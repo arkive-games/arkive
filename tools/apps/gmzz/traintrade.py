@@ -22,7 +22,22 @@ from .version import stamp_version
 
 OUT_SUBDIR = "traintrade"
 
-#: Client table -> output file. Every train-trade table the client ships.
+#: Client table -> output file.
+#:
+#: The mode spells its tables with two prefixes, and only the economy half uses
+#: the mode's own name. ``TrainTrade*`` holds the goods and their prices;
+#: ``Train*`` holds the structure of a run -- which routes exist, how many
+#: stations each has, what the station types trade, and the strategy cards. A
+#: list matching ``TrainTrade`` alone looks complete and silently omits the
+#: half that says how the mode is actually played.
+#:
+#: Not every ``Train*`` table belongs to this mode: ``TrainDummyMedicineData``
+#: is the *training dummy*'s potions (character attributes, weekly limits) and
+#: has nothing to do with the railway.
+#:
+#: ``TrainStrategyCardPoolData`` is deliberately absent. The client ships it as
+#: six bare ids and nothing else -- which cards each pool draws is not in the
+#: export -- so emitting it would promise a mapping the dataset cannot keep.
 TABLES = {
     "TrainTradeGoodsData": "goods.json",
     "TrainTradeGoodsTypeNameData": "goods_types.json",
@@ -30,6 +45,11 @@ TABLES = {
     "TrainTradeContractData": "contracts.json",
     "TrainTradeQuestData": "quests.json",
     "TrainTradeConstData": "constants.json",
+    "TrainDifficultyData": "difficulties.json",
+    "TrainMapGenerationData": "map_generation.json",
+    "TrainStationTypeData": "station_types.json",
+    "TrainStrategyCardData": "strategy_cards.json",
+    "TrainUpgradeData": "upgrades.json",
 }
 
 #: The subsystem shard whose strings the train-trade UI itself uses. Emitted

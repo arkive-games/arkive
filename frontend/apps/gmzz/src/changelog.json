@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.4.1",
+      "date": "2026-09-04",
+      "commit": "3f7ea859be5c874ae2ba634022745470508c8441",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Station planner: route counts and station mixes now come from the game package, including every supported route variant, with a memory-efficient forecast solver.",
+            "zh-CN": "站点推演台：路线数量和站点构成现在直接读取游戏包体，涵盖所有支持的路线变体，并使用低内存推演算法。",
+            "zh-TW": "站點推演台：路線數量和站點構成現在直接讀取遊戲包體，涵蓋所有支援的路線變體，並使用低記憶體推演演算法。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "date": "2026-09-03",
       "commit": "9e18421d8d6162c1501074f403bc9f5ee52e8b3b",
