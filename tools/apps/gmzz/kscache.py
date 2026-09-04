@@ -71,7 +71,7 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-from .env import require_dir
+from .env import BUILD_MARKER, require_dir
 
 KMF_MAGIC = b"KMF\0"
 KMF_HEADER = struct.Struct("<4sIIIII")
@@ -81,8 +81,10 @@ PIECE_SIZE = 12
 PAK_MAGIC = 0x5A6F12E1
 PAK_VERSION = 11
 PAK_FOOTER_SIZE = 221
-PATCH_PAK_NAME = "pakchunk0-Windows_1_P.pak"
 LOCAL_CACHE_ENTRY = struct.Struct("<12sIIII")
+#: The manifest's compression methods, index 0 being uncompressed — the only two seen.
+MANIFEST_METHODS = ["None", "Oodle"]
+#: The patch pak's method table: slot 0 is method index 1, since index 0 is the implicit None.
 PAK_METHODS = ["Oodle"]
 #: The pak entries the client compresses in 64 KiB blocks, as its own index says.
 PAK_BLOCK_SIZE = 65536
@@ -130,7 +132,16 @@ class Record:
 
 @dataclass
 class Piece:
-    """One compression block of a chunk: offset within the chunk, sizes, method index."""
+    """One compression block of a chunk: offset *within the chunk*, sizes, method index.
+
+    Nothing here says where the block is in a file. CUE4Parse composes that
+    when it turns the manifest into a table of contents: the partition index
+    implied by the owner's ``_sN`` suffix times 4 GiB, plus the record's offset,
+    plus this offset — into a 40-bit field. That composition is what lets a
+    record be re-pointed at another partition by changing only its owner and
+    offset, with its blocks untouched, and what caps a container at 256
+    partitions.
+    """
 
     offset: int
     csize: int
@@ -491,6 +502,7 @@ class Report:
     iostore_skipped_owner: int = 0
     partitions: int = 0
     linked: int = 0
+    removed: int = 0
     notes: list[str] = field(default_factory=list)
 
 
@@ -532,6 +544,11 @@ def write_aggregate(path: Path, kscache: Path, chunks: list[tuple[Record, LocalC
         out.write(bytes(16))
 
 
+def patch_pak_name(base_pak: str) -> str:
+    """``pakchunk0-Windows.pak`` -> ``pakchunk0-Windows_1_P.pak``: UE's patch-pak convention, which CUE4Parse reads first."""
+    return base_pak[:-len(".pak")] + "_1_P.pak"
+
+
 def partition_base(name: str) -> tuple[str, int]:
     """``Paks/pakchunk9999-Windows_s2.ucas`` -> (``Paks/pakchunk9999-Windows``, 2); no suffix is partition 0."""
     stem = name[:-len(".ucas")]
@@ -554,9 +571,22 @@ def build(game: Path, out: Path, key: bytes) -> Report:
     live = Manifest.read(live_manifest_path)
     local = read_local_cache(kscache / "local.cache")
     base_by_id = {r.chunk_id: r for r in base_manifest.records}
+    # Every chunk's blocks are described with one of these two methods, and the
+    # patch pak's method table is written to match; a third one would otherwise
+    # be labelled Oodle and decompress to garbage rather than fail.
+    if live.methods != MANIFEST_METHODS:
+        raise RuntimeError(f"manifest compression methods {live.methods} are not the expected {MANIFEST_METHODS}")
 
     out_content = out / "C7" / "Content"
     paks_out = out_content / "Paks"
+    # A previous run's patch pak, partitions and aggregates would otherwise
+    # survive a newer patch and shadow what this run writes.
+    base_files = {src.name for src in (content / "Paks").iterdir() if src.is_file()}
+    if paks_out.is_dir():
+        for stale in paks_out.iterdir():
+            if stale.name not in base_files:
+                stale.unlink()
+                report.removed += 1
     for src in (content / "Paks").iterdir():
         if src.is_file():
             hard_link(src, paks_out / src.name, report)
@@ -577,13 +607,22 @@ def build(game: Path, out: Path, key: bytes) -> Report:
             raise RuntimeError(f"chunk {record.chunk_id.hex()} in {where.path}@{where.offset} does not match its manifest CRC")
         return data
 
-    # --- the pak ------------------------------------------------------------
+    # --- the paks -----------------------------------------------------------
+    # One patch pak per base pak, named after it, so the `_P` priority rule only
+    # ever has to beat the pak it patches. The marker rides in the first one,
+    # under the ScriptOPCode root uex exports, so the export can say which
+    # build it is (see `gmzz.env.check_export_current`).
     pak_owners = {i for i, n in enumerate(live.names) if n.endswith(".pak")}
-    pak_files: list[tuple[str, PakEntry, bytes]] = []
+    marker_written = False
     for owner in sorted(pak_owners):
         pak_name = live.names[owner].split("/")[-1]
         base_index = read_pak_index(content / "Paks" / pak_name, key)
         by_data_offset = {e.data_offset: (p, e) for p, e in base_index.items()}
+        pak_files: list[tuple[str, PakEntry, bytes]] = []
+        if not marker_written:
+            marker = f"{report.live}\n".encode("ascii")
+            pak_files.append((BUILD_MARKER, PakEntry(0, len(marker), len(marker), 0, False, []), marker))
+            marker_written = True
         for record in live.records:
             if record.owner != owner or record.version == report.base:
                 continue
@@ -599,16 +638,19 @@ def build(game: Path, out: Path, key: bytes) -> Report:
                 report.notes.append(f"not downloaded: {path}")
                 continue
             pieces = live.pieces_of(record)
-            method = 1 if any(p.method for p in pieces) else 0
+            methods = {p.method for p in pieces}
+            if not methods <= {0, 1}:
+                raise RuntimeError(f"{path}: compression blocks use method {methods - {0, 1}}, which the patch pak cannot express")
+            method = 1 if 1 in methods else 0
             entry = PakEntry(0, record.usize, record.size, method, old_entry.encrypted, [p.csize for p in pieces] if method else [])
             pak_files.append((path, entry, data))
             report.pak_patched += 1
-    if pak_files:
-        write_patch_pak(paks_out / PATCH_PAK_NAME, pak_files)
+        write_patch_pak(paks_out / patch_pak_name(pak_name), pak_files)
 
     # --- IoStore ------------------------------------------------------------
-    # A chunk's compression blocks are addressed as partition x 4 GiB + offset in a
-    # 40-bit field, so a container can have at most 256 partitions. Pack files
+    # A chunk's compression blocks are addressed as partition x 4 GiB + record
+    # offset + block offset in a 40-bit field (see `Piece`), so a container can
+    # have at most 256 partitions and a record moves with its blocks. Pack files
     # (one per patch per container) are linked in as partitions of their own;
     # the single-chunk bucket files, of which one container has 250, are copied
     # into one aggregate partition per container instead.
@@ -676,7 +718,7 @@ def main(argv: list[str] | None = None) -> None:
         raise RuntimeError("GMZZ_AES_KEY is not set: the pak index key, as in uex's profile (0x... hex)")
     key = bytes.fromhex(key_text.removeprefix("0x"))
     report = build(game, out, key)
-    print(f"base {report.base} -> live {report.live}: {report.linked} files linked")
+    print(f"base {report.base} -> live {report.live}: {report.linked} files linked, {report.removed} stale files removed")
     print(f"pak: {report.pak_patched} entries patched, {report.pak_unnamed} new files without a name, {report.pak_missing} not downloaded")
     print(f"iostore: {report.iostore_patched} chunks re-pointed across {report.partitions} partitions, "
           f"{report.iostore_missing} not downloaded (dropped), {report.iostore_skipped_owner} in .upak containers (untouched)")

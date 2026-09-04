@@ -34,7 +34,8 @@ dependencies = [
     "unicorn (>=2.1.4,<3.0.0)",
     # ro3: block-LZ4 at C speed, to index 188k decrypted bundles in minutes.
     "lz4 (>=4.4.4,<5.0.0)",
-    "cryptography>=50.0.1",
+    # gmzz: AES-ECB for the client pak index, in gmzz.kscache.
+    "cryptography (>=50.0.1,<51.0.0)",
 ]
 
 [dependency-groups]

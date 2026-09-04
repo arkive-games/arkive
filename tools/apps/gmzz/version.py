@@ -13,7 +13,7 @@ import hashlib
 from pathlib import Path
 
 from .common import write_json
-from .env import optional_dir
+from .env import export_build, optional_dir
 
 VERSION_FILE = "version.json"
 
@@ -51,11 +51,12 @@ def stamp_version(data_out: Path) -> str:
         digest.update(path.read_bytes())
     version = digest.hexdigest()[:12]
     payload: dict[str, str] = {"version": version}
-    # The build the export actually came from: the hot-patched view when one is
-    # assembled (gmzz.kscache writes its live build there), else the install.
-    patched = optional_dir("GMZZ_PATCHED")
-    game = patched / "C7" if patched and (patched / "C7" / "Content" / "package.txt").exists() else optional_dir("GMZZ_GAME")
-    game_version = read_game_version(game) if game else None
+    # The build the export actually came from: the marker gmzz.kscache plants in
+    # a patched export, else the install's own number (an export of the install
+    # carries no marker, and is the base build by definition).
+    raw = optional_dir("GMZZ_RAW")
+    game = optional_dir("GMZZ_GAME")
+    game_version = (export_build(raw) if raw else None) or (read_game_version(game) if game else None)
     if game_version:
         payload["gameVersion"] = game_version
     write_json(data_out / VERSION_FILE, payload)

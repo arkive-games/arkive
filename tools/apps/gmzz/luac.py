@@ -183,10 +183,12 @@ def _bytecode_offset(body: bytes, stripped: bool) -> tuple[int, int]:
 
 
 def decrypt(data: bytes, path: Path | str = "<bytes>") -> bytes:
-    """Turn one obfuscated client dump into a dump stock LuaJIT can load.
+    """A dump stock LuaJIT can load, from either form the client ships.
 
-    Proto lengths are unchanged by both transforms, so the container is rebuilt
-    verbatim apart from the version byte.
+    A stock dump (version byte 0x02 — every hot-patched table) is returned as
+    is. The base install's obfuscated form (0x82) has both layers undone; proto
+    lengths are unchanged by both transforms, so the container is rebuilt
+    verbatim apart from the version byte. Anything else is refused.
     """
     if data[:3] != LUAJIT_MAGIC:
         raise LuacError(f"{path}: not a LuaJIT dump (magic {data[:3]!r})")

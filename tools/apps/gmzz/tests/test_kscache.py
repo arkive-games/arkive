@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from gmzz import kscache
+from gmzz.env import BUILD_MARKER
 from gmzz.kscache import (
     LocalChunk,
     Manifest,
@@ -25,6 +26,7 @@ from gmzz.kscache import (
     encode_pak_entry,
     is_bucket_file,
     partition_base,
+    patch_pak_name,
     read_local_cache,
     read_pak_index,
     write_aggregate,
@@ -93,6 +95,10 @@ def test_local_cache_maps_chunk_ids_to_files(tmp_path):
     local = read_local_cache(tmp_path / "local.cache")
     assert local[_chunk_id(2, 6)] == LocalChunk("2097705/pakchunk0-Windows.pak", 17507770, 0xBB)
     assert len(local) == 2
+
+
+def test_patch_pak_is_named_after_the_pak_it_patches():
+    assert patch_pak_name("pakchunk0-Windows.pak") == "pakchunk0-Windows_1_P.pak"
 
 
 def test_partition_base_and_bucket_file_names():
@@ -232,11 +238,15 @@ def test_build_assembles_the_patched_view(tmp_path):
     assert (content / "Manifest_UFSFiles_Win64.txt").exists()
     assert (content / "package.txt").read_text() == "2097705"
 
-    # The patch pak carries the changed table under its base-index name.
-    patch = read_pak_index(content / "Paks" / kscache.PATCH_PAK_NAME, KEY)
-    assert list(patch) == ["C7/Content/ScriptOPCode/Data/Excel/Table.luac"]
+    # The patch pak carries the changed table under its base-index name, plus
+    # the build marker the pipelines check the export against.
+    patch_pak = content / "Paks" / "pakchunk0-Windows_1_P.pak"
+    patch = read_pak_index(patch_pak, KEY)
+    assert sorted(patch) == sorted([BUILD_MARKER, "C7/Content/ScriptOPCode/Data/Excel/Table.luac"])
+    raw = patch_pak.read_bytes()
+    marker = patch[BUILD_MARKER]
+    assert raw[marker.data_offset:marker.data_offset + marker.csize] == b"2097705\n"
     entry = patch["C7/Content/ScriptOPCode/Data/Excel/Table.luac"]
-    raw = (content / "Paks" / kscache.PATCH_PAK_NAME).read_bytes()
     assert raw[entry.data_offset:entry.data_offset + entry.csize] == table_new
     assert (entry.usize, entry.csize, entry.method, entry.blocks) == (100, 44, 1, [44])
     assert report.pak_patched == 1 and report.pak_missing == 0
@@ -258,3 +268,27 @@ def test_build_refuses_an_unpatched_install(tmp_path):
     (game / "Saved" / "kscache" / "package_2018737.manifest").unlink()
     with pytest.raises(RuntimeError, match="has not patched"):
         build(game, tmp_path / "out", KEY)
+
+
+def test_build_removes_what_an_earlier_run_left_behind(tmp_path):
+    game, *_ = _client(tmp_path)
+    out = tmp_path / "patched"
+    paks = out / "C7" / "Content" / "Paks"
+    paks.mkdir(parents=True)
+    (paks / "pakchunk9999-Windows_s7.ucas").write_bytes(b"old partition")
+    (paks / "pakchunk0-Windows_1_P.pak").write_bytes(b"old patch pak")
+    report = build(game, out, KEY)
+    assert not (paks / "pakchunk9999-Windows_s7.ucas").exists()
+    assert (paks / "pakchunk0-Windows_1_P.pak").read_bytes() != b"old patch pak"
+    assert report.removed == 2
+
+
+def test_build_refuses_a_manifest_with_another_compression_method(tmp_path):
+    game, *_ = _client(tmp_path)
+    ks = game / "Saved" / "kscache"
+    live = Manifest.read(ks / "package_2018737.manifest")
+    live.methods = ["None", "Oodle", "Zlib"]
+    live.write(ks / "package_2018737.manifest")
+    with pytest.raises(RuntimeError, match="compression methods"):
+        build(game, tmp_path / "out", KEY)
+

@@ -74,9 +74,14 @@ also stock LuaJIT dumps — version byte `0x02`, no XOR, no opcode remap — so
 
 - the base containers and `Manifest_UFSFiles_Win64.txt` are **hard-linked**, so
   `GMZZ_PATCHED` must be on the install's volume and nothing is copied;
-- every changed `.pak` entry that has been downloaded goes into
-  `Paks/pakchunk0-Windows_1_P.pak`, a plain version-11 pak whose `_P` suffix
-  makes CUE4Parse prefer it over the base — this is where the tables live;
+- every changed `.pak` entry that has been downloaded goes into a patch pak
+  named after its base (`Paks/pakchunk0-Windows_1_P.pak`), a plain version-11
+  pak whose `_P` suffix makes CUE4Parse prefer it over the base — this is where
+  the tables live. It also carries `C7/Content/ScriptOPCode/arkive-kscache-build.txt`,
+  a marker holding the live build, so that the export itself says which build
+  it came from: with `GMZZ_PATCHED` set, every stage refuses an export whose
+  marker is missing or behind the assembled build rather than silently
+  regressing the patched tables, and `version.json` stamps the marker's build;
 - for the IoStore containers a `package.manifest` is synthesized: each kscache
   pack file is hard-linked in as an extra partition of the container it patches
   (`pakchunk9999-Windows_s19.ucas`, …) and the changed chunks are re-pointed at
@@ -92,6 +97,10 @@ only source of names and the chunk id is not a path hash we could find; and the
 `.upak` containers are left as installed. The format itself — the `KMF`
 manifest's 48-byte chunk records, `local.cache`, the pack and bucket files, the
 client's pak footer variant — is written up at the top of `kscache.py`.
+
+Each run first removes whatever an earlier run left under `Paks/` that the
+install does not have — the previous patch pak, partitions, aggregates — so a
+newer patch cannot be shadowed by an older one.
 
 Needs `GMZZ_PATCHED` and `GMZZ_AES_KEY` (the pak index key, the same one in
 uex's profile) in `tools/.env`.
