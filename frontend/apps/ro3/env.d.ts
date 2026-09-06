@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly VITE_HOME_URL?: string
   readonly VITE_GITHUB_URL?: string
   readonly VITE_ICP_BEIAN?: string
+  readonly VITE_TOY?: string
   // Sibling RO3 surfaces that do not exist yet. Absent means "not built": the
   // matching entry renders as unavailable rather than linking nowhere.
   readonly VITE_RO3_MAP_URL?: string

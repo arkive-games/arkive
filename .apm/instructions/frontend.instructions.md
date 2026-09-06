@@ -37,6 +37,26 @@ The workspace-wide conventions apply here too.
   start/set up the server if nothing responds. (Note: `5173`/`5174` may be taken by unrelated
   apps — don't assume those are ours.)
 
+## Analytics (Baidu Tongji) — every site, no exceptions
+Traffic for **every** app is measured, and a new app is not finished until it is.
+`packages/map-shell/src/baiduAnalytics.ts` owns the whole integration; nothing goes in
+`index.html`, and no app carries its own site id.
+- Call `initBaiduAnalytics({ dev: import.meta.env.DEV, toy: Boolean(import.meta.env.VITE_TOY) })`
+  once at module scope in `src/main.tsx`, before `createRoot`. Both flags are passed **in** by the
+  app — the shell reads no environment of its own. `dev` keeps local traffic out of the report;
+  `toy` skips the count inside the Bilibili iframe, where the visit is Bilibili's to record.
+  Declare `VITE_TOY` in the app's `env.d.ts` even when it has no Toy build yet.
+- **`hm.js` only counts the page it loads on**, so an SPA reports one pageview per visit unless
+  client-side navigation is pushed by hand. Report every navigation with `trackPageview()`:
+  a TanStack app does it with `router.subscribe('onResolved', () => trackPageview())`; an app
+  that drives history itself (ro3) calls it right after its `pushState` and inside its
+  `popstate` handler. Repeats and the entry page are deduped inside the shell, so an extra call
+  is harmless and a missing one is invisible.
+- Only a genuinely single-page app with no in-app URL changes (meta) may call `init` alone.
+- **One site id — `ARKIVE_BAIDU_SITE_ID` — across every subdomain**, so all Arkive traffic lands
+  in one report and the per-site split comes from the recorded URLs. Do not register a new id
+  for a new game.
+
 ## Typography
 - **Never hard-code pixel sizes** (no `text-[13px]`, `font-size: 11px`). Always use the Tailwind
   scale steps (`text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`)

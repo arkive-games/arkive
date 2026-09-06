@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ThemeProvider } from '@gamemap/map-shell'
+import { initBaiduAnalytics, ThemeProvider } from '@gamemap/map-shell'
 import { createArkiveThemeStorage } from '@gamemap/ui'
 import App from './App'
 import './index.css'
@@ -11,6 +11,13 @@ import './index.css'
 // adapter ThemeProvider still renders, but `get`/`set` become no-ops — the
 // shared preference is ignored and the visitor's choice dies on reload.
 const themeStorage = createArkiveThemeStorage({ legacyKeys: ['ro3.theme'] })
+
+// Baidu Tongji counts the entry page only. RO3 has no router, so the pushState
+// navigation in App reports every client-side page change after it.
+initBaiduAnalytics({
+  dev: import.meta.env.DEV,
+  toy: Boolean(import.meta.env.VITE_TOY),
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

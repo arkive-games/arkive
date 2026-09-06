@@ -19,7 +19,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { ArkiveMapTopBar, ArkiveMobileHeader, useTheme, type ShellNavItem } from '@gamemap/map-shell'
+import { ArkiveMapTopBar, ArkiveMobileHeader, trackPageview, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
 import { filterGuides, type GuideEntry, type GuideScope, type GuideSort } from './guideCatalog'
 import {
@@ -187,6 +187,9 @@ function App() {
     const handlePopState = () => {
       setPage(getInitialPage())
       setWikiView(getInitialWikiView())
+      // The browser has already swapped the URL by the time popstate fires, so
+      // the default (read location) is the page the visitor just went back to.
+      trackPageview()
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -231,6 +234,7 @@ function App() {
       url.searchParams.delete('wiki')
     }
     window.history.pushState({}, '', url)
+    trackPageview()
     setPage(nextPage)
     setWikiView(nextWikiView)
     window.scrollTo({ top: 0, behavior: 'smooth' })
