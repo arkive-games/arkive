@@ -14,6 +14,7 @@ import {
   getArkiveBrandName,
   ArkiveSettingsDialog,
   useArkiveSettingsProps,
+  trackPageview,
   useTheme,
   type ShellNavItem,
 } from '@gamemap/map-shell'
@@ -182,6 +183,28 @@ export default function App() {
     window.addEventListener('hashchange', updateView)
     return () => window.removeEventListener('hashchange', updateView)
   }, [])
+
+  // The portal's views are hash routes -- `#games`, `#tools`, `#updates`,
+  // `#forum`, `#notifications/…`, `#account/…`, `#user/…` -- and hm.js counts
+  // only the URL it loaded on, so without this the whole forum and account
+  // surface is invisible in the traffic report.
+  //
+  // Keyed on the adopted route rather than on `hashchange`, because the two are
+  // not the same set: a dirty composer reverts the hash without changing the
+  // view (which must NOT report), while `discardForumComposer` changes the view
+  // through `replaceState`, which fires no event at all (which must).
+  //
+  // The path is passed explicitly since the shell defaults to `pathname +
+  // search`, identical for every hash route here. The first run is the entry
+  // page hm.js already counted, so it seeds without reporting.
+  const reportedPath = useRef<string | null>(null)
+  useEffect(() => {
+    const path = window.location.pathname + window.location.search + window.location.hash
+    const previous = reportedPath.current
+    reportedPath.current = path
+    if (previous === null || previous === path) return
+    trackPageview(path)
+  }, [activeRoute])
 
   useEffect(() => {
     if (!forumComposerDirty) return
