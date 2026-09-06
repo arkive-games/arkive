@@ -223,7 +223,14 @@ function App() {
   const navigateToPage = (nextPage: Page, nextWikiView: WikiView = wikiView) => {
     const url = new URL(window.location.href)
     url.pathname = nextPage === 'changelog' ? '/changelog' : '/'
-    if (nextPage === 'wiki') {
+    if (nextPage === 'wiki' && nextWikiView === 'skills') {
+      // Bare `/` already resolves to wiki/skills (see getInitialPage and
+      // getInitialWikiView), so spelling the default out gives one page two
+      // URLs: two links to share for the same view, and two rows in the traffic
+      // report. Strip the params instead — the state round-trips either way.
+      url.searchParams.delete('view')
+      url.searchParams.delete('wiki')
+    } else if (nextPage === 'wiki') {
       url.searchParams.set('view', 'wiki')
       url.searchParams.set('wiki', nextWikiView)
     } else if (nextPage === 'overview') {
