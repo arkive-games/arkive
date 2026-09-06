@@ -250,8 +250,15 @@ function App() {
   const openWiki = (nextWikiView: WikiView = 'skills') => {
     if (WIKI_URL) {
       const url = new URL(WIKI_URL, window.location.href)
-      url.searchParams.set('view', 'wiki')
-      url.searchParams.set('wiki', nextWikiView)
+      // Same rule as navigateToPage. The destination is another instance of
+      // this app -- `view` and `wiki` are parameters only getInitialPage and
+      // getInitialWikiView read -- so it resolves a bare URL to wiki/skills
+      // too, and spelling the default out would hand it the second address for
+      // one page that this app just stopped producing for itself.
+      if (nextWikiView !== 'skills') {
+        url.searchParams.set('view', 'wiki')
+        url.searchParams.set('wiki', nextWikiView)
+      }
       window.location.assign(url)
       return
     }

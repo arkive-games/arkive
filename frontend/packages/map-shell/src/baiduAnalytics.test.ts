@@ -76,6 +76,25 @@ describe("trackPageview", () => {
     expect(queue()).toEqual([["_trackPageview", "/breeding?c=Anubis"]])
   })
 
+  it("keeps the hash, which is a page of its own in a hash-routed app", async () => {
+    const { initBaiduAnalytics, trackPageview } = await load()
+    initBaiduAnalytics()
+    window.history.pushState({}, "", "/#forum")
+    trackPageview()
+    expect(queue()).toEqual([["_trackPageview", "/#forum"]])
+  })
+
+  it("seeds the entry hash, so the first navigation away from it still counts", async () => {
+    // hm.js reports `location.href`, hash included, so an entry on a hash route
+    // is counted as that route. Seeding without the hash made the bare URL look
+    // like a repeat of it, and the visitor's move to the home view vanished.
+    const { initBaiduAnalytics, trackPageview } = await load()
+    window.history.replaceState({}, "", "/#games")
+    initBaiduAnalytics()
+    trackPageview("/")
+    expect(queue()).toEqual([["_trackPageview", "/"]])
+  })
+
   it("skips the entry page, which hm.js already counted", async () => {
     const { initBaiduAnalytics, trackPageview } = await load()
     window.history.replaceState({}, "", "/items")

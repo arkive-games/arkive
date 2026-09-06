@@ -33,8 +33,21 @@ let started = false
 /** Last URL reported, so the entry page is not counted twice. */
 let lastPath: string | null = null
 
+/**
+ * The URL as hm.js records it, which is what the seed below has to match.
+ *
+ * The hash is part of that: `hm.js` reports `location.href`, verified against a
+ * live entry on `/#games` coming back as `u=…%2F%23games`. Leaving it out made
+ * the seed disagree with the entry pageview it exists to mirror, so a
+ * hash-routed app that reported the bare URL for its first navigation had that
+ * navigation silently dropped as a duplicate of an entry that was never
+ * recorded under that URL.
+ *
+ * Harmless for the path-routed apps: their hash is empty, and a router fires no
+ * resolve for a hash-only change, so nothing new reports.
+ */
 function currentPath(): string {
-  return window.location.pathname + window.location.search
+  return window.location.pathname + window.location.search + window.location.hash
 }
 
 /**

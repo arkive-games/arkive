@@ -184,7 +184,7 @@ if (problems.length) {
   process.exit(1)
 }
 
-const exempt = apps.filter((app) => app in NO_NAVIGATION)
+const exempt = apps.filter((app) => Object.hasOwn(NO_NAVIGATION, app))
 console.log(
   `check-analytics: ok (${apps.length} apps init` +
   `${exempt.length ? `, ${exempt.join(', ')} exempt from trackPageview` : ''})`,
