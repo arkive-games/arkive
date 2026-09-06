@@ -8,4 +8,5 @@ interface ImportMetaEnv {
   readonly VITE_HOME_URL?: string
   readonly VITE_GITHUB_URL?: string
   readonly VITE_ICP_BEIAN?: string
+  readonly VITE_TOY?: string
 }

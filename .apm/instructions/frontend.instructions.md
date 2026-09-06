@@ -50,12 +50,20 @@ Traffic for **every** app is measured, and a new app is not finished until it is
   client-side navigation is pushed by hand. Report every navigation with `trackPageview()`:
   a TanStack app does it with `router.subscribe('onResolved', () => trackPageview())`; an app
   that drives history itself (ro3) calls it right after its `pushState` and inside its
-  `popstate` handler. Repeats and the entry page are deduped inside the shell, so an extra call
-  is harmless and a missing one is invisible.
-- Only a genuinely single-page app with no in-app URL changes (meta) may call `init` alone.
+  `popstate` handler; a hash-routed app (meta) reports the adopted route and must pass the path
+  explicitly, since the shell's default is `pathname + search` and every hash route shares it.
+  Repeats and the entry page are deduped inside the shell, so an extra call is harmless and a
+  missing one is invisible.
+- **"No router" does not mean "one page."** Nothing is exempt from `trackPageview` unless it
+  changes neither `pathname`, `search` nor `hash` after load — `meta` was assumed exempt on the
+  strength of having no router, and its whole `#forum`/`#account` surface went uncounted.
 - **One site id — `ARKIVE_BAIDU_SITE_ID` — across every subdomain**, so all Arkive traffic lands
   in one report and the per-site split comes from the recorded URLs. Do not register a new id
-  for a new game.
+  for a new game, and never paste the vendor `<script>` into an `index.html`.
+- `pnpm check:analytics` enforces all of the above in CI, over every app found on disk — so app
+  nine fails the day it is added rather than the day someone notices a subdomain missing from
+  the report. It is a script and not just this paragraph because the paragraph is what failed:
+  ro3 shipped unmeasured for months.
 
 ## Typography
 - **Never hard-code pixel sizes** (no `text-[13px]`, `font-size: 11px`). Always use the Tailwind
