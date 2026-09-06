@@ -123,6 +123,32 @@ function recentDestination(site: SiteCard, route: string): RecentDestination {
     timestamp: Date.now(),
   }
 }
+/**
+ * The canonical hash for a route -- the inverse of `routeFromHash`, and the URL
+ * the traffic report should record.
+ *
+ * The raw `location.hash` cannot be used for this. `#top` and `#explore` are
+ * in-page scroll anchors on the discover view, not routes: `routeFromHash`
+ * discards them, so reporting the hash verbatim would file the portal's most
+ * visited page under three separate URLs and inflate two of them on every
+ * click of the brand logo. This also normalizes the sections `routeFromHash`
+ * defaults, so a hand-typed `#account` does not open a second row for the page
+ * the UI links as `#account/edit`.
+ */
+function hashForRoute(route: HomeRoute): string {
+  switch (route.view) {
+    case 'allGames': return '#games'
+    case 'tools': return '#tools'
+    case 'platformUpdates': return '#updates'
+    case 'forum': return route.composer ? '#forum/new' : '#forum'
+    case 'notifications': return `#notifications/${route.section}`
+    case 'account': return `#account/${route.section}`
+    case 'publicProfile': return `#user/${encodeURIComponent(route.userId)}/${route.section}`
+    // The discover view is the bare URL; `#top`/`#explore` scroll within it.
+    case 'discoverGames': return ''
+  }
+}
+
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
@@ -195,11 +221,13 @@ export default function App() {
   // through `replaceState`, which fires no event at all (which must).
   //
   // The path is passed explicitly since the shell defaults to `pathname +
-  // search`, identical for every hash route here. The first run is the entry
-  // page hm.js already counted, so it seeds without reporting.
+  // search`, identical for every hash route here -- and it comes from
+  // `hashForRoute` rather than `location.hash`, so scroll anchors do not read
+  // as pages. The first run is the entry page hm.js already counted, so it
+  // seeds without reporting.
   const reportedPath = useRef<string | null>(null)
   useEffect(() => {
-    const path = window.location.pathname + window.location.search + window.location.hash
+    const path = window.location.pathname + window.location.search + hashForRoute(activeRoute)
     const previous = reportedPath.current
     reportedPath.current = path
     if (previous === null || previous === path) return

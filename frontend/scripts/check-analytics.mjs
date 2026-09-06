@@ -37,20 +37,38 @@ const APPS = path.join(ROOT, 'apps')
  */
 const NO_NAVIGATION = {}
 
-/** Every .ts/.tsx source under an app, excluding tests and build output. */
-function sources(dir, out = []) {
+const SKIP_DIRS = ['node_modules', 'dist', 'dist-toy', '.vite', 'e2e']
+
+/** Files under `dir` matching `match`, recursively, excluding build output. */
+function filesUnder(dir, match, out = []) {
   if (!fs.existsSync(dir)) return out
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name)
     if (entry.isDirectory()) {
-      if (['node_modules', 'dist', 'dist-toy', '.vite', 'e2e'].includes(entry.name)) continue
-      sources(full, out)
-    } else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) {
+      if (SKIP_DIRS.includes(entry.name)) continue
+      filesUnder(full, match, out)
+    } else if (match.test(entry.name)) {
       out.push(full)
     }
   }
   return out
 }
+
+/** Every .ts/.tsx source under an app, excluding tests and build output. */
+function sources(dir) {
+  return filesUnder(dir, /\.tsx?$/).filter((file) => !/\.test\.tsx?$/.test(path.basename(file)))
+}
+
+/**
+ * Where an app's entry module might be.
+ *
+ * Listing the candidates rather than assuming `src/main.tsx`: keying discovery
+ * on one filename would move the "missing from a list" failure this script
+ * exists to prevent out of a hardcoded array and into a hardcoded filename, and
+ * an app with a differently named entry would be skipped in silence -- passing
+ * the check by being invisible to it. Finding none is an error, not a skip.
+ */
+const ENTRY_CANDIDATES = ['src/main.tsx', 'src/main.ts', 'src/index.tsx', 'src/index.ts']
 
 /** The `initBaiduAnalytics({ ... })` argument, brace-matched. */
 function initCallBody(text) {
@@ -67,8 +85,9 @@ function initCallBody(text) {
   return depth === 0 ? text.slice(start, i - 1) : null
 }
 
+// Every workspace package under apps/, whatever its entry module is called.
 const apps = fs.readdirSync(APPS, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(APPS, entry.name, 'src', 'main.tsx')))
+  .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(APPS, entry.name, 'package.json')))
   .map((entry) => entry.name)
   .sort()
 
@@ -76,13 +95,21 @@ const problems = []
 
 for (const app of apps) {
   const dir = path.join(APPS, app)
-  const main = path.join(dir, 'src', 'main.tsx')
-  const mainText = fs.readFileSync(main, 'utf8')
+  const entry = ENTRY_CANDIDATES.map((candidate) => path.join(dir, candidate)).find((file) => fs.existsSync(file))
 
-  const body = initCallBody(mainText)
+  if (!entry) {
+    problems.push(
+      `${app}: no entry module found (looked for ${ENTRY_CANDIDATES.join(', ')}), so this check ` +
+      'cannot tell whether the app is measured. Add the real entry to ENTRY_CANDIDATES in this script.',
+    )
+    continue
+  }
+
+  const entryName = path.relative(dir, entry).replaceAll('\\', '/')
+  const body = initCallBody(fs.readFileSync(entry, 'utf8'))
   if (body === null) {
     problems.push(
-      `${app}: src/main.tsx does not call initBaiduAnalytics({ ... }) -- this app's traffic is ` +
+      `${app}: ${entryName} does not call initBaiduAnalytics({ ... }) -- this app's traffic is ` +
       'not measured. See the analytics section of CLAUDE.md.',
     )
   } else {
@@ -105,7 +132,9 @@ for (const app of apps) {
     }
   }
 
-  if (!(app in NO_NAVIGATION)) {
+  // `hasOwn`, not `in`: `in` walks the prototype chain, so an app directory
+  // named `constructor` or `toString` would exempt itself.
+  if (!Object.hasOwn(NO_NAVIGATION, app)) {
     const reports = sources(path.join(dir, 'src')).some(
       (file) => /\btrackPageview\s*\(/.test(fs.readFileSync(file, 'utf8')),
     )
@@ -123,9 +152,20 @@ for (const app of apps) {
 
 // One site id, owned by the shell. A pasted vendor snippet would count under a
 // second id, splitting the report in a way that looks like a traffic drop.
+//
+// `public/` is scanned as well as `src/`: everything in it is copied to the CDN
+// verbatim, so a snippet parked there ships without passing through the bundler
+// at all.
+const TEXTUAL = /\.(html?|m?[jt]sx?|cjs|json|txt)$/
 for (const app of apps) {
   const dir = path.join(APPS, app)
-  const candidates = [path.join(dir, 'index.html'), ...sources(path.join(dir, 'src'))]
+  // A Set because the scans overlap -- `public/index.html` matches both -- and one
+  // pasted snippet should be one problem, not two.
+  const candidates = new Set([
+    ...filesUnder(dir, /^index\.html$/),
+    ...sources(path.join(dir, 'src')),
+    ...filesUnder(path.join(dir, 'public'), TEXTUAL),
+  ])
   for (const file of candidates) {
     if (!fs.existsSync(file)) continue
     if (/hm\.baidu\.com/.test(fs.readFileSync(file, 'utf8'))) {
