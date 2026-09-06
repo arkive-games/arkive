@@ -43,8 +43,15 @@ let lastPath: string | null = null
  * navigation silently dropped as a duplicate of an entry that was never
  * recorded under that URL.
  *
- * Harmless for the path-routed apps: their hash is empty, and a router fires no
- * resolve for a hash-only change, so nothing new reports.
+ * The path-routed apps are not exempt from this and their hash is not always
+ * empty -- aion2's quest breadcrumb links to `/wiki/quest/<group>#<section>`.
+ * Those anchors now appear in the report, which is the point rather than a side
+ * effect: hm.js already recorded them for anyone arriving on such a URL
+ * directly, so before this the same page reported under two different keys
+ * depending on how the visitor got there. A row per anchor is finer than a row
+ * per page, and consistent, which is the trade taken here. An app that wants
+ * the page rather than the anchor passes its own path -- `trackPageview` takes
+ * one for exactly this reason, and meta uses it to keep scroll anchors out.
  */
 function currentPath(): string {
   return window.location.pathname + window.location.search + window.location.hash
