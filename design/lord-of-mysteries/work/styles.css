@@ -1471,3 +1471,11 @@ body { color: var(--text); background: var(--bg); }
   .bottom-actions { margin-top: 0; padding: .35rem; }
   .action-button { min-height: 2.5rem; font-size: .875rem; }
 }
+
+/* Keep the station statistics header on the same grid as its editable rows. */
+.station-table-header,
+.station-summary-section .station-table-row {
+  grid-template-columns: minmax(4.5rem, 1fr) 4.25rem 4.25rem;
+  column-gap: .5rem;
+}
+.station-table-header span:first-child { padding-left: .25rem; }
