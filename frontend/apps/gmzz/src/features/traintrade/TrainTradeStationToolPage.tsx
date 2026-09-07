@@ -1,31 +1,32 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   IconArrowBackUp,
   IconChevronLeft,
   IconChevronRight,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
+import {
+  loadTrainTradeRouteProfiles,
+} from "@/features/traintrade/data";
+import { stationTotalsEqual, type TrainTradeDifficultyId, type TrainTradeRouteProfile } from "@/features/traintrade/routeProfiles";
+import {
+  HINT_IDS,
+  STATION_TYPES,
+  createRouteModel,
+  getAvailableHints,
+  getConfirmedStations,
+  probabilityFor,
+  prospectiveRouteCount,
+  roundedProbabilities,
+  windowDistribution,
+  type ConfirmedStep,
+  type HintId,
+  type RouteModel,
+  type StationTotals,
+  type StationType,
+} from "@/features/traintrade/stationSolver";
 
-const STATION_TYPES = ["winery", "food", "trade"] as const;
-type StationType = (typeof STATION_TYPES)[number];
-
-const HINT_IDS = ["winery-most", "food-most", "trade-most", "equal"] as const;
-type HintId = (typeof HINT_IDS)[number];
-
-const DIFFICULTIES = [
-  { id: "beginner", stops: 15 },
-  { id: "normal", stops: 15 },
-  { id: "advanced", stops: 15 },
-  { id: "hard", stops: 14 },
-  { id: "challenge", stops: 15 },
-] as const;
-type DifficultyId = (typeof DIFFICULTIES)[number]["id"];
-
-type StationTotals = Record<StationType, number>;
-type Sequence = StationType[];
-type ConfirmedStep = { currentType: StationType; hintId: HintId };
-
-const DEFAULT_TOTALS: StationTotals = { winery: 5, food: 5, trade: 5 };
+const EMPTY_TOTALS: StationTotals = { winery: 0, food: 0, trade: 0 };
 
 const STATION_KEY: Record<StationType, string> = {
   winery: "trainTrade.station.wine",
@@ -41,47 +42,49 @@ const STATION_TONE: Record<StationType, string> = {
 
 export default function TrainTradeStationToolPage() {
   const { t } = useTranslation();
-  const [difficulty, setDifficulty] = useState<DifficultyId | "">("");
-  const [totals, setTotals] = useState<StationTotals>(DEFAULT_TOTALS);
+  const [profiles, setProfiles] = useState<TrainTradeRouteProfile[] | null>(null);
+  const [dataError, setDataError] = useState(false);
+  const [difficulty, setDifficulty] = useState<TrainTradeDifficultyId | "">("");
+  const [totals, setTotals] = useState<StationTotals>(EMPTY_TOTALS);
   const [quotaConfirmed, setQuotaConfirmed] = useState(false);
-  const [sequences, setSequences] = useState<Sequence[]>([]);
   const [originHint, setOriginHint] = useState<HintId | "">("");
   const [steps, setSteps] = useState<ConfirmedStep[]>([]);
   const [pendingCurrent, setPendingCurrent] = useState<StationType | "">("");
   const [pendingHint, setPendingHint] = useState<HintId | "">("");
   const [stationOffset, setStationOffset] = useState<number | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const generationId = useRef(0);
 
-  const difficultyProfile = DIFFICULTIES.find((item) => item.id === difficulty);
-  const stationCount = difficultyProfile?.stops ?? 15;
+  const difficultyProfile = profiles?.find((item) => item.id === difficulty);
+  const stationCount = difficultyProfile?.stops ?? 0;
   const quotaTotal = STATION_TYPES.reduce((sum, type) => sum + totals[type], 0);
-  const quotaValid = Boolean(difficulty) && quotaTotal === stationCount;
+  const quotaValid = Boolean(difficultyProfile?.variants.some((variant) => stationTotalsEqual(variant, totals)));
 
   useEffect(() => {
     document.title = `${t("trainTrade.stationTool.title")} - ${t("trainTrade.stationTool.productTitle")}`;
-    return () => {
-      generationId.current += 1;
-    };
   }, [t]);
 
-  const possibleSequences = useMemo(
-    () => filterSequences(sequences, originHint, steps),
-    [originHint, sequences, steps],
-  );
+  useEffect(() => {
+    let active = true;
+    loadTrainTradeRouteProfiles()
+      .then((entries) => {
+        if (active) setProfiles(entries);
+      })
+      .catch((reason) => {
+        console.error(reason);
+        if (active) setDataError(true);
+      });
+    return () => { active = false; };
+  }, []);
 
-  const confirmedStations = useMemo(
-    () => getConfirmedStations(possibleSequences, originHint, steps, stationCount),
-    [originHint, possibleSequences, stationCount, steps],
-  );
+  const routeModel = quotaConfirmed ? createRouteModel(totals, stationCount, originHint, steps) : null;
 
-  const remainingStations = useMemo(() => {
-    const remaining = { ...totals };
-    confirmedStations.forEach((type) => {
-      remaining[type] = Math.max(0, remaining[type] - 1);
-    });
-    return remaining;
-  }, [confirmedStations, totals]);
+  const confirmedStations = routeModel
+    ? getConfirmedStations(routeModel, originHint, steps)
+    : new Map<number, StationType>();
+
+  const remainingStations = { ...totals };
+  steps.forEach(({ currentType: type }) => {
+    remainingStations[type] = Math.max(0, remainingStations[type] - 1);
+  });
 
   const currentIndex = originHint ? steps.length : -1;
   const visibleCount = Math.min(6, stationCount);
@@ -90,19 +93,18 @@ export default function TrainTradeStationToolPage() {
   const visibleOffset = Math.max(0, Math.min(maxOffset, stationOffset ?? autoOffset));
 
   const resetForecast = () => {
-    generationId.current += 1;
     setQuotaConfirmed(false);
-    setSequences([]);
     setOriginHint("");
     setSteps([]);
     setPendingCurrent("");
     setPendingHint("");
     setStationOffset(null);
-    setGenerating(false);
   };
 
-  const changeDifficulty = (next: DifficultyId | "") => {
+  const changeDifficulty = (next: TrainTradeDifficultyId | "") => {
     setDifficulty(next);
+    const profile = profiles?.find((item) => item.id === next);
+    setTotals(profile?.variants.length === 1 ? { ...profile.variants[0] } : { ...EMPTY_TOTALS });
     resetForecast();
   };
 
@@ -113,22 +115,13 @@ export default function TrainTradeStationToolPage() {
   };
 
   const confirmQuota = () => {
-    if (!quotaValid || generating) return;
-    const currentGeneration = generationId.current + 1;
-    generationId.current = currentGeneration;
-    setGenerating(true);
-    window.setTimeout(() => {
-      const nextSequences = enumerateSequences(totals, stationCount);
-      if (generationId.current !== currentGeneration) return;
-      setOriginHint("");
-      setSteps([]);
-      setPendingCurrent("");
-      setPendingHint("");
-      setStationOffset(null);
-      setQuotaConfirmed(true);
-      setSequences(nextSequences);
-      setGenerating(false);
-    }, 0);
+    if (!quotaValid) return;
+    setOriginHint("");
+    setSteps([]);
+    setPendingCurrent("");
+    setPendingHint("");
+    setStationOffset(null);
+    setQuotaConfirmed(true);
   };
 
   const undo = () => {
@@ -164,6 +157,9 @@ export default function TrainTradeStationToolPage() {
     return entries;
   }, [originHint, steps, t]);
 
+  if (dataError) return <p className="text-sm text-muted-foreground">{t("trainTrade.stationTool.loadError")}</p>;
+  if (!profiles) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
+
   return (
     <div className="space-y-4" data-testid="train-trade-station-tool">
       <h1 className="sr-only">{t("trainTrade.stationTool.planner.workspaceTitle")}</h1>
@@ -176,13 +172,13 @@ export default function TrainTradeStationToolPage() {
             </h2>
             <select
               value={difficulty}
-              onChange={(event) => changeDifficulty(event.target.value as DifficultyId | "")}
+              onChange={(event) => changeDifficulty(event.target.value as TrainTradeDifficultyId | "")}
               className="mt-3 h-11 w-full rounded-md border border-border bg-background px-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={t("trainTrade.stationTool.planner.difficultyHeading")}
               data-testid="planner-difficulty"
             >
               <option value="">{t("trainTrade.stationTool.planner.difficultyPlaceholder")}</option>
-              {DIFFICULTIES.map((item) => (
+              {profiles.map((item) => (
                 <option key={item.id} value={item.id}>
                   {t(`trainTrade.stationTool.planner.difficultyProfile.${item.id}.name`)}
                 </option>
@@ -210,6 +206,31 @@ export default function TrainTradeStationToolPage() {
               {t("trainTrade.stationTool.planner.quotaHeading")}
             </h2>
             <div className="mt-3 grid gap-2">
+              {difficultyProfile && difficultyProfile.variants.length > 1 && (
+                <label className="grid gap-1.5 text-xs font-semibold text-muted-foreground">
+                  {t("trainTrade.stationTool.planner.stationMixHeading")}
+                  <select
+                    value={difficultyProfile.variants.findIndex((variant) => stationTotalsEqual(variant, totals))}
+                    onChange={(event) => {
+                      const variant = difficultyProfile.variants[Number(event.target.value)];
+                      if (variant) setTotals({ ...variant });
+                      resetForecast();
+                    }}
+                    className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value={-1}>{t("trainTrade.stationTool.planner.stationMixPlaceholder")}</option>
+                    {difficultyProfile.variants.map((variant, index) => (
+                      <option key={`${variant.winery}-${variant.food}-${variant.trade}`} value={index}>
+                        {t("trainTrade.stationTool.planner.stationMixOption", {
+                          winery: variant.winery,
+                          food: variant.food,
+                          trade: variant.trade,
+                        })}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {STATION_TYPES.map((type) => (
                 <label key={type} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center rounded-md border border-border bg-muted/25 px-3 py-2 text-sm font-semibold">
                   <span>{t(STATION_KEY[type])}</span>
@@ -231,6 +252,8 @@ export default function TrainTradeStationToolPage() {
                 ? ""
                 : quotaValid
                   ? t("trainTrade.stationTool.planner.quotaValid")
+                  : quotaTotal === stationCount
+                    ? t("trainTrade.stationTool.planner.quotaVariantInvalid")
                   : t("trainTrade.stationTool.planner.quotaInvalid", {
                       remaining: Math.abs(stationCount - quotaTotal),
                       current: quotaTotal,
@@ -238,14 +261,12 @@ export default function TrainTradeStationToolPage() {
             </p>
             <button
               type="button"
-              disabled={!quotaValid || generating}
+              disabled={!quotaValid}
               onClick={confirmQuota}
               className="mt-2 min-h-11 w-full rounded-md border border-[color:var(--arkive-nav-accent)] bg-[color:var(--arkive-nav-accent)] px-3 text-sm font-semibold text-primary-foreground transition-colors enabled:hover:opacity-90 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted disabled:text-muted-foreground"
               data-testid="planner-confirm-quota"
             >
-              {generating
-                ? t("trainTrade.stationTool.planner.generating")
-                : quotaConfirmed
+              {quotaConfirmed
                   ? t("trainTrade.stationTool.planner.quotaConfirmed")
                   : t("trainTrade.stationTool.planner.quotaConfirm")}
             </button>
@@ -269,59 +290,59 @@ export default function TrainTradeStationToolPage() {
             </button>
           </div>
 
-          <div className="mt-4 grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] gap-2" aria-label={t("trainTrade.stationTool.planner.stationProgress")}> 
-            <button
-              type="button"
-              disabled={visibleOffset === 0}
-              onClick={() => setStationOffset(Math.max(0, visibleOffset - 1))}
-              className="grid min-h-14 place-items-center rounded-md border border-border text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-35"
-              aria-label={t("trainTrade.stationTool.planner.previousStations")}
-            >
-              <IconChevronLeft className="size-5" stroke={1.8} aria-hidden />
-            </button>
-            <div className="grid min-w-0 grid-cols-3 gap-2 sm:grid-cols-6" aria-label={t("trainTrade.stationTool.planner.stationRange", { start: visibleOffset + 1, end: visibleOffset + visibleCount })}>
-              {Array.from({ length: visibleCount }, (_, slot) => {
-                const index = visibleOffset + slot;
-                const type = confirmedStations.get(index);
-                const inForecastWindow = !type && currentIndex >= 0 && index >= currentIndex && index < currentIndex + 3;
-                return (
-                  <div
-                    key={index}
-                    className={`flex min-h-14 min-w-0 flex-col items-center justify-center rounded-md border px-1 text-center ${type ? STATION_TONE[type] : inForecastWindow ? "border-[color:var(--arkive-nav-accent)] bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]" : "border-border bg-muted/25 text-muted-foreground"}`}
-                  >
-                    <strong className="text-sm tabular-nums">{index + 1}</strong>
-                    <small className="max-w-full truncate text-xs">
-                      {type
-                        ? t(STATION_KEY[type])
-                        : inForecastWindow
-                          ? t("trainTrade.stationTool.planner.stationForecasted")
-                          : t("trainTrade.stationTool.planner.stationPending")}
-                    </small>
-                  </div>
-                );
-              })}
+          {stationCount > 0 && (
+            <div className="mt-4 grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] gap-2" aria-label={t("trainTrade.stationTool.planner.stationProgress")}>
+              <button
+                type="button"
+                disabled={visibleOffset === 0}
+                onClick={() => setStationOffset(Math.max(0, visibleOffset - 1))}
+                className="grid min-h-14 place-items-center rounded-md border border-border text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-35"
+                aria-label={t("trainTrade.stationTool.planner.previousStations")}
+              >
+                <IconChevronLeft className="size-5" stroke={1.8} aria-hidden />
+              </button>
+              <div className="grid min-w-0 grid-cols-3 gap-2 sm:grid-cols-6" aria-label={t("trainTrade.stationTool.planner.stationRange", { start: visibleOffset + 1, end: visibleOffset + visibleCount })}>
+                {Array.from({ length: visibleCount }, (_, slot) => {
+                  const index = visibleOffset + slot;
+                  const type = confirmedStations.get(index);
+                  const inForecastWindow = !type && currentIndex >= 0 && index >= currentIndex && index < currentIndex + 3;
+                  return (
+                    <div
+                      key={index}
+                      className={`flex min-h-14 min-w-0 flex-col items-center justify-center rounded-md border px-1 text-center ${type ? STATION_TONE[type] : inForecastWindow ? "border-[color:var(--arkive-nav-accent)] bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]" : "border-border bg-muted/25 text-muted-foreground"}`}
+                    >
+                      <strong className="text-sm tabular-nums">{index + 1}</strong>
+                      <small className="max-w-full truncate text-xs">
+                        {type
+                          ? t(STATION_KEY[type])
+                          : inForecastWindow
+                            ? t("trainTrade.stationTool.planner.stationForecasted")
+                            : t("trainTrade.stationTool.planner.stationPending")}
+                      </small>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                disabled={visibleOffset === maxOffset}
+                onClick={() => setStationOffset(Math.min(maxOffset, visibleOffset + 1))}
+                className="grid min-h-14 place-items-center rounded-md border border-border text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-35"
+                aria-label={t("trainTrade.stationTool.planner.nextStations")}
+              >
+                <IconChevronRight className="size-5" stroke={1.8} aria-hidden />
+              </button>
             </div>
-            <button
-              type="button"
-              disabled={visibleOffset === maxOffset}
-              onClick={() => setStationOffset(Math.min(maxOffset, visibleOffset + 1))}
-              className="grid min-h-14 place-items-center rounded-md border border-border text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-35"
-              aria-label={t("trainTrade.stationTool.planner.nextStations")}
-            >
-              <IconChevronRight className="size-5" stroke={1.8} aria-hidden />
-            </button>
-          </div>
+          )}
 
-          {!quotaConfirmed || sequences.length === 0 ? (
+          {!routeModel || routeModel.count === 0 ? (
             <div className="grid min-h-64 place-items-center text-center text-sm font-semibold text-muted-foreground">
-              {generating
-                ? t("trainTrade.stationTool.planner.generating")
-                : t("trainTrade.stationTool.planner.forecastStart")}
+              {t("trainTrade.stationTool.planner.forecastStart")}
             </div>
           ) : !originHint ? (
             <OriginPrompt
               pendingHint={pendingHint}
-              sequences={sequences}
+              routeModel={routeModel}
               onHintChange={setPendingHint}
               onConfirm={() => {
                 if (!pendingHint) return;
@@ -335,7 +356,7 @@ export default function TrainTradeStationToolPage() {
               steps={steps}
               pendingCurrent={pendingCurrent}
               pendingHint={pendingHint}
-              possibleSequences={possibleSequences}
+              routeModel={routeModel}
               stationCount={stationCount}
               onCurrentChange={setPendingCurrent}
               onHintChange={setPendingHint}
@@ -406,17 +427,17 @@ export default function TrainTradeStationToolPage() {
 
 function OriginPrompt({
   pendingHint,
-  sequences,
+  routeModel,
   onHintChange,
   onConfirm,
 }: {
   pendingHint: HintId | "";
-  sequences: Sequence[];
+  routeModel: RouteModel;
   onHintChange: (hint: HintId | "") => void;
   onConfirm: () => void;
 }) {
   const { t } = useTranslation();
-  const availableHints = getAvailableHints(sequences, 0);
+  const availableHints = getAvailableHints(routeModel, 0);
 
   return (
     <div className="mt-5 border-l-2 border-[color:var(--arkive-nav-accent)] bg-muted/20 p-4" data-testid="planner-origin-prompt">
@@ -451,7 +472,7 @@ function ForecastWorkspace({
   steps,
   pendingCurrent,
   pendingHint,
-  possibleSequences,
+  routeModel,
   stationCount,
   onCurrentChange,
   onHintChange,
@@ -461,7 +482,7 @@ function ForecastWorkspace({
   steps: ConfirmedStep[];
   pendingCurrent: StationType | "";
   pendingHint: HintId | "";
-  possibleSequences: Sequence[];
+  routeModel: RouteModel;
   stationCount: number;
   onCurrentChange: (type: StationType | "") => void;
   onHintChange: (hint: HintId | "") => void;
@@ -469,25 +490,27 @@ function ForecastWorkspace({
 }) {
   const { t } = useTranslation();
   const latestStart = steps.length;
-  const latestStep = steps.at(-1);
   const complete = steps.length >= stationCount - 3;
   const certainCurrent = STATION_TYPES.find(
-    (type) => possibleSequences.length > 0 && possibleSequences.every((sequence) => sequence[steps.length] === type),
+    (type) => routeModel.count > 0 && probabilityFor(routeModel, steps.length)[type] === 1,
   );
   const effectiveCurrent = certainCurrent ?? pendingCurrent;
-  const hintCandidates = prospectiveSequences(possibleSequences, steps.length, effectiveCurrent, "");
-  const availableHints = getAvailableHints(hintCandidates, steps.length + 1);
-  const candidateCount = effectiveCurrent && pendingHint
-    ? prospectiveSequences(possibleSequences, steps.length, effectiveCurrent, pendingHint).length
-    : possibleSequences.length;
-  const latestDetail = latestStep
-      ? t("trainTrade.stationTool.planner.currentDetail", {
-        station: t(STATION_KEY[latestStep.currentType]),
-        hint: t(`trainTrade.stationTool.planner.hint.${latestStep.hintId}`),
-      })
+  const availableHints = getAvailableHints(routeModel, steps.length + 1, steps.length, effectiveCurrent);
+  const candidateCount = prospectiveRouteCount(
+    routeModel,
+    steps.length,
+    effectiveCurrent,
+    steps.length + 1,
+    pendingHint,
+  );
+  const latestDetail = steps.at(-1)
+    ? t("trainTrade.stationTool.planner.currentDetail", {
+      station: t(STATION_KEY[steps.at(-1)!.currentType]),
+      hint: t(`trainTrade.stationTool.planner.hint.${steps.at(-1)!.hintId}`),
+    })
     : t("trainTrade.stationTool.planner.originHintDetail", {
-        hint: t(`trainTrade.stationTool.planner.hint.${originHint}`),
-      });
+      hint: t(`trainTrade.stationTool.planner.hint.${originHint}`),
+    });
 
   return (
     <div className="mt-5 space-y-4">
@@ -540,7 +563,7 @@ function ForecastWorkspace({
         </div>
       )}
 
-      <ResolvedWindow sequences={possibleSequences} start={latestStart} detail={latestDetail} />
+      <ResolvedWindow routeModel={routeModel} start={latestStart} detail={latestDetail} />
 
       {complete && (
         <p className="border-l-2 border-emerald-500 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
@@ -581,12 +604,12 @@ function HintSelect({
   );
 }
 
-function ResolvedWindow({ sequences, start, detail }: { sequences: Sequence[]; start: number; detail: string }) {
+function ResolvedWindow({ routeModel, start, detail }: { routeModel: RouteModel; start: number; detail: string }) {
   const { t } = useTranslation();
-  const probabilities = roundedProbabilities(probabilityFor(sequences, start));
+  const probabilities = roundedProbabilities(probabilityFor(routeModel, start));
   const leading = Math.max(...STATION_TYPES.map((type) => probabilities[type]));
-  const combinations = windowDistribution(sequences, start);
-  const combinationTotal = sequences.length || 1;
+  const combinations = windowDistribution(routeModel, start);
+  const combinationTotal = routeModel.count || 1;
 
   return (
     <section className="border-t-2 border-[color:var(--arkive-nav-accent)] pt-4" aria-labelledby="planner-probability-title">
@@ -639,129 +662,4 @@ function StepNumber({ value }: { value: number }) {
       {value}
     </span>
   );
-}
-
-export function enumerateSequences(totals: StationTotals, totalStops: number): Sequence[] {
-  const result: Sequence[] = [];
-  const remaining = { ...totals };
-  const current: StationType[] = [];
-
-  const visit = () => {
-    if (current.length === totalStops) {
-      result.push(current.slice());
-      return;
-    }
-    STATION_TYPES.forEach((type) => {
-      if (!remaining[type]) return;
-      remaining[type] -= 1;
-      current.push(type);
-      visit();
-      current.pop();
-      remaining[type] += 1;
-    });
-  };
-
-  visit();
-  return result;
-}
-
-function matchesHint(sequence: Sequence, start: number, hintId: HintId) {
-  const counts: StationTotals = { winery: 0, food: 0, trade: 0 };
-  sequence.slice(start, start + 3).forEach((type) => {
-    counts[type] += 1;
-  });
-  if (hintId === "equal") return STATION_TYPES.every((type) => counts[type] === 1);
-  const winner = hintId.replace("-most", "") as StationType;
-  return counts[winner] >= 2;
-}
-
-function filterSequences(sequences: Sequence[], originHint: HintId | "", steps: ConfirmedStep[]) {
-  return sequences.filter((sequence) => {
-    if (originHint && !matchesHint(sequence, 0, originHint)) return false;
-    return steps.every(
-      (step, index) => sequence[index] === step.currentType && matchesHint(sequence, index + 1, step.hintId),
-    );
-  });
-}
-
-function prospectiveSequences(
-  possibleSequences: Sequence[],
-  index: number,
-  currentType: StationType | "",
-  pendingHint: HintId | "",
-) {
-  return possibleSequences.filter((sequence) => {
-    if (currentType && sequence[index] !== currentType) return false;
-    if (pendingHint && !matchesHint(sequence, index + 1, pendingHint)) return false;
-    return true;
-  });
-}
-
-function getAvailableHints(sequences: Sequence[], start: number) {
-  return new Set(
-    HINT_IDS.filter((hint) => sequences.some((sequence) => matchesHint(sequence, start, hint))),
-  );
-}
-
-function probabilityFor(sequences: Sequence[], position: number): StationTotals {
-  const counts: StationTotals = { winery: 0, food: 0, trade: 0 };
-  sequences.forEach((sequence) => {
-    const type = sequence[position];
-    if (type) counts[type] += 1;
-  });
-  const total = sequences.length || 1;
-  return {
-    winery: counts.winery / total,
-    food: counts.food / total,
-    trade: counts.trade / total,
-  };
-}
-
-function roundedProbabilities(probability: StationTotals): StationTotals {
-  const raw = STATION_TYPES.map((type) => probability[type] * 100);
-  const values = raw.map(Math.floor);
-  let remainder = 100 - values.reduce((sum, value) => sum + value, 0);
-  raw
-    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
-    .sort((left, right) => right.fraction - left.fraction)
-    .forEach(({ index }) => {
-      if (remainder <= 0) return;
-      values[index] += 1;
-      remainder -= 1;
-    });
-  return {
-    winery: values[0],
-    food: values[1],
-    trade: values[2],
-  };
-}
-
-function windowDistribution(sequences: Sequence[], start: number) {
-  const counts = new Map<string, number>();
-  sequences.forEach((sequence) => {
-    const key = sequence.slice(start, start + 3).join(",");
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  });
-  return [...counts.entries()].sort((left, right) => right[1] - left[1]);
-}
-
-function getConfirmedStations(
-  possibleSequences: Sequence[],
-  originHint: HintId | "",
-  steps: ConfirmedStep[],
-  stationCount: number,
-) {
-  const confirmed = new Map<number, StationType>(
-    steps.map((step, index) => [index, step.currentType]),
-  );
-  if (!possibleSequences.length || !originHint) return confirmed;
-  const starts = [0, ...steps.map((_, index) => index + 1)];
-  starts.flatMap((start) => [start, start + 1, start + 2]).forEach((position) => {
-    if (confirmed.has(position) || position >= stationCount) return;
-    const type = STATION_TYPES.find((candidate) =>
-      possibleSequences.every((sequence) => sequence[position] === candidate),
-    );
-    if (type) confirmed.set(position, type);
-  });
-  return confirmed;
 }
