@@ -258,7 +258,7 @@
     {
       "version": "0.13.1",
       "date": "2026-09-03",
-      "commit": "17624aaec3579c9b7f510d4ca183ec165c5a3365",
+      "commit": "17624aaec3579c9b7f510d4ca183ce165c5a3365",
       "changes": [
         {
           "kind": "fix",
