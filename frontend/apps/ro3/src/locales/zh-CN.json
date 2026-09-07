@@ -53,6 +53,9 @@
     "wiki": "百科",
     "map": "互动地图"
   },
+  "builds": {
+    "title": "流派手册"
+  },
   "filters": {
     "eyebrow": "筛选攻略",
     "title": "看看大家怎么玩",
@@ -133,7 +136,9 @@
       "talents": "天赋系统",
       "cards": "卡片图鉴",
       "pets": "宠物图鉴",
-      "monsters": "魔物图鉴"
+      "monsters": "魔物图鉴",
+      "equipment": "装备图鉴",
+      "souls": "灵魂残响"
     },
     "professions": {
       "lineLabel": "职业系",
@@ -141,6 +146,7 @@
       "searchLabel": "搜索当前阶段技能",
       "searchPlaceholder": "搜索技能名称或编号",
       "rank": "第 {rank} 阶段",
+      "advancementLabels": ["一转", "二转", "进阶二转", "三转"],
       "newSkills": "新增 {count} 项",
       "skillsTitle": "阶段可选技能",
       "newOnly": "本阶段新增",

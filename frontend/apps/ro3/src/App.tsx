@@ -11,10 +11,12 @@ import {
   MapPinned,
   MessageCircle,
   Ghost,
+  Gem,
   PawPrint,
   Search,
   SlidersHorizontal,
   Sparkles,
+  Shield,
   Swords,
   Wrench,
   X,
@@ -38,6 +40,9 @@ import { loadWikiData, type WikiData } from './wikiData'
 import { MonsterWiki, PetWiki } from './CreatureWiki'
 import { ProfessionWiki } from './ProfessionWiki'
 import { TalentWiki } from './TalentWiki'
+import { EquipmentWiki } from './EquipmentWiki'
+import { SoulWiki } from './SoulWiki'
+import { BuildPlanner } from './BuildPlanner'
 import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
 import emptyImage from './assets/ro3-guide-empty.webp'
@@ -109,8 +114,8 @@ const GUIDES: GuideEntry[] = []
 
 type DestinationKey = keyof typeof DESTINATIONS
 type IconComponent = ComponentType<{ 'aria-hidden'?: boolean | 'true' }>
-type Page = 'overview' | 'wiki' | 'changelog'
-type WikiView = 'skills' | 'talents' | 'cards' | 'pets' | 'monsters'
+type Page = 'overview' | 'wiki' | 'builds' | 'changelog'
+type WikiView = 'skills' | 'talents' | 'cards' | 'pets' | 'monsters' | 'equipment' | 'souls'
 
 // Bare `/` opens the encyclopedias rather than the guide hub: the hub has no
 // guides yet, so it would land every visitor on an empty state while the
@@ -118,12 +123,13 @@ type WikiView = 'skills' | 'talents' | 'cards' | 'pets' | 'monsters'
 // its own, or reload and deep links would silently bounce back to the wiki.
 function getInitialPage(): Page {
   if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return 'changelog'
-  return new URLSearchParams(window.location.search).get('view') === 'overview' ? 'overview' : 'wiki'
+  const view = new URLSearchParams(window.location.search).get('view')
+  return view === 'overview' ? 'overview' : view === 'builds' ? 'builds' : 'wiki'
 }
 
 function getInitialWikiView(): WikiView {
   const value = new URLSearchParams(window.location.search).get('wiki')
-  return value === 'talents' || value === 'cards' || value === 'pets' || value === 'monsters' ? value : 'skills'
+  return value === 'talents' || value === 'cards' || value === 'pets' || value === 'monsters' || value === 'equipment' || value === 'souls' ? value : 'skills'
 }
 
 function App() {
@@ -137,7 +143,7 @@ function App() {
   const [sort, setSort] = useState<GuideSort>('latest')
   const [noticeId, setNoticeId] = useState(0)
 
-  const navItems: ShellNavItem[] = useMemo(() => content.navigation.map((item) => {
+  const navItems: ShellNavItem[] = useMemo(() => [{ key: 'builds', label: content.builds.title, active: page === 'builds' }, ...content.navigation.map((item) => {
     if (item.key !== 'wiki') {
       return { key: item.key, label: item.label, active: item.key === page }
     }
@@ -171,9 +177,19 @@ function App() {
           label: content.wiki.tabs.monsters,
           active: page === 'wiki' && wikiView === 'monsters',
         },
+        {
+          key: 'wiki-equipment',
+          label: content.wiki.tabs.equipment,
+          active: page === 'wiki' && wikiView === 'equipment',
+        },
+        {
+          key: 'wiki-souls',
+          label: content.wiki.tabs.souls,
+          active: page === 'wiki' && wikiView === 'souls',
+        },
       ],
     }
-  }), [page, wikiView])
+  })], [page, wikiView])
 
   useEffect(() => {
     document.title = page === 'wiki'
@@ -233,6 +249,9 @@ function App() {
     } else if (nextPage === 'wiki') {
       url.searchParams.set('view', 'wiki')
       url.searchParams.set('wiki', nextWikiView)
+    } else if (nextPage === 'builds') {
+      url.searchParams.set('view', 'builds')
+      url.searchParams.delete('wiki')
     } else if (nextPage === 'overview') {
       url.searchParams.set('view', 'overview')
       url.searchParams.delete('wiki')
@@ -270,6 +289,10 @@ function App() {
       navigateToPage('overview')
       return
     }
+    if (key === 'builds') {
+      navigateToPage('builds')
+      return
+    }
     if (key === 'classes' || key === 'dungeons') {
       if (page !== 'overview') navigateToPage('overview')
       setScope(key === 'classes' ? 'class' : 'dungeon')
@@ -294,6 +317,14 @@ function App() {
     }
     if (key === 'wiki-monsters') {
       openWiki('monsters')
+      return
+    }
+    if (key === 'wiki-equipment') {
+      openWiki('equipment')
+      return
+    }
+    if (key === 'wiki-souls') {
+      openWiki('souls')
       return
     }
     if (key in DESTINATIONS) openDestination(key as DestinationKey)
@@ -369,6 +400,8 @@ function App() {
 
       {page === 'wiki' ? (
         <WikiPage view={wikiView} onViewChange={openWiki} />
+      ) : page === 'builds' ? (
+        <main className="ro3-builds-page"><BuildPlanner onUnavailable={showUnavailable} /></main>
       ) : page === 'changelog' ? (
         <ChangelogPage onBack={() => navigateToPage('wiki')} />
       ) : (
@@ -625,6 +658,8 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
         <button type="button" className={view === 'cards' ? 'is-active' : undefined} aria-current={view === 'cards' ? 'page' : undefined} onClick={() => onViewChange('cards')}><BookOpen aria-hidden="true" />{content.wiki.tabs.cards}</button>
         <button type="button" className={view === 'pets' ? 'is-active' : undefined} aria-current={view === 'pets' ? 'page' : undefined} onClick={() => onViewChange('pets')}><PawPrint aria-hidden="true" />{content.wiki.tabs.pets}</button>
         <button type="button" className={view === 'monsters' ? 'is-active' : undefined} aria-current={view === 'monsters' ? 'page' : undefined} onClick={() => onViewChange('monsters')}><Ghost aria-hidden="true" />{content.wiki.tabs.monsters}</button>
+        <button type="button" className={view === 'equipment' ? 'is-active' : undefined} aria-current={view === 'equipment' ? 'page' : undefined} onClick={() => onViewChange('equipment')}><Shield aria-hidden="true" />{content.wiki.tabs.equipment}</button>
+        <button type="button" className={view === 'souls' ? 'is-active' : undefined} aria-current={view === 'souls' ? 'page' : undefined} onClick={() => onViewChange('souls')}><Gem aria-hidden="true" />{content.wiki.tabs.souls}</button>
       </nav>
       {view === 'skills' ? <ProfessionWiki /> : view === 'talents' ? <TalentWiki /> : view === 'cards' ? (
         <CardWiki
@@ -638,7 +673,7 @@ function WikiPage({ view, onViewChange }: { view: WikiView; onViewChange: (view:
           onFiltersChange={setCardFilters}
           onSelect={setSelectedCard}
         />
-      ) : view === 'pets' ? <PetWiki /> : <MonsterWiki />}
+      ) : view === 'pets' ? <PetWiki /> : view === 'monsters' ? <MonsterWiki /> : view === 'equipment' ? <EquipmentWiki /> : <SoulWiki />}
     </main>
   )
 }

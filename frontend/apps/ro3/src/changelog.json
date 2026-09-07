@@ -1,16 +1,466 @@
 {
   "entries": [
     {
-      "version": "0.8.1",
-      "date": "2026-09-07",
-      "commit": "abd43752b187f662d5e35ec6e25310d4351c04f0",
+      "version": "0.14.16",
+      "date": "2026-09-04",
+      "commit": "3d1337392473d8b33287bdae3ba625469fb4f43b",
       "changes": [
         {
           "kind": "fix",
           "text": {
-            "en-US": "The skill encyclopedia now has one clean address you can share and reload, instead of two links for the same page.",
-            "zh-CN": "职业技能图鉴现在只有一个简洁地址，可分享、可刷新，不再出现同一页面两个链接的情况。",
-            "zh-TW": "職業技能圖鑑現在只有一個簡潔網址，可分享、可重新整理，不再出現同一頁面兩個連結的情況。"
+            "en-US": "Enlarge the four-note soul resonance strip for clearer in-game readability.",
+            "zh-CN": "放大灵魂残响底部四格音符条，提升与游戏内一致的辨识度。",
+            "zh-TW": "放大靈魂殘響底部四格音符條，提升與遊戲內一致的辨識度。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.15",
+      "date": "2026-09-04",
+      "commit": "62012087ceff8de8dd1eaac1f1535c0c170f8975",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Align pet rows and standardize square icon frames across the build manual.",
+            "zh-CN": "对齐宠物上下两行，并统一流派手册中技能、装备、天赋、宠物、卡片和灵魂残响的正方形图标框。",
+            "zh-TW": "對齊寵物上下兩行，並統一流派手冊中技能、裝備、天賦、寵物、卡片與靈魂殘響的正方形圖示框。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.14",
+      "date": "2026-09-03",
+      "commit": "f7987ebe0bddb02d66cb29b49abea4cc0d1e203b",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Use the game talent icons in build editor selections.",
+            "zh-CN": "在流派编辑器中使用游戏包体的天赋图标。",
+            "zh-TW": "在流派編輯器中使用遊戲包體的天賦圖示。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.13",
+      "date": "2026-09-03",
+      "commit": "d8d82f8a4ca94d78655c6559902422fa16526d32",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Expanded the build card grid with larger native-style cards, clearer group spacing, and frame-aligned soul notes.",
+            "zh-CN": "放大流派手册卡片并恢复原生分组间距，同时让灵魂残响音符条与卡框对齐。",
+            "zh-TW": "放大流派手冊卡片並恢復原生分組間距，同時讓靈魂殘響音符條與卡框對齊。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.12",
+      "date": "2026-09-03",
+      "commit": "2e9b0fb61f65353a9c5831a20df907bf4ac60902",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Paired equipment with talents and pets with cards while matching soul note strips to their frames.",
+            "zh-CN": "将装备与天赋、宠物与卡片分别对齐，并让灵魂残响音符条与卡框等宽。",
+            "zh-TW": "將裝備與天賦、寵物與卡片分別對齊，並讓靈魂殘響音符條與卡框等寬。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.11",
+      "date": "2026-09-03",
+      "commit": "039bfe449c99505263aac04996b0df631d2259b9",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned the build manual sections, pet combat summary, slot spacing, and native title treatments with the client layout.",
+            "zh-CN": "按客户端布局校准流派手册分区、宠物出战效果、槽位间距和原生标题样式。",
+            "zh-TW": "依照客戶端佈局校準流派手冊分區、寵物出戰效果、槽位間距和原生標題樣式。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.10",
+      "date": "2026-09-03",
+      "commit": "aeac91394bc157dcc796103947a9c99c6fb46628",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Named profession advancement stages as first, second, advanced second, and third class changes.",
+            "zh-CN": "将职业阶段明确标注为一转、二转、进阶二转和三转。",
+            "zh-TW": "將職業階段明確標註為一轉、二轉、進階二轉和三轉。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.9",
+      "date": "2026-09-03",
+      "commit": "8878c08f5a85c632204a85127963fa25e29987b7",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Refined pet frames, talent node art, resonance note strips, and zero-gap equipment and card rows.",
+            "zh-CN": "优化宠物方框头像、天赋节点素材、残响音符条，并让装备和卡片无缝排列。",
+            "zh-TW": "優化寵物方框頭像、天賦節點素材、殘響音符條，並讓裝備和卡片無縫排列。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.8",
+      "date": "2026-09-03",
+      "commit": "951edcfc30f09f7035542fdc9ff4dcb0b053ff33",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned build manual skill levels, quality frames, attribute icons, pet portraits, and soul resonance layout with the client UI.",
+            "zh-CN": "校准流派手册中的技能等级、品质框、属性图标、宠物头像和灵魂残响布局，使其更贴近客户端界面。",
+            "zh-TW": "校準流派手冊中的技能等級、品質框、屬性圖示、寵物頭像和靈魂殘響佈局，使其更貼近客戶端介面。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.7",
+      "date": "2026-09-03",
+      "commit": "3f4f5d1336df69667e27184a1f20d1b9d32c7f77",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Seeded the manual with client equipment, cards, pets, talents, souls, and varied pet artwork for an authentic in-game first view.",
+            "zh-CN": "首次进入流派手册时使用客户端装备、卡片、宠物、天赋、残响数据，并展示不同宠物原画。",
+            "zh-TW": "首次進入流派手冊時使用客戶端裝備、卡片、寵物、天賦、殘響資料，並展示不同寵物原畫。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.6",
+      "date": "2026-09-03",
+      "commit": "432c824112fddb4f6bdca882edf9c1589c067517",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Extended the build manual with the client background texture and side-by-side pet and soul resonance summaries.",
+            "zh-CN": "补充客户端流派手册背景纹理，并将宠物效果与灵魂共鸣摘要调整为游戏内并排布局。",
+            "zh-TW": "補充客戶端流派手冊背景紋理，並將寵物效果與靈魂共鳴摘要調整為遊戲內並排佈局。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.5",
+      "date": "2026-09-03",
+      "commit": "125f272de72a7409286202524e0be8c1c4e85635",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched build manual panel heights and native pet, card, talent, and soul resonance arrangements to the client layout.",
+            "zh-CN": "按客户端布局对齐流派手册面板高度，并还原宠物、卡片、天赋与灵魂共鸣区域。",
+            "zh-TW": "依照客戶端佈局對齊流派手冊面板高度，並還原寵物、卡片、天賦與靈魂共鳴區域。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.4",
+      "date": "2026-09-03",
+      "commit": "bc2918f56589cff46758f5a539852a82e9568714",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Applied extracted Ragnarok 3 GenreManual UI assets to build viewer slots and information panels.",
+            "zh-CN": "将解包的仙境传说 3 流派手册原生 UI 应用于 BD 查看页槽位与信息面板。",
+            "zh-TW": "將解包的仙境傳說 3 流派手冊原生 UI 應用於 BD 查看頁槽位與資訊面板。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.3",
+      "date": "2026-09-03",
+      "commit": "44027b143f593e2fb2bc0ed3326f223b876ebaa8",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Matched the fixed three-row card socket arrangement from the in-client build manual.",
+            "zh-CN": "按游戏内流派手册恢复固定三行卡片槽位布局。",
+            "zh-TW": "依照遊戲內流派手冊恢復固定三行卡片槽位佈局。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.2",
+      "date": "2026-09-03",
+      "commit": "1b6c7174caeb4a36998f78401b502923bcbe5f0a",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned the build manual with the in-client layout, equipment row, socket groups, and visible pet and soul effects.",
+            "zh-CN": "对齐流派手册布局，修正横向装备栏与真实卡槽分组，并显示宠物和残响效果。",
+            "zh-TW": "對齊流派手冊佈局，修正橫向裝備欄與真實卡槽分組，並顯示寵物和殘響效果。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.1",
+      "date": "2026-09-03",
+      "commit": "16bdee37ed5226e14b3a65f7cb466998a03416b1",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed the viewer sidebar, added an always-visible build switcher, and fixed first-column hover panels so item details remain fully visible.",
+            "zh-CN": "移除查看页左侧栏，增加始终可见的流派切换，并修复首列悬停详情面板被裁剪的问题。",
+            "zh-TW": "移除查看頁左側欄，增加始終可見的流派切換，並修復首列懸停詳情面板被裁剪的問題。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.14.0",
+      "date": "2026-09-03",
+      "commit": "9260a1607b078a2f38a89ba6060cadf21026e6f2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rebuilt the build viewer as a compact, game-style two-column manual with six skill slots, equipment and card grids, pet parties, talents, soul echoes, and client-data hover details.",
+            "zh-CN": "重构 BD 查看页为紧凑的游戏风格双栏流派手册：技能六格、装备与卡片网格、宠物队伍、天赋、灵魂残响及客户端数据悬浮详情。",
+            "zh-TW": "重構 BD 查看頁為緊湊的遊戲風格雙欄流派手冊：技能六格、裝備與卡片網格、寵物隊伍、天賦、靈魂殘響及客戶端資料懸浮詳情。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.13.1",
+      "date": "2026-09-03",
+      "commit": "17624aaec3579c9b7f510d4ca183ce165c5a3365",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Expanded equipment hover cards with client-sourced quality, level, basic attributes, description, and selected entry details.",
+            "zh-CN": "完善装备悬浮信息：加入客户端品质、等级、基础属性、说明和已选词条。",
+            "zh-TW": "完善裝備懸浮信息：加入客戶端品質、等級、基礎屬性、說明和已選詞條。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.13.0",
+      "date": "2026-09-03",
+      "commit": "1f3938b4e5c4095e5138abd31c567c5d38cfef30",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added game-style build viewing details: six-skill preview with skill editing entry and hover cards for equipment, cards, pets, talents, and soul echoes.",
+            "zh-CN": "新增游戏风格的 BD 查看详情：技能默认展示 6 个并提供技能编辑入口，装备、卡片、宠物、天赋和灵魂残响支持悬停查看效果。",
+            "zh-TW": "新增遊戲風格的 BD 查看詳情：技能預設展示 6 個並提供技能編輯入口，裝備、卡片、寵物、天賦和靈魂殘響支援懸停查看效果。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.12.3",
+      "date": "2026-09-03",
+      "commit": "ae8a36a88113e5271f58f518dc70585f7975b8b9",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Reorganized equipment editing into compact slot cards with a game-styled modal for gear, quality, entries, and socketed cards.",
+            "zh-CN": "重组装备编辑界面：仅显示紧凑的部位卡片，点击后在游戏风格弹窗中配置装备、品质、词条和卡片。",
+            "zh-TW": "重組裝備編輯介面：僅顯示緊湊的部位卡片，點擊後在遊戲風格彈窗中配置裝備、品質、詞條和卡片。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.12.2",
+      "date": "2026-09-03",
+      "commit": "6f5749911ee3935ae440557254826ce0659d81d4",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Aligned archer equipment slots with the game client by using a single main-hand weapon slot without off-hand or shield selection.",
+            "zh-CN": "按游戏客户端规则调整弓箭手装备槽：仅保留主手武器，不再显示副手和盾牌选择。",
+            "zh-TW": "按遊戲客戶端規則調整弓箭手裝備槽：僅保留主手武器，不再顯示副手和盾牌選擇。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.12.1",
+      "date": "2026-09-02",
+      "commit": "d6d5594b6c869d99f96f0f4bf12fbcd6ac1d83ad",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed weapon entry selection for novice variants by inheriting the real entry pool from their visual equipment family.",
+            "zh-CN": "修复新手武器无法选择词条的问题，改为继承同视觉装备族的真实词条池。",
+            "zh-TW": "修復新手武器無法選擇詞條的問題，改為繼承同視覺裝備族的真實詞條池。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.12.0",
+      "date": "2026-09-02",
+      "commit": "cd8b2c557dcc2e475c0e6165f6b4f84f42d10914",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Reworked build editing around fixed equipment slots with visual gear selection, quality and entry configuration, plus separate combat and assist pet parties.",
+            "zh-CN": "重构职业 BD 编辑：按固定装备部位选择并预览真实装备图片，支持品质、词条和卡槽配置，并拆分出战与助战宠物队伍。",
+            "zh-TW": "重構職業 BD 編輯：按固定裝備部位選擇並預覽真實裝備圖片，支援品質、詞條和卡槽配置，並拆分出戰與助戰寵物隊伍。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.11.0",
+      "date": "2026-09-02",
+      "commit": "8d384f1fecbb2d90d6471782ba12e256a3f2b7b6",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added profession-aware build loadouts with route-filtered skills and equipment, editable gear entries, socketed cards, and soul resonance effects.",
+            "zh-CN": "新增按职业路线联动的 BD 配置：技能与装备自动过滤，支持装备品质、词条、部位卡槽、灵魂残响和职业共振效果。",
+            "zh-TW": "新增按職業路線聯動的 BD 配置：技能與裝備自動篩選，支援裝備品質、詞條、部位卡槽、靈魂殘響和職業共鳴效果。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.10.1",
+      "date": "2026-09-02",
+      "commit": "70b8e59e8e9c30b3f0d9f5f1840c239c2726e0f3",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Added search to every build editor catalogue so authors can select from the complete client dataset.",
+            "zh-CN": "为 BD 编辑器的每个数据选择器增加搜索，可从完整客户端数据中选择。",
+            "zh-TW": "為 BD 編輯器的每個資料選擇器增加搜尋，可從完整客戶端資料中選擇。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.10.0",
+      "date": "2026-09-02",
+      "commit": "0d876542654306b8b3d6989e656ea5fec5311145",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added a local build planner with viewer and editor workflows for skills, attributes, equipment, cards, pets, talents, and soul echoes.",
+            "zh-CN": "新增本地职业 BD 流派手册，支持查看和编辑技能、属性、装备、卡片、宠物、天赋与灵魂残响。",
+            "zh-TW": "新增本地職業 BD 流派手冊，支援查看與編輯技能、屬性、裝備、卡片、寵物、天賦與靈魂殘響。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.9.4",
+      "date": "2026-09-02",
+      "commit": "6d3a49dc3b75447c751133595b3bfe0118c73726",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Updated the equipment catalogue counter to reflect deduplicated visible entries.",
+            "zh-CN": "装备图鉴顶部统计改为显示去重后的实际条目数。",
+            "zh-TW": "裝備圖鑑頂部統計改為顯示去重後的實際條目數。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.9.3",
+      "date": "2026-09-02",
+      "commit": "aa2867dcbd18979071a6648998781e656c35fbdb",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Collapsed same-name equipment variants into one catalogue tile while retaining quality indicators.",
+            "zh-CN": "合并同名同外观的装备变体，保留品质标识，避免图鉴重复展示。",
+            "zh-TW": "合併同名同外觀的裝備變體，保留品質標示，避免圖鑑重複顯示。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.9.2",
+      "date": "2026-09-02",
+      "commit": "0039ad09028ea23bae1b1dd5d12782d0c90d7577",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Removed client placeholder equipment entries from the player-facing catalogue.",
+            "zh-CN": "移除玩家图鉴中的客户端占位装备条目。",
+            "zh-TW": "移除玩家圖鑑中的客戶端佔位裝備條目。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.9.1",
+      "date": "2026-09-02",
+      "commit": "94197d617e16a5c99806d600318d21f5126187aa",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Grouped equipment entries that share the same visual across qualities while preserving quality variants.",
+            "zh-CN": "合并不同品质下共用同一装备图标的重复条目，并保留品质信息。",
+            "zh-TW": "合併不同品質下共用同一裝備圖示的重複條目，並保留品質資訊。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.9.0",
+      "date": "2026-09-02",
+      "commit": "ff909c573732d73b2c7aad103cc858e3c6690feb",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added equipment and soul-resonance encyclopaedia pages with searchable client data.",
+            "zh-CN": "新增装备图鉴与灵魂残响百科，支持搜索筛选并查看客户端数据。",
+            "zh-TW": "新增裝備圖鑑與靈魂殘響百科，支援搜尋篩選並查看客戶端資料。"
           }
         }
       ]

@@ -127,6 +127,34 @@ def test_icon_path_matches_case_insensitively():
     assert ex.icon_path(icons, 0) is None
 
 
+def test_soul_rows_joins_emblem_identity_marks_and_attribute_pool():
+    text = ex.Text({"zh-CN": {"1": "Echo", "2": "Resonance"}})
+    data, counts = ex.soul_rows(
+        {"10": {"_iID": 10, "_iSeasonPower": 20, "_iSubAttributeGroup": 3,
+                 "_kPrimaryAttribute": [[101, 5, 5]], "_kPrimaryAttributeLvUp": [],
+                 "_kInitialMark": [[5, 1001]]}},
+        {"10": {"_iName": [1], "_iQuality": 5, "_kIcon": "echo.png"}},
+        {"1": {"_iID": 1, "_iEmblemMarkID": 1001, "_iMarkNum": 3,
+                "_iMarkStage": 1, "_kSpecialAttribute": [99],
+                "_kEmblemMarkPic": "mark.png"}},
+        {},
+        {"1": {"_iGroup": 3, "_iSubAttriID": 101, "_iMin": 2, "_iMax": 4}},
+        {"99": {"_iID": 99, "_iEffectDesc": [0], "_iEffectName": [0]}},
+        {"1": {"_iId": 1, "_iJobResonanceId": 1, "_iName": [2],
+                "_kAttribute": [], "_kJobResonancePic": "res.png"}},
+        {}, {}, {}, {},
+        {"101": {"_iID": 101, "_kVariable": "maxhp", "_iName": [1]}},
+        {"echo": "icons/souls/echo.webp", "mark": "icons/souls/mark.webp",
+         "res": "icons/souls/res.webp"},
+        text,
+    )
+    assert counts["souls"] == 1
+    assert data["souls"][0]["name"]["zh-CN"] == "Echo"
+    assert data["souls"][0]["marks"][0]["markId"] == 1001
+    assert data["souls"][0]["subAttributes"][0]["attributeId"] == 101
+    assert data["markEffects"][0]["iID"] == 99
+
+
 def test_placeholder_family_is_the_one_localization_implements():
     """Guards the note in equipment.json/talents.json against the module drifting."""
     from ro3 import localization
