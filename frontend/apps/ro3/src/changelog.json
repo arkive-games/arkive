@@ -288,7 +288,7 @@
     {
       "version": "0.12.3",
       "date": "2026-09-03",
-      "commit": "ae8a36a88113e5271f58f518dc70585f7975b8b",
+      "commit": "ae8a36a88113e5271f58f518dc70585f7975b8b9",
       "changes": [
         {
           "kind": "improvement",
@@ -348,7 +348,7 @@
     {
       "version": "0.11.0",
       "date": "2026-09-02",
-      "commit": "8d384f1fecbb2d90d6471782ba12e256a3f2b7b",
+      "commit": "8d384f1fecbb2d90d6471782ba12e256a3f2b7b6",
       "changes": [
         {
           "kind": "feature",
