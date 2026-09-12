@@ -878,6 +878,9 @@ const zhCN: Strings = {
   },
 }
 
+// The simulator's target is the guild being tested for qualification, not a generic roster target.
+zhCN.league.target = '晋级推演公会'
+
 const zhTW: Strings = {
   ...zhCN,
   siteTitle: '詭祕之主資料庫',
@@ -1306,6 +1309,8 @@ const zhTW: Strings = {
     "loading": "載入中…"
   },
 }
+
+zhTW.league.target = '晉級推演公會'
 
 const UI: Partial<Record<Language, Strings>> = { 'en-US': en, 'zh-CN': zhCN, 'zh-TW': zhTW }
 
