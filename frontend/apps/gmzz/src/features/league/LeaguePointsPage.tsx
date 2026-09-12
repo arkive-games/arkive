@@ -59,7 +59,18 @@ export default function LeaguePointsPage() {
         </div>
       </div>
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[1080px] table-fixed text-left text-sm">
+        <table className="min-w-max table-fixed text-left text-sm">
+          <colgroup>
+            <col className="w-36" />
+            <col className="w-44" />
+            <col className="w-44" />
+            <col className="w-24" />
+            <col className="w-44" />
+            <col className="w-44" />
+            <col className="w-24" />
+            <col className="w-28" />
+            <col className="w-12" />
+          </colgroup>
           <thead className="border-b border-border text-xs text-muted-foreground">
             <tr>
               <th className="w-32 px-2 py-2 align-bottom">{t('league.guild')}</th>
