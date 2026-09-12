@@ -59,23 +59,23 @@ export default function LeaguePointsPage() {
         </div>
       </div>
       <div className="mt-4 overflow-x-auto">
-        <table className="min-w-max table-fixed text-left text-sm">
+        <table className="w-max table-fixed text-left text-sm">
           <colgroup>
             <col className="w-36" />
-            <col className="w-44" />
-            <col className="w-44" />
             <col className="w-24" />
             <col className="w-44" />
+            <col className="w-24" />
+            <col className="w-24" />
             <col className="w-44" />
             <col className="w-24" />
-            <col className="w-28" />
+            <col className="w-24" />
           </colgroup>
           <thead className="border-b border-border text-xs text-muted-foreground">
             <tr>
               <th className="w-36 bg-slate-50 px-2 py-2 align-bottom dark:bg-slate-900/40">{t('league.guild')}</th>
-              {([1, 2] as WeekNumber[]).map((week) => <th key={week} className="bg-sky-50 px-2 py-2 align-bottom dark:bg-sky-950/20"><div className="flex min-w-32 flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
+              {([1, 2] as WeekNumber[]).map((week) => <th key={week} className="bg-sky-50 px-2 py-2 align-bottom dark:bg-sky-950/20"><div className="flex flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
               <th className="w-24 bg-sky-50 px-2 py-2 text-center align-bottom dark:bg-sky-950/20">{t('league.round1Total')}</th>
-              {([3, 4] as WeekNumber[]).map((week) => <th key={week} className="bg-violet-50 px-2 py-2 align-bottom dark:bg-violet-950/20"><div className="flex min-w-32 flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
+              {([3, 4] as WeekNumber[]).map((week) => <th key={week} className="bg-violet-50 px-2 py-2 align-bottom dark:bg-violet-950/20"><div className="flex flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
               <th className="w-24 bg-violet-50 px-2 py-2 text-center align-bottom dark:bg-violet-950/20">{t('league.round2Total')}</th>
               <th className="w-28 bg-amber-50 px-2 py-2 text-center align-bottom dark:bg-amber-950/20">{t('league.currentTotal')}</th>
             </tr>
