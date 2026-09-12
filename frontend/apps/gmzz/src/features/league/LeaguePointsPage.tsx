@@ -1,139 +1,60 @@
 import { useEffect, useMemo, useState } from 'react'
-import { IconArrowRight, IconInfoCircle, IconPlus, IconRefresh, IconTrash } from '@tabler/icons-react'
+import { IconInfoCircle, IconPlus, IconRefresh, IconTrash } from '@tabler/icons-react'
 import { Button, Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 import { ContentPage } from '@/components/ContentPage'
-import {
-  calculateScenario,
-  DEFAULT_GUILDS,
-  DEFAULT_RULES,
-  enumerateScenarios,
-  isValidRoster,
-  type LeagueGuild,
-  type LeagueRules,
-  type LeagueScenario,
-} from './league'
+import { calculateScenario, DEFAULT_GUILDS, DEFAULT_RULES, enumerateScenarios, isValidRoster, type LeagueGuild, type LeagueGroup, type LeagueRules, type LeagueScenario, type WeekNumber } from './league'
 
-const numberValue = (value: string, fallback = 0) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
+const numberValue = (value: string, fallback = 0) => { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : fallback }
+const ranks = [1, 2, 3, 4]
+
+function RankSelect({ value, onChange, label, disabled = false }: { value: number | null; onChange: (value: number | null) => void; label: string; disabled?: boolean }) {
+  return <select disabled={disabled} aria-label={label} value={value ?? ''} onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))} className="h-9 w-[4.5rem] rounded-md border border-border bg-background px-1 text-sm"><option value="">—</option>{ranks.map((rank) => <option key={rank} value={rank}>{rank}</option>)}</select>
 }
 
 function ScenarioLine({ scenario, targetId, t }: { scenario: LeagueScenario; targetId: string; t: (key: string, options?: Record<string, unknown>) => string }) {
   const target = scenario.results.find((result) => result.id === targetId)
   if (!target) return null
-  const winner = scenario.results.filter((result) => result.group === 'winner').sort((a, b) => a.globalRank - b.globalRank).map((result) => result.name).join('、')
-  const loser = scenario.results.filter((result) => result.group === 'loser').sort((a, b) => a.globalRank - b.globalRank).map((result) => result.name).join('、')
-  return (
-    <div className="rounded-md border border-border bg-background p-3 text-sm">
-      <div className="flex flex-wrap items-center gap-2 font-medium">
-        <span className={target.overallRank <= 4 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>
-          {t('league.rankValue', { rank: target.overallRank })}
-        </span>
-        <span>{target.name}</span>
-        <span className="text-muted-foreground">{target.finalPoints} {t('league.points')}</span>
-      </div>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">{t('league.winnerOrder')}: {winner}</p>
-      <p className="text-xs leading-5 text-muted-foreground">{t('league.loserOrder')}: {loser}</p>
-    </div>
-  )
+  return <div className="rounded-md border border-border bg-background p-3 text-sm"><div className="flex flex-wrap items-center gap-2 font-medium"><span className={target.finalRank <= 4 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}>{t('league.rankValue', { rank: target.finalRank })}</span><span>{target.name}</span><span className="text-muted-foreground">{target.finalPoints} {t('league.points')}</span></div><p className="mt-1 text-xs leading-5 text-muted-foreground">{t('league.weekPath')}: {([1, 2, 3, 4] as WeekNumber[]).map((week) => `${t('league.weekShort', { week })}#${scenario.assignments[targetId]?.[week] ?? '—'}`).join(' · ')}</p></div>
 }
 
 export default function LeaguePointsPage() {
   const { t } = useTranslation()
-  const [guilds, setGuilds] = useState<LeagueGuild[]>(DEFAULT_GUILDS)
-  const [rules, setRules] = useState<LeagueRules>(DEFAULT_RULES)
+  const [guilds, setGuilds] = useState<LeagueGuild[]>(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } })))
+  const [rules, setRules] = useState<LeagueRules>({ ...DEFAULT_RULES, matchPoints: [...DEFAULT_RULES.matchPoints], round1Bonuses: [...DEFAULT_RULES.round1Bonuses], round2Bonuses: [...DEFAULT_RULES.round2Bonuses] })
   const [targetId, setTargetId] = useState(DEFAULT_GUILDS[1].id)
 
   useEffect(() => { document.title = `${t('league.title')} - ${t('siteTitle')}` }, [t])
-
   const valid = isValidRoster(guilds)
-  const scenarios = useMemo(() => valid ? enumerateScenarios(guilds, rules) : [], [guilds, rules, valid])
-  const fixed = guilds.every((guild) => guild.groupRank !== null)
-  const currentScenario = useMemo(() => fixed && valid ? calculateScenario(guilds, rules) : null, [fixed, guilds, rules, valid])
-  const targetScenarios = scenarios.filter((scenario) => (scenario.results.find((result) => result.id === targetId)?.overallRank ?? Number.POSITIVE_INFINITY) <= rules.qualificationCount)
-  const targetRanks = [...new Set(scenarios.map((scenario) => scenario.results.find((result) => result.id === targetId)?.overallRank).filter((rank): rank is number => Boolean(rank)))].sort((a, b) => a - b)
-  const target = currentScenario?.results.find((result) => result.id === targetId)
+  const enumeration = useMemo(() => valid ? enumerateScenarios(guilds, rules, 7) : { scenarios: [], truncated: false }, [guilds, rules, valid])
+  const allScenarios = enumeration.scenarios
+  const targetTotal = guilds.find((guild) => guild.id === targetId)?.targetTotal
+  const matchingScenarios = targetTotal === null || targetTotal === undefined ? allScenarios : allScenarios.filter((scenario) => scenario.results.find((result) => result.id === targetId)?.finalPoints === targetTotal)
+  const targetRanks = [...new Set(allScenarios.map((scenario) => scenario.results.find((result) => result.id === targetId)?.finalRank).filter((rank): rank is number => Boolean(rank)))].sort((a, b) => a - b)
+  const fixed = guilds.every((guild) => [1, 2, 3, 4].every((week) => guild.weeks[week as WeekNumber].rank !== null))
+  const current = fixed && valid ? calculateScenario(guilds, rules) : null
 
   const updateGuild = (id: string, patch: Partial<LeagueGuild>) => setGuilds((items) => items.map((guild) => guild.id === id ? { ...guild, ...patch } : guild))
-  const updateRule = (key: 'matchPoints' | 'roundBonuses', index: number, value: string) => setRules((current) => ({ ...current, [key]: current[key].map((item, itemIndex) => itemIndex === index ? numberValue(value) : item) }))
-  const reset = () => { setGuilds(DEFAULT_GUILDS.map((guild) => ({ ...guild }))); setRules({ matchPoints: [...DEFAULT_RULES.matchPoints], roundBonuses: [...DEFAULT_RULES.roundBonuses], qualificationCount: 4 }); setTargetId(DEFAULT_GUILDS[1].id) }
+  const updateWeek = (id: string, weekNumber: WeekNumber, patch: Partial<LeagueGuild['weeks'][WeekNumber]>) => setGuilds((items) => items.map((guild) => guild.id === id ? { ...guild, weeks: { ...guild.weeks, [weekNumber]: { ...guild.weeks[weekNumber], ...patch } } } : guild))
+  const updateRule = (key: 'matchPoints' | 'round1Bonuses' | 'round2Bonuses', index: number, value: string) => setRules((currentRules) => ({ ...currentRules, [key]: currentRules[key].map((item, itemIndex) => itemIndex === index ? numberValue(value) : item) }))
+  const reset = () => { setGuilds(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } }))); setRules({ ...DEFAULT_RULES, matchPoints: [...DEFAULT_RULES.matchPoints], round1Bonuses: [...DEFAULT_RULES.round1Bonuses], round2Bonuses: [...DEFAULT_RULES.round2Bonuses] }); setTargetId(DEFAULT_GUILDS[1].id) }
 
-  return (
-    <ContentPage active="/tools/league-points" title={t('league.title')} wide>
-      <div className="space-y-5" data-testid="league-points-page">
-        <header className="border-b border-border pb-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('league.eyebrow')}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">{t('league.title')}</h1>
-          <p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">{t('league.description')}</p>
-        </header>
+  return <ContentPage active="/tools/league-points" title={t('league.title')} wide><div className="space-y-5" data-testid="league-points-page">
+    <header className="border-b border-border pb-4"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('league.eyebrow')}</p><h1 className="mt-1 text-3xl font-bold tracking-tight">{t('league.title')}</h1><p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">{t('league.description')}</p></header>
 
-        <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="font-semibold">{t('league.rulesTitle')}</h2>
-              <p className="mt-1 text-xs text-muted-foreground">{t('league.rulesHint')}</p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={reset}><IconRefresh size={16} />{t('league.reset')}</Button>
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div>
-              <h3 className="text-sm font-medium">{t('league.matchPoints')}</h3>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-                {rules.matchPoints.map((value, index) => <label key={index} className="text-xs text-muted-foreground">{t('league.place', { rank: index + 1 })}<Input type="number" min={0} value={value} onChange={(event) => updateRule('matchPoints', index, event.target.value)} className="mt-1 h-9" /></label>)}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium">{t('league.roundBonuses')}</h3>
-              <div className="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-8">
-                {rules.roundBonuses.map((value, index) => <label key={index} className="text-xs text-muted-foreground">{t('league.place', { rank: index + 1 })}<Input type="number" min={0} value={value} onChange={(event) => updateRule('roundBonuses', index, event.target.value)} className="mt-1 h-9" /></label>)}
-              </div>
-            </div>
-          </div>
-        </section>
+    <section className="rounded-lg border border-border bg-card p-4 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">{t('league.rulesTitle')}</h2><p className="mt-1 text-xs text-muted-foreground">{t('league.rulesHint')}</p></div><Button variant="ghost" size="sm" onClick={reset}><IconRefresh size={16} />{t('league.reset')}</Button></div><div className="mt-4 grid gap-4 lg:grid-cols-3"><RuleInputs title={t('league.matchPoints')} values={rules.matchPoints} onChange={(index, value) => updateRule('matchPoints', index, value)} t={t} /><RuleInputs title={t('league.round1Bonuses')} values={rules.round1Bonuses} onChange={(index, value) => updateRule('round1Bonuses', index, value)} t={t} /><RuleInputs title={t('league.round2Bonuses')} values={rules.round2Bonuses} onChange={(index, value) => updateRule('round2Bonuses', index, value)} t={t} /></div></section>
 
-        <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="font-semibold">{t('league.rosterTitle')}</h2><p className="mt-1 text-xs text-muted-foreground">{t('league.rosterHint')}</p></div>
-            <label className="flex items-center gap-2 text-sm"><span>{t('league.target')}</span><select value={targetId} onChange={(event) => setTargetId(event.target.value)} className="h-9 rounded-md border border-border bg-background px-2"><option value="">{t('league.chooseTarget')}</option>{guilds.map((guild) => <option key={guild.id} value={guild.id}>{guild.name}</option>)}</select></label>
-          </div>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left text-sm">
-              <thead className="border-b border-border text-xs text-muted-foreground"><tr><th className="px-2 py-2">{t('league.guild')}</th><th className="px-2 py-2">{t('league.currentPoints')}</th><th className="px-2 py-2">{t('league.group')}</th><th className="px-2 py-2">{t('league.groupRank')}</th><th className="px-2 py-2" /></tr></thead>
-              <tbody>
-                {guilds.map((guild) => <tr key={guild.id} className="border-b border-border/60 last:border-0">
-                  <td className="px-2 py-2"><Input aria-label={t('league.guild')} value={guild.name} onChange={(event) => updateGuild(guild.id, { name: event.target.value })} className="h-9 min-w-40" /></td>
-                  <td className="px-2 py-2"><Input aria-label={t('league.currentPoints')} type="number" min={0} value={guild.currentPoints} onChange={(event) => updateGuild(guild.id, { currentPoints: numberValue(event.target.value) })} className="h-9 w-28" /></td>
-                  <td className="px-2 py-2"><select value={guild.group} onChange={(event) => updateGuild(guild.id, { group: event.target.value as LeagueGuild['group'], groupRank: null })} className="h-9 rounded-md border border-border bg-background px-2"><option value="winner">{t('league.winner')}</option><option value="loser">{t('league.loser')}</option></select></td>
-                  <td className="px-2 py-2"><select value={guild.groupRank ?? ''} onChange={(event) => updateGuild(guild.id, { groupRank: event.target.value === '' ? null : Number(event.target.value) })} className="h-9 rounded-md border border-border bg-background px-2"><option value="">{t('league.unknown')}</option>{[1, 2, 3, 4].map((rank) => <option key={rank} value={rank}>{t('league.place', { rank })}</option>)}</select></td>
-                  <td className="px-2 py-2 text-right"><button type="button" aria-label={t('league.remove')} className="rounded p-2 text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setGuilds((items) => items.filter((item) => item.id !== guild.id))}><IconTrash size={16} /></button></td>
-                </tr>)}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Button variant="outline" size="sm" disabled={guilds.length >= 8} onClick={() => setGuilds((items) => [...items, { id: `guild-${Date.now()}`, name: t('league.newGuild'), currentPoints: 0, group: items.filter((item) => item.group === 'winner').length < 4 ? 'winner' : 'loser', groupRank: null }])}><IconPlus size={16} />{t('league.addGuild')}</Button>
-            {!valid ? <span className="text-xs text-amber-700 dark:text-amber-300"><IconInfoCircle size={14} className="mr-1 inline" />{t('league.rosterInvalid')}</span> : <span className="text-xs text-muted-foreground">{t('league.unknownHint')}</span>}
-          </div>
-        </section>
+    <section className="rounded-lg border border-border bg-card p-4 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">{t('league.rosterTitle')}</h2><p className="mt-1 text-xs text-muted-foreground">{t('league.rosterHint')}</p></div><label className="flex items-center gap-2 text-sm"><span>{t('league.target')}</span><select value={targetId} onChange={(event) => setTargetId(event.target.value)} className="h-9 rounded-md border border-border bg-background px-2">{guilds.map((guild) => <option key={guild.id} value={guild.id}>{guild.name}</option>)}</select></label></div>
+      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[1180px] text-left text-sm"><thead className="border-b border-border text-xs text-muted-foreground"><tr><th className="px-2 py-2">{t('league.guild')}</th><th className="px-2 py-2">{t('league.startingPoints')}</th><th className="px-2 py-2">{t('league.weekTotal')}</th>{([1, 2, 3, 4] as WeekNumber[]).map((week) => <th key={week} className="px-2 py-2">{t('league.weekShort', { week })}{week === 2 || week === 4 ? ` · ${t('league.group')}` : ''}</th>)}<th className="px-2 py-2">{t('league.targetTotal')}</th><th className="px-2 py-2" /></tr></thead><tbody>{guilds.map((guild) => <tr key={guild.id} className="border-b border-border/60 last:border-0"><td className="px-2 py-2"><Input aria-label={t('league.guild')} value={guild.name} onChange={(event) => updateGuild(guild.id, { name: event.target.value })} className="h-9 min-w-40" /></td><td className="px-2 py-2"><Input aria-label={t('league.startingPoints')} type="number" min={0} value={guild.startingPoints} onChange={(event) => updateGuild(guild.id, { startingPoints: numberValue(event.target.value) })} className="h-9 w-24" /></td><td className="px-2 py-2 text-xs text-muted-foreground">{(() => { const result = current?.results.find((item) => item.id === guild.id); return result ? `${result.round1Total} / ${result.round2Total} / ${result.finalPoints}` : '—' })()}</td>{([1, 2, 3, 4] as WeekNumber[]).map((week) => <td key={week} className="px-2 py-2"><div className="flex items-center gap-1"><RankSelect value={guild.weeks[week].rank} label={`${guild.name} ${t('league.weekShort', { week })}`} onChange={(value) => updateWeek(guild.id, week, { rank: value })} />{week === 2 || week === 4 ? <select aria-label={`${guild.name} ${t('league.group')}`} value={guild.weeks[week].group ?? ''} onChange={(event) => updateWeek(guild.id, week, { group: event.target.value as LeagueGroup })} className="h-9 rounded-md border border-border bg-background px-1 text-xs"><option value="">—</option><option value="winner">{t('league.winner')}</option><option value="loser">{t('league.loser')}</option></select> : null}</div></td>)}<td className="px-2 py-2"><Input aria-label={t('league.targetTotal')} type="number" min={0} placeholder="—" value={guild.targetTotal ?? ''} onChange={(event) => updateGuild(guild.id, { targetTotal: event.target.value === '' ? null : numberValue(event.target.value) })} className="h-9 w-24" /></td><td className="px-2 py-2 text-right"><button type="button" aria-label={t('league.remove')} className="rounded p-2 text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setGuilds((items) => items.filter((item) => item.id !== guild.id))}><IconTrash size={16} /></button></td></tr>)}</tbody></table></div>
+      <div className="mt-3 flex flex-wrap items-center gap-3"><Button variant="outline" size="sm" disabled={guilds.length >= 8} onClick={() => setGuilds((items) => [...items, { id: `guild-${Date.now()}`, name: t('league.newGuild'), startingPoints: 0, targetTotal: null, weeks: { 1: { rank: null, group: null, status: 'unknown' }, 2: { rank: null, group: items.filter((item) => item.weeks[2].group === 'winner').length < 4 ? 'winner' : 'loser', status: 'unknown' }, 3: { rank: null, group: null, status: 'unknown' }, 4: { rank: null, group: items.filter((item) => item.weeks[4].group === 'winner').length < 4 ? 'winner' : 'loser', status: 'unknown' } } }])}><IconPlus size={16} />{t('league.addGuild')}</Button>{!valid ? <span className="text-xs text-amber-700 dark:text-amber-300"><IconInfoCircle size={14} className="mr-1 inline" />{t('league.rosterInvalid')}</span> : <span className="text-xs text-muted-foreground">{t('league.inputHint')}</span>}</div>
+    </section>
 
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-          <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-            <h2 className="font-semibold">{t('league.summaryTitle')}</h2>
-            {!valid ? <p className="mt-3 text-sm text-muted-foreground">{t('league.completeRoster')}</p> : <>
-              <div className="mt-3 rounded-md bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t('league.possibleRanks')}</p><p className="mt-1 text-2xl font-semibold">{targetRanks.length ? targetRanks.map((rank) => t('league.rankValue', { rank })).join('、') : '—'}</p><p className="mt-1 text-xs text-muted-foreground">{t('league.scenarioCount', { count: scenarios.length })}</p></div>
-              {targetScenarios.length > 0 ? <div className="mt-3 rounded-md border border-emerald-300/60 bg-emerald-50 p-3 dark:bg-emerald-950/20"><p className="font-medium text-emerald-800 dark:text-emerald-200">{t('league.canQualify')}</p><p className="mt-1 text-sm text-emerald-800/80 dark:text-emerald-200/80">{t('league.qualifyCount', { count: targetScenarios.length })}</p></div> : <div className="mt-3 rounded-md border border-rose-300/60 bg-rose-50 p-3 dark:bg-rose-950/20"><p className="font-medium text-rose-800 dark:text-rose-200">{t('league.cannotQualify')}</p></div>}
-              {target ? <div className="mt-3 flex items-center gap-2 text-sm"><span>{t('league.fixedResult')}:</span><strong>{target.finalPoints} {t('league.points')}</strong><span className="text-muted-foreground">·</span><strong>{t('league.rankValue', { rank: target.overallRank })}</strong></div> : null}
-            </>}
-          </div>
-          <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-2"><h2 className="font-semibold">{t('league.pathsTitle')}</h2><IconArrowRight size={18} className="text-muted-foreground" /></div>
-            {!valid ? <p className="mt-3 text-sm text-muted-foreground">{t('league.completeRoster')}</p> : targetScenarios.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">{t('league.noPath')}</p> : <div className="mt-3 space-y-2">{targetScenarios.slice(0, 8).map((scenario, index) => <ScenarioLine key={index} scenario={scenario} targetId={targetId} t={t} />)}{targetScenarios.length > 8 ? <p className="pt-1 text-xs text-muted-foreground">{t('league.morePaths', { count: targetScenarios.length - 8 })}</p> : null}</div>}
-          </div>
-        </section>
+    <section className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"><div className="rounded-lg border border-border bg-card p-4 shadow-sm"><h2 className="font-semibold">{t('league.summaryTitle')}</h2>{!valid ? <p className="mt-3 text-sm text-muted-foreground">{t('league.completeRoster')}</p> : enumeration.truncated ? <div className="mt-3 rounded-md border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/20 dark:text-amber-200"><IconInfoCircle size={16} className="mr-1 inline" />{t('league.tooMany', { limit: 6 })}</div> : <><div className="mt-3 rounded-md bg-muted/50 p-3"><p className="text-xs text-muted-foreground">{t('league.possibleRanks')}</p><p className="mt-1 text-2xl font-semibold">{targetRanks.length ? targetRanks.map((rank) => t('league.rankValue', { rank })).join('、') : '—'}</p><p className="mt-1 text-xs text-muted-foreground">{t('league.scenarioCount', { count: matchingScenarios.length })}</p></div>{matchingScenarios.length ? <div className="mt-3 rounded-md border border-emerald-300/60 bg-emerald-50 p-3 dark:bg-emerald-950/20"><p className="font-medium text-emerald-800 dark:text-emerald-200">{t('league.canQualify')}</p><p className="mt-1 text-sm text-emerald-800/80 dark:text-emerald-200/80">{t('league.qualifyCount', { count: matchingScenarios.filter((scenario) => (scenario.results.find((result) => result.id === targetId)?.finalRank ?? 99) <= rules.qualificationCount).length })}</p></div> : <div className="mt-3 rounded-md border border-rose-300/60 bg-rose-50 p-3 dark:bg-rose-950/20"><p className="font-medium text-rose-800 dark:text-rose-200">{t('league.noMatch')}</p></div>}</>}</div><div className="rounded-lg border border-border bg-card p-4 shadow-sm"><h2 className="font-semibold">{t('league.pathsTitle')}</h2>{!valid ? <p className="mt-3 text-sm text-muted-foreground">{t('league.completeRoster')}</p> : enumeration.truncated ? <p className="mt-3 text-sm text-muted-foreground">{t('league.tooMany', { limit: 6 })}</p> : matchingScenarios.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">{t('league.noPath')}</p> : <div className="mt-3 space-y-2">{matchingScenarios.slice(0, 6).map((scenario, index) => <ScenarioLine key={index} scenario={scenario} targetId={targetId} t={t} />)}</div>}</div></section>
 
-        {currentScenario ? <section className="rounded-lg border border-border bg-card p-4 shadow-sm"><h2 className="font-semibold">{t('league.currentTitle')}</h2><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{currentScenario.results.map((result) => <div key={result.id} className={`rounded-md border p-3 ${result.id === targetId ? 'border-[color:var(--arkive-nav-accent)]' : 'border-border'}`}><div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-medium">{result.name}</span><span className="text-xs text-muted-foreground">#{result.overallRank}</span></div><p className="mt-1 text-lg font-semibold">{result.finalPoints} <span className="text-xs font-normal text-muted-foreground">{t('league.points')}</span></p><p className="text-xs text-muted-foreground">{result.group === 'winner' ? t('league.winner') : t('league.loser')} · {t('league.place', { rank: result.groupRank })}</p></div>)}</div></section> : null}
-      </div>
-    </ContentPage>
-  )
+    {current ? <section className="rounded-lg border border-border bg-card p-4 shadow-sm"><h2 className="font-semibold">{t('league.currentTitle')}</h2><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-border text-xs text-muted-foreground"><tr><th className="px-2 py-2">{t('league.guild')}</th>{([1, 2, 3, 4] as WeekNumber[]).map((week) => <th key={week} className="px-2 py-2">{t('league.weekShort', { week })}</th>)}<th className="px-2 py-2">{t('league.round1Total')}</th><th className="px-2 py-2">{t('league.round2Total')}</th><th className="px-2 py-2">{t('league.finalTotal')}</th><th className="px-2 py-2">{t('league.finalRank')}</th></tr></thead><tbody>{current.results.map((result) => <tr key={result.id} className="border-b border-border/60 last:border-0"><td className="px-2 py-2 font-medium">{result.name}</td>{result.weekPoints.map((points, index) => <td key={index} className="px-2 py-2">{points}</td>)}<td className="px-2 py-2">{result.round1Total}</td><td className="px-2 py-2">{result.round2Total}</td><td className="px-2 py-2 font-semibold">{result.finalPoints}</td><td className="px-2 py-2">#{result.finalRank}</td></tr>)}</tbody></table></div></section> : null}
+  </div></ContentPage>
+}
+
+function RuleInputs({ title, values, onChange, t }: { title: string; values: number[]; onChange: (index: number, value: string) => void; t: (key: string, options?: Record<string, unknown>) => string }) {
+  return <div><h3 className="text-sm font-medium">{title}</h3><div className="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-8">{values.map((value, index) => <label key={index} className="text-xs text-muted-foreground">{t('league.place', { rank: index + 1 })}<Input type="number" min={0} value={value} onChange={(event) => onChange(index, event.target.value)} className="mt-1 h-9" /></label>)}</div></div>
 }
