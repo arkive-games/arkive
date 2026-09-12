@@ -25,6 +25,8 @@ describe('league points simulator', () => {
     const assignments = Object.fromEntries(DEFAULT_GUILDS.map((guild) => [guild.id, { 1: guild.weeks[1].rank ?? 1, 2: guild.weeks[2].rank ?? 1, 3: guild.weeks[3].rank ?? 1, 4: guild.weeks[4].rank ?? 1 }]))
     const scenario = calculateScenario(DEFAULT_GUILDS, DEFAULT_RULES, assignments)
     expect(scenario.results.find((result) => result.id === 'guild-1')?.weekPoints).toEqual([30, 30, 30, 30])
+    expect(scenario.results.find((result) => result.id === 'guild-1')?.round1Total).toBe(60)
+    expect(scenario.results.find((result) => result.id === 'guild-1')?.finalPoints).toBe(380)
   })
 
   it('rejects duplicate fixed placements', () => {

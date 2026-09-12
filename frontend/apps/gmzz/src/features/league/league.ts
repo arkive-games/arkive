@@ -35,9 +35,10 @@ export function calculateScenario(guilds: LeagueGuild[], rules: LeagueRules, ass
     const r2Group = effectiveGroup(guild, 4)
     const r1 = weekRanks[1] === null || !r1Group || guild.weeks[2].status === 'absent' ? null : globalRank(r1Group, weekRanks[1])
     const r2 = weekRanks[3] === null || !r2Group || guild.weeks[4].status === 'absent' ? null : globalRank(r2Group, weekRanks[3])
-    const round1Total = weekPoints[0] + weekPoints[1] + (guild.weeks[2].status === 'absent' ? 0 : finalBonus(r1Group, weekRanks[1], rules.round1Bonuses) ?? 0)
-    const round2Total = weekPoints[2] + weekPoints[3] + (guild.weeks[4].status === 'absent' ? 0 : finalBonus(r2Group, weekRanks[3], rules.round2Bonuses) ?? 0)
-    return { ...guild, weekPoints, round1Total, round2Total, finalPoints: round1Total + round2Total, finalRank: 0, roundRanks: [r1, r2] as [number | null, number | null] }
+    const round1Total = guild.weeks[2].status === 'absent' ? 0 : finalBonus(r1Group, weekRanks[1], rules.round1Bonuses) ?? 0
+    const round2Total = guild.weeks[4].status === 'absent' ? 0 : finalBonus(r2Group, weekRanks[3], rules.round2Bonuses) ?? 0
+    const finalPoints = weekPoints.reduce((sum, points) => sum + points, 0) + round1Total + round2Total
+    return { ...guild, weekPoints, round1Total, round2Total, finalPoints, finalRank: 0, roundRanks: [r1, r2] as [number | null, number | null] }
   })
   results.sort((a, b) => b.finalPoints - a.finalPoints || (a.roundRanks[1] ?? 99) - (b.roundRanks[1] ?? 99) || a.name.localeCompare(b.name)); results.forEach((result, index) => { result.finalRank = index + 1 })
   return { results, assignments: assignments ?? {} }
