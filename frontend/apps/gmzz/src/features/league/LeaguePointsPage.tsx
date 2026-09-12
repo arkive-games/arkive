@@ -25,7 +25,7 @@ export default function LeaguePointsPage() {
   const [guilds, setGuilds] = useState<LeagueGuild[]>(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } })))
   const rules: LeagueRules = DEFAULT_RULES
   const [targetId, setTargetId] = useState(DEFAULT_GUILDS[0].id)
-  const [weekStarted, setWeekStarted] = useState<Record<WeekNumber, boolean>>({ 1: true, 2: true, 3: true, 4: false })
+  const [weekStarted, setWeekStarted] = useState<Record<WeekNumber, boolean>>({ 1: false, 2: false, 3: false, 4: false })
   useEffect(() => { document.title = `${t('league.title')} - ${t('siteTitle')}` }, [t])
   const valid = isValidRoster(guilds)
   const simulationGuilds = useMemo(() => guilds.map((guild) => ({ ...guild, weeks: Object.fromEntries(([1, 2, 3, 4] as WeekNumber[]).map((week) => [week, { ...guild.weeks[week], status: weekStarted[week] ? guild.weeks[week].status : 'absent' }])) as LeagueGuild['weeks'] })), [guilds, weekStarted])
@@ -42,7 +42,7 @@ export default function LeaguePointsPage() {
     if ((week === 1 || week === 3) && patch.rank !== undefined && patch.rank !== null) { const nextWeek = (week + 1) as 2 | 4; weeks[nextWeek] = { ...weeks[nextWeek], group: groupFromMatchRank(patch.rank) } }
     return { ...guild, weeks }
   }))
-  const reset = () => { setGuilds(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } }))); setTargetId(DEFAULT_GUILDS[0].id); setWeekStarted({ 1: true, 2: true, 3: true, 4: false }) }
+  const reset = () => { setGuilds(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } }))); setTargetId(DEFAULT_GUILDS[0].id); setWeekStarted({ 1: false, 2: false, 3: false, 4: false }) }
 
   return <ContentPage active="/tools/league-points" title={t('league.title')} wide><div className="space-y-5" data-testid="league-points-page">
     <header className="border-b border-border pb-4"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('league.eyebrow')}</p><h1 className="mt-1 text-3xl font-bold tracking-tight">{t('league.title')}</h1><p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">{t('league.description')}</p></header>
