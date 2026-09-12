@@ -61,23 +61,23 @@ export default function LeaguePointsPage() {
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[1080px] table-fixed text-left text-sm">
           <colgroup>
-            <col className="w-[12%]" />
+            <col className="w-[14%]" />
             <col className="w-[10%]" />
-            <col className="w-[18%]" />
+            <col className="w-[14%]" />
+            <col className="w-[11%]" />
             <col className="w-[10%]" />
-            <col className="w-[10%]" />
-            <col className="w-[18%]" />
-            <col className="w-[10%]" />
-            <col className="w-[12%]" />
+            <col className="w-[14%]" />
+            <col className="w-[11%]" />
+            <col className="w-[16%]" />
           </colgroup>
           <thead className="border-b border-border text-xs text-muted-foreground">
             <tr>
               <th className="w-36 whitespace-nowrap bg-slate-50 px-2 py-2 align-bottom dark:bg-slate-900/40">{t('league.guild')}</th>
-              {([1, 2] as WeekNumber[]).map((week) => <th key={week} className="whitespace-nowrap bg-sky-50 px-2 py-2 align-bottom dark:bg-sky-950/20"><div className="flex flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
+              {([1, 2] as WeekNumber[]).map((week) => <th key={week} className="whitespace-nowrap bg-sky-50 px-2 py-2 align-bottom dark:bg-sky-950/20"><div className="flex items-center gap-2"><span className="font-semibold text-foreground">{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
               <th className="w-24 whitespace-nowrap bg-sky-50 px-2 py-2 text-center align-bottom dark:bg-sky-950/20">{t('league.round1Total')}</th>
-              {([3, 4] as WeekNumber[]).map((week) => <th key={week} className="whitespace-nowrap bg-violet-50 px-2 py-2 align-bottom dark:bg-violet-950/20"><div className="flex flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
+              {([3, 4] as WeekNumber[]).map((week) => <th key={week} className="whitespace-nowrap bg-violet-50 px-2 py-2 align-bottom dark:bg-violet-950/20"><div className="flex items-center gap-2"><span className="font-semibold text-foreground">{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
               <th className="w-24 whitespace-nowrap bg-violet-50 px-2 py-2 text-center align-bottom dark:bg-violet-950/20">{t('league.round2Total')}</th>
-              <th className="w-28 whitespace-nowrap bg-amber-50 px-2 py-2 text-center align-bottom dark:bg-amber-950/20">{t('league.currentTotal')}</th>
+              <th className="w-28 whitespace-nowrap bg-slate-50 px-2 py-2 text-center align-bottom dark:bg-slate-900/40">{t('league.currentTotal')}</th>
             </tr>
           </thead>
           <tbody>
@@ -91,7 +91,7 @@ export default function LeaguePointsPage() {
                 <td className="bg-violet-50 px-2 py-2 dark:bg-violet-950/20"><WeekRankSelect guild={guild} week={3} started={weekStarted[3]} points={rules.matchPoints} t={t} onChange={(rank, group) => updateWeek(guild.id, 3, { rank, ...(group !== undefined ? { group } : {}) })} /></td>
                 <td className="bg-violet-50 px-2 py-2 dark:bg-violet-950/20"><WeekRankSelect guild={guild} week={4} started={weekStarted[4]} points={rules.matchPoints} t={t} onChange={(rank, group) => updateWeek(guild.id, 4, { rank, ...(group !== undefined ? { group } : {}) })} /></td>
                 <td className="bg-violet-50 px-2 py-2 text-center font-medium tabular-nums dark:bg-violet-950/20">{result.round2Total}</td>
-                <td className="bg-amber-50 px-2 py-2 text-center font-semibold tabular-nums dark:bg-amber-950/20">{result.finalPoints}</td>
+                <td className="bg-slate-50 px-2 py-2 text-center font-semibold tabular-nums dark:bg-slate-900/40">{result.finalPoints}</td>
               </tr>
             })}
           </tbody>
