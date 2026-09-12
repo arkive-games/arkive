@@ -2,7 +2,7 @@ export type LeagueGroup = 'winner' | 'loser'
 export type WeekNumber = 1 | 2 | 3 | 4
 export type WeekStatus = 'unknown' | 'absent'
 export interface WeekInput { rank: number | null; group: LeagueGroup | null; status: WeekStatus }
-export interface LeagueGuild { id: string; name: string; startingPoints: number; targetTotal: number | null; weeks: Record<WeekNumber, WeekInput> }
+export interface LeagueGuild { id: string; name: string; targetTotal: number | null; weeks: Record<WeekNumber, WeekInput> }
 export interface LeagueRules { matchPoints: number[]; round1Bonuses: number[]; round2Bonuses: number[]; qualificationCount: number }
 export interface LeagueResult extends LeagueGuild { weekPoints: number[]; round1Total: number; round2Total: number; finalPoints: number; finalRank: number; roundRanks: [number | null, number | null] }
 export interface LeagueScenario { results: LeagueResult[]; assignments: Record<string, Record<WeekNumber, number>> }
@@ -13,7 +13,7 @@ const week = (rank: number | null, group: LeagueGroup | null = null, status: Wee
 export const DEFAULT_GUILDS: LeagueGuild[] = Array.from({ length: 8 }, (_, index) => {
   const id = `guild-${index + 1}`
   const group: LeagueGroup = index < 4 ? 'winner' : 'loser'
-  return { id, name: `公会${String.fromCharCode(65 + index)}`, startingPoints: 0, targetTotal: null, weeks: { 1: week(null), 2: week(null, group), 3: week(null), 4: week(null, group) } }
+  return { id, name: `公会${String.fromCharCode(65 + index)}`, targetTotal: null, weeks: { 1: week(null), 2: week(null, group), 3: week(null), 4: week(null, group) } }
 })
 export function globalRank(group: LeagueGroup, rank: number): number { return group === 'winner' ? rank : rank + 4 }
 function rankFor(guild: LeagueGuild, weekNumber: WeekNumber, assignments?: Record<string, Record<WeekNumber, number>>): number | null { return guild.weeks[weekNumber].status === 'absent' ? null : assignments?.[guild.id]?.[weekNumber] ?? guild.weeks[weekNumber].rank }
@@ -23,7 +23,7 @@ export function calculateScenario(guilds: LeagueGuild[], rules: LeagueRules, ass
     const weekPoints = weekRanks.map((rank) => rank === null ? 0 : rules.matchPoints[rank - 1] ?? 0)
     const r1 = weekRanks[1] === null || !guild.weeks[2].group || guild.weeks[2].status === 'absent' ? null : globalRank(guild.weeks[2].group, weekRanks[1])
     const r2 = weekRanks[3] === null || !guild.weeks[4].group || guild.weeks[4].status === 'absent' ? null : globalRank(guild.weeks[4].group, weekRanks[3])
-    const round1Total = guild.startingPoints + weekPoints[0] + weekPoints[1] + (r1 === null ? 0 : rules.round1Bonuses[r1 - 1] ?? 0)
+    const round1Total = weekPoints[0] + weekPoints[1] + (r1 === null ? 0 : rules.round1Bonuses[r1 - 1] ?? 0)
     const round2Total = weekPoints[2] + weekPoints[3] + (r2 === null ? 0 : rules.round2Bonuses[r2 - 1] ?? 0)
     return { ...guild, weekPoints, round1Total, round2Total, finalPoints: round1Total + round2Total, finalRank: 0, roundRanks: [r1, r2] as [number | null, number | null] }
   })
