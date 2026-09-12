@@ -762,7 +762,7 @@ const zhCN: Strings = {
     "aggregateNote": "客户端只定义了单项百分比，分组与总体完成度因此由各单项取平均——某一项拉满不会替另一项补分。合计一栏只是你填入各项的加总；游戏自己的非凡评分是另一个服务器数值，并没有说明它等于各项之和。"
   },
   league: {
-    "title": "联赛积分推演器", "homeDescription": "输入公会积分和分组名次，推演晋级前四的所有路径。", "eyebrow": "战略服 · 四方联赛",
+    "title": "诡秘之主战略服积分推演器", "homeDescription": "输入每周排名和积分，推演晋级前四的所有路径。", "eyebrow": "战略服 · 四方联赛",
     "description": "填入每个公会的名称、每周名次、组别和可选总积分。工具会计算每周积分、两轮积分和最终总分；当只填写总分时，也会尝试反推缺失名次。", "rulesTitle": "积分规则", "rulesHint": "单场积分、第一轮和第二轮最终排名积分都可以修改。", "reset": "恢复示例", "matchPoints": "单场名次积分", "round1Bonuses": "第一轮最终排名积分", "round2Bonuses": "第二轮最终排名积分", "place": "第{{rank}}名", "rosterTitle": "公会与每周输入", "rosterHint": "可添加或删除公会。名次留空表示待推演；填入已知总积分可筛选可能的每周名次组合。", "target": "目标公会", "guild": "公会", "startingPoints": "周期前积分", "weekTotal": "第一轮 / 第二轮 / 总计", "weekShort": "第{{week}}周", "targetTotal": "已知总积分", "group": "组别", "winner": "胜者组", "loser": "败者组", "remove": "删除公会", "newGuild": "新公会", "addGuild": "添加公会", "rosterInvalid": "需要八个公会，且第2、4周各有胜者组4个、败者组4个。", "inputHint": "第1、3周使用总排名；第2、4周按胜者组和败者组分别排名。", "summaryTitle": "晋级摘要", "completeRoster": "请先补齐八个公会，再开始计算。", "possibleRanks": "目标公会可能的最终排名", "scenarioCount": "匹配的名次组合：{{count}} 种", "canQualify": "存在晋级可能", "qualifyCount": "其中 {{count}} 种组合进入前四。", "noMatch": "没有每周名次组合能匹配这个总积分。", "pathsTitle": "可能的每周路径", "noPath": "当前输入下没有可展示的路径。", "tooMany": "可能性超过 {{limit}} 种，请补齐更多每周名次或总积分后继续推演。", "currentTitle": "计算结果", "round1Total": "第一轮积分", "round2Total": "第二轮积分", "finalTotal": "最终总分", "finalRank": "最终排名", "rankValue": "第{{rank}}名", "points": "分", "weekPath": "每周名次"
   },
   equip: {
@@ -1191,7 +1191,7 @@ const zhTW: Strings = {
     "aggregateNote": "客戶端只定義了單項百分比，分組與總體完成度因此由各單項取平均——某一項拉滿不會替另一項補分。合計一欄只是你填入各項的加總；遊戲自己的非凡評分是另一個伺服器數值，並沒有說明它等於各項之和。"
   },
   league: {
-    "title": "聯賽積分推演器", "homeDescription": "輸入公會積分和分組名次，推演晉級前四的所有路徑。", "eyebrow": "戰略服 · 四方聯賽",
+    "title": "詭秘之主戰略服積分推演器", "homeDescription": "輸入每週排名和積分，推演晉級前四的所有路徑。", "eyebrow": "戰略服 · 四方聯賽",
     "description": "填入每個公會的名稱、每週名次、組別和可選總積分。工具會計算每週積分、兩輪積分和最終總分；只填寫總分時，也會嘗試反推缺失名次。", "rulesTitle": "積分規則", "rulesHint": "單場積分、第一輪和第二輪最終排名積分都可以修改。", "reset": "恢復範例", "matchPoints": "單場名次積分", "round1Bonuses": "第一輪最終排名積分", "round2Bonuses": "第二輪最終排名積分", "place": "第{{rank}}名", "rosterTitle": "公會與每週輸入", "rosterHint": "可新增或刪除公會。名次留空表示待推演；填入已知總積分可篩選可能的每週名次組合。", "target": "目標公會", "guild": "公會", "startingPoints": "週期前積分", "weekTotal": "第一輪 / 第二輪 / 總計", "weekShort": "第{{week}}週", "targetTotal": "已知總積分", "group": "組別", "winner": "勝者組", "loser": "敗者組", "remove": "刪除公會", "newGuild": "新公會", "addGuild": "新增公會", "rosterInvalid": "需要八個公會，且第2、4週各有勝者組4個、敗者組4個。", "inputHint": "第1、3週使用總排名；第2、4週按勝者組和敗者組分別排名。", "summaryTitle": "晉級摘要", "completeRoster": "請先補齊八個公會，再開始計算。", "possibleRanks": "目標公會可能的最終排名", "scenarioCount": "符合的名次組合：{{count}} 種", "canQualify": "存在晉級可能", "qualifyCount": "其中 {{count}} 種組合進入前四。", "noMatch": "沒有每週名次組合能符合這個總積分。", "pathsTitle": "可能的每週路徑", "noPath": "目前輸入下沒有可展示的路徑。", "tooMany": "可能性超過 {{limit}} 種，請補齊更多每週名次或總積分後繼續推演。", "currentTitle": "計算結果", "round1Total": "第一輪積分", "round2Total": "第二輪積分", "finalTotal": "最終總分", "finalRank": "最終排名", "rankValue": "第{{rank}}名", "points": "分", "weekPath": "每週名次"
   },
   equip: {

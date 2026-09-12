@@ -10,16 +10,11 @@ export interface ScenarioEnumeration { scenarios: LeagueScenario[]; truncated: b
 
 export const DEFAULT_RULES: LeagueRules = { matchPoints: [30, 15, 10, 5], round1Bonuses: [60, 50, 45, 40, 10, 10, 10, 10], round2Bonuses: [200, 100, 70, 50, 15, 15, 15, 15], qualificationCount: 4 }
 const week = (rank: number | null, group: LeagueGroup | null = null, status: WeekStatus = 'unknown'): WeekInput => ({ rank, group, status })
-export const DEFAULT_GUILDS: LeagueGuild[] = [
-  { id: 'jiexu-wangting', name: '戒序王庭', startingPoints: 0, targetTotal: null, weeks: { 1: week(1), 2: week(1, 'loser'), 3: week(3), 4: week(null, 'loser') } },
-  { id: 'wushangke', name: '雾上客', startingPoints: 0, targetTotal: null, weeks: { 1: week(2), 2: week(2, 'winner'), 3: week(1), 4: week(null, 'winner') } },
-  { id: 'junlin-shuangye', name: '君临霜夜', startingPoints: 0, targetTotal: null, weeks: { 1: week(1), 2: week(3, 'winner'), 3: week(2), 4: week(null, 'winner') } },
-  { id: 'junlin-zaishui', name: '君临在水', startingPoints: 0, targetTotal: null, weeks: { 1: week(2), 2: week(4, 'loser'), 3: week(3), 4: week(null, 'loser') } },
-  { id: 'amushi', name: '阿姆斯特朗炮', startingPoints: 0, targetTotal: null, weeks: { 1: week(3), 2: week(1, 'loser'), 3: week(4), 4: week(null, 'loser') } },
-  { id: 'yaoguang', name: '瑶光', startingPoints: 0, targetTotal: null, weeks: { 1: week(3), 2: week(2, 'loser'), 3: week(2), 4: week(null, 'winner') } },
-  { id: 'moshang', name: '陌上花开为卿顾', startingPoints: 0, targetTotal: null, weeks: { 1: week(null), 2: week(null, 'winner'), 3: week(1), 4: week(null, 'winner') } },
-  { id: 'qingshui', name: '清水鉴心', startingPoints: 0, targetTotal: null, weeks: { 1: week(null), 2: week(null, 'loser'), 3: week(4), 4: week(null, 'loser') } },
-]
+export const DEFAULT_GUILDS: LeagueGuild[] = Array.from({ length: 8 }, (_, index) => {
+  const id = `guild-${index + 1}`
+  const group: LeagueGroup = index < 4 ? 'winner' : 'loser'
+  return { id, name: `公会${String.fromCharCode(65 + index)}`, startingPoints: 0, targetTotal: null, weeks: { 1: week(null), 2: week(null, group), 3: week(null), 4: week(null, group) } }
+})
 export function globalRank(group: LeagueGroup, rank: number): number { return group === 'winner' ? rank : rank + 4 }
 function rankFor(guild: LeagueGuild, weekNumber: WeekNumber, assignments?: Record<string, Record<WeekNumber, number>>): number | null { return guild.weeks[weekNumber].status === 'absent' ? null : assignments?.[guild.id]?.[weekNumber] ?? guild.weeks[weekNumber].rank }
 export function calculateScenario(guilds: LeagueGuild[], rules: LeagueRules, assignments?: Record<string, Record<WeekNumber, number>>): LeagueScenario {
