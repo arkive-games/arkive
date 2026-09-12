@@ -450,6 +450,11 @@ const en = {
 
 type Strings = typeof en
 
+;(en.league as Record<string, string>).calculatedTotal = 'Calculated points'
+;(en.league as Record<string, string>).groupRank = 'Group placement'
+;(en.league as Record<string, string>).weekStarted = 'Started'
+;(en.league as Record<string, string>).weekNotStarted = 'Not started'
+
 const zhCN: Strings = {
   siteTitle: '诡秘之主资料库',
   brand: '藏舟游戏攻略网',
@@ -880,6 +885,10 @@ const zhCN: Strings = {
 
 // The simulator's target is the guild being tested for qualification, not a generic roster target.
 zhCN.league.target = '晋级推演公会'
+;(zhCN.league as Record<string, string>).calculatedTotal = '已计算积分'
+;(zhCN.league as Record<string, string>).groupRank = '组内名次'
+;(zhCN.league as Record<string, string>).weekStarted = '已开始'
+;(zhCN.league as Record<string, string>).weekNotStarted = '未开始'
 
 const zhTW: Strings = {
   ...zhCN,
@@ -1311,6 +1320,10 @@ const zhTW: Strings = {
 }
 
 zhTW.league.target = '晉級推演公會'
+;(zhTW.league as Record<string, string>).calculatedTotal = '已計算積分'
+;(zhTW.league as Record<string, string>).groupRank = '組內名次'
+;(zhTW.league as Record<string, string>).weekStarted = '已開始'
+;(zhTW.league as Record<string, string>).weekNotStarted = '未開始'
 
 const UI: Partial<Record<Language, Strings>> = { 'en-US': en, 'zh-CN': zhCN, 'zh-TW': zhTW }
 
