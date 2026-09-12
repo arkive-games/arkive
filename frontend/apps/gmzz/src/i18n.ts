@@ -37,7 +37,7 @@ const en = {
   themeDark: 'Dark',
   themeMenu: 'Theme',
   languageMenu: 'Language',
-  nav: {"home": "Home", "traintrade": "Train Trade", "utopia": "Utopian Theater", "reforge": "Reforge Graces", "score": "Rating Calculator", "changelog": "Changelog"},
+  nav: {"home": "Home", "traintrade": "Train Trade", "utopia": "Utopian Theater", "reforge": "Reforge Graces", "score": "Rating Calculator", "league": "League simulator", "changelog": "Changelog"},
   siteInfo: {
     tab: 'About',
     aboutTitle: 'About this site',
@@ -332,6 +332,10 @@ const en = {
     "dataNote": "Benchmarks and bands parsed from the local game package",
     "aggregateNote": "The client only defines a per-item percentage, so group and overall figures average those \u2014 one maxed item cannot cover a neglected one. The totals are simply the items you entered added up; the game\u2019s own rating is a separate server value and is not stated to be their sum."
   },
+  league: {
+    "title": "League points simulator", "homeDescription": "Enter guild points and group placements to explore every route to the top four.", "eyebrow": "Strategy server · Four-way league",
+    "description": "Enter the points already earned and the winner/loser group for each guild. Leave an upcoming placement blank to enumerate every possible result and see which outcomes qualify your target guild.", "rulesTitle": "Scoring rules", "rulesHint": "These defaults match the currently known rules; edit them if the season uses different values.", "reset": "Reset example", "matchPoints": "Match points", "roundBonuses": "Round-final points", "place": "Place {{rank}}", "rosterTitle": "Guilds and current standings", "rosterHint": "Exactly four guilds belong in each group. A blank placement means unknown and will be tested in every possible order.", "target": "Target guild", "chooseTarget": "Choose a guild", "guild": "Guild", "currentPoints": "Current points", "group": "Group", "groupRank": "Group placement", "winner": "Winner group", "loser": "Loser group", "unknown": "Unknown", "remove": "Remove guild", "newGuild": "New guild", "addGuild": "Add guild", "rosterInvalid": "Need eight guilds split four and four before calculating.", "unknownHint": "The simulator uses final group placement to assign the round-final bonus.", "summaryTitle": "Qualification summary", "completeRoster": "Complete the roster to start the simulation.", "possibleRanks": "Possible final ranks for the target", "scenarioCount": "{{count}} possible placement combinations", "canQualify": "Qualification is possible", "qualifyCount": "{{count}} of the tested combinations finish in the top four.", "cannotQualify": "No tested combination reaches the top four", "fixedResult": "With all placements fixed", "pathsTitle": "Example qualification paths", "noPath": "There is no qualification path under these inputs.", "morePaths": "{{count}} more paths are available.", "currentTitle": "Current result", "rankValue": "Rank {{rank}}", "points": "points", "winnerOrder": "Winner order", "loserOrder": "Loser order"
+  },
   equip: {
     "title": "Equipment score",
     "hint": "Enter what you are wearing to reproduce the rating the game shows. Base score is the item's own; the suit follows from the pieces worn.",
@@ -463,7 +467,7 @@ const zhCN: Strings = {
   themeDark: '深色模式',
   themeMenu: '主题',
   languageMenu: '语言',
-  nav: {"home": "首页", "traintrade": "铁路大亨", "utopia": "乌托邦剧场", "reforge": "重塑恩赐", "score": "非凡评分计算器", "changelog": "更新日志"},
+  nav: {"home": "首页", "traintrade": "铁路大亨", "utopia": "乌托邦剧场", "reforge": "重塑恩赐", "score": "非凡评分计算器", "league": "联赛积分推演", "changelog": "更新日志"},
   siteInfo: {
     tab: '关于',
     aboutTitle: '关于本站',
@@ -758,6 +762,10 @@ const zhCN: Strings = {
     "dataNote": "期望值与评价档位解析自本地游戏客户端",
     "aggregateNote": "客户端只定义了单项百分比，分组与总体完成度因此由各单项取平均——某一项拉满不会替另一项补分。合计一栏只是你填入各项的加总；游戏自己的非凡评分是另一个服务器数值，并没有说明它等于各项之和。"
   },
+  league: {
+    "title": "联赛积分推演器", "homeDescription": "输入公会积分和分组名次，推演晋级前四的所有路径。", "eyebrow": "战略服 · 四方联赛",
+    "description": "填入各公会当前积分和胜者组/败者组。把尚未确定的名次留空，工具会枚举所有可能结果，并显示目标公会哪些情况可以晋级。", "rulesTitle": "积分规则", "rulesHint": "默认值按目前已知规则填写；如果赛季规则不同，可以直接修改。", "reset": "恢复示例", "matchPoints": "单场名次积分", "roundBonuses": "本轮最终排名积分", "place": "第{{rank}}名", "rosterTitle": "公会与当前积分", "rosterHint": "需要四个胜者组和四个败者组。名次留空表示未知，工具会尝试所有排列。", "target": "目标公会", "chooseTarget": "选择公会", "guild": "公会", "currentPoints": "当前积分", "group": "组别", "groupRank": "组内名次", "winner": "胜者组", "loser": "败者组", "unknown": "未知", "remove": "删除公会", "newGuild": "新公会", "addGuild": "添加公会", "rosterInvalid": "需要正好八个公会，并分成胜者组4个、败者组4个。", "unknownHint": "工具按最终组内名次计算本轮单场积分，并按全局名次计算本轮最终排名积分。", "summaryTitle": "晋级摘要", "completeRoster": "先补齐公会名单，才能开始推演。", "possibleRanks": "目标公会可能的最终排名", "scenarioCount": "共 {{count}} 种名次组合", "canQualify": "存在晋级可能", "qualifyCount": "测试组合中有 {{count}} 种可以进入前四。", "cannotQualify": "当前输入下没有进入前四的组合", "fixedResult": "全部名次确定时", "pathsTitle": "晋级路径示例", "noPath": "当前输入下没有晋级路径。", "morePaths": "另有 {{count}} 条路径。", "currentTitle": "当前结果", "rankValue": "第{{rank}}名", "points": "分", "winnerOrder": "胜者组顺序", "loserOrder": "败者组顺序"
+  },
   equip: {
     "title": "装备评分",
     "hint": "填入当前穿戴的装备，即可复现游戏内显示的评分。基础评分为装备固有数值；套装由已穿戴的装备自动推导。",
@@ -888,7 +896,7 @@ const zhTW: Strings = {
   themeDark: '深色模式',
   themeMenu: '主題',
   languageMenu: '語言',
-  nav: {"home": "首頁", "traintrade": "鐵路大亨", "utopia": "烏托邦劇場", "reforge": "重塑恩賜", "score": "非凡評分計算器", "changelog": "更新日誌"},
+  nav: {"home": "首頁", "traintrade": "鐵路大亨", "utopia": "烏托邦劇場", "reforge": "重塑恩賜", "score": "非凡評分計算器", "league": "聯賽積分推演", "changelog": "更新日誌"},
   siteInfo: {
     tab: '關於',
     aboutTitle: '關於本站',
@@ -1182,6 +1190,10 @@ const zhTW: Strings = {
     "loadError": "評分資料載入失敗。",
     "dataNote": "期望值與評價檔位解析自本機遊戲客戶端",
     "aggregateNote": "客戶端只定義了單項百分比，分組與總體完成度因此由各單項取平均——某一項拉滿不會替另一項補分。合計一欄只是你填入各項的加總；遊戲自己的非凡評分是另一個伺服器數值，並沒有說明它等於各項之和。"
+  },
+  league: {
+    "title": "聯賽積分推演器", "homeDescription": "輸入公會積分和分組名次，推演晉級前四的所有路徑。", "eyebrow": "戰略服 · 四方聯賽",
+    "description": "填入各公會目前積分和勝者組/敗者組。把尚未確定的名次留空，工具會列舉所有可能結果，並顯示目標公會哪些情況可以晉級。", "rulesTitle": "積分規則", "rulesHint": "預設值依目前已知規則填寫；如果賽季規則不同，可以直接修改。", "reset": "恢復範例", "matchPoints": "單場名次積分", "roundBonuses": "本輪最終排名積分", "place": "第{{rank}}名", "rosterTitle": "公會與目前積分", "rosterHint": "需要四個勝者組和四個敗者組。名次留空表示未知，工具會嘗試所有排列。", "target": "目標公會", "chooseTarget": "選擇公會", "guild": "公會", "currentPoints": "目前積分", "group": "組別", "groupRank": "組內名次", "winner": "勝者組", "loser": "敗者組", "unknown": "未知", "remove": "刪除公會", "newGuild": "新公會", "addGuild": "新增公會", "rosterInvalid": "需要正好八個公會，並分成勝者組4個、敗者組4個。", "unknownHint": "工具按最終組內名次計算本輪單場積分，並按全局名次計算本輪最終排名積分。", "summaryTitle": "晉級摘要", "completeRoster": "先補齊公會名單，才能開始推演。", "possibleRanks": "目標公會可能的最終排名", "scenarioCount": "共 {{count}} 種名次組合", "canQualify": "存在晉級可能", "qualifyCount": "測試組合中有 {{count}} 種可以進入前四。", "cannotQualify": "目前輸入下沒有進入前四的組合", "fixedResult": "全部名次確定時", "pathsTitle": "晉級路徑範例", "noPath": "目前輸入下沒有晉級路徑。", "morePaths": "另有 {{count}} 條路徑。", "currentTitle": "目前結果", "rankValue": "第{{rank}}名", "points": "分", "winnerOrder": "勝者組順序", "loserOrder": "敗者組順序"
   },
   equip: {
     "title": "裝備評分",

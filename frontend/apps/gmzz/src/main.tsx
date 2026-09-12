@@ -14,6 +14,7 @@ import UtopiaPage from './features/utopia/UtopiaPage'
 import ReforgePage from './features/reforge/ReforgePage'
 import ScorePage from './features/score/ScorePage'
 import ChangelogPage from './features/changelog/ChangelogPage'
+import LeaguePointsPage from './features/league/LeaguePointsPage'
 import { initDataVersion } from './lib/urls'
 import { BottomTabBar } from './components/BottomTabBar'
 
@@ -35,9 +36,10 @@ const utopiaRoute = createRoute({ getParentRoute: () => rootRoute, path: '/utopi
 const reforgeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/reforge', component: ReforgePage })
 const scoreRoute = createRoute({ getParentRoute: () => rootRoute, path: '/score', component: ScorePage })
 const changelogRoute = createRoute({ getParentRoute: () => rootRoute, path: '/changelog', component: ChangelogPage })
+const leaguePointsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/tools/league-points', component: LeaguePointsPage })
 
 const routeTree = rootRoute.addChildren([
-  homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, changelogRoute,
+  homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, changelogRoute, leaguePointsRoute,
 ])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })

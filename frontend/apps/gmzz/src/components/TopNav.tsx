@@ -6,7 +6,7 @@ import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } f
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
 
-export type NavKey = '/' | '/traintrade' | '/utopia' | '/reforge' | '/score' | '/changelog'
+export type NavKey = '/' | '/traintrade' | '/utopia' | '/reforge' | '/score' | '/tools/league-points' | '/changelog'
 
 const ITEMS: { key: NavKey; labelKey: string }[] = [
   { key: '/', labelKey: 'nav.home' },
@@ -14,6 +14,7 @@ const ITEMS: { key: NavKey; labelKey: string }[] = [
   { key: '/utopia', labelKey: 'nav.utopia' },
   { key: '/reforge', labelKey: 'nav.reforge' },
   { key: '/score', labelKey: 'nav.score' },
+  { key: '/tools/league-points', labelKey: 'nav.league' },
 ]
 
 export function TopNav({ active }: { active: NavKey }) {

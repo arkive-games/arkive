@@ -9,6 +9,7 @@ const SECTIONS = [
   { to: '/utopia', titleKey: 'utopianTheater.title', bodyKey: 'utopianTheater.homeDescription' },
   { to: '/reforge', titleKey: 'reforge.title', bodyKey: 'reforge.homeDescription' },
   { to: '/score', titleKey: 'score.title', bodyKey: 'score.homeDescription' },
+  { to: '/tools/league-points', titleKey: 'league.title', bodyKey: 'league.homeDescription' },
 ] as const
 
 export default function HomePage() {
