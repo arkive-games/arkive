@@ -23,7 +23,7 @@ function ScenarioLine({ scenario, targetId, t }: { scenario: LeagueScenario; tar
 export default function LeaguePointsPage() {
   const { t } = useTranslation()
   const [guilds, setGuilds] = useState<LeagueGuild[]>(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } })))
-  const [rules, setRules] = useState<LeagueRules>({ ...DEFAULT_RULES, matchPoints: [...DEFAULT_RULES.matchPoints], round1Bonuses: [...DEFAULT_RULES.round1Bonuses], round2Bonuses: [...DEFAULT_RULES.round2Bonuses] })
+  const rules: LeagueRules = DEFAULT_RULES
   const [targetId, setTargetId] = useState(DEFAULT_GUILDS[0].id)
   const [weekStarted, setWeekStarted] = useState<Record<WeekNumber, boolean>>({ 1: true, 2: true, 3: true, 4: false })
   useEffect(() => { document.title = `${t('league.title')} - ${t('siteTitle')}` }, [t])
@@ -42,24 +42,32 @@ export default function LeaguePointsPage() {
     if ((week === 1 || week === 3) && patch.rank !== undefined && patch.rank !== null) { const nextWeek = (week + 1) as 2 | 4; weeks[nextWeek] = { ...weeks[nextWeek], group: groupFromMatchRank(patch.rank) } }
     return { ...guild, weeks }
   }))
-  const updateRule = (key: 'matchPoints' | 'round1Bonuses' | 'round2Bonuses', index: number, value: string) => setRules((currentRules) => ({ ...currentRules, [key]: currentRules[key].map((item, itemIndex) => itemIndex === index ? numberValue(value) : item) }))
-  const reset = () => { setGuilds(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } }))); setRules({ ...DEFAULT_RULES, matchPoints: [...DEFAULT_RULES.matchPoints], round1Bonuses: [...DEFAULT_RULES.round1Bonuses], round2Bonuses: [...DEFAULT_RULES.round2Bonuses] }); setTargetId(DEFAULT_GUILDS[0].id); setWeekStarted({ 1: true, 2: true, 3: true, 4: false }) }
+  const reset = () => { setGuilds(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } }))); setTargetId(DEFAULT_GUILDS[0].id); setWeekStarted({ 1: true, 2: true, 3: true, 4: false }) }
 
   return <ContentPage active="/tools/league-points" title={t('league.title')} wide><div className="space-y-5" data-testid="league-points-page">
     <header className="border-b border-border pb-4"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t('league.eyebrow')}</p><h1 className="mt-1 text-3xl font-bold tracking-tight">{t('league.title')}</h1><p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">{t('league.description')}</p></header>
-    <section className="rounded-lg border border-border bg-card p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">{t('league.rulesTitle')}</h2><p className="mt-1 text-xs text-muted-foreground">{t('league.rulesHint')}</p></div><Button variant="ghost" size="sm" onClick={reset}><IconRefresh size={16} />{t('league.reset')}</Button></div><div className="mt-4 grid gap-4 xl:grid-cols-3"><RuleInputs title={t('league.matchPoints')} values={rules.matchPoints} onChange={(index, value) => updateRule('matchPoints', index, value)} t={t} /><RuleInputs title={t('league.round1Bonuses')} values={rules.round1Bonuses} onChange={(index, value) => updateRule('round1Bonuses', index, value)} t={t} /><RuleInputs title={t('league.round2Bonuses')} values={rules.round2Bonuses} onChange={(index, value) => updateRule('round2Bonuses', index, value)} t={t} /></div></section>
-    <section className="rounded-lg border border-border bg-card p-4 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold">{t('league.rosterTitle')}</h2><p className="mt-1 text-xs text-muted-foreground">{t('league.rosterHint')}</p></div><label className="flex items-center gap-2 text-sm"><span>{t('league.target')}</span><select value={targetId} onChange={(event) => setTargetId(event.target.value)} className="h-9 rounded-md border border-border bg-background px-2">{guilds.map((guild) => <option key={guild.id} value={guild.id}>{guild.name}</option>)}</select></label></div>
+    <section className="rounded-lg border border-border bg-card p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div><h2 className="font-semibold">{t('league.rulesTitle')}</h2><p className="mt-1 text-xs text-muted-foreground">{t('league.rulesHint')}</p></div><Button variant="ghost" size="sm" onClick={reset}><IconRefresh size={16} />{t('league.reset')}</Button></div><div className="mt-4 grid gap-4 xl:grid-cols-3"><RuleInputs title={t('league.matchPoints')} values={rules.matchPoints} t={t} /><RuleInputs title={t('league.round1Bonuses')} values={rules.round1Bonuses} t={t} /><RuleInputs title={t('league.round2Bonuses')} values={rules.round2Bonuses} t={t} /></div></section>
+    <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="font-semibold">{t('league.rosterTitle')}</h2>
+          <p className="mt-1 text-xs text-muted-foreground">{t('league.rosterHint')}</p>
+        </div>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground"><span>{t('league.target')}</span><select value={targetId} onChange={(event) => setTargetId(event.target.value)} className="h-9 min-w-32 rounded-md border border-border bg-background px-2 text-sm">{guilds.map((guild) => <option key={guild.id} value={guild.id}>{guild.name}</option>)}</select></label>
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground"><span>{t('league.targetScore')}</span><Input aria-label={t('league.targetScore')} type="number" min={0} placeholder="—" value={targetTotal ?? ''} onChange={(event) => updateGuild(targetId, { targetTotal: event.target.value === '' ? null : numberValue(event.target.value) })} className="h-9 w-28 text-sm" /></label>
+        </div>
+      </div>
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[1240px] text-left text-sm">
+        <table className="w-full min-w-[1080px] table-fixed text-left text-sm">
           <thead className="border-b border-border text-xs text-muted-foreground">
             <tr>
-              <th className="px-2 py-2 align-bottom">{t('league.guild')}</th>
+              <th className="w-32 px-2 py-2 align-bottom">{t('league.guild')}</th>
               {([1, 2] as WeekNumber[]).map((week) => <th key={week} className="px-2 py-2 align-bottom"><div className="flex min-w-32 flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
-              <th className="px-2 py-2 align-bottom">{t('league.round1Total')}</th>
+              <th className="w-20 px-2 py-2 text-center align-bottom">{t('league.round1Total')}</th>
               {([3, 4] as WeekNumber[]).map((week) => <th key={week} className="px-2 py-2 align-bottom"><div className="flex min-w-32 flex-col items-start gap-1"><span>{t('league.weekShort', { week })}</span><button type="button" aria-pressed={weekStarted[week]} onClick={() => setWeekStarted((current) => ({ ...current, [week]: !current[week] }))} className={`rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${weekStarted[week] ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-border bg-muted text-muted-foreground'}`}>{weekStarted[week] ? t('league.weekStarted') : t('league.weekNotStarted')}</button></div></th>)}
-              <th className="px-2 py-2 align-bottom">{t('league.round2Total')}</th>
-              <th className="px-2 py-2 align-bottom">{t('league.currentTotal')}</th>
-              <th className="px-2 py-2 align-bottom">{t('league.targetTotal')}</th>
+              <th className="w-20 px-2 py-2 text-center align-bottom">{t('league.round2Total')}</th>
+              <th className="w-20 px-2 py-2 text-center align-bottom">{t('league.currentTotal')}</th>
               <th className="px-2 py-2 align-bottom" />
             </tr>
           </thead>
@@ -67,15 +75,14 @@ export default function LeaguePointsPage() {
             {guilds.map((guild) => {
               const result = preview.results.find((item) => item.id === guild.id)!
               return <tr key={guild.id} className="border-b border-border/60 last:border-0">
-                <td className="px-2 py-2"><Input aria-label={t('league.guild')} value={guild.name} onChange={(event) => updateGuild(guild.id, { name: event.target.value })} className="h-9 min-w-40" /></td>
+                <td className="px-2 py-2"><Input aria-label={t('league.guild')} value={guild.name} onChange={(event) => updateGuild(guild.id, { name: event.target.value })} className="h-9 w-28" /></td>
                 <td className="px-2 py-2"><WeekRankSelect guild={guild} week={1} started={weekStarted[1]} points={rules.matchPoints} t={t} onChange={(rank, group) => updateWeek(guild.id, 1, { rank, ...(group !== undefined ? { group } : {}) })} /></td>
                 <td className="px-2 py-2"><WeekRankSelect guild={guild} week={2} started={weekStarted[2]} points={rules.matchPoints} t={t} onChange={(rank, group) => updateWeek(guild.id, 2, { rank, ...(group !== undefined ? { group } : {}) })} /></td>
-                <td className="px-2 py-2 font-medium">{result.round1Total}</td>
+                <td className="px-2 py-2 text-center font-medium tabular-nums">{result.round1Total}</td>
                 <td className="px-2 py-2"><WeekRankSelect guild={guild} week={3} started={weekStarted[3]} points={rules.matchPoints} t={t} onChange={(rank, group) => updateWeek(guild.id, 3, { rank, ...(group !== undefined ? { group } : {}) })} /></td>
                 <td className="px-2 py-2"><WeekRankSelect guild={guild} week={4} started={weekStarted[4]} points={rules.matchPoints} t={t} onChange={(rank, group) => updateWeek(guild.id, 4, { rank, ...(group !== undefined ? { group } : {}) })} /></td>
-                <td className="px-2 py-2 font-medium">{result.round2Total}</td>
-                <td className="px-2 py-2 font-semibold">{result.finalPoints}</td>
-                <td className="px-2 py-2"><Input aria-label={t('league.targetTotal')} type="number" min={0} placeholder="—" value={guild.targetTotal ?? ''} onChange={(event) => updateGuild(guild.id, { targetTotal: event.target.value === '' ? null : numberValue(event.target.value) })} className="h-9 w-24" /></td>
+                <td className="px-2 py-2 text-center font-medium tabular-nums">{result.round2Total}</td>
+                <td className="px-2 py-2 text-center font-semibold tabular-nums">{result.finalPoints}</td>
                 <td className="px-2 py-2 text-right"><button type="button" disabled={guilds.length <= 8} aria-label={t('league.remove')} className="rounded p-2 text-muted-foreground enabled:hover:bg-muted enabled:hover:text-foreground disabled:opacity-30" onClick={() => setGuilds((items) => items.length > 8 ? items.filter((item) => item.id !== guild.id) : items)}><IconTrash size={16} /></button></td>
               </tr>
             })}
@@ -89,4 +96,4 @@ export default function LeaguePointsPage() {
   </div></ContentPage>
 }
 
-function RuleInputs({ title, values, onChange, t }: { title: string; values: number[]; onChange: (index: number, value: string) => void; t: (key: string, options?: Record<string, unknown>) => string }) { return <div><h3 className="text-sm font-medium">{title}</h3><div className="mt-2 grid grid-cols-4 gap-2">{values.map((value, index) => <label key={index} className="min-w-0 text-xs text-muted-foreground"><span className="block truncate">{t('league.place', { rank: index + 1 })}</span><Input type="number" min={0} value={value} onChange={(event) => onChange(index, event.target.value)} className="mt-1 h-9 w-full min-w-0" /></label>)}</div></div> }
+function RuleInputs({ title, values, t }: { title: string; values: number[]; t: (key: string, options?: Record<string, unknown>) => string }) { return <div><h3 className="text-sm font-medium">{title}</h3><div className="mt-2 grid grid-cols-4 gap-2">{values.map((value, index) => <div key={index} className="min-w-0 rounded-md border border-border/70 bg-muted/30 px-3 py-2 text-center"><span className="block truncate text-xs text-muted-foreground">{t('league.place', { rank: index + 1 })}</span><span className="mt-1 block text-lg font-semibold tabular-nums">{value}</span></div>)}</div></div> }

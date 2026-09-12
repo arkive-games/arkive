@@ -451,7 +451,9 @@ const en = {
 type Strings = typeof en
 
 ;(en.league as Record<string, string>).calculatedTotal = 'Calculated points'
-;(en.league as Record<string, string>).currentTotal = 'Current total'
+;(en.league as Record<string, string>).currentTotal = 'Total score'
+;(en.league as Record<string, string>).targetScore = 'Target score (optional)'
+en.league.rulesHint = 'These scoring values are fixed and are shown for reference only.'
 ;(en.league as Record<string, string>).groupRank = 'Group placement'
 ;(en.league as Record<string, string>).weekStarted = 'Started'
 ;(en.league as Record<string, string>).weekNotStarted = 'Not started'
@@ -887,7 +889,9 @@ const zhCN: Strings = {
 // The simulator's target is the guild being tested for qualification, not a generic roster target.
 zhCN.league.target = '晋级推演公会'
 ;(zhCN.league as Record<string, string>).calculatedTotal = '已计算积分'
-;(zhCN.league as Record<string, string>).currentTotal = '当前积分总和'
+;(zhCN.league as Record<string, string>).currentTotal = '积分总和'
+;(zhCN.league as Record<string, string>).targetScore = '目标积分（可选）'
+zhCN.league.rulesHint = '积分规则固定，以下数值仅供查看，不能修改。'
 ;(zhCN.league as Record<string, string>).groupRank = '组内名次'
 ;(zhCN.league as Record<string, string>).weekStarted = '已开始'
 ;(zhCN.league as Record<string, string>).weekNotStarted = '未开始'
@@ -1323,7 +1327,9 @@ const zhTW: Strings = {
 
 zhTW.league.target = '晉級推演公會'
 ;(zhTW.league as Record<string, string>).calculatedTotal = '已計算積分'
-;(zhTW.league as Record<string, string>).currentTotal = '目前積分總和'
+;(zhTW.league as Record<string, string>).currentTotal = '積分總和'
+;(zhTW.league as Record<string, string>).targetScore = '目標積分（可選）'
+zhTW.league.rulesHint = '積分規則固定，以下數值僅供查看，不能修改。'
 ;(zhTW.league as Record<string, string>).groupRank = '組內名次'
 ;(zhTW.league as Record<string, string>).weekStarted = '已開始'
 ;(zhTW.league as Record<string, string>).weekNotStarted = '未開始'
