@@ -21,6 +21,6 @@
     "@hey-api/openapi-ts": "^0.99.0",
     "@types/node": "^22.15.3",
     "typescript": "~5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.11"
   }
 }
