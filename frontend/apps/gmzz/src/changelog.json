@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.0",
+      "date": "2026-09-14",
+      "commit": "3268990aa49f5de6624ac101c4c0a863e79d2d2f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New League Points Simulator: enter each guild's weekly placement and group, and see running totals, the final standings they produce, and which placements still reach the top four.",
+            "zh-CN": "新增公会联赛积分推演：录入每家公会每周的名次与分组，即可查看实时总分、由此得出的最终排名，以及仍能晋级前四的名次组合。",
+            "zh-TW": "新增公會聯賽積分推演：輸入每家公會每週的名次與分組，即可查看即時總分、由此得出的最終排名，以及仍能晉級前四的名次組合。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.1",
       "date": "2026-09-04",
       "commit": "dc5a205429aa563413d83837d0a5ca53a7d31466",
