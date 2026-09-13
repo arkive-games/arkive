@@ -20,10 +20,11 @@ import (
 // The same test runs against either backend, because that is the point — MinIO
 // in development and Tencent COS in production must be one code path.
 //
-//	# MinIO
+//	# MinIO. The images come from quay.io; Docker Hub denies the unqualified
+//	# name, so `minio/minio` fails the pull rather than the test.
 //	docker run --rm -d -p 9000:9000 -e MINIO_ROOT_USER=minioadmin \
-//	  -e MINIO_ROOT_PASSWORD=minioadmin minio/minio server /data
-//	docker run --rm --network host --entrypoint sh minio/mc -c \
+//	  -e MINIO_ROOT_PASSWORD=minioadmin quay.io/minio/minio server /data
+//	docker run --rm --network host --entrypoint sh quay.io/minio/mc -c \
 //	  "mc alias set l http://127.0.0.1:9000 minioadmin minioadmin && \
 //	   mc mb --ignore-existing l/arkive-test && mc anonymous set download l/arkive-test"
 //

@@ -39,8 +39,12 @@ services:
       timeout: 5s
       retries: 20
 
+  # quay.io is where MinIO publishes. Docker Hub answers the unqualified
+  # `minio/minio` with "repository does not exist or may require 'docker
+  # login'", which reads like a credentials problem and stops `docker compose
+  # up` before anything starts, so the registry is written down here.
   minio:
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -64,7 +68,7 @@ services:
   # avatars are served straight from the bucket to browsers, so both are set up
   # here. This container exits once done.
   minio-init:
-    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
     depends_on:
       minio:
         condition: service_healthy
