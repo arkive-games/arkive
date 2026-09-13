@@ -183,15 +183,27 @@ jobs:
             echo "no $src — ${{ matrix.app }} needs no host rules"
           fi
 
+      # Installed rather than run through npx, and from the repository root
+      # rather than frontend/. `npx` resolves against the tree of the directory
+      # it runs in, and npm's arborist cannot read the one pnpm builds: it dies
+      # with "Cannot read properties of null (reading 'edgesOut')" before the
+      # CLI is ever downloaded. That took every deploy down from 2026-09-06 to
+      # 2026-09-13 -- six sites, a week of merged work, and a green CI the whole
+      # time, because CI never deploys. A global install builds its tree in the
+      # global prefix, where no project tree can reach it.
+      #
+      # Still pinned: an unpinned CLI is a floating dependency sitting in the
+      # deploy path of every production site.
+      - name: Install the EdgeOne CLI
+        run: npm install --global edgeone@1.6.21
+
       - name: Deploy to EdgeOne Pages
         working-directory: frontend
         env:
           # The only secret this workflow needs.
           EDGEONE_API_TOKEN: ${{ secrets.EDGEONE_API_TOKEN }}
-        # Pinned: an unpinned `npx edgeone` is a floating dependency sitting in the
-        # deploy path of every production site.
         run: >
-          npx --yes edgeone@1.6.21 makers deploy apps/${{ matrix.app }}/dist
+          edgeone makers deploy apps/${{ matrix.app }}/dist
           -n ${{ matrix.project }}
           -t "$EDGEONE_API_TOKEN"
           -e production
