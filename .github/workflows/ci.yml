@@ -251,11 +251,17 @@ jobs:
       # Avatars are served straight from the bucket to browsers, so the storage
       # round-trip test fetches its published URL anonymously. MinIO grants that
       # only with an explicit policy, and it creates no bucket on its own.
+      #
+      # Both images come from quay.io, which is where MinIO publishes them.
+      # Docker Hub answers `docker pull minio/minio` with "repository does not
+      # exist or may require 'docker login'", so the unqualified name fails the
+      # job at pull time (exit 125) with a message that reads like a credentials
+      # problem rather than a moved image.
       - name: Start MinIO
         run: |
           docker run -d --name minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
-            minio/minio:latest server /data
+            quay.io/minio/minio:latest server /data
           for i in $(seq 1 60); do
             if curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null; then
               echo "MinIO is live after ${i}s"
@@ -263,7 +269,7 @@ jobs:
             fi
             sleep 1
           done
-          docker run --rm --network host --entrypoint sh minio/mc:latest -c "
+          docker run --rm --network host --entrypoint sh quay.io/minio/mc:latest -c "
             mc alias set ci http://127.0.0.1:9000 minioadmin minioadmin &&
             mc mb --ignore-existing ci/arkive-test &&
             mc anonymous set download ci/arkive-test
