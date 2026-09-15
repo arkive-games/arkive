@@ -50,6 +50,42 @@ export type TrainTradePrices = Record<TrainTradeStation, TrainTradePriceRange>
 type RawPrice = { BuyPriceRange: [number, number]; SellPriceRange: [number, number] }
 type RawPriceTable = Record<string, Record<string, RawPrice>>
 
+type TrainTradeCondition = {
+  CompareOperator?: string
+  ConditionType?: string
+  Value?: string | number
+}
+
+type TrainTradeEffect = {
+  EffectType?: string
+  Target?: Array<string | number>
+  Value?: number | number[]
+}
+
+type RawStrategyCard = {
+  ID: number
+  CardNameText: string
+  CardDescText?: string
+  CardLevel: number
+  Icon?: string
+  LabelName?: string
+  Effects?: TrainTradeEffect[]
+  NotCondEffects?: TrainTradeEffect[]
+  TriggerConditions?: TrainTradeCondition[]
+}
+
+export type TrainTradeStrategyCard = {
+  id: number
+  name: string
+  description: string
+  level: number
+  icon: string
+  label: string
+  effects: TrainTradeEffect[]
+  hasAlternateEffect: boolean
+  triggerConditions: TrainTradeCondition[]
+}
+
 
 /** Strip the client's own rich-text markup (`<LightHighlight>…</>`, `<HyperLink …>`). */
 const stripMarkup = (value: string | undefined) =>
@@ -73,6 +109,22 @@ export async function loadTrainTradeRouteProfiles(): Promise<TrainTradeRouteProf
     loadJson<RawStationType[]>('station_types.json', 'Train Trade station types'),
   ])
   return parseTrainTradeRouteProfiles(difficulties, maps, stations)
+}
+
+export async function loadTrainTradeStrategyCards(): Promise<TrainTradeStrategyCard[]> {
+  const cards = await loadJson<RawStrategyCard[]>('strategy_cards.json', 'Train Trade strategy cards')
+  if (!Array.isArray(cards)) throw new Error('Invalid Train Trade strategy-card data')
+  return cards.map((card) => ({
+    id: card.ID,
+    name: card.CardNameText,
+    description: stripMarkup(card.CardDescText),
+    level: card.CardLevel,
+    icon: card.Icon ?? '',
+    label: card.LabelName ?? '',
+    effects: card.Effects ?? [],
+    hasAlternateEffect: Boolean(card.NotCondEffects?.length),
+    triggerConditions: card.TriggerConditions ?? [],
+  }))
 }
 
 /**

@@ -5,7 +5,7 @@ export const HINT_IDS = ['winery-most', 'food-most', 'trade-most', 'equal'] as c
 export type HintId = (typeof HINT_IDS)[number]
 
 export type StationTotals = Record<StationType, number>
-export type ConfirmedStep = { currentType: StationType; hintId: HintId }
+export type ConfirmedStep = { currentType: StationType; hintId: HintId | '' }
 
 export type RouteModel = {
   totals: StationTotals
@@ -33,7 +33,7 @@ export function createRouteModel(
   if (originHint) hints.set(0, originHint)
   steps.forEach((step, index) => {
     fixed.set(index, step.currentType)
-    hints.set(index + 1, step.hintId)
+    if (step.hintId) hints.set(index + 1, step.hintId)
   })
   const model = { totals: { ...totals }, totalStops, fixed, hints, count: 0 }
   return { ...model, count: countRoutes(model) }
@@ -51,6 +51,20 @@ export function prospectiveRouteCount(
   if (currentType) fixed.set(index, currentType)
   if (hintId) hints.set(hintStart, hintId)
   return countRoutes(model, { fixed, hints })
+}
+
+export function refineRouteModel(
+  model: RouteModel,
+  index: number,
+  currentType: StationType | '',
+  hintStart: number,
+  hintId: HintId | '',
+): RouteModel {
+  const fixed = new Map(model.fixed)
+  const hints = new Map(model.hints)
+  if (currentType) fixed.set(index, currentType)
+  if (hintId) hints.set(hintStart, hintId)
+  return { ...model, fixed, hints, count: prospectiveRouteCount(model, index, currentType, hintStart, hintId) }
 }
 
 export function getAvailableHints(
@@ -133,6 +147,7 @@ function countRoutes(model: Omit<RouteModel, 'count'> | RouteModel, refinement: 
   const fixed = mergeConstraints(model.fixed, refinement.fixed)
   const hints = mergeConstraints(model.hints, refinement.hints)
   if (!fixed || !hints) return 0
+  if ([...hints.keys()].some((start) => start < 0 || start + 2 >= model.totalStops)) return 0
   if (STATION_TYPES.reduce((sum, type) => sum + model.totals[type], 0) !== model.totalStops) return 0
 
   const remaining = STATION_TYPES.map((type) => model.totals[type])

@@ -4,6 +4,7 @@ import {
   getAvailableHints,
   probabilityFor,
   prospectiveRouteCount,
+  refineRouteModel,
   windowDistribution,
   type StationTotals,
 } from './stationSolver'
@@ -31,5 +32,19 @@ describe('train-trade station solver', () => {
     expect(createRouteModel({ winery: 1, food: 1, trade: 1 }, 4, '', []).count).toBe(0)
     const model = createRouteModel({ winery: 2, food: 2, trade: 2 }, 6, 'equal', [])
     expect(prospectiveRouteCount(model, 0, 'winery', 1, 'winery-most')).toBe(0)
+  })
+
+  it('supports station-only confirmations after no full hint window remains', () => {
+    const model = createRouteModel({ winery: 2, food: 2, trade: 2 }, 6, 'equal', [])
+
+    expect(prospectiveRouteCount(model, 0, 'winery', 4, 'equal')).toBe(0)
+    expect(refineRouteModel(model, 0, 'winery', 1, '').count).toBe(12)
+    const complete = createRouteModel({ winery: 1, food: 1, trade: 1 }, 3, 'equal', [
+      { currentType: 'winery', hintId: '' },
+      { currentType: 'food', hintId: '' },
+      { currentType: 'trade', hintId: '' },
+    ])
+    expect(complete.count).toBe(1)
+    expect(probabilityFor(complete, 2).trade).toBe(1)
   })
 })

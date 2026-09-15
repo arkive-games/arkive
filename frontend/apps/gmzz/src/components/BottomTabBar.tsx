@@ -20,7 +20,7 @@ import { useSettingsConfig } from '../lib/settings'
 import type { NavKey } from './TopNav'
 
 function activeKey(pathname: string): NavKey {
-  if (pathname.startsWith('/traintrade')) return '/traintrade'
+  if (pathname.startsWith('/traintrade') || pathname === '/tools/traintrade-station') return '/traintrade'
   if (pathname.startsWith('/utopia')) return '/utopia'
   if (pathname.startsWith('/reforge')) return '/reforge'
   if (pathname.startsWith('/score')) return '/score'
