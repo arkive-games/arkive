@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.6.0",
+      "date": "2026-09-15",
+      "commit": "f365447e5189bac0baa39ebd0ac4a4e5e2befe82",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rebuilt the station planner around the compact local-prototype flow, including three-stop probabilities, automatic station locks, full-route confirmation, and strategy-card recommendations.",
+            "zh-CN": "按本地原型的紧凑流程重建站点推演，新增连续三站概率、站点自动锁定、完整路线确认与策略卡推荐。",
+            "zh-TW": "依本地原型的緊湊流程重建站點推演，新增連續三站機率、站點自動鎖定、完整路線確認與策略卡推薦。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.0",
       "date": "2026-09-14",
       "commit": "3268990aa49f5de6624ac101c4c0a863e79d2d2f",
