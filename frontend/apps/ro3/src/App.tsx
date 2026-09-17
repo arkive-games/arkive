@@ -2,14 +2,11 @@ import { useEffect, useMemo, useState, type ComponentType } from 'react'
 import {
   Check,
   ArrowLeft,
-  Bookmark,
   BookOpen,
   ChevronRight,
-  Compass,
   ExternalLink,
   Gamepad2,
   MapPinned,
-  MessageCircle,
   Ghost,
   Gem,
   PawPrint,
@@ -23,7 +20,6 @@ import {
 } from 'lucide-react'
 import { ArkiveMapTopBar, ArkiveMobileHeader, trackPageview, useTheme, type ShellNavItem } from '@gamemap/map-shell'
 import { SiteFooter, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
-import { filterGuides, type GuideEntry, type GuideScope, type GuideSort } from './guideCatalog'
 import {
   cardFrameVariant,
   countCardsByCategory,
@@ -45,7 +41,6 @@ import { SoulWiki } from './SoulWiki'
 import { BuildPlanner } from './BuildPlanner'
 import { resourceUrl } from './lib/urls'
 import heroImage from './assets/ro3-hero.webp'
-import emptyImage from './assets/ro3-guide-empty.webp'
 import cardFrame01 from './assets/native-ui/card_img_item_01_01.webp'
 import cardFrame02 from './assets/native-ui/card_img_item_02_01.webp'
 import cardFrame03 from './assets/native-ui/card_img_item_03_01.webp'
@@ -110,17 +105,27 @@ const INITIAL_CARD_FILTERS: CardFilters = {
   primaryAttributes: [],
 }
 
-const GUIDES: GuideEntry[] = []
-
 type DestinationKey = keyof typeof DESTINATIONS
 type IconComponent = ComponentType<{ 'aria-hidden'?: boolean | 'true' }>
 type Page = 'overview' | 'wiki' | 'builds' | 'changelog'
 type WikiView = 'skills' | 'talents' | 'cards' | 'pets' | 'monsters' | 'equipment' | 'souls'
 
-// Bare `/` opens the encyclopedias rather than the guide hub: the hub has no
-// guides yet, so it would land every visitor on an empty state while the
-// content that does exist sits one click away. The hub still needs a URL of
-// its own, or reload and deep links would silently bounce back to the wiki.
+// The landing page and the encyclopedia navigation advertise the same seven
+// tables, so they read one list rather than two that drift apart.
+const WIKI_SECTIONS: Array<{ view: WikiView; icon: IconComponent }> = [
+  { view: 'skills', icon: Swords },
+  { view: 'talents', icon: Sparkles },
+  { view: 'cards', icon: BookOpen },
+  { view: 'pets', icon: PawPrint },
+  { view: 'monsters', icon: Ghost },
+  { view: 'equipment', icon: Shield },
+  { view: 'souls', icon: Gem },
+]
+
+// Bare `/` opens the encyclopedias rather than the landing page, which is where
+// a visitor who typed the address wants to end up: the tables are the content,
+// and the landing page exists to introduce them. It still needs a URL of its
+// own, or reload and deep links would silently bounce back to the wiki.
 function getInitialPage(): Page {
   if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return 'changelog'
   const view = new URLSearchParams(window.location.search).get('view')
@@ -136,11 +141,6 @@ function App() {
   const { theme, setTheme } = useTheme()
   const [page, setPage] = useState<Page>(getInitialPage)
   const [wikiView, setWikiView] = useState<WikiView>(getInitialWikiView)
-  const [query, setQuery] = useState('')
-  const [classId, setClassId] = useState('')
-  const [dungeonId, setDungeonId] = useState('')
-  const [scope, setScope] = useState<GuideScope>('all')
-  const [sort, setSort] = useState<GuideSort>('latest')
   const [noticeId, setNoticeId] = useState(0)
 
   const navItems: ShellNavItem[] = useMemo(() => [{ key: 'builds', label: content.builds.title, active: page === 'builds' }, ...content.navigation.map((item) => {
@@ -217,14 +217,6 @@ function App() {
     return () => window.clearTimeout(timeout)
   }, [noticeId])
 
-  const guides = useMemo(() => filterGuides(GUIDES, {
-    scope,
-    classId,
-    dungeonId,
-    query,
-    sort,
-  }), [classId, dungeonId, query, scope, sort])
-
   const showUnavailable = () => setNoticeId((value) => value + 1)
 
   const openDestination = (key: DestinationKey) => {
@@ -293,12 +285,6 @@ function App() {
       navigateToPage('builds')
       return
     }
-    if (key === 'classes' || key === 'dungeons') {
-      if (page !== 'overview') navigateToPage('overview')
-      setScope(key === 'classes' ? 'class' : 'dungeon')
-      window.setTimeout(() => document.querySelector('#guide-browser')?.scrollIntoView({ behavior: 'smooth' }))
-      return
-    }
     if (key === 'wiki' || key === 'wiki-skills') {
       openWiki('skills')
       return
@@ -329,16 +315,6 @@ function App() {
     }
     if (key in DESTINATIONS) openDestination(key as DestinationKey)
   }
-
-  const clearFilters = () => {
-    setQuery('')
-    setClassId('')
-    setDungeonId('')
-    setScope('all')
-    setSort('latest')
-  }
-
-  const hasFilters = Boolean(query || classId || dungeonId || scope !== 'all' || sort !== 'latest')
 
   return (
     <div className="ro3-app">
@@ -405,7 +381,7 @@ function App() {
       ) : page === 'changelog' ? (
         <ChangelogPage onBack={() => navigateToPage('wiki')} />
       ) : (
-      <main>
+      <main className="ro3-home">
         <section className="ro3-hero" aria-labelledby="ro3-title">
           <img src={heroImage} alt="" />
           <div className="ro3-hero-shade" />
@@ -415,111 +391,45 @@ function App() {
               <h1 id="ro3-title">{content.hero.title}</h1>
               <p>{content.hero.description}</p>
             </div>
-            <label className="ro3-search">
-              <Search aria-hidden="true" />
-              <span className="sr-only">{content.search.label}</span>
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={content.search.placeholder}
+            <div className="ro3-hero-actions">
+              <HeroAction
+                icon={BookOpen}
+                title={content.hero.actions.wiki.title}
+                description={content.hero.actions.wiki.description}
+                onClick={() => openWiki('skills')}
+                primary
               />
-              {query ? (
-                <button type="button" aria-label={content.search.clear} onClick={() => setQuery('')}>
-                  <X aria-hidden="true" />
-                </button>
-              ) : null}
-            </label>
-          </div>
-        </section>
-
-        <section className="ro3-entry-band" aria-labelledby="quick-entry-title">
-          <div className="ro3-shell">
-            <h2 id="quick-entry-title" className="sr-only">{content.entries.title}</h2>
-            <div className="ro3-entry-grid">
-              <QuickEntry icon={Swords} label={content.entries.classGuides} onClick={() => handleNavigation('classes')} />
-              <QuickEntry icon={Compass} label={content.entries.dungeonGuides} onClick={() => handleNavigation('dungeons')} />
-              <QuickEntry icon={Gamepad2} label={content.entries.gameplay} onClick={() => openDestination('gameplay')} available={Boolean(DESTINATIONS.gameplay)} />
-              <QuickEntry icon={Wrench} label={content.entries.tools} onClick={() => openDestination('tools')} available={Boolean(DESTINATIONS.tools)} />
-              <QuickEntry icon={BookOpen} label={content.entries.wiki} onClick={openWiki} />
-              <QuickEntry icon={MapPinned} label={content.entries.map} onClick={() => openDestination('map')} available={Boolean(DESTINATIONS.map)} />
+              <HeroAction
+                icon={Swords}
+                title={content.hero.actions.builds.title}
+                description={content.hero.actions.builds.description}
+                onClick={() => navigateToPage('builds')}
+              />
             </div>
           </div>
         </section>
 
-        <div className="ro3-shell ro3-layout">
-          <div className="ro3-main-column">
-            <section id="guide-browser" className="guide-browser" aria-labelledby="guide-heading">
-              <div className="section-heading">
-                <div>
-                  <span>{content.filters.eyebrow}</span>
-                  <h2 id="guide-heading">{content.filters.title}</h2>
-                </div>
-                <div className="scope-tabs" aria-label={content.filters.scopeLabel}>
-                  {content.filters.scopes.map((item) => (
-                    <button
-                      type="button"
-                      key={item.key}
-                      className={scope === item.key ? 'is-active' : undefined}
-                      aria-pressed={scope === item.key}
-                      onClick={() => setScope(item.key as GuideScope)}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <div className="ro3-shell ro3-home-body">
+          <section className="ro3-catalog" aria-labelledby="ro3-catalog-title">
+            <div className="ro3-section-heading">
+              <span>{content.home.catalogEyebrow}</span>
+              <h2 id="ro3-catalog-title">{content.home.catalogTitle}</h2>
+              <p>{content.home.catalogDescription}</p>
+            </div>
+            <div className="ro3-catalog-grid">
+              {WIKI_SECTIONS.map(({ view, icon: Icon }) => (
+                <button type="button" key={view} className="ro3-catalog-card" onClick={() => openWiki(view)}>
+                  <span className="ro3-catalog-card-icon"><Icon aria-hidden="true" /></span>
+                  <strong>{content.wiki.tabs[view]}</strong>
+                  <p>{content.home.sections[view]}</p>
+                  <ChevronRight aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          </section>
 
-              <FilterGroup
-                label={content.filters.classLabel}
-                value={classId}
-                options={content.filters.classes}
-                onChange={setClassId}
-              />
-              <FilterGroup
-                label={content.filters.dungeonLabel}
-                value={dungeonId}
-                options={content.filters.dungeons}
-                onChange={setDungeonId}
-              />
-            </section>
-
-            <section className="guide-stream" aria-labelledby="guide-results-title">
-              <div className="guide-toolbar">
-                <div>
-                  <h2 id="guide-results-title">{content.results.title}</h2>
-                  <span>{content.results.count.replace('{count}', String(guides.length))}</span>
-                </div>
-                <label>
-                  <SlidersHorizontal aria-hidden="true" />
-                  <span className="sr-only">{content.results.sortLabel}</span>
-                  <select value={sort} onChange={(event) => setSort(event.target.value as GuideSort)}>
-                    {content.results.sorts.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
-                  </select>
-                </label>
-              </div>
-
-              {guides.length > 0 ? (
-                <div className="guide-list">
-                  {guides.map((guide) => <GuideRow key={guide.id} guide={guide} />)}
-                </div>
-              ) : (
-                <div className="guide-empty">
-                  <img src={emptyImage} alt="" />
-                  <div>
-                    <Sparkles aria-hidden="true" />
-                    <h3>{hasFilters ? content.results.emptyFilteredTitle : content.results.emptyTitle}</h3>
-                    <p>{hasFilters ? content.results.emptyFilteredDescription : content.results.emptyDescription}</p>
-                    {hasFilters ? (
-                      <button type="button" onClick={clearFilters}>{content.results.clearFilters}</button>
-                    ) : null}
-                  </div>
-                </div>
-              )}
-            </section>
-          </div>
-
-          <aside className="ro3-sidebar" aria-label={content.sidebar.title}>
+          <section className="ro3-home-aside" aria-labelledby="ro3-destinations-title">
+            <h2 id="ro3-destinations-title" className="sr-only">{content.sidebar.title}</h2>
             <DestinationPanel
               icon={MapPinned}
               eyebrow={content.sidebar.map.eyebrow}
@@ -530,26 +440,18 @@ function App() {
               onClick={() => openDestination('map')}
               featured
             />
-            <section className="sidebar-section">
-              <div className="sidebar-heading">
-                <h2>{content.sidebar.resourcesTitle}</h2>
-                <span>{content.unavailable}</span>
-              </div>
-              <DestinationRow icon={Gamepad2} title={content.entries.gameplay} onClick={() => openDestination('gameplay')} available={Boolean(DESTINATIONS.gameplay)} />
-              <DestinationRow icon={Wrench} title={content.entries.tools} onClick={() => openDestination('tools')} available={Boolean(DESTINATIONS.tools)} />
-              <DestinationRow icon={BookOpen} title={content.entries.wiki} onClick={openWiki} available />
-            </section>
-            <section className="sidebar-section contribution-section">
+            {/* The gameplay notes and the tool set have no page yet. One shared
+                note says so once, rather than a row each repeating the same
+                "coming soon" badge down the column. */}
+            <section className="ro3-upcoming">
+              <strong>{content.home.upcoming.title}</strong>
+              <p>{content.home.upcoming.description}</p>
               <div>
-                <h2>{content.sidebar.contribution.title}</h2>
-                <p>{content.sidebar.contribution.description}</p>
+                <span><Gamepad2 aria-hidden="true" />{content.entries.gameplay}</span>
+                <span><Wrench aria-hidden="true" />{content.entries.tools}</span>
               </div>
-              <button type="button" disabled>
-                {content.sidebar.contribution.action}
-                <span>{content.unavailable}</span>
-              </button>
             </section>
-          </aside>
+          </section>
         </div>
       </main>
       )}
@@ -906,76 +808,28 @@ function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData })
   )
 }
 
-function QuickEntry({
+function HeroAction({
   icon: Icon,
-  label,
+  title,
+  description,
   onClick,
-  available = true,
+  primary = false,
 }: {
   icon: IconComponent
-  label: string
+  title: string
+  description: string
   onClick: () => void
-  available?: boolean
+  primary?: boolean
 }) {
   return (
-    <button type="button" className="quick-entry" onClick={onClick}>
-      <span><Icon aria-hidden="true" /></span>
-      <strong>{label}</strong>
-      {!available ? <small>{content.unavailable}</small> : <ChevronRight aria-hidden="true" />}
+    <button type="button" className={primary ? 'ro3-hero-action is-primary' : 'ro3-hero-action'} onClick={onClick}>
+      <span className="ro3-hero-action-icon"><Icon aria-hidden="true" /></span>
+      <span className="ro3-hero-action-copy">
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </span>
+      <ChevronRight aria-hidden="true" />
     </button>
-  )
-}
-
-function FilterGroup({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: string
-  options: Array<{ key: string; label: string }>
-  onChange: (value: string) => void
-}) {
-  return (
-    <div className="filter-group">
-      <span>{label}</span>
-      <div>
-        {options.map((option) => (
-          <button
-            type="button"
-            key={option.key}
-            className={value === option.key ? 'is-active' : undefined}
-            aria-pressed={value === option.key}
-            onClick={() => onChange(option.key)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function GuideRow({ guide }: { guide: GuideEntry }) {
-  return (
-    <article className="guide-row">
-      {guide.coverUrl ? <img src={guide.coverUrl} alt="" /> : null}
-      <div>
-        <span className="guide-scope">{guide.scope}</span>
-        <h3><a href={guide.href}>{guide.title}</a></h3>
-        <p>{guide.summary}</p>
-        <div className="guide-author">
-          {guide.author.avatarUrl ? <img src={guide.author.avatarUrl} alt="" /> : <span />}
-          <strong>{guide.author.name}</strong>
-          <time dateTime={guide.updatedAt}>{guide.updatedAt}</time>
-        </div>
-      </div>
-      <div className="guide-signals">
-        <span><Bookmark aria-hidden="true" />{guide.savedCount}</span>
-        <span><MessageCircle aria-hidden="true" />{guide.replyCount}</span>
-      </div>
-    </article>
   )
 }
 
@@ -1003,7 +857,10 @@ function DestinationPanel({
       <span className="destination-eyebrow"><Icon aria-hidden="true" />{eyebrow}</span>
       <h2>{title}</h2>
       <p>{description}</p>
-      <button type="button" onClick={onClick}>
+      {/* An unavailable destination keeps its button -- it explains itself when
+          clicked -- but drops the call-to-action colour, which otherwise reads
+          as "open this" on the one panel that cannot be opened. */}
+      <button type="button" className={available ? undefined : 'is-unavailable'} onClick={onClick}>
         {available ? action : content.unavailable}
         {available ? <ExternalLink aria-hidden="true" /> : null}
       </button>
@@ -1011,26 +868,4 @@ function DestinationPanel({
   )
 }
 
-function DestinationRow({
-  icon: Icon,
-  title,
-  available,
-  onClick,
-}: {
-  icon: IconComponent
-  title: string
-  available: boolean
-  onClick: () => void
-}) {
-  return (
-    <button type="button" className="destination-row" onClick={onClick}>
-      <span><Icon aria-hidden="true" /></span>
-      <strong>{title}</strong>
-      <small>{available ? content.sidebar.open : content.unavailable}</small>
-      <ChevronRight aria-hidden="true" />
-    </button>
-  )
-}
-
-// Kept as small, data-oriented building blocks for the legacy detail routes.
 export default App

@@ -37,17 +37,22 @@
   "hero": {
     "eyebrow": "仙境传说 3",
     "title": "仙境传说 3",
-    "description": "按职业与副本筛选玩家攻略，找到适合你的冒险路线。"
+    "description": "从客户端配置表整理的技能、卡片、装备与宠物资料，以及可自由搭配的职业流派手册。",
+    "actions": {
+      "wiki": {
+        "title": "游戏百科",
+        "description": "七类资料，逐条对照客户端配置"
+      },
+      "builds": {
+        "title": "流派手册",
+        "description": "按职业路线搭配技能与装备"
+      }
+    }
   },
   "search": {
-    "label": "搜索攻略",
-    "placeholder": "搜索职业流派、副本机制或作者",
     "clear": "清空搜索"
   },
   "entries": {
-    "title": "快速入口",
-    "classGuides": "职业攻略",
-    "dungeonGuides": "副本攻略",
     "gameplay": "玩法资料",
     "tools": "工具",
     "wiki": "百科",
@@ -56,44 +61,23 @@
   "builds": {
     "title": "流派手册"
   },
-  "filters": {
-    "eyebrow": "筛选攻略",
-    "title": "看看大家怎么玩",
-    "scopeLabel": "攻略范围",
-    "scopes": [
-      { "key": "all", "label": "全部攻略" },
-      { "key": "class", "label": "职业攻略" },
-      { "key": "dungeon", "label": "副本攻略" }
-    ],
-    "classLabel": "职业",
-    "classes": [
-      { "key": "", "label": "全部职业" },
-      { "key": "swordsman", "label": "剑士" },
-      { "key": "mage", "label": "魔法师" },
-      { "key": "archer", "label": "弓箭手" },
-      { "key": "acolyte", "label": "服事" },
-      { "key": "merchant", "label": "商人" },
-      { "key": "thief", "label": "盗贼" }
-    ],
-    "dungeonLabel": "副本",
-    "dungeons": [
-      { "key": "", "label": "全部副本" }
-    ]
-  },
-  "results": {
-    "title": "攻略文章",
-    "count": "共 {count} 篇",
-    "sortLabel": "攻略排序",
-    "sorts": [
-      { "key": "latest", "label": "最近更新" },
-      { "key": "saved", "label": "收藏最多" },
-      { "key": "replied", "label": "回复最多" }
-    ],
-    "emptyTitle": "暂无功能",
-    "emptyDescription": "当前暂无攻略内容。作者、更新时间、收藏数和回复数将在内容接入后显示。",
-    "emptyFilteredTitle": "没有符合条件的攻略",
-    "emptyFilteredDescription": "当前筛选下暂无内容，可以清除筛选查看全部攻略。",
-    "clearFilters": "清除筛选"
+  "home": {
+    "catalogEyebrow": "玩家资料库",
+    "catalogTitle": "游戏百科",
+    "catalogDescription": "以下资料全部取自客户端配置表，随版本更新同步整理。",
+    "sections": {
+      "skills": "按职业系与转职阶段查看技能数值",
+      "talents": "季节天赋树与守护天赋矩阵",
+      "cards": "卡面、部位、阶级属性与特殊效果",
+      "pets": "品质、星级成长与完整技能说明",
+      "monsters": "等级、种族、属性与掉落数值",
+      "equipment": "部位、词条与特殊效果对照",
+      "souls": "灵魂属性、刻印与共鸣关系"
+    },
+    "upcoming": {
+      "title": "正在准备",
+      "description": "以下内容尚未接入页面，接入后会出现在导航中。"
+    }
   },
   "sidebar": {
     "title": "资料入口",
@@ -104,11 +88,6 @@
       "title": "米德加尔特探索地图",
       "description": "地图保持独立更新，以当前地图实现为准。",
       "action": "打开地图"
-    },
-    "contribution": {
-      "title": "分享你的攻略",
-      "description": "同一职业和副本可以由不同作者发布多篇攻略。",
-      "action": "发布攻略"
     }
   },
   "notice": {
