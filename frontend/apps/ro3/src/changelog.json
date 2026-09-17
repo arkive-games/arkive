@@ -1,6 +1,37 @@
 {
   "entries": [
     {
+      "version": "0.15.0",
+      "date": "2026-09-17",
+      "commit": "f5d02f8546f16d5b76cddb43791aa4d6f4d80be7",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added a dark theme. The encyclopedias and the build manual now follow the theme switch instead of staying bright, and keep their aged-paper look at night.",
+            "zh-CN": "新增深色主题。百科与流派手册现在会跟随主题切换，夜间保留羊皮纸质感，不再是半黑半白。",
+            "zh-TW": "新增深色主題。百科與流派手冊現在會跟隨主題切換，夜間保留羊皮紙質感，不再是半黑半白。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Rebuilt the landing page around the seven encyclopedias and the build manual, and removed the guide list that had no guides in it.",
+            "zh-CN": "首页改版：以七类百科和流派手册为入口，移除了始终为空的攻略列表与筛选。",
+            "zh-TW": "首頁改版：以七類百科和流派手冊為入口，移除了始終為空的攻略列表與篩選。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fixed the build manual’s edit button, which rendered unstyled and overlapped the build selector.",
+            "zh-CN": "修复流派手册中「编辑方案」按钮没有样式并遮挡方案下拉框的问题。",
+            "zh-TW": "修復流派手冊中「編輯方案」按鈕沒有樣式並遮擋方案下拉框的問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.16",
       "date": "2026-09-04",
       "commit": "3d1337392473d8b33287bdae3ba625469fb4f43b",
