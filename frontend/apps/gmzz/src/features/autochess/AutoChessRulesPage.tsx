@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ContentPage } from '@/components/ContentPage'
 import {
   loadAutoChessRules,
+  type AutoChessStreakStep,
   type AutoChessTurn,
   type AutoChessTurnKind,
 } from '@/features/autochess/data'
@@ -25,6 +26,53 @@ const SECTIONS = [
   { to: '/autochess/items', titleKey: 'autochess.items.title', bodyKey: 'autochess.items.short' },
   { to: '/autochess/talents', titleKey: 'autochess.talents.title', bodyKey: 'autochess.talents.short' },
 ] as const
+
+/** One numbered gold source: what it is, how much, and the condition. */
+function IncomeRow({
+  index,
+  label,
+  value,
+  note,
+}: {
+  index: number
+  label: string
+  value: string
+  note: string
+}) {
+  return (
+    <li className="flex gap-3 rounded-md border border-border bg-card p-3">
+      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-border text-xs tabular-nums text-muted-foreground">
+        {index}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+          <span className="font-medium">{label}</span>
+          <span className="font-semibold tabular-nums">{value}</span>
+        </div>
+        <p className="mt-0.5 text-sm text-muted-foreground">{note}</p>
+      </div>
+    </li>
+  )
+}
+
+/** The streak lengths one ladder step covers: "3–4", "5", or "6+" at the top. */
+function streakBand(from: number, nextFrom: number | undefined): string {
+  if (nextFrom === undefined) return `${from}+`
+  return nextFrom - 1 === from ? String(from) : `${from}–${nextFrom - 1}`
+}
+
+/** "+1 ~ +3 金" — the span a streak can pay, for the summary row. */
+function streakSummary(
+  steps: AutoChessStreakStep[],
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
+  if (!steps.length) return '—'
+  const low = steps[0].bonus
+  const high = steps[steps.length - 1].bonus
+  return low === high
+    ? `+${t('autochess.rules.gold', { count: high })}`
+    : `+${low} ~ +${t('autochess.rules.gold', { count: high })}`
+}
 
 export default function AutoChessRulesPage() {
   const { t } = useTranslation()
@@ -59,7 +107,7 @@ export default function AutoChessRulesPage() {
     )
   }
 
-  const { levels, costs, poolSizeByCost, economy } = rules.data
+  const { levels, costs, poolSizeByCost, economy, damage } = rules.data
   // Only the steps that actually grant something; the ladder's leading 0 row is
   // the "no streak" case and says nothing a reader needs.
   const winSteps = economy?.winStreak.filter((step) => step.bonus > 0) ?? []
@@ -118,36 +166,39 @@ export default function AutoChessRulesPage() {
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.economyTitle')}</h2>
 
-        {/* The client's own sentence. It is the only statement of the interest
-            rate and the duel-win bonus anywhere in the tables, so it is quoted
-            rather than turned into figures of ours. */}
-        <blockquote className="mb-3 whitespace-pre-line rounded-md border-l-2 border-border bg-muted/40 py-2 pl-3 pr-2 text-sm text-muted-foreground">
-          {economy.incomeDescription}
-        </blockquote>
+        <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.economyHint')}</p>
 
-        <dl className="mb-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-          <div className="flex justify-between gap-2 border-b border-border/60 py-1">
-            <dt className="text-muted-foreground">{t('autochess.rules.baseIncome')}</dt>
-            <dd className="font-medium tabular-nums">
-              {t('autochess.rules.gold', { count: economy.baseIncomePerTurn })}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-2 border-b border-border/60 py-1">
-            <dt className="text-muted-foreground">{t('autochess.rules.maxInterest')}</dt>
-            <dd className="font-medium tabular-nums">
-              {t('autochess.rules.gold', { count: economy.maxInterest })}
-            </dd>
-          </div>
-          <div className="flex justify-between gap-2 border-b border-border/60 py-1">
-            <dt className="text-muted-foreground">{t('autochess.rules.buyExp')}</dt>
-            <dd className="font-medium tabular-nums">
-              {t('autochess.rules.buyExpValue', {
-                price: economy.experience.price,
-                gain: economy.experience.gain,
-              })}
-            </dd>
-          </div>
-        </dl>
+        {/* One row per source, each with its own figure. The earlier version
+            quoted the client's paragraph and listed the constants separately,
+            which left the reader to work out which number went with which
+            sentence — and the paragraph names no figure for the base income at
+            all. */}
+        <ol className="mb-4 space-y-2">
+          <IncomeRow
+            index={1}
+            label={t('autochess.rules.incomeBase')}
+            value={t('autochess.rules.gold', { count: economy.baseIncomePerTurn })}
+            note={t('autochess.rules.incomeBaseNote')}
+          />
+          <IncomeRow
+            index={2}
+            label={t('autochess.rules.incomeInterest')}
+            value={t('autochess.rules.interestValue', { max: economy.maxInterest })}
+            note={t('autochess.rules.incomeInterestNote', { max: economy.maxInterest * 10 })}
+          />
+          <IncomeRow
+            index={3}
+            label={t('autochess.rules.incomeWin')}
+            value={t('autochess.rules.gold', { count: 1 })}
+            note={t('autochess.rules.incomeWinNote')}
+          />
+          <IncomeRow
+            index={4}
+            label={t('autochess.rules.incomeStreak')}
+            value={streakSummary(winSteps, t)}
+            note={t('autochess.rules.incomeStreakNote')}
+          />
+        </ol>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[22rem] border-collapse text-sm">
@@ -163,8 +214,13 @@ export default function AutoChessRulesPage() {
             <tbody>
               {winSteps.map((step, index) => (
                 <tr key={step.fromStreak} className="border-b border-border/60">
+                  {/* Built from numbers rather than a translated template:
+                      "3–4" and "6+" read the same in every locale the site
+                      speaks, and the ladder's open top row has no separate
+                      wording to get wrong. A band one wide prints as a single
+                      number — "5–5" is noise. */}
                   <td className="py-1.5 pr-3 tabular-nums">
-                    {t('autochess.rules.fromStreak', { count: step.fromStreak })}
+                    {streakBand(step.fromStreak, winSteps[index + 1]?.fromStreak)}
                   </td>
                   <td className="py-1.5 pr-3 tabular-nums">
                     +{t('autochess.rules.gold', { count: step.bonus })}
@@ -179,10 +235,77 @@ export default function AutoChessRulesPage() {
             </tbody>
           </table>
         </div>
-        {sameLadder ? (
-          <p className="mt-2 text-sm text-muted-foreground">{t('autochess.rules.streakSame')}</p>
-        ) : null}
+        <p className="mt-2 text-sm text-muted-foreground">
+          {sameLadder ? `${t('autochess.rules.streakSame')} ` : ''}
+          {t('autochess.rules.streakExcluded')}
+        </p>
+
+        <p className="mt-3 text-sm text-muted-foreground">
+          {t('autochess.rules.buyExp')}
+          {'：'}
+          {t('autochess.rules.buyExpValue', {
+            price: economy.experience.price,
+            gain: economy.experience.gain,
+          })}
+        </p>
       </section>
+      ) : null}
+
+      {damage ? (
+        <section className="mb-8">
+          <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.damageTitle')}</h2>
+          <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.damageHint')}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[30rem] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="py-2 pr-3 font-medium">{t('autochess.rules.stage')}</th>
+                  {damage.baseByRound.map((_, index) => (
+                    <th key={index} className="py-2 pr-3 font-medium tabular-nums">
+                      {index + 1}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 text-muted-foreground">{t('autochess.rules.baseDamage')}</td>
+                  {damage.baseByRound.map((value, index) => (
+                    <td key={index} className="py-1.5 pr-3 tabular-nums">{value}</td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-3 mb-2 text-sm text-muted-foreground">{t('autochess.rules.perPieceHint')}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[22rem] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="py-2 pr-3 font-medium">{t('autochess.rules.costColumn')}</th>
+                  {[1, 2, 3].map((star) => (
+                    <th key={star} className="py-2 pr-3 font-medium">
+                      {t('autochess.pieces.star', { star })}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {damage.perSurvivingPieceByCostAndStar.map((row, costIndex) => (
+                  <tr key={costIndex} className="border-b border-border/60">
+                    <td className="py-1.5 pr-3 tabular-nums">
+                      {t('autochess.pieces.cost', { cost: costIndex + 1 })}
+                    </td>
+                    {row.map((value, starIndex) => (
+                      <td key={starIndex} className="py-1.5 pr-3 tabular-nums">{value}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       ) : null}
 
       <section className="mb-8">

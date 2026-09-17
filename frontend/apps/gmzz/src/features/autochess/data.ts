@@ -111,6 +111,13 @@ export type AutoChessEconomy = {
   incomeDescription: string
 }
 
+export type AutoChessDamage = {
+  /** Base damage a lost duel deals, one entry per stage. */
+  baseByRound: number[]
+  /** Extra damage per surviving enemy piece, indexed [cost - 1][star - 1]. */
+  perSurvivingPieceByCostAndStar: number[][]
+}
+
 export type AutoChessRules = {
   turns: AutoChessTurn[]
   levels: { level: number; exp: number; population: number; shopOdds: number[] }[]
@@ -124,6 +131,8 @@ export type AutoChessRules = {
    * data catches up.
    */
   economy?: AutoChessEconomy
+  /** Optional for the same deploy-skew reason as `economy`. */
+  damage?: AutoChessDamage
 }
 
 async function load<T>(file: string, what: string): Promise<T> {

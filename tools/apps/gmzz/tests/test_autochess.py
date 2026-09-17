@@ -131,7 +131,9 @@ def test_turn_kind_comes_from_the_table_the_detail_id_lands_in():
         "PlayerLevel": [{"Exp": 2, "Population": 1, **{f"Pool_{n}": 0 for n in range(1, 7)}}],
         "Cost": [{"Cost": 1, "BuyStar": [1, 3, 9], "SellStar": [1, 3, 9]}],
         "Shop": [{"Id": 1, "NumberLimit": [30]}],
-        "Const": CONSTS,
+        # Two stages in this fixture, so the damage table has to be two long —
+        # which is the check build_damage exists to make.
+        "Const": {**CONSTS, "BASE_PLAYER_DAMAGE_PER_TURN": [2, 6]},
     })
     assert [turn["kind"] for turn in rules["turns"]] == ["pve", "insight", "pvp", "carousel"]
     assert rules["levels"][0]["level"] == 1, "levels are 1-based, as the client's own UI counts them"
@@ -146,7 +148,28 @@ CONSTS = {
     "STREAK_LOSE_MONEY": [[0, 0], [3, 1], [5, 2], [6, 3]],
     "SHOP_INCOME_TIPS_DESC": "…每回合获得当前总金币10%的利息（最多为5金币）…",
     "BASE_MONEY": 0,
+    "BASE_PLAYER_DAMAGE_PER_TURN": [2, 2, 6, 7, 10, 12, 17, 150],
+    "BASE_PLAYER_DAMAGE_PER_CHESS": [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 2], [1, 1, 2]],
+    "PLAYER_DAMAGE_RULE": [5, 4],
 }
+
+
+def test_damage_table_must_cover_every_stage():
+    # The eight base-damage entries line up with the eight stages of the turn
+    # ladder. If a patch adds a stage without extending the table, the last one
+    # would index off the end and read as 0 damage.
+    damage = autochess.build_damage(CONSTS, rounds=set(range(1, 9)))
+    assert damage["baseByRound"] == [2, 2, 6, 7, 10, 12, 17, 150]
+    assert damage["perSurvivingPieceByCostAndStar"][4] == [1, 1, 2], "a 5-cost 3-star hits for 2"
+
+    with pytest.raises(RuntimeError, match="turn ladder"):
+        autochess.build_damage(CONSTS, rounds=set(range(1, 10)))
+
+
+def test_damage_omits_the_rule_nobody_can_label():
+    # PLAYER_DAMAGE_RULE is [5, 4] and nothing says what the two numbers select.
+    damage = autochess.build_damage(CONSTS, rounds=set(range(1, 9)))
+    assert "rule" not in damage and "playerDamageRule" not in damage
 
 
 def test_economy_reads_the_streak_ladder_as_thresholds():

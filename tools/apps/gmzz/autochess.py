@@ -365,7 +365,37 @@ def build_rules(tables: dict) -> dict:
         # How many copies of each cost tier the shared pool holds.
         "poolSizeByCost": _list(shop[0]["NumberLimit"]) if shop else [],
         "economy": build_economy(tables["Const"]),
+        "damage": build_damage(tables["Const"], rounds={turn["round"] for turn in turns}),
     }
+
+
+def build_damage(consts: dict, rounds: set[int]) -> dict:
+    """What a lost duel costs the player.
+
+    `BASE_PLAYER_DAMAGE_PER_TURN` holds one value per stage and
+    `BASE_PLAYER_DAMAGE_PER_CHESS` one per (cost, star) — the names say so, and
+    the first lines up exactly with the eight stages the turn ladder has, which
+    is asserted here: a patch that adds a stage without extending the table
+    would otherwise index off the end and silently under-report the damage of
+    the last one.
+
+    `PLAYER_DAMAGE_RULE` is `[5, 4]` and is **not** emitted. Nothing in the
+    export says what those two numbers select, and a field on the page needs a
+    label — which would have to be invented.
+    """
+    by_round = [int(value) for value in _list(consts.get("BASE_PLAYER_DAMAGE_PER_TURN"))]
+    per_piece = [
+        [int(value) for value in _list(row)]
+        for row in _list(consts.get("BASE_PLAYER_DAMAGE_PER_CHESS"))
+    ]
+    if not by_round or not per_piece:
+        raise RuntimeError("BASE_PLAYER_DAMAGE_PER_TURN / _PER_CHESS are missing or not lists")
+    if len(by_round) != len(rounds):
+        raise RuntimeError(
+            f"BASE_PLAYER_DAMAGE_PER_TURN has {len(by_round)} entries but the turn ladder "
+            f"has {len(rounds)} stages — one of the two moved"
+        )
+    return {"baseByRound": by_round, "perSurvivingPieceByCostAndStar": per_piece}
 
 
 def build_economy(consts: dict) -> dict:
@@ -381,6 +411,24 @@ def build_economy(consts: dict) -> dict:
 
     `BASE_MONEY` is 0 and nothing names what it counts, so it is left out
     rather than labelled "starting gold" on the strength of its name.
+
+    **Rounding.** The blurb says "10% of your gold" and stops there, which
+    leaves 45 gold ambiguous. Two pieces of evidence settle it as *floor*, and
+    the page states it:
+
+    - ``Data/NetDefs/AvatarAutoChessComponent.xml`` defines the server's own
+      ``AUTO_CHESS_TURN_MONEY_DETAIL`` — ``totalMoney`` / ``baseMoney`` /
+      ``interestMoney`` / ``winBaseMoney`` / ``streakMoney``, every one a
+      ``UINT``. The award is an integer, not a rounded display of a fraction.
+    - The interest widget,
+      ``Gameplay/LogicSystem/AutoChess/HUD/AutoChess_HUD_Talent.luac``, carries
+      ``InterestMoneyUnit``, ``maxInterest`` and ``floor`` together.
+
+    What is *not* recoverable: the 10% itself and the value of
+    ``InterestMoneyUnit`` are in no table, and that same NetDefs file shows the
+    breakdown arriving from the server — so the real sum is computed there, as
+    with 非凡评分. This module publishes the constants and the client's wording,
+    and does not reimplement the formula.
     """
     def ladder(key: str) -> list[dict]:
         # `[[fromStreak, bonus], ...]`, e.g. [[0,0],[3,1],[5,2],[6,3]].
