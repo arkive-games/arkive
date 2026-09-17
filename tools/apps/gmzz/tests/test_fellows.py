@@ -67,34 +67,90 @@ def test_a_mislabelled_tier_is_reported_but_still_ships():
 FELLOWS = {
     "41000007": {
         "ID": 41000007, "Name": "克莱恩·莫雷蒂", "EnglishName": "Klein", "Quality": 5,
-        "Label": "塔罗会", "Order": 7, "VoiceActor": "唐子晰",
-        "DescribList": [f"技能{n}" for n in range(1, 6)],
+        "Label": "塔罗会", "Order": 7, "VoiceActor": "唐子晰", "DefaultSkillID": 87002210,
+        "DescribList": [f"强化{n}" for n in range(1, 6)],
         "StoryList": [1066], "RelationList": [4],
         "IconPath": "/Game/A/B/7_Klein.7_Klein", "IconPath_M": "/Game/A/C/7_Klein.7_Klein",
     },
 }
 STORIES = {"1066": {"StoryTitle": "尊名", "UnlockLevel": 1, "StoryText": "灰雾之上的神秘主宰。"}}
 
+# 1004/1012 are bookkeeping and sit in `Tags`, never in `DesTags` — the panel
+# would otherwise print 伙伴技能 as if it were a label.
+TAGS = {1: "单体", 11: "治疗", 21: "强化", 23: "辅助", 1004: "伙伴技能", 1012: "非普攻战斗技能"}
+SKILLS = {
+    87002210: {
+        "ID": 87002210, "Name": "转运仪式", "CD": 35, "Tag": "增益",
+        "Tags": [1004, 1012, 21, 23], "DesTags": [21, 23],
+        "SkillCastDesc": [[2, "自身"]],
+        "SkillDisc": "自身获得灰雾加持，造成*d点伤害，buffdisc(*id)",
+        "BriefDescription": "自身获得灰雾加持。",
+        "SkillIcon": "/Game/Arts/UI_2/Resource/Skill/Follow/Follow_Skill_19.Follow_Skill_19",
+    },
+}
 
-def test_a_story_carries_its_unlock_level_but_a_skill_does_not(monkeypatch):
+
+def _klein(monkeypatch, table=None):
     monkeypatch.setattr(fellows, "FELLOW_COUNT", 1)
-    built = fellows.build_fellows({"Fellow": FELLOWS, "FellowStory": STORIES})
-    assert built[0]["stories"][0]["unlockLevel"] == 1
-    assert built[0]["skills"] == [f"技能{n}" for n in range(1, 6)]
-    # Nothing in the export says what unlocks each skill, so nothing claims to.
-    assert all(isinstance(skill, str) for skill in built[0]["skills"])
+    return fellows.build_fellows(
+        {"Fellow": table or FELLOWS, "FellowStory": STORIES}, SKILLS, TAGS
+    )
 
 
-def test_a_fellow_missing_skill_lines_stops_the_build(monkeypatch):
+def test_describ_list_is_the_star_ladder_not_five_skills(monkeypatch):
+    # The first reading of this table shipped five "skills" per fellow. They are
+    # the 一阶…五阶 upgrades of the one skill, and the stage is the index.
+    built = _klein(monkeypatch)
+    assert built[0]["upgrades"] == [
+        {"stage": n, "description": f"强化{n}"} for n in range(1, 6)
+    ]
+    assert built[0]["skill"]["name"] == "转运仪式"
+
+
+def test_a_story_carries_its_unlock_level(monkeypatch):
+    assert _klein(monkeypatch)[0]["stories"][0]["unlockLevel"] == 1
+
+
+def test_a_fellow_missing_upgrade_lines_stops_the_build(monkeypatch):
     monkeypatch.setattr(fellows, "FELLOW_COUNT", 1)
     broken = {"41000007": {**FELLOWS["41000007"], "DescribList": ["只有一条"]}}
-    with pytest.raises(RuntimeError, match="1 skill lines"):
-        fellows.build_fellows({"Fellow": broken, "FellowStory": STORIES})
+    with pytest.raises(RuntimeError, match="1 upgrade lines"):
+        fellows.build_fellows({"Fellow": broken, "FellowStory": STORIES}, SKILLS, TAGS)
+
+
+def test_the_panel_chips_come_from_destags_not_tags(monkeypatch):
+    skill = _klein(monkeypatch)[0]["skill"]
+    assert skill["tags"] == ["强化", "辅助"], "Tags' 1004/1012 are not labels"
+    assert skill["cooldown"] == 35 and skill["castTargets"] == ["自身"]
+    assert skill["icon"] == "Follow_Skill_19"
+
+
+def test_client_side_formulas_are_marked_never_guessed(monkeypatch):
+    skill = _klein(monkeypatch)[0]["skill"]
+    # `*d` and `buffdisc(*id)` are expanded by the client from the caster's
+    # level; a static export has no figure to put there.
+    assert skill["description"] == "自身获得灰雾加持，造成…点伤害，…"
+    assert skill["hasFormula"] is True
+    assert skill["brief"] == "自身获得灰雾加持。", "the brief text carries no placeholder"
+
+
+def test_a_fellow_without_a_skill_row_stops_the_build(monkeypatch):
+    monkeypatch.setattr(fellows, "FELLOW_COUNT", 1)
+    with pytest.raises(KeyError):
+        fellows.build_fellows({"Fellow": FELLOWS, "FellowStory": STORIES}, {}, TAGS)
+
+
+def test_an_unknown_display_tag_stops_the_build(monkeypatch):
+    monkeypatch.setattr(fellows, "FELLOW_COUNT", 1)
+    with pytest.raises(RuntimeError, match="DesTags names 23"):
+        fellows.build_fellows(
+            {"Fellow": FELLOWS, "FellowStory": STORIES}, SKILLS, {21: "强化"}
+        )
 
 
 def test_relation_effects_are_per_member_and_zero_means_none(monkeypatch):
     monkeypatch.setattr(fellows, "FELLOW_COUNT", 1)
-    people = fellows.build_fellows({"Fellow": FELLOWS, "FellowStory": STORIES})
+    people = fellows.build_fellows({"Fellow": FELLOWS, "FellowStory": STORIES}, SKILLS, TAGS)
     grades = fellows.build_grades({"RelationRarity": GRADES})
     effects, _ = fellows.build_effects({"RelationEffect": EFFECTS}, grades)
     relations = fellows.build_relations(
@@ -113,7 +169,7 @@ def test_relation_effects_are_per_member_and_zero_means_none(monkeypatch):
 
 def test_a_relation_naming_an_unknown_effect_stops_the_build(monkeypatch):
     monkeypatch.setattr(fellows, "FELLOW_COUNT", 1)
-    people = fellows.build_fellows({"Fellow": FELLOWS, "FellowStory": STORIES})
+    people = fellows.build_fellows({"Fellow": FELLOWS, "FellowStory": STORIES}, SKILLS, TAGS)
     with pytest.raises(RuntimeError, match="names effect 99"):
         fellows.build_relations(
             {"FellowRelation": {"4": {

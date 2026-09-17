@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { IconSearch } from '@tabler/icons-react'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
@@ -7,6 +7,7 @@ import { ContentPage } from '@/components/ContentPage'
 import { Chip, FilterRow } from '@/components/Filters'
 import {
   fellowPortraitUrl,
+  fellowSkillIconUrl,
   loadAffinityLadders,
   loadFellowRelations,
   loadFellows,
@@ -23,6 +24,15 @@ const QUALITY_CLASS: Record<number, string> = {
   5: 'border-amber-500/60 bg-amber-50/35 dark:border-amber-800 dark:bg-amber-950/20',
 }
 
+/** One of the small chips the game prints under a skill's name. */
+function Tag({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded border border-border/70 bg-background/50 px-1.5 py-0.5 text-xs text-muted-foreground">
+      {children}
+    </span>
+  )
+}
+
 export default function FellowsPage() {
   const { t } = useTranslation()
   const fellows = useRemoteData(loadFellows)
@@ -35,7 +45,7 @@ export default function FellowsPage() {
   const [openId, setOpenId] = useState<number | null>(null)
 
   useEffect(() => {
-    document.title = `${t('fellows.title')} - ${t('siteTitle')}`
+    document.title = `${t('fellows.sectionTitle')} · ${t('fellows.title')} - ${t('siteTitle')}`
   }, [t])
 
   const all = useMemo(() => fellows.data ?? [], [fellows.data])
@@ -63,7 +73,15 @@ export default function FellowsPage() {
       if (quality && fellow.quality !== quality) return false
       if (label && fellow.label !== label) return false
       if (!needle) return true
-      return [fellow.name, fellow.englishName, fellow.label, fellow.affiliations, ...fellow.skills]
+      return [
+        fellow.name,
+        fellow.englishName,
+        fellow.label,
+        fellow.affiliations,
+        fellow.skill.name,
+        fellow.skill.brief,
+        ...fellow.upgrades.map((upgrade) => upgrade.description),
+      ]
         .join(' ')
         .toLocaleLowerCase()
         .includes(needle)
@@ -182,23 +200,57 @@ function FellowCard({
             </span>
           </div>
           <p className="mt-0.5 text-sm text-muted-foreground">{fellow.affiliations || fellow.label}</p>
-          {fellow.voiceActor ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {t('fellows.voiceActor', { name: fellow.voiceActor })}
-            </p>
-          ) : null}
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {[fellow.sequence, fellow.voiceActor && t('fellows.voiceActor', { name: fellow.voiceActor })]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
         </div>
       </header>
 
+      {/* The game's own panel: the skill with its cooldown and target chips,
+          then the 一阶…五阶 rungs its stars unlock. Reading the five rungs as
+          five separate skills is the mistake this layout exists to prevent. */}
       <section className="mt-3 border-t border-border/70 pt-2">
-        <h3 className="text-sm font-semibold">{t('fellows.skills')}</h3>
-        {/* Numbered, not levelled: the tables carry no unlock condition for
-            these, so the page states none. See tools/apps/gmzz/fellows.py. */}
+        <div className="flex items-start gap-2">
+          {fellow.skill.icon ? (
+            <img
+              src={fellowSkillIconUrl(fellow.skill.icon)}
+              alt=""
+              loading="lazy"
+              className="size-10 shrink-0 rounded-md border border-border/70 bg-background/40"
+            />
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold">{fellow.skill.name}</h3>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {fellow.skill.cooldown ? (
+                <Tag>{t('fellows.cooldown', { seconds: fellow.skill.cooldown })}</Tag>
+              ) : null}
+              {fellow.skill.castTargets.map((target) => <Tag key={target}>{target}</Tag>)}
+              {fellow.skill.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}
+            </div>
+          </div>
+        </div>
+        <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
+          {plainText(fellow.skill.description) || plainText(fellow.skill.brief)}
+        </p>
+        {fellow.skill.hasFormula ? (
+          <p className="mt-1 text-xs text-muted-foreground/80">{t('fellows.formulaNote')}</p>
+        ) : null}
+      </section>
+
+      <section className="mt-3 border-t border-border/70 pt-2">
+        <h3 className="text-sm font-semibold">{t('fellows.upgrades')}</h3>
         <ol className="mt-1 space-y-1">
-          {fellow.skills.map((skill, index) => (
-            <li key={index} className="flex gap-2 text-sm text-muted-foreground">
-              <span className="shrink-0 tabular-nums">{index + 1}.</span>
-              <span>{plainText(skill)}</span>
+          {fellow.upgrades.map((upgrade) => (
+            <li key={upgrade.stage} className="flex gap-2 text-sm text-muted-foreground">
+              <span className="shrink-0 rounded bg-muted px-1.5 text-xs leading-5 tabular-nums">
+                {/* One key per rung rather than an interpolated number: the
+                    game writes 一阶…五阶, and "1阶" is not what it says. */}
+                {t(`fellows.stage${upgrade.stage}`)}
+              </span>
+              <span>{plainText(upgrade.description)}</span>
             </li>
           ))}
         </ol>

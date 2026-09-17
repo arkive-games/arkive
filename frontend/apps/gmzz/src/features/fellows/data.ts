@@ -5,7 +5,7 @@ import { dataUrl, RES_BASE } from '@/lib/urls'
  * `SecretPartner` tables are 秘偶, a different system.
  *
  * Emitted by `tools/apps/gmzz/fellows.py`; see that module for why a relation's
- * effect is per member and why the skills carry no unlock level.
+ * effect is per member and why a skill's figures cannot be recovered offline.
  */
 
 export type FellowStory = {
@@ -13,6 +13,29 @@ export type FellowStory = {
   /** Affinity level that opens it — stories do state this, unlike skills. */
   unlockLevel: number | null
   text: string
+}
+
+export type FellowSkill = {
+  id: number
+  name: string
+  cooldown: number | null
+  /** The chips the game's panel prints, e.g. 单体 / 治疗 — the client's `DesTags`. */
+  tags: string[]
+  /** 自身 / 15米内单体目标 / 半径为4米的圆形 … */
+  castTargets: string[]
+  description: string
+  /** Placeholder-free prose; the fallback when the detail collapses into marks. */
+  brief: string
+  /** True when `description` carries a `…` the client fills in at cast time. */
+  hasFormula: boolean
+  /** Basename under `resource-gmzz/fellows/`; empty for the three with no art. */
+  icon: string
+}
+
+/** One rung of the star ladder. `stage` is 1–5, the game's 一阶…五阶. */
+export type FellowUpgrade = {
+  stage: number
+  description: string
 }
 
 export type Fellow = {
@@ -27,14 +50,13 @@ export type Fellow = {
   affiliations: string
   gender: number | null
   voiceActor: string
+  /** The pathway the game prints on the panel, e.g. 空想家途径. */
+  sequence: string
   order: number
   affinityLevelType: number | null
-  defaultSkillId: number | null
-  /**
-   * Five lines, in the client's order. **No unlock condition** — nothing in the
-   * export says what opens each, so nothing here claims to.
-   */
-  skills: string[]
+  /** One per fellow. The five `upgrades` below strengthen this, not other skills. */
+  skill: FellowSkill
+  upgrades: FellowUpgrade[]
   stories: FellowStory[]
   relationIds: number[]
   /** Basename under `resource-gmzz/fellows/`. Every fellow has one. */
@@ -92,6 +114,9 @@ export const loadAffinityLadders = () => load<AffinityLadder[]>('levels', 'affin
 export function fellowPortraitUrl(portrait: string): string {
   return `${RES_BASE}/fellows/${portrait}.webp`
 }
+
+/** Same directory as the portraits; the names cannot collide. */
+export const fellowSkillIconUrl = fellowPortraitUrl
 
 /**
  * Strip the client's own markup. Same reasoning as the 愚者棋局 pages: the tags

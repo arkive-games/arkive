@@ -202,11 +202,12 @@ visibly broken. Re-runs skip any WebP newer than its source PNG.
 
 ```bash
 uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/ConfigIcon/Partners
+uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Skill/Follow
 uv run python -m gmzz.fellows
 ```
 
-Writes `fellows/{fellows,relations,effects,levels}.json` to `GMZZ_DATA_OUT` and
-one portrait per fellow to `GMZZ_RES_OUT/fellows/`.
+Writes `fellows/{fellows,relations,effects,levels}.json` to `GMZZ_DATA_OUT`, and
+one portrait per fellow plus eleven skill icons to `GMZZ_RES_OUT/fellows/`.
 
 The system is `Fellow` internally. **`SecretPartner` is a different system**
 (秘偶) whose table names also contain `Partner`, so a grep for that finds the
@@ -223,11 +224,26 @@ wrong one first.
   two disagree, the table wins and the run says so. One does: **effect 7's 秘辛
   tier repeats its 实证 tier verbatim, label included.** That is the client's own
   copy-paste; it ships as it stands rather than blocking the build.
-- **Skills carry no unlock condition.** `FellowData.DescribList` is five lines
-  per fellow, and nothing in the export says what opens each — five matches
-  neither the seven affinity levels nor the four steps of
-  `FellowRelationAwakeData`. They are emitted numbered, in the client's order.
-  Stories are the opposite: `FellowStoryData.UnlockLevel` states it outright.
+- **`DescribList` is one skill's star ladder, not five skills.** A fellow has a
+  single skill — `DefaultSkillID`, in `SkillDataNew` — and `DescribList`'s five
+  lines are its 一阶…五阶 upgrades in order. Nothing in the table says so, and the
+  first pass shipped them as five skills; the game's panel is what settles it,
+  printing 奥黛丽's 一阶 as `DescribList[0]` word for word. Stories do state their
+  own condition: `FellowStoryData.UnlockLevel`.
+- **The panel's chips are `DesTags`, not `Tag`.** 奥黛丽's `Tag` is 急救 while the
+  game shows 单体 and 治疗 — `DesTags` [1, 11] through `SkillTagData`. `Tags` is
+  the combat code's superset and carries bookkeeping ids (1004 伙伴技能, 1012
+  非普攻战斗技能) that are not labels.
+- **A skill's numbers are not in the tables.** `SkillDisc` is written for a
+  client that expands `*d` and `buffdisc(*id)` from the caster's level at cast
+  time, so an export sees the placeholder where the game prints 2247. Thirteen of
+  the fourteen have at least one. They become `…`, never a guess, and
+  `BriefDescription` — placeholder-free for all fourteen — ships alongside.
+- **Three skill icons do not exist to export.** `Follow_Skill_01`, `_05` and
+  `_08` (邓恩, 佛尔思, 梅丽莎) are absent from the pak index itself: `uex search
+  Follow_Skill_0` lists 02, 03, 04, 06, 07, 09 and skips exactly those. Same
+  blind spot as 愚者棋局's art. The three are named in the run's output and their
+  `icon` cleared, so the page prints a name rather than a broken image.
 - **Portraits need both sizes.** `ConfigIcon/Partners/Large` has 13 and
   `Medium` 11; neither covers everyone — 克莱恩 is Medium-only and 戴莉 / 班森 /
   梅丽莎 are Large-only — so the stage prefers Large, falls back to Medium, and

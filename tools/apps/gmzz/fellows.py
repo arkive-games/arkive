@@ -3,6 +3,7 @@
 Run from ``tools/``::
 
     uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/ConfigIcon/Partners
+    uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Skill/Follow
     uv run python -m gmzz.fellows
 
 The system is ``Fellow`` internally. **``SecretPartner`` is a different system**
@@ -25,18 +26,27 @@ own typography. ``RelationRarityData`` maps the same 0..5 to
 :data:`GRADE_COUNT` names, so the label is joined rather than parsed out of a
 string that is free to change its punctuation.
 
-**What is not here.** ``FellowData.DescribList`` holds five skill descriptions
-per fellow and **nothing in the export says what unlocks each one** — five does
-not line up with the seven affinity levels, nor with the four awakening steps of
-``FellowRelationAwakeData``. They ship numbered, in the client's own order, with
-no unlock condition attached, because inventing one would read as the game's.
-Stories are different: ``FellowStoryData`` carries ``UnlockLevel`` outright, so
-those do say when they open.
+**``DescribList`` is the star ladder, not five separate skills.** A fellow has
+exactly one skill — ``DefaultSkillID``, in ``SkillDataNew`` — and the five lines
+of ``DescribList`` are the 一阶…五阶 upgrades that its stars unlock, in order.
+The game's own panel proves it: 奥黛丽's 一阶 chip reads "持续时间内目标受到的治疗
+量增加5%", which is ``DescribList[0]`` verbatim. Nothing in the table says so,
+which is exactly why it was first read as five skills and shipped that way.
+
+**The skill's numbers cannot be recovered offline.** ``SkillDisc`` is written
+against a client that expands ``*d`` and ``buffdisc(*id)`` at display time from
+the caster's level, so a static export sees the placeholder rather than the 2247
+the game prints. They are replaced with :data:`FORMULA_MARK` and counted — never
+guessed. ``BriefDescription`` is placeholder-free for all fourteen and carries
+the same shape of the skill without the figures, so both ship.
+
+Stories do state when they open: ``FellowStoryData`` carries ``UnlockLevel``.
 """
 
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 from PIL import Image
@@ -52,8 +62,23 @@ WEBP_QUALITY = 90
 
 #: Asserted against the client rather than assumed.
 FELLOW_COUNT = 14
-SKILLS_PER_FELLOW = 5
+UPGRADE_COUNT = 5
 GRADE_COUNT = 6
+
+#: ``SkillDataNew`` ships as eight shards. All fourteen fellow skills sit in the
+#: first one today, so the loader stops as soon as it has them all rather than
+#: parsing nineteen megabytes of bytecode to find nothing new.
+SKILL_TABLE = "SkillDataNew_split_{index}"
+SKILL_TABLE_SHARDS = 8
+
+#: What replaces a client-side formula in a skill description. Chosen to read as
+#: an omission in running Chinese: "回复…点生命值" is plainly a missing figure,
+#: where a 0 or a copied 2247 would be a wrong one.
+FORMULA_MARK = "…"
+
+#: ``*d`` is a scaled number; ``skilldisc(*id)`` and its siblings are whole
+#: clauses the client assembles from another row. Neither survives an export.
+FORMULA = re.compile(r"[A-Za-z]*disc\(\*id\)|\*id|\*d")
 
 #: Large first, Medium second. Neither directory is complete on its own — 克莱恩
 #: has only a Medium, and 戴莉 / 班森 / 梅丽莎 only a Large — but together they
@@ -63,6 +88,11 @@ PORTRAIT_DIRS = (
     "C7/Content/Arts/UI_2/Resource/ConfigIcon/Partners/Large",
     "C7/Content/Arts/UI_2/Resource/ConfigIcon/Partners/Medium",
 )
+
+#: The fellow skills' own icons. Unlike 愚者棋局's art this directory does mount,
+#: so all fourteen resolve — but it is not part of the Partners export above and
+#: has to be asked for by name.
+SKILL_ICON_DIR = "C7/Content/Arts/UI_2/Resource/Skill/Follow"
 
 
 def _rows(table) -> list:
@@ -141,16 +171,68 @@ def build_effects(tables: dict, grades: list[dict]) -> tuple[list[dict], list[st
     return sorted(effects, key=lambda effect: effect["id"]), mismatches
 
 
-def build_fellows(tables: dict) -> list[dict]:
+def load_skills(excel: Path, strings: dict, wanted: set[int]) -> dict[int, dict]:
+    """The rows behind the fellows' ``DefaultSkillID``, across ``SkillDataNew``."""
+    found: dict[int, dict] = {}
+    for index in range(1, SKILL_TABLE_SHARDS + 1):
+        for key, row in load_table(excel, SKILL_TABLE.format(index=index)).items():
+            skill_id = int(key)
+            if skill_id in wanted:
+                found[skill_id] = resolve_text(row, strings)
+        if len(found) == len(wanted):
+            return found
+    raise RuntimeError(
+        f"{len(wanted) - len(found)} fellow skill(s) absent from {SKILL_TABLE.format(index='*')}: "
+        f"{sorted(wanted - set(found))}"
+    )
+
+
+def build_skill(row: dict, tags: dict[int, str]) -> dict:
+    """One fellow's skill, in the shape the game's own panel shows it.
+
+    The panel's two chips are ``DesTags``, not the single ``Tag`` field: 奥黛丽 is
+    tagged 急救 there while the game shows 单体 and 治疗, which are ``DesTags``
+    [1, 11]. ``Tags`` is the superset used by the combat code and carries
+    bookkeeping entries (1004 伙伴技能, 1012 非普攻战斗技能) that are not labels.
+    """
+    named = []
+    for tag_id in _list(row.get("DesTags")):
+        name = tags.get(int(tag_id))
+        if not name:
+            raise RuntimeError(f"skill {row['ID']}: DesTags names {tag_id}, absent from SkillTagData")
+        named.append(name)
+    # `SkillCastDesc` rows are (shape id, human text); only the text is kept —
+    # the shape id is an enum the client renders as that same text.
+    cast = [str(entry[1]) for entry in _list(row.get("SkillCastDesc")) if len(entry) > 1]
+    description = FORMULA.sub(FORMULA_MARK, row.get("SkillDisc", ""))
+    return {
+        "id": int(row["ID"]),
+        "name": row.get("Name", ""),
+        "cooldown": row.get("CD"),
+        "tags": named,
+        "castTargets": cast,
+        "description": description,
+        # Placeholder-free for all fourteen, so it is what a reader gets when
+        # the detailed line collapses into marks.
+        "brief": row.get("BriefDescription", ""),
+        "hasFormula": FORMULA_MARK in description,
+        "icon": _asset_name(row.get("SkillIcon")),
+    }
+
+
+def build_fellows(tables: dict, skills: dict[int, dict], tags: dict[int, str]) -> list[dict]:
     stories = tables["FellowStory"]
     fellows = []
     for row in _rows(tables["Fellow"]):
-        skills = _list(row.get("DescribList"))
-        if len(skills) != SKILLS_PER_FELLOW:
+        upgrades = _list(row.get("DescribList"))
+        if len(upgrades) != UPGRADE_COUNT:
             raise RuntimeError(
-                f"fellow {row['ID']} ({row.get('Name')}) has {len(skills)} skill lines, "
-                f"expected {SKILLS_PER_FELLOW}"
+                f"fellow {row['ID']} ({row.get('Name')}) has {len(upgrades)} upgrade lines, "
+                f"expected {UPGRADE_COUNT} (一阶…五阶)"
             )
+        skill_id = row.get("DefaultSkillID")
+        if skill_id is None:
+            raise RuntimeError(f"fellow {row['ID']} ({row.get('Name')}) has no DefaultSkillID")
         told = []
         for story_id in _list(row.get("StoryList")):
             story = stories.get(str(int(story_id)))
@@ -174,11 +256,16 @@ def build_fellows(tables: dict) -> list[dict]:
             "affiliations": row.get("BackgroudDesc", ""),
             "gender": row.get("Gender"),
             "voiceActor": row.get("VoiceActor", ""),
+            # The pathway the game prints on the fellow's own panel (空想家途径).
+            "sequence": row.get("SequenceDesc", ""),
             "order": row.get("Order", 0),
             "affinityLevelType": row.get("AffinityLevelType"),
-            "defaultSkillId": row.get("DefaultSkillID"),
-            # Numbered, with no unlock condition — see the module docstring.
-            "skills": skills,
+            "skill": build_skill(skills[int(skill_id)], tags),
+            # 一阶…五阶, unlocked by stars — index carries the stage.
+            "upgrades": [
+                {"stage": stage, "description": text}
+                for stage, text in enumerate(upgrades, start=1)
+            ],
             "stories": told,
             "relationIds": [int(r) for r in _list(row.get("RelationList"))],
             "portrait": "",  # filled by _convert_portraits, which knows what exists
@@ -276,6 +363,37 @@ def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict]) -> dict[st
     return used
 
 
+def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict]) -> tuple[int, list[str]]:
+    """Eleven of the fourteen skill icons; the other three do not exist to export.
+
+    ``Follow_Skill_01``, ``_05`` and ``_08`` — 邓恩, 佛尔思 and 梅丽莎 — are absent
+    from the pak index itself, not merely from the last export: ``uex search
+    Follow_Skill_0`` lists 02, 03, 04, 06, 07 and 09 and skips exactly those
+    three. That is the same blind spot 愚者棋局's art falls into, so the three are
+    named in the output and their `icon` cleared, and the page prints their name
+    instead of a broken image.
+    """
+    source = Path(raw) / SKILL_ICON_DIR
+    if not source.is_dir():
+        raise FileNotFoundError(
+            f"{source} is absent — run: uex export --profile gmzz --only {SKILL_ICON_DIR}"
+        )
+    target = Path(res_out) / ICON_SUBDIR
+    target.mkdir(parents=True, exist_ok=True)
+    count, missing = 0, []
+    for fellow in fellows:
+        name = fellow["skill"]["icon"]
+        png = source / f"{name}.png"
+        if not png.is_file():
+            missing.append(f"{fellow['name']} ({name})")
+            fellow["skill"]["icon"] = ""
+            continue
+        with Image.open(png) as img:
+            img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
+        count += 1
+    return count, missing
+
+
 def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, int]:
     strings = load_strings(excel)
     names = {
@@ -285,12 +403,17 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
         "RelationEffect": "RelationEffectData",
         "RelationRarity": "RelationRarityData",
         "FellowAffinityLevel": "FellowAffinityLevelData",
+        "SkillTag": "SkillTagData",
     }
     tables = {key: resolve_text(load_table(excel, table), strings) for key, table in names.items()}
+    tags = {int(row["ID"]): row["Tag"] for row in _rows(tables["SkillTag"])}
+    skills = load_skills(
+        excel, strings, {int(row["DefaultSkillID"]) for row in _rows(tables["Fellow"])}
+    )
 
     grades = build_grades(tables)
     effects, mismatches = build_effects(tables, grades)
-    fellows = build_fellows(tables)
+    fellows = build_fellows(tables, skills, tags)
     relations = build_relations(tables, fellows, effects)
     levels = build_levels(tables)
 
@@ -304,13 +427,27 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
     # Portraits before the JSON: each fellow's `portrait` is decided here, and a
     # dataset naming art the image repo lacks is worse than no dataset.
     used = _convert_portraits(raw, res_out, fellows)
+    skill_icons, iconless = _convert_skill_icons(raw, res_out, fellows)
     for name, payload in payloads.items():
         write_json(Path(data_out) / OUT_DIR / f"{name}.json", payload)
 
+    formulas = sum(1 for fellow in fellows if fellow["skill"]["hasFormula"])
     print(
         f"fellows: {len(fellows)} fellows, {len(relations)} relations, {len(effects)} effect sets "
-        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium portraits -> {res_out}/{ICON_SUBDIR}"
+        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium portraits + "
+        f"{skill_icons} skill icons -> {res_out}/{ICON_SUBDIR}"
     )
+    if iconless:
+        print(
+            f"fellows: {len(iconless)} skill icon(s) are not in the pak index at all — "
+            f"{', '.join(iconless)}"
+        )
+    if formulas:
+        print(
+            f"fellows: {formulas} of {len(fellows)} skill descriptions carry a client-side "
+            f"formula, shown as '{FORMULA_MARK}' — the figure depends on the caster's level "
+            "and is not in the tables"
+        )
     for line in mismatches:
         print(f"fellows: {line} (the client's own data; shipped as it stands)")
     return {"fellows": len(fellows), "relations": len(relations), "effects": len(effects)}

@@ -22,7 +22,7 @@ export default function FellowRelationsPage() {
   const [openId, setOpenId] = useState<number | null>(null)
 
   useEffect(() => {
-    document.title = `${t('fellows.relationsTitle')} - ${t('siteTitle')}`
+    document.title = `${t('fellows.sectionTitle')} · ${t('fellows.relationsTitle')} - ${t('siteTitle')}`
   }, [t])
 
   const fellowsById = useMemo(
