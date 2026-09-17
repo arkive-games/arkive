@@ -45,6 +45,18 @@
       "destination": "/index.html"
     },
     {
+      "source": "/autochess",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/autochess*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/autochess/*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/changelog",
       "destination": "/index.html"
     },

@@ -198,6 +198,54 @@ whole set — icons and plates — is validated before anything is written: the 
 artifact repos are committed separately, so a half-converted run would ship
 visibly broken. Re-runs skip any WebP newer than its source PNG.
 
+## Fool's Gambit (愚者棋局)
+
+```bash
+uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/ConfigIcon/AutoChess/Property
+uv run python -m gmzz.autochess
+```
+
+Writes `autochess/{attributes,chess,bonds,items,talents,rules}.json` to
+`GMZZ_DATA_OUT` and the twelve attribute icons to `GMZZ_RES_OUT/autochess/`.
+
+The mode shipped in build 2153744 and is `AutoChess` internally — 自走棋 — so
+nothing answers to its player-facing name. **That name is 愚者棋局, not 愚者棋盘**:
+the string shards contain the former 145 times and the latter not once.
+
+Three joins here are wrong in ways that raise nothing:
+
+- **It has its own attribute id space.** `AutoChessChessAttributeData` names
+  2010/2028/2297. The global `FightPropData` *also* has rows under all of them,
+  so joining against it succeeds for every id while rendering a 5-cost's 146 攻击
+  as 「获得护盾增幅 146」 and its 33 防御 as 「最大物理攻击 33」. Use the mode's table.
+  Carry `DataFormat` with the value, too: `*100|%d%%` is what turns a stored 1.5
+  into the 150% 暴击伤害 the game shows.
+- **Bond families are in `Priority`, not `Type`.** `Type` is 1 on twenty-seven of
+  the twenty-eight rows (only 非凡世界 is 2), so grouping by it yields 27/1 and a
+  page asserting that one 组织共鸣 exists. The bands are 100 → the ten 职业,
+  200–201 → the ten 组织 (荒野怪物 sits at 201), 206 → the eight 特殊 — and that
+  10/10/8 is what the client's own help text enumerates by name. It is asserted.
+- **Summons and caskets are not pieces.** 15 of the 68 `ChessBaseData` rows carry
+  `SummonMonster = 1`, and say so themselves in their `PositionDesc`:
+  「不参与商店、掉落、选秀与共鸣统计」. Dropping them leaves exactly the 53 the help
+  text claims. The same five caskets reappear in `AutoChessItemData` as
+  `UseType = 2`, where `EquipTagDesc` is `[[1, 20]]` — **not** an attribute pair.
+  What it means is not in the tables, so it is dropped rather than published
+  under a name we invented.
+
+A turn's kind is resolved by which detail table its `TurnDetailID` lands in
+(`PVPTurnData` → 对弈, with `HasInsight` marking 天赋回合; `PVETurnData` → 试炼;
+`ShowTurnData` → 选将) rather than by reading `TurnType` as a code of our own.
+
+**No piece portraits and no bond icons.** `ChessBaseData.Icon` points at
+`ConfigIcon/AutoChess/Avatar/Large/UI_AutoChess_Head_<id>`, and
+`Manifest_UFSFiles_Win64.txt` has **zero** entries under `AutoChess/Avatar` — the
+art is not in this build at all, rather than merely undownloaded. The `Fetter/`
+and `Talent/` icons *are* in the manifest but fall in the same `ConfigIcon` blind
+spot that leaves the reforge graces unillustrated (see above), so only
+`Property/` comes through. The pages are therefore typographic, as the reforge
+page is. If the portraits turn up, they are a small addition here.
+
 ## Utopian Theater (乌托邦剧场)
 
 ```bash

@@ -15,6 +15,11 @@ import ReforgePage from './features/reforge/ReforgePage'
 import ScorePage from './features/score/ScorePage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import LeaguePointsPage from './features/league/LeaguePointsPage'
+import AutoChessRulesPage from './features/autochess/AutoChessRulesPage'
+import AutoChessPiecesPage from './features/autochess/AutoChessPiecesPage'
+import AutoChessBondsPage from './features/autochess/AutoChessBondsPage'
+import AutoChessItemsPage from './features/autochess/AutoChessItemsPage'
+import AutoChessTalentsPage from './features/autochess/AutoChessTalentsPage'
 import { initDataVersion } from './lib/urls'
 import { BottomTabBar } from './components/BottomTabBar'
 
@@ -38,8 +43,18 @@ const scoreRoute = createRoute({ getParentRoute: () => rootRoute, path: '/score'
 const changelogRoute = createRoute({ getParentRoute: () => rootRoute, path: '/changelog', component: ChangelogPage })
 const leaguePointsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/tools/league-points', component: LeaguePointsPage })
 
+// 愚者棋局. Five pages rather than one: the mode carries 53 pieces, 28 bonds,
+// 107 items and 181 talents, and a single scroll of all of it is not something
+// a player can look one thing up in.
+const autoChessRoute = createRoute({ getParentRoute: () => rootRoute, path: '/autochess', component: AutoChessRulesPage })
+const autoChessPiecesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/autochess/chess', component: AutoChessPiecesPage })
+const autoChessBondsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/autochess/bonds', component: AutoChessBondsPage })
+const autoChessItemsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/autochess/items', component: AutoChessItemsPage })
+const autoChessTalentsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/autochess/talents', component: AutoChessTalentsPage })
+
 const routeTree = rootRoute.addChildren([
   homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, changelogRoute, leaguePointsRoute,
+  autoChessRoute, autoChessPiecesRoute, autoChessBondsRoute, autoChessItemsRoute, autoChessTalentsRoute,
 ])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
