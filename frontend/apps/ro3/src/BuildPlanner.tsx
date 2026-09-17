@@ -15,11 +15,12 @@ import {
 } from "lucide-react";
 import { resourceUrl } from "./lib/urls";
 import {
+  loadCardCatalogData,
   loadEquipmentWikiData,
   loadProfessionWikiData,
+  loadSkillCatalogData,
   loadSoulWikiData,
   loadTalentWikiData,
-  loadWikiData,
   loadSkillLevels,
   type EquipmentAttrsDocument,
   type EquipmentRecord,
@@ -81,12 +82,16 @@ interface BuildDraft {
   talentIds: number[];
   souls: SoulBuildConfig[];
 }
-type BuildData = Awaited<ReturnType<typeof loadWikiData>> & {
+/** The build manual reads seven tables. Skills and the profession tree are what the
+ *  whole page is built on; the rest each back one panel, so a table that fails to load
+ *  hides its own panel instead of taking the page down with it. */
+type BuildData = Awaited<ReturnType<typeof loadSkillCatalogData>> & {
   profession: Awaited<ReturnType<typeof loadProfessionWikiData>>;
-  equipment: Awaited<ReturnType<typeof loadEquipmentWikiData>>;
-  souls: Awaited<ReturnType<typeof loadSoulWikiData>>;
-  pets: Awaited<ReturnType<typeof loadPetWikiData>>;
-  talents: Awaited<ReturnType<typeof loadTalentWikiData>>;
+  cards?: Awaited<ReturnType<typeof loadCardCatalogData>>;
+  equipment?: Awaited<ReturnType<typeof loadEquipmentWikiData>>;
+  souls?: Awaited<ReturnType<typeof loadSoulWikiData>>;
+  pets?: Awaited<ReturnType<typeof loadPetWikiData>>;
+  talents?: Awaited<ReturnType<typeof loadTalentWikiData>>;
 };
 interface EquipmentFamily {
   key: string;
@@ -351,8 +356,9 @@ function seedClientBuild(data: BuildData): BuildDraft {
     new Map(data.profession.skills.skills.map((skill) => [skill.iSkillID, skill])),
   );
   const skillIds = stages.flatMap((stage) => stage.skills.map((choice) => choice.skillId)).slice(0, 6);
-    const equipment: EquipmentBuildConfig[] = equipmentSlotsForLine(line.id).map((slot) => {
-    const family = uniqueFamilies(data.equipment.equipment.equipment, slot.part)[0];
+  const equipmentRecords = data.equipment?.equipment.equipment ?? [];
+  const equipment: EquipmentBuildConfig[] = equipmentSlotsForLine(line.id).map((slot) => {
+    const family = uniqueFamilies(equipmentRecords, slot.part)[0];
     const variant = family?.variants.at(-1);
     return {
       slotKey: slot.key,
@@ -363,17 +369,18 @@ function seedClientBuild(data: BuildData): BuildDraft {
       cardIds: [],
     };
   });
-  const cards = data.cards.cards.filter((card) => card.icon).slice(0, 17);
+  const cards = (data.cards?.cards ?? []).filter((card) => card.icon).slice(0, 17);
+  const equipmentAttrs = data.equipment?.attrs;
   let cardCursor = 0;
   const sockets = equipment.map((item) => {
-    const record = data.equipment.equipment.equipment.find((candidate) => candidate.iID === item.equipmentId);
-    const count = socketCount(data.equipment.attrs, record);
+    const record = equipmentRecords.find((candidate) => candidate.iID === item.equipmentId);
+    const count = equipmentAttrs ? socketCount(equipmentAttrs, record) : 0;
     const selected = cards.slice(cardCursor, cardCursor + count).map((card) => card.id);
     cardCursor += selected.length;
     return selected;
   });
   equipment.forEach((item, index) => { item.cardIds = sockets[index] ?? []; });
-  const pets = data.pets.catalog.pets.filter((pet) => pet.show).slice(0, 9).map((pet) => pet.id);
+  const pets = (data.pets?.catalog.pets ?? []).filter((pet) => pet.show).slice(0, 9).map((pet) => pet.id);
   return normalizeBuild({
     ...EMPTY_BUILD,
     title: "剑士·骑士方案",
@@ -384,8 +391,8 @@ function seedClientBuild(data: BuildData): BuildDraft {
     equipment,
     petCombatIds: pets.slice(0, 4),
     petAssistIds: pets.slice(4, 9),
-    talentIds: data.talents.talents.seasonTalents.nodes.slice(0, 5).map((talent) => talent.iId),
-    souls: data.souls.souls.souls.slice(0, 5).map((soul, index) => ({ slotIndex: index, soulId: soul.iID, subAttributeIds: [], markEffectIds: [] })),
+    talentIds: (data.talents?.talents.seasonTalents.nodes ?? []).slice(0, 5).map((talent) => talent.iId),
+    souls: (data.souls?.souls.souls ?? []).slice(0, 5).map((soul, index) => ({ slotIndex: index, soulId: soul.iID, subAttributeIds: [], markEffectIds: [] })),
   });
 }
 function socketCount(
@@ -437,27 +444,49 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
   const [dataError, setDataError] = useState(false);
   useEffect(() => {
     let active = true;
-    Promise.all([
-      loadWikiData(),
+    const settledValue = <T,>(result: PromiseSettledResult<T>, label: string) => {
+      if (result.status === "fulfilled") return result.value;
+      // Nothing is shown to the reader for an optional table -- its panel simply does not
+      // render -- so the reason is logged, otherwise a missing file is invisible.
+      console.warn(`[build manual] ${label} unavailable, its panel is hidden`, result.reason);
+      return undefined;
+    };
+    Promise.allSettled([
+      loadSkillCatalogData(),
       loadProfessionWikiData(),
+      loadCardCatalogData(),
       loadEquipmentWikiData(),
       loadSoulWikiData(),
       loadPetWikiData(),
       loadTalentWikiData(),
     ])
-      .then(([wiki, profession, equipment, souls, pets, talents]) => {
-        if (active) {
-          const nextData = { ...wiki, profession, equipment, souls, pets, talents };
-          setData(nextData);
-          const current = readBuilds();
-          const isUntouched = current.length === 1 && current[0].id === EMPTY_BUILD.id && !current[0].skillIds.length && !current[0].petCombatIds.length && !current[0].souls.length;
-          if (isUntouched) {
-            const seeded = seedClientBuild(nextData);
-            setBuilds([seeded]);
-            setDraft(seeded);
-            setSelectedId(seeded.id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([seeded]));
-          }
+      .then(([skillsResult, professionResult, cards, equipment, souls, pets, talents]) => {
+        if (!active) return;
+        const skills = settledValue(skillsResult, "skills.json");
+        const profession = settledValue(professionResult, "job-skills.json");
+        // Without the skill catalogue or the profession tree there is no build to show.
+        if (!skills || !profession) {
+          setDataError(true);
+          return;
+        }
+        const nextData: BuildData = {
+          ...skills,
+          profession,
+          cards: settledValue(cards, "cards.json"),
+          equipment: settledValue(equipment, "equipment.json"),
+          souls: settledValue(souls, "souls.json"),
+          pets: settledValue(pets, "pets.json"),
+          talents: settledValue(talents, "talents.json"),
+        };
+        setData(nextData);
+        const current = readBuilds();
+        const isUntouched = current.length === 1 && current[0].id === EMPTY_BUILD.id && !current[0].skillIds.length && !current[0].petCombatIds.length && !current[0].souls.length;
+        if (isUntouched) {
+          const seeded = seedClientBuild(nextData);
+          setBuilds([seeded]);
+          setDraft(seeded);
+          setSelectedId(seeded.id);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([seeded]));
         }
       })
       .catch(() => {
@@ -495,7 +524,7 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
   const skills = (data?.skills.skills ?? []).filter((skill) =>
     routeSkillIds.has(skill.iSkillID),
   );
-  const equipmentRecords = data?.equipment.equipment.equipment ?? [];
+  const equipmentRecords = data?.equipment?.equipment.equipment ?? [];
   const updateDraft = (patch: Partial<BuildDraft>) =>
     setDraft((current) => ({ ...current, ...patch }));
   const selectProfession = (lineId: string, routeId: string) => {
@@ -663,34 +692,41 @@ function BuildViewer({
       active = false;
     };
   }, [build.skillIds, data.skills.shards, data.skills.skills]);
+  // Each optional table is pulled out once: a panel renders only when its own table
+  // loaded, and the narrowed const is what the panel body reads.
+  const equipmentData = data.equipment;
+  const cardsData = data.cards;
+  const petsData = data.pets;
+  const soulsData = data.souls;
+  const talentsData = data.talents;
   const equipmentMap = new Map(
-    data.equipment.equipment.equipment.map((item) => [item.iID, item]),
+    (equipmentData?.equipment.equipment ?? []).map((item) => [item.iID, item]),
   );
-  const cardMap = new Map(data.cards.cards.map((card) => [card.id, card]));
-  const petMap = new Map(data.pets.catalog.pets.map((pet) => [pet.id, pet]));
+  const cardMap = new Map((cardsData?.cards ?? []).map((card) => [card.id, card]));
+  const petMap = new Map((petsData?.catalog.pets ?? []).map((pet) => [pet.id, pet]));
   const soulMap = new Map(
-    data.souls.souls.souls.map((soul) => [soul.iID, soul]),
+    (soulsData?.souls.souls ?? []).map((soul) => [soul.iID, soul]),
   );
   const resonanceMap = new Map(
-    data.souls.souls.resonance.map((item) => [
+    (soulsData?.souls.resonance ?? []).map((item) => [
       item.resonanceId ?? item.iID,
       item,
     ]),
   );
   const talentMap = new Map(
-    data.talents.talents.seasonTalents.nodes.map((talent) => [talent.iId, talent]),
+    (talentsData?.talents.seasonTalents.nodes ?? []).map((talent) => [talent.iId, talent]),
   );
   const petSkillMap = new Map<number, PetSkillRecord>(
-    data.pets.skills.skills.map((skill) => [skill.id, skill]),
+    (petsData?.skills.skills ?? []).map((skill) => [skill.id, skill]),
   );
   const petAttributeMap = new Map(
-    data.pets.catalog.attributes.map((attribute) => [attribute.id, attribute]),
+    (petsData?.catalog.attributes ?? []).map((attribute) => [attribute.id, attribute]),
   );
   const soulMarkMap = new Map(
-    data.souls.souls.markEffects.map((effect) => [effect.iID, effect]),
+    (soulsData?.souls.markEffects ?? []).map((effect) => [effect.iID, effect]),
   );
   const cardEffectMap = new Map(
-    data.cards.specialEffects.map((effect) => [effect.id, localizedText(effect.description)]),
+    (cardsData?.specialEffects ?? []).map((effect) => [effect.id, localizedText(effect.description)]),
   );
   const equipmentSlots = equipmentSlotsForLine(build.professionLineId);
   const equippedCards = build.equipment.flatMap((config) =>
@@ -699,7 +735,7 @@ function BuildViewer({
   const cardSlotRows = [[4, 2, 2], [2, 2, 2, 1, 1], [1]];
   const petDetails = (id: number) => {
     const pet = petMap.get(id);
-    const stars = data.pets.stars.stars
+    const stars = (petsData?.stars.stars ?? [])
       .filter((item) => item.petId === id)
       .sort((a, b) => b.star - a.star || b.stage - a.stage);
     const star = stars[0];
@@ -723,7 +759,7 @@ function BuildViewer({
   };
   const petEffectLines = (id: number, mode: "combat" | "assist") => {
     const pet = petMap.get(id);
-    const star = data.pets.stars.stars
+    const star = (petsData?.stars.stars ?? [])
       .filter((item) => item.petId === id)
       .sort((a, b) => b.star - a.star || b.stage - a.stage)[0];
     if (!pet || !star) return [mode === "combat" ? "暂无出战效果" : "暂无助战效果"];
@@ -807,6 +843,7 @@ function BuildViewer({
               </div>
             </GameBuildPanel>
 
+            {equipmentData ? (
             <GameBuildPanel icon={Shield} title="装备">
               <div className="game-build-slots game-build-slots--equipment">
                 {equipmentSlots.map((slot) => {
@@ -816,11 +853,11 @@ function BuildViewer({
                     ? [
                         `品质 ${config.quality || item.item?.iQuality || "-"} · 使用等级 ${item.item?.iLevelNeed ?? "-"}`,
                         ...(item.kBasicAttribute ?? []).map(([attributeId, min, max]) => {
-                          const name = displayName(data.equipment.attrs.attributes.find((attribute) => attribute.iID === attributeId)?.name, `属性 ${attributeId}`);
+                          const name = displayName(equipmentData.attrs.attributes.find((attribute) => attribute.iID === attributeId)?.name, `属性 ${attributeId}`);
                           return `${name} +${min}${max !== undefined && max !== min ? `~${max}` : ""}`;
                         }),
-                        ...config.normalEntryIds.map((id) => `词条 · ${entryLabel(data.equipment.attrs, id)}`),
-                        ...config.specialEffectIds.map((id) => `特技 · ${displayName(data.equipment.attrs.specialEffects.find((effect) => effect.iID === id)?.name, `特殊效果 ${id}`)}`),
+                        ...config.normalEntryIds.map((id) => `词条 · ${entryLabel(equipmentData.attrs, id)}`),
+                        ...config.specialEffectIds.map((id) => `特技 · ${displayName(equipmentData.attrs.specialEffects.find((effect) => effect.iID === id)?.name, `特殊效果 ${id}`)}`),
                         item.desc?.["zh-CN"] || "暂无装备说明",
                       ]
                     : undefined;
@@ -829,7 +866,9 @@ function BuildViewer({
                 })}
               </div>
             </GameBuildPanel>
+            ) : null}
 
+            {petsData ? (
             <GameBuildPanel icon={PawPrint} title="宠物">
               <div className="game-pet-roster">
                 <span className="game-pet-mode-label"><img src={nativePetCombat} alt="" />出战</span>
@@ -859,7 +898,9 @@ function BuildViewer({
                 </div>
               </div>
             </GameBuildPanel>
+            ) : null}
 
+            {soulsData ? (
             <GameBuildPanel icon={Gem} title="灵魂残响">
               <div className="game-soul-row">
                 <div className="game-build-slots game-build-slots--souls">
@@ -868,7 +909,7 @@ function BuildViewer({
                   const soul = config?.soulId ? soulMap.get(config.soulId) : undefined;
                   const resonance = config?.resonanceId ? resonanceMap.get(config.resonanceId) : undefined;
                   const primary = soul?.primaryAttributes?.map((attribute) => {
-                    const name = displayName(data.souls.souls.attributes.find((item) => item.iID === attribute.attributeId)?.name, `属性 ${attribute.attributeId}`);
+                    const name = displayName(soulsData.souls.attributes.find((item) => item.iID === attribute.attributeId)?.name, `属性 ${attribute.attributeId}`);
                     return `${name} +${attribute.min}${attribute.max !== undefined && attribute.max !== attribute.min ? `~${attribute.max}` : ""}`;
                   }) ?? [];
                   const markIds = config?.markEffectIds?.length
@@ -883,7 +924,7 @@ function BuildViewer({
                   const resonanceLine = resonance ? `共振 · ${displayName(resonance.name, `共振 ${resonance.iID}`)}` : "未指定共振";
                   const resonanceAttributes = resonance?.attributes?.map((attribute) => {
                     const id = attribute.attributeId ?? attribute.iAttributeID ?? attribute.iSubAttriID ?? 0;
-                    const name = displayName(data.souls.souls.attributes.find((item) => item.iID === id)?.name, `属性 ${id}`);
+                    const name = displayName(soulsData.souls.attributes.find((item) => item.iID === id)?.name, `属性 ${id}`);
                     const min = attribute.min ?? attribute.iMin;
                     const max = attribute.max ?? attribute.iMax;
                     return `${name} +${min ?? "-"}${max !== undefined && max !== min ? `~${max}` : ""}`;
@@ -904,6 +945,7 @@ function BuildViewer({
                 </div>
               </div>
             </GameBuildPanel>
+            ) : null}
           </div>
 
           <div className="game-build-column game-build-column--right">
@@ -913,6 +955,7 @@ function BuildViewer({
               </div>
             </GameBuildPanel>
 
+            {cardsData ? (
             <GameBuildPanel icon={BookOpen} title="卡片">
               <div className="game-card-fixed-grid">
                 {cardSlotRows.map((groups, rowIndex) => {
@@ -929,7 +972,7 @@ function BuildViewer({
                               const card = selected ? cardMap.get(selected.cardId) : undefined;
                               const tier = card?.tiers[0];
                               const attributes = tier?.attributes.map(([attributeId, value]) => {
-                                const name = localizedText(data.cards.attributes.find((attribute) => attribute.id === attributeId)?.name) || `属性 ${attributeId}`;
+                                const name = localizedText(cardsData.attributes.find((attribute) => attribute.id === attributeId)?.name) || `属性 ${attributeId}`;
                                 return `${name} +${value}`;
                               }) ?? [];
                               const effects = (tier?.specialEffects ?? []).map((id) => cardEffectMap.get(id)).filter(Boolean) as string[];
@@ -944,21 +987,24 @@ function BuildViewer({
                 })}
               </div>
             </GameBuildPanel>
+            ) : null}
 
+            {talentsData ? (
             <GameBuildPanel icon={Sparkles} title="天赋">
               <div className="game-build-slots game-build-slots--talents">
                 {Array.from({ length: Math.max(5, build.talentIds.length) }, (_, index) => {
                   const id = build.talentIds[index];
                   const talent = id ? talentMap.get(id) : undefined;
-                  const level = talent?.levels?.[0] ? data.talents.talents.seasonTalents.levels.find((item) => item.iId === talent.levels?.[0]) : undefined;
+                  const level = talent?.levels?.[0] ? talentsData.talents.seasonTalents.levels.find((item) => item.iId === talent.levels?.[0]) : undefined;
                   const attrLines = level?.kAttrs?.map(([attributeId, value]) => {
-                    const name = displayName(data.talents.talents.attributes.find((attribute) => attribute.iID === attributeId)?.name, `属性 ${attributeId}`);
+                    const name = displayName(talentsData.talents.attributes.find((attribute) => attribute.iID === attributeId)?.name, `属性 ${attributeId}`);
                     return `${name} +${value}`;
                   }) ?? [];
                   return <GameBuildSlot key={id ?? `talent-empty-${index}`} kind="talent" icon={level?.icon} label={id ? displayName(talent?.name ?? level?.name, `天赋节点 ${id}`) : "空天赋槽"} badge={talent ? `上限 ${talent.iMaxLevel ?? "-"}` : undefined} empty={!talent} details={talent ? [`节点编号 ${id}`, ...attrLines] : undefined} diamond />;
                 })}
               </div>
             </GameBuildPanel>
+            ) : null}
             <GameBuildPanel icon={BookOpen} title="功能尚未开启">
               <div className="game-build-unavailable">功能尚未开启</div>
             </GameBuildPanel>
@@ -998,11 +1044,16 @@ function BuildEditor({
   const [activeEquipmentSlot, setActiveEquipmentSlot] = useState<string | null>(
     null,
   );
-  const talents = data.talents.talents.seasonTalents.nodes
+  const equipmentData = data.equipment;
+  const cardsData = data.cards;
+  const petsData = data.pets;
+  const soulsData = data.souls;
+  const talentsData = data.talents;
+  const talents = (talentsData?.talents.seasonTalents.nodes ?? [])
     .filter((node) => node.iType !== 0)
     .slice(0, 120);
   const talentLevelById = new Map(
-    data.talents.talents.seasonTalents.levels.map((level) => [level.iId, level]),
+    (talentsData?.talents.seasonTalents.levels ?? []).map((level) => [level.iId, level]),
   );
   const prefix =
     (
@@ -1017,14 +1068,14 @@ function BuildEditor({
     )[line.id] ?? 0;
   const resonanceIds = [
     ...new Set(
-      data.souls.souls.resonanceActivation
+      (soulsData?.souls.resonanceActivation ?? [])
         .filter((item) => !item.iJob || Math.trunc(item.iJob / 1000) === prefix)
         .map((item) => item.iJobResonanceId)
         .filter((id): id is number => Boolean(id)),
     ),
   ];
   const cardsForPart = (part: number) =>
-    data.cards.cards.filter((card) => card.part === part);
+    (cardsData?.cards ?? []).filter((card) => card.part === part);
   const updateEquipment = (
     index: number,
     patch: Partial<EquipmentBuildConfig>,
@@ -1172,6 +1223,7 @@ function BuildEditor({
           }
         />
       </EditorSection>
+      {equipmentData ? (
       <EditorSection
         icon={Shield}
         title="固定装备部位"
@@ -1226,7 +1278,7 @@ function BuildEditor({
                     records={equipmentRecords.filter((item) =>
                       allowedForLine(item, line),
                     )}
-                    attrs={data.equipment.attrs}
+                    attrs={equipmentData.attrs}
                     cards={cardsForPart(slot.part)}
                     update={updateEquipment}
                     onClose={() => setActiveEquipmentSlot(null)}
@@ -1237,10 +1289,13 @@ function BuildEditor({
           })}
         </div>
       </EditorSection>
+      ) : null}
+      {petsData ? (
+      <>
       <EditorSection icon={PawPrint} title="出战宠物" hint="最多选择 4 个">
         <PickerGrid
           selected={draft.petCombatIds}
-          items={data.pets.catalog.pets
+          items={petsData.catalog.pets
             .filter((pet) => pet.show)
             .map((pet) => ({
               id: pet.id,
@@ -1254,7 +1309,7 @@ function BuildEditor({
       <EditorSection icon={PawPrint} title="助战宠物" hint="最多选择 5 个">
         <PickerGrid
           selected={draft.petAssistIds}
-          items={data.pets.catalog.pets
+          items={petsData.catalog.pets
             .filter((pet) => pet.show)
             .map((pet) => ({
               id: pet.id,
@@ -1265,6 +1320,9 @@ function BuildEditor({
           onToggle={(id) => updatePets("petAssistIds", id, 5)}
         />
       </EditorSection>
+      </>
+      ) : null}
+      {talentsData ? (
       <EditorSection
         icon={Sparkles}
         title="天赋"
@@ -1300,6 +1358,8 @@ function BuildEditor({
           }
         />
       </EditorSection>
+      ) : null}
+      {soulsData ? (
       <EditorSection
         icon={Gem}
         title="灵魂残响与共振"
@@ -1311,8 +1371,8 @@ function BuildEditor({
               key={config.slotIndex}
               index={index}
               config={config}
-              souls={data.souls.souls.souls}
-              resonance={data.souls.souls.resonance}
+              souls={soulsData.souls.souls}
+              resonance={soulsData.souls.resonance}
               resonanceIds={resonanceIds}
               update={updateSoul}
             />
@@ -1327,6 +1387,7 @@ function BuildEditor({
           </button>
         </div>
       </EditorSection>
+      ) : null}
       <div className="build-editor-footer">
         <button type="button" className="build-save-button" onClick={onSave}>
           <Save aria-hidden="true" />

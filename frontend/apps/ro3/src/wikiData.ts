@@ -331,6 +331,21 @@ export async function loadWikiData(): Promise<WikiData> {
   return { version, skills, cards }
 }
 
+/** Skills on their own, so a caller can survive a missing card table. */
+export async function loadSkillCatalogData(): Promise<{
+  version: DataVersion
+  skills: SkillCatalogDocument
+}> {
+  const version = await loadDataVersion()
+  const skills = await fetchJson<SkillCatalogDocument>('skills.json')
+  return { version, skills }
+}
+
+/** Cards on their own, for the same reason. */
+export async function loadCardCatalogData(): Promise<CardCatalogDocument> {
+  return fetchJson<CardCatalogDocument>('cards.json')
+}
+
 export async function loadProfessionWikiData(): Promise<{
   version: DataVersion
   skills: SkillCatalogDocument
