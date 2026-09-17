@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react'
 export type Loaded<T> = { data: T | null; loading: boolean; error: boolean }
 
 /**
- * Load one dataset for a 愚者棋局 page.
+ * Load one dataset for a catalogue page.
  *
- * The five pages differ only in which files they need, so the fetch/loading/
- * error lifecycle lives here rather than five times over. `load` is called once
- * on mount; the `live` flag drops a response that arrives after unmount, which
- * is the usual React strict-mode double-invoke hazard.
+ * The 愚者棋局 and 人脉 pages differ only in which files they need, so the
+ * fetch/loading/error lifecycle lives here rather than once per page. `load` is
+ * called on mount only; the `live` flag drops a response that arrives after
+ * unmount, which is the usual strict-mode double-invoke hazard.
  */
-export function useAutoChess<T>(load: () => Promise<T>): Loaded<T> {
+export function useRemoteData<T>(load: () => Promise<T>): Loaded<T> {
   const [state, setState] = useState<Loaded<T>>({ data: null, loading: true, error: false })
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function useAutoChess<T>(load: () => Promise<T>): Loaded<T> {
     return () => {
       live = false
     }
-    // `load` is a module-level function per page; re-running on identity would
+    // `load` is a module-level function per page; keying on its identity would
     // refetch on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

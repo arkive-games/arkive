@@ -8,8 +8,8 @@ import {
   plainText,
   type AutoChessBondGroup,
 } from '@/features/autochess/data'
-import { Chip, FilterRow } from '@/features/autochess/Filters'
-import { useAutoChess } from '@/features/autochess/useAutoChess'
+import { Chip, FilterRow } from '@/components/Filters'
+import { useRemoteData } from '@/lib/useRemoteData'
 
 /**
  * The three families, in the order the in-game help lists them. Derived in the
@@ -20,8 +20,8 @@ const GROUPS: AutoChessBondGroup[] = ['role', 'faction', 'special']
 
 export default function AutoChessBondsPage() {
   const { t } = useTranslation()
-  const bonds = useAutoChess(loadAutoChessBonds)
-  const pieces = useAutoChess(loadAutoChessPieces)
+  const bonds = useRemoteData(loadAutoChessBonds)
+  const pieces = useRemoteData(loadAutoChessPieces)
   const [group, setGroup] = useState<AutoChessBondGroup | ''>('')
 
   useEffect(() => {

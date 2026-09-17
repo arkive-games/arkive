@@ -17,7 +17,7 @@ import {
   type AutoChessPiece,
   type AutoChessStar,
 } from '@/features/autochess/data'
-import { useAutoChess } from '@/features/autochess/useAutoChess'
+import { useRemoteData } from '@/lib/useRemoteData'
 
 /**
  * The client's own `TagColor`, which is what tints the role chip along the top
@@ -47,9 +47,9 @@ const COST_CLASS: Record<number, string> = {
 
 export default function AutoChessPiecesPage() {
   const { t } = useTranslation()
-  const pieces = useAutoChess(loadAutoChessPieces)
-  const bonds = useAutoChess(loadAutoChessBonds)
-  const attributes = useAutoChess(loadAutoChessAttributes)
+  const pieces = useRemoteData(loadAutoChessPieces)
+  const bonds = useRemoteData(loadAutoChessBonds)
+  const attributes = useRemoteData(loadAutoChessAttributes)
 
   const [cost, setCost] = useState(0)
   const [bondId, setBondId] = useState(0)

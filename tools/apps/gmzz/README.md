@@ -198,6 +198,42 @@ whole set — icons and plates — is validated before anything is written: the 
 artifact repos are committed separately, so a half-converted run would ship
 visibly broken. Re-runs skip any WebP newer than its source PNG.
 
+## Connections (人脉)
+
+```bash
+uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/ConfigIcon/Partners
+uv run python -m gmzz.fellows
+```
+
+Writes `fellows/{fellows,relations,effects,levels}.json` to `GMZZ_DATA_OUT` and
+one portrait per fellow to `GMZZ_RES_OUT/fellows/`.
+
+The system is `Fellow` internally. **`SecretPartner` is a different system**
+(秘偶) whose table names also contain `Partner`, so a grep for that finds the
+wrong one first.
+
+- **A relation's effect is per member.** `FellowRelationData.MemberEffectList`
+  maps each fellow id to its own row in `RelationEffectData` — 永远的守护者 gives
+  克莱恩 effect 6, 伦纳德 effect 7 and 邓恩 effect 8. An effect id of **0 means no
+  combat effect**: that member is in the relation for its story. Treating the
+  relation as having one shared effect mislabels most of the roster.
+- **The six tiers are named by `RelationRarityData`** (0–5 → 【风闻】【浅见】
+  【实证】【隐迹】【秘辛】【本相】), not by the 【…】 each description happens to open
+  with. The prefix is stripped so the label is not printed twice — and where the
+  two disagree, the table wins and the run says so. One does: **effect 7's 秘辛
+  tier repeats its 实证 tier verbatim, label included.** That is the client's own
+  copy-paste; it ships as it stands rather than blocking the build.
+- **Skills carry no unlock condition.** `FellowData.DescribList` is five lines
+  per fellow, and nothing in the export says what opens each — five matches
+  neither the seven affinity levels nor the four steps of
+  `FellowRelationAwakeData`. They are emitted numbered, in the client's order.
+  Stories are the opposite: `FellowStoryData.UnlockLevel` states it outright.
+- **Portraits need both sizes.** `ConfigIcon/Partners/Large` has 13 and
+  `Medium` 11; neither covers everyone — 克莱恩 is Medium-only and 戴莉 / 班森 /
+  梅丽莎 are Large-only — so the stage prefers Large, falls back to Medium, and
+  fails naming the fellow if neither exists. `IconPath_Circle` points at
+  `ConfigIcon/Character/PlayerHead`, which resolves to nothing; it is unused.
+
 ## Fool's Gambit (愚者棋局)
 
 ```bash

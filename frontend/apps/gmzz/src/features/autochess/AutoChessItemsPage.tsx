@@ -12,8 +12,8 @@ import {
   loadAutoChessItems,
   plainText,
 } from '@/features/autochess/data'
-import { Chip, FilterRow } from '@/features/autochess/Filters'
-import { useAutoChess } from '@/features/autochess/useAutoChess'
+import { Chip, FilterRow } from '@/components/Filters'
+import { useRemoteData } from '@/lib/useRemoteData'
 
 /**
  * The client's `UseType`. The split is its own; only the names here are ours,
@@ -32,8 +32,8 @@ const RARITY_CLASS: Record<number, string> = {
 
 export default function AutoChessItemsPage() {
   const { t } = useTranslation()
-  const items = useAutoChess(loadAutoChessItems)
-  const attributes = useAutoChess(loadAutoChessAttributes)
+  const items = useRemoteData(loadAutoChessItems)
+  const attributes = useRemoteData(loadAutoChessAttributes)
   const [useType, setUseType] = useState(0)
   const [typeName, setTypeName] = useState('')
   const [query, setQuery] = useState('')

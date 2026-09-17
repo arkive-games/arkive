@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
 import { loadAutoChessTalents, plainText } from '@/features/autochess/data'
-import { Chip, FilterRow } from '@/features/autochess/Filters'
-import { useAutoChess } from '@/features/autochess/useAutoChess'
+import { Chip, FilterRow } from '@/components/Filters'
+import { useRemoteData } from '@/lib/useRemoteData'
 
 const RARITY_CLASS: Record<number, string> = {
   1: 'border-border bg-card',
@@ -18,7 +18,7 @@ const RARITY_CLASS: Record<number, string> = {
 
 export default function AutoChessTalentsPage() {
   const { t } = useTranslation()
-  const talents = useAutoChess(loadAutoChessTalents)
+  const talents = useRemoteData(loadAutoChessTalents)
   const [rarity, setRarity] = useState(0)
   const [query, setQuery] = useState('')
   // The client hides some rows from its own handbook; matching that default

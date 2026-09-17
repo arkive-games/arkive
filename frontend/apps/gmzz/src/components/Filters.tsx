@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react'
 
 /**
- * The filter chrome the five 愚者棋局 pages share.
+ * The filter chrome the catalogue pages share.
  *
- * Extracted rather than copied because every page filters on something — cost,
- * bond family, equipment type, talent rarity — and five hand-rolled copies of a
- * chip row is how they drift apart visually.
+ * Shared rather than copied because every catalogue filters on something —
+ * cost, bond family, equipment type, talent rarity, fellow quality — and a
+ * hand-rolled chip row per page is how they drift apart visually.
  */
 
 export function FilterRow({ label, children }: { label: string; children: ReactNode }) {

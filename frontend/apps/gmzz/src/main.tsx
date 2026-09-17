@@ -20,6 +20,8 @@ import AutoChessPiecesPage from './features/autochess/AutoChessPiecesPage'
 import AutoChessBondsPage from './features/autochess/AutoChessBondsPage'
 import AutoChessItemsPage from './features/autochess/AutoChessItemsPage'
 import AutoChessTalentsPage from './features/autochess/AutoChessTalentsPage'
+import FellowsPage from './features/fellows/FellowsPage'
+import FellowRelationsPage from './features/fellows/FellowRelationsPage'
 import { initDataVersion } from './lib/urls'
 import { BottomTabBar } from './components/BottomTabBar'
 
@@ -52,9 +54,15 @@ const autoChessBondsRoute = createRoute({ getParentRoute: () => rootRoute, path:
 const autoChessItemsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/autochess/items', component: AutoChessItemsPage })
 const autoChessTalentsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/autochess/talents', component: AutoChessTalentsPage })
 
+// 人脉. Two pages: the roster, and the relations, which carry their own
+// per-member effects and enough story text to crowd a card list.
+const fellowsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/fellows', component: FellowsPage })
+const fellowRelationsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/fellows/relations', component: FellowRelationsPage })
+
 const routeTree = rootRoute.addChildren([
   homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, changelogRoute, leaguePointsRoute,
   autoChessRoute, autoChessPiecesRoute, autoChessBondsRoute, autoChessItemsRoute, autoChessTalentsRoute,
+  fellowsRoute, fellowRelationsRoute,
 ])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })

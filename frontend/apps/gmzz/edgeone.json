@@ -57,6 +57,18 @@
       "destination": "/index.html"
     },
     {
+      "source": "/fellows",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/fellows*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/fellows/*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/changelog",
       "destination": "/index.html"
     },

@@ -18,6 +18,8 @@ export type NavKey =
   | '/autochess/bonds'
   | '/autochess/items'
   | '/autochess/talents'
+  | '/fellows'
+  | '/fellows/relations'
   | '/changelog'
 
 /**
@@ -36,6 +38,25 @@ const AUTOCHESS_CHILDREN: { key: NavKey; labelKey: string }[] = [
   { key: '/autochess/bonds', labelKey: 'autochess.bonds.title' },
   { key: '/autochess/items', labelKey: 'autochess.items.title' },
   { key: '/autochess/talents', labelKey: 'autochess.talents.title' },
+]
+
+const FELLOW_CHILDREN: { key: NavKey; labelKey: string }[] = [
+  { key: '/fellows', labelKey: 'fellows.title' },
+  { key: '/fellows/relations', labelKey: 'fellows.relationsTitle' },
+]
+
+/**
+ * The three standalone reference pages, grouped so the bar keeps its shape.
+ *
+ * Adding 人脉 as an eighth top-level entry would have crowded the row past what
+ * fits on a narrow desktop. These three are each one page with no children of
+ * their own, which makes them the right ones to fold: their routes do not
+ * change, so every existing link and bookmark still lands.
+ */
+const REFERENCE_CHILDREN: { key: NavKey; labelKey: string }[] = [
+  { key: '/utopia', labelKey: 'nav.utopia' },
+  { key: '/reforge', labelKey: 'nav.reforge' },
+  { key: '/score', labelKey: 'nav.score' },
 ]
 
 export function TopNav({ active }: { active: NavKey }) {
@@ -57,9 +78,24 @@ export function TopNav({ active }: { active: NavKey }) {
         active: active === child.key,
       })),
     },
-    { key: '/utopia', label: t('nav.utopia'), active: active === '/utopia' },
-    { key: '/reforge', label: t('nav.reforge'), active: active === '/reforge' },
-    { key: '/score', label: t('nav.score'), active: active === '/score' },
+    {
+      key: 'fellows',
+      label: t('nav.fellows'),
+      children: FELLOW_CHILDREN.map((child) => ({
+        key: child.key,
+        label: t(child.labelKey),
+        active: active === child.key,
+      })),
+    },
+    {
+      key: 'reference',
+      label: t('nav.reference'),
+      children: REFERENCE_CHILDREN.map((child) => ({
+        key: child.key,
+        label: t(child.labelKey),
+        active: active === child.key,
+      })),
+    },
     { key: '/tools/league-points', label: t('nav.league'), active: active === '/tools/league-points' },
   ]
 

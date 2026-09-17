@@ -9,7 +9,7 @@ import {
   type AutoChessTurn,
   type AutoChessTurnKind,
 } from '@/features/autochess/data'
-import { useAutoChess } from '@/features/autochess/useAutoChess'
+import { useRemoteData } from '@/lib/useRemoteData'
 
 const KIND_CLASS: Record<AutoChessTurnKind, string> = {
   pve: 'border-emerald-400/60 bg-emerald-50/50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/25 dark:text-emerald-300',
@@ -99,7 +99,7 @@ function streakSummary(
 
 export default function AutoChessRulesPage() {
   const { t } = useTranslation()
-  const rules = useAutoChess(loadAutoChessRules)
+  const rules = useRemoteData(loadAutoChessRules)
 
   useEffect(() => {
     document.title = `${t('autochess.title')} - ${t('siteTitle')}`

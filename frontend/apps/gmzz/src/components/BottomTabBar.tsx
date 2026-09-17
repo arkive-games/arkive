@@ -25,6 +25,7 @@ function activeKey(pathname: string): NavKey {
   // 愚者棋局's four sub-pages report the section, so the strip highlights it as
   // a whole — the same grouping the desktop dropdown shows.
   if (pathname.startsWith('/autochess')) return '/autochess'
+  if (pathname.startsWith('/fellows')) return '/fellows'
   if (pathname.startsWith('/tools/league-points')) return '/tools/league-points'
   if (pathname.startsWith('/traintrade') || pathname === '/tools/traintrade-station') return '/traintrade'
   if (pathname.startsWith('/utopia')) return '/utopia'
@@ -75,6 +76,11 @@ export function BottomTabBar() {
           label: t('nav.autochess'),
           icon: <Grid3X3 className="size-5" strokeWidth={1.8} />,
           active: active === '/autochess',
+        }, {
+          key: '/fellows',
+          label: t('nav.fellows'),
+          icon: <Users className="size-5" strokeWidth={1.8} />,
+          active: active === '/fellows',
         }, {
           key: '/tools/league-points',
           label: t('nav.league'),
