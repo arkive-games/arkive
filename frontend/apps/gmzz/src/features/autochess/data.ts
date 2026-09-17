@@ -116,7 +116,14 @@ export type AutoChessRules = {
   levels: { level: number; exp: number; population: number; shopOdds: number[] }[]
   costs: { cost: number; buyPriceByStar: number[]; sellPriceByStar: number[] }[]
   poolSizeByCost: number[]
-  economy: AutoChessEconomy
+  /**
+   * Optional on purpose. `data-gmzz` is a separate repository served over HTTP
+   * and deployed on its own schedule, so the site can be newer than the dataset
+   * it reads. A required field would turn that ordinary skew into a blank page
+   * for the whole route; this way the section simply does not render until the
+   * data catches up.
+   */
+  economy?: AutoChessEconomy
 }
 
 async function load<T>(file: string, what: string): Promise<T> {

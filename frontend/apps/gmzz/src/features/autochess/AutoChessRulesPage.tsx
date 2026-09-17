@@ -62,10 +62,10 @@ export default function AutoChessRulesPage() {
   const { levels, costs, poolSizeByCost, economy } = rules.data
   // Only the steps that actually grant something; the ladder's leading 0 row is
   // the "no streak" case and says nothing a reader needs.
-  const winSteps = economy.winStreak.filter((step) => step.bonus > 0)
-  const loseSteps = economy.loseStreak.filter((step) => step.bonus > 0)
+  const winSteps = economy?.winStreak.filter((step) => step.bonus > 0) ?? []
+  const loseSteps = economy?.loseStreak.filter((step) => step.bonus > 0) ?? []
   const sameLadder =
-    JSON.stringify(economy.winStreak) === JSON.stringify(economy.loseStreak)
+    JSON.stringify(economy?.winStreak) === JSON.stringify(economy?.loseStreak)
 
   return (
     <ContentPage active="/autochess" title={t('autochess.title')} heading wide>
@@ -114,6 +114,7 @@ export default function AutoChessRulesPage() {
         </div>
       </section>
 
+      {economy ? (
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.economyTitle')}</h2>
 
@@ -182,6 +183,7 @@ export default function AutoChessRulesPage() {
           <p className="mt-2 text-sm text-muted-foreground">{t('autochess.rules.streakSame')}</p>
         ) : null}
       </section>
+      ) : null}
 
       <section className="mb-8">
         <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.levelsTitle')}</h2>
