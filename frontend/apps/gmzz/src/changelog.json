@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.8.1",
+      "date": "2026-09-17",
+      "commit": "58ade6099eb3d549c44ba646f7d74ec0744b8fe7",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Connections now shows each fellow's actual skill — its name, icon, cooldown and target — with the five star tiers listed as the upgrades they are, rather than as five separate skills. The two pages are also renamed Roster and Relations, matching the game's own tabs.",
+            "zh-CN": "「人脉」现在显示每位人脉真正的技能：名称、图标、冷却与目标，原先当成 5 条技能列出的内容改回它本来的样子——一阶到五阶的星级强化。两个页面也改名为「名录」和「关系」，与游戏内一致。",
+            "zh-TW": "「人脈」現在顯示每位人脈真正的技能：名稱、圖示、冷卻與目標，原先當成 5 條技能列出的內容改回它本來的樣子——一階到五階的星級強化。兩個頁面也改名為「名錄」和「關係」，與遊戲內一致。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.0",
       "date": "2026-09-17",
       "commit": "c80bf9491e4afe8152ef64ade7ddf304356b8e7d",
