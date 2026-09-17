@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.7.0",
+      "date": "2026-09-17",
+      "commit": "76a116583255062cfaf1fc87438357f51f6eeaf4",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Fool's Gambit section: the 53 pieces with their skills and per-star stats, all 28 bonds and who carries them, the 107 items, the talent list, and the round ladder with player levels and shop odds.",
+            "zh-CN": "新增「愚者棋局」板块：53 枚棋子的技能与各星级属性、28 种共鸣及其拥有者、107 件装备、天赋一览，以及回合流程、棋手等级与商店概率。",
+            "zh-TW": "新增「愚者棋局」板塊：53 枚棋子的技能與各星級屬性、28 種共鳴及其擁有者、107 件裝備、天賦一覽，以及回合流程、棋手等級與商店機率。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "date": "2026-09-15",
       "commit": "f365447e5189bac0baa39ebd0ac4a4e5e2befe82",
