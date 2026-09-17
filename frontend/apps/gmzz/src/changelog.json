@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.8.0",
+      "date": "2026-09-17",
+      "commit": "c80bf9491e4afe8152ef64ade7ddf304356b8e7d",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Connections section: all 14 fellows with their five abilities, their stories and the affinity ladder that unlocks them, plus the 10 relations and the six-tier effects each one grants its members.",
+            "zh-CN": "新增「人脉」板块：14 位人脉的 5 条技能、5 段故事与解锁它们的好感度阶梯，以及 10 个关系及其给每位成员的六档效果。",
+            "zh-TW": "新增「人脈」板塊：14 位人脈的 5 條技能、5 段故事與解鎖它們的好感度階梯，以及 10 個關係及其給每位成員的六檔效果。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The top bar is tidier: Utopian Theater, Reforge and the Extraordinary Score calculator now sit together under a Reference menu. Their addresses are unchanged, so existing links and bookmarks still work.",
+            "zh-CN": "顶部导航重新归类：乌托邦剧场、重塑恩赐、非凡评分计算器收进「资料」菜单。三个页面的网址没变，旧链接和收藏依然有效。",
+            "zh-TW": "頂部導覽重新歸類：烏托邦劇場、重塑恩賜、非凡評分計算器收進「資料」選單。三個頁面的網址沒變，舊連結和書籤依然有效。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.7.0",
       "date": "2026-09-17",
       "commit": "76a116583255062cfaf1fc87438357f51f6eeaf4",
