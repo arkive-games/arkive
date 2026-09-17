@@ -92,11 +92,31 @@ export type AutoChessTurnKind = 'pve' | 'pvp' | 'insight' | 'carousel'
 
 export type AutoChessTurn = { id: number; round: number; label: string; kind: AutoChessTurnKind }
 
+/** A streak step: from this many wins (or losses) on, the bonus applies. */
+export type AutoChessStreakStep = { fromStreak: number; bonus: number }
+
+export type AutoChessEconomy = {
+  baseIncomePerTurn: number
+  maxInterest: number
+  winStreak: AutoChessStreakStep[]
+  loseStreak: AutoChessStreakStep[]
+  experience: { price: number; gain: number }
+  /**
+   * The client's own explanation of gold income.
+   *
+   * Shown rather than parsed: the 10% interest rate and the +1 for winning a
+   * duel appear in **no constant**, only in this sentence, so restating them as
+   * our own numbers would present a reading of prose as data.
+   */
+  incomeDescription: string
+}
+
 export type AutoChessRules = {
   turns: AutoChessTurn[]
   levels: { level: number; exp: number; population: number; shopOdds: number[] }[]
   costs: { cost: number; buyPriceByStar: number[]; sellPriceByStar: number[] }[]
   poolSizeByCost: number[]
+  economy: AutoChessEconomy
 }
 
 async function load<T>(file: string, what: string): Promise<T> {

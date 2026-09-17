@@ -364,6 +364,46 @@ def build_rules(tables: dict) -> dict:
         "costs": costs,
         # How many copies of each cost tier the shared pool holds.
         "poolSizeByCost": _list(shop[0]["NumberLimit"]) if shop else [],
+        "economy": build_economy(tables["Const"]),
+    }
+
+
+def build_economy(consts: dict) -> dict:
+    """Gold income per turn.
+
+    Only part of this is data. `TURN_BASE_MONEY`, `MAX_INTEREST_MONEY`, the two
+    streak ladders and the experience price are constants; **the 10% interest
+    rate and the +1 for winning a duel are not**. Those two numbers exist
+    nowhere but inside `SHOP_INCOME_TIPS_DESC`, the client's own explanation, so
+    that text is shipped verbatim and they are not re-published as fields we
+    derived — a structured `interestRate: 0.1` would read as something the
+    tables said, and the tables do not say it.
+
+    `BASE_MONEY` is 0 and nothing names what it counts, so it is left out
+    rather than labelled "starting gold" on the strength of its name.
+    """
+    def ladder(key: str) -> list[dict]:
+        # `[[fromStreak, bonus], ...]`, e.g. [[0,0],[3,1],[5,2],[6,3]].
+        return [
+            {"fromStreak": int(step[0]), "bonus": int(step[1])}
+            for step in _list(consts.get(key))
+            if isinstance(step, list) and len(step) == 2
+        ]
+
+    win, lose = ladder("STREAK_WIN_MONEY"), ladder("STREAK_LOSE_MONEY")
+    if not win or not lose:
+        raise RuntimeError(
+            "STREAK_WIN_MONEY / STREAK_LOSE_MONEY are missing or not [threshold, bonus] pairs"
+        )
+    return {
+        "baseIncomePerTurn": consts["TURN_BASE_MONEY"],
+        "maxInterest": consts["MAX_INTEREST_MONEY"],
+        "winStreak": win,
+        "loseStreak": lose,
+        "experience": {"price": consts["BUY_EXP_PRICE"], "gain": consts["BUY_EXP_GAIN"]},
+        # The client's own wording, which is the only place the interest rate
+        # and the duel-win bonus are stated at all.
+        "incomeDescription": consts["SHOP_INCOME_TIPS_DESC"],
     }
 
 
@@ -371,7 +411,7 @@ def _load_tables(excel: Path, strings: dict) -> dict:
     names = [
         "ChessAttribute", "ChessBase", "Chess", "ChessStaticProp",
         "Bond", "BondEffect", "Item", "EquipType", "Insight",
-        "Turn", "PVETurn", "PVPTurn", "ShowTurn", "PlayerLevel", "Cost", "Shop",
+        "Turn", "PVETurn", "PVPTurn", "ShowTurn", "PlayerLevel", "Cost", "Shop", "Const",
     ]
     return {
         name: resolve_text(load_table(excel, f"AutoChess{name}Data"), strings)

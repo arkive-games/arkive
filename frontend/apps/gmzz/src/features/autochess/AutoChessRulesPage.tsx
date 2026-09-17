@@ -59,7 +59,13 @@ export default function AutoChessRulesPage() {
     )
   }
 
-  const { levels, costs, poolSizeByCost } = rules.data
+  const { levels, costs, poolSizeByCost, economy } = rules.data
+  // Only the steps that actually grant something; the ladder's leading 0 row is
+  // the "no streak" case and says nothing a reader needs.
+  const winSteps = economy.winStreak.filter((step) => step.bonus > 0)
+  const loseSteps = economy.loseStreak.filter((step) => step.bonus > 0)
+  const sameLadder =
+    JSON.stringify(economy.winStreak) === JSON.stringify(economy.loseStreak)
 
   return (
     <ContentPage active="/autochess" title={t('autochess.title')} heading wide>
@@ -106,6 +112,75 @@ export default function AutoChessRulesPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.economyTitle')}</h2>
+
+        {/* The client's own sentence. It is the only statement of the interest
+            rate and the duel-win bonus anywhere in the tables, so it is quoted
+            rather than turned into figures of ours. */}
+        <blockquote className="mb-3 whitespace-pre-line rounded-md border-l-2 border-border bg-muted/40 py-2 pl-3 pr-2 text-sm text-muted-foreground">
+          {economy.incomeDescription}
+        </blockquote>
+
+        <dl className="mb-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+          <div className="flex justify-between gap-2 border-b border-border/60 py-1">
+            <dt className="text-muted-foreground">{t('autochess.rules.baseIncome')}</dt>
+            <dd className="font-medium tabular-nums">
+              {t('autochess.rules.gold', { count: economy.baseIncomePerTurn })}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-border/60 py-1">
+            <dt className="text-muted-foreground">{t('autochess.rules.maxInterest')}</dt>
+            <dd className="font-medium tabular-nums">
+              {t('autochess.rules.gold', { count: economy.maxInterest })}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-2 border-b border-border/60 py-1">
+            <dt className="text-muted-foreground">{t('autochess.rules.buyExp')}</dt>
+            <dd className="font-medium tabular-nums">
+              {t('autochess.rules.buyExpValue', {
+                price: economy.experience.price,
+                gain: economy.experience.gain,
+              })}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[22rem] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border text-left">
+                <th className="py-2 pr-3 font-medium">{t('autochess.rules.streak')}</th>
+                <th className="py-2 pr-3 font-medium">{t('autochess.rules.streakWin')}</th>
+                {!sameLadder ? (
+                  <th className="py-2 pr-3 font-medium">{t('autochess.rules.streakLose')}</th>
+                ) : null}
+              </tr>
+            </thead>
+            <tbody>
+              {winSteps.map((step, index) => (
+                <tr key={step.fromStreak} className="border-b border-border/60">
+                  <td className="py-1.5 pr-3 tabular-nums">
+                    {t('autochess.rules.fromStreak', { count: step.fromStreak })}
+                  </td>
+                  <td className="py-1.5 pr-3 tabular-nums">
+                    +{t('autochess.rules.gold', { count: step.bonus })}
+                  </td>
+                  {!sameLadder ? (
+                    <td className="py-1.5 pr-3 tabular-nums">
+                      {loseSteps[index] ? `+${t('autochess.rules.gold', { count: loseSteps[index].bonus })}` : '—'}
+                    </td>
+                  ) : null}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {sameLadder ? (
+          <p className="mt-2 text-sm text-muted-foreground">{t('autochess.rules.streakSame')}</p>
+        ) : null}
       </section>
 
       <section className="mb-8">

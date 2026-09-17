@@ -131,9 +131,50 @@ def test_turn_kind_comes_from_the_table_the_detail_id_lands_in():
         "PlayerLevel": [{"Exp": 2, "Population": 1, **{f"Pool_{n}": 0 for n in range(1, 7)}}],
         "Cost": [{"Cost": 1, "BuyStar": [1, 3, 9], "SellStar": [1, 3, 9]}],
         "Shop": [{"Id": 1, "NumberLimit": [30]}],
+        "Const": CONSTS,
     })
     assert [turn["kind"] for turn in rules["turns"]] == ["pve", "insight", "pvp", "carousel"]
     assert rules["levels"][0]["level"] == 1, "levels are 1-based, as the client's own UI counts them"
+
+
+CONSTS = {
+    "TURN_BASE_MONEY": 5,
+    "MAX_INTEREST_MONEY": 5,
+    "BUY_EXP_PRICE": 4,
+    "BUY_EXP_GAIN": 4,
+    "STREAK_WIN_MONEY": [[0, 0], [3, 1], [5, 2], [6, 3]],
+    "STREAK_LOSE_MONEY": [[0, 0], [3, 1], [5, 2], [6, 3]],
+    "SHOP_INCOME_TIPS_DESC": "…每回合获得当前总金币10%的利息（最多为5金币）…",
+    "BASE_MONEY": 0,
+}
+
+
+def test_economy_reads_the_streak_ladder_as_thresholds():
+    economy = autochess.build_economy(CONSTS)
+    assert economy["baseIncomePerTurn"] == 5
+    assert economy["winStreak"] == [
+        {"fromStreak": 0, "bonus": 0},
+        {"fromStreak": 3, "bonus": 1},
+        {"fromStreak": 5, "bonus": 2},
+        {"fromStreak": 6, "bonus": 3},
+    ]
+
+
+def test_economy_does_not_republish_what_only_the_blurb_states():
+    # The 10% interest rate and the +1 for winning a duel are in no constant —
+    # only inside SHOP_INCOME_TIPS_DESC. Emitting them as fields would present
+    # a reading of prose as something the tables said.
+    economy = autochess.build_economy(CONSTS)
+    assert "interestRate" not in economy
+    assert "winBonus" not in economy
+    assert "10%" in economy["incomeDescription"]
+    # BASE_MONEY is 0 and nothing says what it counts.
+    assert "baseMoney" not in economy and "startingGold" not in economy
+
+
+def test_economy_stops_when_the_streak_ladder_changes_shape():
+    with pytest.raises(RuntimeError, match="STREAK_WIN_MONEY"):
+        autochess.build_economy({**CONSTS, "STREAK_WIN_MONEY": {}})
 
 
 def test_a_turn_pointing_nowhere_stops_the_build():
@@ -141,5 +182,5 @@ def test_a_turn_pointing_nowhere_stops_the_build():
         autochess.build_rules({
             "Turn": {"1": [{"Id": 1, "Round": 1, "TurnDesc": "1-1", "TurnDetailID": 999}]},
             "PVETurn": [], "PVPTurn": [], "ShowTurn": [],
-            "PlayerLevel": [], "Cost": [], "Shop": [],
+            "PlayerLevel": [], "Cost": [], "Shop": [], "Const": CONSTS,
         })
