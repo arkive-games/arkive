@@ -502,6 +502,7 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
         )
 
     icons = _convert_property_icons(raw, res_out)
+    item_icons, item_missing = _convert_item_icons(raw, res_out, payloads["items"])
     for name, payload in payloads.items():
         write_json(Path(data_out) / OUT_DIR / f"{name}.json", payload)
 
@@ -509,8 +510,15 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
     print(
         f"autochess: {counts['chess']} pieces, {counts['bonds']} bonds, {counts['items']} items, "
         f"{counts['talents']} talents, {len(payloads['rules']['turns'])} turns "
-        f"-> {OUT_DIR}/, {icons} webp -> {res_out}/{ICON_SUBDIR}"
+        f"-> {OUT_DIR}/, {icons} attribute + {item_icons} item webp -> {res_out}/{ICON_SUBDIR}"
     )
+    if item_missing:
+        # Named, not silently dropped: the page renders these without art, and a
+        # reader of this output should know how many and why.
+        print(
+            f"autochess: {len(item_missing)} item icon(s) unavailable — they live under "
+            f"ConfigIcon/AutoChess, which no mountable container carries (see README)"
+        )
     return counts
 
 
@@ -539,6 +547,52 @@ def _convert_property_icons(raw: Path, res_out: Path) -> int:
     if not count:
         raise FileNotFoundError(f"no PNG under {source} — the icon export produced nothing")
     return count
+
+
+#: Where each item's art lives. The first two are ordinary game-wide item
+#: directories and export normally; the third is this mode's own, and shares the
+#: fate of its portraits and talent icons — see :func:`_convert_property_icons`.
+ITEM_ICON_DIRS = (
+    "C7/Content/Arts/UI_2/Resource/Item/Middle",
+    "C7/Content/Arts/UI_2/Resource/Item/Large",
+)
+
+
+def _convert_item_icons(raw: Path, res_out: Path, items: list[dict]) -> tuple[int, list[int]]:
+    """Equipment art, for the 89 of 107 rows whose icon is reachable.
+
+    The split is not arbitrary and is worth stating: 84 items point at
+    ``Item/Middle`` and 5 at ``Item/Large`` — ordinary game-wide directories,
+    both of which mount — while the 18 共鸣徽章 point at
+    ``ConfigIcon/AutoChess/EquipMiddle``, which does not. Every piece of art the
+    *mode itself* added is unreachable; everything it borrows from the rest of
+    the game is fine.
+
+    Rows whose icon cannot be produced keep their ``icon`` value — the page
+    checks for the file rather than trusting the field — and the count is
+    reported by the caller instead of being swallowed.
+    """
+    target = Path(res_out) / ICON_SUBDIR / "items"
+    target.mkdir(parents=True, exist_ok=True)
+    converted, missing = 0, []
+    for item in items:
+        name = item["icon"]
+        if not name:
+            missing.append(item["id"])
+            continue
+        source = next(
+            (png for directory in ITEM_ICON_DIRS
+             if (png := Path(raw) / directory / f"{name}.png").is_file()),
+            None,
+        )
+        if source is None:
+            missing.append(item["id"])
+            item["icon"] = ""  # nothing to point at; the page shows no frame
+            continue
+        with Image.open(source) as img:
+            img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
+        converted += 1
+    return converted, missing
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -154,6 +154,17 @@ export function autoChessIconUrl(icon: string): string {
 }
 
 /**
+ * Equipment art, for the 77 of 107 rows that have any.
+ *
+ * The pipeline blanks `icon` on a row whose image it could not produce, so an
+ * empty string here means "no art exists for this one" rather than "not loaded
+ * yet" — the card then renders without a frame instead of with a broken one.
+ */
+export function autoChessItemIconUrl(icon: string): string {
+  return `${RES_BASE}/autochess/items/${icon}.webp`
+}
+
+/**
  * Render a stored value the way the client does.
  *
  * The format is the client's own `DataFormat`, and it has to be applied rather

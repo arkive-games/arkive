@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ContentPage } from '@/components/ContentPage'
 import {
   attributeMap,
+  autoChessItemIconUrl,
   formatAttributeValue,
   loadAutoChessAttributes,
   loadAutoChessItems,
@@ -126,19 +127,34 @@ export default function AutoChessItemsPage() {
             key={item.id}
             className={`rounded-lg border p-4 shadow-sm ${RARITY_CLASS[item.rarity] ?? 'border-border bg-card'}`}
           >
-            <header className="flex flex-wrap items-baseline gap-2">
-              <h2 className="font-semibold">{item.name}</h2>
-              {item.typeName ? (
-                <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
-                  {item.typeName}
-                </span>
+            <header className="flex items-start gap-2.5">
+              {/* Only when there is art. 30 of the 107 rows have none — the 18
+                  共鸣徽章 and 12 newer items whose images live in containers we
+                  cannot mount — and an empty frame reads as a failed load. */}
+              {item.icon ? (
+                <img
+                  src={autoChessItemIconUrl(item.icon)}
+                  alt=""
+                  loading="lazy"
+                  className="size-11 shrink-0 rounded border border-border/70 bg-background/40 object-contain"
+                />
               ) : null}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <h2 className="font-semibold">{item.name}</h2>
+                  {item.typeName ? (
+                    <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
+                      {item.typeName}
+                    </span>
+                  ) : null}
+                </div>
+                {item.brief ? (
+                  <p className="mt-0.5 text-sm font-medium">{plainText(item.brief)}</p>
+                ) : null}
+              </div>
             </header>
 
-            {item.brief ? (
-              <p className="mt-1 text-sm font-medium">{plainText(item.brief)}</p>
-            ) : null}
-            <p className="mt-1 text-sm text-muted-foreground">{plainText(item.description)}</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">{plainText(item.description)}</p>
 
             {item.attributes.length ? (
               <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
