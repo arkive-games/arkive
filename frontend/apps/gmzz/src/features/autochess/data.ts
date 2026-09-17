@@ -46,6 +46,11 @@ export type AutoChessPiece = {
   bondIds: number[]
   positionDescription: string
   positionSuggestion: string
+  /**
+   * Skill art, empty for the 44 of 53 whose icon the export cannot reach.
+   * One per piece, not per star — the client stores it on the base row.
+   */
+  skillIcon: string
   stars: AutoChessStar[]
 }
 
@@ -162,6 +167,11 @@ export function autoChessIconUrl(icon: string): string {
  */
 export function autoChessItemIconUrl(icon: string): string {
   return `${RES_BASE}/autochess/items/${icon}.webp`
+}
+
+/** Skill art, for the 9 of 53 pieces that borrow an existing game icon. */
+export function autoChessSkillIconUrl(icon: string): string {
+  return `${RES_BASE}/autochess/skills/${icon}.webp`
 }
 
 /**

@@ -185,6 +185,9 @@ def build_pieces(tables: dict) -> list[dict]:
             "bondIds": [int(b) for b in _list(row["BondList"])],
             "positionDescription": row["PositionDesc"],
             "positionSuggestion": row.get("PosSuggest", ""),
+            # One icon per piece, not per star. Blanked later for the 44 that
+            # name a file under Skill/AutoChess, which does not mount.
+            "skillIcon": _icon_name(row.get("SkillIcon")),
             "stars": stars,
         })
 
@@ -503,6 +506,7 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
 
     icons = _convert_property_icons(raw, res_out)
     item_icons, item_missing = _convert_item_icons(raw, res_out, payloads["items"])
+    skill_icons, skill_missing = _convert_skill_icons(raw, res_out, payloads["chess"])
     for name, payload in payloads.items():
         write_json(Path(data_out) / OUT_DIR / f"{name}.json", payload)
 
@@ -510,14 +514,15 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
     print(
         f"autochess: {counts['chess']} pieces, {counts['bonds']} bonds, {counts['items']} items, "
         f"{counts['talents']} talents, {len(payloads['rules']['turns'])} turns "
-        f"-> {OUT_DIR}/, {icons} attribute + {item_icons} item webp -> {res_out}/{ICON_SUBDIR}"
+        f"-> {OUT_DIR}/, {icons} attribute + {item_icons} item + {skill_icons} skill webp "
+        f"-> {res_out}/{ICON_SUBDIR}"
     )
-    if item_missing:
+    if item_missing or skill_missing:
         # Named, not silently dropped: the page renders these without art, and a
         # reader of this output should know how many and why.
         print(
-            f"autochess: {len(item_missing)} item icon(s) unavailable — they live under "
-            f"ConfigIcon/AutoChess, which no mountable container carries (see README)"
+            f"autochess: {len(item_missing)} item and {skill_missing} skill icon(s) unavailable — "
+            f"this mode's own art is not in any mountable container (see README)"
         )
     return counts
 
@@ -588,6 +593,41 @@ def _convert_item_icons(raw: Path, res_out: Path, items: list[dict]) -> tuple[in
         if source is None:
             missing.append(item["id"])
             item["icon"] = ""  # nothing to point at; the page shows no frame
+            continue
+        with Image.open(source) as img:
+            img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
+        converted += 1
+    return converted, missing
+
+
+#: Skill art the export reaches. `Skill/AutoChess`, where 44 of the 53 pieces
+#: point, does not mount — the same boundary as the portraits.
+SKILL_ICON_DIRS = (
+    "C7/Content/Arts/UI_2/Resource/Skill/Rogue",
+    "C7/Content/Arts/UI_2/Resource/Skill/Profession/Bard",
+)
+
+
+def _convert_skill_icons(raw: Path, res_out: Path, pieces: list[dict]) -> tuple[int, int]:
+    """Skill art, for the 9 of 53 pieces that borrow an existing game icon.
+
+    Deliberately partial. Nine cards out of fifty-three carrying an icon would
+    look like a broken grid, so the page places it inline beside the skill's
+    name, where its absence reads as ordinary text rather than a missing tile.
+    """
+    target = Path(res_out) / ICON_SUBDIR / "skills"
+    target.mkdir(parents=True, exist_ok=True)
+    converted, missing = 0, 0
+    for piece in pieces:
+        name = piece["skillIcon"]
+        source = next(
+            (png for directory in SKILL_ICON_DIRS
+             if name and (png := Path(raw) / directory / f"{name}.png").is_file()),
+            None,
+        )
+        if source is None:
+            piece["skillIcon"] = ""
+            missing += 1
             continue
         with Image.open(source) as img:
             img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)

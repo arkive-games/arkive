@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ContentPage } from '@/components/ContentPage'
 import {
   attributeMap,
+  autoChessSkillIconUrl,
   formatAttributeValue,
   loadAutoChessAttributes,
   loadAutoChessBonds,
@@ -247,7 +248,7 @@ function PieceCard({
         <p className="text-sm text-muted-foreground">{plainText(piece.positionDescription)}</p>
 
         {(open ? stars : stars.slice(0, 1)).map((star) => (
-          <StarBlock key={star.chessId} star={star} attrs={attrs} />
+          <StarBlock key={star.chessId} star={star} attrs={attrs} skillIcon={piece.skillIcon} />
         ))}
 
         {stars.length > 1 ? (
@@ -264,7 +265,15 @@ function PieceCard({
   )
 }
 
-function StarBlock({ star, attrs }: { star: AutoChessStar; attrs: Map<number, AutoChessAttribute> }) {
+function StarBlock({
+  star,
+  attrs,
+  skillIcon,
+}: {
+  star: AutoChessStar
+  attrs: Map<number, AutoChessAttribute>
+  skillIcon: string
+}) {
   const { t } = useTranslation()
   return (
     <section className="border-t border-border/70 pt-2">
@@ -292,7 +301,20 @@ function StarBlock({ star, attrs }: { star: AutoChessStar; attrs: Map<number, Au
 
       {star.skill.name ? (
         <div className="mt-1.5">
-          <p className="text-sm font-medium">{star.skill.name}</p>
+          {/* Inline beside the name rather than as a tile: only 9 of the 53
+              pieces have reachable skill art, and a grid of mostly-empty
+              frames would read as a broken page. */}
+          <p className="flex items-center gap-1.5 text-sm font-medium">
+            {skillIcon ? (
+              <img
+                src={autoChessSkillIconUrl(skillIcon)}
+                alt=""
+                loading="lazy"
+                className="size-5 shrink-0 rounded-sm object-contain"
+              />
+            ) : null}
+            {star.skill.name}
+          </p>
           <p className="text-sm text-muted-foreground">{plainText(star.skill.description)}</p>
           {star.skill.valueDescription ? (
             <p className="mt-0.5 text-xs text-muted-foreground">{plainText(star.skill.valueDescription)}</p>
