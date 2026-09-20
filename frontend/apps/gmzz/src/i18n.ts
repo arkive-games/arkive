@@ -1269,7 +1269,7 @@ const zhTW: Strings = {
   themeDark: '深色模式',
   themeMenu: '主題',
   languageMenu: '語言',
-  nav: {"home": "首頁", "traintrade": "鐵路大亨", "autochess": "愚者棋局", "fellows": "人脉", "reference": "資料", "utopia": "烏托邦劇場", "reforge": "重塑恩賜", "score": "非凡評分計算器", "league": "聯賽積分推演", "changelog": "更新日誌"},
+  nav: {"home": "首頁", "traintrade": "鐵路大亨", "autochess": "愚者棋局", "fellows": "人脈", "reference": "資料", "utopia": "烏托邦劇場", "reforge": "重塑恩賜", "score": "非凡評分計算器", "league": "聯賽積分推演", "changelog": "更新日誌"},
   fellows: {
     "sectionTitle": "人脈",
     "title": "名錄",

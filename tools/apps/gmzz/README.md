@@ -214,6 +214,8 @@ The system is `Fellow` internally. **`SecretPartner` is a different system**
 wrong one first.
 
 - **A relation's effect is per member.** `FellowRelationData.MemberEffectList`
+  — read as its ordered twin `MemberEffectMapList`, since the dict form's
+  iteration order is a Lua hash order —
   maps each fellow id to its own row in `RelationEffectData` — 永远的守护者 gives
   克莱恩 effect 6, 伦纳德 effect 7 and 邓恩 effect 8. An effect id of **0 means no
   combat effect**: that member is in the relation for its story. Treating the

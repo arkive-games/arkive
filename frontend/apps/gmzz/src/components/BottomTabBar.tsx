@@ -2,12 +2,14 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import {
   BookOpen,
+  Contact,
   Gauge,
   Grid3X3,
   Hammer,
   History,
   Home,
   Menu,
+  Spline,
   Trophy,
   Users,
 } from 'lucide-react'
@@ -25,6 +27,10 @@ function activeKey(pathname: string): NavKey {
   // 愚者棋局's four sub-pages report the section, so the strip highlights it as
   // a whole — the same grouping the desktop dropdown shows.
   if (pathname.startsWith('/autochess')) return '/autochess'
+  // 人脉 is the exception to the grouping above: below `md` the desktop bar and
+  // its dropdown are gone, so a section that folds its children here leaves
+  // them with no entry point at all. Both pages are listed, so both highlight.
+  if (pathname.startsWith('/fellows/relations')) return '/fellows/relations'
   if (pathname.startsWith('/fellows')) return '/fellows'
   if (pathname.startsWith('/tools/league-points')) return '/tools/league-points'
   if (pathname.startsWith('/traintrade') || pathname === '/tools/traintrade-station') return '/traintrade'
@@ -78,9 +84,16 @@ export function BottomTabBar() {
           active: active === '/autochess',
         }, {
           key: '/fellows',
-          label: t('nav.fellows'),
-          icon: <Users className="size-5" strokeWidth={1.8} />,
+          label: t('fellows.title'),
+          // Not `Users`: /utopia already carries it in the strip above, and two
+          // identical icons in one open sheet read as the same destination.
+          icon: <Contact className="size-5" strokeWidth={1.8} />,
           active: active === '/fellows',
+        }, {
+          key: '/fellows/relations',
+          label: t('fellows.relationsTitle'),
+          icon: <Spline className="size-5" strokeWidth={1.8} />,
+          active: active === '/fellows/relations',
         }, {
           key: '/tools/league-points',
           label: t('nav.league'),

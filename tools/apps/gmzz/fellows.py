@@ -13,7 +13,8 @@ grepping for "Partner" finds the wrong one first.
 Two joins carry the mechanics, and both are easy to get subtly wrong:
 
 **A relation's effect is per member, not per relation.**
-``FellowRelationData.MemberEffectList`` maps a fellow id to an id in
+``FellowRelationData.MemberEffectList`` — read here as its ordered twin
+``MemberEffectMapList``, see :func:`build_relations` — maps a fellow id to an id in
 ``RelationEffectData`` — so 永远的守护者 gives 克莱恩 effect 6 and its other two
 members something else entirely. An effect id of **0 means no combat effect**:
 that member is in the relation for its story only. Reading the relation as
@@ -314,9 +315,25 @@ def build_relations(tables: dict, fellows: list[dict], effects: list[dict]) -> l
 
 
 def build_levels(tables: dict) -> list[dict]:
-    """The affinity ladders, one per `AffinityLevelType`."""
+    """The affinity ladders, one per `AffinityLevelType`.
+
+    This table carries no id of its own, so ``type`` and ``level`` come from
+    position — which only holds while the Lua keys are a contiguous 1..N, and
+    that is exactly the condition under which the table arrives as a list. If it
+    ever arrives as a dict the order is a Lua hash order, positions mean
+    nothing, and the symptom would be a frontend lookup missing silently. So the
+    shape is asserted rather than trusted.
+    """
+    table = tables["FellowAffinityLevel"]
+    if not isinstance(table, list):
+        raise RuntimeError(
+            "FellowAffinityLevelData is no longer keyed 1..N — `type` is derived "
+            "from position and would now be assigned by hash order"
+        )
     ladders = []
-    for index, ladder in enumerate(_rows(tables["FellowAffinityLevel"]), start=1):
+    for index, ladder in enumerate(table, start=1):
+        if not isinstance(ladder, list):
+            raise RuntimeError(f"affinity ladder {index} is not a contiguous list of rungs")
         ladders.append({
             "type": index,
             "levels": [
@@ -327,7 +344,7 @@ def build_levels(tables: dict) -> list[dict]:
                     "exp": row.get("Exp"),
                     "interactCount": row.get("InteractCount"),
                 }
-                for level, row in enumerate(_rows(ladder), start=1)
+                for level, row in enumerate(ladder, start=1)
             ],
         })
     return ladders

@@ -37,21 +37,21 @@ export default function FellowRelationsPage() {
 
   if (relations.error || fellows.error || effects.error) {
     return (
-      <ContentPage active="/fellows" title={t('fellows.relationsTitle')} heading wide>
+      <ContentPage active="/fellows/relations" title={t('fellows.relationsTitle')} heading wide>
         <p className="text-sm text-muted-foreground">{t('fellows.loadError')}</p>
       </ContentPage>
     )
   }
   if (relations.loading || fellows.loading || effects.loading) {
     return (
-      <ContentPage active="/fellows" title={t('fellows.relationsTitle')} heading wide>
+      <ContentPage active="/fellows/relations" title={t('fellows.relationsTitle')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </ContentPage>
     )
   }
 
   return (
-    <ContentPage active="/fellows" title={t('fellows.relationsTitle')} heading wide>
+    <ContentPage active="/fellows/relations" title={t('fellows.relationsTitle')} heading wide>
       <p className="mb-4 text-sm text-muted-foreground">
         {t('fellows.relationsDescription', { count: all.length })}
       </p>

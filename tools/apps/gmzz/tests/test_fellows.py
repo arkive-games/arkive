@@ -113,7 +113,7 @@ def test_a_story_carries_its_unlock_level(monkeypatch):
 
 def test_a_fellow_missing_upgrade_lines_stops_the_build(monkeypatch):
     monkeypatch.setattr(fellows, "FELLOW_COUNT", 1)
-    broken = {"41000007": {**FELLOWS["41000007"], "DescribList": ["只有一条"]}}
+    broken = {"41000007": {**FELLOWS["41000007"], "DescribList": ["one line only"]}}
     with pytest.raises(RuntimeError, match="1 upgrade lines"):
         fellows.build_fellows({"Fellow": broken, "FellowStory": STORIES}, SKILLS, TAGS)
 
