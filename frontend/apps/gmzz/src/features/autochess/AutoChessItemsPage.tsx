@@ -64,21 +64,21 @@ export default function AutoChessItemsPage() {
 
   if (items.error || attributes.error) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.items.title')} heading wide>
+      <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
       </ContentPage>
     )
   }
   if (items.loading || attributes.loading) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.items.title')} heading wide>
+      <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </ContentPage>
     )
   }
 
   return (
-    <ContentPage active="/autochess" title={t('autochess.items.title')} heading wide>
+    <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide>
       <p className="mb-4 text-sm text-muted-foreground">
         {t('autochess.items.description', { count: all.length })}
       </p>

@@ -206,7 +206,9 @@ uv run python -m gmzz.autochess
 ```
 
 Writes `autochess/{attributes,chess,bonds,items,talents,rules}.json` to
-`GMZZ_DATA_OUT` and the twelve attribute icons to `GMZZ_RES_OUT/autochess/`.
+`GMZZ_DATA_OUT`, and to `GMZZ_RES_OUT/autochess/` the twelve attribute icons,
+`items/` (77 of the 107) and `skills/` (the piece skill icons the export
+reaches).
 
 The mode shipped in build 2153744 and is `AutoChess` internally — 自走棋 — so
 nothing answers to its player-facing name. **That name is 愚者棋局, not 愚者棋盘**:

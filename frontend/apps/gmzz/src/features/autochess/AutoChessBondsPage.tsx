@@ -30,11 +30,11 @@ export default function AutoChessBondsPage() {
 
   /** Which pieces carry each bond — the question a player actually has. */
   const membersByBond = useMemo(() => {
-    const map = new Map<number, { name: string; cost: number }[]>()
+    const map = new Map<number, { baseId: number; name: string; cost: number }[]>()
     for (const piece of pieces.data ?? []) {
       for (const id of piece.bondIds) {
         const list = map.get(id) ?? []
-        list.push({ name: piece.name, cost: piece.cost })
+        list.push({ baseId: piece.baseId, name: piece.name, cost: piece.cost })
         map.set(id, list)
       }
     }
@@ -47,21 +47,21 @@ export default function AutoChessBondsPage() {
 
   if (bonds.error || pieces.error) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.bonds.title')} heading wide>
+      <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
       </ContentPage>
     )
   }
   if (bonds.loading || pieces.loading) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.bonds.title')} heading wide>
+      <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </ContentPage>
     )
   }
 
   return (
-    <ContentPage active="/autochess" title={t('autochess.bonds.title')} heading wide>
+    <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide>
       <p className="mb-4 text-sm text-muted-foreground">
         {t('autochess.bonds.description', { count: all.length })}
       </p>
@@ -106,11 +106,15 @@ export default function AutoChessBondsPage() {
               </ol>
 
               {members.length ? (
-                <p className="mt-3 border-t border-border/70 pt-2 text-xs text-muted-foreground">
+                // Laid out rather than joined: a literal separator in the code
+                // is one locale's punctuation imposed on all three — `、` reads
+                // as a stray glyph in English. Spacing is the stylesheet's job.
+                <div className="mt-3 flex flex-wrap gap-x-2 gap-y-0.5 border-t border-border/70 pt-2 text-xs text-muted-foreground">
                   <span className="font-medium">{t('autochess.bonds.members', { count: members.length })}</span>
-                  {'  '}
-                  {members.map((member) => `${member.name}(${member.cost})`).join('、')}
-                </p>
+                  {members.map((member) => (
+                    <span key={member.baseId} className="tabular-nums">{member.name}({member.cost})</span>
+                  ))}
+                </div>
               ) : null}
             </article>
           )

@@ -94,21 +94,21 @@ export default function AutoChessPiecesPage() {
 
   if (pieces.error || bonds.error || attributes.error) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.pieces.title')} heading wide>
+      <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
       </ContentPage>
     )
   }
   if (pieces.loading || bonds.loading || attributes.loading) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.pieces.title')} heading wide>
+      <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </ContentPage>
     )
   }
 
   return (
-    <ContentPage active="/autochess" title={t('autochess.pieces.title')} heading wide>
+    <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
       <p className="mb-4 text-sm text-muted-foreground">
         {t('autochess.pieces.description', { count: all.length })}
       </p>

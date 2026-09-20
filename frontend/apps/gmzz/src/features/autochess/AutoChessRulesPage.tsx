@@ -61,6 +61,29 @@ function streakBand(from: number, nextFrom: number | undefined): string {
   return nextFrom - 1 === from ? String(from) : `${from}–${nextFrom - 1}`
 }
 
+/**
+ * One row per streak length either ladder starts paying at, each side then
+ * looked up by that threshold.
+ *
+ * Walking the win ladder and reading `loseSteps[index]` pairs the two by
+ * position, which is right only when they are identical — and the loss column
+ * is rendered precisely when they are not, so the wrong pairing would be the
+ * only one ever shown. A loss ladder with more paying steps than the win ladder
+ * would drop its surplus rows outright.
+ */
+function buildStreakRows(winSteps: AutoChessStreakStep[], loseSteps: AutoChessStreakStep[]) {
+  const at = (steps: AutoChessStreakStep[], from: number) =>
+    steps.find((step) => step.fromStreak === from)
+  const thresholds = [...new Set([...winSteps, ...loseSteps].map((step) => step.fromStreak))]
+    .sort((a, b) => a - b)
+  return thresholds.map((from, index) => ({
+    from,
+    band: streakBand(from, thresholds[index + 1]),
+    win: at(winSteps, from)?.bonus,
+    lose: at(loseSteps, from)?.bonus,
+  }))
+}
+
 /** "+1 ~ +3 金" — the span a streak can pay, for the summary row. */
 function streakSummary(
   steps: AutoChessStreakStep[],
@@ -114,6 +137,8 @@ export default function AutoChessRulesPage() {
   const loseSteps = economy?.loseStreak.filter((step) => step.bonus > 0) ?? []
   const sameLadder =
     JSON.stringify(economy?.winStreak) === JSON.stringify(economy?.loseStreak)
+
+  const streakRows = buildStreakRows(winSteps, loseSteps)
 
   return (
     <ContentPage active="/autochess" title={t('autochess.title')} heading wide>
@@ -212,22 +237,20 @@ export default function AutoChessRulesPage() {
               </tr>
             </thead>
             <tbody>
-              {winSteps.map((step, index) => (
-                <tr key={step.fromStreak} className="border-b border-border/60">
+              {streakRows.map((row) => (
+                <tr key={row.from} className="border-b border-border/60">
                   {/* Built from numbers rather than a translated template:
                       "3–4" and "6+" read the same in every locale the site
                       speaks, and the ladder's open top row has no separate
                       wording to get wrong. A band one wide prints as a single
                       number — "5–5" is noise. */}
+                  <td className="py-1.5 pr-3 tabular-nums">{row.band}</td>
                   <td className="py-1.5 pr-3 tabular-nums">
-                    {streakBand(step.fromStreak, winSteps[index + 1]?.fromStreak)}
-                  </td>
-                  <td className="py-1.5 pr-3 tabular-nums">
-                    +{t('autochess.rules.gold', { count: step.bonus })}
+                    {row.win === undefined ? '—' : `+${t('autochess.rules.gold', { count: row.win })}`}
                   </td>
                   {!sameLadder ? (
                     <td className="py-1.5 pr-3 tabular-nums">
-                      {loseSteps[index] ? `+${t('autochess.rules.gold', { count: loseSteps[index].bonus })}` : '—'}
+                      {row.lose === undefined ? '—' : `+${t('autochess.rules.gold', { count: row.lose })}`}
                     </td>
                   ) : null}
                 </tr>
@@ -240,10 +263,11 @@ export default function AutoChessRulesPage() {
           {t('autochess.rules.streakExcluded')}
         </p>
 
+        {/* One key rather than a label, a literal separator and a value: the
+            separator is punctuation, and punctuation belongs to the locale —
+            written here as `：` it followed the English build too. */}
         <p className="mt-3 text-sm text-muted-foreground">
-          {t('autochess.rules.buyExp')}
-          {'：'}
-          {t('autochess.rules.buyExpValue', {
+          {t('autochess.rules.buyExpLine', {
             price: economy.experience.price,
             gain: economy.experience.gain,
           })}

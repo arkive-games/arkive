@@ -51,14 +51,14 @@ export default function AutoChessTalentsPage() {
 
   if (talents.error) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.talents.title')} heading wide>
+      <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
       </ContentPage>
     )
   }
   if (talents.loading) {
     return (
-      <ContentPage active="/autochess" title={t('autochess.talents.title')} heading wide>
+      <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </ContentPage>
     )
@@ -67,7 +67,7 @@ export default function AutoChessTalentsPage() {
   const hidden = all.filter((talent) => !talent.inHandbook).length
 
   return (
-    <ContentPage active="/autochess" title={t('autochess.talents.title')} heading wide>
+    <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide>
       <p className="mb-4 text-sm text-muted-foreground">
         {t('autochess.talents.description', { count: all.filter((talent) => talent.inHandbook).length })}
       </p>

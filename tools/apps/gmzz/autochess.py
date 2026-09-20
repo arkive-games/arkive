@@ -564,14 +564,15 @@ ITEM_ICON_DIRS = (
 
 
 def _convert_item_icons(raw: Path, res_out: Path, items: list[dict]) -> tuple[int, list[int]]:
-    """Equipment art, for the 89 of 107 rows whose icon is reachable.
+    """Equipment art, for the 77 of 107 rows whose icon is reachable.
 
-    The split is not arbitrary and is worth stating: 84 items point at
-    ``Item/Middle`` and 5 at ``Item/Large`` — ordinary game-wide directories,
-    both of which mount — while the 18 共鸣徽章 point at
-    ``ConfigIcon/AutoChess/EquipMiddle``, which does not. Every piece of art the
-    *mode itself* added is unreachable; everything it borrows from the rest of
-    the game is fine.
+    The split is not arbitrary and is worth stating. The 18 共鸣徽章 point at
+    ``ConfigIcon/AutoChess/EquipMiddle``, which does not mount — art the *mode
+    itself* added. The other 12 misses are ordinary 装备 rows pointing at
+    ``Item/Middle``, a directory that does mount and serves the remaining 77:
+    those twelve are items added in the same patch, so their files are not in
+    the index either. So the rule is the patch, not the directory — everything
+    this mode brought with it is unreachable, everything older is fine.
 
     Rows whose icon cannot be produced keep their ``icon`` value — the page
     checks for the file rather than trusting the field — and the count is
