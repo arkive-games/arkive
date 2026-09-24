@@ -9,6 +9,7 @@ import {
   History,
   Home,
   Menu,
+  Route,
   Spline,
   Trophy,
   Users,
@@ -33,7 +34,10 @@ function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/fellows/relations')) return '/fellows/relations'
   if (pathname.startsWith('/fellows')) return '/fellows'
   if (pathname.startsWith('/tools/league-points')) return '/tools/league-points'
-  if (pathname.startsWith('/traintrade') || pathname === '/tools/traintrade-station') return '/traintrade'
+  // The planner is its own entry in the More grid, so it reports itself rather
+  // than borrowing 铁路大亨's highlight the way it used to.
+  if (pathname.startsWith('/tools/traintrade-station')) return '/tools/traintrade-station'
+  if (pathname.startsWith('/traintrade')) return '/traintrade'
   if (pathname.startsWith('/utopia')) return '/utopia'
   if (pathname.startsWith('/reforge')) return '/reforge'
   if (pathname.startsWith('/score')) return '/score'
@@ -78,6 +82,11 @@ export function BottomTabBar() {
       }}
       grid={{
         items: [{
+          key: '/tools/traintrade-station',
+          label: t('trainTrade.stationTool.title'),
+          icon: <Route className="size-5" strokeWidth={1.8} />,
+          active: active === '/tools/traintrade-station',
+        }, {
           key: '/autochess',
           label: t('nav.autochess'),
           icon: <Grid3X3 className="size-5" strokeWidth={1.8} />,

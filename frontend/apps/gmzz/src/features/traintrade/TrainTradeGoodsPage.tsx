@@ -8,6 +8,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@gamemap/ui";
+import { ContentPage } from "@/components/ContentPage";
 import CatalogPagination from "@/features/traintrade/CatalogPagination";
 import { loadTrainTradeGoods, iconFor, type TrainTradeGoods } from "@/features/traintrade/data";
 
@@ -110,17 +111,33 @@ export default function TrainTradeGoodsPage() {
     window.requestAnimationFrame(() => resultsAnchorRef.current?.scrollIntoView({ block: "start" }));
   };
 
-  if (error) return <p className="text-sm text-muted-foreground">{t("trainTrade.loadError")}</p>;
-  if (!goods.length) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
+  // This page predates `ContentPage` and was the one page in the app still
+  // rendering a bare <div>: no top bar, no mobile header, no footer, and none
+  // of the shared container width — which is why 铁路大亨 looked unlike every
+  // other section. The <h1> it used to draw itself is now the shell's
+  // `heading`, so the title is hidden on mobile where the mobile header
+  // already carries it, exactly as the other pages behave.
+  if (error) {
+    return (
+      <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide>
+        <p className="text-sm text-muted-foreground">{t("trainTrade.loadError")}</p>
+      </ContentPage>
+    );
+  }
+  if (!goods.length) {
+    return (
+      <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide>
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+      </ContentPage>
+    );
+  }
 
   return (
+    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide>
     <div className="space-y-3" data-testid="train-trade-page">
       <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold text-foreground">
-            {t("trainTrade.title")}
-          </h1>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
             {t("trainTrade.description", { count: goods.length })}
           </p>
         </div>
@@ -191,6 +208,7 @@ export default function TrainTradeGoodsPage() {
         {t("trainTrade.sourceNote")}
       </p>
     </div>
+    </ContentPage>
   );
 }
 

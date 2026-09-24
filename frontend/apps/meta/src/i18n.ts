@@ -350,8 +350,8 @@ const resources = {
         pageStatus: '第 {{page}} / {{total}} 页',
       },
       toolsLibrary: {
-        eyebrow: '实用工具', title: '工具库', description: '按游戏查找计算、规划与资料整理工具。', open: '打开工具',
-        trainTrade: { game: '诡秘之主 · 铁路大亨', title: '站点推演', description: '配置路线难度与站点配额，根据每次三站提示推演站点概率和组合。' },
+        eyebrow: '实用工具', title: '工具库', description: '按游戏查找计算、规划与资料整理工具。', visit: '前往游戏站点',
+        gmzz: { game: '诡秘之主', title: '站内工具集', description: '站点推演、战略服积分推演器等工具已并入诡秘之主站点，在站内导航直接使用。' },
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['zh-CN'],
@@ -505,8 +505,8 @@ const resources = {
         pageStatus: '第 {{page}} / {{total}} 頁',
       },
       toolsLibrary: {
-        eyebrow: '實用工具', title: '工具庫', description: '按遊戲查找計算、規劃與資料整理工具。', open: '開啟工具',
-        trainTrade: { game: '詭秘之主 · 鐵路大亨', title: '站點推演', description: '設定路線難度與站點配額，根據每次三站提示推演站點機率和組合。' },
+        eyebrow: '實用工具', title: '工具庫', description: '按遊戲查找計算、規劃與資料整理工具。', visit: '前往遊戲站點',
+        gmzz: { game: '詭秘之主', title: '站內工具集', description: '站點推演、戰略服積分推演器等工具已併入詭秘之主站點，在站內導覽直接使用。' },
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['zh-TW'],
@@ -630,8 +630,8 @@ const resources = {
         pageStatus: 'Page {{page}} of {{total}}',
       },
       toolsLibrary: {
-        eyebrow: 'Practical tools', title: 'Tool library', description: 'Find calculators, planners, and reference tools by game.', open: 'Open tool',
-        trainTrade: { game: 'Lord of Mysteries · Train Tycoon', title: 'Station planner', description: 'Set the route difficulty and station quota, then use each three-stop hint to project probabilities and combinations.' },
+        eyebrow: 'Practical tools', title: 'Tool library', description: 'Find calculators, planners, and reference tools by game.', visit: 'Visit the game site',
+        gmzz: { game: 'Lord of Mysteries', title: 'Tools on the game site', description: 'The station planner, the strategy-server league simulator and the rest now live on the Lord of Mysteries site, in its own navigation.' },
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['en-US'],
@@ -736,8 +736,8 @@ const resources = {
         pageStatus: '{{page}} / {{total}}ページ',
       },
       toolsLibrary: {
-        eyebrow: '実用ツール', title: 'ツールライブラリ', description: 'ゲーム別の計算、計画、資料整理ツールを探せます。', open: 'ツールを開く',
-        trainTrade: { game: 'ロード・オブ・ミステリーズ · 鉄道王', title: '駅ルート推演', description: 'ルート難易度と駅数を設定し、3駅ごとのヒントから各駅の確率と組み合わせを推演します。' },
+        eyebrow: '実用ツール', title: 'ツールライブラリ', description: 'ゲーム別の計算、計画、資料整理ツールを探せます。', visit: 'ゲームサイトへ',
+        gmzz: { game: 'ロード・オブ・ミステリーズ', title: 'サイト内ツール集', description: '駅ルート推演や戦略サーバーのリーグ積分シミュレーターなどは、ロード・オブ・ミステリーズのサイト内ナビゲーションから利用できます。' },
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['ja-JP'],
@@ -836,8 +836,8 @@ const resources = {
         pageStatus: '{{page}} / {{total}}페이지',
       },
       toolsLibrary: {
-        eyebrow: '실용 도구', title: '도구 모음', description: '게임별 계산기, 계획 도구와 참고 자료를 찾습니다.', open: '도구 열기',
-        trainTrade: { game: '신비의 제왕 · 철도 재벌', title: '역 경로 시뮬레이션', description: '경로 난이도와 역 할당량을 설정하고 세 역 힌트로 각 역의 확률과 조합을 추론합니다.' },
+        eyebrow: '실용 도구', title: '도구 모음', description: '게임별 계산기, 계획 도구와 참고 자료를 찾습니다.', visit: '게임 사이트로 이동',
+        gmzz: { game: '신비의 제왕', title: '사이트 내 도구 모음', description: '역 경로 시뮬레이션과 전략 서버 리그 점수 시뮬레이터 등은 이제 신비의 제왕 사이트의 자체 내비게이션에서 사용할 수 있습니다.' },
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['ko-KR'],

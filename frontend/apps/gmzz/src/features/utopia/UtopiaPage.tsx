@@ -4,6 +4,7 @@ import { Grid2X2, List } from "lucide-react";
 import { Input } from "@gamemap/ui";
 import { useTranslation } from "react-i18next";
 
+import { ContentPage } from "@/components/ContentPage";
 import CatalogPagination from "@/features/traintrade/CatalogPagination";
 import {
   loadUtopiaCards,
@@ -102,28 +103,36 @@ export default function UtopianTheaterPage() {
     window.requestAnimationFrame(() => resultsAnchorRef.current?.scrollIntoView({ block: "start" }));
   };
 
+  // Wrapped in `ContentPage` for the same reason 铁路大亨 was: this page also
+  // predates the shared shell and drew a bare <div>, so it lost the top bar,
+  // the footer and the common container width. Its <h1> becomes the shell's
+  // `heading`, which hides it on mobile where the mobile header carries it.
   if (loading) {
     return (
-      <div className="space-y-5" role="status" aria-label={t("common.loading")} data-testid="utopian-theater-loading">
-        <div className="h-28 animate-pulse rounded-md bg-muted" />
-        <div className="h-11 animate-pulse rounded-md bg-muted" />
-        <div className="h-96 animate-pulse rounded-md bg-muted" />
-      </div>
+      <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide>
+        <div className="space-y-5" role="status" aria-label={t("common.loading")} data-testid="utopian-theater-loading">
+          <div className="h-28 animate-pulse rounded-md bg-muted" />
+          <div className="h-11 animate-pulse rounded-md bg-muted" />
+          <div className="h-96 animate-pulse rounded-md bg-muted" />
+        </div>
+      </ContentPage>
     );
   }
 
   if (error) {
-    return <p className="text-sm text-muted-foreground">{t("utopianTheater.loadError")}</p>;
+    return (
+      <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide>
+        <p className="text-sm text-muted-foreground">{t("utopianTheater.loadError")}</p>
+      </ContentPage>
+    );
   }
 
   return (
+    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide>
     <div data-testid="utopian-theater-page" className="space-y-3">
       <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold text-foreground">
-            {t("utopianTheater.title")}
-          </h1>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
             {t("utopianTheater.description", { count: entries.length })}
           </p>
           <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">
@@ -294,6 +303,7 @@ export default function UtopianTheaterPage() {
         </p>
       </div>
     </div>
+    </ContentPage>
   );
 }
 

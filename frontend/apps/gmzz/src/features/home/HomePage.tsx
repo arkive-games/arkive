@@ -6,6 +6,7 @@ import { getGameVersion } from '../../lib/urls'
 
 const SECTIONS = [
   { to: '/traintrade', titleKey: 'trainTrade.title', bodyKey: 'trainTrade.homeDescription' },
+  { to: '/tools/traintrade-station', titleKey: 'trainTrade.stationTool.title', bodyKey: 'trainTrade.stationTool.homeDescription' },
   { to: '/autochess', titleKey: 'autochess.title', bodyKey: 'autochess.homeDescription' },
   { to: '/fellows', titleKey: 'fellows.sectionTitle', bodyKey: 'fellows.homeDescription' },
   { to: '/utopia', titleKey: 'utopianTheater.title', bodyKey: 'utopianTheater.homeDescription' },

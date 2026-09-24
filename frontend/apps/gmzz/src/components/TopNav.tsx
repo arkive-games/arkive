@@ -9,6 +9,7 @@ import { useSettingsConfig } from '../lib/settings'
 export type NavKey =
   | '/'
   | '/traintrade'
+  | '/tools/traintrade-station'
   | '/utopia'
   | '/reforge'
   | '/score'
@@ -32,6 +33,17 @@ export type NavKey =
  * — which is what a reader wants from a section, and avoids every child having
  * to be listed twice.
  */
+/**
+ * 铁路大亨 owns two pages, and the planner had no entry anywhere in this site:
+ * it was reachable only from the portal's tool library, while the wiki page it
+ * belongs with sat in the nav alone. Grouping them keeps the bar at six items
+ * and puts the tool where a reader of the wiki will look for it.
+ */
+const TRAINTRADE_CHILDREN: { key: NavKey; labelKey: string }[] = [
+  { key: '/traintrade', labelKey: 'trainTrade.title' },
+  { key: '/tools/traintrade-station', labelKey: 'trainTrade.stationTool.title' },
+]
+
 const AUTOCHESS_CHILDREN: { key: NavKey; labelKey: string }[] = [
   { key: '/autochess', labelKey: 'autochess.rules.navTitle' },
   { key: '/autochess/chess', labelKey: 'autochess.pieces.title' },
@@ -68,7 +80,15 @@ export function TopNav({ active }: { active: NavKey }) {
 
   const ITEMS: ShellNavItem[] = [
     { key: '/', label: t('nav.home'), active: active === '/' },
-    { key: '/traintrade', label: t('nav.traintrade'), active: active === '/traintrade' },
+    {
+      key: 'traintrade',
+      label: t('nav.traintrade'),
+      children: TRAINTRADE_CHILDREN.map((child) => ({
+        key: child.key,
+        label: t(child.labelKey),
+        active: active === child.key,
+      })),
+    },
     {
       key: 'autochess',
       label: t('nav.autochess'),

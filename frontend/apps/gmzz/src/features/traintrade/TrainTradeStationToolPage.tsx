@@ -196,11 +196,11 @@ export default function TrainTradeStationToolPage() {
     return entries;
   }, [originHint, steps, t]);
 
-  if (dataError) return <ContentPage active="/traintrade" title={t("trainTrade.stationTool.title")} wide><p className="text-sm text-muted-foreground">{t("trainTrade.stationTool.loadError")}</p></ContentPage>;
-  if (!profiles) return <ContentPage active="/traintrade" title={t("trainTrade.stationTool.title")} wide><p className="text-sm text-muted-foreground">{t("loading")}</p></ContentPage>;
+  if (dataError) return <ContentPage active="/tools/traintrade-station" title={t("trainTrade.stationTool.title")} wide><p className="text-sm text-muted-foreground">{t("trainTrade.stationTool.loadError")}</p></ContentPage>;
+  if (!profiles) return <ContentPage active="/tools/traintrade-station" title={t("trainTrade.stationTool.title")} wide><p className="text-sm text-muted-foreground">{t("loading")}</p></ContentPage>;
 
   return (
-    <ContentPage active="/traintrade" title={t("trainTrade.stationTool.title")} wide>
+    <ContentPage active="/tools/traintrade-station" title={t("trainTrade.stationTool.title")} wide>
     <div className="space-y-3 pb-16 md:pb-0" data-testid="train-trade-station-tool">
       <h1 className="sr-only">{t("trainTrade.stationTool.planner.workspaceTitle")}</h1>
       <div className="grid min-w-0 gap-3 xl:grid-cols-[15rem_minmax(0,1fr)]">
