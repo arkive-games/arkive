@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.9.0",
+      "date": "2026-09-25",
+      "commit": "710ca0c9801eff364e4e1b942bd5b965beb14018",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The station route planner now lives in this site's own navigation: Train Trade is a menu holding the goods catalogue and the planner, and the planner also appears on the home page and in the mobile More sheet. It was previously reachable only from the portal's tool library.",
+            "zh-CN": "站点推演进入站内导航：「铁路大亨」现在是一个菜单，下面是货物图鉴和站点推演；首页和手机「更多」面板里也都有入口。此前它只能从门户的工具库进入。",
+            "zh-TW": "站點推演進入站內導覽：「鐵路大亨」現在是一個選單，底下是貨物圖鑑和站點推演；首頁和手機「更多」面板裡也都有入口。此前它只能從入口網站的工具庫進入。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The Train Trade goods catalogue and Utopian Theater pages were missing the top navigation bar, the footer and the site's standard page width. Both now match every other page.",
+            "zh-CN": "「铁路大亨货物」和「乌托邦剧场」两个页面此前缺少顶部导航栏、页脚和全站统一的版心宽度，现在与其他页面一致。",
+            "zh-TW": "「鐵路大亨貨物」和「烏托邦劇場」兩個頁面此前缺少頂部導覽列、頁尾和全站統一的版心寬度，現在與其他頁面一致。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.1",
       "date": "2026-09-17",
       "commit": "87c5a76491ce42a604fa6dc9a21a0af7c83304fa",
