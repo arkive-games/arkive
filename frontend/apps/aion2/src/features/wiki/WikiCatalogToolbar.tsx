@@ -129,7 +129,7 @@ export default function WikiCatalogToolbar({
       >
         {showHeading && (
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="min-w-0 truncate text-2xl font-bold text-[color:var(--arkive-nav-active)]">
+            <h1 className="min-w-0 truncate text-3xl font-bold text-[color:var(--arkive-nav-active)]">
               {title}
             </h1>
             <span className="shrink-0 text-xs tabular-nums text-muted-foreground">

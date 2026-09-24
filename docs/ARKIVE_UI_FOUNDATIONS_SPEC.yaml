@@ -107,7 +107,7 @@ typography:
     text-2xl: "1.5rem"
     text-3xl: "1.875rem"
   role_defaults:
-    page_title: "text-2xl, weight 700, tight line height"
+    page_title: "text-3xl, weight 700, tight line height"
     section_title: "text-lg, weight 600"
     subsection_title: "text-base, weight 600"
     long_form_body: "text-base, regular weight, relaxed line height"
