@@ -516,6 +516,7 @@ export default function App() {
           <HomeDirectory
             sites={displayedSites}
             continueSiteId={continueSite?.id}
+            updatedDates={__GAME_UPDATED__}
             recentlyUsed={recentlyUsed}
             onOpenSite={rememberSite}
             onOpenFeature={rememberFeature}

@@ -6,7 +6,25 @@ import {
   paginateCatalogEntries,
   type CatalogEntry,
 } from './gameCatalog'
-import { GAME_LOGOS, SITES } from './sites'
+import { GAME_LOGOS, RECENT_UPDATE_DAYS, SITES, recentUpdateDays } from './sites'
+
+describe('recentUpdateDays', () => {
+  const now = new Date(2026, 8, 26, 23, 30)
+
+  it('counts calendar days, not 24-hour spans', () => {
+    expect(recentUpdateDays('2026-09-26', now)).toBe(0)
+    expect(recentUpdateDays('2026-09-25', now)).toBe(1)
+    expect(recentUpdateDays('2026-09-17', now)).toBe(9)
+  })
+
+  it('hides stale, future and malformed dates', () => {
+    expect(recentUpdateDays('2026-08-12', now)).toBeUndefined()
+    expect(recentUpdateDays('2026-08-27', now)).toBe(RECENT_UPDATE_DAYS)
+    expect(recentUpdateDays('2026-09-27', now)).toBeUndefined()
+    expect(recentUpdateDays('26/09/2026', now)).toBeUndefined()
+    expect(recentUpdateDays(undefined, now)).toBeUndefined()
+  })
+})
 
 const entries: CatalogEntry[] = [
   { id: 'aion2', categories: ['mmorpg'], searchText: 'AION2' },

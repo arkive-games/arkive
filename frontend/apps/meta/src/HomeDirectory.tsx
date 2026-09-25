@@ -22,7 +22,7 @@ import {
   type RecentFeature,
   type SearchHit,
 } from './featureCatalog'
-import { siteHref, type SiteCard } from './sites'
+import { recentUpdateDays, siteHref, type SiteCard } from './sites'
 import { ToolCard } from './ToolCard'
 
 /** Feature links under each game card before the rest fold into "+N". */
@@ -48,10 +48,12 @@ const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
  * site has rather than recommending one game from it. Both shelves are plain
  * wrapping grids -- a new game or tool adds a card, not a redesign.
  */
-export function HomeDirectory({ sites, continueSiteId, recentlyUsed, onOpenSite, onOpenFeature }: {
+export function HomeDirectory({ sites, continueSiteId, updatedDates, recentlyUsed, onOpenSite, onOpenFeature }: {
   /** In display order; the caller decides whether a recent game leads. */
   sites: readonly SiteCard[]
   continueSiteId?: string
+  /** Newest changelog date per game id; a recent one earns its card a badge. */
+  updatedDates: Readonly<Record<string, string>>
   /** Newest first; the row is omitted while this is empty. */
   recentlyUsed: readonly RecentFeature[]
   onOpenSite: (site: SiteCard) => void
@@ -59,6 +61,7 @@ export function HomeDirectory({ sites, continueSiteId, recentlyUsed, onOpenSite,
 }) {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
+  const [now] = useState(() => new Date())
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
     && sites.some((site) => site.id === feature.gameId && siteHref(site)))
 
@@ -112,6 +115,7 @@ export function HomeDirectory({ sites, continueSiteId, recentlyUsed, onOpenSite,
               key={site.id}
               site={site}
               continuing={site.id === continueSiteId}
+              updatedDaysAgo={recentUpdateDays(updatedDates[site.id], now)}
               onOpen={() => onOpenSite(site)}
               onOpenFeature={(feature) => onOpenFeature(feature, site)}
             />
@@ -150,9 +154,11 @@ export function HomeDirectory({ sites, continueSiteId, recentlyUsed, onOpenSite,
   )
 }
 
-function DirectoryGameCard({ site, continuing, onOpen, onOpenFeature }: {
+function DirectoryGameCard({ site, continuing, updatedDaysAgo, onOpen, onOpenFeature }: {
   site: SiteCard
   continuing: boolean
+  /** Set only for a recent update; see `recentUpdateDays`. */
+  updatedDaysAgo?: number
   onOpen: () => void
   onOpenFeature: (feature: GameFeature) => void
 }) {
@@ -176,7 +182,20 @@ function DirectoryGameCard({ site, continuing, onOpen, onOpenFeature }: {
       <a href={href} className="directory-game-cover group" onClick={onOpen}>
         <img src={site.bg} alt="" style={{ objectPosition: site.bgPosition }} />
         <span className="directory-game-shade" aria-hidden="true" />
-        {continuing && <small>{t('hero.continue')}</small>}
+        {(continuing || updatedDaysAgo !== undefined) && (
+          // One wrapping row, so a narrow card stacks the two tags instead of
+          // overlapping them.
+          <span className="directory-game-tags">
+            {continuing && <small>{t('hero.continue')}</small>}
+            {updatedDaysAgo !== undefined && (
+              <span className="directory-game-updated">
+                {t('home.updated', {
+                  when: new Intl.RelativeTimeFormat(language, { numeric: 'auto' }).format(-updatedDaysAgo, 'day'),
+                })}
+              </span>
+            )}
+          </span>
+        )}
         <strong>{name}</strong>
       </a>
       {shown.length > 0 && (

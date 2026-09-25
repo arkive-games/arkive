@@ -235,10 +235,24 @@ body:has(.arkive-home-view) {
   white-space: nowrap;
 }
 
-.directory-game-cover small {
+/* The card's tags: "continue exploring" on the left, the update badge on the
+   right, wrapping onto a second line when the card is too narrow for both. */
+.directory-game-tags {
   position: absolute;
   top: 0.6rem;
+  right: 0.6rem;
   left: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.directory-game-tags > .directory-game-updated:only-child {
+  margin-left: auto;
+}
+
+.directory-game-cover small {
   padding: 0.2rem 0.45rem;
   border-radius: var(--arkive-radius-compact);
   color: white;
@@ -246,6 +260,28 @@ body:has(.arkive-home-view) {
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.2;
+}
+
+.directory-game-updated {
+  padding: 0.2rem 0.45rem;
+  border-radius: 999rem;
+  color: white;
+  background: rgba(8, 22, 28, 0.62);
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.2;
+  backdrop-filter: blur(0.4rem);
+}
+
+.directory-game-updated::before {
+  content: "";
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-right: 0.3rem;
+  border-radius: 50%;
+  background: #4ade80;
+  vertical-align: 0.1rem;
 }
 
 .directory-game-features {

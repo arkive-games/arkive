@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 declare const __BUILD_TIME__: string
 declare const __BUILD_GIT_COMMIT__: string
+/** Newest changelog date (YYYY-MM-DD) per game app, from vite.config.ts. */
+declare const __GAME_UPDATED__: Record<string, string>
 
 interface ImportMetaEnv {
   /** Set to "1" by scripts/toy-build.mjs when building the Bilibili Toy package. */
