@@ -92,6 +92,8 @@ export const FEATURES: readonly GameFeature[] = [
     keywords: ['train', 'station', '火车', '火車', '站点', '站點'],
   },
   { id: 'gmzz-traintrade', gameId: 'gmzz', kind: 'wiki', path: '/traintrade', name: text('Train Tycoon', '铁路大亨', '鐵路大亨'), keywords: ['train', '火车', '火車', '货物', '貨物'] },
+  { id: 'gmzz-autochess', gameId: 'gmzz', kind: 'wiki', path: '/autochess', name: text('Fool\'s Gambit', '愚者棋局', '愚者棋局'), keywords: ['autochess', 'chess', '自走棋', '棋子', '羁绊', '羈絆'] },
+  { id: 'gmzz-fellows', gameId: 'gmzz', kind: 'wiki', path: '/fellows', name: text('Connections', '人脉', '人脈'), keywords: ['fellows', 'relations', '人脉关系', '人脈關係'] },
   { id: 'gmzz-utopia', gameId: 'gmzz', kind: 'wiki', path: '/utopia', name: text('Utopian Theater', '乌托邦剧场', '烏托邦劇場') },
   { id: 'gmzz-reforge', gameId: 'gmzz', kind: 'wiki', path: '/reforge', name: text('Reforge Graces', '重塑恩赐', '重塑恩賜') },
 
