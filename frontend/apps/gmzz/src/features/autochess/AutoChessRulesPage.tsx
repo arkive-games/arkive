@@ -19,6 +19,20 @@ const KIND_CLASS: Record<AutoChessTurnKind, string> = {
 
 const KINDS: AutoChessTurnKind[] = ['pve', 'pvp', 'insight', 'carousel']
 
+/**
+ * One type scale for the whole page, and every section drawn as the same card.
+ * The earlier layout mixed seven size/weight pairs — income rows set at body
+ * size among small-print notes, section headings larger than anything in them —
+ * and stacked bare sections whose different heights left holes. Titles are
+ * text-base, content text-sm, hints and table headers text-xs, nothing else.
+ */
+const SECTION = 'mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4'
+const TITLE = 'text-base font-semibold'
+const HINT = 'mt-0.5 mb-3 text-xs text-muted-foreground'
+const NOTE = 'mt-2 text-xs text-muted-foreground'
+const TH = 'py-1.5 pr-4 text-left text-xs font-medium text-muted-foreground'
+const TD = 'py-1.5 pr-4 tabular-nums'
+
 /** One numbered gold source: what it is, how much, and the condition. */
 function IncomeRow({
   index,
@@ -32,16 +46,16 @@ function IncomeRow({
   note: string
 }) {
   return (
-    <li className="flex gap-2.5 rounded-md border border-border bg-card px-3 py-2">
+    <li className="flex gap-2.5 border-b border-border/60 py-2 last:border-b-0">
       <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-border text-xs tabular-nums text-muted-foreground">
         {index}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
           <span className="font-medium">{label}</span>
           <span className="font-semibold tabular-nums">{value}</span>
         </div>
-        <p className="mt-0.5 text-sm text-muted-foreground">{note}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{note}</p>
       </div>
     </li>
   )
@@ -136,14 +150,15 @@ export default function AutoChessRulesPage() {
     <ContentPage active="/autochess" title={t('autochess.title')} heading wide>
       <p className="mb-4 text-sm text-muted-foreground">{t('autochess.description')}</p>
 
-      {/* The five rule sections side by side on a wide screen: each is a short
-          table or list, and stacked one per row they left most of the width
-          empty. The four cards that used to sit above them linked to the other
-          pages, which the nav's own 愚者棋局 menu now does. */}
-      <div className="grid items-start gap-x-8 gap-y-6 xl:grid-cols-2">
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.turnsTitle')}</h2>
-        <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.turnsHint')}</p>
+      {/* Two flowing columns rather than a two-column grid: a grid row is as
+          tall as its taller cell, so the short turn ladder beside the long gold
+          section left a hole under it. Columns pack each card straight under the
+          one above. The four cards that used to sit above this linked to the
+          other pages, which the nav's own 愚者棋局 menu now does. */}
+      <div className="gap-4 xl:columns-2">
+      <section className={SECTION}>
+        <h2 className={TITLE}>{t('autochess.rules.turnsTitle')}</h2>
+        <p className={HINT}>{t('autochess.rules.turnsHint')}</p>
         <ul className="mb-3 flex flex-wrap gap-2">
           {KINDS.map((kind) => (
             <li key={kind} className={`rounded border px-2 py-0.5 text-xs ${KIND_CLASS[kind]}`}>
@@ -154,7 +169,7 @@ export default function AutoChessRulesPage() {
         <div className="space-y-1.5">
           {rounds.map(([round, turns]) => (
             <div key={round} className="flex flex-wrap items-center gap-1.5">
-              <span className="w-16 shrink-0 text-sm text-muted-foreground">
+              <span className="w-16 shrink-0 text-xs text-muted-foreground">
                 {t('autochess.rules.round', { round })}
               </span>
               {turns.map((turn) => (
@@ -172,17 +187,17 @@ export default function AutoChessRulesPage() {
       </section>
 
       {economy ? (
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.economyTitle')}</h2>
+      <section className={SECTION}>
+        <h2 className={TITLE}>{t('autochess.rules.economyTitle')}</h2>
 
-        <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.economyHint')}</p>
+        <p className={HINT}>{t('autochess.rules.economyHint')}</p>
 
         {/* One row per source, each with its own figure. The earlier version
             quoted the client's paragraph and listed the constants separately,
             which left the reader to work out which number went with which
             sentence — and the paragraph names no figure for the base income at
             all. */}
-        <ol className="mb-4 space-y-2">
+        <ol className="mb-3">
           <IncomeRow
             index={1}
             label={t('autochess.rules.incomeBase')}
@@ -210,13 +225,13 @@ export default function AutoChessRulesPage() {
         </ol>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[22rem] border-collapse text-sm">
+          <table className="w-full min-w-[16rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="py-2 pr-3 font-medium">{t('autochess.rules.streak')}</th>
-                <th className="py-2 pr-3 font-medium">{t('autochess.rules.streakWin')}</th>
+                <th className={TH}>{t('autochess.rules.streak')}</th>
+                <th className={TH}>{t('autochess.rules.streakWin')}</th>
                 {!sameLadder ? (
-                  <th className="py-2 pr-3 font-medium">{t('autochess.rules.streakLose')}</th>
+                  <th className={TH}>{t('autochess.rules.streakLose')}</th>
                 ) : null}
               </tr>
             </thead>
@@ -228,12 +243,12 @@ export default function AutoChessRulesPage() {
                       speaks, and the ladder's open top row has no separate
                       wording to get wrong. A band one wide prints as a single
                       number — "5–5" is noise. */}
-                  <td className="py-1.5 pr-3 tabular-nums">{row.band}</td>
-                  <td className="py-1.5 pr-3 tabular-nums">
+                  <td className={TD}>{row.band}</td>
+                  <td className={TD}>
                     {row.win === undefined ? '—' : `+${t('autochess.rules.gold', { count: row.win })}`}
                   </td>
                   {!sameLadder ? (
-                    <td className="py-1.5 pr-3 tabular-nums">
+                    <td className={TD}>
                       {row.lose === undefined ? '—' : `+${t('autochess.rules.gold', { count: row.lose })}`}
                     </td>
                   ) : null}
@@ -242,7 +257,7 @@ export default function AutoChessRulesPage() {
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className={NOTE}>
           {sameLadder ? `${t('autochess.rules.streakSame')} ` : ''}
           {t('autochess.rules.streakExcluded')}
         </p>
@@ -250,7 +265,7 @@ export default function AutoChessRulesPage() {
         {/* One key rather than a label, a literal separator and a value: the
             separator is punctuation, and punctuation belongs to the locale —
             written here as `：` it followed the English build too. */}
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className={NOTE}>
           {t('autochess.rules.buyExpLine', {
             price: economy.experience.price,
             gain: economy.experience.gain,
@@ -260,16 +275,16 @@ export default function AutoChessRulesPage() {
       ) : null}
 
       {damage ? (
-        <section>
-          <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.damageTitle')}</h2>
-          <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.damageHint')}</p>
+        <section className={SECTION}>
+          <h2 className={TITLE}>{t('autochess.rules.damageTitle')}</h2>
+          <p className={HINT}>{t('autochess.rules.damageHint')}</p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[30rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
-                  <th className="py-2 pr-3 font-medium">{t('autochess.rules.stage')}</th>
+                  <th className={TH}>{t('autochess.rules.stage')}</th>
                   {damage.baseByRound.map((_, index) => (
-                    <th key={index} className="py-2 pr-3 font-medium tabular-nums">
+                    <th key={index} className={TH}>
                       {index + 1}
                     </th>
                   ))}
@@ -277,23 +292,23 @@ export default function AutoChessRulesPage() {
               </thead>
               <tbody>
                 <tr className="border-b border-border/60">
-                  <td className="py-1.5 pr-3 text-muted-foreground">{t('autochess.rules.baseDamage')}</td>
+                  <td className={`${TD} text-muted-foreground`}>{t('autochess.rules.baseDamage')}</td>
                   {damage.baseByRound.map((value, index) => (
-                    <td key={index} className="py-1.5 pr-3 tabular-nums">{value}</td>
+                    <td key={index} className={TD}>{value}</td>
                   ))}
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <p className="mt-3 mb-2 text-sm text-muted-foreground">{t('autochess.rules.perPieceHint')}</p>
+          <p className={`${NOTE} mb-2`}>{t('autochess.rules.perPieceHint')}</p>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[22rem] border-collapse text-sm">
+            <table className="w-full min-w-[16rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
-                  <th className="py-2 pr-3 font-medium">{t('autochess.rules.costColumn')}</th>
+                  <th className={TH}>{t('autochess.rules.costColumn')}</th>
                   {[1, 2, 3].map((star) => (
-                    <th key={star} className="py-2 pr-3 font-medium">
+                    <th key={star} className={TH}>
                       {t('autochess.pieces.star', { star })}
                     </th>
                   ))}
@@ -302,11 +317,11 @@ export default function AutoChessRulesPage() {
               <tbody>
                 {damage.perSurvivingPieceByCostAndStar.map((row, costIndex) => (
                   <tr key={costIndex} className="border-b border-border/60">
-                    <td className="py-1.5 pr-3 tabular-nums">
+                    <td className={TD}>
                       {t('autochess.pieces.cost', { cost: costIndex + 1 })}
                     </td>
                     {row.map((value, starIndex) => (
-                      <td key={starIndex} className="py-1.5 pr-3 tabular-nums">{value}</td>
+                      <td key={starIndex} className={TD}>{value}</td>
                     ))}
                   </tr>
                 ))}
@@ -316,18 +331,18 @@ export default function AutoChessRulesPage() {
         </section>
       ) : null}
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.levelsTitle')}</h2>
-        <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.levelsHint')}</p>
+      <section className={SECTION}>
+        <h2 className={TITLE}>{t('autochess.rules.levelsTitle')}</h2>
+        <p className={HINT}>{t('autochess.rules.levelsHint')}</p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="py-2 pr-3 font-medium">{t('autochess.rules.level')}</th>
-                <th className="py-2 pr-3 font-medium">{t('autochess.rules.population')}</th>
-                <th className="py-2 pr-3 font-medium">{t('autochess.rules.exp')}</th>
+                <th className={TH}>{t('autochess.rules.level')}</th>
+                <th className={TH}>{t('autochess.rules.population')}</th>
+                <th className={TH}>{t('autochess.rules.exp')}</th>
                 {[1, 2, 3, 4, 5].map((cost) => (
-                  <th key={cost} className="py-2 pr-3 font-medium tabular-nums">
+                  <th key={cost} className={TH}>
                     {t('autochess.pieces.cost', { cost })}
                   </th>
                 ))}
@@ -336,15 +351,15 @@ export default function AutoChessRulesPage() {
             <tbody>
               {levels.map((level) => (
                 <tr key={level.level} className="border-b border-border/60">
-                  <td className="py-1.5 pr-3 tabular-nums">{level.level}</td>
-                  <td className="py-1.5 pr-3 tabular-nums">{level.population}</td>
-                  <td className="py-1.5 pr-3 tabular-nums text-muted-foreground">
+                  <td className={TD}>{level.level}</td>
+                  <td className={TD}>{level.population}</td>
+                  <td className={`${TD} text-muted-foreground`}>
                     {level.exp || '—'}
                   </td>
                   {level.shopOdds.map((odds, index) => (
                     <td
                       key={index}
-                      className={`py-1.5 pr-3 tabular-nums ${odds ? '' : 'text-muted-foreground/50'}`}
+                      className={`${TD} ${odds ? '' : 'text-muted-foreground/50'}`}
                     >
                       {odds}%
                     </td>
@@ -356,17 +371,17 @@ export default function AutoChessRulesPage() {
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.costsTitle')}</h2>
-        <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.costsHint')}</p>
+      <section className={SECTION}>
+        <h2 className={TITLE}>{t('autochess.rules.costsTitle')}</h2>
+        <p className={HINT}>{t('autochess.rules.costsHint')}</p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[28rem] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="py-2 pr-3 font-medium">{t('autochess.rules.costColumn')}</th>
-                <th className="py-2 pr-3 font-medium">{t('autochess.rules.poolSize')}</th>
+                <th className={TH}>{t('autochess.rules.costColumn')}</th>
+                <th className={TH}>{t('autochess.rules.poolSize')}</th>
                 {[1, 2, 3].map((star) => (
-                  <th key={star} className="py-2 pr-3 font-medium">
+                  <th key={star} className={TH}>
                     {t('autochess.rules.sellAtStar', { star })}
                   </th>
                 ))}
@@ -375,12 +390,12 @@ export default function AutoChessRulesPage() {
             <tbody>
               {costs.map((row, index) => (
                 <tr key={row.cost} className="border-b border-border/60">
-                  <td className="py-1.5 pr-3 tabular-nums">{t('autochess.pieces.cost', { cost: row.cost })}</td>
-                  <td className="py-1.5 pr-3 tabular-nums text-muted-foreground">
+                  <td className={TD}>{t('autochess.pieces.cost', { cost: row.cost })}</td>
+                  <td className={`${TD} text-muted-foreground`}>
                     {poolSizeByCost[index] ?? '—'}
                   </td>
                   {row.sellPriceByStar.map((price, star) => (
-                    <td key={star} className="py-1.5 pr-3 tabular-nums">{price}</td>
+                    <td key={star} className={TD}>{price}</td>
                   ))}
                 </tr>
               ))}
