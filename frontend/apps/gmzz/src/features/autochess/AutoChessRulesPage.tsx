@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from 'react'
-import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -20,13 +19,6 @@ const KIND_CLASS: Record<AutoChessTurnKind, string> = {
 
 const KINDS: AutoChessTurnKind[] = ['pve', 'pvp', 'insight', 'carousel']
 
-const SECTIONS = [
-  { to: '/autochess/chess', titleKey: 'autochess.pieces.title', bodyKey: 'autochess.pieces.short' },
-  { to: '/autochess/bonds', titleKey: 'autochess.bonds.title', bodyKey: 'autochess.bonds.short' },
-  { to: '/autochess/items', titleKey: 'autochess.items.title', bodyKey: 'autochess.items.short' },
-  { to: '/autochess/talents', titleKey: 'autochess.talents.title', bodyKey: 'autochess.talents.short' },
-] as const
-
 /** One numbered gold source: what it is, how much, and the condition. */
 function IncomeRow({
   index,
@@ -40,7 +32,7 @@ function IncomeRow({
   note: string
 }) {
   return (
-    <li className="flex gap-3 rounded-md border border-border bg-card p-3">
+    <li className="flex gap-2.5 rounded-md border border-border bg-card px-3 py-2">
       <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-border text-xs tabular-nums text-muted-foreground">
         {index}
       </span>
@@ -142,23 +134,15 @@ export default function AutoChessRulesPage() {
 
   return (
     <ContentPage active="/autochess" title={t('autochess.title')} heading wide>
-      <p className="mb-6 text-sm text-muted-foreground">{t('autochess.description')}</p>
+      <p className="mb-4 text-sm text-muted-foreground">{t('autochess.description')}</p>
 
-      <div className="mb-8 grid gap-3 sm:grid-cols-2">
-        {SECTIONS.map((section) => (
-          <Link
-            key={section.to}
-            to={section.to}
-            className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 shadow-sm transition hover:border-primary/60"
-          >
-            <span className="font-semibold">{t(section.titleKey)}</span>
-            <span className="text-sm text-muted-foreground">{t(section.bodyKey)}</span>
-          </Link>
-        ))}
-      </div>
-
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.turnsTitle')}</h2>
+      {/* The five rule sections side by side on a wide screen: each is a short
+          table or list, and stacked one per row they left most of the width
+          empty. The four cards that used to sit above them linked to the other
+          pages, which the nav's own 愚者棋局 menu now does. */}
+      <div className="grid items-start gap-x-8 gap-y-6 xl:grid-cols-2">
+      <section>
+        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.turnsTitle')}</h2>
         <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.turnsHint')}</p>
         <ul className="mb-3 flex flex-wrap gap-2">
           {KINDS.map((kind) => (
@@ -188,8 +172,8 @@ export default function AutoChessRulesPage() {
       </section>
 
       {economy ? (
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.economyTitle')}</h2>
+      <section>
+        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.economyTitle')}</h2>
 
         <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.economyHint')}</p>
 
@@ -276,8 +260,8 @@ export default function AutoChessRulesPage() {
       ) : null}
 
       {damage ? (
-        <section className="mb-8">
-          <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.damageTitle')}</h2>
+        <section>
+          <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.damageTitle')}</h2>
           <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.damageHint')}</p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[30rem] border-collapse text-sm">
@@ -332,8 +316,8 @@ export default function AutoChessRulesPage() {
         </section>
       ) : null}
 
-      <section className="mb-8">
-        <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.levelsTitle')}</h2>
+      <section>
+        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.levelsTitle')}</h2>
         <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.levelsHint')}</p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[34rem] border-collapse text-sm">
@@ -373,7 +357,7 @@ export default function AutoChessRulesPage() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-xl font-semibold">{t('autochess.rules.costsTitle')}</h2>
+        <h2 className="mb-2 text-lg font-semibold">{t('autochess.rules.costsTitle')}</h2>
         <p className="mb-3 text-sm text-muted-foreground">{t('autochess.rules.costsHint')}</p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[28rem] border-collapse text-sm">
@@ -404,6 +388,7 @@ export default function AutoChessRulesPage() {
           </table>
         </div>
       </section>
+      </div>
     </ContentPage>
   )
 }

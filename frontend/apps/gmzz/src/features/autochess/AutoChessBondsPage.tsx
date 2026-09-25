@@ -8,7 +8,7 @@ import {
   plainText,
   type AutoChessBondGroup,
 } from '@/features/autochess/data'
-import { Chip, FilterRow } from '@/components/Filters'
+import { Chip, FilterBar, FilterRow } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 
 /**
@@ -62,13 +62,12 @@ export default function AutoChessBondsPage() {
 
   return (
     <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {t('autochess.bonds.description', { count: all.length })}
-      </p>
-
-      <div className="mb-4">
+      <FilterBar>
         <FilterRow label={t('autochess.bonds.groupFilter')}>
-          <Chip active={group === ''} onClick={() => setGroup('')}>{t('autochess.all')}</Chip>
+          <Chip active={group === ''} onClick={() => setGroup('')}>
+            {t('autochess.all')}
+            <span className="ml-1 text-xs opacity-70">{all.length}</span>
+          </Chip>
           {GROUPS.map((value) => (
             <Chip key={value} active={group === value} onClick={() => setGroup(value)}>
               {t(`autochess.bonds.group.${value}`)}
@@ -78,15 +77,15 @@ export default function AutoChessBondsPage() {
             </Chip>
           ))}
         </FilterRow>
-      </div>
+      </FilterBar>
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
         {shown.map((bond) => {
           const members = membersByBond.get(bond.id) ?? []
           return (
-            <article key={bond.id} className="rounded-lg border border-border bg-card p-4 shadow-sm">
+            <article key={bond.id} className="rounded-md border border-border bg-card p-3">
               <header className="flex flex-wrap items-baseline gap-2">
-                <h2 className="text-lg font-semibold">{bond.name}</h2>
+                <h2 className="text-base font-semibold">{bond.name}</h2>
                 <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
                   {t(`autochess.bonds.group.${bond.group}`)}
                 </span>
@@ -94,7 +93,7 @@ export default function AutoChessBondsPage() {
 
               <p className="mt-1 text-sm text-muted-foreground">{plainText(bond.description)}</p>
 
-              <ol className="mt-3 space-y-1.5">
+              <ol className="mt-2 space-y-1">
                 {bond.tiers.map((tier) => (
                   <li key={tier.activateNum} className="flex gap-2 text-sm">
                     <span className="mt-px shrink-0 rounded border border-border px-1.5 text-xs tabular-nums text-muted-foreground">
@@ -109,7 +108,7 @@ export default function AutoChessBondsPage() {
                 // Laid out rather than joined: a literal separator in the code
                 // is one locale's punctuation imposed on all three — `、` reads
                 // as a stray glyph in English. Spacing is the stylesheet's job.
-                <div className="mt-3 flex flex-wrap gap-x-2 gap-y-0.5 border-t border-border/70 pt-2 text-xs text-muted-foreground">
+                <div className="mt-2 flex flex-wrap gap-x-2 gap-y-0.5 border-t border-border/70 pt-1.5 text-xs text-muted-foreground">
                   <span className="font-medium">{t('autochess.bonds.members', { count: members.length })}</span>
                   {members.map((member) => (
                     <span key={member.baseId} className="tabular-nums">{member.name}({member.cost})</span>

@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { IconSearch } from '@tabler/icons-react'
-import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
+import { FilterBar, SearchField } from '@/components/Filters'
 import {
   attributeMap,
   autoChessSkillIconUrl,
@@ -109,15 +108,11 @@ export default function AutoChessPiecesPage() {
 
   return (
     <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {t('autochess.pieces.description', { count: all.length })}
-      </p>
-
-      {/* The game's own filter geometry: a cost tab row, with the bond filter
-          as a single select on the right. Twenty-eight bond chips would push
-          the grid below the fold on every load. */}
-      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap items-center gap-1 border-b border-border">
+      {/* The game's own filter geometry — a cost tab row with the bond filter
+          as one select, since twenty-eight bond chips would bury the grid —
+          sharing its line with the search box and the count. */}
+      <FilterBar count={t('autochess.pieces.resultCount', { count: filtered.length })}>
+        <div className="flex flex-wrap items-center gap-1">
           <CostTab active={cost === 0} onClick={() => setCost(0)}>{t('autochess.all')}</CostTab>
           {costs.map((value) => (
             <CostTab key={value} active={cost === value} onClick={() => setCost(value)}>
@@ -130,31 +125,22 @@ export default function AutoChessPiecesPage() {
           value={bondId}
           onChange={(event) => setBondId(Number(event.target.value))}
           aria-label={t('autochess.pieces.bondFilter')}
-          className="h-9 shrink-0 rounded-md border border-border bg-card px-2 text-sm md:w-48"
+          className="h-8 shrink-0 rounded-md border border-border bg-card px-2 text-sm md:w-40"
         >
           <option value={0}>{t('autochess.pieces.allBonds')}</option>
           {(bonds.data ?? []).map((bond) => (
             <option key={bond.id} value={bond.id}>{bond.name}</option>
           ))}
         </select>
-      </div>
 
-      <label className="relative mb-4 block">
-        <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
+        <SearchField
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={setQuery}
           placeholder={t('autochess.pieces.searchPlaceholder')}
-          aria-label={t('autochess.pieces.searchPlaceholder')}
         />
-      </label>
+      </FilterBar>
 
-      <p className="mb-3 text-sm text-muted-foreground">
-        {t('autochess.pieces.resultCount', { count: filtered.length })}
-      </p>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((piece) => (
           <PieceCard
             key={piece.baseId}
@@ -190,8 +176,8 @@ function CostTab({
       aria-pressed={active}
       className={
         active
-          ? '-mb-px border-b-2 border-primary px-3 py-1.5 text-sm font-semibold text-primary'
-          : '-mb-px border-b-2 border-transparent px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground'
+          ? 'border-b-2 border-primary px-2.5 py-1 text-sm font-semibold text-primary'
+          : 'border-b-2 border-transparent px-2.5 py-1 text-sm text-muted-foreground hover:text-foreground'
       }
     >
       {children}
@@ -218,7 +204,7 @@ function PieceCard({
 
   return (
     <article
-      className={`flex flex-col overflow-hidden rounded-lg border shadow-sm ${COST_CLASS[piece.cost] ?? 'border-border bg-card'}`}
+      className={`flex flex-col overflow-hidden rounded-md border ${COST_CLASS[piece.cost] ?? 'border-border bg-card'}`}
     >
       {/* Role chip on its own strip, as the game draws it. There is no portrait
           here: the client's `ChessBaseData.Icon` points into
@@ -229,7 +215,7 @@ function PieceCard({
         {piece.role}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-base font-semibold">{piece.name}</h2>
           <span className="shrink-0 rounded-full border border-amber-500/70 px-2 py-0.5 text-xs tabular-nums text-amber-700 dark:text-amber-300">
@@ -276,7 +262,7 @@ function StarBlock({
 }) {
   const { t } = useTranslation()
   return (
-    <section className="border-t border-border/70 pt-2">
+    <section className="border-t border-border/70 pt-1.5">
       <h3 className="text-sm font-semibold">
         {t('autochess.pieces.star', { star: star.starLevel })}
         <span className="ml-2 font-normal text-muted-foreground">
