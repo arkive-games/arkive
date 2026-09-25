@@ -1,11 +1,19 @@
-import { IconArrowUpRight, IconTool } from '@tabler/icons-react'
+import { IconTool } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
+import { FEATURES } from './featureCatalog'
 import { siteHref, type SiteCard } from './sites'
+import { ToolCard } from './ToolCard'
 import './tools-page.css'
 
-export function ToolsPage({ gmzz }: { gmzz: SiteCard }) {
+/** Every tool on every open game, from the same catalog the homepage shelf reads. */
+export function ToolsPage({ sites, onOpenSite }: {
+  sites: readonly SiteCard[]
+  onOpenSite: (site: SiteCard) => void
+}) {
   const { t } = useTranslation()
+  const tools = FEATURES.filter((feature) => feature.kind === 'tool'
+    && sites.some((site) => site.id === feature.gameId && siteHref(site)))
 
   return (
     <main className="tools-main">
@@ -18,28 +26,18 @@ export function ToolsPage({ gmzz }: { gmzz: SiteCard }) {
         <p>{t('toolsLibrary.description')}</p>
       </header>
 
-      {/* The tools themselves now live inside the games that own them, so this
-          page points at the game rather than restating a catalogue that would
-          have to be kept in step with it. */}
-      <section className="home-shell tools-list" aria-label={t('toolsLibrary.title')}>
-        <article className="tool-entry">
-          <a href={siteHref(gmzz)}>
-            <span className="tool-entry-visual">
-              <img src={gmzz.bg} alt="" />
-              <span aria-hidden="true" />
-              <IconTool className="size-8" stroke={1.6} aria-hidden="true" />
-            </span>
-            <span className="tool-entry-copy">
-              <small>{t('toolsLibrary.gmzz.game')}</small>
-              <strong>{t('toolsLibrary.gmzz.title')}</strong>
-              <span>{t('toolsLibrary.gmzz.description')}</span>
-            </span>
-            <span className="tool-entry-action">
-              {t('toolsLibrary.visit')}
-              <IconArrowUpRight className="size-4" stroke={1.8} aria-hidden="true" />
-            </span>
-          </a>
-        </article>
+      <section className="home-shell tools-list directory-tools" aria-label={t('toolsLibrary.title')}>
+        {tools.map((tool) => {
+          const site = sites.find((item) => item.id === tool.gameId)
+          return (
+            <ToolCard
+              key={tool.id}
+              tool={tool}
+              site={site}
+              onOpen={site ? () => onOpenSite(site) : undefined}
+            />
+          )
+        })}
       </section>
     </main>
   )

@@ -44,14 +44,8 @@ export interface SiteCard {
   nameKey: string
   descKey: string
   featureKey: string
-  /** Listed and searchable, but not linked and never featured. */
+  /** Announced but not open: kept out of `VISIBLE_SITES`, so the portal lists it nowhere. */
   comingSoon?: boolean
-  /**
-   * The curated hero pick, used when the visitor has no recent game of their
-   * own. Editorial policy, so it lives with the site list rather than as a game
-   * id spelled out in the page.
-   */
-  featured?: boolean
 }
 
 export type SiteClickCounts = Record<string, number>
@@ -94,7 +88,6 @@ export const SITES: SiteCard[] = [
       'https://palworld.tc-imba.com',
     ),
     toySlug: 'arkive-palworld',
-    featured: true,
     bg: palworldBg,
     nameKey: 'site.palworld.name',
     descKey: 'site.palworld.desc',
@@ -143,8 +136,8 @@ export const SITES: SiteCard[] = [
  *
  * `Record<string, string>` rather than `Record<GameId, string>`: a missing game
  * is therefore not a type error but an `undefined` src on a live `<img>`. Every
- * id in `VISIBLE_SITES` needs an entry, `comingSoon` ones included — ForumPage
- * receives the list unfiltered. Games with no dedicated logo reuse their card
+ * id in `SITES` needs an entry, `comingSoon` ones included, so that one is
+ * ready the day it opens. Games with no dedicated logo reuse their card
  * art, as gmzz and ro3 do. gameCatalog.test.ts asserts the coverage.
  */
 export const GAME_LOGOS: Record<string, string> = {
@@ -156,22 +149,20 @@ export const GAME_LOGOS: Record<string, string> = {
   ro3: ro3Bg,
 }
 
-export const VISIBLE_SITES: SiteCard[] = IS_TOY ? SITES.filter((site) => site.toySlug) : SITES
+/**
+ * What the portal lists: the homepage, the top-bar game menu, the all-games
+ * page and the forum's game cabins. An announced game stays out of all of them
+ * until it opens -- a card that leads nowhere reads as a broken site, not as a
+ * promise. It remains in `SITES`, so a post or favourite that already names it
+ * still resolves.
+ */
+export const VISIBLE_SITES: SiteCard[] = SITES.filter((site) =>
+  !site.comingSoon && (!IS_TOY || site.toySlug))
 
 /** `undefined` for an announced game, so callers render an inert card instead of a link. */
 export function siteHref(site: SiteCard): string | undefined {
   if (site.comingSoon) return undefined
   return IS_TOY && site.toySlug ? `/toy/${site.toySlug}/index.html` : site.url
-}
-
-/** The hero slot must never advertise a game nobody can open yet. */
-export function firstPlayableSite(sites: readonly SiteCard[]): SiteCard | undefined {
-  return sites.find((site) => !site.comingSoon)
-}
-
-/** The curated pick, falling back to whichever playable game ranks first. */
-export function curatedFeaturedSite(sites: readonly SiteCard[]): SiteCard | undefined {
-  return sites.find((site) => site.featured && !site.comingSoon) ?? firstPlayableSite(sites)
 }
 
 /**

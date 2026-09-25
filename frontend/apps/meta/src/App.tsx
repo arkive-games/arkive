@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AccountDialog,
@@ -21,17 +21,13 @@ import {
 import { SiteFooter } from '@gamemap/ui'
 import {
   IconArrowRight,
-  IconArrowUpRight,
-  IconCompass,
   IconHammer,
   IconMessageCircle,
-  IconSearch,
 } from '@tabler/icons-react'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import {
   IS_TOY,
   VISIBLE_SITES,
-  curatedFeaturedSite,
   loadSiteClickCounts,
   rankSitesByClicks,
   siteHref,
@@ -40,6 +36,8 @@ import {
 } from './sites'
 import { AllGamesPage } from './AllGamesPage'
 import { ToolsPage } from './ToolsPage'
+import { HomeDirectory } from './HomeDirectory'
+import { FEATURES } from './featureCatalog'
 import { AuthenticatedControls } from './AuthenticatedControls'
 import { ForumPage } from './ForumPage'
 import {
@@ -77,15 +75,16 @@ import {
 } from '@gamemap/state-memory'
 
 /**
- * The tool library points at the game that owns the tools. A build that cannot
- * open that game (the Toy bundle carries only games with a `toySlug`) has no
- * library to show, so the nav entry and the `#tools` route go with it rather
- * than leading to an empty page.
+ * The tool library lists the catalog's tools whose game this build can open. A
+ * build that can open none of them (a Toy bundle carries only games with a
+ * `toySlug`) has no library to show, so the nav entry and the `#tools` route
+ * go with it rather than leading to an empty page.
  */
-const TOOLS_SITE = VISIBLE_SITES.find((site) => site.id === 'gmzz' && siteHref(site))
+const HAS_TOOLS = FEATURES.some((feature) => feature.kind === 'tool'
+  && VISIBLE_SITES.some((site) => site.id === feature.gameId && siteHref(site)))
 
 const NAV_KEYS = (['discoverGames', 'allGames', 'tools', 'forum'] as const)
-  .filter((key) => key !== 'tools' || TOOLS_SITE)
+  .filter((key) => key !== 'tools' || HAS_TOOLS)
 
 type HomeRoute =
   | { view: 'discoverGames' }
@@ -162,7 +161,7 @@ function hashForRoute(route: HomeRoute): string {
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
-  if (root === 'tools' && TOOLS_SITE) return { view: 'tools' }
+  if (root === 'tools' && HAS_TOOLS) return { view: 'tools' }
   if (root === 'updates') return { view: 'platformUpdates' }
   if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
@@ -288,9 +287,10 @@ export default function App() {
   const continueSite = continueDestination
     ? VISIBLE_SITES.find((site) => site.id === continueDestination.gameId)
     : undefined
-  const featuredSite = continueSite ?? curatedFeaturedSite(rankedSites)
-  const displayedSites = featuredSite
-    ? [featuredSite, ...rankedSites.filter((site) => site.id !== featuredSite.id)]
+  // The game a visitor was last in leads the shelf; everyone else sees the
+  // curated order, popularity-ranked once a click source is configured.
+  const displayedSites = continueSite
+    ? [continueSite, ...rankedSites.filter((site) => site.id !== continueSite.id)]
     : rankedSites
   const [communityPosts, setCommunityPosts] = useState<HomeCommunityPost[]>([])
 
@@ -344,11 +344,6 @@ export default function App() {
         }))
       : undefined,
   }))
-
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    showComingSoon()
-  }
 
   const updateForumComposerDirty = useCallback((dirty: boolean) => {
     forumComposerDirtyRef.current = dirty
@@ -481,8 +476,8 @@ export default function App() {
           onAuthRequired={() => setAccountOpen(true)}
           onOpenSite={rememberSite}
         />
-      ) : activeRoute.view === 'tools' && TOOLS_SITE ? (
-        <ToolsPage gmzz={TOOLS_SITE} />
+      ) : activeRoute.view === 'tools' && HAS_TOOLS ? (
+        <ToolsPage sites={VISIBLE_SITES} onOpenSite={rememberSite} />
       ) : activeRoute.view === 'forum' ? (
         <ForumPage
           sites={VISIBLE_SITES}
@@ -503,60 +498,11 @@ export default function App() {
         />
       ) : (
         <main className="arkive-home-view">
-          <section className="home-shell hero-section" aria-labelledby="home-heading">
-          <div className="hero-copy">
-            <p className="hero-eyebrow">
-              {t('hero.eyebrow')}
-            </p>
-            <h1 id="home-heading" className="hero-title">
-              <span>{t('hero.lead')}</span>
-              <span><em>{t('hero.highlight')}</em>{t('hero.tail')}</span>
-            </h1>
-            <p className="hero-description">{t('hero.description')}</p>
-            <form className="hero-search" onSubmit={submitSearch}>
-              <IconSearch className="size-5 shrink-0" stroke={1.8} aria-hidden="true" />
-              <input type="search" aria-label={t('search.placeholder')} placeholder={t('search.placeholder')} />
-              <button type="submit">{t('search.action')}</button>
-            </form>
-          </div>
-
-          {featuredSite ? (
-            <FeaturedGame
-              site={featuredSite}
-              continuing={featuredSite.id === continueSite?.id}
-              onOpen={() => rememberSite(featuredSite)}
-            />
-          ) : (
-            <div className="featured-empty" aria-live="polite">
-              <IconCompass className="size-10" stroke={1.5} />
-              <p>{t('comingSoon.title')}</p>
-            </div>
-          )}
-          </section>
-
-          <section id="explore" className="home-shell explore-section" aria-labelledby="explore-heading">
-          <div className="section-heading">
-            <div>
-              <span>{t('explore.eyebrow')}</span>
-              <h2 id="explore-heading">{t('explore.title')}</h2>
-            </div>
-            <a href="#games" className="text-action">
-              {t('action.browseAll')}
-              <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
-            </a>
-          </div>
-
-          <div className="game-shelf">
-            {displayedSites.map((site, index) => (
-              <GameCard
-                key={site.id}
-                site={site}
-                featured={index === 0}
-                onOpen={() => rememberSite(site)}
-              />
-            ))}
-          </div>
-          </section>
+          <HomeDirectory
+            sites={displayedSites}
+            continueSiteId={continueSite?.id}
+            onOpenSite={rememberSite}
+          />
 
           {communityPosts.length > 0 && (
             <HomeCommunity posts={communityPosts} />
@@ -622,68 +568,6 @@ export default function App() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
-}
-
-function FeaturedGame({ site, continuing, onOpen }: {
-  site: SiteCard
-  continuing: boolean
-  onOpen: () => void
-}) {
-  const { t } = useTranslation()
-  const name = t(site.nameKey)
-
-  return (
-    <a className="featured-game group" href={siteHref(site)} onClick={onOpen}>
-      <img src={site.bg} alt={name} />
-      <span className="featured-shade" aria-hidden="true" />
-      <span className="featured-label">{t(continuing ? 'hero.continue' : 'hero.recommendation')}</span>
-      <span className="featured-content">
-        <strong>{name}</strong>
-        <span className="featured-copy">{t(site.featureKey)}</span>
-        <span className="featured-link">
-          <i><IconArrowUpRight className="size-4" stroke={2} /></i>
-          {t('action.openGame', { game: name })}
-        </span>
-      </span>
-    </a>
-  )
-}
-
-function GameCard({ site, featured, onOpen }: {
-  site: SiteCard
-  featured: boolean
-  onOpen: () => void
-}) {
-  const { t } = useTranslation()
-  const name = t(site.nameKey)
-  const href = siteHref(site)
-  const body = (
-    <>
-      <span className="game-cover">
-        <img src={site.bg} alt={name} />
-        <span className="game-cover-shade" aria-hidden="true" />
-        {href && (
-          <span className="game-open-icon"><IconArrowUpRight className="size-5" stroke={1.8} /></span>
-        )}
-        <span className="game-card-copy">
-          {site.comingSoon && <small>{t('comingSoon.badge')}</small>}
-          {featured && !site.comingSoon && <small>{t('hero.recommendation')}</small>}
-          <strong>{name}</strong>
-          <span>{t(site.descKey)}</span>
-        </span>
-      </span>
-    </>
-  )
-
-  return (
-    <article className={site.comingSoon ? 'game-card is-soon' : 'game-card'}>
-      {href ? (
-        <a href={href} className="game-card-link group" onClick={onOpen}>{body}</a>
-      ) : (
-        <span className="game-card-link is-inert">{body}</span>
-      )}
-    </article>
   )
 }
 
