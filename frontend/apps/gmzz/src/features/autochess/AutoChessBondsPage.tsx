@@ -95,7 +95,9 @@ export default function AutoChessBondsPage() {
 
               <ol className="mt-2 space-y-1">
                 {bond.tiers.map((tier) => (
-                  <li key={tier.activateNum} className="flex gap-2 text-sm">
+                  // `items-start`: stretched by default, the count chip grew to
+                  // the height of any tier text that wrapped to a second line.
+                  <li key={tier.activateNum} className="flex items-start gap-2 text-sm">
                     <span className="mt-px shrink-0 rounded border border-border px-1.5 text-xs tabular-nums text-muted-foreground">
                       {t('autochess.bonds.activateNum', { count: tier.activateNum })}
                     </span>
