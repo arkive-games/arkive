@@ -444,13 +444,17 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
   const [dataError, setDataError] = useState(false);
   useEffect(() => {
     let active = true;
-    const settledValue = <T,>(result: PromiseSettledResult<T>, label: string) => {
+    const settledValue = <T,>(result: PromiseSettledResult<T>, label: string, consequence: string) => {
       if (result.status === "fulfilled") return result.value;
       // Nothing is shown to the reader for an optional table -- its panel simply does not
       // render -- so the reason is logged, otherwise a missing file is invisible.
-      console.warn(`[build manual] ${label} unavailable, its panel is hidden`, result.reason);
+      console.warn(`[build manual] ${label} unavailable, ${consequence}`, result.reason);
       return undefined;
     };
+    const requiredValue = <T,>(result: PromiseSettledResult<T>, label: string) =>
+      settledValue(result, label, "the build manual cannot be shown");
+    const optionalValue = <T,>(result: PromiseSettledResult<T>, label: string) =>
+      settledValue(result, label, "its panel is hidden");
     Promise.allSettled([
       loadSkillCatalogData(),
       loadProfessionWikiData(),
@@ -462,8 +466,8 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
     ])
       .then(([skillsResult, professionResult, cards, equipment, souls, pets, talents]) => {
         if (!active) return;
-        const skills = settledValue(skillsResult, "skills.json");
-        const profession = settledValue(professionResult, "job-skills.json");
+        const skills = requiredValue(skillsResult, "skill catalogue");
+        const profession = requiredValue(professionResult, "profession tree");
         // Without the skill catalogue or the profession tree there is no build to show.
         if (!skills || !profession) {
           setDataError(true);
@@ -472,12 +476,13 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
         const nextData: BuildData = {
           ...skills,
           profession,
-          cards: settledValue(cards, "cards.json"),
-          equipment: settledValue(equipment, "equipment.json"),
-          souls: settledValue(souls, "souls.json"),
-          pets: settledValue(pets, "pets.json"),
-          talents: settledValue(talents, "talents.json"),
+          cards: optionalValue(cards, "cards.json"),
+          equipment: optionalValue(equipment, "equipment.json"),
+          souls: optionalValue(souls, "souls.json"),
+          pets: optionalValue(pets, "pets.json"),
+          talents: optionalValue(talents, "talents.json"),
         };
+        const complete = [cards, equipment, souls, pets, talents].every((result) => result.status === "fulfilled");
         setData(nextData);
         const current = readBuilds();
         const isUntouched = current.length === 1 && current[0].id === EMPTY_BUILD.id && !current[0].skillIds.length && !current[0].petCombatIds.length && !current[0].souls.length;
@@ -486,7 +491,10 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
           setBuilds([seeded]);
           setDraft(seeded);
           setSelectedId(seeded.id);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify([seeded]));
+          // A seed built on a partial load leaves the missing panels empty, and once stored it
+          // no longer counts as untouched, so it would stay empty on every later visit. Show it
+          // for this visit only; the next complete load seeds and stores it properly.
+          if (complete) localStorage.setItem(STORAGE_KEY, JSON.stringify([seeded]));
         }
       })
       .catch(() => {
