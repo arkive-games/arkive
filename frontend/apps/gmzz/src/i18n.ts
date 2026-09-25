@@ -201,9 +201,6 @@ const en = {
   },
   home: {
     "tagline": "Calculators, a wiki and the Fool's Gambit guide for Lord of Mysteries, built straight from the game files.",
-    "toolsIntro": "Fill in what you have and let the numbers do the work.",
-    "wikiIntro": "Look things up: goods, connections, cards and graces.",
-    "autochessRules": "Rounds, gold income, levels, shop odds and the damage a loss costs.",
     "dataNote": "Data extracted from game build {{version}}."
   },
   changelog: {
@@ -819,9 +816,6 @@ const zhCN: Strings = {
   },
   home: {
     "tagline": "诡秘之主的计算工具、百科资料与愚者棋局攻略，全部直接取自游戏文件。",
-    "toolsIntro": "填入你手上的数据，剩下的交给计算。",
-    "wikiIntro": "随时查阅：货物、人脉、卡牌与恩赐。",
-    "autochessRules": "回合流程、金币收益、等级、商店概率与落败掉血。",
     "dataNote": "数据提取自游戏版本 {{version}}。"
   },
   changelog: {
@@ -1439,9 +1433,6 @@ const zhTW: Strings = {
   },
   home: {
     "tagline": "詭秘之主的計算工具、百科資料與愚者棋局攻略，全部直接取自遊戲檔案。",
-    "toolsIntro": "填入你手上的數據，剩下的交給計算。",
-    "wikiIntro": "隨時查閱：貨物、人脈、卡牌與恩賜。",
-    "autochessRules": "回合流程、金幣收益、等級、商店機率與落敗掉血。",
     "dataNote": "資料擷取自遊戲版本 {{version}}。"
   },
   changelog: {
