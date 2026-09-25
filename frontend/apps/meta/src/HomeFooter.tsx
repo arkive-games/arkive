@@ -144,8 +144,6 @@ function AboutDialog({ open, brandName, onOpenChange }: {
           </DialogDescription>
         </DialogHeader>
         <div className="footer-dialog-body">
-          <p>{t('footerDialogs.about.intro')}</p>
-          <p>{t('footerDialogs.about.features')}</p>
           <p>
             <Trans
               i18nKey="footerDialogs.about.team"

@@ -312,10 +312,8 @@ const FOOTER_DIALOG_COPY = {
     close: '关闭',
     about: {
       title: '关于藏舟',
-      intro: '“舟”是承载，也是航行。我们把每款游戏的互动地图、图鉴资料与实用工具装上同一条船，你不必在几十个网页之间来回翻找，一站就能查到想要的答案。',
-      features: '“藏”是收藏，也是发现。地图标出每一处宝藏与坐标，图鉴整理游戏里的知识，计算器和规划器替你算清每一步；遇到新的发现，也可以带回论坛与大家分享。',
       team: '藏舟由双酿和<suyn>苏烟Suyn</suyn>两人出于热爱制作。我们都有各自的工作，网站的创作与完善都在业余时间进行，如有疏漏，还请多多担待。',
-      history: '第一款游戏永恒之塔 2 于 2025 年 11 月 16 日首次与大家见面。如今藏舟已收录 {{games}} 款游戏、{{tools}} 个实用工具，更多游戏世界正在陆续启航。',
+      history: '第一款游戏攻略——永恒之塔 2 攻略，于 2025 年 11 月 16 日首次与大家见面。如今藏舟已收录 {{games}} 款游戏的攻略与 {{tools}} 个实用工具，更多游戏攻略正在陆续启航，敬请期待！',
     },
     contact: {
       title: '联系我们',
@@ -333,10 +331,8 @@ const FOOTER_DIALOG_COPY = {
     close: '關閉',
     about: {
       title: '關於藏舟',
-      intro: '「舟」是承載，也是航行。我們把每款遊戲的互動地圖、圖鑑資料與實用工具裝上同一條船，你不必在幾十個網頁之間來回翻找，一站就能查到想要的答案。',
-      features: '「藏」是收藏，也是發現。地圖標出每一處寶藏與座標，圖鑑整理遊戲裡的知識，計算器和規劃器替你算清每一步；遇到新的發現，也可以帶回論壇與大家分享。',
       team: '藏舟由雙釀和<suyn>蘇煙Suyn</suyn>兩人出於熱愛製作。我們都有各自的工作，網站的創作與完善都在業餘時間進行，如有疏漏，還請多多包涵。',
-      history: '第一款遊戲永恆之塔 2 於 2025 年 11 月 16 日首次與大家見面。如今藏舟已收錄 {{games}} 款遊戲、{{tools}} 個實用工具，更多遊戲世界正在陸續啟航。',
+      history: '第一款遊戲攻略——永恆之塔 2 攻略，於 2025 年 11 月 16 日首次與大家見面。如今藏舟已收錄 {{games}} 款遊戲的攻略與 {{tools}} 個實用工具，更多遊戲攻略正在陸續啟航，敬請期待！',
     },
     contact: {
       title: '聯絡我們',
@@ -354,10 +350,8 @@ const FOOTER_DIALOG_COPY = {
     close: 'Close',
     about: {
       title: 'About Arkive',
-      intro: 'An ark carries, and it sails. We bring every game\'s interactive maps, encyclopedias and tools aboard one vessel, so the answer you need is one stop away instead of scattered across dozens of pages.',
-      features: 'An archive keeps, and it uncovers. Maps mark every treasure and coordinate, encyclopedias gather what each game knows, and calculators and planners work out every step for you. When you find something new, bring it back to the forum and share it.',
       team: 'Arkive is made for the love of it by two people, Shuangniang and <suyn>Suyan (Suyn)</suyn>. We both have day jobs, so the site is built and refined in our spare time. Thank you for bearing with us where it falls short.',
-      history: 'Our first game, AION 2, went live on November 16, 2025. Arkive now covers {{games}} games and {{tools}} tools, with more worlds setting sail soon.',
+      history: 'Our first guide, for AION 2, went live on November 16, 2025. Arkive now has guides for {{games}} games and {{tools}} tools, with more guides setting sail soon. Stay tuned!',
     },
     contact: {
       title: 'Contact us',
@@ -375,10 +369,8 @@ const FOOTER_DIALOG_COPY = {
     close: '閉じる',
     about: {
       title: '藏舟について',
-      intro: '「舟」は運ぶもの、そして航海するもの。各ゲームのインタラクティブマップ、図鑑、便利なツールをひとつの舟に載せ、いくつものページを行き来しなくても、欲しい答えにすぐたどり着けるようにしています。',
-      features: '「藏」は集めること、そして見つけること。マップは宝や座標を記し、図鑑はゲームの知識をまとめ、計算機やプランナーは一歩ずつの計算を引き受けます。新しい発見は、フォーラムでみんなと分かち合えます。',
       team: '藏舟は、双醸と<suyn>蘇煙 Suyn</suyn>の二人が好きな気持ちだけで作っています。二人とも本業があり、制作と改善はすべて空き時間に行っているため、行き届かない点はどうかご容赦ください。',
-      history: '最初のゲーム『アイオン2』は 2025 年 11 月 16 日に公開しました。現在は {{games}} 本のゲームと {{tools}} 個のツールを収録しており、さらに多くの世界が出航の準備中です。',
+      history: '最初の攻略である『アイオン2』攻略は 2025 年 11 月 16 日に公開しました。現在は {{games}} 本のゲームの攻略と {{tools}} 個のツールを収録しています。さらに多くの攻略が出航準備中です。どうぞお楽しみに！',
     },
     contact: {
       title: 'お問い合わせ',
@@ -396,10 +388,8 @@ const FOOTER_DIALOG_COPY = {
     close: '닫기',
     about: {
       title: 'Arkive 소개',
-      intro: '배는 싣고, 또 항해합니다. 각 게임의 인터랙티브 지도, 도감과 유용한 도구를 한 척의 배에 실어, 수십 개의 페이지를 오가지 않아도 원하는 답을 한곳에서 찾을 수 있게 했습니다.',
-      features: '간직하고, 또 발견합니다. 지도는 모든 보물과 좌표를 표시하고, 도감은 게임 속 지식을 정리하며, 계산기와 플래너는 한 걸음 한 걸음을 대신 계산합니다. 새로운 발견은 포럼에서 함께 나눌 수 있습니다.',
       team: 'Arkive는 쌍냥과 <suyn>쑤옌(Suyn)</suyn> 두 사람이 좋아하는 마음으로 만들고 있습니다. 둘 다 본업이 있어 제작과 개선은 모두 여가 시간에 하고 있으니, 부족한 점이 있더라도 너그러이 양해해 주세요.',
-      history: '첫 게임인 아이온 2는 2025년 11월 16일에 처음 공개되었습니다. 지금은 게임 {{games}}개와 도구 {{tools}}개를 수록하고 있으며, 더 많은 세계가 곧 출항합니다.',
+      history: '첫 공략인 아이온 2 공략은 2025년 11월 16일에 처음 공개되었습니다. 지금은 게임 {{games}}개의 공략과 도구 {{tools}}개를 수록하고 있으며, 더 많은 공략이 곧 출항합니다. 많이 기대해 주세요!',
     },
     contact: {
       title: '문의하기',
