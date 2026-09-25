@@ -252,28 +252,43 @@ jobs:
       # round-trip test fetches its published URL anonymously. MinIO grants that
       # only with an explicit policy, and it creates no bucket on its own.
       #
-      # Both images come from quay.io, which is where MinIO publishes them.
-      # Docker Hub answers `docker pull minio/minio` with "repository does not
-      # exist or may require 'docker login'", so the unqualified name fails the
-      # job at pull time (exit 125) with a message that reads like a credentials
-      # problem rather than a moved image.
+      # MinIO no longer publishes images anywhere anonymous: Docker Hub answers
+      # "repository does not exist or may require 'docker login'", quay.io now
+      # returns "unauthorized" for the whole repository, and dl.min.io's binaries
+      # are 410 Gone. Each failed this job at pull time (exit 125) with a message
+      # that reads like a credentials problem. Chainguard builds the same server
+      # from MinIO's source and serves it anonymously.
+      #
+      # That image is distroless (no shell) and runs as a non-root user, so /data
+      # is a world-writable tmpfs, and the bucket and its policy are made with the
+      # AWS CLI the runner already ships rather than a second image for `mc`.
+      # The policy is the one `mc anonymous set download` writes.
       - name: Start MinIO
         run: |
-          docker run -d --name minio -p 9000:9000 \
+          docker run -d --name minio -p 9000:9000 --tmpfs /data:rw,mode=1777 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
-            quay.io/minio/minio:latest server /data
+            cgr.dev/chainguard/minio:latest server /data
           for i in $(seq 1 60); do
             if curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null; then
               echo "MinIO is live after ${i}s"
               break
             fi
+            if [ "$i" = 60 ]; then
+              echo "MinIO did not come up within 60s:"
+              docker logs minio
+              exit 1
+            fi
             sleep 1
           done
-          docker run --rm --network host --entrypoint sh quay.io/minio/mc:latest -c "
-            mc alias set ci http://127.0.0.1:9000 minioadmin minioadmin &&
-            mc mb --ignore-existing ci/arkive-test &&
-            mc anonymous set download ci/arkive-test
-          "
+          export AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin AWS_DEFAULT_REGION=us-east-1
+          aws --endpoint-url http://127.0.0.1:9000 s3api create-bucket --bucket arkive-test
+          aws --endpoint-url http://127.0.0.1:9000 s3api put-bucket-policy --bucket arkive-test --policy '{
+            "Version": "2012-10-17",
+            "Statement": [
+              {"Effect": "Allow", "Principal": {"AWS": ["*"]}, "Action": ["s3:GetBucketLocation"], "Resource": ["arn:aws:s3:::arkive-test"]},
+              {"Effect": "Allow", "Principal": {"AWS": ["*"]}, "Action": ["s3:GetObject"], "Resource": ["arn:aws:s3:::arkive-test/*"]}
+            ]
+          }'
 
       # The database-backed and object-storage tests read their DSN and endpoint
       # from the environment and t.Skipf when it is absent. Supplying both is the
