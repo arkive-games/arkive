@@ -203,4 +203,55 @@ describe("ShellBottomNav", () => {
     open(api)
     expect(api.queryByTestId("grid-w")).toBeNull()
   })
+
+  describe("group tabs", () => {
+    const grouped = () =>
+      props({
+        tabs: [
+          { key: "/", label: "Home", icon: <i /> },
+          {
+            key: "tools",
+            label: "Tools",
+            icon: <i />,
+            active: true,
+            children: [
+              { key: "/a", label: "A", icon: <i />, active: true },
+              { key: "/b", label: "B", icon: <i /> },
+            ],
+          },
+        ],
+      })
+
+    it("opens its own sheet of children instead of rendering a link", () => {
+      const api = render(<ShellBottomNav {...grouped()} />)
+      // The group's key is not a route, so it must never reach renderTab as a tab.
+      expect(api.queryByTestId("tab-tools")).toBeNull()
+      fireEvent.click(api.getByTestId("tab-group-tools"))
+      expect(api.getByTestId("group-sheet-tools")).toBeTruthy()
+      expect(api.getByTestId("tab-/a")).toBeTruthy()
+      expect(api.getByTestId("tab-/b")).toBeTruthy()
+      // The current child is filled, exactly as in the More grid.
+      expect(api.getByTestId("tab-/a").className).toContain("bg-primary")
+      expect(api.getByTestId("tab-/b").className).not.toContain("bg-primary")
+    })
+
+    it("marks the group tab current when one of its pages is", () => {
+      const api = render(<ShellBottomNav {...grouped()} />)
+      expect(api.getByTestId("tab-group-tools").getAttribute("aria-current")).toBe("page")
+    })
+
+    it("closes on navigation, like the More sheet", () => {
+      const api = render(<ShellBottomNav {...grouped()} />)
+      fireEvent.click(api.getByTestId("tab-group-tools"))
+      expect(api.queryByTestId("group-sheet-tools")).toBeTruthy()
+      api.rerender(<ShellBottomNav {...grouped()} pathname="/a" />)
+      expect(api.queryByTestId("group-sheet-tools")).toBeNull()
+    })
+
+    it("leaves a plain tab strip exactly as it was", () => {
+      const api = render(<ShellBottomNav {...props()} />)
+      expect(api.getByTestId("tab-/")).toBeTruthy()
+      expect(api.queryByTestId("tab-group-/")).toBeNull()
+    })
+  })
 })

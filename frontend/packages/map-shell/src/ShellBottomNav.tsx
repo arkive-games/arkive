@@ -29,6 +29,16 @@ export interface ShellBottomTab {
   label: ReactNode
   icon: ReactNode
   active?: boolean
+  /**
+   * Makes this tab a group: tapping it opens a sheet of these pages instead of
+   * navigating. The mobile counterpart of a desktop `ShellNavItem` dropdown, so
+   * an app that groups its top bar can group its strip the same way rather than
+   * flattening every page into More. Children are drawn through `renderTab`,
+   * like any tab, and the group's own `key` is never navigated to.
+   *
+   * Only honoured on `tabs`; a grid item with children is rendered as a leaf.
+   */
+  children?: ShellBottomTab[]
 }
 
 export interface ShellBottomNavProps {
@@ -142,6 +152,9 @@ export function ShellBottomNav({
 }: ShellBottomNavProps) {
   const [open, setOpen] = useState(false)
   const [pane, setPane] = useState<MorePane>("main")
+  // The key of the group tab whose sheet is open. One at a time: two sheets
+  // stacked on a phone is the overlay trap the language pane exists to avoid.
+  const [openGroup, setOpenGroup] = useState<string | null>(null)
   const isMobile = useIsMobile()
   // Unconditional: hooks cannot be skipped, and an empty config is never
   // rendered because the pane only opens when `settings` is present.
@@ -151,13 +164,17 @@ export function ShellBottomNav({
   // A tap that navigates must not leave the sheet over the destination.
   useEffect(() => {
     setOpen(false)
+    setOpenGroup(null)
   }, [pathname])
 
   // The strip is `md:hidden`, but the sheet portals to <body> and so is NOT
   // hidden by that class. Without this an open sheet stays draped over the
   // desktop layout after a rotation past 768px (a landscape phone is 844px).
   useEffect(() => {
-    if (!isMobile) setOpen(false)
+    if (!isMobile) {
+      setOpen(false)
+      setOpenGroup(null)
+    }
   }, [isMobile])
 
   const tabClass = (active?: boolean) =>
@@ -169,6 +186,56 @@ export function ShellBottomNav({
       classNames?.tab,
       active && classNames?.tabActive,
     )
+
+  // Shared by the More grid and every group sheet, so a page looks the same
+  // whichever sheet it is reached from.
+  const gridItemClass = (active?: boolean) =>
+    cn(
+      "arkive-more-route flex min-h-16 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border px-1 py-2 text-xs font-semibold active:scale-[0.98]",
+      active ? "bg-primary text-primary-foreground" : "bg-card text-card-foreground",
+    )
+
+  const sheetClass =
+    "arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))] gap-0 overflow-y-auto rounded-t-lg border p-0 pt-5"
+
+  const renderGroupTab = (tab: ShellBottomTab, children: ShellBottomTab[]) => (
+    <Sheet
+      open={openGroup === tab.key}
+      onOpenChange={(next) => {
+        setOpenGroup(next ? tab.key : null)
+        if (next) setOpen(false)
+      }}
+    >
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          data-testid={`tab-group-${tab.key}`}
+          data-active={tab.active}
+          aria-current={tab.active ? "page" : undefined}
+          aria-label={typeof tab.label === "string" ? tab.label : undefined}
+          className={tabClass(tab.active)}
+        >
+          {tab.icon}
+          <span className="max-w-full truncate px-0.5">{tab.label}</span>
+        </button>
+      </SheetTrigger>
+      <SheetContent
+        side="bottom"
+        data-testid={`group-sheet-${tab.key}`}
+        className={sheetClass}
+        style={{ paddingBottom: "1rem" }}
+      >
+        <SheetHeader className="border-b border-border px-4 pb-3 pr-12 md:pr-10">
+          <SheetTitle>{tab.label}</SheetTitle>
+        </SheetHeader>
+        <div className="grid grid-cols-4 gap-1.5 px-4 pb-4 pt-4">
+          {children.map((child) => (
+            <Fragment key={child.key}>{renderTab(child, gridItemClass(child.active))}</Fragment>
+          ))}
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
 
   return (
     <>
@@ -182,7 +249,9 @@ export function ShellBottomNav({
       >
         {tabs.map((tab) => (
           <span key={tab.key} className="flex flex-1">
-            {renderTab(tab, tabClass(tab.active))}
+            {tab.children && tab.children.length > 0
+              ? renderGroupTab(tab, tab.children)
+              : renderTab(tab, tabClass(tab.active))}
           </span>
         ))}
         {/* SheetTrigger rather than a bare button so Radix knows the trigger and
@@ -191,6 +260,7 @@ export function ShellBottomNav({
           open={open}
           onOpenChange={(next) => {
             setOpen(next)
+            if (next) setOpenGroup(null)
             // Always reopen on the main body: a sheet that remembered it was
             // left on the language sub-page would look like the wrong menu.
             if (!next) setPane("main")
@@ -213,7 +283,7 @@ export function ShellBottomNav({
           <SheetContent
             side="bottom"
             data-testid="more-sheet"
-            className="arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))] gap-0 overflow-y-auto rounded-t-lg border p-0 pt-5"
+            className={sheetClass}
             style={{ paddingBottom: "1rem" }}
           >
             {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}
@@ -236,15 +306,7 @@ export function ShellBottomNav({
                   <div className="grid grid-cols-4 gap-1.5">
                     {grid.items.map((item) => (
                       <Fragment key={item.key}>
-                        {grid.renderItem(
-                          item,
-                          cn(
-                            "arkive-more-route flex min-h-16 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border px-1 py-2 text-xs font-semibold active:scale-[0.98]",
-                            item.active
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card text-card-foreground",
-                          ),
-                        )}
+                        {grid.renderItem(item, gridItemClass(item.active))}
                       </Fragment>
                     ))}
                   </div>
