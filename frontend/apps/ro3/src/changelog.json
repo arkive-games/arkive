@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.15.1",
+      "date": "2026-09-26",
+      "commit": "988a23a9476692ff9831aa06ccd9bf0abccba94f",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The build manual no longer disappears when one of its tables fails to load. Only the affected panel is hidden, and the rest of the manual still shows.",
+            "zh-CN": "流派手册不再因为某一份数据加载失败而整页不可用：只隐藏受影响的面板，其余内容照常显示。",
+            "zh-TW": "流派手冊不再因為某一份資料載入失敗而整頁無法使用：只隱藏受影響的面板，其餘內容照常顯示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.15.0",
       "date": "2026-09-17",
       "commit": "5779e419b6b598f0c47694eb78e7ebb78b9092e7",
