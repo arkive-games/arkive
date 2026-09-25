@@ -3,6 +3,7 @@ import type { CreatePostBody } from '@gamemap/api-core'
 import aion2Bg from './assets/aion2-bg.jpg'
 import palworldBg from './assets/palworld-bg.webp'
 import gmzzBg from './assets/gmzz-bg.webp'
+import gmzzThumb from './assets/gmzz-thumb.webp'
 import ro3Bg from './assets/ro3-bg.webp'
 import aion2Logo from './assets/aion2-logo.webp'
 import palworldLogo from './assets/palworld-logo.png'
@@ -41,6 +42,17 @@ export interface SiteCard {
   url?: string
   toySlug?: string
   bg: string
+  /**
+   * CSS `object-position` for `bg` wherever it is cropped (the homepage's 16:9
+   * covers, the square tool thumbnails), so the crop keeps the characters'
+   * faces. Omit for art that already centres them.
+   */
+  bgPosition?: string
+  /**
+   * A square close-up for small thumbnails (tool cards), for art whose `bg` is
+   * a group shot that turns to noise at 4rem. Falls back to `bg`.
+   */
+  thumb?: string
   nameKey: string
   descKey: string
   featureKey: string
@@ -76,6 +88,9 @@ export const SITES: SiteCard[] = [
       'https://gmzz.tc-imba.com',
     ),
     bg: gmzzBg,
+    // The lead character stands right of centre.
+    bgPosition: '65% center',
+    thumb: gmzzThumb,
     nameKey: 'site.gmzz.name',
     descKey: 'site.gmzz.desc',
     featureKey: 'site.gmzz.feature',
@@ -101,6 +116,9 @@ export const SITES: SiteCard[] = [
       'https://vrising.tc-imba.com',
     ),
     bg: VRISING_BG,
+    // A portrait poster whose two faces sit in its top third; a centred
+    // landscape crop cuts through their chests instead.
+    bgPosition: 'center 15%',
     nameKey: 'site.vrising.name',
     descKey: 'site.vrising.desc',
     featureKey: 'site.vrising.feature',
@@ -137,12 +155,13 @@ export const SITES: SiteCard[] = [
  * `Record<string, string>` rather than `Record<GameId, string>`: a missing game
  * is therefore not a type error but an `undefined` src on a live `<img>`. Every
  * id in `SITES` needs an entry, `comingSoon` ones included, so that one is
- * ready the day it opens. Games with no dedicated logo reuse their card
- * art, as gmzz and ro3 do. gameCatalog.test.ts asserts the coverage.
+ * ready the day it opens. Games with no dedicated logo reuse their square
+ * `thumb` (gmzz) or their card art (ro3). gameCatalog.test.ts asserts the
+ * coverage.
  */
 export const GAME_LOGOS: Record<string, string> = {
   aion2: aion2Logo,
-  gmzz: gmzzBg,
+  gmzz: gmzzThumb,
   palworld: palworldLogo,
   vrising: vrisingLogo,
   sts2: sts2Logo,

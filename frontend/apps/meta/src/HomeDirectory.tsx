@@ -134,7 +134,7 @@ function DirectoryGameCard({ site, continuing, onOpen }: {
   return (
     <article className="directory-game">
       <a href={href} className="directory-game-cover group" onClick={onOpen}>
-        <img src={site.bg} alt="" />
+        <img src={site.bg} alt="" style={{ objectPosition: site.bgPosition }} />
         <span className="directory-game-shade" aria-hidden="true" />
         {continuing && <small>{t('hero.continue')}</small>}
         <strong>{name}</strong>

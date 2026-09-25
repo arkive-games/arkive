@@ -292,7 +292,7 @@ body:has(.arkive-home-view) {
 
 .tool-card {
   display: grid;
-  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  grid-template-columns: 4rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.85rem;
   min-width: 0;
@@ -312,35 +312,37 @@ body:has(.arkive-home-view) {
 
 .tool-card-visual {
   position: relative;
-  isolation: isolate;
-  display: grid;
+  display: block;
   aspect-ratio: 1;
   overflow: hidden;
-  place-items: center;
   border-radius: var(--arkive-radius-compact);
-  color: white;
-}
-
-.tool-card-visual img,
-.tool-card-visual > span {
-  position: absolute;
-  inset: 0;
+  background: var(--muted);
 }
 
 .tool-card-visual img {
-  z-index: var(--arkive-layer-local-backdrop);
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform var(--arkive-motion-panel) var(--arkive-motion-easing);
 }
 
-.tool-card-visual > span {
-  z-index: var(--arkive-layer-local-underlay);
-  background: color-mix(in srgb, var(--arkive-nav-active) 74%, transparent);
+.tool-card:hover .tool-card-visual img {
+  transform: scale(1.06);
 }
 
-.tool-card-visual svg {
-  z-index: var(--arkive-layer-local-control);
+/* Names the kind of tool without hiding the art it sits on. */
+.tool-card-badge {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  display: grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--primary);
+  background: var(--card);
+  box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.3);
 }
 
 .tool-card-copy {
@@ -610,6 +612,7 @@ body:has(.arkive-home-view) {
   .directory-game-cover img,
   .directory-game-features a,
   .tool-card,
+  .tool-card-visual img,
   .tool-card-arrow,
   .community-card {
     transition: none;

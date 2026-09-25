@@ -234,7 +234,7 @@ function CatalogGameCard({
   const body = (
     <>
       <span className="catalog-game-cover">
-        <img src={game.site.bg} alt={name} />
+        <img src={game.site.bg} alt={name} style={{ objectPosition: game.site.bgPosition }} />
         <span className="catalog-game-shade" aria-hidden="true" />
         {href && (
           <span className="catalog-game-open" aria-hidden="true">

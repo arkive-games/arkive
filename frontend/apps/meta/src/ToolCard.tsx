@@ -24,7 +24,9 @@ const TOOL_ICONS: Record<string, Icon> = {
 
 /**
  * One tool, as both the homepage shelf and the tools page list it: the game's
- * art behind the tool's icon, then its name, its game and what it does.
+ * art, so the tool's game reads at a glance, with a small badge naming what
+ * kind of tool it is -- two tools from one game would otherwise share an
+ * identical thumbnail. Then its name, its game and what it does.
  */
 export function ToolCard({ tool, site, onOpen }: {
   tool: GameFeature
@@ -40,9 +42,10 @@ export function ToolCard({ tool, site, onOpen }: {
   return (
     <a className="tool-card group" href={href} onClick={onOpen}>
       <span className="tool-card-visual" aria-hidden="true">
-        <img src={site.bg} alt="" />
-        <span />
-        <ToolIcon className="size-6" stroke={1.7} />
+        {site.thumb
+          ? <img src={site.thumb} alt="" />
+          : <img src={site.bg} alt="" style={{ objectPosition: site.bgPosition }} />}
+        <span className="tool-card-badge"><ToolIcon className="size-3.5" stroke={2} /></span>
       </span>
       <span className="tool-card-copy">
         <strong>{localize(tool.name, language)}</strong>
