@@ -26,7 +26,7 @@ const KINDS: AutoChessTurnKind[] = ['pve', 'pvp', 'insight', 'carousel']
  * and stacked bare sections whose different heights left holes. Titles are
  * text-base, content text-sm, hints and table headers text-xs, nothing else.
  */
-const SECTION = 'mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4'
+const SECTION = 'rounded-lg border border-border bg-card p-4'
 const TITLE = 'text-base font-semibold'
 const HINT = 'mt-0.5 mb-3 text-xs text-muted-foreground'
 const NOTE = 'mt-2 text-xs text-muted-foreground'
@@ -150,12 +150,12 @@ export default function AutoChessRulesPage() {
     <ContentPage active="/autochess" title={t('autochess.title')} heading wide>
       <p className="mb-4 text-sm text-muted-foreground">{t('autochess.description')}</p>
 
-      {/* Two flowing columns rather than a two-column grid: a grid row is as
-          tall as its taller cell, so the short turn ladder beside the long gold
-          section left a hole under it. Columns pack each card straight under the
-          one above. The four cards that used to sit above this linked to the
-          other pages, which the nav's own 愚者棋局 menu now does. */}
-      <div className="gap-4 xl:columns-2">
+      {/* A two-column grid, so the cards side by side share a top and a bottom
+          edge. Flowing columns packed tighter but staggered every edge across
+          the gap, which read as misaligned. The four cards that used to sit
+          above this linked to the other pages, which the nav's own 愚者棋局
+          menu now does. */}
+      <div className="grid gap-4 xl:grid-cols-2">
       <section className={SECTION}>
         <h2 className={TITLE}>{t('autochess.rules.turnsTitle')}</h2>
         <p className={HINT}>{t('autochess.rules.turnsHint')}</p>
