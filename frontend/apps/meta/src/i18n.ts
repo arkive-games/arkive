@@ -300,6 +300,136 @@ function userSystemCopy(language: Language) {
   }
 }
 
+/**
+ * The footer's "About Arkive" and "Contact us" dialogs.
+ *
+ * The domain, slogans, QQ group, creator handles and repository URL are the
+ * same in every language, so they live in HomeFooter rather than here; this
+ * holds only what is translated.
+ */
+const FOOTER_DIALOG_COPY = {
+  'zh-CN': {
+    close: '关闭',
+    about: {
+      title: '关于藏舟',
+      paragraphs: [
+        '“舟”是承载，也是航行。我们把每款游戏的互动地图、图鉴资料与实用工具装上同一条船，你不必在几十个网页之间来回翻找，一站就能查到想要的答案。',
+        '“藏”是收藏，也是发现。地图标出每一处宝藏与坐标，图鉴整理游戏里的知识，计算器和规划器替你算清每一步；遇到新的发现，也可以带回论坛与大家分享。',
+        '藏舟目前收录 {{games}} 款游戏、{{tools}} 个实用工具，更多游戏世界正在陆续启航。',
+      ],
+      domain: '网站域名',
+      slogan: '品牌标语',
+    },
+    contact: {
+      title: '联系我们',
+      description: '发现数据错误、想要新功能，或者想一起建设藏舟？欢迎通过以下方式找到我们。',
+      feedbackGroup: '意见反馈 QQ 群',
+      creator: '创作者 · {{name}}',
+      github: 'GitHub 开源',
+      copy: '复制 {{label}}',
+      copyAction: '复制',
+      copied: '已复制',
+      open: '打开',
+    },
+  },
+  'zh-TW': {
+    close: '關閉',
+    about: {
+      title: '關於藏舟',
+      paragraphs: [
+        '「舟」是承載，也是航行。我們把每款遊戲的互動地圖、圖鑑資料與實用工具裝上同一條船，你不必在幾十個網頁之間來回翻找，一站就能查到想要的答案。',
+        '「藏」是收藏，也是發現。地圖標出每一處寶藏與座標，圖鑑整理遊戲裡的知識，計算器和規劃器替你算清每一步；遇到新的發現，也可以帶回論壇與大家分享。',
+        '藏舟目前收錄 {{games}} 款遊戲、{{tools}} 個實用工具，更多遊戲世界正在陸續啟航。',
+      ],
+      domain: '網站網域',
+      slogan: '品牌標語',
+    },
+    contact: {
+      title: '聯絡我們',
+      description: '發現資料錯誤、想要新功能，或者想一起建設藏舟？歡迎透過以下方式找到我們。',
+      feedbackGroup: '意見回饋 QQ 群',
+      creator: '創作者 · {{name}}',
+      github: 'GitHub 開源',
+      copy: '複製 {{label}}',
+      copyAction: '複製',
+      copied: '已複製',
+      open: '開啟',
+    },
+  },
+  'en-US': {
+    close: 'Close',
+    about: {
+      title: 'About Arkive',
+      paragraphs: [
+        'An ark carries, and it sails. We bring every game\'s interactive maps, encyclopedias and tools aboard one vessel, so the answer you need is one stop away instead of scattered across dozens of pages.',
+        'An archive keeps, and it uncovers. Maps mark every treasure and coordinate, encyclopedias gather what each game knows, and calculators and planners work out every step for you. When you find something new, bring it back to the forum and share it.',
+        'Arkive covers {{games}} games and {{tools}} tools today, with more worlds setting sail soon.',
+      ],
+      domain: 'Website',
+      slogan: 'Slogan',
+    },
+    contact: {
+      title: 'Contact us',
+      description: 'Found a data error, want a new feature, or want to help build Arkive? Here is where to find us.',
+      feedbackGroup: 'Feedback QQ group',
+      creator: 'Creator · {{name}}',
+      github: 'Open source on GitHub',
+      copy: 'Copy {{label}}',
+      copyAction: 'Copy',
+      copied: 'Copied',
+      open: 'Open',
+    },
+  },
+  'ja-JP': {
+    close: '閉じる',
+    about: {
+      title: '藏舟について',
+      paragraphs: [
+        '「舟」は運ぶもの、そして航海するもの。各ゲームのインタラクティブマップ、図鑑、便利なツールをひとつの舟に載せ、いくつものページを行き来しなくても、欲しい答えにすぐたどり着けるようにしています。',
+        '「藏」は集めること、そして見つけること。マップは宝や座標を記し、図鑑はゲームの知識をまとめ、計算機やプランナーは一歩ずつの計算を引き受けます。新しい発見は、フォーラムでみんなと分かち合えます。',
+        '藏舟は現在 {{games}} 本のゲームと {{tools}} 個のツールを収録しています。さらに多くの世界が出航の準備中です。',
+      ],
+      domain: 'ウェブサイト',
+      slogan: 'スローガン',
+    },
+    contact: {
+      title: 'お問い合わせ',
+      description: 'データの誤りを見つけた、新しい機能がほしい、藏舟づくりに参加したい。そんなときは以下からご連絡ください。',
+      feedbackGroup: 'フィードバック QQ グループ',
+      creator: 'クリエイター · {{name}}',
+      github: 'GitHub でオープンソース',
+      copy: '{{label}}をコピー',
+      copyAction: 'コピー',
+      copied: 'コピーしました',
+      open: '開く',
+    },
+  },
+  'ko-KR': {
+    close: '닫기',
+    about: {
+      title: 'Arkive 소개',
+      paragraphs: [
+        '배는 싣고, 또 항해합니다. 각 게임의 인터랙티브 지도, 도감과 유용한 도구를 한 척의 배에 실어, 수십 개의 페이지를 오가지 않아도 원하는 답을 한곳에서 찾을 수 있게 했습니다.',
+        '간직하고, 또 발견합니다. 지도는 모든 보물과 좌표를 표시하고, 도감은 게임 속 지식을 정리하며, 계산기와 플래너는 한 걸음 한 걸음을 대신 계산합니다. 새로운 발견은 포럼에서 함께 나눌 수 있습니다.',
+        'Arkive는 현재 게임 {{games}}개와 도구 {{tools}}개를 수록하고 있으며, 더 많은 세계가 곧 출항합니다.',
+      ],
+      domain: '웹사이트',
+      slogan: '슬로건',
+    },
+    contact: {
+      title: '문의하기',
+      description: '데이터 오류를 발견했거나, 새로운 기능이 필요하거나, Arkive를 함께 만들고 싶다면 아래로 연락해 주세요.',
+      feedbackGroup: '피드백 QQ 그룹',
+      creator: '제작자 · {{name}}',
+      github: 'GitHub 오픈 소스',
+      copy: '{{label}} 복사',
+      copyAction: '복사',
+      copied: '복사됨',
+      open: '열기',
+    },
+  },
+} as const
+
 const resources = {
   'zh-CN': {
     translation: {
@@ -449,13 +579,14 @@ const resources = {
         title: '更多游戏正在制作中',
         badge: '即将上线',
       },
+      footerDialogs: FOOTER_DIALOG_COPY['zh-CN'],
       footer: {
         browse: '浏览',
         about: '关于',
         help: '帮助',
         allGames: '全部游戏',
         community: '藏舟社区',
-        toolsAndMods: '工具与模组',
+        toolLibrary: '工具库',
         aboutArkive: '关于藏舟',
         contact: '联系我们',
         updateHistory: '更新日志',
@@ -591,8 +722,9 @@ const resources = {
         title: '更多遊戲正在製作中',
         badge: '即將上線',
       },
+      footerDialogs: FOOTER_DIALOG_COPY['zh-TW'],
       footer: {
-        browse: '瀏覽', about: '關於', help: '幫助', allGames: '全部遊戲', community: '藏舟社群', toolsAndMods: '工具與模組',
+        browse: '瀏覽', about: '關於', help: '幫助', allGames: '全部遊戲', community: '藏舟社群', toolLibrary: '工具庫',
         aboutArkive: '關於藏舟', contact: '聯絡我們', updateHistory: '更新日誌', language: '語言切換', theme: '主題切換', clearCache: '清理快取',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
@@ -718,8 +850,9 @@ const resources = {
         title: 'More games are on the way',
         badge: 'Coming soon',
       },
+      footerDialogs: FOOTER_DIALOG_COPY['en-US'],
       footer: {
-        browse: 'Browse', about: 'About', help: 'Help', allGames: 'All games', community: 'Arkive community', toolsAndMods: 'Tools and mods',
+        browse: 'Browse', about: 'About', help: 'Help', allGames: 'All games', community: 'Arkive community', toolLibrary: 'Tool library',
         aboutArkive: 'About Arkive', contact: 'Contact us', updateHistory: 'Update history', language: 'Language', theme: 'Theme', clearCache: 'Clear local data',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
@@ -833,8 +966,9 @@ const resources = {
         gmzz: { name: 'Lord of Mysteries', desc: 'ユートピア百科、インタラクティブマップ、ツール', feature: 'ユートピア劇場から始め、各階の記憶の欠片を整理します。' },
       },
       comingSoon: { title: 'さらに多くのゲームを制作中', badge: '近日公開' },
+      footerDialogs: FOOTER_DIALOG_COPY['ja-JP'],
       footer: {
-        browse: '見る', about: '藏舟について', help: 'ヘルプ', allGames: 'すべてのゲーム', community: '藏舟コミュニティ', toolsAndMods: 'ツールとMOD',
+        browse: '見る', about: '藏舟について', help: 'ヘルプ', allGames: 'すべてのゲーム', community: '藏舟コミュニティ', toolLibrary: 'ツールライブラリ',
         aboutArkive: '藏舟について', contact: 'お問い合わせ', updateHistory: '更新履歴', language: '言語切替', theme: 'テーマ切替', clearCache: 'キャッシュを消去',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
@@ -948,8 +1082,9 @@ const resources = {
         gmzz: { name: 'Lord of Mysteries', desc: '유토피아 백과, 인터랙티브 지도와 도구', feature: '유토피아 극장에서 시작해 각 층의 기억 조각을 정리하세요.' },
       },
       comingSoon: { title: '더 많은 게임을 제작하고 있어요', badge: '출시 예정' },
+      footerDialogs: FOOTER_DIALOG_COPY['ko-KR'],
       footer: {
-        browse: '둘러보기', about: '소개', help: '도움말', allGames: '전체 게임', community: 'Arkive 커뮤니티', toolsAndMods: '도구와 모드',
+        browse: '둘러보기', about: '소개', help: '도움말', allGames: '전체 게임', community: 'Arkive 커뮤니티', toolLibrary: '도구 모음',
         aboutArkive: 'Arkive 소개', contact: '문의하기', updateHistory: '업데이트 기록', language: '언어 전환', theme: '테마 전환', clearCache: '캐시 지우기',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
