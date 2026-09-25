@@ -1,48 +1,39 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import {
-  BookOpen,
-  Contact,
-  Gauge,
-  Grid3X3,
-  Hammer,
-  History,
-  Home,
-  Menu,
-  Route,
-  Spline,
-  Trophy,
-  Users,
-} from 'lucide-react'
+import { History, Home, Menu, type LucideIcon } from 'lucide-react'
 import {
   ShellBottomNav,
   useTheme,
+  type ShellBottomTab,
   type Theme,
 } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SiteInfo } from './SiteInfo'
 import { useSettingsConfig } from '../lib/settings'
-import type { NavKey } from './TopNav'
+import { isCurrent, NAV_GROUPS, type NavKey } from './navGroups'
+
+const icon = (Icon: LucideIcon) => <Icon className="size-5" strokeWidth={1.8} />
+
+/** Every route a page can report, longest first so a sub-page wins its prefix. */
+const ROUTES: NavKey[] = [
+  '/tools/traintrade-station',
+  '/tools/league-points',
+  '/autochess/chess',
+  '/autochess/bonds',
+  '/autochess/items',
+  '/autochess/talents',
+  '/fellows/relations',
+  '/autochess',
+  '/fellows',
+  '/traintrade',
+  '/utopia',
+  '/reforge',
+  '/score',
+  '/changelog',
+]
 
 function activeKey(pathname: string): NavKey {
-  // 愚者棋局's four sub-pages report the section, so the strip highlights it as
-  // a whole — the same grouping the desktop dropdown shows.
-  if (pathname.startsWith('/autochess')) return '/autochess'
-  // 人脉 is the exception to the grouping above: below `md` the desktop bar and
-  // its dropdown are gone, so a section that folds its children here leaves
-  // them with no entry point at all. Both pages are listed, so both highlight.
-  if (pathname.startsWith('/fellows/relations')) return '/fellows/relations'
-  if (pathname.startsWith('/fellows')) return '/fellows'
-  if (pathname.startsWith('/tools/league-points')) return '/tools/league-points'
-  // The planner is its own entry in the More grid, so it reports itself rather
-  // than borrowing Train Trade's highlight the way it used to.
-  if (pathname.startsWith('/tools/traintrade-station')) return '/tools/traintrade-station'
-  if (pathname.startsWith('/traintrade')) return '/traintrade'
-  if (pathname.startsWith('/utopia')) return '/utopia'
-  if (pathname.startsWith('/reforge')) return '/reforge'
-  if (pathname.startsWith('/score')) return '/score'
-  if (pathname.startsWith('/changelog')) return '/changelog'
-  return '/'
+  return ROUTES.find((route) => pathname === route || pathname.startsWith(`${route}/`)) ?? '/'
 }
 
 export function BottomTabBar() {
@@ -53,70 +44,55 @@ export function BottomTabBar() {
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const active = activeKey(pathname)
 
-  const tabs = [
-    { key: '/', label: t('nav.home'), icon: <Home className="size-5" strokeWidth={1.8} /> },
-    { key: '/traintrade', label: t('nav.traintrade'), icon: <BookOpen className="size-5" strokeWidth={1.8} /> },
-    { key: '/utopia', label: t('nav.utopia'), icon: <Users className="size-5" strokeWidth={1.8} /> },
-    { key: '/reforge', label: t('nav.reforge'), icon: <Hammer className="size-5" strokeWidth={1.8} /> },
+  // The strip mirrors the desktop bar: Home, then one group tab per section,
+  // each opening a sheet of its pages. Four tabs is the strip's ceiling, and
+  // the three sections plus Home fill it exactly.
+  const tabs: ShellBottomTab[] = [
+    { key: '/', label: t('nav.home'), icon: icon(Home), active: active === '/' },
+    ...NAV_GROUPS.map((group) => {
+      const children = group.children.map((child) => ({
+        key: child.key,
+        label: t(child.labelKey),
+        icon: icon(child.icon),
+        active: isCurrent(child.key, active),
+      }))
+      return {
+        key: group.key,
+        label: t(group.labelKey),
+        icon: icon(group.icon),
+        active: children.some((child) => child.active),
+        children,
+      }
+    }),
   ]
+
+  // Derived, not listed: a page reached only through More is one that no tab
+  // or group claims, so adding a page to a group cannot leave More lit.
+  const claimed = tabs.some((tab) => tab.active)
 
   return (
     <ShellBottomNav
       pathname={pathname}
-      tabs={tabs.map((tab) => ({ ...tab, active: active === tab.key }))}
+      tabs={tabs}
       renderTab={(tab, className) => (
         <Link to={tab.key as NavKey} className={className} data-testid={`tab-${tab.key}`}>
-          {tab.icon}<span className="max-w-full truncate">{tab.label}</span>
+          {/* Two lines, not `truncate`: this also draws the pages inside a
+              group sheet, where 铁路大亨货物 is too wide for one quarter row and
+              was clipped to 铁路大亨…. The strip's own labels are one line anyway. */}
+          {tab.icon}<span className="line-clamp-2 max-w-full text-center leading-tight">{tab.label}</span>
         </Link>
       )}
-      // The strip is at its documented ceiling of four tabs (see
-      // ShellBottomNav's own contract), so anything further goes in here.
-      // Derived rather than listed, so a route added to the grid below cannot
-      // be left out of the button's own active state — which is how
-      // /tools/league-points came to light up the Home tab instead.
       more={{
         label: t('more'),
-        icon: <Menu className="size-5" strokeWidth={1.8} />,
-        active: !tabs.some((tab) => tab.key === active),
+        icon: icon(Menu),
+        active: !claimed,
         title: t('more'),
       }}
       grid={{
         items: [{
-          key: '/tools/traintrade-station',
-          label: t('trainTrade.stationTool.title'),
-          icon: <Route className="size-5" strokeWidth={1.8} />,
-          active: active === '/tools/traintrade-station',
-        }, {
-          key: '/autochess',
-          label: t('nav.autochess'),
-          icon: <Grid3X3 className="size-5" strokeWidth={1.8} />,
-          active: active === '/autochess',
-        }, {
-          key: '/fellows',
-          label: t('fellows.title'),
-          // Not `Users`: /utopia already carries it in the strip above, and two
-          // identical icons in one open sheet read as the same destination.
-          icon: <Contact className="size-5" strokeWidth={1.8} />,
-          active: active === '/fellows',
-        }, {
-          key: '/fellows/relations',
-          label: t('fellows.relationsTitle'),
-          icon: <Spline className="size-5" strokeWidth={1.8} />,
-          active: active === '/fellows/relations',
-        }, {
-          key: '/tools/league-points',
-          label: t('nav.league'),
-          icon: <Trophy className="size-5" strokeWidth={1.8} />,
-          active: active === '/tools/league-points',
-        }, {
-          key: '/score',
-          label: t('nav.score'),
-          icon: <Gauge className="size-5" strokeWidth={1.8} />,
-          active: active === '/score',
-        }, {
           key: '/changelog',
           label: t('nav.changelog'),
-          icon: <History className="size-5" strokeWidth={1.8} />,
+          icon: icon(History),
           active: active === '/changelog',
         }],
         renderItem: (item, className) => (

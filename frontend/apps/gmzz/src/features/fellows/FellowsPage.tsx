@@ -4,6 +4,7 @@ import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
+import { FellowsTabs } from '@/features/fellows/FellowsTabs'
 import { Chip, FilterRow } from '@/components/Filters'
 import {
   fellowPortraitUrl,
@@ -90,21 +91,22 @@ export default function FellowsPage() {
 
   if (fellows.error || relations.error || ladders.error) {
     return (
-      <ContentPage active="/fellows" title={t('fellows.title')} heading wide>
+      <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide>
         <p className="text-sm text-muted-foreground">{t('fellows.loadError')}</p>
       </ContentPage>
     )
   }
   if (fellows.loading || relations.loading || ladders.loading) {
     return (
-      <ContentPage active="/fellows" title={t('fellows.title')} heading wide>
+      <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </ContentPage>
     )
   }
 
   return (
-    <ContentPage active="/fellows" title={t('fellows.title')} heading wide>
+    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide>
+      <FellowsTabs current="/fellows" />
       <p className="mb-4 text-sm text-muted-foreground">
         {t('fellows.description', { count: all.length })}
       </p>

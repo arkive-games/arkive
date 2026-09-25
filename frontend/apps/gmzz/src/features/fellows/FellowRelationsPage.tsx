@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
+import { FellowsTabs } from '@/features/fellows/FellowsTabs'
 import {
   fellowPortraitUrl,
   loadFellowRelations,
@@ -37,21 +38,22 @@ export default function FellowRelationsPage() {
 
   if (relations.error || fellows.error || effects.error) {
     return (
-      <ContentPage active="/fellows/relations" title={t('fellows.relationsTitle')} heading wide>
+      <ContentPage active="/fellows/relations" title={t('fellows.sectionTitle')} heading wide>
         <p className="text-sm text-muted-foreground">{t('fellows.loadError')}</p>
       </ContentPage>
     )
   }
   if (relations.loading || fellows.loading || effects.loading) {
     return (
-      <ContentPage active="/fellows/relations" title={t('fellows.relationsTitle')} heading wide>
+      <ContentPage active="/fellows/relations" title={t('fellows.sectionTitle')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </ContentPage>
     )
   }
 
   return (
-    <ContentPage active="/fellows/relations" title={t('fellows.relationsTitle')} heading wide>
+    <ContentPage active="/fellows/relations" title={t('fellows.sectionTitle')} heading wide>
+      <FellowsTabs current="/fellows/relations" />
       <p className="mb-4 text-sm text-muted-foreground">
         {t('fellows.relationsDescription', { count: all.length })}
       </p>
