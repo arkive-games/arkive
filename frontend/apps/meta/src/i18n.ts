@@ -430,6 +430,7 @@ const resources = {
       home: {
         title: '游戏攻略与工具，一站查齐',
         description: '藏舟收录的全部游戏与实用工具都在这里，也可以直接搜索功能名称。',
+        recentlyUsed: '最近使用',
         searchLabel: '搜索游戏或功能',
         searchPlaceholder: '搜索游戏或功能，例如“配种”',
         searchResults: '搜索结果',
@@ -593,6 +594,7 @@ const resources = {
       home: {
         title: '遊戲攻略與工具，一站查齊',
         description: '藏舟收錄的全部遊戲與實用工具都在這裡，也可以直接搜尋功能名稱。',
+        recentlyUsed: '最近使用',
         searchLabel: '搜尋遊戲或功能',
         searchPlaceholder: '搜尋遊戲或功能，例如「配種」',
         searchResults: '搜尋結果',
@@ -723,6 +725,7 @@ const resources = {
       home: {
         title: 'Game guides and tools, all in one place',
         description: 'Every game and tool on Arkive is right here, or search for the page you need by name.',
+        recentlyUsed: 'Recently used',
         searchLabel: 'Search games and features',
         searchPlaceholder: 'Search games or features, e.g. "breeding"',
         searchResults: 'Search results',
@@ -847,6 +850,7 @@ const resources = {
       home: {
         title: 'ゲーム攻略とツールをひとつの場所で',
         description: '藏舟が収録するすべてのゲームとツールをここから。機能名で直接検索することもできます。',
+        recentlyUsed: '最近使ったもの',
         searchLabel: 'ゲームや機能を検索',
         searchPlaceholder: 'ゲームや機能を検索',
         searchResults: '検索結果',
@@ -963,6 +967,7 @@ const resources = {
       home: {
         title: '게임 공략과 도구를 한곳에서',
         description: '장저우가 수록한 모든 게임과 도구를 여기서 확인하고, 기능 이름으로 바로 검색하세요.',
+        recentlyUsed: '최근 사용',
         searchLabel: '게임 또는 기능 검색',
         searchPlaceholder: '게임 또는 기능 검색',
         searchResults: '검색 결과',

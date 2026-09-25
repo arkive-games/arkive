@@ -1,15 +1,15 @@
 import { IconTool } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
-import { FEATURES } from './featureCatalog'
+import { FEATURES, type GameFeature } from './featureCatalog'
 import { siteHref, type SiteCard } from './sites'
 import { ToolCard } from './ToolCard'
 import './tools-page.css'
 
 /** Every tool on every open game, from the same catalog the homepage shelf reads. */
-export function ToolsPage({ sites, onOpenSite }: {
+export function ToolsPage({ sites, onOpenFeature }: {
   sites: readonly SiteCard[]
-  onOpenSite: (site: SiteCard) => void
+  onOpenFeature: (feature: GameFeature, site: SiteCard) => void
 }) {
   const { t } = useTranslation()
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
@@ -34,7 +34,7 @@ export function ToolsPage({ sites, onOpenSite }: {
               key={tool.id}
               tool={tool}
               site={site}
-              onOpen={site ? () => onOpenSite(site) : undefined}
+              onOpen={site ? () => onOpenFeature(tool, site) : undefined}
             />
           )
         })}

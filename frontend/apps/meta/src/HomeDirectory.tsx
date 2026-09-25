@@ -4,6 +4,7 @@ import {
   IconArrowRight,
   IconBook2,
   IconCompass,
+  IconHistory,
   IconMap2,
   IconSearch,
   IconTool,
@@ -17,6 +18,8 @@ import {
   localize,
   searchCatalog,
   type FeatureKind,
+  type GameFeature,
+  type RecentFeature,
   type SearchHit,
 } from './featureCatalog'
 import { siteHref, type SiteCard } from './sites'
@@ -24,6 +27,11 @@ import { ToolCard } from './ToolCard'
 
 /** Feature links under each game card before the rest fold into "+N". */
 const CARD_FEATURE_LIMIT = 4
+/**
+ * The same on a phone, where two cards share a row: one name plus "+N" is all
+ * that fits a half-width card on one line without cutting the name short.
+ */
+const CARD_FEATURE_LIMIT_PHONE = 1
 const SEARCH_RESULT_LIMIT = 8
 
 const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
@@ -40,13 +48,17 @@ const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
  * site has rather than recommending one game from it. Both shelves are plain
  * wrapping grids -- a new game or tool adds a card, not a redesign.
  */
-export function HomeDirectory({ sites, continueSiteId, onOpenSite }: {
+export function HomeDirectory({ sites, continueSiteId, recentlyUsed, onOpenSite, onOpenFeature }: {
   /** In display order; the caller decides whether a recent game leads. */
   sites: readonly SiteCard[]
   continueSiteId?: string
+  /** Newest first; the row is omitted while this is empty. */
+  recentlyUsed: readonly RecentFeature[]
   onOpenSite: (site: SiteCard) => void
+  onOpenFeature: (feature: GameFeature, site: SiteCard) => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const language = i18n.resolvedLanguage ?? i18n.language
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
     && sites.some((site) => site.id === feature.gameId && siteHref(site)))
 
@@ -57,8 +69,31 @@ export function HomeDirectory({ sites, continueSiteId, onOpenSite }: {
           <h1 id="home-heading">{t('home.title')}</h1>
           <p>{t('home.description')}</p>
         </div>
-        <HomeSearch sites={sites} onOpenSite={onOpenSite} />
+        <HomeSearch sites={sites} onOpenSite={onOpenSite} onOpenFeature={onOpenFeature} />
       </header>
+
+      {recentlyUsed.length > 0 && (
+        <nav className="directory-recent" aria-label={t('home.recentlyUsed')}>
+          <span className="directory-recent-label">
+            <IconHistory className="size-4" stroke={1.8} aria-hidden="true" />
+            {t('home.recentlyUsed')}
+          </span>
+          <ul>
+            {recentlyUsed.map(({ feature, site }) => {
+              const KindIcon = KIND_ICONS[feature.kind]
+              return (
+                <li key={feature.id}>
+                  <a href={featureHref(feature, site)} onClick={() => onOpenFeature(feature, site)}>
+                    <KindIcon className="size-4 shrink-0" stroke={1.8} aria-hidden="true" />
+                    <strong>{localize(feature.name, language)}</strong>
+                    <small>{t(site.nameKey)}</small>
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+      )}
 
       <section className="directory-section" aria-labelledby="home-games-heading">
         <div className="directory-heading">
@@ -78,6 +113,7 @@ export function HomeDirectory({ sites, continueSiteId, onOpenSite }: {
               site={site}
               continuing={site.id === continueSiteId}
               onOpen={() => onOpenSite(site)}
+              onOpenFeature={(feature) => onOpenFeature(feature, site)}
             />
           ))}
         </div>
@@ -103,7 +139,7 @@ export function HomeDirectory({ sites, continueSiteId, onOpenSite }: {
                   key={tool.id}
                   tool={tool}
                   site={site}
-                  onOpen={site ? () => onOpenSite(site) : undefined}
+                  onOpen={site ? () => onOpenFeature(tool, site) : undefined}
                 />
               )
             })}
@@ -114,10 +150,11 @@ export function HomeDirectory({ sites, continueSiteId, onOpenSite }: {
   )
 }
 
-function DirectoryGameCard({ site, continuing, onOpen }: {
+function DirectoryGameCard({ site, continuing, onOpen, onOpenFeature }: {
   site: SiteCard
   continuing: boolean
   onOpen: () => void
+  onOpenFeature: (feature: GameFeature) => void
 }) {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
@@ -129,7 +166,10 @@ function DirectoryGameCard({ site, continuing, onOpen }: {
     .filter((feature) => feature.kind !== 'tool')
     .sort((left, right) => Number(right.kind === 'map') - Number(left.kind === 'map'))
   const shown = pages.slice(0, CARD_FEATURE_LIMIT)
+  // A phone shows fewer links per card (CSS hides the rest), so it needs its
+  // own count: two "+N" items are rendered and CSS shows the one that fits.
   const hidden = pages.length - shown.length
+  const hiddenOnPhone = pages.length - Math.min(pages.length, CARD_FEATURE_LIMIT_PHONE)
 
   return (
     <article className="directory-game">
@@ -141,19 +181,22 @@ function DirectoryGameCard({ site, continuing, onOpen }: {
       </a>
       {shown.length > 0 && (
         <ul className="directory-game-features" aria-label={t('home.featuresOf', { game: name })}>
-          {shown.map((feature) => (
-            <li key={feature.id}>
-              <a href={featureHref(feature, site)} onClick={onOpen}>{localize(feature.name, language)}</a>
+          {shown.map((feature, index) => (
+            <li key={feature.id} className={index >= CARD_FEATURE_LIMIT_PHONE ? 'is-desktop-only' : undefined}>
+              <a href={featureHref(feature, site)} onClick={() => onOpenFeature(feature)}>{localize(feature.name, language)}</a>
             </li>
           ))}
           {hidden > 0 && (
-            <li>
-              <a
-                href={href}
-                onClick={onOpen}
-                aria-label={t('home.moreFeaturesLabel', { game: name, count: hidden })}
-              >
+            <li className="directory-more is-desktop-only">
+              <a href={href} onClick={onOpen} aria-label={t('home.moreFeaturesLabel', { game: name, count: hidden })}>
                 +{hidden}
+              </a>
+            </li>
+          )}
+          {hiddenOnPhone > 0 && (
+            <li className="directory-more is-phone-only">
+              <a href={href} onClick={onOpen} aria-label={t('home.moreFeaturesLabel', { game: name, count: hiddenOnPhone })}>
+                +{hiddenOnPhone}
               </a>
             </li>
           )}
@@ -172,9 +215,10 @@ function hitHref(hit: SearchHit): string | undefined {
  * (the first by default), so typing "配种" and pressing Enter lands on the
  * breeding calculator without touching the mouse.
  */
-function HomeSearch({ sites, onOpenSite }: {
+function HomeSearch({ sites, onOpenSite, onOpenFeature }: {
   sites: readonly SiteCard[]
   onOpenSite: (site: SiteCard) => void
+  onOpenFeature: (feature: GameFeature, site: SiteCard) => void
 }) {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
@@ -197,7 +241,8 @@ function HomeSearch({ sites, onOpenSite }: {
   const open = (hit: SearchHit | undefined) => {
     const href = hit && hitHref(hit)
     if (!hit || !href) return
-    onOpenSite(hit.site)
+    if (hit.type === 'feature') onOpenFeature(hit.feature, hit.site)
+    else onOpenSite(hit.site)
     window.location.assign(href)
   }
 

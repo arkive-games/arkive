@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { FEATURES, featureHref, featuresOf, localize, searchCatalog, type GameFeature } from './featureCatalog'
+import {
+  FEATURES,
+  featureHref,
+  featuresOf,
+  localize,
+  recentFeatures,
+  searchCatalog,
+  type GameFeature,
+} from './featureCatalog'
 import { SITES, VISIBLE_SITES, type SiteCard } from './sites'
 
 interface EdgeOneConfig {
@@ -84,6 +92,38 @@ describe('featureHref', () => {
   it('has no link for a game that is not open', () => {
     expect(featureHref(feature, { ...site, comingSoon: true })).toBeUndefined()
     expect(featureHref(feature, undefined)).toBeUndefined()
+  })
+})
+
+describe('recentFeatures', () => {
+  const now = 1_000_000
+  const options = { now, maxAge: 1000 }
+  const ids = (destinations: { id: string; timestamp: number }[], extra = {}) =>
+    recentFeatures(destinations, SITES, { ...options, ...extra }).map(({ feature }) => feature.id)
+
+  it('keeps feature visits newest first and skips game visits', () => {
+    expect(ids([
+      { id: 'feature:palworld-breeding', timestamp: now - 1 },
+      { id: 'game:ro3', timestamp: now - 2 },
+      { id: 'feature:ro3-cards', timestamp: now - 3 },
+    ])).toEqual(['palworld-breeding', 'ro3-cards'])
+  })
+
+  it('drops expired visits, retired pages and unlaunched games', () => {
+    expect(ids([
+      { id: 'feature:palworld-breeding', timestamp: now - 1000 },
+      { id: 'feature:no-longer-exists', timestamp: now },
+    ])).toEqual([])
+    const sts2Page = { ...FEATURES[0], id: 'sts2-cards', gameId: 'sts2' } as GameFeature
+    expect(recentFeatures([{ id: 'feature:sts2-cards', timestamp: now }], SITES, {
+      ...options,
+      features: [sts2Page],
+    })).toEqual([])
+  })
+
+  it('stops at the limit', () => {
+    const visits = FEATURES.slice(0, 6).map((feature) => ({ id: `feature:${feature.id}`, timestamp: now }))
+    expect(ids(visits, { limit: 3 })).toHaveLength(3)
   })
 })
 

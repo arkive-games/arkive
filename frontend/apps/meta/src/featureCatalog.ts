@@ -143,6 +143,40 @@ export function featureHref(feature: GameFeature, site: SiteCard | undefined): s
   return new URL(feature.path, root.endsWith('/') ? root : `${root}/`).toString()
 }
 
+export interface RecentFeature {
+  feature: GameFeature
+  site: SiteCard
+}
+
+/**
+ * The pages a visitor opened lately, newest first, from the portal's recent
+ * destinations (`feature:<id>` entries; `game:<id>` ones are skipped).
+ *
+ * An entry is dropped once it is older than `maxAge`, once its feature leaves
+ * the catalog, or once its game is no longer listed -- a stored id outlives
+ * the page it named, and the row must never offer a dead link.
+ */
+export function recentFeatures(
+  destinations: readonly { id: string; timestamp: number }[],
+  sites: readonly SiteCard[],
+  { now, maxAge, limit = 4, features = FEATURES }: {
+    now: number
+    maxAge: number
+    limit?: number
+    features?: readonly GameFeature[]
+  },
+): RecentFeature[] {
+  const recent: RecentFeature[] = []
+  for (const destination of destinations) {
+    if (recent.length >= limit) break
+    if (!destination.id.startsWith('feature:') || now - destination.timestamp >= maxAge) continue
+    const feature = features.find((item) => `feature:${item.id}` === destination.id)
+    const site = feature && sites.find((item) => item.id === feature.gameId && siteHref(item))
+    if (feature && site) recent.push({ feature, site })
+  }
+  return recent
+}
+
 export type SearchHit =
   | { type: 'game'; site: SiteCard }
   | { type: 'feature'; feature: GameFeature; site: SiteCard }

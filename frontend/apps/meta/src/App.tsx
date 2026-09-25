@@ -37,7 +37,7 @@ import {
 import { AllGamesPage } from './AllGamesPage'
 import { ToolsPage } from './ToolsPage'
 import { HomeDirectory } from './HomeDirectory'
-import { FEATURES } from './featureCatalog'
+import { FEATURES, featureHref, recentFeatures, type GameFeature } from './featureCatalog'
 import { AuthenticatedControls } from './AuthenticatedControls'
 import { ForumPage } from './ForumPage'
 import {
@@ -124,9 +124,15 @@ const recentDestinationsRecord = defineMemoryRecord({
       && typeof (item as RecentDestination).timestamp === 'number'),
 })
 
-function recentDestination(site: SiteCard, route: string): RecentDestination {
+/**
+ * One record for both kinds of visit: `game:<id>` for a game's front page and
+ * `feature:<id>` for one of its pages, which feeds the homepage's "recently
+ * used" row. Either kind also names its game, so "continue exploring" reads the
+ * newest entry whatever it was.
+ */
+function recentDestination(site: SiteCard, route: string, featureId?: string): RecentDestination {
   return {
-    id: `game:${site.id}`,
+    id: featureId ? `feature:${featureId}` : `game:${site.id}`,
     gameId: site.id,
     route,
     timestamp: Date.now(),
@@ -272,15 +278,24 @@ export default function App() {
   const { state: userSystemState } = useUserSystem()
   const [recentDestinations, setRecentDestinations] = useMemoryState(recentDestinationsRecord)
   const [memoryNow] = useState(Date.now)
-  const rememberSite = (site: SiteCard) => {
-    const route = siteHref(site)
-    if (!route) return
-    const destination = recentDestination(site, route)
+  const remember = (destination: RecentDestination) => {
     setRecentDestinations((current) => [
       destination,
       ...current.filter((item) => item.id !== destination.id),
     ].slice(0, 10))
   }
+  const rememberSite = (site: SiteCard) => {
+    const route = siteHref(site)
+    if (route) remember(recentDestination(site, route))
+  }
+  const rememberFeature = (feature: GameFeature, site: SiteCard) => {
+    const route = featureHref(feature, site)
+    if (route) remember(recentDestination(site, route, feature.id))
+  }
+  const recentlyUsed = recentFeatures(recentDestinations, VISIBLE_SITES, {
+    now: memoryNow,
+    maxAge: RECENT_ACTIVITY_RETENTION.milliseconds,
+  })
   const continueDestination = recentDestinations.find((destination) =>
     memoryNow - destination.timestamp < RECENT_ACTIVITY_RETENTION.milliseconds
     && VISIBLE_SITES.some((site) => site.id === destination.gameId && siteHref(site)))
@@ -477,7 +492,7 @@ export default function App() {
           onOpenSite={rememberSite}
         />
       ) : activeRoute.view === 'tools' && HAS_TOOLS ? (
-        <ToolsPage sites={VISIBLE_SITES} onOpenSite={rememberSite} />
+        <ToolsPage sites={VISIBLE_SITES} onOpenFeature={rememberFeature} />
       ) : activeRoute.view === 'forum' ? (
         <ForumPage
           sites={VISIBLE_SITES}
@@ -501,7 +516,9 @@ export default function App() {
           <HomeDirectory
             sites={displayedSites}
             continueSiteId={continueSite?.id}
+            recentlyUsed={recentlyUsed}
             onOpenSite={rememberSite}
+            onOpenFeature={rememberFeature}
           />
 
           {communityPosts.length > 0 && (

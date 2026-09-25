@@ -278,9 +278,75 @@ body:has(.arkive-home-view) {
   background: color-mix(in srgb, var(--primary) 12%, var(--muted));
 }
 
-.directory-game-features li:last-child a[aria-label] {
+.directory-more a {
   color: var(--muted-foreground);
   background: transparent;
+}
+
+/* Each card renders a "+N" for both widths; only one shows. */
+.directory-game-features .is-phone-only {
+  display: none;
+}
+
+/* Sits between the intro and the games: one line of the pages a visitor
+   opened lately, so a returning regular is one click from them. */
+.directory-recent {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: -0.5rem;
+}
+
+.directory-recent-label {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.directory-recent ul {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.directory-recent a {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding-inline: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999rem;
+  color: var(--primary);
+  background: var(--card);
+  text-decoration: none;
+  transition: border-color var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.directory-recent a:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+.directory-recent strong {
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.directory-recent small {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 /* Shared by the homepage shelf and the tools page. */
@@ -566,12 +632,81 @@ body:has(.arkive-home-view) {
     font-size: 0.875rem;
   }
 
+  /* One row per card: a name that does not fit is ellipsised rather than
+     pushing "+N" onto a second line. */
   .directory-game-features {
-    padding: 0.55rem;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+    padding: 0.5rem;
   }
 
+  .directory-game-features li {
+    min-width: 0;
+  }
+
+  .directory-game-features li.directory-more {
+    flex: none;
+  }
+
+  .directory-game-features a {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    padding-inline: 0.4rem;
+    line-height: 1.75rem;
+    text-overflow: ellipsis;
+  }
+
+  .directory-game-features .is-desktop-only {
+    display: none;
+  }
+
+  .directory-game-features .is-phone-only {
+    display: list-item;
+  }
+
+  /* Recent pages scroll sideways rather than stacking into several rows. */
+  .directory-recent {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: -0.25rem;
+  }
+
+  .directory-recent ul {
+    max-width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .directory-recent ul::-webkit-scrollbar {
+    display: none;
+  }
+
+  .directory-recent small {
+    display: none;
+  }
+
+  /* Name and game only on the homepage: five tools fit one screen instead of
+     two. The tool library keeps its descriptions. */
   .directory-tools {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .home-directory .tool-card {
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    padding: 0.55rem 0.65rem;
+  }
+
+  .home-directory .tool-card-copy > span {
+    display: none;
+  }
+
+  .home-directory .tool-card-arrow {
+    align-self: center;
   }
 
   .section-heading {
@@ -611,6 +746,7 @@ body:has(.arkive-home-view) {
 @media (prefers-reduced-motion: reduce) {
   .directory-game-cover img,
   .directory-game-features a,
+  .directory-recent a,
   .tool-card,
   .tool-card-visual img,
   .tool-card-arrow,
