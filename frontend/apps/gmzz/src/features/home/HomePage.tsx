@@ -1,56 +1,70 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
-import { getGameVersion } from '../../lib/urls'
+import { NAV_GROUPS } from '../../components/navGroups'
+import { RES_BASE } from '../../lib/urls'
 
-const SECTIONS = [
-  { to: '/traintrade', titleKey: 'trainTrade.title', bodyKey: 'trainTrade.homeDescription' },
-  { to: '/tools/traintrade-station', titleKey: 'trainTrade.stationTool.title', bodyKey: 'trainTrade.stationTool.homeDescription' },
-  { to: '/autochess', titleKey: 'autochess.title', bodyKey: 'autochess.homeDescription' },
-  { to: '/fellows', titleKey: 'fellows.sectionTitle', bodyKey: 'fellows.homeDescription' },
-  { to: '/utopia', titleKey: 'utopianTheater.title', bodyKey: 'utopianTheater.homeDescription' },
-  { to: '/reforge', titleKey: 'reforge.title', bodyKey: 'reforge.homeDescription' },
-  { to: '/score', titleKey: 'score.title', bodyKey: 'score.homeDescription' },
-  { to: '/tools/league-points', titleKey: 'league.title', bodyKey: 'league.homeDescription' },
-] as const
-
+/**
+ * The home page is the nav, laid out: the same three sections drawn from the
+ * same list, so a page added to a menu appears here without a second edit.
+ *
+ * Built to fit one screen. This is a tool site, and a visitor arrives to go
+ * somewhere, so every entry is a picture and a name — no description to read
+ * past, no banner above the fold. On desktop the three sections sit side by
+ * side; on a phone they stack, still as tiles.
+ */
 export default function HomePage() {
   const { t } = useTranslation()
-  const gameVersion = getGameVersion()
 
   return (
-    <ContentPage active="/" title={t('siteTitle')}>
-      <div className="flex flex-col gap-6">
-        <div>
+    <ContentPage active="/" title={t('siteTitle')} wide>
+      <div className="flex flex-col gap-4">
+        {/* Desktop only: on a phone the mobile header already names the site,
+            and repeating it pushed the last section under the tab strip. */}
+        <div className="hidden flex-wrap items-baseline gap-x-3 gap-y-1 md:flex">
           <h1 className="text-3xl font-bold">{t('siteTitle')}</h1>
-          <p className="mt-1 text-muted-foreground">{t('home.tagline')}</p>
+          <p className="text-sm text-muted-foreground">{t('home.tagline')}</p>
         </div>
 
-        {/* Only the sections that exist are linked. A grid of tiles promising
-            pages that are not built is worse than a short honest list. */}
-        <div className="grid gap-3 sm:grid-cols-2">
-          {SECTIONS.map((section) => (
-            <Link
-              key={section.to}
-              to={section.to}
-              className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 shadow-sm transition hover:border-primary/60"
-            >
-              <span className="font-semibold">{t(section.titleKey)}</span>
-              <span className="text-sm text-muted-foreground">{t(section.bodyKey)}</span>
-            </Link>
-          ))}
+        <div className="grid gap-4 lg:grid-cols-[3fr_4fr_5fr]">
+          {NAV_GROUPS.map((group) => {
+            const GroupIcon = group.icon
+            return (
+              <section
+                key={group.key}
+                aria-labelledby={`home-${group.key}`}
+                className="rounded-lg border border-border bg-card p-3 shadow-sm"
+              >
+                <h2 id={`home-${group.key}`} className="mb-2 flex items-center gap-1.5 px-1 text-base font-semibold">
+                  <GroupIcon className="size-4 text-[color:var(--arkive-nav-active)]" strokeWidth={2} aria-hidden />
+                  {t(group.labelKey)}
+                </h2>
+                {/* Columns follow the entry count on desktop, so every section
+                    is exactly one row of tiles and the three end level. */}
+                <div
+                  className="grid grid-cols-4 gap-1.5 sm:grid-cols-5 lg:[grid-template-columns:repeat(var(--home-cols),minmax(0,1fr))]"
+                  style={{ ['--home-cols' as string]: group.children.length }}
+                >
+                  {group.children.map((entry) => (
+                    <Link
+                      key={entry.key}
+                      to={entry.key}
+                      className="group flex flex-col items-center gap-1.5 rounded-md px-1 py-2 text-center transition-colors hover:bg-accent"
+                    >
+                      <img
+                        src={`${RES_BASE}/${entry.art}.webp`}
+                        alt=""
+                        loading="lazy"
+                        className="size-14 rounded-md object-contain transition-transform group-hover:scale-105"
+                      />
+                      <span className="line-clamp-2 text-xs font-medium leading-tight">{t(entry.labelKey)}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )
+          })}
         </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button asChild>
-            <Link to="/traintrade">{t('home.browse')}</Link>
-          </Button>
-        </div>
-
-        {gameVersion ? (
-          <p className="text-xs text-muted-foreground">{t('home.dataNote', { version: gameVersion })}</p>
-        ) : null}
       </div>
     </ContentPage>
   )

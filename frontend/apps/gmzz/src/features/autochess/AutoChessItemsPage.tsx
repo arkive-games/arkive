@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { IconSearch } from '@tabler/icons-react'
-import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -12,7 +10,7 @@ import {
   loadAutoChessItems,
   plainText,
 } from '@/features/autochess/data'
-import { Chip, FilterRow } from '@/components/Filters'
+import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 
 /**
@@ -79,11 +77,7 @@ export default function AutoChessItemsPage() {
 
   return (
     <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {t('autochess.items.description', { count: all.length })}
-      </p>
-
-      <div className="mb-4 flex flex-col gap-3">
+      <FilterBar count={t('autochess.items.resultCount', { count: filtered.length })}>
         <FilterRow label={t('autochess.items.kindFilter')}>
           <Chip active={useType === 0} onClick={() => setUseType(0)}>{t('autochess.all')}</Chip>
           {USE_TYPES.map((value) => (
@@ -105,27 +99,18 @@ export default function AutoChessItemsPage() {
           ))}
         </FilterRow>
 
-        <label className="relative block">
-          <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('autochess.items.searchPlaceholder')}
-            aria-label={t('autochess.items.searchPlaceholder')}
-          />
-        </label>
-      </div>
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder={t('autochess.items.searchPlaceholder')}
+        />
+      </FilterBar>
 
-      <p className="mb-3 text-sm text-muted-foreground">
-        {t('autochess.items.resultCount', { count: filtered.length })}
-      </p>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((item) => (
           <article
             key={item.id}
-            className={`rounded-lg border p-4 shadow-sm ${RARITY_CLASS[item.rarity] ?? 'border-border bg-card'}`}
+            className={`rounded-md border p-3 ${RARITY_CLASS[item.rarity] ?? 'border-border bg-card'}`}
           >
             <header className="flex items-start gap-2.5">
               {/* Only when there is art. 30 of the 107 rows have none — the 18
@@ -136,7 +121,7 @@ export default function AutoChessItemsPage() {
                   src={autoChessItemIconUrl(item.icon)}
                   alt=""
                   loading="lazy"
-                  className="size-11 shrink-0 rounded border border-border/70 bg-background/40 object-contain"
+                  className="size-10 shrink-0 rounded border border-border/70 bg-background/40 object-contain"
                 />
               ) : null}
               <div className="min-w-0 flex-1">
