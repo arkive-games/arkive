@@ -54,9 +54,7 @@
   },
   "entries": {
     "gameplay": "玩法资料",
-    "tools": "工具",
-    "wiki": "百科",
-    "map": "互动地图"
+    "tools": "工具"
   },
   "builds": {
     "title": "流派手册"
@@ -81,8 +79,6 @@
   },
   "sidebar": {
     "title": "资料入口",
-    "open": "打开",
-    "resourcesTitle": "更多资料",
     "map": {
       "eyebrow": "互动地图",
       "title": "米德加尔特探索地图",

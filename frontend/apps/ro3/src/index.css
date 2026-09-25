@@ -1595,10 +1595,6 @@
   .database-detail { position: static; max-height: none; border-top: 1px solid color-mix(in srgb, var(--ro3-tone-07) 30%, transparent); border-left: 0; }
 }
 
-:root.dark {
-  color-scheme: dark;
-}
-
 html {
   background: var(--background);
   scroll-behavior: smooth;
@@ -1857,7 +1853,7 @@ select {
 }
 
 .ro3-hero-action.is-primary .ro3-hero-action-copy small {
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--arkive-action-on);
 }
 
 .ro3-hero-action > svg {
