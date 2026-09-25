@@ -1,81 +1,70 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { ChevronRight } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import { NAV_GROUPS } from '../../components/navGroups'
-import { getGameVersion } from '../../lib/urls'
+import { RES_BASE } from '../../lib/urls'
 
 /**
- * The home page is the nav, laid out: the same three sections in the same order,
- * drawn from the same list, so a page added to a menu appears here without a
- * second edit — and one missing here is missing from the menu too.
+ * The home page is the nav, laid out: the same three sections drawn from the
+ * same list, so a page added to a menu appears here without a second edit.
+ *
+ * Built to fit one screen. This is a tool site, and a visitor arrives to go
+ * somewhere, so every entry is a picture and a name — no description to read
+ * past, no banner above the fold. On desktop the three sections sit side by
+ * side; on a phone they stack, still as tiles.
  */
 export default function HomePage() {
   const { t } = useTranslation()
-  const gameVersion = getGameVersion()
 
   return (
-    <ContentPage active="/" title={t('siteTitle')}>
-      <div className="flex flex-col gap-8">
-        <header className="rounded-xl border border-border bg-card px-5 py-6 shadow-sm md:px-8 md:py-8">
+    <ContentPage active="/" title={t('siteTitle')} wide>
+      <div className="flex flex-col gap-4">
+        {/* Desktop only: on a phone the mobile header already names the site,
+            and repeating it pushed the last section under the tab strip. */}
+        <div className="hidden flex-wrap items-baseline gap-x-3 gap-y-1 md:flex">
           <h1 className="text-3xl font-bold">{t('siteTitle')}</h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">{t('home.tagline')}</p>
-          {gameVersion ? (
-            <p className="mt-4 inline-flex rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground">
-              {t('home.dataNote', { version: gameVersion })}
-            </p>
-          ) : null}
-        </header>
+          <p className="text-sm text-muted-foreground">{t('home.tagline')}</p>
+        </div>
 
-        {NAV_GROUPS.map((group) => {
-          const GroupIcon = group.icon
-          return (
-            <section key={group.key} aria-labelledby={`home-${group.key}`}>
-              <div className="mb-3 flex items-center gap-2">
-                <GroupIcon className="size-5 text-[color:var(--arkive-nav-active)]" strokeWidth={1.8} aria-hidden />
-                <h2 id={`home-${group.key}`} className="text-lg font-semibold">
+        <div className="grid gap-4 lg:grid-cols-[3fr_4fr_5fr]">
+          {NAV_GROUPS.map((group) => {
+            const GroupIcon = group.icon
+            return (
+              <section
+                key={group.key}
+                aria-labelledby={`home-${group.key}`}
+                className="rounded-lg border border-border bg-card p-3 shadow-sm"
+              >
+                <h2 id={`home-${group.key}`} className="mb-2 flex items-center gap-1.5 px-1 text-base font-semibold">
+                  <GroupIcon className="size-4 text-[color:var(--arkive-nav-active)]" strokeWidth={2} aria-hidden />
                   {t(group.labelKey)}
                 </h2>
-              </div>
-              <p className="mb-3 text-sm text-muted-foreground">{t(group.introKey)}</p>
-
-              {/* Four across when a section has exactly four, so it fills one
-                  row rather than leaving a card stranded under three. */}
-              <div
-                className={
-                  group.children.length === 4
-                    ? 'grid gap-3 sm:grid-cols-2 lg:grid-cols-4'
-                    : 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3'
-                }
-              >
-                {group.children.map((entry) => {
-                  const EntryIcon = entry.icon
-                  return (
+                {/* Columns follow the entry count on desktop, so every section
+                    is exactly one row of tiles and the three end level. */}
+                <div
+                  className="grid grid-cols-4 gap-1.5 sm:grid-cols-5 lg:[grid-template-columns:repeat(var(--home-cols),minmax(0,1fr))]"
+                  style={{ ['--home-cols' as string]: group.children.length }}
+                >
+                  {group.children.map((entry) => (
                     <Link
                       key={entry.key}
                       to={entry.key}
-                      className="group flex items-start gap-3 rounded-lg border border-border bg-card p-4 shadow-sm transition hover:border-primary/60 hover:shadow"
+                      className="group flex flex-col items-center gap-1.5 rounded-md px-1 py-2 text-center transition-colors hover:bg-accent"
                     >
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent text-[color:var(--arkive-nav-active)]">
-                        <EntryIcon className="size-5" strokeWidth={1.8} aria-hidden />
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col gap-1">
-                        <span className="flex items-center justify-between gap-2 font-semibold">
-                          {t(entry.labelKey)}
-                          <ChevronRight
-                            className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground"
-                            aria-hidden
-                          />
-                        </span>
-                        <span className="text-sm text-muted-foreground">{t(entry.bodyKey)}</span>
-                      </span>
+                      <img
+                        src={`${RES_BASE}/${entry.art}.webp`}
+                        alt=""
+                        loading="lazy"
+                        className="size-14 rounded-md object-contain transition-transform group-hover:scale-105"
+                      />
+                      <span className="line-clamp-2 text-xs font-medium leading-tight">{t(entry.labelKey)}</span>
                     </Link>
-                  )
-                })}
-              </div>
-            </section>
-          )
-        })}
+                  ))}
+                </div>
+              </section>
+            )
+          })}
+        </div>
       </div>
     </ContentPage>
   )

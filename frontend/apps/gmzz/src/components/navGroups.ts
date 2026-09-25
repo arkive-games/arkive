@@ -36,10 +36,15 @@ export type NavKey =
 
 export interface NavEntry {
   key: NavKey
-  /** The label the menus use, and the home page card's title. */
+  /** The label the menus use, and the home page tile's caption. */
   labelKey: string
-  /** The home page card's one-line description. */
-  bodyKey: string
+  /**
+   * The home tile's picture: a path under the resource repo, without the
+   * extension. Real game art, one piece per page, chosen so a reader can find a
+   * page by what it looks like before reading its name.
+   */
+  art: string
+  /** The glyph the mobile strip's sheets use, where game art would be too busy. */
   icon: LucideIcon
 }
 
@@ -47,8 +52,6 @@ export interface NavGroup {
   /** Not a route — the dropdown's own id, and the mobile group tab's. */
   key: string
   labelKey: string
-  /** One line under the section's heading on the home page. */
-  introKey: string
   icon: LucideIcon
   children: NavEntry[]
 }
@@ -69,59 +72,38 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     key: 'tools',
     labelKey: 'nav.tools',
-    introKey: 'home.toolsIntro',
     icon: Wrench,
     children: [
-      {
-        key: '/tools/traintrade-station',
-        labelKey: 'nav.stationTool',
-        bodyKey: 'trainTrade.stationTool.homeDescription',
-        icon: Route,
-      },
-      { key: '/score', labelKey: 'nav.score', bodyKey: 'score.homeDescription', icon: Gauge },
-      {
-        key: '/tools/league-points',
-        labelKey: 'nav.league',
-        bodyKey: 'league.homeDescription',
-        icon: Trophy,
-      },
+      // Goods art, since the planner is about what you carry between stations.
+      { key: '/tools/traintrade-station', labelKey: 'nav.stationTool', art: 'icons/2000270', icon: Route },
+      // Equipment, which is what the calculator scores.
+      { key: '/score', labelKey: 'nav.score', art: 'icons/3250455', icon: Gauge },
+      { key: '/tools/league-points', labelKey: 'nav.league', art: 'icons/3200663', icon: Trophy },
     ],
   },
   {
     key: 'wiki',
     labelKey: 'nav.wiki',
-    introKey: 'home.wikiIntro',
     icon: BookOpen,
     children: [
-      { key: '/traintrade', labelKey: 'trainTrade.title', bodyKey: 'trainTrade.homeDescription', icon: Package },
+      { key: '/traintrade', labelKey: 'trainTrade.title', art: 'icons/2000235', icon: Package },
       // One entry for both 人脉 pages: the menu is a single level, and 名录 and
       // 关系 switch between each other from their own tab control.
-      { key: '/fellows', labelKey: 'nav.fellows', bodyKey: 'fellows.homeDescription', icon: Contact },
-      { key: '/utopia', labelKey: 'nav.utopia', bodyKey: 'utopianTheater.homeDescription', icon: Users },
-      { key: '/reforge', labelKey: 'nav.reforge', bodyKey: 'reforge.homeDescription', icon: Hammer },
+      { key: '/fellows', labelKey: 'nav.fellows', art: 'fellows/7_Klein', icon: Contact },
+      { key: '/utopia', labelKey: 'nav.utopia', art: 'utopia/Rogue_Common_05', icon: Users },
+      { key: '/reforge', labelKey: 'nav.reforge', art: 'icons/3210613', icon: Hammer },
     ],
   },
   {
     key: 'autochess',
     labelKey: 'nav.autochess',
-    introKey: 'autochess.homeDescription',
     icon: Grid3X3,
     children: [
-      {
-        key: '/autochess',
-        labelKey: 'autochess.rules.navTitle',
-        bodyKey: 'home.autochessRules',
-        icon: ScrollText,
-      },
-      { key: '/autochess/chess', labelKey: 'autochess.pieces.title', bodyKey: 'autochess.pieces.short', icon: Swords },
-      { key: '/autochess/bonds', labelKey: 'autochess.bonds.title', bodyKey: 'autochess.bonds.short', icon: Link2 },
-      { key: '/autochess/items', labelKey: 'autochess.items.title', bodyKey: 'autochess.items.short', icon: Shield },
-      {
-        key: '/autochess/talents',
-        labelKey: 'autochess.talents.title',
-        bodyKey: 'autochess.talents.short',
-        icon: Sparkles,
-      },
+      { key: '/autochess', labelKey: 'autochess.rules.navTitle', art: 'autochess/skills/Bard_Skill_04', icon: ScrollText },
+      { key: '/autochess/chess', labelKey: 'autochess.pieces.title', art: 'autochess/skills/Rogue_Common_13', icon: Swords },
+      { key: '/autochess/bonds', labelKey: 'autochess.bonds.title', art: 'autochess/items/2001892', icon: Link2 },
+      { key: '/autochess/items', labelKey: 'autochess.items.title', art: 'autochess/items/2002125', icon: Shield },
+      { key: '/autochess/talents', labelKey: 'autochess.talents.title', art: 'utopia/Rogue_Common_10', icon: Sparkles },
     ],
   },
 ]
