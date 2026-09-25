@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { IconSearch } from '@tabler/icons-react'
-import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
 import { loadAutoChessTalents, plainText } from '@/features/autochess/data'
-import { Chip, FilterRow } from '@/components/Filters'
+import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 
 const RARITY_CLASS: Record<number, string> = {
@@ -68,11 +66,7 @@ export default function AutoChessTalentsPage() {
 
   return (
     <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide>
-      <p className="mb-4 text-sm text-muted-foreground">
-        {t('autochess.talents.description', { count: all.filter((talent) => talent.inHandbook).length })}
-      </p>
-
-      <div className="mb-4 flex flex-col gap-3">
+      <FilterBar count={t('autochess.talents.resultCount', { count: filtered.length })}>
         <FilterRow label={t('autochess.talents.rarityFilter')}>
           <Chip active={rarity === 0} onClick={() => setRarity(0)}>{t('autochess.all')}</Chip>
           {rarities.map((value) => (
@@ -82,16 +76,11 @@ export default function AutoChessTalentsPage() {
           ))}
         </FilterRow>
 
-        <label className="relative block">
-          <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('autochess.talents.searchPlaceholder')}
-            aria-label={t('autochess.talents.searchPlaceholder')}
-          />
-        </label>
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          placeholder={t('autochess.talents.searchPlaceholder')}
+        />
 
         {hidden ? (
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -103,17 +92,13 @@ export default function AutoChessTalentsPage() {
             {t('autochess.talents.showHidden', { count: hidden })}
           </label>
         ) : null}
-      </div>
+      </FilterBar>
 
-      <p className="mb-3 text-sm text-muted-foreground">
-        {t('autochess.talents.resultCount', { count: filtered.length })}
-      </p>
-
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((talent) => (
           <article
             key={talent.id}
-            className={`rounded-lg border p-4 shadow-sm ${RARITY_CLASS[talent.rarity] ?? 'border-border bg-card'}`}
+            className={`rounded-md border p-3 ${RARITY_CLASS[talent.rarity] ?? 'border-border bg-card'}`}
           >
             <header className="flex flex-wrap items-baseline gap-2">
               <h2 className="font-semibold">{talent.name}</h2>
