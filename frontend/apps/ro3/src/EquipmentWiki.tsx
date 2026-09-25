@@ -69,7 +69,7 @@ export function EquipmentWiki() {
   return (
     <div className="ro3-shell ro3-database equipment-wiki" role="tabpanel">
       <header className="database-header">
-        <div><span className="database-eyebrow"><Shield aria-hidden="true" />装备资料库</span><h2>装备图鉴</h2><p>查阅装备基础属性与可用词条，为职业配置挑选合适的装备。</p></div>
+        <div><p>查阅装备基础属性与可用词条，为职业配置挑选合适的装备。</p></div>
         <div className="database-stat"><strong>{data ? groups.length : '—'}</strong><span>个图鉴条目</span></div>
       </header>
       <div className="database-toolbar">

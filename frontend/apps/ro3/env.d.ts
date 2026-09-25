@@ -10,10 +10,5 @@ interface ImportMetaEnv {
   readonly VITE_GITHUB_URL?: string
   readonly VITE_ICP_BEIAN?: string
   readonly VITE_TOY?: string
-  // Sibling RO3 surfaces that do not exist yet. Absent means "not built": the
-  // matching entry renders as unavailable rather than linking nowhere.
-  readonly VITE_RO3_MAP_URL?: string
-  readonly VITE_RO3_GAMEPLAY_URL?: string
-  readonly VITE_RO3_TOOLS_URL?: string
-  readonly VITE_RO3_WIKI_URL?: string
+  readonly VITE_API_BASE_URL?: string
 }

@@ -1108,7 +1108,7 @@
 .soul-resonance-strip img { width: 1rem; height: 1rem; object-fit: contain; }
 
 .ro3-builds-page { min-height: calc(100dvh - 8rem); padding: 1.25rem 0 2rem; background: var(--ro3-tone-19) url('./assets/native-ui/card_bg_007.png') 0 0 / 9rem auto repeat; }
-.build-planner { width: min(100% - 2rem, 112rem); margin: 0 auto; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 28%, transparent); background: color-mix(in srgb, var(--ro3-tone-20) 92%, transparent); box-shadow: 0 0.7rem 1.8rem color-mix(in srgb, var(--ro3-tone-04) 10%, transparent); }
+.build-planner { width: 100%; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 28%, transparent); background: color-mix(in srgb, var(--ro3-tone-20) 92%, transparent); box-shadow: 0 0.7rem 1.8rem color-mix(in srgb, var(--ro3-tone-04) 10%, transparent); }
 .build-planner-header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem 0.85rem; border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-07) 25%, transparent); background: color-mix(in srgb, var(--ro3-tone-20) 95%, transparent); }
 .build-planner-header h2 { margin: 0.18rem 0 0; color: var(--ro3-tone-04); font-family: 'Arkive Display', 'Arkive Sans', sans-serif; font-size: 1.45rem; }
 .build-planner-header p { margin: 0.3rem 0 0; color: var(--ro3-tone-09); font-size: 0.76rem; }
@@ -1555,8 +1555,7 @@
 
 @media (max-width: 47.999rem) {
   .ro3-builds-page { padding-top: 0.6rem; }
-  .build-planner { width: calc(100% - 1rem); }
-  .build-planner-header { display: grid; align-items: start; padding-inline: 0.8rem; }
+    .build-planner-header { display: grid; align-items: start; padding-inline: 0.8rem; }
   .build-planner-header p { display: none; }
   .build-planner-actions { justify-content: space-between; }
   .build-view-layout { display: block; min-height: 0; }
@@ -1677,9 +1676,10 @@ select {
   font-size: 0.875rem;
 }
 
+/* Width and gutters belong to the shared content column (`.arkive-content-page`)
+   now, so the per-page wrapper only fills it. */
 .ro3-shell {
-  width: min(88rem, calc(100% - 4rem));
-  margin-inline: auto;
+  width: 100%;
 }
 
 .ro3-mobile-nav {
@@ -2141,12 +2141,6 @@ select {
   font-size: 0.75rem;
 }
 
-.wiki-page {
-  min-height: calc(100dvh - 4rem);
-  background:
-    linear-gradient(color-mix(in srgb, var(--arkive-filter-active) 32%, transparent), transparent 24rem),
-    var(--background);
-}
 
 .wiki-masthead {
   border-bottom: 1px solid color-mix(in srgb, var(--arkive-nav-active) 28%, var(--border));
@@ -3460,10 +3454,6 @@ select {
 }
 
 @media (max-width: 47.999rem) {
-  .wiki-page {
-    min-height: calc(100dvh - 6.5rem);
-  }
-
   .wiki-masthead-inner {
     gap: 1.25rem;
     padding-block: 0.875rem 1rem;
@@ -5842,10 +5832,6 @@ select {
 }
 
 @media (max-width: 79.999rem) {
-  .ro3-shell {
-    width: min(100% - 2rem, 88rem);
-  }
-
   .ro3-hero-inner {
     gap: 2rem;
   }
@@ -5877,10 +5863,6 @@ select {
 }
 
 @media (max-width: 47.999rem) {
-  .ro3-shell {
-    width: calc(100% - 2rem);
-  }
-
   .ro3-hero {
     min-height: 18rem;
   }
@@ -5923,9 +5905,10 @@ select {
     grid-template-columns: 1fr;
   }
 
+  /* Above the bottom strip, which is fixed to the same edge. */
   .ro3-toast {
     right: 1rem;
-    bottom: 1rem;
+    bottom: calc(env(safe-area-inset-bottom) + 5rem);
   }
 }
 
@@ -5949,9 +5932,7 @@ select {
   --ro3-navy-soft: #344154;
   --ro3-gold: var(--ro3-gold-08);
   --ro3-orange: #e5774e;
-  min-height: calc(100dvh - 4rem);
   color: var(--ro3-ink);
-  background: var(--ro3-paper);
 }
 
 /* The shared Arkive bar already carries the page identity; the native workspace

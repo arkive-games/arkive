@@ -3,7 +3,6 @@ import {
   Crown,
   Ghost,
   HeartPulse,
-  PawPrint,
   Search,
   Shield,
   Sparkles,
@@ -111,11 +110,9 @@ export function PetWiki() {
 
   return (
     <div className="ro3-shell creature-wiki" role="tabpanel">
-      <section className="creature-database-main" aria-labelledby="pet-wiki-title">
+      <section className="creature-database-main" aria-label={content.wiki.pets.title}>
         <header className="creature-database-toolbar">
           <div className="creature-database-title">
-            <PawPrint aria-hidden="true" />
-            <h2 id="pet-wiki-title">{content.wiki.pets.title}</h2>
             <span>{content.wiki.pets.count.replace('{count}', String(pets.length))}</span>
           </div>
           <div className="creature-toolbar-controls">
@@ -302,11 +299,9 @@ export function MonsterWiki() {
 
   return (
     <div className="ro3-shell creature-wiki" role="tabpanel">
-      <section className="creature-database-main" aria-labelledby="monster-wiki-title">
+      <section className="creature-database-main" aria-label={content.wiki.monsters.title}>
         <header className="creature-database-toolbar monster-toolbar">
           <div className="creature-database-title">
-            <Ghost aria-hidden="true" />
-            <h2 id="monster-wiki-title">{content.wiki.monsters.title}</h2>
             <span>{content.wiki.monsters.count.replace('{count}', String(monsters.length))}</span>
           </div>
           <SearchField value={query} label={content.wiki.monsters.searchLabel} placeholder={content.wiki.monsters.searchPlaceholder} onChange={(value) => {

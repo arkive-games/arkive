@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { CircleDot, GitFork, LockKeyhole, Sparkles, Star, Zap } from 'lucide-react'
+import { CircleDot, GitFork, LockKeyhole, Star, Zap } from 'lucide-react'
 import { resourceUrl } from './lib/urls'
 import {
   loadTalentWikiData,
@@ -50,10 +50,6 @@ export function TalentWiki() {
   return (
     <div className="ro3-shell talent-wiki" role="tabpanel">
       <header className="talent-toolbar">
-        <div>
-          <span><Sparkles aria-hidden="true" />{content.wiki.talents.eyebrow}</span>
-          <h2>{content.wiki.talents.title}</h2>
-        </div>
         <div className="talent-mode-tabs" role="tablist" aria-label={content.wiki.talents.systemLabel}>
           <button type="button" role="tab" aria-selected={mode === 'season'} className={mode === 'season' ? 'is-active' : undefined} onClick={() => setMode('season')}>
             <GitFork aria-hidden="true" />{content.wiki.talents.season}

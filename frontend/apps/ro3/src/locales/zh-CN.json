@@ -4,12 +4,14 @@
   "brandName": "藏舟游戏攻略网",
   "brandSlogan": "万千攻略，藏于一舟",
   "pageTitle": "仙境传说 3",
-  "navigationLabel": "仙境传说 3 导航",
-  "navigation": [
-    { "key": "overview", "label": "攻略" },
-    { "key": "wiki", "label": "百科" }
-  ],
+  "nav": {
+    "home": "首页",
+    "wiki": "百科",
+    "more": "更多",
+    "back": "返回"
+  },
   "language": "简体中文",
+  "languageMenu": "语言",
   "languageShort": "中文",
   "themeMenu": "主题",
   "theme": {
@@ -21,10 +23,7 @@
   "unavailable": "暂无功能",
   "changelog": {
     "documentTitle": "仙境传说 3 更新日志 | 藏舟攻略",
-    "back": "返回百科",
-    "eyebrow": "版本记录",
     "title": "更新日志",
-    "description": "查看仙境传说 3 资料站的版本变化与对应代码提交。",
     "current": "当前版本",
     "empty": "暂无更新记录",
     "kinds": {
@@ -34,35 +33,18 @@
       "data": "数据"
     }
   },
-  "hero": {
-    "eyebrow": "仙境传说 3",
-    "title": "仙境传说 3",
-    "description": "从客户端配置表整理的技能、卡片、装备与宠物资料，以及可自由搭配的职业流派手册。",
-    "actions": {
-      "wiki": {
-        "title": "游戏百科",
-        "description": "七类资料，逐条对照客户端配置"
-      },
-      "builds": {
-        "title": "流派手册",
-        "description": "按职业路线搭配技能与装备"
-      }
-    }
-  },
   "search": {
     "clear": "清空搜索"
   },
-  "entries": {
-    "gameplay": "玩法资料",
-    "tools": "工具"
-  },
   "builds": {
-    "title": "流派手册"
+    "title": "流派手册",
+    "homeDescription": "按职业路线搭配技能、装备、宠物与灵魂残响，保存自己的流派方案。"
   },
   "home": {
-    "catalogEyebrow": "玩家资料库",
-    "catalogTitle": "游戏百科",
-    "catalogDescription": "以下资料全部取自客户端配置表，随版本更新同步整理。",
+    "title": "仙境传说 3 资料库",
+    "tagline": "直接从客户端配置表整理的技能、卡片、装备与宠物资料，以及可自由搭配的职业流派手册。",
+    "browse": "浏览游戏百科",
+    "dataNote": "数据提取自客户端版本 {version}。",
     "sections": {
       "skills": "按职业系与转职阶段查看技能数值",
       "talents": "季节天赋树与守护天赋矩阵",
@@ -71,19 +53,6 @@
       "monsters": "等级、种族、属性与掉落数值",
       "equipment": "部位、词条与特殊效果对照",
       "souls": "灵魂属性、刻印与共鸣关系"
-    },
-    "upcoming": {
-      "title": "正在准备",
-      "description": "以下内容尚未接入页面，接入后会出现在导航中。"
-    }
-  },
-  "sidebar": {
-    "title": "资料入口",
-    "map": {
-      "eyebrow": "互动地图",
-      "title": "米德加尔特探索地图",
-      "description": "地图保持独立更新，以当前地图实现为准。",
-      "action": "打开地图"
     }
   },
   "notice": {

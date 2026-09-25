@@ -1,8 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { AuthProvider } from '@gamemap/auth'
 import { initBaiduAnalytics, ThemeProvider } from '@gamemap/map-shell'
 import { createArkiveThemeStorage } from '@gamemap/ui'
 import App from './App'
+import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 
 // The theme is a site-wide preference, not a per-app one: every Arkive game
@@ -22,7 +24,16 @@ initBaiduAnalytics({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="auto" storage={themeStorage}>
-      <App />
+      {/* Mounted unconditionally, with `enabled` doing the gating, as in every
+          other game: mounting it conditionally would change hook order between
+          a build that has an API and one that does not. */}
+      <AuthProvider
+        baseUrl={AUTH_CONFIG.baseUrl}
+        transport={AUTH_CONFIG.transport}
+        enabled={AUTH_CONFIG.enabled}
+      >
+        <App />
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
 )

@@ -594,11 +594,6 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
     <section className="build-planner" aria-label="流派手册">
       <header className="build-planner-header">
         <div>
-          <span className="database-eyebrow">
-            <Swords aria-hidden="true" />
-            玩家流派手册
-          </span>
-          <h2>职业 BD</h2>
           <p>
             先选职业路线，再配置该路线可用的技能、固定装备部位、宠物和灵魂残响。
           </p>
