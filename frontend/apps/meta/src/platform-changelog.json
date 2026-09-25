@@ -1,6 +1,27 @@
 {
   "entries": [
     {
+      "date": "2026-09-26",
+      "commit": "7740be213969b3ced4305be0f2573d7b9624d12b",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The Arkive homepage now shows every game and every tool on its first screen: each game card links straight to its maps and encyclopedia pages and marks games updated in the last 30 days, the search box finds games and pages by name, such as the Palworld breeding calculator, and the pages you opened lately wait under the search box. Games not yet open no longer appear. The footer's About Arkive and Contact us open on the site with an introduction and the feedback QQ group, and Tool library and Update history open the site's own pages.",
+            "zh-CN": "藏舟首页改版：第一屏即可看到全部游戏与全部工具，每张游戏卡片可直接进入对应的地图与资料页面，30 天内有更新的游戏会显示更新时间；搜索框可按名称找到游戏和功能，例如帕鲁配种计算器；最近打开过的页面会显示在搜索框下方。尚未上线的游戏不再显示。底部的「关于藏舟」「联系我们」改为站内弹窗，提供网站介绍与意见反馈 QQ 群；「工具库」「更新日志」改为打开网站自己的页面。",
+            "zh-TW": "藏舟首頁改版：第一屏即可看到全部遊戲與全部工具，每張遊戲卡片可直接進入對應的地圖與資料頁面，30 天內有更新的遊戲會顯示更新時間；搜尋框可按名稱找到遊戲和功能，例如帕魯配種計算器；最近開啟過的頁面會顯示在搜尋框下方。尚未上線的遊戲不再顯示。底部的「關於藏舟」「聯絡我們」改為站內彈窗，提供網站介紹與意見回饋 QQ 群；「工具庫」「更新日誌」改為開啟網站自己的頁面。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-08-16",
       "commit": "f5e4ce9190065bc1f3b37d672a3a284354963d35",
       "targets": [
