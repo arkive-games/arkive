@@ -38,7 +38,7 @@ export function PlatformUpdatesPage() {
         </a>
         <div className="mt-4 flex items-center gap-3">
           <IconHistory className="size-6 shrink-0 text-primary" stroke={1.8} aria-hidden="true" />
-          <h1 className="text-2xl font-bold leading-tight">{t('platformUpdates.title')}</h1>
+          <h1 className="text-3xl font-bold leading-tight">{t('platformUpdates.title')}</h1>
         </div>
       </header>
 

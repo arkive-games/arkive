@@ -76,7 +76,17 @@ import {
   useMemoryState,
 } from '@gamemap/state-memory'
 
-const NAV_KEYS = ['discoverGames', 'allGames', 'tools', 'forum'] as const
+/**
+ * The tool library points at the game that owns the tools. A build that cannot
+ * open that game (the Toy bundle carries only games with a `toySlug`) has no
+ * library to show, so the nav entry and the `#tools` route go with it rather
+ * than leading to an empty page.
+ */
+const TOOLS_SITE = VISIBLE_SITES.find((site) => site.id === 'gmzz' && siteHref(site))
+
+const NAV_KEYS = (['discoverGames', 'allGames', 'tools', 'forum'] as const)
+  .filter((key) => key !== 'tools' || TOOLS_SITE)
+
 type HomeRoute =
   | { view: 'discoverGames' }
   | { view: 'allGames' }
@@ -152,7 +162,7 @@ function hashForRoute(route: HomeRoute): string {
 function routeFromHash(): HomeRoute {
   const [root, value, detail] = window.location.hash.replace(/^#/, '').split('/')
   if (root === 'games') return { view: 'allGames' }
-  if (root === 'tools') return { view: 'tools' }
+  if (root === 'tools' && TOOLS_SITE) return { view: 'tools' }
   if (root === 'updates') return { view: 'platformUpdates' }
   if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
@@ -471,8 +481,8 @@ export default function App() {
           onAuthRequired={() => setAccountOpen(true)}
           onOpenSite={rememberSite}
         />
-      ) : activeRoute.view === 'tools' ? (
-        <ToolsPage gmzz={VISIBLE_SITES.find((site) => site.id === 'gmzz')} />
+      ) : activeRoute.view === 'tools' && TOOLS_SITE ? (
+        <ToolsPage gmzz={TOOLS_SITE} />
       ) : activeRoute.view === 'forum' ? (
         <ForumPage
           sites={VISIBLE_SITES}
