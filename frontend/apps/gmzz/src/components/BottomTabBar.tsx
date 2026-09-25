@@ -35,7 +35,7 @@ function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/fellows')) return '/fellows'
   if (pathname.startsWith('/tools/league-points')) return '/tools/league-points'
   // The planner is its own entry in the More grid, so it reports itself rather
-  // than borrowing 铁路大亨's highlight the way it used to.
+  // than borrowing Train Trade's highlight the way it used to.
   if (pathname.startsWith('/tools/traintrade-station')) return '/tools/traintrade-station'
   if (pathname.startsWith('/traintrade')) return '/traintrade'
   if (pathname.startsWith('/utopia')) return '/utopia'

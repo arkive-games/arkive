@@ -103,7 +103,7 @@ export default function UtopianTheaterPage() {
     window.requestAnimationFrame(() => resultsAnchorRef.current?.scrollIntoView({ block: "start" }));
   };
 
-  // Wrapped in `ContentPage` for the same reason 铁路大亨 was: this page also
+  // Wrapped in `ContentPage` for the same reason Train Trade was: this page also
   // predates the shared shell and drew a bare <div>, so it lost the top bar,
   // the footer and the common container width. Its <h1> becomes the shell's
   // `heading`, which hides it on mobile where the mobile header carries it.

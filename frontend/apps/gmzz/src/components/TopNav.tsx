@@ -33,8 +33,16 @@ export type NavKey =
  * — which is what a reader wants from a section, and avoids every child having
  * to be listed twice.
  */
+const AUTOCHESS_CHILDREN: { key: NavKey; labelKey: string }[] = [
+  { key: '/autochess', labelKey: 'autochess.rules.navTitle' },
+  { key: '/autochess/chess', labelKey: 'autochess.pieces.title' },
+  { key: '/autochess/bonds', labelKey: 'autochess.bonds.title' },
+  { key: '/autochess/items', labelKey: 'autochess.items.title' },
+  { key: '/autochess/talents', labelKey: 'autochess.talents.title' },
+]
+
 /**
- * 铁路大亨 owns two pages, and the planner had no entry anywhere in this site:
+ * Train Trade owns two pages, and the planner had no entry anywhere in this site:
  * it was reachable only from the portal's tool library, while the wiki page it
  * belongs with sat in the nav alone. Grouping them keeps the bar at six items
  * and puts the tool where a reader of the wiki will look for it.
@@ -42,14 +50,6 @@ export type NavKey =
 const TRAINTRADE_CHILDREN: { key: NavKey; labelKey: string }[] = [
   { key: '/traintrade', labelKey: 'trainTrade.title' },
   { key: '/tools/traintrade-station', labelKey: 'trainTrade.stationTool.title' },
-]
-
-const AUTOCHESS_CHILDREN: { key: NavKey; labelKey: string }[] = [
-  { key: '/autochess', labelKey: 'autochess.rules.navTitle' },
-  { key: '/autochess/chess', labelKey: 'autochess.pieces.title' },
-  { key: '/autochess/bonds', labelKey: 'autochess.bonds.title' },
-  { key: '/autochess/items', labelKey: 'autochess.items.title' },
-  { key: '/autochess/talents', labelKey: 'autochess.talents.title' },
 ]
 
 const FELLOW_CHILDREN: { key: NavKey; labelKey: string }[] = [

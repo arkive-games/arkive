@@ -113,7 +113,7 @@ export default function TrainTradeGoodsPage() {
 
   // This page predates `ContentPage` and was the one page in the app still
   // rendering a bare <div>: no top bar, no mobile header, no footer, and none
-  // of the shared container width — which is why 铁路大亨 looked unlike every
+  // of the shared container width — which is why Train Trade looked unlike every
   // other section. The <h1> it used to draw itself is now the shell's
   // `heading`, so the title is hidden on mobile where the mobile header
   // already carries it, exactly as the other pages behave.
