@@ -1,6 +1,37 @@
 {
   "entries": [
     {
+      "version": "0.10.0",
+      "date": "2026-09-26",
+      "commit": "358ddb3004ade3c2f8e49a77b6e771364b1ce31f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The navigation is regrouped into Home, Tools, Wiki and Fool's Gambit. Tools holds the station planner, the Beyonder score calculator and the league points planner; Wiki holds Train Trade goods, Fellows, Utopia Theatre and Reforged Blessings. On phones each group opens as its own sheet from the bottom bar.",
+            "zh-CN": "导航重新归类为首页、工具、百科、愚者棋局：工具下是站点推演、非凡评分计算器、联赛积分推演，百科下是铁路大亨货物、人脉、乌托邦剧场、重塑恩赐。手机底栏的每一类点开即是该类页面。",
+            "zh-TW": "導覽重新歸類為首頁、工具、百科、愚者棋局：工具下是站點推演、非凡評分計算器、聯賽積分推演，百科下是鐵路大亨貨物、人脈、烏托邦劇場、重塑恩賜。手機底欄的每一類點開即是該類頁面。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The home page fits on one screen as picture tiles, one section per group.",
+            "zh-CN": "首页改为一屏可见的图文入口，按类分区。",
+            "zh-TW": "首頁改為一屏可見的圖文入口，按類分區。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Fool's Gambit pages are denser: filters sit on one line, cards are smaller and more fit per row, and the rules page uses one type scale with side-by-side cards aligned.",
+            "zh-CN": "愚者棋局各页更紧凑：筛选合并为一行，卡片更小、每行更多；规则页统一字号，左右卡片对齐。",
+            "zh-TW": "愚者棋局各頁更緊湊：篩選合併為一行，卡片更小、每行更多；規則頁統一字號，左右卡片對齊。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.0",
       "date": "2026-09-25",
       "commit": "28156f798a473f153124c249bd0cc6a00da37640",
