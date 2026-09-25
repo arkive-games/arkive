@@ -37,7 +37,7 @@ const en = {
   themeDark: 'Dark',
   themeMenu: 'Theme',
   languageMenu: 'Language',
-  nav: {"home": "Home", "traintrade": "Train Trade", "autochess": "Fool's Gambit", "fellows": "Connections", "reference": "Reference", "utopia": "Utopian Theater", "reforge": "Reforge Graces", "score": "Rating Calculator", "league": "League simulator", "changelog": "Changelog"},
+  nav: {"home": "Home", "traintrade": "Train Trade", "autochess": "Fool's Gambit", "fellows": "Connections", "tools": "Tools", "wiki": "Wiki", "stationTool": "Train Trade planner", "utopia": "Utopian Theater", "reforge": "Reforge Graces", "score": "Rating Calculator", "league": "League simulator", "changelog": "Changelog"},
   fellows: {
     "sectionTitle": "Connections",
     "title": "Roster",
@@ -200,8 +200,10 @@ const en = {
     close: 'Close',
   },
   home: {
-    "tagline": "Train Trade goods and Utopian Theater cards, straight from the game files.",
-    "browse": "Browse Train Trade goods",
+    "tagline": "Calculators, a wiki and the Fool's Gambit guide for Lord of Mysteries, built straight from the game files.",
+    "toolsIntro": "Fill in what you have and let the numbers do the work.",
+    "wikiIntro": "Look things up: goods, connections, cards and graces.",
+    "autochessRules": "Rounds, gold income, levels, shop odds and the damage a loss costs.",
     "dataNote": "Data extracted from game build {{version}}."
   },
   changelog: {
@@ -653,7 +655,7 @@ const zhCN: Strings = {
   themeDark: '深色模式',
   themeMenu: '主题',
   languageMenu: '语言',
-  nav: {"home": "首页", "traintrade": "铁路大亨", "autochess": "愚者棋局", "fellows": "人脉", "reference": "资料", "utopia": "乌托邦剧场", "reforge": "重塑恩赐", "score": "非凡评分计算器", "league": "联赛积分推演", "changelog": "更新日志"},
+  nav: {"home": "首页", "traintrade": "铁路大亨", "autochess": "愚者棋局", "fellows": "人脉", "tools": "工具", "wiki": "百科", "stationTool": "铁路大亨站点推演", "utopia": "乌托邦剧场", "reforge": "重塑恩赐", "score": "非凡评分计算器", "league": "联赛积分推演", "changelog": "更新日志"},
   fellows: {
     "sectionTitle": "人脉",
     "title": "名录",
@@ -816,8 +818,10 @@ const zhCN: Strings = {
     close: '关闭',
   },
   home: {
-    "tagline": "直接从游戏文件提取的铁路大亨货物与乌托邦剧场卡牌资料。",
-    "browse": "浏览铁路大亨货物",
+    "tagline": "诡秘之主的计算工具、百科资料与愚者棋局攻略，全部直接取自游戏文件。",
+    "toolsIntro": "填入你手上的数据，剩下的交给计算。",
+    "wikiIntro": "随时查阅：货物、人脉、卡牌与恩赐。",
+    "autochessRules": "回合流程、金币收益、等级、商店概率与落败掉血。",
     "dataNote": "数据提取自游戏版本 {{version}}。"
   },
   changelog: {
@@ -1271,7 +1275,7 @@ const zhTW: Strings = {
   themeDark: '深色模式',
   themeMenu: '主題',
   languageMenu: '語言',
-  nav: {"home": "首頁", "traintrade": "鐵路大亨", "autochess": "愚者棋局", "fellows": "人脈", "reference": "資料", "utopia": "烏托邦劇場", "reforge": "重塑恩賜", "score": "非凡評分計算器", "league": "聯賽積分推演", "changelog": "更新日誌"},
+  nav: {"home": "首頁", "traintrade": "鐵路大亨", "autochess": "愚者棋局", "fellows": "人脈", "tools": "工具", "wiki": "百科", "stationTool": "鐵路大亨站點推演", "utopia": "烏托邦劇場", "reforge": "重塑恩賜", "score": "非凡評分計算器", "league": "聯賽積分推演", "changelog": "更新日誌"},
   fellows: {
     "sectionTitle": "人脈",
     "title": "名錄",
@@ -1434,8 +1438,10 @@ const zhTW: Strings = {
     close: '關閉',
   },
   home: {
-    "tagline": "直接從遊戲檔案擷取的鐵路大亨貨物與烏托邦劇場卡牌資料。",
-    "browse": "瀏覽鐵路大亨貨物",
+    "tagline": "詭秘之主的計算工具、百科資料與愚者棋局攻略，全部直接取自遊戲檔案。",
+    "toolsIntro": "填入你手上的數據，剩下的交給計算。",
+    "wikiIntro": "隨時查閱：貨物、人脈、卡牌與恩賜。",
+    "autochessRules": "回合流程、金幣收益、等級、商店機率與落敗掉血。",
     "dataNote": "資料擷取自遊戲版本 {{version}}。"
   },
   changelog: {
