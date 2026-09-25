@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { IconArrowUpRight, IconCheck, IconCopy } from '@tabler/icons-react'
 import { ArkiveMark, settingsStringsFor } from '@gamemap/map-shell'
 import {
@@ -22,8 +22,7 @@ const CREATORS = [
   { name: '苏烟', handle: 'Suyn77' },
 ] as const
 const GITHUB_URL = 'https://github.com/arkive-games/arkive/tree/master/tools'
-
-const ABOUT_PARAGRAPHS = 3
+const SUYN_URL = 'https://space.bilibili.com/33004908/upload/video'
 
 type FooterDialog = 'about' | 'contact' | null
 
@@ -140,23 +139,20 @@ function AboutDialog({ open, brandName, onOpenChange }: {
             <span>
               <strong>{brandName}</strong>
               <small>{SLOGANS.join(' · ')}</small>
+              <span className="footer-dialog-domain">{ARKIVE_DOMAIN}</span>
             </span>
           </DialogDescription>
         </DialogHeader>
         <div className="footer-dialog-body">
-          {Array.from({ length: ABOUT_PARAGRAPHS }, (_, index) => (
-            <p key={index}>{t(`footerDialogs.about.paragraphs.${index}`, { games, tools })}</p>
-          ))}
-          <dl className="footer-dialog-facts">
-            <div>
-              <dt>{t('footerDialogs.about.domain')}</dt>
-              <dd>{ARKIVE_DOMAIN}</dd>
-            </div>
-            <div>
-              <dt>{t('footerDialogs.about.slogan')}</dt>
-              <dd>{SLOGANS.map((slogan) => <span key={slogan}>{slogan}</span>)}</dd>
-            </div>
-          </dl>
+          <p>{t('footerDialogs.about.intro')}</p>
+          <p>{t('footerDialogs.about.features')}</p>
+          <p>
+            <Trans
+              i18nKey="footerDialogs.about.team"
+              components={{ suyn: <a href={SUYN_URL} target="_blank" rel="noreferrer" /> }}
+            />
+          </p>
+          <p>{t('footerDialogs.about.history', { games, tools })}</p>
         </div>
       </DialogContent>
     </Dialog>

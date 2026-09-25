@@ -198,33 +198,20 @@ footer a:focus-visible {
   margin: 0;
 }
 
-.footer-dialog-facts {
-  display: grid;
-  gap: 0.5rem;
-  margin: 0.25rem 0 0;
-  padding: 0.75rem;
-  border-radius: var(--arkive-radius-compact);
-  background: var(--muted);
-}
-
-.footer-dialog-facts > div {
-  display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
-  gap: 0.75rem;
-}
-
-.footer-dialog-facts dt {
+.footer-dialog-domain {
   color: var(--muted-foreground);
   font-size: 0.75rem;
-  line-height: 1.5rem;
 }
 
-.footer-dialog-facts dd {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 0.75rem;
-  margin: 0;
+.footer-dialog-body a {
+  color: var(--primary);
   font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.footer-dialog-body a:hover {
+  text-decoration-thickness: 2px;
 }
 
 .footer-contact-list {
