@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/react"
+import { AxiosError, type AxiosAdapter, type AxiosResponse } from "axios"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { AccountDialog, type AccountDialogMode } from "./AccountDialog"
@@ -18,6 +19,20 @@ function renderDialog(initialMode: AccountDialogMode = "login") {
       />
     </AuthProvider>,
   )
+}
+
+/** Answers every request with a 401 carrying the given backend error code. */
+function rejectingAdapter(errorCode: string): AxiosAdapter {
+  return async (config) => {
+    const response: AxiosResponse = {
+      data: { errorCode, errorMessage: "rejected" },
+      status: 401,
+      statusText: "Unauthorized",
+      headers: {},
+      config,
+    }
+    throw new AxiosError("Request failed with status code 401", "ERR_BAD_REQUEST", config, {}, response)
+  }
 }
 
 describe("AccountDialog", () => {
@@ -58,5 +73,25 @@ describe("AccountDialog", () => {
     expect(getByLabelText("Reset code")).toBeTruthy()
     expect(getByLabelText("New password").getAttribute("type")).toBe("password")
     expect(getByRole("button", { name: "Update password" })).toBeTruthy()
+  })
+
+  // The provider records a failed login in its own error state, which rebuilt
+  // clearError; the dialog reset effect depends on clearError, so it re-ran and
+  // wiped the message the moment it was set.
+  it("keeps the wrong-password message on screen after a rejected sign-in", async () => {
+    const { findByTestId, getByLabelText, getByRole } = render(
+      <AuthProvider baseUrl="https://api.test" adapter={rejectingAdapter("UserBadCredentialsError")}>
+        <AccountDialog open onOpenChange={vi.fn()} />
+      </AuthProvider>,
+    )
+
+    fireEvent.change(getByLabelText("Email"), { target: { value: "someone@example.com" } })
+    fireEvent.change(getByLabelText("Password"), { target: { value: "wrong-password" } })
+    fireEvent.click(getByRole("button", { name: "Sign in" }))
+
+    const alert = await findByTestId("account-dialog-error")
+    expect(alert.textContent).toBe("Incorrect email or password.")
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(getByRole("alert").textContent).toBe("Incorrect email or password.")
   })
 })

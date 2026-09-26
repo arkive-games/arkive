@@ -205,6 +205,14 @@ export function AuthProvider({
     }
   }, [client])
 
+  // Stable identities, not inline arrows in the memo below. The memo rebuilds
+  // whenever `error` changes, so an inline clearError was a new function on every
+  // failed login — and AccountDialog's reset effect depends on it, so the effect
+  // re-ran and wiped the message the instant it appeared: a wrong password looked
+  // like nothing had happened at all.
+  const clearError = useCallback(() => setError(null), [])
+  const clearPendingResetToken = useCallback(() => setPendingResetToken(null), [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -217,10 +225,23 @@ export function AuthProvider({
       logout,
       refresh: probe,
       pendingResetToken,
-      clearPendingResetToken: () => setPendingResetToken(null),
-      clearError: () => setError(null),
+      clearPendingResetToken,
+      clearError,
     }),
-    [status, user, error, client, enabled, pendingResetToken, login, register, logout, probe],
+    [
+      status,
+      user,
+      error,
+      client,
+      enabled,
+      pendingResetToken,
+      login,
+      register,
+      logout,
+      probe,
+      clearPendingResetToken,
+      clearError,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
