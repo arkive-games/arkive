@@ -153,7 +153,7 @@ export default function AutoChessRulesPage() {
       {/* A two-column grid, so the cards side by side share a top and a bottom
           edge. Flowing columns packed tighter but staggered every edge across
           the gap, which read as misaligned. The four cards that used to sit
-          above this linked to the other pages, which the nav's own 愚者棋局
+          above this linked to the other pages, which the nav's own Fool's Gambit
           menu now does. */}
       <div className="grid gap-4 xl:grid-cols-2">
       <section className={SECTION}>

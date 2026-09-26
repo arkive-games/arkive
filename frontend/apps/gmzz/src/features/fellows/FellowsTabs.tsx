@@ -8,9 +8,10 @@ const TABS = [
 ] as const
 
 /**
- * 名录 and 关系, as the game's own 人脉 panel puts them: two tabs of one screen.
+ * Roster and Relations, as the game's own Connections panel puts them: two tabs of
+ * one screen.
  *
- * The nav carries a single 人脉 entry because its menus are one level deep, so
+ * The nav carries a single Connections entry because its menus are one level deep, so
  * this control is the only way from one page to the other. It is a pair of real
  * links rather than state, so each page keeps its own URL and can be shared.
  */

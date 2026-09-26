@@ -77,8 +77,8 @@ export function BottomTabBar() {
       renderTab={(tab, className) => (
         <Link to={tab.key as NavKey} className={className} data-testid={`tab-${tab.key}`}>
           {/* Two lines, not `truncate`: this also draws the pages inside a
-              group sheet, where 铁路大亨货物 is too wide for one quarter row and
-              was clipped to 铁路大亨…. The strip's own labels are one line anyway. */}
+              group sheet, where the longest Chinese label overflows a quarter-width
+              cell and was being truncated. The strip's own labels are one line anyway. */}
           {tab.icon}<span className="line-clamp-2 max-w-full text-center leading-tight">{tab.label}</span>
         </Link>
       )}

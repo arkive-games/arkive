@@ -61,9 +61,10 @@ export interface NavGroup {
  *
  * Grouped by what a page *does* rather than which game system it covers: a
  * calculator you fill in is a tool, a catalogue you look things up in is the
- * wiki. The earlier bar grouped by system (铁路大亨 held both its goods list and
- * its planner) and then ran out of systems, which is how a 「资料」 menu came to
- * hold a calculator. Routes are untouched, so every existing link still lands.
+ * wiki. The earlier bar grouped by system (Train Trade held both its goods list
+ * and its planner) and then ran out of systems, which is how a Reference menu
+ * came to hold a calculator. Routes are untouched, so every existing link still
+ * lands.
  *
  * The desktop bar, the mobile strip and the home page all draw from this one
  * list. Three hand-kept copies is how they drifted apart before.
@@ -87,8 +88,8 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: BookOpen,
     children: [
       { key: '/traintrade', labelKey: 'trainTrade.title', art: 'icons/2000235', icon: Package },
-      // One entry for both 人脉 pages: the menu is a single level, and 名录 and
-      // 关系 switch between each other from their own tab control.
+      // One entry for both Connections pages: the menu is a single level, and
+      // Roster and Relations switch between each other from their own tab control.
       { key: '/fellows', labelKey: 'nav.fellows', art: 'fellows/7_Klein', icon: Contact },
       { key: '/utopia', labelKey: 'nav.utopia', art: 'utopia/Rogue_Common_05', icon: Users },
       { key: '/reforge', labelKey: 'nav.reforge', art: 'icons/3210613', icon: Hammer },
@@ -110,7 +111,7 @@ export const NAV_GROUPS: NavGroup[] = [
 
 /**
  * Whether a menu entry is the page being shown. Exact match, except that the
- * single 人脉 entry stands for both of its pages.
+ * single Connections entry stands for both of its pages.
  */
 export function isCurrent(entry: NavKey, active: NavKey): boolean {
   if (entry === '/fellows') return active === '/fellows' || active === '/fellows/relations'
