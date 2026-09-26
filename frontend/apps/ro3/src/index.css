@@ -5616,16 +5616,13 @@ select {
 /* Card catalogue follows the Paldeck scanning pattern: a dense, responsive
    image grid in the main column, with the selected record pinned in the detail
    rail. The frames and palette remain RO3-native. */
+/* The page scrolls, as on every other game's catalogue, rather than a box
+   inside it; the class stays because the card-face rules below hang off it. */
 .card-catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
   align-content: start;
   gap: 0.65rem;
-  max-height: min(46rem, calc(100dvh - 11rem));
-  margin-top: 0.75rem;
-  padding: 0.2rem 0.2rem 0.75rem;
-  overflow-y: auto;
-  scrollbar-color: color-mix(in srgb, var(--ro3-tone-08) 55%, transparent) transparent;
 }
 
 .card-catalog-grid .card-tile {
@@ -5790,11 +5787,6 @@ select {
     max-height: min(31rem, calc(100dvh - 10rem));
   }
   .card-filter-group > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .card-catalog-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-height: none;
-    overflow: visible;
-  }
 }
 
 @media (max-width: 39.999rem) {

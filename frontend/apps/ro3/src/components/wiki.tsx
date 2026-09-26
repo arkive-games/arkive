@@ -44,20 +44,29 @@ export function FilterRow({ label, children }: { label: string; children: ReactN
   )
 }
 
-export function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+export function Chip({ active, onClick, children, disabled = false, count }: {
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+  disabled?: boolean
+  /** How many records the chip would leave; shown after the label. */
+  count?: number
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      disabled={disabled}
       className={cn(
-        'inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-sm transition-colors',
+        'inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-45',
         active
           ? 'border-ring bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]'
-          : 'border-border text-muted-foreground hover:border-primary/60',
+          : 'border-border text-muted-foreground enabled:hover:border-primary/60',
       )}
     >
       {children}
+      {count !== undefined ? <span className="text-xs opacity-70">{count}</span> : null}
     </button>
   )
 }

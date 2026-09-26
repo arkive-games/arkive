@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, Check, Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
+import { BookOpen, Check, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
-import { Button, VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/ui'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  resolveChangelog,
+  useIsMobile,
+  VersionHistory,
+  type ChangelogFile,
+} from '@gamemap/ui'
+import { Chip, DetailPanel, DetailSection, FilterRow, Notice, Panel, SearchField, Tab, TabRow } from './components/wiki'
 import {
   cardFrameVariant,
   countCardsByCategory,
@@ -324,6 +334,7 @@ function CardWiki({
   onSelect: (card: WikiCard | null) => void
 }) {
   const [showFilters, setShowFilters] = useState(false)
+  const isMobile = useIsMobile()
   const allCards = data?.cards.cards ?? []
   const collectionCardIds = new Set(data?.cards.flashCardPools.flatMap((pool) => pool.cards) ?? [])
   const categories: Array<{ key: CardCategory; label: string; count: number }> = [
@@ -352,87 +363,102 @@ function CardWiki({
   const clearFilters = () => onFiltersChange({ ...INITIAL_CARD_FILTERS, category: filters.category })
 
   return (
-    <div className="ro3-shell wiki-card-workspace" role="tabpanel">
-      <div className="card-native-layout">
-        <section className="card-native-center" aria-label={content.wiki.cards.title}>
-          <div className="card-catalog-toolbar">
-            <div className="card-category-tabs" role="tablist" aria-label={content.wiki.cards.filterLabel}>
-              {categories.map((category) => (
-                <button type="button" role="tab" key={category.key} className={filters.category === category.key ? 'is-active' : undefined} aria-selected={filters.category === category.key} onClick={() => selectCategory(category.key)}>
-                  {category.key === 'collection' ? <Sparkles aria-hidden="true" /> : <BookOpen aria-hidden="true" />}
-                  <strong>{category.label}</strong>
-                  <small>{category.count}</small>
-                </button>
-              ))}
-            </div>
-            <div className="card-native-toolbar">
-              <button type="button" className={`card-filter-trigger${showFilters ? ' is-active' : ''}`} aria-expanded={showFilters} onClick={() => setShowFilters((visible) => !visible)}>
-                <SlidersHorizontal aria-hidden="true" />
-                <span>{content.wiki.cards.filters.action}</span>
-                {activeFilterCount > 0 ? <strong>{activeFilterCount}</strong> : null}
-              </button>
-              <label className="wiki-search">
-                <Search aria-hidden="true" />
-                <span className="sr-only">{content.wiki.cards.searchLabel}</span>
-                <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder={content.wiki.cards.searchPlaceholder} />
-                {query ? <button type="button" aria-label={content.search.clear} onClick={() => onQueryChange('')}><X aria-hidden="true" /></button> : null}
-              </label>
-            </div>
-          </div>
-          {showFilters ? (
-            <section className="card-filter-panel" aria-label={content.wiki.cards.filters.panelTitle}>
-              <header>
-                <strong>{content.wiki.cards.filters.panelTitle}</strong>
-                <div>
-                  <button type="button" onClick={clearFilters} disabled={activeFilterCount === 0}>{content.wiki.cards.filters.clear}</button>
-                  <button type="button" aria-label={content.wiki.cards.filters.close} onClick={() => setShowFilters(false)}><X aria-hidden="true" /></button>
-                </div>
-              </header>
-              <CardFilterGroup
-                label={content.wiki.cards.filters.part}
-                options={Object.keys(CARD_PART_ASSETS).map(Number).map((part) => ({ value: part, label: cardPartLabel(part), count: categoryCards.filter((card) => card.part === part).length }))}
-                selected={filters.parts}
-                onToggle={(value) => toggleFilterValue('parts', value)}
-              />
-              <CardFilterGroup
-                label={content.wiki.cards.filters.quality}
-                options={[1, 2, 3, 4, 5, 6].map((quality) => ({ value: quality, label: content.wiki.cards.quality.replace('{quality}', String(quality)), count: countCardsByQuality(categoryCards, quality) }))}
-                selected={filters.qualities}
-                onToggle={(value) => toggleFilterValue('qualities', value)}
-              />
-              <CardFilterGroup
-                label={content.wiki.cards.filters.baseAttribute}
-                options={baseAttributes.map((attribute) => ({ value: attribute.id, label: localizedText(attribute.name) }))}
-                selected={filters.baseAttributes}
-                onToggle={(value) => toggleFilterValue('baseAttributes', value)}
-              />
-              <CardFilterGroup
-                label={content.wiki.cards.filters.primaryAttribute}
-                options={primaryAttributes.map((attribute) => ({ value: attribute.id, label: localizedText(attribute.name) }))}
-                selected={filters.primaryAttributes}
-                onToggle={(value) => toggleFilterValue('primaryAttributes', value)}
-              />
-            </section>
-          ) : null}
-          <div className="card-catalog-grid" aria-label={content.wiki.cards.title}>
-            {dataError ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : cards.length > 0 ? cards.map((card) => <CardTile key={card.id} card={card} collection={filters.category === 'collection'} active={activeCard?.id === card.id} onSelect={onSelect} />) : <div className="wiki-empty">{content.wiki.cards.empty}</div>}
-          </div>
-        </section>
-
-        <aside className="card-native-detail" aria-label={content.wiki.cards.title}>
-          {activeCard && data ? <CardWorkspaceDetail card={activeCard} data={data} /> : <div className="card-detail-empty">{dataError ? content.wiki.dataError : content.wiki.loading}</div>}
-        </aside>
-      </div>
-      {selectedCard && data ? (
-        <div className="card-mobile-dialog-backdrop" role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onSelect(null)
-        }}>
-          <aside className="card-mobile-dialog" role="dialog" aria-modal="true" aria-label={localizedText(selectedCard.name)}>
-            <button type="button" className="wiki-dialog-close" aria-label={content.wiki.cards.closeDetail} onClick={() => onSelect(null)}><X aria-hidden="true" /></button>
-            <CardWorkspaceDetail card={selectedCard} data={data} />
-          </aside>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <TabRow label={content.wiki.cards.filterLabel}>
+          {categories.map((category) => (
+            <Tab key={category.key} active={filters.category === category.key} onClick={() => selectCategory(category.key)}>
+              {category.key === 'collection' ? <Sparkles aria-hidden="true" className="size-4" /> : <BookOpen aria-hidden="true" className="size-4" />}
+              {category.label}
+              <span className="text-xs text-muted-foreground">{category.count}</span>
+            </Tab>
+          ))}
+        </TabRow>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant={showFilters || activeFilterCount > 0 ? 'secondary' : 'outline'}
+            aria-expanded={showFilters}
+            onClick={() => setShowFilters((visible) => !visible)}
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            {content.wiki.cards.filters.action}
+            {activeFilterCount > 0 ? <span className="rounded bg-primary px-1.5 text-xs text-primary-foreground">{activeFilterCount}</span> : null}
+          </Button>
+          <SearchField
+            className="min-w-0 flex-1 md:w-72"
+            value={query}
+            onChange={onQueryChange}
+            label={content.wiki.cards.searchLabel}
+            placeholder={content.wiki.cards.searchPlaceholder}
+          />
         </div>
+      </div>
+
+      {showFilters ? (
+        <Panel aria-label={content.wiki.cards.filters.panelTitle} className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold">{content.wiki.cards.filters.panelTitle}</h2>
+            <div className="flex items-center gap-1">
+              <Button type="button" variant="ghost" size="sm" onClick={clearFilters} disabled={activeFilterCount === 0}>{content.wiki.cards.filters.clear}</Button>
+              <Button type="button" variant="ghost" size="icon" aria-label={content.wiki.cards.filters.close} onClick={() => setShowFilters(false)}><X aria-hidden="true" /></Button>
+            </div>
+          </div>
+          <CardFilterGroup
+            label={content.wiki.cards.filters.part}
+            options={Object.keys(CARD_PART_ASSETS).map(Number).map((part) => ({ value: part, label: cardPartLabel(part), count: categoryCards.filter((card) => card.part === part).length }))}
+            selected={filters.parts}
+            onToggle={(value) => toggleFilterValue('parts', value)}
+          />
+          <CardFilterGroup
+            label={content.wiki.cards.filters.quality}
+            options={[1, 2, 3, 4, 5, 6].map((quality) => ({ value: quality, label: content.wiki.cards.quality.replace('{quality}', String(quality)), count: countCardsByQuality(categoryCards, quality) }))}
+            selected={filters.qualities}
+            onToggle={(value) => toggleFilterValue('qualities', value)}
+          />
+          <CardFilterGroup
+            label={content.wiki.cards.filters.baseAttribute}
+            options={baseAttributes.map((attribute) => ({ value: attribute.id, label: localizedText(attribute.name) }))}
+            selected={filters.baseAttributes}
+            onToggle={(value) => toggleFilterValue('baseAttributes', value)}
+          />
+          <CardFilterGroup
+            label={content.wiki.cards.filters.primaryAttribute}
+            options={primaryAttributes.map((attribute) => ({ value: attribute.id, label: localizedText(attribute.name) }))}
+            selected={filters.primaryAttributes}
+            onToggle={(value) => toggleFilterValue('primaryAttributes', value)}
+          />
+        </Panel>
       ) : null}
+
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">{content.wiki.cards.resultCount.replace('{count}', String(cards.length))}</p>
+          {dataError ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : cards.length > 0 ? (
+            // The faces are the game's own card art; the class carries their rules.
+            <div className="card-catalog-grid" aria-label={content.wiki.cards.title}>
+              {cards.map((card) => <CardTile key={card.id} card={card} collection={filters.category === 'collection'} active={activeCard?.id === card.id} onSelect={onSelect} />)}
+            </div>
+          ) : <Notice>{content.wiki.cards.empty}</Notice>}
+        </div>
+
+        {/* Beside the grid on a wide screen; on a phone the tap opens a dialog
+            instead, so the detail is not stranded below two hundred cards. */}
+        <div className="hidden lg:block">
+          {activeCard && data ? (
+            <DetailPanel label={localizedText(activeCard.name)}><CardWorkspaceDetail card={activeCard} data={data} /></DetailPanel>
+          ) : (
+            <DetailPanel label={content.wiki.cards.title}><Notice>{dataError ? content.wiki.dataError : content.wiki.loading}</Notice></DetailPanel>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={isMobile && Boolean(selectedCard && data)} onOpenChange={(open) => { if (!open) onSelect(null) }}>
+        <DialogContent className="max-h-[85dvh] overflow-y-auto">
+          <DialogTitle className="sr-only">{selectedCard ? localizedText(selectedCard.name) : content.wiki.cards.title}</DialogTitle>
+          {selectedCard && data ? <CardWorkspaceDetail card={selectedCard} data={data} /> : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -449,18 +475,20 @@ function CardFilterGroup({
   onToggle: (value: number) => void
 }) {
   return (
-    <div className="card-filter-group">
-      <strong>{label}</strong>
-      <div>
-        {options.map((option) => (
-          <button type="button" key={option.value} className={selected.includes(option.value) ? 'is-active' : undefined} aria-pressed={selected.includes(option.value)} disabled={option.count === 0} onClick={() => onToggle(option.value)}>
-            <span>{selected.includes(option.value) ? <Check aria-hidden="true" /> : null}</span>
-            {option.label}
-            {option.count !== undefined ? <small>{option.count}</small> : null}
-          </button>
-        ))}
-      </div>
-    </div>
+    <FilterRow label={label}>
+      {options.map((option) => (
+        <Chip
+          key={option.value}
+          active={selected.includes(option.value)}
+          disabled={option.count === 0}
+          count={option.count}
+          onClick={() => onToggle(option.value)}
+        >
+          {selected.includes(option.value) ? <Check aria-hidden="true" className="size-3.5" /> : null}
+          {option.label}
+        </Chip>
+      ))}
+    </FilterRow>
   )
 }
 
@@ -505,24 +533,43 @@ function CardWorkspaceDetail({ card, data }: { card: WikiCard; data: WikiData })
   const effectIds = [...new Set(card.tiers.flatMap((tier) => tier.specialEffects))]
   return (
     <>
-      <header className="card-detail-heading">
-        <h3>{localizedText(card.name)}</h3>
-        <span>{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {cardPartLabel(card.part)}</span>
+      <header className="flex flex-col gap-0.5 border-b border-border pb-3">
+        <h3 className="text-lg font-semibold">{localizedText(card.name)}</h3>
+        <span className="text-xs text-muted-foreground">{content.wiki.cards.quality.replace('{quality}', String(card.quality))} · {cardPartLabel(card.part)}</span>
       </header>
-      <h4 className="card-detail-section-title">{content.wiki.cards.attributesTitle}</h4>
-      <div className="card-detail-tiers">
-        {card.tiers.map((tier) => (
-          <section key={tier.configId}>
-            <header><strong>{content.wiki.cards.tier.replace('{tier}', String(tier.tier + 1))}</strong><span>{content.wiki.cards.power.replace('{power}', String(tier.power))}</span></header>
-            <small>{content.wiki.cards.requiredLevel.replace('{level}', String(tier.level))}</small>
-            <div>{tier.attributes.map(([attributeId, value]) => {
-              const attribute = attributeById.get(attributeId)
-              return <span key={attributeId}>{localizedText(attribute?.name) || content.wiki.cards.attributeId.replace('{id}', String(attributeId))} +{value}</span>
-            })}</div>
-          </section>
-        ))}
-      </div>
-      {effectIds.length > 0 ? <div className="card-detail-series"><strong>{content.wiki.cards.specialEffects}</strong>{effectIds.map((effectId) => <span key={effectId}>{stripGameMarkup(localizedText(effectById.get(effectId)?.description) || content.wiki.cards.effectId.replace('{id}', String(effectId)))}</span>)}</div> : null}
+      <DetailSection title={content.wiki.cards.attributesTitle}>
+        <div className="flex flex-col divide-y divide-border">
+          {card.tiers.map((tier) => (
+            <section key={tier.configId} className="flex flex-col gap-1.5 py-2.5 first:pt-0">
+              <div className="flex items-baseline justify-between gap-2">
+                <strong className="text-sm font-semibold">{content.wiki.cards.tier.replace('{tier}', String(tier.tier + 1))}</strong>
+                <span className="text-xs text-muted-foreground">{content.wiki.cards.power.replace('{power}', String(tier.power))}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">{content.wiki.cards.requiredLevel.replace('{level}', String(tier.level))}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {tier.attributes.map(([attributeId, value]) => {
+                  const attribute = attributeById.get(attributeId)
+                  return (
+                    <span key={attributeId} className="rounded bg-[color:var(--arkive-filter-active)] px-1.5 py-0.5 text-xs">
+                      {localizedText(attribute?.name) || content.wiki.cards.attributeId.replace('{id}', String(attributeId))}{' '}
+                      <b className="font-semibold text-[color:var(--arkive-nav-active)]">+{value}</b>
+                    </span>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </DetailSection>
+      {effectIds.length > 0 ? (
+        <DetailSection title={content.wiki.cards.specialEffects}>
+          {effectIds.map((effectId) => (
+            <p key={effectId} className="text-sm leading-relaxed text-muted-foreground">
+              {stripGameMarkup(localizedText(effectById.get(effectId)?.description) || content.wiki.cards.effectId.replace('{id}', String(effectId)))}
+            </p>
+          ))}
+        </DetailSection>
+      ) : null}
     </>
   )
 }
