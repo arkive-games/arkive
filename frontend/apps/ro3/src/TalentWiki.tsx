@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { CircleDot, GitFork, LockKeyhole, Star, Zap } from 'lucide-react'
 import { resourceUrl } from './lib/urls'
+import { Chip, DetailPanel, DetailSection, Facts, FilterRow, Notice, Panel, Tab, TabRow } from './components/wiki'
 import {
   loadTalentWikiData,
   type PatronTalentNodeRecord,
@@ -48,68 +49,54 @@ export function TalentWiki() {
   const selectedPatron = patronNodes.find((node) => node.iID === selectedPatronId) ?? patronNodes[0] ?? null
 
   return (
-    <div className="ro3-shell talent-wiki" role="tabpanel">
-      <header className="talent-toolbar">
-        <div className="talent-mode-tabs" role="tablist" aria-label={content.wiki.talents.systemLabel}>
-          <button type="button" role="tab" aria-selected={mode === 'season'} className={mode === 'season' ? 'is-active' : undefined} onClick={() => setMode('season')}>
-            <GitFork aria-hidden="true" />{content.wiki.talents.season}
-            <small>{data?.talents.counts.seasonNodes ?? 0}</small>
-          </button>
-          <button type="button" role="tab" aria-selected={mode === 'patron'} className={mode === 'patron' ? 'is-active' : undefined} onClick={() => setMode('patron')}>
-            <Star aria-hidden="true" />{content.wiki.talents.patron}
-            <small>{data?.talents.counts.patronNodes ?? 0}</small>
-          </button>
-        </div>
-      </header>
+    <div className="flex flex-col gap-4">
+      <TabRow label={content.wiki.talents.systemLabel}>
+        <Tab active={mode === 'season'} onClick={() => setMode('season')}>
+          <GitFork aria-hidden="true" className="size-4" />{content.wiki.talents.season}
+          <span className="text-xs text-muted-foreground">{data?.talents.counts.seasonNodes ?? 0}</span>
+        </Tab>
+        <Tab active={mode === 'patron'} onClick={() => setMode('patron')}>
+          <Star aria-hidden="true" className="size-4" />{content.wiki.talents.patron}
+          <span className="text-xs text-muted-foreground">{data?.talents.counts.patronNodes ?? 0}</span>
+        </Tab>
+      </TabRow>
 
-      {dataError ? <div className="talent-empty">{content.wiki.dataError}</div> : !data ? <div className="talent-empty">{content.wiki.loading}</div> : mode === 'season' ? (
-        <div className="talent-system-layout">
-          <section className="talent-tree-panel" aria-labelledby="season-tree-title">
-            <header>
-              <div>
-                <span>{content.wiki.talents.treeLabel}</span>
-                <h3 id="season-tree-title">{activeTree?.name?.['zh-CN'] ?? content.wiki.talents.season}</h3>
-              </div>
-              <div className="talent-tree-tabs" role="tablist" aria-label={content.wiki.talents.treeLabel}>
-                {data.talents.seasonTalents.trees.map((tree) => (
-                  <button type="button" role="tab" key={tree.iId} aria-selected={tree.iId === treeId} className={tree.iId === treeId ? 'is-active' : undefined} onClick={() => {
-                    setTreeId(tree.iId)
-                    setSelectedSeasonId(null)
-                  }}>
-                    {tree.name?.['zh-CN'] ?? tree.iId}
-                    {tree.iNeedLevel ? <small>{content.wiki.talents.requiredLevel.replace('{level}', String(tree.iNeedLevel))}</small> : null}
-                  </button>
-                ))}
-              </div>
-            </header>
+      {dataError ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : mode === 'season' ? (
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <Panel aria-label={activeTree?.name?.['zh-CN'] ?? content.wiki.talents.season} className="flex min-w-0 flex-col gap-3">
+            <FilterRow label={content.wiki.talents.treeLabel}>
+              {data.talents.seasonTalents.trees.map((tree) => (
+                <Chip key={tree.iId} active={tree.iId === treeId} onClick={() => {
+                  setTreeId(tree.iId)
+                  setSelectedSeasonId(null)
+                }}>
+                  {tree.name?.['zh-CN'] ?? tree.iId}
+                  {tree.iNeedLevel ? <span className="text-xs text-muted-foreground">{content.wiki.talents.requiredLevel.replace('{level}', String(tree.iNeedLevel))}</span> : null}
+                </Chip>
+              ))}
+            </FilterRow>
             <SeasonTalentCanvas
               nodes={seasonNodes}
               levels={data.talents.seasonTalents.levels}
               activeId={selectedSeason?.iId ?? null}
               onSelect={setSelectedSeasonId}
             />
-          </section>
+          </Panel>
           <SeasonTalentDetail node={selectedSeason} data={data.talents} />
         </div>
       ) : (
-        <div className="talent-system-layout">
-          <section className="talent-tree-panel patron-tree-panel" aria-labelledby="patron-tree-title">
-            <header>
-              <div>
-                <span>{content.wiki.talents.groupLabel}</span>
-                <h3 id="patron-tree-title">{activeGroup?.name?.['zh-CN'] ?? content.wiki.talents.patron}</h3>
-              </div>
-              <div className="talent-tree-tabs is-groups" role="tablist" aria-label={content.wiki.talents.groupLabel}>
-                {data.talents.patronTalents.groups.map((group) => (
-                  <button type="button" role="tab" key={group.iID} aria-selected={group.iID === groupId} className={group.iID === groupId ? 'is-active' : undefined} onClick={() => {
-                    setGroupId(group.iID)
-                    setSelectedPatronId(null)
-                  }}>{group.name?.['zh-CN'] ?? group.iID}</button>
-                ))}
-              </div>
-            </header>
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <Panel aria-label={activeGroup?.name?.['zh-CN'] ?? content.wiki.talents.patron} className="flex min-w-0 flex-col gap-3">
+            <FilterRow label={content.wiki.talents.groupLabel}>
+              {data.talents.patronTalents.groups.map((group) => (
+                <Chip key={group.iID} active={group.iID === groupId} onClick={() => {
+                  setGroupId(group.iID)
+                  setSelectedPatronId(null)
+                }}>{group.name?.['zh-CN'] ?? group.iID}</Chip>
+              ))}
+            </FilterRow>
             <PatronTalentGrid nodes={patronNodes} activeId={selectedPatron?.iID ?? null} onSelect={setSelectedPatronId} />
-          </section>
+          </Panel>
           <PatronTalentDetail node={selectedPatron} data={data.talents} />
         </div>
       )}
@@ -126,7 +113,7 @@ function SeasonTalentCanvas({ nodes, levels, activeId, onSelect }: {
   const levelById = new Map(levels.map((level) => [level.iId, level]))
   const nodeById = new Map(nodes.map((node) => [node.iId, node]))
   return (
-    <div className="season-talent-scroll">
+    <div className="season-talent-scroll rounded-md">
       <div className="season-talent-canvas">
         <svg className="season-talent-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {nodes.flatMap((node) => (node.kAfterids ?? []).flatMap((nextId) => {
@@ -163,7 +150,7 @@ function SeasonTalentCanvas({ nodes, levels, activeId, onSelect }: {
 function PatronTalentGrid({ nodes, activeId, onSelect }: { nodes: PatronTalentNodeRecord[]; activeId: number | null; onSelect: (id: number) => void }) {
   const nodeById = new Map(nodes.map((node) => [node.iID, node]))
   return (
-    <div className="patron-talent-grid">
+    <div className="patron-talent-grid rounded-md">
       <svg className="patron-talent-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {nodes.flatMap((node) => (node.iPostTalentID ?? []).flatMap((nextId) => {
           const next = nodeById.get(nextId)
@@ -194,19 +181,24 @@ function SeasonTalentDetail({ node, data }: { node: TalentNodeRecord | null; dat
   const first = levels[0]
   const last = levels.at(-1)
   return (
-    <aside className="talent-detail">
-      <header>
-        <span>{first?.icon ? <img src={resourceUrl(first.icon)} alt="" /> : <Zap aria-hidden="true" />}</span>
-        <div><small>{content.wiki.talents.node}</small><h3>{first?.name?.['zh-CN'] ?? content.wiki.talents.gate}</h3><em>{content.wiki.talents.nodeId.replace('{id}', String(node.iId))}</em></div>
-      </header>
+    <DetailPanel label={content.wiki.talents.node}>
+      <TalentHeader
+        icon={first?.icon ? <img src={resourceUrl(first.icon)} alt="" /> : <Zap aria-hidden="true" />}
+        name={first?.name?.['zh-CN'] ?? content.wiki.talents.gate}
+        id={node.iId}
+      />
       <TalentFacts maxLevel={node.iMaxLevel ?? levels.length} type={node.iType} start={Boolean(node.iIsStartPoint)} />
-      <TalentAttributes level={last} data={data} />
+      <AttributeList values={last?.kAttrs ?? []} data={data} />
       <TalentCosts level={first} />
-      <section className="talent-level-strip">
-        <h4>{content.wiki.talents.levels}</h4>
-        <div>{levels.slice(0, 10).map((level) => <span key={level.iId}>{level.iLevel ?? 1}</span>)}{levels.length > 10 ? <small>+{levels.length - 10}</small> : null}</div>
-      </section>
-    </aside>
+      <DetailSection title={content.wiki.talents.levels}>
+        <div className="flex flex-wrap gap-1.5">
+          {levels.slice(0, 10).map((level) => (
+            <span key={level.iId} className="grid min-w-8 place-items-center rounded-md border border-border px-2 py-1 text-xs">{level.iLevel ?? 1}</span>
+          ))}
+          {levels.length > 10 ? <span className="px-1 py-1 text-xs text-muted-foreground">+{levels.length - 10}</span> : null}
+        </div>
+      </DetailSection>
+    </DetailPanel>
   )
 }
 
@@ -215,47 +207,87 @@ function PatronTalentDetail({ node, data }: { node: PatronTalentNodeRecord | nul
   const attrById = new Map(data.patronTalents.attrLevels.map((row) => [row.iID, row]))
   const lastAttributes = attrById.get(node.kTalentAttrIds?.at(-1) ?? -1)?.kAttrs ?? []
   return (
-    <aside className="talent-detail">
-      <header>
-        <span>{node.icon ? <img src={resourceUrl(node.icon)} alt="" /> : <Star aria-hidden="true" />}</span>
-        <div><small>{content.wiki.talents.node}</small><h3>{node.name?.['zh-CN'] ?? node.iID}</h3><em>{content.wiki.talents.nodeId.replace('{id}', String(node.iID))}</em></div>
-      </header>
+    <DetailPanel label={content.wiki.talents.node}>
+      <TalentHeader
+        icon={node.icon ? <img src={resourceUrl(node.icon)} alt="" /> : <Star aria-hidden="true" />}
+        name={node.name?.['zh-CN'] ?? String(node.iID)}
+        id={node.iID}
+      />
       <TalentFacts maxLevel={node.iMaxLevel} type={node.iType} start={Boolean(node.iIsStartPoint)} />
       <AttributeList values={lastAttributes} data={data} />
-    </aside>
+    </DetailPanel>
+  )
+}
+
+function TalentHeader({ icon, name, id }: { icon: ReactNode; name: string; id: number }) {
+  return (
+    <header className="flex items-center gap-3 border-b border-border pb-4">
+      {/* The medallion is the game's own artwork and keeps its palette. */}
+      <span className="talent-medallion shrink-0">{icon}</span>
+      <div className="flex min-w-0 flex-col">
+        <span className="text-xs text-[color:var(--arkive-nav-active)]">{content.wiki.talents.node}</span>
+        <h3 className="text-lg font-semibold">{name}</h3>
+        <span className="text-xs text-muted-foreground">{content.wiki.talents.nodeId.replace('{id}', String(id))}</span>
+      </div>
+    </header>
   )
 }
 
 function TalentFacts({ maxLevel, type, start }: { maxLevel: number; type: number; start: boolean }) {
-  return <dl className="talent-facts"><div><dt>{content.wiki.talents.levelCapLabel}</dt><dd>{maxLevel}</dd></div><div><dt>{content.wiki.talents.nodeType}</dt><dd>{type}</dd></div><div><dt>{content.wiki.talents.startNode}</dt><dd>{start ? content.wiki.talents.yes : content.wiki.talents.no}</dd></div></dl>
+  return (
+    <Facts
+      items={[
+        { label: content.wiki.talents.levelCapLabel, value: maxLevel },
+        { label: content.wiki.talents.nodeType, value: type },
+        { label: content.wiki.talents.startNode, value: start ? content.wiki.talents.yes : content.wiki.talents.no },
+      ]}
+    />
+  )
 }
 
-function TalentAttributes({ level, data }: { level?: TalentLevelRecord; data: TalentCatalogDocument }) {
-  return <AttributeList values={level?.kAttrs ?? []} data={data} />
+function StatList({ rows }: { rows: Array<{ key: number | string; label: ReactNode; value: ReactNode }> }) {
+  return (
+    <div className="flex flex-col gap-1">
+      {rows.map((row) => (
+        <div key={row.key} className="flex items-center justify-between gap-3 rounded-md bg-muted px-3 py-1.5 text-sm">
+          <span className="text-muted-foreground">{row.label}</span>
+          <strong className="font-semibold text-[color:var(--arkive-nav-active)]">{row.value}</strong>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function AttributeList({ values, data }: { values: number[][]; data: TalentCatalogDocument }) {
   const attributeById = new Map(data.attributes.map((attribute) => [attribute.iID, attribute]))
   return (
-    <section className="talent-detail-section">
-      <h4>{content.wiki.talents.maxEffect}</h4>
-      {values.length > 0 ? <div>{values.map(([id, value]) => <span key={id}><small>{attributeById.get(id)?.name?.['zh-CN'] ?? attributeById.get(id)?.kVariable ?? id}</small><strong>+{value}</strong></span>)}</div> : <p>{content.wiki.talents.noEffect}</p>}
-    </section>
+    <DetailSection title={content.wiki.talents.maxEffect}>
+      {values.length > 0 ? (
+        <StatList rows={values.map(([id, value]) => ({
+          key: id,
+          label: attributeById.get(id)?.name?.['zh-CN'] ?? attributeById.get(id)?.kVariable ?? id,
+          value: `+${value}`,
+        }))} />
+      ) : <p className="text-sm text-muted-foreground">{content.wiki.talents.noEffect}</p>}
+    </DetailSection>
   )
 }
 
 function TalentCosts({ level }: { level?: TalentLevelRecord }) {
   if (!level?.kCosts?.length && !level?.iSkillPoint) return null
+  const rows = [
+    ...(level.iSkillPoint ? [{ key: 'point', label: content.wiki.talents.skillPoint, value: level.iSkillPoint }] : []),
+    ...(level.kCosts ?? []).map(([id, value]) => ({ key: id, label: content.wiki.talents.item.replace('{id}', String(id)), value })),
+  ]
   return (
-    <section className="talent-detail-section">
-      <h4>{content.wiki.talents.cost}</h4>
-      <div>{level.iSkillPoint ? <span><small>{content.wiki.talents.skillPoint}</small><strong>{level.iSkillPoint}</strong></span> : null}{level.kCosts?.map(([id, value]) => <span key={id}><small>{content.wiki.talents.item.replace('{id}', String(id))}</small><strong>{value}</strong></span>)}</div>
-    </section>
+    <DetailSection title={content.wiki.talents.cost}>
+      <StatList rows={rows} />
+    </DetailSection>
   )
 }
 
 function TalentEmptyDetail() {
-  return <aside className="talent-detail"><div className="talent-empty">{content.wiki.talents.selectNode}</div></aside>
+  return <DetailPanel label={content.wiki.talents.node}><Notice>{content.wiki.talents.selectNode}</Notice></DetailPanel>
 }
 
 function talentPosition(position: number[]): { x: number; y: number } {
