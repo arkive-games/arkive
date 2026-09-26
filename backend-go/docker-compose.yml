@@ -49,7 +49,9 @@ services:
     restart: unless-stopped
     # The image runs as uid 65532, which cannot write to a fresh named volume
     # (owned by root), nor to one left behind by the old root-run image. The
-    # healthcheck's `mc` also needs a writable home for its config.
+    # healthcheck's `mc` also needs a writable home for its config. Once written
+    # as root the volume stays root-owned; going back to the default user means
+    # `docker volume rm arkive-backend_minio-data`, which discards its objects.
     user: root
     command: server /data --console-address ":9001"
     environment:
@@ -126,6 +128,10 @@ services:
       # handed to a browser has to work from the host, which is why the write
       # endpoint and the public base are configured separately.
       S3_ENDPOINT: http://minio:9000
+      # The same injected-proxy trap as minio-init: the AWS SDK's default
+      # transport honours HTTP_PROXY, so every upload to minio would 502.
+      NO_PROXY: minio
+      no_proxy: minio
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_BUCKET: ${S3_BUCKET:-arkive}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
