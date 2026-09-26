@@ -136,7 +136,7 @@ export function Facts({ items }: { items: Array<{ label: string; value: ReactNod
   return (
     // The hairlines are the `bg-border` showing through a 1px gap, so a row
     // must be full or its empty cell reads as a grey block.
-    <dl className={cn('grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border', items.length % 3 === 0 && 'sm:grid-cols-3')}>
+    <dl className={cn('grid gap-px overflow-hidden rounded-md border border-border bg-border', items.length % 3 === 0 ? 'grid-cols-3' : 'grid-cols-2')}>
       {items.map((item) => (
         <div key={item.label} className="bg-card px-3 py-2">
           <dt className="text-xs text-muted-foreground">{item.label}</dt>
