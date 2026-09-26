@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-09-26",
+      "commit": "9b81cf8ba95383a1c3a4932952d1c6a6d52ba2d3",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Signing in with a wrong password now says so, instead of the dialog appearing to do nothing.",
+            "zh-CN": "密码输错时，登录窗口现在会提示邮箱或密码不正确，不再毫无反应。",
+            "zh-TW": "密碼輸錯時，登入視窗現在會提示電子郵件或密碼不正確，不再毫無反應。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-09-26",
       "commit": "7740be213969b3ced4305be0f2573d7b9624d12b",
       "targets": [
         "aion2",
