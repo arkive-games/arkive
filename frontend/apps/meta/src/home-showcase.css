@@ -1,0 +1,38 @@
+/* Homepage-only geometry; shared navigation and the tool library stay unchanged. */
+.home-directory .directory-showcase { display: grid; grid-template-columns: calc((100% - 5rem) / 5 * 2 + 1.25rem) minmax(0,1fr); gap: 1.25rem; align-items: start; }
+.home-directory .directory-showcase.without-carousel { grid-template-columns: 1fr; }
+.home-directory .directory-showcase .directory-games { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1.25rem; }
+.home-directory .directory-game-cover { aspect-ratio: 16 / 9; }
+.home-directory .directory-game-name { font-size: .875rem; font-weight: 600; margin: .5rem 0 .25rem; }
+.directory-game-description { margin: 0; color: var(--muted-foreground); font-size: .75rem; line-height: 1.6; }
+.home-directory .directory-game-updated { border-radius: var(--arkive-radius-compact); background: var(--popover); color: var(--foreground); border: 1px solid var(--border); padding: .15rem .4rem; font-weight: 500; }
+.home-directory .directory-game-updated::before { background: var(--primary); border-radius: .1rem; width: .15rem; height: .5rem; flex-basis: .15rem; opacity: 1; }
+.home-carousel { min-width: 0; }
+.home-carousel-art { position: relative; aspect-ratio: 516 / 374; overflow: hidden; border-radius: var(--arkive-radius-standard); background: var(--muted); }
+.home-carousel-art > a { display: block; height: 100%; }
+.home-carousel-art img { width: 100%; height: 100%; object-fit: cover; }
+.home-carousel h3 { font-size: .875rem; line-height: 1.5; font-weight: 600; margin: .5rem 0 .25rem; }
+.home-carousel p { margin: 0; font-size: .75rem; line-height: 1.6; color: var(--muted-foreground); }
+.home-carousel h3 a:hover { color: var(--primary); }
+.home-carousel-controls { position: absolute; inset: auto .75rem .75rem; display: flex; align-items: center; justify-content: space-between; gap: .5rem; pointer-events: none; }
+.home-carousel-dots, .home-carousel-arrows { display: flex; align-items: center; pointer-events: auto; }
+.home-carousel-dots button { display: grid; place-items: center; width: 1.5rem; height: 2rem; padding: 0; background: transparent; border: 0; cursor: pointer; }
+.home-carousel-dots span { width: .4rem; height: .4rem; border-radius: 50%; background: #fff; opacity: .55; box-shadow: 0 1px 3px #0008; }
+.home-carousel-dots button[aria-current] span { width: .6rem; height: .6rem; opacity: 1; }
+.home-carousel-arrows { gap: .4rem; }
+.home-carousel-arrows button { width: 2rem; height: 2rem; padding: 0; display: grid; place-items: center; border: 1px solid rgb(255 255 255 / 16%); border-radius: var(--arkive-radius-compact); color: #fff; background: rgb(25 35 45 / 55%); cursor: pointer; }
+.home-carousel-arrows button:hover { background: rgb(25 35 45 / 80%); }
+.home-carousel-arrows svg { width: 1rem; height: 1rem; stroke-width: 1.7; }
+@media(max-width:62rem) and (min-width:48rem) {
+ .home-directory .directory-showcase { grid-template-columns: 1fr 1fr; }
+ .home-directory .directory-showcase .directory-games { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:47.99rem) {
+ .home-directory .directory-showcase { grid-template-columns: 1fr; }
+ .home-directory .directory-showcase .directory-games { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+ .home-carousel-art { aspect-ratio: 1.5; }
+}
+@media(pointer:coarse) {
+ .home-carousel-arrows button { width: 2.75rem; height: 2.75rem; }
+ .home-carousel-dots button { width: 2rem; height: 2.75rem; }
+}

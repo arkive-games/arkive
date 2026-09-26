@@ -14,7 +14,6 @@ import { LANGUAGES } from './i18n'
 import {
   FEATURES,
   featureHref,
-  featuresOf,
   localize,
   searchCatalog,
   type FeatureKind,
@@ -25,13 +24,8 @@ import {
 import { recentUpdateDays, siteHref, type SiteCard } from './sites'
 import { ToolCard } from './ToolCard'
 
-/** Feature links under each game card before the rest fold into "+N". */
-const CARD_FEATURE_LIMIT = 4
-/**
- * The same on a phone, where two cards share a row: one name plus "+N" is all
- * that fits a half-width card on one line without cutting the name short.
- */
-const CARD_FEATURE_LIMIT_PHONE = 1
+import { HomeCarousel } from './HomeCarousel'
+import allGamesArt from './assets/all-games.svg'
 const SEARCH_RESULT_LIMIT = 8
 
 const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
@@ -48,7 +42,7 @@ const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
  * site has rather than recommending one game from it. Both shelves are plain
  * wrapping grids -- a new game or tool adds a card, not a redesign.
  */
-export function HomeDirectory({ sites, continueSiteId, updatedDates, recentlyUsed, onOpenSite, onOpenFeature }: {
+export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, onOpenFeature }: {
   /** In display order; the caller decides whether a recent game leads. */
   sites: readonly SiteCard[]
   continueSiteId?: string
@@ -98,28 +92,19 @@ export function HomeDirectory({ sites, continueSiteId, updatedDates, recentlyUse
         </nav>
       )}
 
-      <section className="directory-section" aria-labelledby="home-games-heading">
-        <div className="directory-heading">
-          <h2 id="home-games-heading">
-            {t('home.games')}
-            <span>{t('home.gameCount', { count: sites.length })}</span>
-          </h2>
-          <a href="#games" className="text-action">
-            {t('action.browseAll')}
-            <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
-          </a>
-        </div>
+      <section className={`directory-showcase${tools.length ? '' : ' without-carousel'}`} aria-label={t('home.games')}>
+        {tools.length > 0 && <HomeCarousel tools={tools} sites={sites} onOpen={onOpenFeature} />}
         <div className="directory-games">
-          {sites.map((site) => (
-            <DirectoryGameCard
-              key={site.id}
-              site={site}
-              continuing={site.id === continueSiteId}
+          {sites.slice(0, 5).map((site) => (
+            <DirectoryGameCard key={site.id} site={site}
               updatedDaysAgo={recentUpdateDays(updatedDates[site.id], now)}
-              onOpen={() => onOpenSite(site)}
-              onOpenFeature={(feature) => onOpenFeature(feature, site)}
-            />
+              onOpen={() => onOpenSite(site)} />
           ))}
+          <article className="directory-game">
+            <a href="#games" className="directory-game-cover" aria-label={t('action.browseAll')}><img src={allGamesArt} alt="" /></a>
+            <h3 className="directory-game-name"><a href="#games">{t('action.browseAll')}</a></h3>
+            <p className="directory-game-description">{t('home.gameCount', { count: sites.length })}</p>
+          </article>
         </div>
       </section>
 
@@ -154,73 +139,33 @@ export function HomeDirectory({ sites, continueSiteId, updatedDates, recentlyUse
   )
 }
 
-function DirectoryGameCard({ site, continuing, updatedDaysAgo, onOpen, onOpenFeature }: {
+function DirectoryGameCard({ site, updatedDaysAgo, onOpen }: {
   site: SiteCard
-  continuing: boolean
   /** Set only for a recent update; see `recentUpdateDays`. */
   updatedDaysAgo?: number
   onOpen: () => void
-  onOpenFeature: (feature: GameFeature) => void
 }) {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const name = t(site.nameKey)
   const href = siteHref(site)
-  // Tools have a shelf of their own just below, so the card lists the rest:
-  // the map first, then the encyclopedia pages, in catalog order.
-  const pages = featuresOf(site.id)
-    .filter((feature) => feature.kind !== 'tool')
-    .sort((left, right) => Number(right.kind === 'map') - Number(left.kind === 'map'))
-  const shown = pages.slice(0, CARD_FEATURE_LIMIT)
-  // A phone shows fewer links per card (CSS hides the rest), so it needs its
-  // own count: two "+N" items are rendered and CSS shows the one that fits.
-  const hidden = pages.length - shown.length
-  const hiddenOnPhone = pages.length - Math.min(pages.length, CARD_FEATURE_LIMIT_PHONE)
 
   return (
     <article className="directory-game">
       <a href={href} className="directory-game-cover group" onClick={onOpen}>
-        <img src={site.bg} alt="" style={{ objectPosition: site.bgPosition }} />
-        <span className="directory-game-shade" aria-hidden="true" />
-        {(continuing || updatedDaysAgo !== undefined) && (
-          // One wrapping row, so a narrow card stacks the two tags instead of
-          // overlapping them.
+        <img src={site.bg} alt={name} style={{ objectPosition: site.bgPosition }} />
+        {updatedDaysAgo !== undefined && (
           <span className="directory-game-tags">
-            {continuing && <small>{t('hero.continue')}</small>}
-            {updatedDaysAgo !== undefined && (
-              <span className="directory-game-updated">
-                {t('home.updated', {
-                  when: new Intl.RelativeTimeFormat(language, { numeric: 'auto' }).format(-updatedDaysAgo, 'day'),
-                })}
-              </span>
-            )}
+            <span className="directory-game-updated">
+              {t('home.updated', {
+                when: new Intl.RelativeTimeFormat(language, { numeric: 'auto' }).format(-updatedDaysAgo, 'day'),
+              })}
+            </span>
           </span>
         )}
-        <strong>{name}</strong>
       </a>
-      {shown.length > 0 && (
-        <ul className="directory-game-features" aria-label={t('home.featuresOf', { game: name })}>
-          {shown.map((feature, index) => (
-            <li key={feature.id} className={index >= CARD_FEATURE_LIMIT_PHONE ? 'is-desktop-only' : undefined}>
-              <a href={featureHref(feature, site)} onClick={() => onOpenFeature(feature)}>{localize(feature.name, language)}</a>
-            </li>
-          ))}
-          {hidden > 0 && (
-            <li className="directory-more is-desktop-only">
-              <a href={href} onClick={onOpen} aria-label={t('home.moreFeaturesLabel', { game: name, count: hidden })}>
-                +{hidden}
-              </a>
-            </li>
-          )}
-          {hiddenOnPhone > 0 && (
-            <li className="directory-more is-phone-only">
-              <a href={href} onClick={onOpen} aria-label={t('home.moreFeaturesLabel', { game: name, count: hiddenOnPhone })}>
-                +{hiddenOnPhone}
-              </a>
-            </li>
-          )}
-        </ul>
-      )}
+      <h3 className="directory-game-name"><a href={href} onClick={onOpen}>{name}</a></h3>
+      <p className="directory-game-description">{t(site.descKey)}</p>
     </article>
   )
 }

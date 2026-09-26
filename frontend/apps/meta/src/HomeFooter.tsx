@@ -44,15 +44,6 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
   const icp = import.meta.env.VITE_ICP_BEIAN ?? t('footer.icp')
   const columns = [
     {
-      key: 'browse',
-      title: t('footer.browse'),
-      links: [
-        { label: t('footer.allGames'), href: '#games' },
-        { label: t('footer.community'), href: '#forum' },
-        { label: t('footer.toolLibrary'), href: '#tools' },
-      ],
-    },
-    {
       key: 'about',
       title: t('footer.about'),
       links: [
@@ -64,7 +55,7 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
   ]
 
   return (
-    <footer className="home-footer" data-testid="home-footer">
+    <footer className="home-footer home-footer-compact" data-testid="home-footer">
       <div className="home-shell footer-grid">
         <div className="footer-brand">
           <div className="footer-brand-heading">
