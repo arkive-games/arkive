@@ -140,3 +140,51 @@ func TestRequestWithoutAnOriginIsUntouched(t *testing.T) {
 		t.Errorf("status = %d, want the handler to have run", rec.Code)
 	}
 }
+
+func TestSubdomainPatternCoversEverySiteWithCredentials(t *testing.T) {
+	cfg := config.CORS{
+		AllowedOrigins:   []string{"https://tc-imba.com", "https://*.tc-imba.com"},
+		AllowCredentials: true,
+		PublicFallback:   true,
+	}
+
+	// gmzz and ro3 were missing from the exact list in production, so every
+	// credentialed call from them fell to the public path and was refused by the
+	// browser. A pattern covers a site the day it launches.
+	for _, origin := range []string{
+		"https://tc-imba.com",
+		"https://www.tc-imba.com",
+		"https://gmzz.tc-imba.com",
+		"https://RO3.tc-imba.com",
+		"https://a.b.tc-imba.com",
+	} {
+		rec := exercise(t, cfg, http.MethodGet, origin)
+		if got := rec.Header().Get("Access-Control-Allow-Origin"); got != origin {
+			t.Errorf("%s: Allow-Origin = %q, want the echoed origin", origin, got)
+		}
+		if got := rec.Header().Get("Access-Control-Allow-Credentials"); got != "true" {
+			t.Errorf("%s: Allow-Credentials = %q, want true", origin, got)
+		}
+	}
+}
+
+func TestSubdomainPatternRejectsLookalikes(t *testing.T) {
+	cfg := config.CORS{AllowedOrigins: []string{"https://*.tc-imba.com"}, AllowCredentials: true}
+
+	for _, origin := range []string{
+		"https://tc-imba.com",                   // the apex is not a subdomain
+		"http://gmzz.tc-imba.com",               // wrong scheme
+		"https://eviltc-imba.com",               // no dot boundary
+		"https://gmzz.tc-imba.com.evil.example", // the suffix inside another domain
+		"https://gmzz.tc-imba.com:8443",         // another port is another origin
+		"https://user@gmzz.tc-imba.com",         // not an origin at all
+		"https://-x.tc-imba.com",                // not a hostname label
+		"https://x_y.tc-imba.com",
+		"null",
+	} {
+		rec := exercise(t, cfg, http.MethodGet, origin)
+		if got := rec.Header().Get("Access-Control-Allow-Origin"); got != "" {
+			t.Errorf("%s: Allow-Origin = %q, want no CORS headers", origin, got)
+		}
+	}
+}
