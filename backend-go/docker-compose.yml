@@ -39,13 +39,18 @@ services:
       timeout: 5s
       retries: 20
 
-  # quay.io is where MinIO publishes. Docker Hub answers the unqualified
-  # `minio/minio` with "repository does not exist or may require 'docker
-  # login'", which reads like a credentials problem and stops `docker compose
-  # up` before anything starts, so the registry is written down here.
+  # MinIO no longer publishes images anywhere: Docker Hub answers `minio/minio`
+  # with "repository does not exist or may require 'docker login'", and the
+  # quay.io repositories are closed too. Chainguard's rebuild is what CI already
+  # runs the storage tests against, so the local stack uses the same one. Its
+  # free tier serves only `latest`, which is why nothing here is pinned.
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    image: cgr.dev/chainguard/minio:latest
     restart: unless-stopped
+    # The image runs as uid 65532, which cannot write to a fresh named volume
+    # (owned by root), nor to one left behind by the old root-run image. The
+    # healthcheck's `mc` also needs a writable home for its config.
+    user: root
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
@@ -66,9 +71,10 @@ services:
 
   # MinIO creates neither the bucket nor a public read policy on its own, and
   # avatars are served straight from the bucket to browsers, so both are set up
-  # here. This container exits once done.
+  # here. This container exits once done. The `-dev` variant is Chainguard's
+  # one meant for shell use, which the chained commands below need.
   minio-init:
-    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
+    image: cgr.dev/chainguard/minio-client:latest-dev
     depends_on:
       minio:
         condition: service_healthy
@@ -76,8 +82,13 @@ services:
       S3_BUCKET: ${S3_BUCKET:-arkive}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      # A proxy set in the Docker client's config is injected into every
+      # container, and `mc` then sends even this in-network call through it,
+      # failing with "502 Bad Gateway". The only host this talks to is minio.
+      NO_PROXY: minio
+      no_proxy: minio
     entrypoint: >
-      /bin/sh -c "
+      /usr/bin/sh -c "
       mc alias set local http://minio:9000 $$S3_ACCESS_KEY_ID $$S3_SECRET_ACCESS_KEY &&
       mc mb --ignore-existing local/$$S3_BUCKET &&
       mc anonymous set download local/$$S3_BUCKET &&

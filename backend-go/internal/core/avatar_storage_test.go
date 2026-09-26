@@ -20,11 +20,14 @@ import (
 // The same test runs against either backend, because that is the point — MinIO
 // in development and Tencent COS in production must be one code path.
 //
-//	# MinIO. The images come from quay.io; Docker Hub denies the unqualified
-//	# name, so `minio/minio` fails the pull rather than the test.
-//	docker run --rm -d -p 9000:9000 -e MINIO_ROOT_USER=minioadmin \
-//	  -e MINIO_ROOT_PASSWORD=minioadmin quay.io/minio/minio server /data
-//	docker run --rm --network host --entrypoint sh quay.io/minio/mc -c \
+//	# MinIO, as CI runs it. MinIO publishes no images any more (Docker Hub
+//	# denies `minio/minio` and quay.io is closed), so these are Chainguard's
+//	# rebuilds. The server runs as a non-root user, hence the writable tmpfs.
+//	docker run --rm -d -p 9000:9000 --tmpfs /data:rw,mode=1777 \
+//	  -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+//	  cgr.dev/chainguard/minio:latest server /data
+//	docker run --rm --network host --entrypoint sh \
+//	  cgr.dev/chainguard/minio-client:latest-dev -c \
 //	  "mc alias set l http://127.0.0.1:9000 minioadmin minioadmin && \
 //	   mc mb --ignore-existing l/arkive-test && mc anonymous set download l/arkive-test"
 //
