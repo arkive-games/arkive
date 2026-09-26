@@ -1,6 +1,27 @@
 {
   "entries": [
     {
+      "date": "2026-09-27",
+      "commit": "c1dd30ef1c3117ea4cc7d1cc00f25b44a90f3cbc",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The homepage pairs game covers with an automatically rotating tool showcase, with captions below the images and playback controls. A dedicated all-games illustration and compact footer keep navigation clear, while search, recent pages and update badges remain available.",
+            "zh-CN": "首页采用左侧工具轮播与右侧游戏封面的布局，名称与简介置于图片下方，轮播支持自动切换及播放控制；新增全部游戏插画入口与简洁页脚，保留搜索、最近使用和更新角标。",
+            "zh-TW": "首頁採用左側工具輪播與右側遊戲封面的配置，名稱與簡介置於圖片下方，輪播支援自動切換及播放控制；新增全部遊戲插畫入口與簡潔頁尾，保留搜尋、最近使用和更新角標。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-09-26",
       "commit": "9b81cf8ba95383a1c3a4932952d1c6a6d52ba2d3",
       "targets": [
