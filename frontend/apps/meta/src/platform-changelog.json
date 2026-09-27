@@ -14,9 +14,9 @@
         {
           "kind": "improvement",
           "text": {
-            "en-US": "The homepage pairs game covers with an automatically rotating tool showcase, with captions below the images and playback controls. A dedicated all-games illustration and compact footer keep navigation clear, while search, recent pages and update badges remain available.",
-            "zh-CN": "首页采用左侧工具轮播与右侧游戏封面的布局，名称与简介置于图片下方，轮播支持自动切换及播放控制；新增全部游戏插画入口与简洁页脚，保留搜索、最近使用和更新角标。",
-            "zh-TW": "首頁採用左側工具輪播與右側遊戲封面的配置，名稱與簡介置於圖片下方，輪播支援自動切換及播放控制；新增全部遊戲插畫入口與簡潔頁尾，保留搜尋、最近使用和更新角標。"
+            "en-US": "The homepage pairs game covers with an automatically rotating tool showcase, with captions below the images and playback controls. A dedicated all-games illustration leads to the full game list, while search, recent pages and update badges remain available.",
+            "zh-CN": "首页采用左侧工具轮播与右侧游戏封面的布局，名称与简介置于图片下方，轮播支持自动切换及播放控制；新增全部游戏插画入口，保留搜索、最近使用和更新角标。",
+            "zh-TW": "首頁採用左側工具輪播與右側遊戲封面的配置，名稱與簡介置於圖片下方，輪播支援自動切換及播放控制；新增全部遊戲插畫入口，保留搜尋、最近使用和更新角標。"
           }
         }
       ]
