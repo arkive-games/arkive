@@ -444,6 +444,7 @@ const resources = {
         featuresOf: '{{game}} 的功能',
         moreFeaturesLabel: '进入{{game}}查看其余 {{count}} 项功能',
         kind: { game: '游戏', tool: '工具', map: '地图', wiki: '资料' },
+        carousel: { label: '精选工具', previous: '上一项推荐', next: '下一项推荐', pause: '暂停轮播', play: '继续轮播', slide: '选择推荐：{{name}}' },
       },
       search: { placeholder: '搜索游戏、任务、角色或地点', action: '开始查找' },
       catalog: {
@@ -609,6 +610,7 @@ const resources = {
         featuresOf: '{{game}} 的功能',
         moreFeaturesLabel: '進入{{game}}查看其餘 {{count}} 項功能',
         kind: { game: '遊戲', tool: '工具', map: '地圖', wiki: '資料' },
+        carousel: { label: '精選工具', previous: '上一項推薦', next: '下一項推薦', pause: '暫停輪播', play: '繼續輪播', slide: '選擇推薦：{{name}}' },
       },
       search: { placeholder: '搜尋遊戲、任務、角色或地點', action: '開始查找' },
       catalog: {
@@ -743,6 +745,7 @@ const resources = {
         featuresOf: '{{game}} features',
         moreFeaturesLabel: '{{count}} more features in {{game}}',
         kind: { game: 'Game', tool: 'Tool', map: 'Map', wiki: 'Reference' },
+        carousel: { label: 'Featured tools', previous: 'Previous recommendation', next: 'Next recommendation', pause: 'Pause slideshow', play: 'Resume slideshow', slide: 'Select recommendation: {{name}}' },
       },
       search: { placeholder: 'Search games, quests, characters, or places', action: 'Search' },
       catalog: {
@@ -867,6 +870,7 @@ const resources = {
         featuresOf: '{{game}}の機能',
         moreFeaturesLabel: '{{game}}のその他 {{count}} 件の機能',
         kind: { game: 'ゲーム', tool: 'ツール', map: 'マップ', wiki: '資料' },
+        carousel: { label: 'おすすめツール', previous: '前のおすすめ', next: '次のおすすめ', pause: 'スライドショーを一時停止', play: 'スライドショーを再開', slide: 'おすすめを選択：{{name}}' },
       },
       search: { placeholder: 'ゲーム、クエスト、キャラクター、場所を検索', action: '検索する' },
       catalog: {
@@ -985,6 +989,7 @@ const resources = {
         featuresOf: '{{game}} 기능',
         moreFeaturesLabel: '{{game}}의 기능 {{count}}개 더 보기',
         kind: { game: '게임', tool: '도구', map: '지도', wiki: '자료' },
+        carousel: { label: '추천 도구', previous: '이전 추천', next: '다음 추천', pause: '슬라이드쇼 일시 정지', play: '슬라이드쇼 재개', slide: '추천 선택: {{name}}' },
       },
       search: { placeholder: '게임, 퀘스트, 캐릭터 또는 장소 검색', action: '검색' },
       catalog: {

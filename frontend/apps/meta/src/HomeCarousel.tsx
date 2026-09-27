@@ -9,7 +9,7 @@ export function HomeCarousel({ tools, sites, onOpen }: {
   sites: readonly SiteCard[]
   onOpen: (feature: GameFeature, site: SiteCard) => void
 }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const slides = tools.flatMap((feature) => {
     const site = sites.find((item) => item.id === feature.gameId)
@@ -42,15 +42,10 @@ export function HomeCarousel({ tools, sites, onOpen }: {
   if (!slides.length) return null
   const activeIndex = index % slides.length
   const { feature, site } = slides[activeIndex]
-  const copy = language === 'zh-CN'
-    ? { previous: '上一项推荐', next: '下一项推荐', pause: '暂停轮播', play: '继续轮播', label: '精选工具', slide: '选择推荐' }
-    : language === 'zh-TW'
-      ? { previous: '上一項推薦', next: '下一項推薦', pause: '暫停輪播', play: '繼續輪播', label: '精選工具', slide: '選擇推薦' }
-      : { previous: 'Previous recommendation', next: 'Next recommendation', pause: 'Pause slideshow', play: 'Resume slideshow', label: 'Featured tools', slide: 'Select recommendation' }
   const name = localize(feature.name, language)
   const open = () => onOpen(feature, site)
   return (
-    <section className="home-carousel" aria-label={copy.label}
+    <section className="home-carousel" aria-label={t('home.carousel.label')}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
@@ -61,13 +56,13 @@ export function HomeCarousel({ tools, sites, onOpen }: {
         </a>
         {slides.length > 1 && <div className="home-carousel-controls">
           <div className="home-carousel-dots">{slides.map((slide, position) => (
-            <button key={slide.feature.id} type="button" aria-label={`${copy.slide}: ${localize(slide.feature.name, language)}`}
+            <button key={slide.feature.id} type="button" aria-label={t('home.carousel.slide', { name: localize(slide.feature.name, language) })}
               aria-current={position === activeIndex ? 'true' : undefined} onClick={() => setIndex(position)}><span /></button>
           ))}</div>
           <div className="home-carousel-arrows">
-            <button type="button" aria-label={paused ? copy.play : copy.pause} aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? <IconPlayerPlay /> : <IconPlayerPause />}</button>
-            <button type="button" aria-label={copy.previous} onClick={() => setIndex((activeIndex + slides.length - 1) % slides.length)}><IconChevronLeft /></button>
-            <button type="button" aria-label={copy.next} onClick={() => setIndex((activeIndex + 1) % slides.length)}><IconChevronRight /></button>
+            <button type="button" aria-label={t(paused ? 'home.carousel.play' : 'home.carousel.pause')} aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? <IconPlayerPlay /> : <IconPlayerPause />}</button>
+            <button type="button" aria-label={t('home.carousel.previous')} onClick={() => setIndex((activeIndex + slides.length - 1) % slides.length)}><IconChevronLeft /></button>
+            <button type="button" aria-label={t('home.carousel.next')} onClick={() => setIndex((activeIndex + 1) % slides.length)}><IconChevronRight /></button>
           </div>
         </div>}
       </div>

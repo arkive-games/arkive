@@ -1,4 +1,4 @@
-/* Scheme A changes only the homepage content and its footer, never navigation. */
+/* Scheme A changes only the homepage content, never navigation or the footer. */
 .home-directory { gap: 2rem; padding-block: 2rem; }
 .home-directory .directory-intro h1 { font-size: 1.875rem; }
 .home-directory .directory-games { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.125rem; }
@@ -24,18 +24,6 @@
 .home-directory .tool-card-copy strong { overflow: visible; white-space: normal; }
 .home-directory .tool-card-copy > span { display: block; overflow: visible; -webkit-line-clamp: unset; }
 .home-directory .tool-card-arrow { align-self: center; }
-.home-footer-compact { background: transparent; }
-.home-footer-compact .footer-grid { display: flex; align-items: flex-start; gap: 1.5rem; padding-block: 1.5rem; }
-.home-footer-compact .footer-brand { flex: 1; }
-.home-footer-compact .footer-brand-heading > .footer-mark { display: none; }
-.home-footer-compact .footer-brand-copy { flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: .75rem; }
-.home-footer-compact .footer-brand-copy strong { color: var(--primary); font-size: .875rem; }
-.home-footer-compact .footer-brand-copy small { font-weight: 500; }
-.home-footer-compact .footer-metadata { display: flex; flex-wrap: wrap; gap: .35rem .75rem; margin-top: .65rem; }
-.home-footer-compact .footer-column { flex-direction: row; flex-wrap: wrap; gap: 1.5rem; }
-.home-footer-compact .footer-column > h2 { display: none; }
-.home-footer-compact .footer-column > a,
-.home-footer-compact .footer-settings-action { font-size: .75rem; }
 @media (max-width: 74rem) and (min-width: 48rem) {
  .home-directory .directory-games { grid-template-columns: repeat(3,minmax(0,1fr)); }
  .home-directory .directory-tools { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -48,7 +36,4 @@
  .home-directory .directory-game-features a { min-height: 2.75rem; line-height: 2.35rem; }
  .home-directory .directory-tools { grid-template-columns: 1fr; }
  .home-directory .tool-card { padding-block: .85rem; }
- .home-footer-compact .footer-grid { flex-wrap: wrap; gap: 1rem; }
- .home-footer-compact .footer-brand { flex-basis: 100%; }
- .home-footer-compact .footer-column { gap: 1rem; }
 }
