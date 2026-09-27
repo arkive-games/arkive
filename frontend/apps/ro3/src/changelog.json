@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.16.1",
+      "date": "2026-09-28",
+      "commit": "2c43a00b58199e6964c3f4860353f43e35f65914",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Restored card details on tablet widths, added manual saved-build recovery, improved attribute editing, and restricted soul mark stages to the applicable game configuration.",
+            "zh-CN": "修复平板宽度下卡片详情不可见，新增手动查看原配置入口，改善属性输入，并按适用游戏配置筛选残响印记阶段。",
+            "zh-TW": "修復平板寬度下卡片詳情不可見，新增手動查看原配置入口，改善屬性輸入，並依適用遊戲配置篩選殘響印記階段。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.16.0",
       "date": "2026-09-27",
       "commit": "9c91f7b911ba6aa90ab60aa7c3411836da24b5cc",
