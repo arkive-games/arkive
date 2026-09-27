@@ -3,6 +3,11 @@ import type { SoulRecord } from '../wikiData'
 export interface MarkCount { markId: number; count: number }
 export interface MarkStage { markId: number; threshold: number; stage: number; effects: number[]; icon?: string }
 
+export function applicableMarkStages(stages: Array<MarkStage & { multiverses: number[] }>, variant: string): MarkStage[] {
+  const multiverse = /^M\d+$/.test(variant) ? Number(variant.slice(1)) : 0
+  return stages.filter(stage => !stage.multiverses.length || stage.multiverses.includes(0) || stage.multiverses.includes(multiverse))
+}
+
 export function markStages(souls: SoulRecord[]): MarkStage[] {
   const stages = new Map<string, MarkStage>()
   for (const soul of souls) for (const mark of soul.marks ?? []) {

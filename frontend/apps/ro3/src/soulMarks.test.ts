@@ -1,6 +1,13 @@
 import { expect, it } from 'vitest'
-import { activeMarkStages, markStages, sumMarks } from './lib/soulMarks'
+import { activeMarkStages, applicableMarkStages, markStages, sumMarks } from './lib/soulMarks'
 import { emptyPlanner, migratePlanner } from './lib/plannerModel'
+
+it('does not expose another multiverse mark definition', () => {
+  const stages = [[], [0], [101], [102]].map((multiverses, i) => ({ markId: i + 1, threshold: 3, stage: 1, effects: [], multiverses }))
+  expect(applicableMarkStages(stages, 'shared').map(s => s.markId)).toEqual([1, 2])
+  expect(applicableMarkStages(stages, 'M101').map(s => s.markId)).toEqual([1, 2, 3])
+  expect(applicableMarkStages(stages, 'M102').map(s => s.markId)).toEqual([1, 2, 4])
+})
 
 it('sums the same mark across equipped remnants only', () => {
   const totals = sumMarks([{ id: 1, markCounts: [{ markId: 1001, count: 2 }] }, { id: 2, markCounts: [{ markId: 1001, count: 1 }, { markId: 1002, count: 4 }] }, { id: 0, markCounts: [{ markId: 1001, count: 99 }] }])

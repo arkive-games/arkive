@@ -14,6 +14,7 @@ export interface BuildBranch { id: number; name: string; professionId: number; s
 export interface BuildTalentEffect { id: number; group: number; level: number; jobIds: number[]; professionIds: number[] }
 export interface BuildRuleSet {
   talentEffects?: BuildTalentEffect[]
+  markStages?: Array<{ markId: number; threshold: number; stage: number; effects: number[]; multiverses: number[]; icon?: string }>
   jobs: BuildJob[]
   branches: BuildBranch[]
   recommendations: Array<{ branchId: number; talentLevelIds: number[] }>

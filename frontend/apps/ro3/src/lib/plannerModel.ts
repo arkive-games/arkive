@@ -33,7 +33,7 @@ export interface StoredPlanner { records: unknown[]; raw: string | null; malform
 const record = (v: unknown): Record<string, unknown> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {}
 const ids = (v: unknown): number[] => Array.isArray(v) ? v.map((x) => Number.isSafeInteger(x) && Number(x) > 0 ? Number(x) : 0) : []
 
-export function emptyPlanner(id = `local-${Date.now()}`): PlannerBuild {
+export function emptyPlanner(id = `local-${crypto.randomUUID()}`): PlannerBuild {
   return { schemaVersion: 2, id, title: '', summary: '', jobId: 0, branchId: 0, rulesVariant: 'shared', attributes: [1, 1, 1, 1, 1, 1], skills: [], cardSlots: { main: [], off: [], armor: [], cloak: [], shoes: [], 'accessory-1': [], 'accessory-2': [] }, equipment: BUILD_SLOTS.map(s => ({ slot: s.key, id: 0, normal: [], special: [], cards: [] })), combat: [], assist: [], talents: [], souls: [], recovery: [] }
 }
 

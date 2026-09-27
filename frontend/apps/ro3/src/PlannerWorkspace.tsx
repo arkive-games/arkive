@@ -9,7 +9,7 @@ import { loadCardCatalogData, loadEquipmentWikiData, loadProfessionWikiData, loa
 import { BUILD_SLOTS, CAREER_ROOTS, careerRoot, careerJobs, careerTalentEffects, equipmentAllowed, loadBuildRules, slotAllows, type BuildRulesDocument, type BuildSlotKey } from './lib/buildRules'
 import { emptyPlanner, migratePlanner, readPlannerStorage, savePlannerBuilds, type PlannerBuild } from './lib/plannerModel'
 import { clampAttribute } from './lib/buildState'
-import { markStages, sumMarks } from './lib/soulMarks'
+import { applicableMarkStages, sumMarks } from './lib/soulMarks'
 import { resourceUrl } from './lib/urls'
 import { qualityColor, qualityLabel } from './lib/quality'
 import './planner.css'
@@ -27,6 +27,13 @@ interface PlannerData {
 }
 interface Choice { id: number; label: string; icon?: string; selected?: boolean; disabled?: boolean }
 interface Picker { title: string; choices: Choice[]; choose: (id: number) => void; note?: string }
+
+function AttributeInput({ value, disabled, onCommit }: { value: number; disabled: boolean; onCommit: (value: number) => void }) {
+  const [pending, setPending] = useState<string | null>(null)
+  return <Input type="number" min={1} max={999} disabled={disabled} value={pending ?? value}
+    onChange={event => { const raw = event.target.value; setPending(raw); if (raw !== '') onCommit(clampAttribute(Number(raw))) }}
+    onBlur={() => { if (pending !== null) onCommit(clampAttribute(Number(pending))); setPending(null) }} />
+}
 
 function Panel({ title, children, area, note }: { title: string; children: ReactNode; area: string; note?: ReactNode }) {
   return <section className={`planner-panel planner-area-${area}`}><header><h3>{title}</h3>{note}</header><div className="planner-panel-body">{children}</div></section>
@@ -113,7 +120,7 @@ export function PlannerWorkspace({ onUnavailable: _onUnavailable }: { onUnavaila
   const cardMap = new Map(data?.cards?.cards.map(c => [c.id, c]) ?? [])
   const petMap = new Map(data?.pets?.catalog.pets.map(p => [p.id, p]) ?? [])
   const soulMap = new Map(data?.souls?.souls.souls.map(s => [s.iID, s]) ?? [])
-  const stages = markStages(data?.souls?.souls.souls ?? [])
+  const stages = applicableMarkStages(rules?.markStages ?? [], draft.rulesVariant)
   const markIds = [...new Set(stages.map(s => s.markId))]
   const markTotals = sumMarks(draft.souls)
   const talentNodes = data?.talents?.talents.seasonTalents.nodes ?? []
@@ -203,10 +210,11 @@ export function PlannerWorkspace({ onUnavailable: _onUnavailable }: { onUnavaila
     <div className="planner-toolbar"><select aria-label={t.name} value={draft.id} onChange={e => { const next = builds.find(b => b.id === e.target.value); if (!next) return; const run = () => { setDraft(next); setDirty(false) }; if (dirty) ask(t.confirmLeave, run); else run() }}><option value={draft.id}>{draft.title || t.unnamed}</option>{builds.filter(b => b.id !== draft.id).map(b => <option key={b.id} value={b.id}>{b.title || t.unnamed}</option>)}</select><span>{dirty ? t.dirty : savedNotice ? t.saved : ''}</span><Button variant="outline" onClick={() => { const run = () => { setDraft(emptyPlanner()); setEditing(true); setDirty(false) }; if (dirty) ask(t.confirmLeave, run); else run() }}>{t.new}</Button><Button variant="outline" onClick={() => setEditing(v => !v)}>{editing ? t.view : t.edit}</Button>{editing ? <Button disabled={!editing} onClick={save}>{t.save}</Button> : null}</div>
     <Dialog open={Boolean(error)} onOpenChange={v => { if (!v) setError('') }}><DialogContent aria-describedby={undefined}><DialogTitle>{error}</DialogTitle></DialogContent></Dialog>
     {!rules ? <div className="planner-notice"><Button variant="outline" onClick={() => { const run = () => { setDirty(false); setRetry(v => v + 1) }; if (dirty) ask(t.confirmLeave, run); else run() }}>{t.retry}</Button></div> : null}
+    {draft.original !== undefined || draft.recovery.length > 0 ? <div><Button size="sm" variant="ghost" onClick={() => setRecoverOpen(true)}>{t.review}</Button></div> : null}
     <div className="planner-setup"><label>{t.job}<select aria-label={t.job} disabled={!editing || !rules} value={careerRoot(draft.jobId)} onChange={e => changeJob(Number(e.target.value))}><option value={0}>{t.jobRequired}</option>{CAREER_ROOTS.map(id => rules?.jobs.find(j => j.id === id)).filter((j): j is NonNullable<typeof j> => Boolean(j)).map(j => <option key={j.id} value={j.id}>{j.name || t.unknown}</option>)}</select></label>{careerRoot(draft.jobId) === 1100 ? <label>{t.branch}<select aria-label={t.branch} disabled={!editing} value={[1210,1310,1410].includes(draft.jobId) ? 1210 : 1200} onChange={e => changeJob(Number(e.target.value))}>{[1200,1210].map(id => <option key={id} value={id}>{rules?.jobs.find(j => j.id === id)?.name || t.unknown}</option>)}</select></label> : null}<label>{t.name}<Input value={draft.title} disabled={!editing} onChange={e => patch({ title: e.target.value })} /></label></div>
     <div className="planner-grid">
       <Panel title={t.skills} area="skills" note={<small>6</small>}><div className="planner-six">{Array.from({ length: 6 }, (_, i) => { const s = skillMap.get(draft.skills[i]); return <Slot key={i} label={s ? text(s.name) : draft.skills[i] ? t.unknown : t.choose} icon={s?.icon} disabled={!canEdit} onClick={() => chooseSkill(i)} /> })}</div></Panel>
-      <Panel title={t.attributes} area="attributes" note={<small>≤ 999</small>}><div className="planner-attributes">{t.attributesList.map((label, i) => <label key={label}>{label}<Input type="number" min={1} max={999} disabled={!canEdit} value={draft.attributes[i]} onChange={e => patch({ attributes: draft.attributes.map((v, index) => index === i ? clampAttribute(Number(e.target.value)) : v) })} /></label>)}</div></Panel>
+      <Panel title={t.attributes} area="attributes" note={<small>≤ 999</small>}><div className="planner-attributes">{t.attributesList.map((label, i) => <label key={label}>{label}<AttributeInput key={`${draft.id}-${editing}`} disabled={!canEdit} value={draft.attributes[i]} onCommit={value => patch({ attributes: draft.attributes.map((v, index) => index === i ? value : v) })} /></label>)}</div></Panel>
       <Panel title={t.equipment} area="equipment"><div className="planner-seven">{BUILD_SLOTS.map(slot => { const c = slotConfig(slot.key), e = equipmentMap.get(c.id); const lock = slot.key === 'off' ? offReason : ''; return <Slot key={slot.key} locked={lock} label={lock ? t.slots[slot.label] : (e ? text(e.name) : c.id ? t.unknown : t.choose)} icon={e?.icon} quality={e?.item?.iQuality} active={selectedSlot === slot.key} note={<>{t.slots[slot.label]}{e?.iRank ? ` · T${e.iRank}` : ''}</>} onClick={() => setSelectedSlot(slot.key)} /> })}</div></Panel>
       <Panel title={t.talents} area="talents" note={<small>{careerLabel}</small>}><div className="planner-talents">{draft.talents.map(id => <Slot key={id} {...talentInfo(id)} disabled={!canEdit} onClick={() => patch({ talents: draft.talents.filter(v => v !== id) })} />)}{canEdit && data.talents ? <Button variant="outline" onClick={() => openPicker({ title: t.talents, note: t.talentNote, choices: talentChoices.map(n => ({ id: n.iId, ...talentInfo(n.iId), selected: draft.talents.includes(n.iId) })), choose: id => { patch({ talents: draft.talents.includes(id) ? draft.talents.filter(v => v !== id) : [...draft.talents, id] }); setPicker(null) } })}>{t.choose}</Button> : null}</div><p className="planner-note">{t.talentNote}</p></Panel>
       <Panel title={t.pets} area="pets">{(['combat', 'assist'] as const).map(field => <div className="planner-pet-row" key={field}><small>{t[field]}</small><div className="planner-five">{Array.from({ length: Math.max(field === 'combat' ? 4 : 5, draft[field].length) }, (_, i) => { const p = petMap.get(draft[field][i]); return <Slot key={i} label={p ? localizedText(p.name) || t.unknown : draft[field][i] ? t.unknown : t.choose} icon={p?.art.head} disabled={!canEdit || !data.pets} onClick={() => choosePet(field, i)} /> })}</div></div>)}</Panel>

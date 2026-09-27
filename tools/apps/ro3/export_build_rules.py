@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .lua_tables import Runner, iter_chunks, rows
 
-TABLES = {"JobConfig", "JobProfessConfig", "ProfessBuildSuggConfig", "SeasonTalentEffectConfig"}
+TABLES = {"JobConfig", "JobProfessConfig", "ProfessBuildSuggConfig", "SeasonTalentEffectConfig", "EmblemMarkConfig"}
 
 
 def array(value):
@@ -32,8 +32,14 @@ def normalize(tables: dict, strings: dict) -> dict:
                        "level": r.get("_iLevel", 0), "jobIds": array(r.get("_iJobId")),
                        "professionIds": array(r.get("_kProfessionID"))}
                       for r in tables.get("SeasonTalentEffectConfig", {}).values()]
+    mark_stages = [{"markId": r["_iEmblemMarkID"], "threshold": r.get("_iMarkNum", 0),
+                    "stage": r.get("_iMarkStage", 0), "effects": array(r.get("_kSpecialAttribute")),
+                    "multiverses": array(r.get("_kMultiverseArray")),
+                    "icon": "icons/other/" + Path(r["_kEmblemMarkPic"]).stem + ".webp"}
+                   for r in tables.get("EmblemMarkConfig", {}).values()
+                   if r.get("_iEmblemMarkID") and r.get("_kEmblemMarkPic")]
     return {"jobs": jobs, "branches": branches, "recommendations": recommendations,
-            "talentEffects": talent_effects}
+            "talentEffects": talent_effects, "markStages": mark_stages}
 
 
 def main():

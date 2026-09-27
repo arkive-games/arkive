@@ -8,6 +8,11 @@ const records: EquipmentRecord[] = Array.from({ length: 7 }, (_, i) => ({ iID: i
 const keys = ['a', 'b', 'c', 'd', 'e', 'f']
 const job: BuildJob = { id: 1400, name: '', rank: 5, parentId: 1300, branchIds: [131], subtypes: [1], weaponForms: [1, 2] }
 
+it('creates distinct identities for builds created in the same clock tick', () => {
+  const builds = Array.from({ length: 100 }, () => emptyPlanner())
+  expect(new Set(builds.map(b => b.id)).size).toBe(100)
+})
+
 describe('canonical build mappings', () => {
   it('uses one accessory item/card category for two distinct grids', () => {
     expect(BUILD_SLOTS.slice(-2).map(s => [s.grid, [...s.positions], s.cardPart])).toEqual([[6, [7], 6], [7, [7], 6]])

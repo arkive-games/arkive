@@ -3,15 +3,11 @@ import { BookOpen, Check, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
   Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   resolveChangelog,
-  useIsMobile,
   VersionHistory,
   type ChangelogFile,
 } from '@gamemap/ui'
-import { Chip, DetailPanel, DetailSection, FilterRow, Notice, Panel, SearchField, Tab, TabRow } from './components/wiki'
+import { CatalogLayout, Chip, DetailSection, FilterRow, Notice, Panel, SearchField, Tab, TabRow } from './components/wiki'
 import {
   cardFrameVariant,
   countCardsByCategory,
@@ -334,7 +330,6 @@ function CardWiki({
   onSelect: (card: WikiCard | null) => void
 }) {
   const [showFilters, setShowFilters] = useState(false)
-  const isMobile = useIsMobile()
   const allCards = data?.cards.cards ?? []
   const collectionCardIds = new Set(data?.cards.flashCardPools.flatMap((pool) => pool.cards) ?? [])
   const categories: Array<{ key: CardCategory; label: string; count: number }> = [
@@ -431,8 +426,12 @@ function CardWiki({
         </Panel>
       ) : null}
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="flex flex-col gap-3">
+      <CatalogLayout
+        detailLabel={activeCard ? localizedText(activeCard.name) : content.wiki.cards.title}
+        open={Boolean(selectedCard && data)}
+        onClose={() => onSelect(null)}
+        detail={activeCard && data ? <CardWorkspaceDetail card={activeCard} data={data} /> : <Notice>{dataError ? content.wiki.dataError : content.wiki.loading}</Notice>}
+        list={<div className="flex flex-col gap-3">
           <p className="text-sm text-muted-foreground">{content.wiki.cards.resultCount.replace('{count}', String(cards.length))}</p>
           {dataError ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : cards.length > 0 ? (
             // The faces are the game's own card art; the class carries their rules.
@@ -440,25 +439,8 @@ function CardWiki({
               {cards.map((card) => <CardTile key={card.id} card={card} collection={filters.category === 'collection'} active={activeCard?.id === card.id} onSelect={onSelect} />)}
             </div>
           ) : <Notice>{content.wiki.cards.empty}</Notice>}
-        </div>
-
-        {/* Beside the grid on a wide screen; on a phone the tap opens a dialog
-            instead, so the detail is not stranded below two hundred cards. */}
-        <div className="hidden lg:block">
-          {activeCard && data ? (
-            <DetailPanel label={localizedText(activeCard.name)}><CardWorkspaceDetail card={activeCard} data={data} /></DetailPanel>
-          ) : (
-            <DetailPanel label={content.wiki.cards.title}><Notice>{dataError ? content.wiki.dataError : content.wiki.loading}</Notice></DetailPanel>
-          )}
-        </div>
-      </div>
-
-      <Dialog open={isMobile && Boolean(selectedCard && data)} onOpenChange={(open) => { if (!open) onSelect(null) }}>
-        <DialogContent className="max-h-[85dvh] overflow-y-auto">
-          <DialogTitle className="sr-only">{selectedCard ? localizedText(selectedCard.name) : content.wiki.cards.title}</DialogTitle>
-          {selectedCard && data ? <CardWorkspaceDetail card={selectedCard} data={data} /> : null}
-        </DialogContent>
-      </Dialog>
+        </div>}
+      />
     </div>
   )
 }
