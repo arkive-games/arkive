@@ -13,6 +13,11 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { Button, Dialog, DialogContent, DialogTitle, DialogTrigger, Input, cn } from "@gamemap/ui";
+import { SearchField } from "./components/wiki";
+import { qualityColor } from "./lib/quality";
+import { SELECT_CLASS } from "./lib/styles";
+import { BUILD_STORAGE_KEY, clampAttribute, persistBuilds, resolveMarkEffects, updateSocket } from "./lib/buildState";
 import { resourceUrl } from "./lib/urls";
 import {
   loadCardCatalogData,
@@ -40,10 +45,6 @@ import content from "./locales/zh-CN.json";
 import nativeSlotAdd from "./assets/native-ui/genre/genremanual_img_add_01.webp";
 import nativePetCombat from "./assets/native-ui/genre/genremanual_img_pet_01.webp";
 import nativePetAssist from "./assets/native-ui/genre/genremanual_img_pet_02.webp";
-import nativeSoul01 from "./assets/native-ui/genre/genremanual_item_soul_01.webp";
-import nativeSoul02 from "./assets/native-ui/genre/genremanual_item_soul_02.webp";
-import nativeSoul03 from "./assets/native-ui/genre/genremanual_item_soul_03.webp";
-import nativeSoul04 from "./assets/native-ui/genre/genremanual_item_soul_04.webp";
 import attrStr from "./assets/native-ui/genre/genremanual_icon_str.webp";
 import attrAgi from "./assets/native-ui/genre/genremanual_icon_mov.webp";
 import attrVit from "./assets/native-ui/genre/genremanual_icon_power.webp";
@@ -101,7 +102,7 @@ interface EquipmentFamily {
   variants: EquipmentRecord[];
 }
 
-const STORAGE_KEY = "ro3-build-planner";
+const STORAGE_KEY = BUILD_STORAGE_KEY;
 const ATTRIBUTE_KEYS = ["力量", "敏捷", "体质", "智力", "灵巧", "幸运"];
 const ATTRIBUTE_ICONS: Record<string, string> = { 力量: attrStr, 敏捷: attrAgi, 体质: attrVit, 智力: attrInt, 灵巧: attrDex, 幸运: attrLuk };
 const PET_CAMP_ICONS: Record<number, string> = {
@@ -110,7 +111,6 @@ const PET_CAMP_ICONS: Record<number, string> = {
   3: "icons/other/icon_school_yuangong_01.webp",
   4: "icons/other/icon_school_chengshang_01.webp",
 };
-const SOUL_NOTE_ICONS = [nativeSoul01, nativeSoul02, nativeSoul03, nativeSoul04];
 const LINE_LABELS: Record<string, string> = {
   swordman: "剑士",
   magician: "魔法师",
@@ -431,7 +431,10 @@ function specialOptions(
   return attrs.specialEffects.filter((effect) => ids.has(effect.iID));
 }
 
-export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
+export { PlannerWorkspace as BuildPlanner } from './PlannerWorkspace';
+
+/** Retained temporarily as a reference while old saved builds migrate. */
+export function LegacyBuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
   const [mode, setMode] = useState<BuildMode>("view");
   const [builds, setBuilds] = useState<BuildDraft[]>(() => readBuilds());
   const [selectedId, setSelectedId] = useState(
@@ -442,6 +445,7 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
   );
   const [data, setData] = useState<BuildData | null>(null);
   const [dataError, setDataError] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   useEffect(() => {
     let active = true;
     const settledValue = <T,>(result: PromiseSettledResult<T>, label: string, consequence: string) => {
@@ -494,7 +498,7 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
           // A seed built on a partial load leaves the missing panels empty, and once stored it
           // no longer counts as untouched, so it would stay empty on every later visit. Show it
           // for this visit only; the next complete load seeds and stores it properly.
-          if (complete) localStorage.setItem(STORAGE_KEY, JSON.stringify([seeded]));
+          if (complete) setSaveError(!persistBuilds([seeded]));
         }
       })
       .catch(() => {
@@ -567,9 +571,11 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
     const next = builds.some((build) => build.id === draft.id)
       ? builds.map((build) => (build.id === draft.id ? draft : build))
       : [...builds, draft];
+    const saved = persistBuilds(next);
+    setSaveError(!saved);
+    if (!saved) return;
     setBuilds(next);
     setSelectedId(draft.id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setMode("view");
   };
   const createBuild = () => {
@@ -591,8 +597,8 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
       </section>
     );
   return (
-    <section className="build-planner" aria-label="流派手册">
-      <header className="build-planner-header">
+    <section className="flex min-w-0 flex-col gap-6" aria-label={content.builds.title}>
+      <header className="flex flex-col gap-3 border-b border-border pb-4 text-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p>
             先选职业路线，再配置该路线可用的技能、固定装备部位、宠物和灵魂残响。
@@ -627,6 +633,7 @@ export function BuildPlanner({ onUnavailable }: { onUnavailable: () => void }) {
           </button>
         </div>
       </header>
+      {saveError ? <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{content.builds.saveError}</p> : null}
       {mode === "view" ? (
         <BuildViewer
           build={selectedBuild}
@@ -678,7 +685,7 @@ function BuildViewer({
   );
   useEffect(() => {
     let active = true;
-    const selected = build.skillIds.slice(0, 6)
+    const selected = build.skillIds
       .map((id) => data.skills.skills.find((skill) => skill.iSkillID === id))
       .filter((skill): skill is SkillIndexEntry => Boolean(skill));
     Promise.all(
@@ -790,8 +797,8 @@ function BuildViewer({
     return skills.slice(0, 2).length ? skills.slice(0, 2) : ["暂无助战效果"];
   };
   return (
-    <div className="build-view-layout">
-      <div className="build-view-main">
+    <div className="min-w-0">
+      <div className="flex min-w-0 flex-col gap-4">
         <div className="build-view-title">
           <div>
             <span>
@@ -803,7 +810,7 @@ function BuildViewer({
           <div className="build-view-title-actions">
             <label className="build-view-build-select">
               <span className="sr-only">切换流派</span>
-              <select
+              <select className={SELECT_CLASS}
                 value={build.id}
                 aria-label="切换流派"
                 onChange={(event) => onSelect(event.target.value)}
@@ -821,14 +828,14 @@ function BuildViewer({
             </button>
           </div>
         </div>
-        <div className="game-build-manual">
-          <div className="game-build-column game-build-column--left">
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className="flex min-w-0 flex-col gap-4">
             <GameBuildPanel
               icon={Swords}
               title="技能"
             >
-              <div className="game-build-slots game-build-slots--skills">
-                {Array.from({ length: 6 }, (_, index) => {
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {Array.from({ length: Math.max(6, build.skillIds.length) }, (_, index) => {
                   const id = build.skillIds[index];
                   const skill = id ? skillMap.get(id) : undefined;
                   return (
@@ -837,7 +844,6 @@ function BuildViewer({
                       kind="skill"
                       icon={skill?.icon}
                       label={id ? displayName(skill?.name, `技能 ${id}`) : "空技能槽"}
-                      badge={id ? `Lv.${Math.min(5, skill?.iMaxLevel ?? 5)}` : undefined}
                       empty={!id}
                       details={id ? [skillDetails.get(id) || "暂无技能描述", `技能编号 ${id}`, `最高等级 ${skill?.iMaxLevel ?? "-"}`] : undefined}
                     />
@@ -848,7 +854,7 @@ function BuildViewer({
 
             {equipmentData ? (
             <GameBuildPanel icon={Shield} title="装备">
-              <div className="game-build-slots game-build-slots--equipment">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {equipmentSlots.map((slot) => {
                   const config = build.equipment.find((item) => item.slotKey === slot.key) ?? EMPTY_BUILD.equipment.find((item) => item.slotKey === slot.key) ?? EMPTY_BUILD.equipment[0];
                   const item = equipmentMap.get(config.equipmentId);
@@ -875,7 +881,7 @@ function BuildViewer({
             <GameBuildPanel icon={PawPrint} title="宠物">
               <div className="game-pet-roster">
                 <span className="game-pet-mode-label"><img src={nativePetCombat} alt="" />出战</span>
-                <div className="game-build-slots game-build-slots--pets game-build-slots--combat">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {Array.from({ length: 4 }, (_, index) => {
                     const id = build.petCombatIds[index];
                     const pet = id ? petMap.get(id) : undefined;
@@ -891,7 +897,7 @@ function BuildViewer({
                   })}
                 </div>
                 <span className="game-pet-mode-label"><img src={nativePetAssist} alt="" />助战</span>
-                <div className="game-build-slots game-build-slots--pets game-build-slots--assist">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {Array.from({ length: 5 }, (_, index) => {
                     const id = build.petAssistIds[index];
                     const pet = id ? petMap.get(id) : undefined;
@@ -905,8 +911,8 @@ function BuildViewer({
 
             {soulsData ? (
             <GameBuildPanel icon={Gem} title="灵魂残响">
-              <div className="game-soul-row">
-                <div className="game-build-slots game-build-slots--souls">
+              <div className="min-w-0">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {Array.from({ length: 5 }, (_, index) => {
                   const config = build.souls[index];
                   const soul = config?.soulId ? soulMap.get(config.soulId) : undefined;
@@ -915,9 +921,7 @@ function BuildViewer({
                     const name = displayName(soulsData.souls.attributes.find((item) => item.iID === attribute.attributeId)?.name, `属性 ${attribute.attributeId}`);
                     return `${name} +${attribute.min}${attribute.max !== undefined && attribute.max !== attribute.min ? `~${attribute.max}` : ""}`;
                   }) ?? [];
-                  const markIds = config?.markEffectIds?.length
-                    ? config.markEffectIds
-                    : (soul?.marks ?? []).flatMap((mark) => mark.specialEffectIds ?? []);
+                  const markIds = resolveMarkEffects(config?.markEffectIds ?? [], soul?.marks ?? []);
                   const markLines = markIds
                     .map((id) => {
                       const effect = soulMarkMap.get(id);
@@ -932,26 +936,26 @@ function BuildViewer({
                     const max = attribute.max ?? attribute.iMax;
                     return `${name} +${min ?? "-"}${max !== undefined && max !== min ? `~${max}` : ""}`;
                   }) ?? [];
+                  const subAttributes = (config?.subAttributeIds ?? []).map((selectedId) => {
+                    const attribute = soul?.subAttributes?.find((item) => (item.iID ?? item.attributeId ?? item.iSubAttriID) === selectedId);
+                    const attributeId = attribute?.attributeId ?? attribute?.iSubAttriID ?? selectedId;
+                    const name = displayName(soulsData.souls.attributes.find((item) => item.iID === attributeId)?.name, String(attributeId));
+                    const min = attribute?.min ?? attribute?.iMin;
+                    const max = attribute?.max ?? attribute?.iMax;
+                    return `${name} ${min ?? '—'}${max !== undefined && max !== min ? `–${max}` : ''}`;
+                  });
                   const soulEffects = soul
                     ? [...primary.slice(0, 1), ...resonanceAttributes.slice(0, 1), resonanceLine, ...markLines.slice(0, 1)].filter(Boolean)
                     : undefined;
-                  return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} kind="soul" icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} badge={soul ? "20" : undefined} noteOffset={index} empty={!soul} effects={soulEffects} details={soul ? [...primary, ...resonanceAttributes, resonanceLine, ...markLines, soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
+                  return <GameBuildSlot key={config?.slotIndex ?? `soul-empty-${index}`} kind="soul" icon={soul?.icon} label={soul ? displayName(soul.name, `残响 ${config.soulId}`) : "空残响槽"} noteOffset={index} empty={!soul} effects={soulEffects} details={soul ? [...primary, ...subAttributes, ...resonanceAttributes, resonanceLine, ...markLines, soul.desc?.["zh-CN"] || "暂无残响说明"] : undefined} />;
                   })}
-                </div>
-                <div className="game-soul-resonance-summary">
-                  {SOUL_NOTE_ICONS.map((icon) => (
-                    <span key={icon}>
-                      <img src={icon} alt="" />
-                      <strong>{build.souls.filter((soul) => soul.soulId).length || 0}</strong>
-                    </span>
-                  ))}
                 </div>
               </div>
             </GameBuildPanel>
             ) : null}
           </div>
 
-          <div className="game-build-column game-build-column--right">
+          <div className="flex min-w-0 flex-col gap-4">
             <GameBuildPanel icon={Zap} title="属性加点">
               <div className="game-build-attributes">
                 {Object.entries(build.attributes).map(([key, value]) => <div key={key}><span><img src={ATTRIBUTE_ICONS[key]} alt="" />{key}</span><strong>{value}</strong></div>)}
@@ -960,16 +964,16 @@ function BuildViewer({
 
             {cardsData ? (
             <GameBuildPanel icon={BookOpen} title="卡片">
-              <div className="game-card-fixed-grid">
+              <div className="flex flex-col gap-2">
                 {cardSlotRows.map((groups, rowIndex) => {
                   let offset = cardSlotRows.slice(0, rowIndex).flat().reduce((sum, value) => sum + value, 0);
                   return (
-                    <div className="game-card-fixed-row" key={`card-row-${rowIndex}`}>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" key={`card-row-${rowIndex}`}>
                       {groups.map((groupSize, groupIndex) => {
                         const groupStart = offset;
                         offset += groupSize;
                         return (
-                          <div className="game-card-fixed-group game-build-slots game-build-slots--cards" key={`card-group-${rowIndex}-${groupIndex}`}>
+                          <div className="contents" key={`card-group-${rowIndex}-${groupIndex}`}>
                             {Array.from({ length: groupSize }, (_, index) => {
                               const selected = equippedCards[groupStart + index];
                               const card = selected ? cardMap.get(selected.cardId) : undefined;
@@ -994,7 +998,7 @@ function BuildViewer({
 
             {talentsData ? (
             <GameBuildPanel icon={Sparkles} title="天赋">
-              <div className="game-build-slots game-build-slots--talents">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {Array.from({ length: Math.max(5, build.talentIds.length) }, (_, index) => {
                   const id = build.talentIds[index];
                   const talent = id ? talentMap.get(id) : undefined;
@@ -1053,8 +1057,7 @@ function BuildEditor({
   const soulsData = data.souls;
   const talentsData = data.talents;
   const talents = (talentsData?.talents.seasonTalents.nodes ?? [])
-    .filter((node) => node.iType !== 0)
-    .slice(0, 120);
+    .filter((node) => node.iType !== 0);
   const talentLevelById = new Map(
     (talentsData?.talents.seasonTalents.levels ?? []).map((level) => [level.iId, level]),
   );
@@ -1122,11 +1125,11 @@ function BuildEditor({
       ],
     });
   return (
-    <div className="build-editor">
-      <div className="build-editor-form">
+    <div className="flex min-w-0 flex-col gap-6">
+      <div className="grid gap-4 text-sm sm:grid-cols-3 [&>label]:flex [&>label]:min-w-0 [&>label]:flex-col [&>label]:gap-2">
         <label>
           流派名称
-          <input
+          <Input
             value={draft.title}
             onChange={(event) => updateDraft({ title: event.target.value })}
             placeholder="例如：敏捷暴击游侠"
@@ -1134,7 +1137,8 @@ function BuildEditor({
         </label>
         <label>
           职业系
-          <select
+          <select className={SELECT_CLASS}
+            aria-label={content.wiki.professions.lineLabel}
             value={line.id}
             onChange={(event) =>
               onProfessionChange(event.target.value, line.routes[0].id)
@@ -1149,7 +1153,7 @@ function BuildEditor({
         </label>
         <label>
           转职路线
-          <select
+          <select className={SELECT_CLASS}
             value={route.id}
             onChange={(event) =>
               onProfessionChange(line.id, event.target.value)
@@ -1162,9 +1166,9 @@ function BuildEditor({
             ))}
           </select>
         </label>
-        <label className="build-summary-field">
+        <label className="sm:col-span-3">
           流派说明
-          <textarea
+          <textarea className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-ring"
             value={draft.summary}
             onChange={(event) => updateDraft({ summary: event.target.value })}
             rows={2}
@@ -1173,11 +1177,11 @@ function BuildEditor({
         </label>
       </div>
       <EditorSection icon={Zap} title="属性加点" hint="可分配的属性方案">
-        <div className="editor-attribute-grid">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 [&>label]:flex [&>label]:flex-col [&>label]:gap-2 [&>label]:text-sm">
           {ATTRIBUTE_KEYS.map((key) => (
             <label key={key}>
               <span>{key}</span>
-              <input
+              <Input
                 type="number"
                 min={1}
                 max={999}
@@ -1186,7 +1190,7 @@ function BuildEditor({
                   updateDraft({
                     attributes: {
                       ...draft.attributes,
-                      [key]: Math.max(1, Number(event.target.value) || 1),
+                      [key]: clampAttribute(Number(event.target.value)),
                     },
                   })
                 }
@@ -1377,6 +1381,7 @@ function BuildEditor({
               souls={soulsData.souls.souls}
               resonance={soulsData.souls.resonance}
               resonanceIds={resonanceIds}
+              attributes={soulsData.souls.attributes}
               update={updateSoul}
             />
           ))}
@@ -1392,10 +1397,10 @@ function BuildEditor({
       </EditorSection>
       ) : null}
       <div className="build-editor-footer">
-        <button type="button" className="build-save-button" onClick={onSave}>
+        <Button type="button" onClick={onSave}>
           <Save aria-hidden="true" />
           保存到我的流派
-        </button>
+        </Button>
         <button
           type="button"
           className="build-publish-button"
@@ -1456,18 +1461,10 @@ function EquipmentSlotEditor({
         .includes(query.trim().toLocaleLowerCase("zh-CN")),
   );
   return (
-    <div
-      className="build-equipment-modal-backdrop"
-      role="presentation"
-      onMouseDown={onClose}
-    >
-      <article
-        className="build-equip-editor build-equipment-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={`equipment-dialog-${slot.key}`}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent size="lg" className="max-h-[85dvh] overflow-y-auto" aria-describedby={undefined}>
+      <DialogTitle>{slot.label}</DialogTitle>
+      <article className="build-equip-editor">
       <div className="build-config-editor-head">
         <strong id={`equipment-dialog-${slot.key}`}>{slot.label}配置</strong>
         <small>
@@ -1484,7 +1481,7 @@ function EquipmentSlotEditor({
       </div>
       <label className="editor-picker-search">
         <span className="sr-only">搜索{slot.label}</span>
-        <input
+        <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={`搜索${slot.label}名称`}
@@ -1522,10 +1519,10 @@ function EquipmentSlotEditor({
       </div>
       {current ? (
         <>
-          <div className="build-editor-grid">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 [&>label]:flex [&>label]:min-w-0 [&>label]:flex-col [&>label]:gap-2">
             <label>
               品质
-              <select
+              <select className={SELECT_CLASS}
                 value={config.quality || current.item?.iQuality || ""}
                 onChange={(event) => {
                   const quality = Number(event.target.value);
@@ -1557,7 +1554,7 @@ function EquipmentSlotEditor({
             <span>普通词条 · 可选 {normalEntries.length}</span>
             <div>
               {normalEntries.length ? (
-                normalEntries.slice(0, 12).map((entry) => (
+                normalEntries.map((entry) => (
                   <button
                     type="button"
                     key={entry.iID}
@@ -1625,15 +1622,11 @@ function EquipmentSlotEditor({
             </span>
             <div className="build-socket-row">
               {Array.from({ length: count }).map((_, socketIndex) => (
-                <select
+                <select className={SELECT_CLASS}
                   key={socketIndex}
-                  value={config.cardIds[socketIndex] ?? ""}
+                  value={config.cardIds[socketIndex] || ""}
                   onChange={(event) => {
-                    const next = [...config.cardIds];
-                    const value = Number(event.target.value);
-                    if (value) next[socketIndex] = value;
-                    else next.splice(socketIndex, 1);
-                    update(index, { cardIds: next });
+                    update(index, { cardIds: updateSocket(config.cardIds, socketIndex, Number(event.target.value)) });
                   }}
                 >
                   <option value="">空卡槽</option>
@@ -1649,7 +1642,8 @@ function EquipmentSlotEditor({
         </>
       ) : null}
       </article>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1659,6 +1653,7 @@ function SoulConfigEditor({
   souls,
   resonance,
   resonanceIds,
+  attributes,
   update,
 }: {
   index: number;
@@ -1666,19 +1661,21 @@ function SoulConfigEditor({
   souls: SoulRecord[];
   resonance: SoulResonanceRecord[];
   resonanceIds: number[];
+  attributes: Array<{ iID: number; name?: { 'zh-CN'?: string } }>;
   update: (index: number, patch: Partial<SoulBuildConfig>) => void;
 }) {
   const soul = souls.find((item) => item.iID === config.soulId);
+  const selectedMarks = resolveMarkEffects(config.markEffectIds, soul?.marks ?? []);
   const available = resonance.filter((item) =>
     resonanceIds.includes(item.resonanceId ?? item.iID),
   );
   return (
-    <article className="build-soul-editor">
+    <article className="flex min-w-0 flex-col gap-3 rounded-lg border border-border p-4 text-sm">
       <strong>残响槽 {index + 1}</strong>
-      <div className="build-editor-grid">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 [&>label]:flex [&>label]:min-w-0 [&>label]:flex-col [&>label]:gap-2">
         <label>
           残响装备
-          <select
+          <select className={SELECT_CLASS}
             value={config.soulId || ""}
             onChange={(event) =>
               update(index, {
@@ -1699,7 +1696,7 @@ function SoulConfigEditor({
         </label>
         <label>
           共振效果
-          <select
+          <select className={SELECT_CLASS}
             value={config.resonanceId ?? ""}
             onChange={(event) =>
               update(index, {
@@ -1720,7 +1717,7 @@ function SoulConfigEditor({
         <div className="build-soul-options">
           <span>副属性</span>
           <div>
-            {(soul.subAttributes ?? []).slice(0, 10).map((attribute) => {
+            {(soul.subAttributes ?? []).map((attribute) => {
               const id = attribute.iID ?? attribute.attributeId ?? 0;
               return (
                 <button
@@ -1739,33 +1736,33 @@ function SoulConfigEditor({
                     })
                   }
                 >
-                  {displayName(attribute.name, `属性 ${id}`)}
+                  {displayName(attributes.find((item) => item.iID === (attribute.attributeId ?? attribute.iSubAttriID))?.name ?? attribute.name, `属性 ${id}`)} · {attribute.min ?? attribute.iMin ?? '—'}
                 </button>
               );
             })}
           </div>
           <span>印记效果</span>
           <div>
-            {(soul.marks ?? []).map((mark) => {
-              const id = mark.effectId ?? mark.markId ?? 0;
+            {(soul.marks ?? []).flatMap((mark) => (mark.specialEffectIds ?? []).map((effectId) => ({ ...mark, effectId }))).map((mark) => {
+              const id = mark.effectId;
               return (
                 <button
                   type="button"
                   key={`${id}-${mark.stage}`}
                   className={
-                    config.markEffectIds.includes(id)
+                    selectedMarks.includes(id)
                       ? "is-selected"
                       : undefined
                   }
                   onClick={() =>
                     update(index, {
-                      markEffectIds: config.markEffectIds.includes(id)
-                        ? config.markEffectIds.filter((value) => value !== id)
-                        : [...config.markEffectIds, id],
+                      markEffectIds: selectedMarks.includes(id)
+                        ? selectedMarks.filter((value) => value !== id)
+                        : [...selectedMarks, id],
                     })
                   }
                 >
-                  阶段 {mark.stage ?? "-"} · 印记 {mark.markId ?? "-"}
+                  阶段 {mark.stage ?? "-"} · 印记 {id}
                 </button>
               );
             })}
@@ -1788,13 +1785,13 @@ function EditorSection({
   children: ReactNode;
 }) {
   return (
-    <section className="build-editor-section">
-      <header>
-        <span>
-          <Icon aria-hidden="true" />
+    <section className="flex min-w-0 flex-col gap-4 border-t border-border pt-6">
+      <header className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="flex items-center gap-2 text-base font-semibold">
+          <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
           {title}
-        </span>
-        <small>{hint}</small>
+        </h3>
+        <span className="text-sm text-muted-foreground">{hint}</span>
       </header>
       {children}
     </section>
@@ -1812,9 +1809,9 @@ function GameBuildPanel({
   children: ReactNode;
 }) {
   return (
-    <section className="game-build-panel">
-      <header>
-        <span><Icon aria-hidden="true" />{title}</span>
+    <section className="min-w-0 rounded-lg border border-border bg-card p-4">
+      <header className="mb-4 flex items-center justify-between gap-2 border-b border-border pb-3">
+        <h3 className="flex items-center gap-2 text-base font-semibold"><Icon aria-hidden="true" className="size-4 text-muted-foreground" />{title}</h3>
         {action}
       </header>
       {children}
@@ -1830,11 +1827,7 @@ function GameBuildSlot({
   details,
   effects,
   empty = false,
-  portrait = false,
-  card = false,
-  diamond = false,
   overlayIcon,
-  noteOffset = 0,
 }: {
   icon?: string;
   label: string;
@@ -1850,27 +1843,30 @@ function GameBuildSlot({
   overlayIcon?: string;
   noteOffset?: number;
 }) {
-  return (
-    <div className={`game-build-slot${empty ? " is-empty" : ""}${portrait ? " is-portrait" : ""}${card ? " is-card" : ""}${diamond ? " is-diamond" : ""}${kind ? ` is-${kind}` : ""}${quality ? ` is-quality-${quality}` : ""}`} tabIndex={details?.length ? 0 : undefined}>
-      <div className="game-build-slot-frame">
-        {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" /> : <img className="game-build-slot-empty-art" src={nativeSlotAdd} alt="" />}
-        {badge ? <small>{badge}</small> : null}
-        {overlayIcon ? <img className="game-build-slot-overlay" src={resourceUrl(overlayIcon)} alt="" /> : null}
-      </div>
-      {kind === "soul" ? <div className="game-soul-notes">{SOUL_NOTE_ICONS.map((_, index) => { const note = SOUL_NOTE_ICONS[(index + noteOffset) % SOUL_NOTE_ICONS.length]; return <img key={`${note}-${index}`} src={note} alt="" />; })}</div> : <strong>{label}</strong>}
-      {effects?.length ? <span className="game-build-slot-effects" title={effects.join(" · ")}>{effects.slice(0, 2).join(" · ")}</span> : null}
-      {details?.length ? <BuildHoverCard title={label} lines={details} /> : null}
-    </div>
+  const tile = (
+    <button type="button" disabled={!details?.length} aria-label={`${label} · ${content.builds.details}`}
+      className={cn('flex h-full min-w-0 flex-col items-start gap-2 rounded-md border border-border p-2 text-left text-sm transition-colors enabled:hover:border-primary focus-visible:outline-2 focus-visible:outline-ring', empty && 'opacity-60')}
+      style={quality ? { borderColor: qualityColor(quality) } : undefined}>
+      <span className={cn('relative grid w-full place-items-center rounded bg-muted', kind === 'card' ? 'aspect-[3/4]' : 'aspect-square')}>
+        {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" className="size-full object-contain" /> : <img src={nativeSlotAdd} alt="" className="size-8 object-contain opacity-50" />}
+        {overlayIcon ? <img src={resourceUrl(overlayIcon)} alt="" className="absolute bottom-1 right-1 size-5" /> : null}
+      </span>
+      <strong className="break-words font-medium">{label}</strong>
+      {badge ? <span className="text-xs text-muted-foreground">{badge}</span> : null}
+      {effects?.length ? <span className="line-clamp-2 text-xs text-muted-foreground">{effects.join(' · ')}</span> : null}
+    </button>
   );
-}
-function BuildHoverCard({ title, lines }: { title: string; lines: string[] }) {
+  if (!details?.length) return tile;
   return (
-    <span className="build-hover-card" role="tooltip">
-      <strong>{title}</strong>
-      {lines.filter(Boolean).map((line, index) => (
-        <span key={`${line}-${index}`}>{line}</span>
-      ))}
-    </span>
+    <Dialog>
+      <DialogTrigger asChild>{tile}</DialogTrigger>
+      <DialogContent className="max-h-[85dvh] overflow-y-auto" aria-describedby={undefined}>
+        <DialogTitle>{label}</DialogTitle>
+        <div className="flex flex-col gap-3 text-sm leading-relaxed">
+          {details.filter(Boolean).map((line, index) => <p key={index}>{line}</p>)}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 function PickerGrid({
@@ -1894,23 +1890,18 @@ function PickerGrid({
   );
   return (
     <>
-      <label className="editor-picker-search">
-        <span className="sr-only">搜索</span>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜索名称或编号"
-        />
-      </label>
-      <div className="editor-picker-grid">
+      <SearchField value={query} onChange={setQuery} label={content.builds.search} placeholder={content.builds.search} />
+      <div className="grid max-h-80 grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 overflow-y-auto p-1">
         {visible.map((item) => (
           <button
             type="button"
             key={item.id}
-            className={selected.includes(item.id) ? "is-selected" : undefined}
+            className={cn('flex min-w-0 items-center gap-2 rounded-md border p-2 text-left text-sm disabled:opacity-45', selected.includes(item.id) ? 'border-ring bg-accent' : 'border-border hover:bg-muted')}
+            aria-pressed={selected.includes(item.id)}
+            disabled={!selected.includes(item.id) && selected.length >= limit}
             onClick={() => onToggle(item.id)}
           >
-            <span className="editor-picker-art">
+            <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded bg-muted [&_img]:size-full [&_img]:object-contain [&_svg]:size-5">
               {item.icon ? (
                 <img src={resourceUrl(item.icon)} alt="" loading="lazy" />
               ) : (
@@ -1922,9 +1913,10 @@ function PickerGrid({
           </button>
         ))}
       </div>
-      <small className="editor-picker-count">
-        已选 {selected.length} / {limit}
-      </small>
+      {!visible.length ? <p className="text-sm text-muted-foreground">{content.builds.emptySearch}</p> : null}
+      <span className="text-sm tabular-nums text-muted-foreground">
+        {content.builds.selected} {selected.length} / {limit}
+      </span>
     </>
   );
 }

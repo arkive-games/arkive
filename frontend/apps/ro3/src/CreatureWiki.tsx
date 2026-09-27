@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Crown, Ghost, Shield, Sparkles, Star, Swords, Target, Zap } from 'lucide-react'
-import { Button, cn, Dialog, DialogContent, DialogTitle, useIsMobile } from '@gamemap/ui'
+import { Button, cn } from '@gamemap/ui'
 import { localizedText, stripGameMarkup } from './cardCatalog'
 import { filterMonsters, filterPets, findPetStar, petSkillIds, type MonsterFilters } from './creatureCatalog'
 import {
@@ -17,7 +17,8 @@ import {
   type PetWikiData,
 } from './creatureData'
 import { resourceUrl } from './lib/urls'
-import { Chip, DetailPanel, DetailSection, Facts, IconTile, Notice, SearchField } from './components/wiki'
+import { AttributeChips, CatalogLayout, Chip, DetailSection, Facts, IconTile, Notice, SearchField } from './components/wiki'
+import { SELECT_CLASS } from './lib/styles'
 import content from './locales/zh-CN.json'
 
 const numberFormatter = new Intl.NumberFormat('zh-CN')
@@ -25,35 +26,6 @@ const PET_QUALITIES = [3, 4, 5]
 const PET_STARS = [1, 2, 3, 4, 5, 6]
 const MONSTER_BATCH_SIZE = 120
 const MONSTER_STATS = ['maxhp', 'maxsp', 'atk', 'matk', 'def', 'mdef'] as const
-const SELECT = 'h-9 rounded-md border border-border bg-card px-2 text-sm'
-
-/**
- * List on the left, detail on the right -- or, on a phone, the detail in the
- * shared dialog, so it is not stranded below hundreds of tiles.
- */
-function CatalogLayout({ list, detail, detailLabel, open, onClose }: {
-  list: ReactNode
-  detail: ReactNode
-  detailLabel: string
-  open: boolean
-  onClose: () => void
-}) {
-  const isMobile = useIsMobile()
-  return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="flex min-w-0 flex-col gap-3">{list}</div>
-      <div className="hidden lg:block">
-        <DetailPanel label={detailLabel}>{detail}</DetailPanel>
-      </div>
-      <Dialog open={isMobile && open} onOpenChange={(next) => { if (!next) onClose() }}>
-        <DialogContent className="max-h-[85dvh] overflow-y-auto">
-          <DialogTitle className="sr-only">{detailLabel}</DialogTitle>
-          <div className="flex flex-col gap-4">{detail}</div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
 
 export function PetWiki() {
   const [data, setData] = useState<PetWikiData | null>(null)
@@ -202,18 +174,6 @@ function PetDetail({ pet, data, star, onStarChange }: {
   )
 }
 
-function AttributeChips({ values }: { values: Array<{ key: number | string; label: ReactNode; value: ReactNode }> }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {values.map((item) => (
-        <span key={item.key} className="rounded bg-[color:var(--arkive-filter-active)] px-1.5 py-0.5 text-xs">
-          {item.label} <b className="font-semibold text-[color:var(--arkive-nav-active)]">{item.value}</b>
-        </span>
-      ))}
-    </div>
-  )
-}
-
 function PetAttributes({ title, values, attributeById }: {
   title: string
   values: number[][]
@@ -324,14 +284,14 @@ export function MonsterWiki() {
             a dozen entries each, and five chip rows would push the grid off
             the first screen. */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          <select className={SELECT} aria-label={content.wiki.monsters.allRanks} value={filters.rank} onChange={(event) => changeFilters({ rank: event.target.value as MonsterRank | 'all' })}>
+          <select className={SELECT_CLASS} aria-label={content.wiki.monsters.allRanks} value={filters.rank} onChange={(event) => changeFilters({ rank: event.target.value as MonsterRank | 'all' })}>
             <option value="all">{content.wiki.monsters.allRanks}</option>
             {Object.entries(content.wiki.monsters.ranks).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
           <EnumSelect label={content.wiki.monsters.allRaces} value={filters.race} values={data?.catalog.enums.race} onChange={(race) => changeFilters({ race })} />
           <EnumSelect label={content.wiki.monsters.allElements} value={filters.element} values={data?.catalog.enums.element} onChange={(element) => changeFilters({ element })} />
           <EnumSelect label={content.wiki.monsters.allSizes} value={filters.size} values={data?.catalog.enums.size} onChange={(size) => changeFilters({ size })} />
-          <select className={SELECT} aria-label={content.wiki.monsters.allLevels} defaultValue="" onChange={(event) => {
+          <select className={SELECT_CLASS} aria-label={content.wiki.monsters.allLevels} defaultValue="" onChange={(event) => {
             const range = content.wiki.monsters.levelRanges.find((candidate) => candidate.value === event.target.value)
             changeFilters({ levelMin: range?.min ?? 0, levelMax: range?.max ?? 100 })
           }}>
@@ -479,7 +439,7 @@ function EnumSelect({ label, value, values, onChange }: {
   onChange: (value: number) => void
 }) {
   return (
-    <select className={SELECT} aria-label={label} value={value} onChange={(event) => onChange(Number(event.target.value))}>
+    <select className={SELECT_CLASS} aria-label={label} value={value} onChange={(event) => onChange(Number(event.target.value))}>
       <option value={0}>{label}</option>
       {Object.entries(values ?? {}).map(([id, name]) => <option key={id} value={id}>{name['zh-CN']}</option>)}
     </select>

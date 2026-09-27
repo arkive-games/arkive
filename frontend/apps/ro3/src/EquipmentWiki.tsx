@@ -1,16 +1,26 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Search, Shield, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Shield } from 'lucide-react'
 import { resourceUrl } from './lib/urls'
+import { QUALITY_LABELS, qualityColor, qualityLabel } from './lib/quality'
+import { SELECT_CLASS } from './lib/styles'
 import { loadEquipmentWikiData, type EquipmentRecord } from './wikiData'
+import {
+  AttributeChips,
+  CatalogLayout,
+  DetailSection,
+  EffectList,
+  Notice,
+  RecordHeader,
+  RecordTile,
+  SearchField,
+} from './components/wiki'
 import content from './locales/zh-CN.json'
 
 type EquipmentData = Awaited<ReturnType<typeof loadEquipmentWikiData>>
 
-const QUALITY_LABELS: Record<number, string> = { 1: '普通', 2: '优秀', 3: '精良', 4: '史诗', 5: '传说', 6: '神话' }
 const SLOT_LABELS: Record<string, string> = { weapon: '武器', offhand: '副手', armor: '铠甲', cloak: '披风', shoes: '鞋子', accessory: '饰品', headwear: '头饰' }
 
 function text(value: { 'zh-CN'?: string } | undefined, fallback: string) { return value?.['zh-CN'] || fallback }
-function qualityClass(quality?: number) { return `quality-${quality ?? 1}` }
 function rangeValue(row: number[]) { return row.length > 2 && row[1] !== row[2] ? `${row[1]}–${row[2]}` : String(row[1] ?? '-') }
 function isPlaceholderEquipment(record: EquipmentRecord) {
   return record.icon === 'icons/equipment/item_null.webp' || record.item?.kIcon === 'item_null.png' || record.name?.['zh-CN'] === '待定'
@@ -21,6 +31,8 @@ interface EquipmentGroup {
   records: EquipmentRecord[]
 }
 
+// One tile per item: the table repeats an item once for each quality it can
+// drop in, and a grid of identical icons differing only by quality helps no one.
 function groupEquipment(records: EquipmentRecord[]): EquipmentGroup[] {
   const groups = new Map<string, EquipmentRecord[]>()
   for (const record of records) {
@@ -44,6 +56,7 @@ export function EquipmentWiki() {
   const [quality, setQuality] = useState('')
   const [level, setLevel] = useState('')
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -65,25 +78,59 @@ export function EquipmentWiki() {
   const groups = useMemo(() => groupEquipment(records), [records])
 
   const active = records.find((record) => record.iID === selectedId) ?? records[0] ?? null
+  const select = (id: number) => {
+    setSelectedId(id)
+    setMobileDetailOpen(true)
+  }
 
   return (
-    <div className="ro3-shell ro3-database equipment-wiki" role="tabpanel">
-      <header className="database-header">
-        <div><p>查阅装备基础属性与可用词条，为职业配置挑选合适的装备。</p></div>
-        <div className="database-stat"><strong>{data ? groups.length : '—'}</strong><span>个图鉴条目</span></div>
-      </header>
-      <div className="database-toolbar">
-        <label className="wiki-search"><Search aria-hidden="true" /><span className="sr-only">搜索装备</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索装备名称或编号" />{query ? <button type="button" aria-label="清空搜索" onClick={() => setQuery('')}><X aria-hidden="true" /></button> : null}</label>
-        <label><span>部位</span><select value={slot} onChange={(event) => setSlot(event.target.value)}><option value="">全部部位</option>{Object.entries(SLOT_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-        <label><span>品质</span><select value={quality} onChange={(event) => setQuality(event.target.value)}><option value="">全部品质</option>{Object.entries(QUALITY_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-        <label><span>最低等级</span><select value={level} onChange={(event) => setLevel(event.target.value)}><option value="">不限</option>{[1, 20, 40, 60, 80].map((value) => <option value={value} key={value}>{value}级</option>)}</select></label>
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-muted-foreground">查阅装备基础属性与可用词条，为职业配置挑选合适的装备。</p>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center">
+        <SearchField className="md:flex-1" value={query} onChange={setQuery} label="搜索装备" placeholder="搜索装备名称或编号" />
+        <div className="grid grid-cols-3 gap-2 md:flex">
+          <select className={SELECT_CLASS} aria-label="部位" value={slot} onChange={(event) => setSlot(event.target.value)}>
+            <option value="">全部部位</option>
+            {Object.entries(SLOT_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+          </select>
+          <select className={SELECT_CLASS} aria-label="品质" value={quality} onChange={(event) => setQuality(event.target.value)}>
+            <option value="">全部品质</option>
+            {Object.entries(QUALITY_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+          </select>
+          <select className={SELECT_CLASS} aria-label="最低等级" value={level} onChange={(event) => setLevel(event.target.value)}>
+            <option value="">等级不限</option>
+            {[1, 20, 40, 60, 80].map((value) => <option value={value} key={value}>{value} 级以上</option>)}
+          </select>
+        </div>
       </div>
-      <div className="database-layout">
-        <section className="database-grid" aria-label="装备列表">
-          {error ? <div className="wiki-empty">{content.wiki.dataError}</div> : !data ? <div className="wiki-empty">{content.wiki.loading}</div> : groups.length ? groups.map((group) => <EquipmentTile key={group.key} records={group.records} active={group.records.some((record) => active?.iID === record.iID)} onSelect={setSelectedId} />) : <div className="wiki-empty">没有匹配的装备。</div>}
-        </section>
-        <EquipmentDetail record={active} data={data} />
-      </div>
+
+      <CatalogLayout
+        detailLabel={active ? text(active.name, `装备 ${active.iID}`) : content.wiki.tabs.equipment}
+        detail={(
+          <>
+            {active ? <select className={SELECT_CLASS} aria-label={content.wiki.variant} value={active.iID} onChange={(event) => setSelectedId(Number(event.target.value))}>
+              {(groups.find((group) => group.records.some((record) => record.iID === active.iID))?.records ?? []).map((record) => (
+                <option key={record.iID} value={record.iID}>{qualityLabel(record.item?.iQuality)} · {record.iID}</option>
+              ))}
+            </select> : null}
+            <EquipmentDetail record={active} data={data} />
+          </>
+        )}
+        open={mobileDetailOpen}
+        onClose={() => setMobileDetailOpen(false)}
+        list={(
+          <>
+            <p className="text-sm text-muted-foreground">共 {data ? groups.length : '—'} 个图鉴条目</p>
+            {error ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : groups.length ? (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2.5" aria-label="装备列表">
+                {groups.map((group) => (
+                  <EquipmentTile key={group.key} records={group.records} active={group.records.some((record) => active?.iID === record.iID)} onSelect={select} />
+                ))}
+              </div>
+            ) : <Notice>没有匹配的装备。</Notice>}
+          </>
+        )}
+      />
     </div>
   )
 }
@@ -92,15 +139,29 @@ function EquipmentTile({ records, active, onSelect }: { records: EquipmentRecord
   const record = records[records.length - 1]
   const quality = record.item?.iQuality
   const qualities = [...new Set(records.map((variant) => variant.item?.iQuality).filter((value): value is number => value !== undefined))]
-  return <button type="button" className={`equipment-tile ${qualityClass(quality)}${active ? ' is-active' : ''}`} onClick={() => onSelect(record.iID)}>
-    <span className="equipment-tile-art">{record.icon ? <img src={resourceUrl(record.icon)} alt="" loading="lazy" /> : <Shield aria-hidden="true" />}</span>
-    <span className="equipment-tile-name">{text(record.name, `装备 ${record.iID}`)}</span>
-    <span className="equipment-tile-meta">{SLOT_LABELS[record.slot ?? ''] ?? record.slot ?? '未知部位'} · {qualities.length > 1 ? <span className="equipment-quality-dots" aria-label={`包含 ${qualities.length} 种品质`}>{qualities.map((value) => <i className={qualityClass(value)} key={value} />)}</span> : QUALITY_LABELS[quality ?? 1] ?? `品质 ${quality}`}</span>
-  </button>
+  return (
+    <RecordTile
+      active={active}
+      onClick={() => onSelect(record.iID)}
+      accent={qualityColor(quality)}
+      icon={record.icon ? <img src={resourceUrl(record.icon)} alt="" loading="lazy" className="size-full object-contain" /> : <Shield aria-hidden="true" className="size-6 text-muted-foreground" />}
+      name={text(record.name, `装备 ${record.iID}`)}
+      meta={(
+        <>
+          {SLOT_LABELS[record.slot ?? ''] ?? record.slot ?? '未知部位'} ·{' '}
+          {qualities.length > 1 ? (
+            <span className="inline-flex gap-0.5" aria-label={`包含 ${qualities.length} 种品质`}>
+              {qualities.map((value) => <i key={value} className="size-2 rounded-full" style={{ background: qualityColor(value) }} />)}
+            </span>
+          ) : qualityLabel(quality)}
+        </>
+      )}
+    />
+  )
 }
 
 function EquipmentDetail({ record, data }: { record: EquipmentRecord | null; data: EquipmentData | null }) {
-  if (!record || !data) return <aside className="database-detail"><div className="database-detail-empty">选择一件装备查看详情</div></aside>
+  if (!record || !data) return <Notice>选择一件装备查看详情</Notice>
   const item = record.item
   const attrMap = new Map((data.attrs.attributes.length ? data.attrs.attributes : data.equipment.attributes).map((attr) => [attr.iID, text(attr.name, attr.kVariable ?? `属性 ${attr.iID}`)]))
   const entryRows = data.attrs.entryGroups.filter((entry) => entry.iGroup === record.iEntries)
@@ -109,14 +170,40 @@ function EquipmentDetail({ record, data }: { record: EquipmentRecord | null; dat
     const effect = data.attrs.specialEffects.find((candidate) => candidate.iID === group?.iSpecialID || candidate.iID === id)
     return { id, weight, label: text(effect?.desc ?? group?.desc ?? effect?.name ?? group?.name, `特殊词条 ${id}`) }
   })
-  return <aside className={`database-detail ${qualityClass(item?.iQuality)}`}>
-    <div className="database-detail-heading"><span className="database-detail-icon">{record.icon ? <img src={resourceUrl(record.icon)} alt="" /> : <Shield aria-hidden="true" />}</span><div><span className="database-kicker">{QUALITY_LABELS[item?.iQuality ?? 1] ?? '装备'} · {SLOT_LABELS[record.slot ?? ''] ?? '未知部位'}</span><h3>{text(record.name, `装备 ${record.iID}`)}</h3><p>装备编号 {record.iID} · {item?.iLevelNeed ?? 0}级可用</p></div></div>
-    <DetailSection title="基础属性"><div className="detail-chip-list">{(record.kBasicAttribute ?? []).map((row) => <span key={row[0]}>{attrMap.get(row[0]) ?? `属性 ${row[0]}`} <b>{rangeValue(row)}</b></span>)}</div></DetailSection>
-    {record.kFixedEntries?.length ? <DetailSection title="固定词条"><div className="detail-chip-list">{record.kFixedEntries.map(([id, grade]) => <span key={`${id}-${grade}`}>{attrMap.get(id) ?? `属性 ${id}`} <b>等级 {grade}</b></span>)}</div></DetailSection> : null}
-    <DetailSection title="普通词条池"><div className="detail-chip-list">{entryRows.length ? entryRows.map((entry) => <span key={entry.iID}>{attrMap.get(entry.iAttriID ?? 0) ?? `属性 ${entry.iAttriID ?? entry.iID}`} <b>{entry.iMin ?? 0}–{entry.iMax ?? 0}</b></span>) : <span>暂无可解析词条</span>}</div></DetailSection>
-    {specialRows.length || record.kFixedSpecialAttribute?.length ? <DetailSection title="特殊效果"><div className="detail-effect-list">{specialRows.map((row) => <div key={row.id}><strong>{row.label}</strong><small>权重 {row.weight / 1000}</small></div>)}{(record.kFixedSpecialAttribute ?? []).map((id) => <div key={id}><strong>特殊效果 {id}</strong><small>固定</small></div>)}</div></DetailSection> : null}
-    {record.desc?.['zh-CN'] ? <DetailSection title="装备说明"><p className="detail-copy">{record.desc['zh-CN']}</p></DetailSection> : null}
-  </aside>
+  return (
+    <>
+      <RecordHeader
+        icon={record.icon ? resourceUrl(record.icon) : undefined}
+        fallback={<Shield aria-hidden="true" className="size-6 text-muted-foreground" />}
+        kicker={`${qualityLabel(item?.iQuality)} · ${SLOT_LABELS[record.slot ?? ''] ?? '未知部位'}`}
+        kickerColor={qualityColor(item?.iQuality)}
+        name={text(record.name, `装备 ${record.iID}`)}
+        note={`装备编号 ${record.iID} · ${item?.iLevelNeed ?? 0} 级可用`}
+      />
+      <DetailSection title="基础属性">
+        <AttributeChips values={(record.kBasicAttribute ?? []).map((row) => ({ key: row[0], label: attrMap.get(row[0]) ?? `属性 ${row[0]}`, value: rangeValue(row) }))} />
+      </DetailSection>
+      {record.kFixedEntries?.length ? (
+        <DetailSection title="固定词条">
+          <AttributeChips values={record.kFixedEntries.map(([id, grade]) => ({ key: `${id}-${grade}`, label: attrMap.get(id) ?? `属性 ${id}`, value: `等级 ${grade}` }))} />
+        </DetailSection>
+      ) : null}
+      <DetailSection title="普通词条池">
+        {entryRows.length ? (
+          <AttributeChips values={entryRows.map((entry) => ({ key: entry.iID, label: attrMap.get(entry.iAttriID ?? 0) ?? `属性 ${entry.iAttriID ?? entry.iID}`, value: `${entry.iMin ?? 0}–${entry.iMax ?? 0}` }))} />
+        ) : <p className="text-sm text-muted-foreground">暂无可解析词条</p>}
+      </DetailSection>
+      {specialRows.length || record.kFixedSpecialAttribute?.length ? (
+        <DetailSection title="特殊效果">
+          <EffectList rows={[
+            ...specialRows.map((row) => ({ key: row.id, title: row.label, note: `权重 ${row.weight / 1000}` })),
+            ...(record.kFixedSpecialAttribute ?? []).map((id) => ({ key: `fixed-${id}`, title: `特殊效果 ${id}`, note: '固定' })),
+          ]} />
+        </DetailSection>
+      ) : null}
+      {record.desc?.['zh-CN'] ? (
+        <DetailSection title="装备说明"><p className="text-sm leading-relaxed text-muted-foreground">{record.desc['zh-CN']}</p></DetailSection>
+      ) : null}
+    </>
+  )
 }
-
-function DetailSection({ title, children }: { title: string; children: ReactNode }) { return <section className="database-detail-section"><h4>{title}</h4>{children}</section> }

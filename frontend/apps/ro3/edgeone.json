@@ -1,5 +1,21 @@
 {
   "rewrites": [
+    { "source": "/overview", "destination": "/index.html" },
+    { "source": "/overview*", "destination": "/index.html" },
+    { "source": "/builds", "destination": "/index.html" },
+    { "source": "/builds*", "destination": "/index.html" },
+    { "source": "/talents", "destination": "/index.html" },
+    { "source": "/talents*", "destination": "/index.html" },
+    { "source": "/cards", "destination": "/index.html" },
+    { "source": "/cards*", "destination": "/index.html" },
+    { "source": "/pets", "destination": "/index.html" },
+    { "source": "/pets*", "destination": "/index.html" },
+    { "source": "/monsters", "destination": "/index.html" },
+    { "source": "/monsters*", "destination": "/index.html" },
+    { "source": "/equipment", "destination": "/index.html" },
+    { "source": "/equipment*", "destination": "/index.html" },
+    { "source": "/souls", "destination": "/index.html" },
+    { "source": "/souls*", "destination": "/index.html" },
     { "source": "/changelog", "destination": "/index.html" },
     { "source": "/changelog*", "destination": "/index.html" }
   ]

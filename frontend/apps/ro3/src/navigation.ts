@@ -29,13 +29,34 @@ function isWikiView(value: string | null): value is WikiView {
  * who typed the address wants them. The home page keeps an address of its own
  * so reloads and shared links land where they were.
  */
+const PAGE_PATHS = {
+  overview: '/overview',
+  builds: '/builds',
+  changelog: '/changelog',
+} as const
+
+const WIKI_PATHS: Record<WikiView, string> = {
+  skills: '/',
+  talents: '/talents',
+  cards: '/cards',
+  pets: '/pets',
+  monsters: '/monsters',
+  equipment: '/equipment',
+  souls: '/souls',
+}
+
+/** Only the pathname selects a page; legacy query-based routing is retired. */
+export function locationForPath(pathname: string): Location {
+  const path = pathname.replace(/\/+$/, '') || '/'
+  for (const page of ['overview', 'builds', 'changelog'] as const) {
+    if (PAGE_PATHS[page] === path) return { page, view: 'skills' }
+  }
+  const view = WIKI_VIEWS.find((candidate) => WIKI_PATHS[candidate] === path) ?? 'skills'
+  return { page: 'wiki', view }
+}
+
 export function readLocation(): Location {
-  const view = new URLSearchParams(window.location.search).get('wiki')
-  const wikiView: WikiView = isWikiView(view) ? view : 'skills'
-  if (window.location.pathname.replace(/\/$/, '').endsWith('/changelog')) return { page: 'changelog', view: wikiView }
-  const page = new URLSearchParams(window.location.search).get('view')
-  if (page === 'overview' || page === 'builds') return { page, view: wikiView }
-  return { page: 'wiki', view: wikiView }
+  return locationForPath(window.location.pathname)
 }
 
 /**
@@ -44,10 +65,7 @@ export function readLocation(): Location {
  * it in the traffic report.
  */
 export function hrefFor(page: Page, view: WikiView = 'skills'): string {
-  if (page === 'changelog') return '/changelog'
-  if (page === 'builds') return '/?view=builds'
-  if (page === 'overview') return '/?view=overview'
-  return view === 'skills' ? '/' : `/?view=wiki&wiki=${view}`
+  return page === 'wiki' ? WIKI_PATHS[view] : PAGE_PATHS[page]
 }
 
 export function navKeyFor({ page, view }: Location): NavKey {

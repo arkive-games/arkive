@@ -1611,7 +1611,7 @@ html {
 }
 
 body {
-  min-width: 20rem;
+  min-width: 0;
   min-height: 100dvh;
   margin: 0;
   background: var(--background);

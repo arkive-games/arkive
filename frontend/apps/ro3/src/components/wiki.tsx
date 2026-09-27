@@ -1,6 +1,6 @@
-import type { HTMLAttributes, ReactNode } from 'react'
+import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
 import { Search, X } from 'lucide-react'
-import { cn, Input } from '@gamemap/ui'
+import { cn, Dialog, DialogContent, DialogTitle, Input } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 
 /**
@@ -147,8 +147,125 @@ export function Facts({ items }: { items: Array<{ label: string; value: ReactNod
   )
 }
 
+/** Name-and-figure chips, the way every table lists an item's attributes. */
+export function AttributeChips({ values }: { values: Array<{ key: number | string; label: ReactNode; value: ReactNode }> }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {values.map((item) => (
+        <span key={item.key} className="rounded bg-[color:var(--arkive-filter-active)] px-1.5 py-0.5 text-xs">
+          {item.label} <b className="font-semibold text-[color:var(--arkive-nav-active)]">{item.value}</b>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/** Effect rows: a line of text with a short note under it. */
+export function EffectList({ rows }: { rows: Array<{ key: number | string; title: ReactNode; note?: ReactNode }> }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {rows.map((row) => (
+        <div key={row.key} className="flex flex-col gap-0.5 rounded-md bg-muted px-3 py-2">
+          <span className="text-sm">{row.title}</span>
+          {row.note ? <span className="text-xs text-muted-foreground">{row.note}</span> : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * List on the left, detail on the right -- or, on a phone, the detail in the
+ * shared dialog, so it is not stranded below hundreds of tiles.
+ */
+export function CatalogLayout({ list, detail, detailLabel, open, onClose }: {
+  list: ReactNode
+  detail: ReactNode
+  detailLabel: string
+  open: boolean
+  onClose: () => void
+}) {
+  const [isCompact, setIsCompact] = useState(() => window.matchMedia('(width < 1024px)').matches)
+  const closeRef = useRef(onClose)
+  useEffect(() => { closeRef.current = onClose }, [onClose])
+  useEffect(() => {
+    const media = window.matchMedia('(width < 1024px)')
+    const update = () => {
+      setIsCompact(media.matches)
+      closeRef.current()
+    }
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+  return (
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="flex min-w-0 flex-col gap-3">{list}</div>
+      <div className="hidden lg:sticky lg:top-4 lg:block">
+        <DetailPanel label={detailLabel}>{detail}</DetailPanel>
+      </div>
+      <Dialog open={isCompact && open} onOpenChange={(next) => { if (!next) onClose() }}>
+        <DialogContent className="max-h-[85dvh] overflow-y-auto">
+          <DialogTitle className="sr-only">{detailLabel}</DialogTitle>
+          <div className="flex flex-col gap-4">{detail}</div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
 export function Notice({ children }: { children: ReactNode }) {
   return <p className="py-8 text-center text-sm text-muted-foreground">{children}</p>
+}
+
+/**
+ * A catalogue tile for an item record: icon, name and one meta line, with the
+ * record's quality as a coloured top edge -- the game marks quality that way.
+ */
+export function RecordTile({ icon, name, meta, accent, active, onClick }: {
+  icon: ReactNode
+  name: string
+  meta: ReactNode
+  accent: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      style={{ borderTopColor: accent }}
+      className={cn(
+        'flex min-w-0 flex-col gap-1.5 rounded-md border border-t-[3px] bg-card p-2 text-left transition-colors',
+        active ? 'border-ring bg-[color:var(--arkive-filter-active)]' : 'border-border hover:border-primary/60',
+      )}
+    >
+      <span className="grid aspect-square w-full place-items-center overflow-hidden rounded bg-muted">{icon}</span>
+      <span className="truncate text-sm font-semibold">{name}</span>
+      <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">{meta}</span>
+    </button>
+  )
+}
+
+/** The head of an item's detail column: icon, a coloured kicker, name, note. */
+export function RecordHeader({ icon, fallback, kicker, kickerColor, name, note }: {
+  icon?: string
+  fallback: ReactNode
+  kicker: string
+  kickerColor: string
+  name: string
+  note: string
+}) {
+  return (
+    <header className="flex items-center gap-3 border-b border-border pb-4">
+      <IconTile className="size-14" src={icon} fallback={fallback} />
+      <div className="flex min-w-0 flex-col">
+        <span className="text-xs font-medium" style={{ color: kickerColor }}>{kicker}</span>
+        <h3 className="text-lg font-semibold">{name}</h3>
+        <span className="text-xs text-muted-foreground">{note}</span>
+      </div>
+    </header>
+  )
 }
 
 /** A game icon on a quiet square, so transparent artwork has an edge. */
