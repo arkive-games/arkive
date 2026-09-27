@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.16.0",
+      "date": "2026-09-27",
+      "commit": "9c91f7b911ba6aa90ab60aa7c3411836da24b5cc",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Rebuilt the encyclopedias and build workspace with compact editing, independent cards, six-career selection, safer saved builds, and mark-count based soul effects.",
+            "zh-CN": "重整百科与流派工作台：紧凑编辑、独立卡片、六职业选择、存档保护，以及按印记数量展示残响阶段效果。",
+            "zh-TW": "重整百科與流派工作台：緊湊編輯、獨立卡片、六職業選擇、存檔保護，以及按印記數量顯示殘響階段效果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.15.1",
       "date": "2026-09-26",
       "commit": "988a23a9476692ff9831aa06ccd9bf0abccba94f",
