@@ -3,7 +3,7 @@
     {
       "version": "0.16.1",
       "date": "2026-09-28",
-      "commit": "2c43a00b58199e6964c3f4860353f43e35f65914",
+      "commit": "3c902d72f30d422c67258ac89fc1390e1df70661",
       "changes": [
         {
           "kind": "fix",
