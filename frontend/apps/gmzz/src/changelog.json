@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.11.0",
+      "date": "2026-10-04",
+      "commit": "f4997964607bc1d11423df93fbc1ccb2d1fbac27",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse 32 puppets with portraits, skill categories, descriptions and six upgrade tiers. Search by puppet or skill name from the Wiki menu.",
+            "zh-CN": "新增秘偶图鉴，收录32个秘偶的图片、技能类别、技能说明与六档升阶信息，可从百科进入并搜索秘偶或技能名称。",
+            "zh-TW": "新增秘偶圖鑑，收錄32個秘偶的圖片、技能類別、技能說明與六檔升階資訊，可從百科進入並搜尋秘偶或技能名稱。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.10.0",
       "date": "2026-09-26",
       "commit": "dd7a309bdde988f5b6260399123b392598464922",
