@@ -20,6 +20,7 @@ import AutoChessPiecesPage from './features/autochess/AutoChessPiecesPage'
 import AutoChessBondsPage from './features/autochess/AutoChessBondsPage'
 import AutoChessItemsPage from './features/autochess/AutoChessItemsPage'
 import AutoChessTalentsPage from './features/autochess/AutoChessTalentsPage'
+import SecretPartnersPage from './features/secretpartners/SecretPartnersPage'
 import FellowsPage from './features/fellows/FellowsPage'
 import FellowRelationsPage from './features/fellows/FellowRelationsPage'
 import { initDataVersion } from './lib/urls'
@@ -63,6 +64,7 @@ const routeTree = rootRoute.addChildren([
   homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, changelogRoute, leaguePointsRoute,
   autoChessRoute, autoChessPiecesRoute, autoChessBondsRoute, autoChessItemsRoute, autoChessTalentsRoute,
   fellowsRoute, fellowRelationsRoute,
+  createRoute({ getParentRoute: () => rootRoute, path: '/secretpartners', component: SecretPartnersPage }),
 ])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })

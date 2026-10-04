@@ -25,6 +25,7 @@ const ROUTES: NavKey[] = [
   '/fellows/relations',
   '/autochess',
   '/fellows',
+  '/secretpartners',
   '/traintrade',
   '/utopia',
   '/reforge',

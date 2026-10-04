@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/secretpartners", "destination": "/index.html" },
+    { "source": "/secretpartners*", "destination": "/index.html" },
     {
       "source": "/traintrade",
       "destination": "/index.html"

@@ -30,6 +30,7 @@ export type NavKey =
   | '/autochess/bonds'
   | '/autochess/items'
   | '/autochess/talents'
+  | '/secretpartners'
   | '/fellows'
   | '/fellows/relations'
   | '/changelog'
@@ -91,6 +92,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // One entry for both Connections pages: the menu is a single level, and
       // Roster and Relations switch between each other from their own tab control.
       { key: '/fellows', labelKey: 'nav.fellows', art: 'fellows/7_Klein', icon: Contact },
+      { key: '/secretpartners', labelKey: 'secretpartners.title', art: 'secretpartners/100', icon: Users },
       { key: '/utopia', labelKey: 'nav.utopia', art: 'utopia/Rogue_Common_05', icon: Users },
       { key: '/reforge', labelKey: 'nav.reforge', art: 'icons/3210613', icon: Hammer },
     ],
