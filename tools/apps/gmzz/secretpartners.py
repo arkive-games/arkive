@@ -7,6 +7,7 @@ Run with --raw, --data-out and --res-out to use existing local exports.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 from pathlib import Path
 
@@ -109,6 +110,8 @@ def main():
     parser.add_argument('--res-out', type=Path, required=True)
     args = parser.parse_args()
     print(build(args.raw, args.data_out, args.res_out))
+    # The explicit input must also own the build provenance in the version stamp.
+    os.environ['GMZZ_RAW'] = str(args.raw.resolve())
     stamp_version(args.data_out)
 
 
