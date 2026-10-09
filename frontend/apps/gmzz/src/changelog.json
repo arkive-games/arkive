@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.12.0",
+      "date": "2026-10-09",
+      "commit": "588549974fba486ed2f8bd1c1f84fe63737de6f2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse history research ranks, their attribute bonuses, and research rewards for every connection relation tier.",
+            "zh-CN": "新增历史研究段位及属性加成，可查看每组人脉关系各段位的历史研究奖励。",
+            "zh-TW": "新增歷史研究段位及屬性加成，可查看每組人脈關係各段位的歷史研究獎勵。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Correct percentage formatting in puppet and connection skill descriptions.",
+            "zh-CN": "修复秘偶和人脉技能描述中的百分比格式。",
+            "zh-TW": "修復秘偶和人脈技能描述中的百分比格式。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.11.0",
       "date": "2026-10-04",
       "commit": "f4997964607bc1d11423df93fbc1ccb2d1fbac27",
