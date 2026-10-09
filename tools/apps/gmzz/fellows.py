@@ -47,13 +47,14 @@ Stories do state when they open: ``FellowStoryData`` carries ``UnlockLevel``.
 from __future__ import annotations
 
 import argparse
-import re
 from pathlib import Path
 
 from PIL import Image
 
 from .common import write_json
 from .env import excel_dir, require_dir
+from .history_research import build_history_research, build_research_rewards
+from .skill_text import FORMULA_MARK, has_formula, skill_text
 from .tables import load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
 
@@ -72,14 +73,6 @@ GRADE_COUNT = 6
 SKILL_TABLE = "SkillDataNew_split_{index}"
 SKILL_TABLE_SHARDS = 8
 
-#: What replaces a client-side formula in a skill description. Chosen to read as
-#: an omission in running Chinese: "回复…点生命值" is plainly a missing figure,
-#: where a 0 or a copied 2247 would be a wrong one.
-FORMULA_MARK = "…"
-
-#: ``*d`` is a scaled number; ``skilldisc(*id)`` and its siblings are whole
-#: clauses the client assembles from another row. Neither survives an export.
-FORMULA = re.compile(r"[A-Za-z]*disc\(\*id\)|\*id|\*d")
 
 #: Large first, Medium second. Neither directory is complete on its own — 克莱恩
 #: has only a Medium, and 戴莉 / 班森 / 梅丽莎 only a Large — but together they
@@ -205,7 +198,7 @@ def build_skill(row: dict, tags: dict[int, str]) -> dict:
     # `SkillCastDesc` rows are (shape id, human text); only the text is kept —
     # the shape id is an enum the client renders as that same text.
     cast = [str(entry[1]) for entry in _list(row.get("SkillCastDesc")) if len(entry) > 1]
-    description = FORMULA.sub(FORMULA_MARK, row.get("SkillDisc", ""))
+    description = skill_text(row.get("SkillDisc", ""))
     return {
         "id": int(row["ID"]),
         "name": row.get("Name", ""),
@@ -215,8 +208,8 @@ def build_skill(row: dict, tags: dict[int, str]) -> dict:
         "description": description,
         # Placeholder-free for all fourteen, so it is what a reader gets when
         # the detailed line collapses into marks.
-        "brief": row.get("BriefDescription", ""),
-        "hasFormula": FORMULA_MARK in description,
+        "brief": skill_text(row.get("BriefDescription", "")),
+        "hasFormula": has_formula(row.get("SkillDisc", ""), row.get("BriefDescription", "")),
         "icon": _asset_name(row.get("SkillIcon")),
     }
 
@@ -350,13 +343,20 @@ def build_levels(tables: dict) -> list[dict]:
     return ladders
 
 
-def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict]) -> dict[str, int]:
+def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict], reuse_assets: bool = False) -> dict[str, int]:
     """One portrait per fellow, preferring the large art the game's own panel uses."""
     target = Path(res_out) / ICON_SUBDIR
     target.mkdir(parents=True, exist_ok=True)
-    used = {"large": 0, "medium": 0}
+    used = {"large": 0, "medium": 0, "reused": 0}
     for fellow in fellows:
         candidates = fellow.pop("_iconCandidates")
+        if reuse_assets:
+            name = next((name for name in candidates if name and (target / f"{name}.webp").is_file()), None)
+            if name is None:
+                raise FileNotFoundError(f"No existing portrait for fellow {fellow['id']} in {target}")
+            fellow["portrait"] = name
+            used["reused"] += 1
+            continue
         chosen = None
         for directory, size in zip(PORTRAIT_DIRS, ("large", "medium")):
             for name in candidates:
@@ -380,7 +380,7 @@ def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict]) -> dict[st
     return used
 
 
-def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict]) -> tuple[int, list[str]]:
+def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict], reuse_assets: bool = False) -> tuple[int, list[str]]:
     """Eleven of the fourteen skill icons; the other three do not exist to export.
 
     ``Follow_Skill_01``, ``_05`` and ``_08`` — 邓恩, 佛尔思 and 梅丽莎 — are absent
@@ -391,7 +391,7 @@ def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict]) -> tuple
     instead of a broken image.
     """
     source = Path(raw) / SKILL_ICON_DIR
-    if not source.is_dir():
+    if not reuse_assets and not source.is_dir():
         raise FileNotFoundError(
             f"{source} is absent — run: uex export --profile gmzz --only {SKILL_ICON_DIR}"
         )
@@ -400,6 +400,13 @@ def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict]) -> tuple
     count, missing = 0, []
     for fellow in fellows:
         name = fellow["skill"]["icon"]
+        if reuse_assets:
+            if name and (target / f"{name}.webp").is_file():
+                count += 1
+            else:
+                missing.append(f"{fellow['name']} ({name})")
+                fellow["skill"]["icon"] = ""
+            continue
         png = source / f"{name}.png"
         if not png.is_file():
             missing.append(f"{fellow['name']} ({name})")
@@ -411,7 +418,7 @@ def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict]) -> tuple
     return count, missing
 
 
-def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, int]:
+def build(excel: Path, raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) -> dict[str, int]:
     strings = load_strings(excel)
     names = {
         "Fellow": "FellowData",
@@ -421,6 +428,10 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
         "RelationRarity": "RelationRarityData",
         "FellowAffinityLevel": "FellowAffinityLevelData",
         "SkillTag": "SkillTagData",
+        "HistoryResearch": "HistoryResearchData",
+        "HistoryResearchProp": "HistoryResearchPropData",
+        "FightPropMode": "FightPropModeData",
+        "FightPropModeSet": "FightPropModeSetData",
     }
     tables = {key: resolve_text(load_table(excel, table), strings) for key, table in names.items()}
     tags = {int(row["ID"]): row["Tag"] for row in _rows(tables["SkillTag"])}
@@ -433,8 +444,20 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
     fellows = build_fellows(tables, skills, tags)
     relations = build_relations(tables, fellows, effects)
     levels = build_levels(tables)
+    history = build_history_research(
+        tables["HistoryResearch"], tables["HistoryResearchProp"],
+        tables["FightPropMode"], tables["FightPropModeSet"],
+    )
+    relation_rows = {int(row["ID"]): row for row in _rows(tables["FellowRelation"])}
+    for relation in relations:
+        relation["researchRewards"] = build_research_rewards(
+            relation_rows[relation["id"]].get("HistoryResearchValueList"), grades,
+        )
 
-    payloads = {"fellows": fellows, "relations": relations, "effects": effects, "levels": levels}
+    payloads = {
+        "fellows": fellows, "relations": relations, "effects": effects,
+        "levels": levels, "history-research": history,
+    }
     missing = unresolved_ids(payloads)
     if missing:
         raise RuntimeError(
@@ -443,20 +466,20 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
 
     # Portraits before the JSON: each fellow's `portrait` is decided here, and a
     # dataset naming art the image repo lacks is worse than no dataset.
-    used = _convert_portraits(raw, res_out, fellows)
-    skill_icons, iconless = _convert_skill_icons(raw, res_out, fellows)
+    used = _convert_portraits(raw, res_out, fellows, reuse_assets)
+    skill_icons, iconless = _convert_skill_icons(raw, res_out, fellows, reuse_assets)
     for name, payload in payloads.items():
         write_json(Path(data_out) / OUT_DIR / f"{name}.json", payload)
 
     formulas = sum(1 for fellow in fellows if fellow["skill"]["hasFormula"])
     print(
         f"fellows: {len(fellows)} fellows, {len(relations)} relations, {len(effects)} effect sets "
-        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium portraits + "
+        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium + {used['reused']} reused portraits + "
         f"{skill_icons} skill icons -> {res_out}/{ICON_SUBDIR}"
     )
     if iconless:
         print(
-            f"fellows: {len(iconless)} skill icon(s) are not in the pak index at all — "
+            f"fellows: {len(iconless)} skill icon(s) unavailable in the selected asset source: "
             f"{', '.join(iconless)}"
         )
     if formulas:
@@ -476,6 +499,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--raw", type=Path, default=None)
     parser.add_argument("--data-out", type=Path, default=None)
     parser.add_argument("--res-out", type=Path, default=None)
+    parser.add_argument("--reuse-assets", action="store_true", help="Use existing WebPs instead of converting raw portraits and icons")
     args = parser.parse_args(argv)
 
     data_out = args.data_out or require_dir("GMZZ_DATA_OUT")
@@ -484,6 +508,7 @@ def main(argv: list[str] | None = None) -> None:
         args.raw or require_dir("GMZZ_RAW"),
         data_out,
         args.res_out or require_dir("GMZZ_RES_OUT"),
+        args.reuse_assets,
     )
     stamp_version(data_out)
 

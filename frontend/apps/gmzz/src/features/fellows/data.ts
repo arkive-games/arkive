@@ -1,4 +1,4 @@
-import { dataUrl, RES_BASE } from '@/lib/urls'
+import { dataUrl, RES_BASE } from '../../lib/urls'
 
 /**
  * 人脉 — the characters you befriend. `Fellow` internally; the similarly named
@@ -79,6 +79,25 @@ export type FellowRelation = {
   story: string
   awakeStory: string
   members: FellowRelationMember[]
+  researchRewards?: { grade: number; gradeName: string; value: number }[]
+}
+
+export type HistoryResearchRank = {
+  id: number
+  rank: number
+  subRank: number
+  name: string
+  score: number
+  mark: number
+  attributes: { key: string; name: string; value: number; format: 'percent' | 'number' }[]
+}
+
+export function formatResearchAttribute(attribute: HistoryResearchRank['attributes'][number], locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: attribute.format === 'percent' ? 'percent' : 'decimal',
+    maximumFractionDigits: 2,
+    signDisplay: 'exceptZero',
+  }).format(attribute.value)
 }
 
 export type RelationEffectTier = {
@@ -110,6 +129,7 @@ export const loadFellows = () => load<Fellow[]>('fellows', 'fellows')
 export const loadFellowRelations = () => load<FellowRelation[]>('relations', 'relations')
 export const loadRelationEffects = () => load<RelationEffect[]>('effects', 'relation effects')
 export const loadAffinityLadders = () => load<AffinityLadder[]>('levels', 'affinity levels')
+export const loadHistoryResearch = () => load<HistoryResearchRank[]>('history-research', 'history research')
 
 export function fellowPortraitUrl(portrait: string): string {
   return `${RES_BASE}/fellows/${portrait}.webp`

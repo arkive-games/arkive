@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
 import { FellowsTabs } from '@/features/fellows/FellowsTabs'
+import { HistoryResearch } from '@/features/fellows/HistoryResearch'
 import {
   fellowPortraitUrl,
   loadFellowRelations,
@@ -70,6 +71,7 @@ export default function FellowRelationsPage() {
           />
         ))}
       </div>
+      <HistoryResearch />
     </ContentPage>
   )
 }
@@ -128,7 +130,20 @@ function RelationCard({
       </ul>
 
       {open ? (
-        <div className="mt-3 space-y-4 border-t border-border/70 pt-3">
+        <div id={`relation-details-${relation.id}`} className="mt-3 space-y-4 border-t border-border/70 pt-3">
+          {relation.researchRewards?.length ? (
+            <section>
+              <h3 className="text-sm font-semibold">{t('fellows.researchRewards')}</h3>
+              <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-6">
+                {relation.researchRewards.map((reward) => (
+                  <div key={reward.grade} className="text-sm">
+                    <dt className="text-muted-foreground">{reward.gradeName}</dt>
+                    <dd className="tabular-nums">+{reward.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
           {relation.members.map((member) => {
             const effect = member.effectId ? effectsById.get(member.effectId) : undefined
             if (!effect) return null
@@ -167,7 +182,9 @@ function RelationCard({
       <button
         type="button"
         onClick={onToggle}
-        className="mt-3 text-sm font-medium text-primary hover:underline"
+        aria-expanded={open}
+        aria-controls={open ? `relation-details-${relation.id}` : undefined}
+        className="mt-3 min-h-11 text-sm font-medium text-primary hover:underline"
       >
         {open ? t('fellows.collapse') : t('fellows.expandRelation')}
       </button>

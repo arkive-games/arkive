@@ -8,16 +8,14 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 from pathlib import Path
 
 from PIL import Image
 
 from .common import write_json
+from .skill_text import has_formula, skill_text
 from .tables import EXCEL_DIR, load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
-
-FORMULA = re.compile(r"[A-Za-z]*disc\(\*id\)|\*[A-Za-z][A-Za-z0-9_]*")
 
 
 def build_records(config: dict, skills: dict, upgrades: dict, tags: dict) -> list[dict]:
@@ -49,9 +47,9 @@ def build_records(config: dict, skills: dict, upgrades: dict, tags: dict) -> lis
             'category': skill.get('Tag', ''),
             'skill': {'id': skill_id, 'name': skill['Name'], 'tags': labels,
                       'cooldown': skill.get('CD'),
-                      'description': FORMULA.sub('…', description),
-                      'brief': FORMULA.sub('…', skill.get('BriefDescription', '')),
-                      'hasFormula': bool(FORMULA.search(description)),
+                      'description': skill_text(description),
+                      'brief': skill_text(skill.get('BriefDescription', '')),
+                      'hasFormula': has_formula(description, skill.get('BriefDescription', '')),
                       'castTargets': [entry[1] for entry in skill.get('SkillCastDesc', []) if len(entry) > 1]},
             'upgrades': tiers,
         })
@@ -70,7 +68,7 @@ def portrait_path(raw: Path, reference: str) -> Path | None:
     return candidate if candidate.is_file() else None
 
 
-def build(raw: Path, data_out: Path, res_out: Path) -> dict:
+def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) -> dict:
     excel = raw / EXCEL_DIR
     strings = load_strings(excel)
     def table(name):
@@ -90,6 +88,12 @@ def build(raw: Path, data_out: Path, res_out: Path) -> dict:
     output.mkdir(parents=True, exist_ok=True)
     missing = []
     for record in records:
+        if reuse_assets:
+            name = str(record['id'])
+            if not (output / f'{name}.webp').is_file():
+                raise FileNotFoundError(f'Missing existing puppet portrait {name} in {output}')
+            record['portrait'] = name
+            continue
         row = sources[record['id']]
         source = portrait_path(raw, row.get('Icon', '')) or portrait_path(raw, row.get('IconSmall', ''))
         if source is None:
@@ -108,8 +112,9 @@ def main():
     parser.add_argument('--raw', type=Path, required=True)
     parser.add_argument('--data-out', type=Path, required=True)
     parser.add_argument('--res-out', type=Path, required=True)
+    parser.add_argument('--reuse-assets', action='store_true', help='Use existing WebP portraits instead of converting raw images')
     args = parser.parse_args()
-    print(build(args.raw, args.data_out, args.res_out))
+    print(build(args.raw, args.data_out, args.res_out, args.reuse_assets))
     # The explicit input must also own the build provenance in the version stamp.
     os.environ['GMZZ_RAW'] = str(args.raw.resolve())
     stamp_version(args.data_out)

@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from gmzz.secretpartners import build_records, portrait_path
+from gmzz import secretpartners
 
 
 def sample():
@@ -50,3 +51,36 @@ def test_missing_tiers_fail():
 def test_portrait_missing_is_explicit(tmp_path: Path):
     assert portrait_path(tmp_path, '/Game/Portraits/Test.Test') is None
     assert portrait_path(tmp_path, '') is None
+
+
+def test_percent_escape_and_brief_formulas_are_formatted():
+    config, skills, upgrades, tags = sample()
+    skills[10]['SkillDisc'] = 'Chance *f**.'
+    skills[10]['BriefDescription'] = 'Duration *s.'
+    skill = build_records(config, skills, upgrades, tags)[0]['skill']
+    assert skill['description'] == 'Chance \u2026%.'
+    assert skill['brief'] == 'Duration \u2026.'
+    assert skill['hasFormula']
+
+
+def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch):
+    config, skills, upgrades, tags = sample()
+    tables = {
+        'SecretPartnerConfigData': config,
+        'SkillDataNew_split_1': skills,
+        'SkillTagData': {str(key): {'ID': key, 'Tag': value} for key, value in tags.items()},
+        'SecretPartnerSkillStarUpData': upgrades,
+    }
+    monkeypatch.setattr(secretpartners, 'load_strings', lambda _: {})
+    monkeypatch.setattr(secretpartners, 'load_table', lambda _, name: tables[name])
+    monkeypatch.setattr(secretpartners, 'resolve_text', lambda table, _: table)
+    resources = tmp_path / 'res'
+    output = tmp_path / 'data'
+    with pytest.raises(FileNotFoundError, match='Missing existing puppet portrait'):
+        secretpartners.build(tmp_path / 'raw', output, resources, reuse_assets=True)
+    assert not (output / 'secretpartners/secretpartners.json').exists()
+    portrait = resources / 'secretpartners/1.webp'
+    portrait.write_bytes(b'existing-art')
+    result = secretpartners.build(tmp_path / 'raw', output, resources, reuse_assets=True)
+    assert result['portraits'] == 1 and result['missing'] == []
+    assert portrait.read_bytes() == b'existing-art'

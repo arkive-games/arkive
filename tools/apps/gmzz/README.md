@@ -206,8 +206,31 @@ uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Skill/Follow
 uv run python -m gmzz.fellows
 ```
 
-Writes `fellows/{fellows,relations,effects,levels}.json` to `GMZZ_DATA_OUT`, and
+Writes `fellows/{fellows,relations,effects,levels,history-research}.json` to `GMZZ_DATA_OUT`, and
 one portrait per fellow plus eleven skill icons to `GMZZ_RES_OUT/fellows/`.
+
+History research joins `HistoryResearchData.PropID` to the one-based
+`HistoryResearchPropData` rows. Attribute names come from `FightPropModeData`
+and the aggregate `FightPropModeSetData`; `ShowType`, not the `_N` or `_P`
+suffix, decides whether to display a percentage. Aggregate members must agree
+on that format. Each rank exports its score threshold, rating and full attribute
+bundle, not a difference from the preceding rank.
+
+Each relation also exports the six `HistoryResearchValueList` rewards aligned
+with `RelationRarityData`. These are separate from per-member skill effects.
+The exporter preserves each reward as written; it does not infer a cumulative
+total or claim that relations are the only source of research points.
+
+Both connections and puppets use `skill_text.py`: dynamic numeric and nested
+description tokens become explicit omissions, while the client's `**` escape
+becomes a literal percent sign. Values that require the running client are not
+calculated or guessed.
+
+For a table-only refresh, pass `--reuse-assets` with `--res-out` pointing to an
+up-to-date resource checkout. This verifies existing portrait WebPs and reuses
+available skill icons without writing artwork; a missing portrait stops the
+build. The same flag is supported by `gmzz.secretpartners`. Without the flag,
+both commands retain their raw-image conversion behavior.
 
 The system is `Fellow` internally. **`SecretPartner` is a different system**
 (秘偶) whose table names also contain `Partner`, so a grep for that finds the
