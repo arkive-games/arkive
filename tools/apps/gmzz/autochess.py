@@ -38,14 +38,15 @@ build that stops.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 from pathlib import Path
 
 from PIL import Image
 
 from .common import is_nonempty_file, write_json
-from .env import excel_dir, optional_dir, require_dir
-from .tables import load_strings, load_table, resolve_text, unresolved_ids
+from .env import check_export_current, excel_dir, optional_dir, require_dir
+from .tables import EXCEL_DIR, load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
 
 #: The live mode. Every table carries it, and `TurnData` also holds a 99999
@@ -675,8 +676,20 @@ def main(argv: list[str] | None = None) -> None:
 
     data_out = args.data_out or require_dir("GMZZ_DATA_OUT")
     raw = args.raw or optional_dir("GMZZ_RAW")
+    if args.excel:
+        suffix = Path(EXCEL_DIR).parts
+        if tuple(part.lower() for part in args.excel.parts[-len(suffix):]) == tuple(part.lower() for part in suffix):
+            source = args.excel.resolve().parents[len(suffix) - 1]
+            if args.raw and source != args.raw.resolve():
+                raise RuntimeError("--excel and --raw name different exports")
+            raw = source
+        elif raw is None:
+            raise RuntimeError("--excel must use the exported C7/Content/ScriptOPCode/Data/Excel layout, or provide --raw for build provenance")
     if raw is None and not args.reuse_assets:
         raw = require_dir("GMZZ_RAW")
+    if raw is not None:
+        check_export_current(raw)
+        os.environ["GMZZ_RAW"] = str(raw)
     build(
         args.excel or excel_dir(),
         raw,

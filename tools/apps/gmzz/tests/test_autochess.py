@@ -51,15 +51,35 @@ def test_reused_skill_icons_preserve_available_art_and_clear_missing_art(tmp_pat
 
 
 def test_table_only_cli_needs_no_raw_directory_with_explicit_excel(monkeypatch, tmp_path):
+    import json
+
     monkeypatch.delenv("GMZZ_RAW", raising=False)
+    monkeypatch.delenv("GMZZ_PATCHED", raising=False)
+    excel = tmp_path / "raw" / autochess.EXCEL_DIR
+    excel.mkdir(parents=True)
+    (tmp_path / "raw/C7/Content/ScriptOPCode/arkive-kscache-build.txt").write_text("2171866")
+    game = tmp_path / "game"
+    (game / "Content").mkdir(parents=True)
+    (game / "Content/package.txt").write_text("2018737")
+    monkeypatch.setenv("GMZZ_GAME", str(game))
     calls = []
     monkeypatch.setattr(autochess, "build", lambda *args: calls.append(args))
-    monkeypatch.setattr(autochess, "stamp_version", lambda _: None)
     autochess.main([
-        "--excel", str(tmp_path), "--data-out", str(tmp_path),
+        "--excel", str(excel), "--data-out", str(tmp_path / "data"),
         "--res-out", str(tmp_path), "--reuse-assets",
     ])
-    assert calls[0][1] is None and calls[0][-1] is True
+    assert calls[0][1] == (tmp_path / "raw").resolve() and calls[0][-1] is True
+    stamp = json.loads((tmp_path / "data/version.json").read_text())
+    assert stamp["gameVersion"] == "2171866"
+
+
+def test_table_only_cli_rejects_unknown_or_conflicting_source_provenance(monkeypatch, tmp_path):
+    monkeypatch.delenv("GMZZ_RAW", raising=False)
+    options = ["--data-out", str(tmp_path), "--res-out", str(tmp_path), "--reuse-assets"]
+    with pytest.raises(RuntimeError, match="build provenance"):
+        autochess.main(["--excel", str(tmp_path), *options])
+    with pytest.raises(RuntimeError, match="different exports"):
+        autochess.main(["--excel", str(tmp_path / autochess.EXCEL_DIR), "--raw", str(tmp_path / "other"), *options])
 
 
 def test_bond_group_reads_the_priority_band():
