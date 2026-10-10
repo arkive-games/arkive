@@ -130,3 +130,15 @@ def test_re_runs_skip_images_already_current(tmp_path):
     webp = res_out / mod.OUT_SUBDIR / f"{DISTINCT[0]}.webp"
     os.utime(stale,(webp.stat().st_mtime + 10, webp.stat().st_mtime + 10))
     assert mod.build(raw, data_out, res_out) == (11, 1, 10)
+
+
+def test_re_runs_repair_empty_images_even_when_their_timestamp_is_newer(tmp_path):
+    data_out = _data_out(tmp_path)
+    raw = _raw(tmp_path, DISTINCT)
+    res_out = tmp_path / "res"
+    mod.build(raw, data_out, res_out)
+    webp = res_out / mod.OUT_SUBDIR / f"{DISTINCT[0]}.webp"
+    webp.write_bytes(b"")
+    assert mod.build(raw, data_out, res_out) == (11, 1, 10)
+    with Image.open(webp) as image:
+        image.verify()

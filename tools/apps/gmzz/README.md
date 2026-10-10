@@ -469,6 +469,26 @@ client's `Manifest_UFSFiles_Win64.txt` but absent from what uex indexes
 (`ConfigIcon` resolves to one file, against 18130 manifest entries), so the
 asset name is emitted for a later run to resolve and the page is typographic.
 
+## Table-only refreshes
+
+`gmzz.equipment --reuse-assets` checks the resource checkout before emitting
+icon URLs. Unavailable artwork is recorded as `iconSource`, with `icon` empty
+so the picker shows its quality plate rather than a broken image. Convert
+recoverable new icons into the resource checkout before this stage. Without
+the flag, the strict raw-artwork workflow is unchanged.
+
+`gmzz.autochess --reuse-assets` validates every referenced attribute icon in
+the resource checkout and reuses available item and skill WebPs without
+modifying them. Unavailable optional item and skill icons remain explicitly
+empty, as in a raw-image build. Use this when the patched view cannot mount
+artwork that is already published.
+
+The build 2171866 export retains four `SealedRisk` rows without matching
+strings for their eight label and description references. These optional
+fields are `null`, with source text ids preserved as `levelTextId` and
+`descriptionTextId`. Required item names and descriptions still fail when
+unresolved; previous-build text is never carried forward to conceal a gap.
+
 ## Equipment and sealed items
 
 An older pipeline, predating the table reader above: it turns

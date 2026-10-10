@@ -8,6 +8,7 @@ import {
   playableProfessions,
   enhanceOf,
   evaluatePiece,
+  equipmentIconUrl,
   extraordinaryBonus,
   familiesFor,
   graceFor,
@@ -30,6 +31,11 @@ import {
   type Equipment,
   type Grace,
 } from './data'
+
+it('does not request an image when the source artwork is unavailable', () => {
+  expect(equipmentIconUrl('')).toBeUndefined()
+  expect(equipmentIconUrl('3000251')).toContain('/icons/3000251.webp')
+})
 
 /**
  * Fixture carrying the real numbers off the game's own three tabs for one

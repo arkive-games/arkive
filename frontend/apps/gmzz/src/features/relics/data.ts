@@ -21,7 +21,14 @@ export type Artifact = {
 /** Grade ladder. **Lower grade is better** — 3 is the starting grade, 0 the best. */
 export type GradeRung = { grade: number; mark: number; note: string }
 
-export type Risk = { id: number | null; level: string; name: string; description: string }
+export type Risk = {
+  id: number | null
+  level: string | null
+  name: string | null
+  description: string | null
+  levelTextId?: string
+  descriptionTextId?: string
+}
 
 export type ResonanceRung = {
   affixCount: number | null

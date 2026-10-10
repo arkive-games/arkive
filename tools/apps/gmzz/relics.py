@@ -171,18 +171,23 @@ def promotion(excel: Path, strings: dict) -> dict:
 
 
 def risks(excel: Path, strings: dict) -> list[dict]:
-    return sorted(
-        (
-            {
-                "id": r.get("RiskID"),
-                "level": r.get("RiskLevel"),
-                "name": _plain(r.get("RiskLevel")) or _plain(r.get("RiskDescription")),
-                "description": _plain(r.get("RiskDescription")),
-            }
-            for r in _rows(resolve_text(load_table(excel, RISK_TABLE), strings))
-        ),
-        key=lambda r: r["id"] or 0,
-    )
+    out = []
+    for row in _rows(resolve_text(load_table(excel, RISK_TABLE), strings)):
+        risk = {"id": row.get("RiskID")}
+        # Some live risk rows retain references whose strings the client removed.
+        # Preserve the missing references, not stale prose or unresolved markers.
+        for source, field in (("RiskLevel", "level"), ("RiskDescription", "description")):
+            value = row.get(source)
+            missing = unresolved_ids(value)
+            if missing:
+                risk[field] = None
+                risk[f"{field}TextId"] = next(iter(missing))
+                print(f"{RISK_TABLE} risk {risk['id']}: {source} text {risk[f'{field}TextId']} unavailable")
+            else:
+                risk[field] = value if field == "level" else _plain(value)
+        risk["name"] = _plain(risk["level"]) or _plain(risk["description"]) or None
+        out.append(risk)
+    return sorted(out, key=lambda r: r["id"] or 0)
 
 
 def resonance(excel: Path, strings: dict) -> dict:

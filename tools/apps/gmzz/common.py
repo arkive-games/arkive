@@ -41,3 +41,7 @@ def write_json(path: Path, obj) -> None:
 def read_json(path: Path):
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def is_nonempty_file(path: Path) -> bool:
+    return path.is_file() and path.stat().st_size > 0

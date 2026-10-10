@@ -75,7 +75,7 @@ import collections
 import re
 from pathlib import Path
 
-from .common import write_json
+from .common import is_nonempty_file, write_json
 from .env import excel_dir, require_dir
 from .tables import load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
@@ -474,7 +474,19 @@ def affixes(excel: Path, strings: dict) -> dict:
     }
 
 
-def build(excel: Path, data_out: Path) -> dict[str, int]:
+def _reuse_icons(items: list[dict], res_out: Path) -> None:
+    target = Path(res_out) / "icons"
+    if not target.is_dir() or not any(is_nonempty_file(path) for path in target.glob("*.webp")):
+        raise FileNotFoundError(f"No existing equipment icons in {target}")
+    for item in items:
+        icon = item["icon"]
+        if icon and not is_nonempty_file(target / f"{icon}.webp"):
+            item["iconSource"] = icon
+            item["icon"] = ""
+            print(f"equipment item {item['id']}: icon {icon} unavailable in {res_out}")
+
+
+def build(excel: Path, data_out: Path, res_out: Path | None = None) -> dict[str, int]:
     strings = load_strings(excel)
 
     slot_rows = slots(excel, strings)
@@ -482,6 +494,8 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
     types_by_id = {t["id"]: t for t in type_rows}
     profession_rows = professions(excel, strings, type_rows)
     item_rows = items(excel, strings, types_by_id, unwritten_brands(excel, strings))
+    if res_out is not None:
+        _reuse_icons(item_rows, res_out)
     brand_rows = brands(excel, strings)
     enhance = enhancement(excel, strings)
     suit = suits(excel, strings)
@@ -519,10 +533,13 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--excel", type=Path, default=None)
     parser.add_argument("--out", type=Path, default=None)
+    parser.add_argument("--res-out", type=Path, default=None)
+    parser.add_argument("--reuse-assets", action="store_true", help="Use existing icons and record unavailable source references without broken image URLs")
     args = parser.parse_args(argv)
 
     data_out = args.out or require_dir("GMZZ_DATA_OUT")
-    build(args.excel or excel_dir(), data_out)
+    res_out = (args.res_out or require_dir("GMZZ_RES_OUT")) if args.reuse_assets else None
+    build(args.excel or excel_dir(), data_out, res_out)
     stamp_version(data_out)
 
 

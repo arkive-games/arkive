@@ -101,6 +101,23 @@ def test_artifacts_carry_their_group_name(stub):
     assert rows[2085029]["quality"] == 4 and rows[2085004]["quality"] == 4
 
 
+def test_removed_risk_strings_are_null_with_their_source_ids(stub):
+    stub[relics.RISK_TABLE] = [{
+        "RiskID": 1, "RiskLevel": "@LANG:123", "RiskDescription": "@LANG:456",
+    }]
+    assert relics.risks(None, {}) == [{
+        "id": 1, "level": None, "name": None, "description": None,
+        "levelTextId": "123", "descriptionTextId": "456",
+    }]
+
+
+def test_missing_required_artifact_names_still_stop_the_build(stub, tmp_path):
+    stub[relics.SEALED_TABLE] = {"2085029": {**ARTIFACTS["2085029"], "Name": "@LANG:123"}}
+    with pytest.raises(RuntimeError, match="text id.*unresolved"):
+        relics.build(None, tmp_path)
+    assert not (tmp_path / relics.OUT_FILE).exists()
+
+
 def test_promotion_reads_the_nested_shape_and_orders_worst_first(stub):
     ladder = relics.promotion(None, {})
     assert [(r["grade"], r["mark"]) for r in ladder["ladder"]] == [

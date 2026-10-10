@@ -248,6 +248,21 @@ def test_affixes_only_offers_a_slot_the_groups_flagged_for_it(stub):
     assert "7" not in result["bySlot"]
 
 
+def test_reused_icons_preserve_sources_without_broken_references(tmp_path):
+    with pytest.raises(FileNotFoundError, match="No existing equipment icons"):
+        equipment._reuse_icons([{"id": 1, "icon": "present"}], tmp_path)
+    target = tmp_path / "icons"
+    target.mkdir()
+    (target / "present.webp").write_bytes(b"existing")
+    (target / "absent.webp").write_bytes(b"")
+    items = [{"id": 1, "icon": "present"}, {"id": 2, "icon": "absent"}]
+    equipment._reuse_icons(items, tmp_path)
+    assert items == [
+        {"id": 1, "icon": "present"},
+        {"id": 2, "icon": "", "iconSource": "absent"},
+    ]
+
+
 def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
     tables = {
         equipment.SLOT_TABLE: {"1": {"ID": 1, "Name": "武器", "OrderRandom": 1, "Season": [101]}},

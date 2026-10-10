@@ -12,6 +12,56 @@ import pytest
 from gmzz import autochess
 
 
+def test_reused_attribute_icons_validate_every_reference_without_writing(tmp_path):
+    target = tmp_path / autochess.ICON_SUBDIR
+    target.mkdir()
+    icon = target / "01.webp"
+    icon.write_bytes(b"existing")
+    assert autochess._reuse_property_icons(tmp_path, [{"icon": "01"}, {"icon": ""}]) == 1
+    assert icon.read_bytes() == b"existing"
+    with pytest.raises(FileNotFoundError, match="02"):
+        autochess._reuse_property_icons(tmp_path, [{"icon": "02"}])
+    (target / "02.webp").write_bytes(b"")
+    with pytest.raises(FileNotFoundError, match="02"):
+        autochess._reuse_property_icons(tmp_path, [{"icon": "02"}])
+
+
+def test_reused_item_icons_preserve_available_art_and_clear_missing_art(tmp_path):
+    target = tmp_path / autochess.ICON_SUBDIR / "items"
+    target.mkdir(parents=True)
+    icon = target / "old.webp"
+    icon.write_bytes(b"existing")
+    (target / "absent.webp").write_bytes(b"")
+    items = [{"id": 1, "icon": "old"}, {"id": 2, "icon": "absent"}, {"id": 3, "icon": ""}]
+    assert autochess._convert_item_icons(tmp_path / "no-raw", tmp_path, items, True) == (1, [2, 3])
+    assert [item["icon"] for item in items] == ["old", "", ""]
+    assert icon.read_bytes() == b"existing"
+
+
+def test_reused_skill_icons_preserve_available_art_and_clear_missing_art(tmp_path):
+    target = tmp_path / autochess.ICON_SUBDIR / "skills"
+    target.mkdir(parents=True)
+    icon = target / "old.webp"
+    icon.write_bytes(b"existing")
+    (target / "absent.webp").write_bytes(b"")
+    pieces = [{"skillIcon": "old"}, {"skillIcon": "absent"}, {"skillIcon": ""}]
+    assert autochess._convert_skill_icons(tmp_path / "no-raw", tmp_path, pieces, True) == (1, 2)
+    assert [piece["skillIcon"] for piece in pieces] == ["old", "", ""]
+    assert icon.read_bytes() == b"existing"
+
+
+def test_table_only_cli_needs_no_raw_directory_with_explicit_excel(monkeypatch, tmp_path):
+    monkeypatch.delenv("GMZZ_RAW", raising=False)
+    calls = []
+    monkeypatch.setattr(autochess, "build", lambda *args: calls.append(args))
+    monkeypatch.setattr(autochess, "stamp_version", lambda _: None)
+    autochess.main([
+        "--excel", str(tmp_path), "--data-out", str(tmp_path),
+        "--res-out", str(tmp_path), "--reuse-assets",
+    ])
+    assert calls[0][1] is None and calls[0][-1] is True
+
+
 def test_bond_group_reads_the_priority_band():
     # Not `Type`: that is 1 on 27 of the 28 rows, which would put every 组织共鸣
     # but one in the wrong family.

@@ -51,7 +51,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from .common import write_json
+from .common import is_nonempty_file, write_json
 from .env import excel_dir, require_dir
 from .history_research import build_history_research, build_research_rewards
 from .skill_text import FORMULA_MARK, has_formula, skill_text
@@ -351,7 +351,7 @@ def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict], reuse_asse
     for fellow in fellows:
         candidates = fellow.pop("_iconCandidates")
         if reuse_assets:
-            name = next((name for name in candidates if name and (target / f"{name}.webp").is_file()), None)
+            name = next((name for name in candidates if name and is_nonempty_file(target / f"{name}.webp")), None)
             if name is None:
                 raise FileNotFoundError(f"No existing portrait for fellow {fellow['id']} in {target}")
             fellow["portrait"] = name
@@ -401,7 +401,7 @@ def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict], reuse_as
     for fellow in fellows:
         name = fellow["skill"]["icon"]
         if reuse_assets:
-            if name and (target / f"{name}.webp").is_file():
+            if name and is_nonempty_file(target / f"{name}.webp"):
                 count += 1
             else:
                 missing.append(f"{fellow['name']} ({name})")

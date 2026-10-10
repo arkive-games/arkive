@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from .common import write_json
+from .common import is_nonempty_file, write_json
 from .skill_text import has_formula, skill_text
 from .tables import EXCEL_DIR, load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
@@ -90,7 +90,7 @@ def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) 
     for record in records:
         if reuse_assets:
             name = str(record['id'])
-            if not (output / f'{name}.webp').is_file():
+            if not is_nonempty_file(output / f'{name}.webp'):
                 raise FileNotFoundError(f'Missing existing puppet portrait {name} in {output}')
             record['portrait'] = name
             continue

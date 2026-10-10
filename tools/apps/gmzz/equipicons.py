@@ -101,7 +101,7 @@ def _is_current(webp: Path, png: Path) -> bool:
     than its source cannot be stale, and re-encoding 270 PNGs on every run costs
     a minute for a byte-identical result.
     """
-    return webp.is_file() and webp.stat().st_mtime >= png.stat().st_mtime
+    return webp.is_file() and webp.stat().st_size > 0 and webp.stat().st_mtime >= png.stat().st_mtime
 
 
 def _sources(raw: Path, subdir: str, names: list[str], what: str) -> dict[str, Path]:

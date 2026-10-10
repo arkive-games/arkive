@@ -43,6 +43,8 @@ export type EquipItem = {
   slot: number
   quality: number
   icon: string
+  /** Unavailable artwork reference retained for a later asset refresh. */
+  iconSource?: string
   /** The 装等 on the card. Distinct from `levelRequirement`, the character gate. */
   gearLevel: number | null
   levelRequirement: number | null
@@ -771,8 +773,8 @@ export function scoredSlots(equipment: Equipment, graces: Grace[]): EquipSlot[] 
 }
 
 /** URL of an item's icon in the resource repo. */
-export function equipmentIconUrl(icon: string): string {
-  return iconUrl(icon)
+export function equipmentIconUrl(icon: string): string | undefined {
+  return icon ? iconUrl(icon) : undefined
 }
 
 /** Professions a player can actually pick, i.e. not disabled and with a weapon. */

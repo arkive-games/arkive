@@ -80,6 +80,9 @@ def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch
         secretpartners.build(tmp_path / 'raw', output, resources, reuse_assets=True)
     assert not (output / 'secretpartners/secretpartners.json').exists()
     portrait = resources / 'secretpartners/1.webp'
+    portrait.write_bytes(b'')
+    with pytest.raises(FileNotFoundError, match='Missing existing puppet portrait'):
+        secretpartners.build(tmp_path / 'raw', output, resources, reuse_assets=True)
     portrait.write_bytes(b'existing-art')
     result = secretpartners.build(tmp_path / 'raw', output, resources, reuse_assets=True)
     assert result['portraits'] == 1 and result['missing'] == []

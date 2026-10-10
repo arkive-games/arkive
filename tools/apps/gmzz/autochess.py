@@ -43,8 +43,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from .common import write_json
-from .env import excel_dir, require_dir
+from .common import is_nonempty_file, write_json
+from .env import excel_dir, optional_dir, require_dir
 from .tables import load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
 
@@ -470,7 +470,7 @@ def _load_tables(excel: Path, strings: dict) -> dict:
     }
 
 
-def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, int]:
+def build(excel: Path, raw: Path | None, data_out: Path, res_out: Path, reuse_assets: bool = False) -> dict[str, int]:
     strings = load_strings(excel)
     tables = _load_tables(excel, strings)
 
@@ -504,9 +504,12 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
             f"{len(unknown)} attribute id(s) are used but not in AutoChessChessAttributeData: {unknown[:5]}"
         )
 
-    icons = _convert_property_icons(raw, res_out)
-    item_icons, item_missing = _convert_item_icons(raw, res_out, payloads["items"])
-    skill_icons, skill_missing = _convert_skill_icons(raw, res_out, payloads["chess"])
+    if reuse_assets:
+        icons = _reuse_property_icons(res_out, payloads["attributes"])
+    else:
+        icons = _convert_property_icons(raw, res_out)
+    item_icons, item_missing = _convert_item_icons(raw, res_out, payloads["items"], reuse_assets)
+    skill_icons, skill_missing = _convert_skill_icons(raw, res_out, payloads["chess"], reuse_assets)
     for name, payload in payloads.items():
         write_json(Path(data_out) / OUT_DIR / f"{name}.json", payload)
 
@@ -525,6 +528,15 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> dict[str, in
             f"this mode's own art is not in any mountable container (see README)"
         )
     return counts
+
+
+def _reuse_property_icons(res_out: Path, attributes: list[dict]) -> int:
+    names = {row["icon"] for row in attributes if row["icon"]}
+    target = Path(res_out) / ICON_SUBDIR
+    missing = sorted(name for name in names if not is_nonempty_file(target / f"{name}.webp"))
+    if missing:
+        raise FileNotFoundError(f"Missing existing attribute icons in {target}: {missing}")
+    return len(names)
 
 
 def _convert_property_icons(raw: Path, res_out: Path) -> int:
@@ -563,7 +575,7 @@ ITEM_ICON_DIRS = (
 )
 
 
-def _convert_item_icons(raw: Path, res_out: Path, items: list[dict]) -> tuple[int, list[int]]:
+def _convert_item_icons(raw: Path, res_out: Path, items: list[dict], reuse_assets: bool = False) -> tuple[int, list[int]]:
     """Equipment art, for the 77 of 107 rows whose icon is reachable.
 
     The split is not arbitrary and is worth stating. The 18 共鸣徽章 point at
@@ -579,12 +591,20 @@ def _convert_item_icons(raw: Path, res_out: Path, items: list[dict]) -> tuple[in
     reported by the caller instead of being swallowed.
     """
     target = Path(res_out) / ICON_SUBDIR / "items"
-    target.mkdir(parents=True, exist_ok=True)
+    if not reuse_assets:
+        target.mkdir(parents=True, exist_ok=True)
     converted, missing = 0, []
     for item in items:
         name = item["icon"]
         if not name:
             missing.append(item["id"])
+            continue
+        if reuse_assets:
+            if is_nonempty_file(target / f"{name}.webp"):
+                converted += 1
+            else:
+                missing.append(item["id"])
+                item["icon"] = ""
             continue
         source = next(
             (png for directory in ITEM_ICON_DIRS
@@ -609,7 +629,7 @@ SKILL_ICON_DIRS = (
 )
 
 
-def _convert_skill_icons(raw: Path, res_out: Path, pieces: list[dict]) -> tuple[int, int]:
+def _convert_skill_icons(raw: Path, res_out: Path, pieces: list[dict], reuse_assets: bool = False) -> tuple[int, int]:
     """Skill art, for the 9 of 53 pieces that borrow an existing game icon.
 
     Deliberately partial. Nine cards out of fifty-three carrying an icon would
@@ -617,10 +637,18 @@ def _convert_skill_icons(raw: Path, res_out: Path, pieces: list[dict]) -> tuple[
     name, where its absence reads as ordinary text rather than a missing tile.
     """
     target = Path(res_out) / ICON_SUBDIR / "skills"
-    target.mkdir(parents=True, exist_ok=True)
+    if not reuse_assets:
+        target.mkdir(parents=True, exist_ok=True)
     converted, missing = 0, 0
     for piece in pieces:
         name = piece["skillIcon"]
+        if reuse_assets:
+            if name and is_nonempty_file(target / f"{name}.webp"):
+                converted += 1
+            else:
+                piece["skillIcon"] = ""
+                missing += 1
+            continue
         source = next(
             (png for directory in SKILL_ICON_DIRS
              if name and (png := Path(raw) / directory / f"{name}.png").is_file()),
@@ -642,14 +670,19 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--raw", type=Path, default=None)
     parser.add_argument("--data-out", type=Path, default=None)
     parser.add_argument("--res-out", type=Path, default=None)
+    parser.add_argument("--reuse-assets", action="store_true", help="Validate and reuse existing WebPs without converting raw images")
     args = parser.parse_args(argv)
 
     data_out = args.data_out or require_dir("GMZZ_DATA_OUT")
+    raw = args.raw or optional_dir("GMZZ_RAW")
+    if raw is None and not args.reuse_assets:
+        raw = require_dir("GMZZ_RAW")
     build(
         args.excel or excel_dir(),
-        args.raw or require_dir("GMZZ_RAW"),
+        raw,
         data_out,
         args.res_out or require_dir("GMZZ_RES_OUT"),
+        args.reuse_assets,
     )
     stamp_version(data_out)
 
