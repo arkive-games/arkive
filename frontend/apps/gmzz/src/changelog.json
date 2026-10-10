@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.12.1",
+      "date": "2026-10-11",
+      "commit": "ac9e25cfe00831a2c14308a12d661aa6a8a0e71a",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Refresh all game datasets from client build 2171866, including equipment, reforge graces, rating benchmarks, Train Trade, Fool's Gambit and Utopian Theater.",
+            "zh-CN": "全部游戏数据同步至客户端构建 2171866，更新装备、重塑恩赐、评分基准、铁路大亨、愚者棋局及乌托邦剧场。",
+            "zh-TW": "全部遊戲資料同步至客戶端構建 2171866，更新裝備、重塑恩賜、評分基準、鐵路大亨、愚者棋局及烏托邦劇場。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.12.0",
       "date": "2026-10-09",
       "commit": "588549974fba486ed2f8bd1c1f84fe63737de6f2",
