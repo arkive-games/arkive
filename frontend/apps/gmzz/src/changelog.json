@@ -1,6 +1,37 @@
 {
   "entries": [
     {
+      "version": "0.13.0",
+      "date": "2026-10-11",
+      "commit": "bc9a7ba9b4e292451daad96558728dffdf1385da",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Compare puppet base attributes at levels 1-50 and filter by quality, attributes and skill type.",
+            "zh-CN": "新增秘偶1至50级基础属性对比，以及品质、基础属性和技能类型组合筛选。",
+            "zh-TW": "新增秘偶1至50級基礎屬性對比，以及品質、基礎屬性和技能類型組合篩選。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Compare all three piece stars together, combine cost, bond and type filters, and jump from bond previews to their pieces.",
+            "zh-CN": "棋子三星属性并列显示，支持费用、共鸣和类型组合筛选，并可从共鸣预览跳转到成员棋子。",
+            "zh-TW": "棋子三星屬性並列顯示，支援費用、共鳴和類型組合篩選，並可從共鳴預覽跳轉至成員棋子。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Filter Fool's Gambit equipment by quality, kind and type, with game-matched quality colors.",
+            "zh-CN": "愚者棋局装备新增品质、类别与类型组合筛选，并按游戏品质显示颜色。",
+            "zh-TW": "愚者棋局裝備新增品質、類別與類型組合篩選，並依遊戲品質顯示顏色。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.12.1",
       "date": "2026-10-11",
       "commit": "ac9e25cfe00831a2c14308a12d661aa6a8a0e71a",
