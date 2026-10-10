@@ -1,7 +1,9 @@
 export const secretPartnerMessages = {
   'en-US': {
     title: 'Puppets', search: 'Search puppet or skill name', category: 'Skill category',
-    all: 'All categories', count: '{{count}} puppets', empty: 'No matching puppets. Clear the search or choose another category.',
+    all: 'All', count: '{{count}} puppets', empty: 'No matching puppets.',
+    quality: 'Quality', quality7: 'Red', quality6: 'Orange', quality5: 'Yellow', quality4: 'Purple',
+    attributes: 'Base attributes', level: 'Puppet level', levelSlider: 'Adjust puppet level', atLevel: 'Level {{level}}', reset: 'Clear filters',
     missingImage: 'Image unavailable', cooldown: '{{seconds}} s cooldown',
     upgrades: 'Skill upgrades', tier: 'Tier {{tier}} · Requires puppet stage {{stage}}',
     formula: '… denotes a value calculated in-game; it is not a fixed number.',
@@ -9,7 +11,9 @@ export const secretPartnerMessages = {
   },
   'zh-CN': {
     title: '秘偶', search: '搜索秘偶或技能名称', category: '技能类别',
-    all: '全部类别', count: '{{count}} 个秘偶', empty: '没有符合条件的秘偶，请清空搜索或更换类别。',
+    all: '全部', count: '{{count}} 个秘偶', empty: '没有符合条件的秘偶。',
+    quality: '品质', quality7: '红色', quality6: '橙色', quality5: '黄色', quality4: '紫色',
+    attributes: '基础属性', level: '秘偶等级', levelSlider: '调整秘偶等级', atLevel: '{{level}} 级', reset: '清空筛选',
     missingImage: '暂无图片', cooldown: '冷却 {{seconds}} 秒',
     upgrades: '技能升阶', tier: '技能 {{tier}} 阶 · 需要秘偶 {{stage}} 阶',
     formula: '… 为游戏内动态计算的数值，并非固定数值。',
@@ -17,7 +21,9 @@ export const secretPartnerMessages = {
   },
   'zh-TW': {
     title: '秘偶', search: '搜尋秘偶或技能名稱', category: '技能類別',
-    all: '全部類別', count: '{{count}} 個秘偶', empty: '沒有符合條件的秘偶，請清空搜尋或更換類別。',
+    all: '全部', count: '{{count}} 個秘偶', empty: '沒有符合條件的秘偶。',
+    quality: '品質', quality7: '紅色', quality6: '橙色', quality5: '黃色', quality4: '紫色',
+    attributes: '基礎屬性', level: '秘偶等級', levelSlider: '調整秘偶等級', atLevel: '{{level}} 級', reset: '清空篩選',
     missingImage: '暫無圖片', cooldown: '冷卻 {{seconds}} 秒',
     upgrades: '技能升階', tier: '技能 {{tier}} 階 · 需要秘偶 {{stage}} 階',
     formula: '… 為遊戲內動態計算的數值，並非固定數值。',

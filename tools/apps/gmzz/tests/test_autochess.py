@@ -50,6 +50,53 @@ def test_reused_skill_icons_preserve_available_art_and_clear_missing_art(tmp_pat
     assert icon.read_bytes() == b"existing"
 
 
+def test_piece_portraits_preserve_sources_and_reuse_only_nonempty_assets(tmp_path):
+    target = tmp_path / autochess.ICON_SUBDIR / 'pieces'
+    target.mkdir(parents=True)
+    (target / 'old.webp').write_bytes(b'existing')
+    (target / 'empty.webp').write_bytes(b'')
+    pieces = [{'icon': name, 'iconSource': f'/Game/Portraits/{name}.{name}'} for name in ['old', 'empty', 'absent']]
+    assert autochess._convert_piece_icons(None, tmp_path, pieces, True) == (1, 2)
+    assert [piece['icon'] for piece in pieces] == ['old', '', '']
+    assert pieces[2]['iconSource'] == '/Game/Portraits/absent.absent'
+    assert (target / 'old.webp').read_bytes() == b'existing'
+
+
+def test_piece_portrait_conversion_uses_the_exact_source_path(tmp_path):
+    from PIL import Image
+    source = tmp_path / 'raw/C7/Content/Portraits/Portrait.png'
+    source.parent.mkdir(parents=True)
+    Image.new('RGBA', (8, 8), 'red').save(source)
+    pieces = [{'icon': 'Portrait', 'iconSource': '/Game/Portraits/Portrait.Portrait'}]
+    assert autochess._convert_piece_icons(tmp_path / 'raw', tmp_path / 'res', pieces) == (1, 0)
+    with Image.open(tmp_path / 'res/autochess/pieces/Portrait.webp') as image:
+        assert image.size == (8, 8)
+
+
+@pytest.mark.parametrize('name', ['../outside', 'C:/outside/portrait', 'C:\\outside\\portrait'])
+def test_piece_portrait_destinations_are_confined_to_resource_root(tmp_path, name):
+    pieces = [{'icon': name, 'iconSource': f'/Game/Portraits/Portrait.{name}'}]
+    with pytest.raises(ValueError, match='escapes resource directory'):
+        autochess._convert_piece_icons(tmp_path / 'raw', tmp_path / 'res', pieces)
+    assert not (tmp_path / 'res').exists()
+
+
+def test_normal_piece_portrait_rebuild_overwrites_stale_art(tmp_path):
+    from PIL import Image
+    source = tmp_path / 'raw/C7/Content/Portraits/Portrait.png'
+    source.parent.mkdir(parents=True)
+    pieces = [{'icon': 'Portrait', 'iconSource': '/Game/Portraits/Portrait.Portrait'}]
+    Image.new('RGBA', (8, 8), 'red').save(source)
+    autochess._convert_piece_icons(tmp_path / 'raw', tmp_path / 'res', pieces)
+    target = tmp_path / 'res/autochess/pieces/Portrait.webp'
+    before = target.read_bytes()
+    Image.new('RGBA', (8, 8), 'blue').save(source)
+    autochess._convert_piece_icons(tmp_path / 'raw', tmp_path / 'res', pieces)
+    assert target.read_bytes() != before
+    with Image.open(target) as image:
+        assert image.getpixel((0, 0))[2] > image.getpixel((0, 0))[0]
+
+
 def test_table_only_cli_needs_no_raw_directory_with_explicit_excel(monkeypatch, tmp_path):
     import json
 

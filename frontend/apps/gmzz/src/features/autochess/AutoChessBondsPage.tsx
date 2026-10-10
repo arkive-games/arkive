@@ -4,12 +4,16 @@ import { useTranslation } from 'react-i18next'
 import { ContentPage } from '@/components/ContentPage'
 import {
   loadAutoChessBonds,
+  loadAutoChessAttributes,
   loadAutoChessPieces,
+  attributeMap,
+  membersByBond,
   plainText,
   type AutoChessBondGroup,
 } from '@/features/autochess/data'
 import { Chip, FilterBar, FilterRow } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
+import { PieceLink } from './PieceDetails'
 
 /**
  * The three families, in the order the in-game help lists them. Derived in the
@@ -22,6 +26,8 @@ export default function AutoChessBondsPage() {
   const { t } = useTranslation()
   const bonds = useRemoteData(loadAutoChessBonds)
   const pieces = useRemoteData(loadAutoChessPieces)
+  const attributes = useRemoteData(loadAutoChessAttributes)
+  const attrs = useMemo(() => attributeMap(attributes.data ?? []), [attributes.data])
   const [group, setGroup] = useState<AutoChessBondGroup | ''>('')
 
   useEffect(() => {
@@ -29,30 +35,19 @@ export default function AutoChessBondsPage() {
   }, [t])
 
   /** Which pieces carry each bond — the question a player actually has. */
-  const membersByBond = useMemo(() => {
-    const map = new Map<number, { baseId: number; name: string; cost: number }[]>()
-    for (const piece of pieces.data ?? []) {
-      for (const id of piece.bondIds) {
-        const list = map.get(id) ?? []
-        list.push({ baseId: piece.baseId, name: piece.name, cost: piece.cost })
-        map.set(id, list)
-      }
-    }
-    for (const list of map.values()) list.sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name))
-    return map
-  }, [pieces.data])
+  const members = useMemo(() => membersByBond(pieces.data ?? []), [pieces.data])
 
   const all = bonds.data ?? []
   const shown = group ? all.filter((bond) => bond.group === group) : all
 
-  if (bonds.error || pieces.error) {
+  if (bonds.error || pieces.error || attributes.error) {
     return (
       <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
       </ContentPage>
     )
   }
-  if (bonds.loading || pieces.loading) {
+  if (bonds.loading || pieces.loading || attributes.loading) {
     return (
       <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide>
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
@@ -81,9 +76,9 @@ export default function AutoChessBondsPage() {
 
       <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
         {shown.map((bond) => {
-          const members = membersByBond.get(bond.id) ?? []
+          const roster = members.get(bond.id) ?? []
           return (
-            <article key={bond.id} className="rounded-md border border-border bg-card p-3">
+            <article key={bond.id} data-bond-id={bond.id} className="rounded-md border border-border bg-card p-3">
               <header className="flex flex-wrap items-baseline gap-2">
                 <h2 className="text-base font-semibold">{bond.name}</h2>
                 <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
@@ -106,15 +101,13 @@ export default function AutoChessBondsPage() {
                 ))}
               </ol>
 
-              {members.length ? (
+              {roster.length ? (
                 // Laid out rather than joined: a literal separator in the code
                 // is one locale's punctuation imposed on all three — `、` reads
                 // as a stray glyph in English. Spacing is the stylesheet's job.
-                <div className="mt-2 flex flex-wrap gap-x-2 gap-y-0.5 border-t border-border/70 pt-1.5 text-xs text-muted-foreground">
-                  <span className="font-medium">{t('autochess.bonds.members', { count: members.length })}</span>
-                  {members.map((member) => (
-                    <span key={member.baseId} className="tabular-nums">{member.name}({member.cost})</span>
-                  ))}
+                <div className="mt-2 border-t border-border/70 pt-2">
+                  <p className="text-xs font-medium text-muted-foreground">{t('autochess.bonds.members', { count: roster.length })}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">{roster.map((piece) => <PieceLink key={piece.baseId} piece={piece} attrs={attrs} />)}</div>
                 </div>
               ) : null}
             </article>

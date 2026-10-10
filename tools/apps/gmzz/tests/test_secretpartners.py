@@ -2,16 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from gmzz.secretpartners import build_records, portrait_path
+from gmzz.secretpartners import build_attributes, build_records, portrait_path
 from gmzz import secretpartners
 
 
 def sample():
-    return ({'1': {'ID': 1, 'Name': 'Puppet', 'Quality': 6, 'SkillID': 10}},
+    return ({'1': {'ID': 1, 'Name': 'Puppet', 'Quality': 6, 'SkillID': 10, 'Prop_Talent': [100]}},
             {10: {'ID': 10, 'Name': 'Skill', 'Tag': 'Control', 'DesTags': [2],
                   'SkillDisc': 'Deal *d damage for <b>6</> seconds.', 'CD': 23}},
             {'11': {'ID': 11, 'PuppetID': 1, 'SkillStar': 2, 'PartnerStar': 10, 'ImproveText': 'More damage'}},
-            {2: 'Area'})
+            {2: 'Area'}, {1: [{'key': 'MaxHp_P', 'name': 'Max HP', 'format': 'percent', 'values': [0.0018, 0.0036]}]})
 
 
 def test_explicit_skill_tier_and_puppet_stage():
@@ -24,28 +24,28 @@ def test_explicit_skill_tier_and_puppet_stage():
 
 
 def test_missing_skill_fails():
-    config, _, upgrades, tags = sample()
+    config, _, upgrades, tags, attributes = sample()
     with pytest.raises(ValueError, match='Missing skill'):
-        build_records(config, {}, upgrades, tags)
+        build_records(config, {}, upgrades, tags, attributes)
 
 
 def test_unknown_upgrade_puppet_fails():
-    config, skills, upgrades, tags = sample()
+    config, skills, upgrades, tags, attributes = sample()
     upgrades['11']['PuppetID'] = 999
     with pytest.raises(ValueError, match='Unknown puppet'):
-        build_records(config, skills, upgrades, tags)
+        build_records(config, skills, upgrades, tags, attributes)
 
 
 def test_unknown_tag_fails():
-    config, skills, upgrades, _ = sample()
+    config, skills, upgrades, _, attributes = sample()
     with pytest.raises(ValueError, match='Unknown skill tag'):
-        build_records(config, skills, upgrades, {})
+        build_records(config, skills, upgrades, {}, attributes)
 
 
 def test_missing_tiers_fail():
-    config, skills, _, tags = sample()
+    config, skills, _, tags, attributes = sample()
     with pytest.raises(ValueError, match='Missing or duplicate'):
-        build_records(config, skills, {}, tags)
+        build_records(config, skills, {}, tags, attributes)
 
 
 def test_portrait_missing_is_explicit(tmp_path: Path):
@@ -54,26 +54,32 @@ def test_portrait_missing_is_explicit(tmp_path: Path):
 
 
 def test_percent_escape_and_brief_formulas_are_formatted():
-    config, skills, upgrades, tags = sample()
+    config, skills, upgrades, tags, attributes = sample()
     skills[10]['SkillDisc'] = 'Chance *f**.'
     skills[10]['BriefDescription'] = 'Duration *s.'
-    skill = build_records(config, skills, upgrades, tags)[0]['skill']
+    skill = build_records(config, skills, upgrades, tags, attributes)[0]['skill']
     assert skill['description'] == 'Chance \u2026%.'
     assert skill['brief'] == 'Duration \u2026.'
     assert skill['hasFormula']
 
 
 def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch):
-    config, skills, upgrades, tags = sample()
+    config, skills, upgrades, tags, _ = sample()
     tables = {
         'SecretPartnerConfigData': config,
         'SkillDataNew_split_1': skills,
         'SkillTagData': {str(key): {'ID': key, 'Tag': value} for key, value in tags.items()},
         'SecretPartnerSkillStarUpData': upgrades,
+        'SecretPartnerTalentData': {'100': {'ID': 100, 'Type': 2, 'StarUpDescribe1': 'Max HP'}},
+        'SecretPartnerTalentStarUpData': {'10001': {'TalentID': 100, 'Star': 1, 'FightProp': {'MaxHp_P': [0.0018]}}},
+        'FightPropModeData': {'1': {'PropMode': 'MaxHp_P', 'ShowType': 1}},
+        'FightPropModeSetData': {},
+        'SecretPartnerConstData': {'SECRET_PARTNER_MAX_STAR': 1},
     }
     monkeypatch.setattr(secretpartners, 'load_strings', lambda _: {})
     monkeypatch.setattr(secretpartners, 'load_table', lambda _, name: tables[name])
     monkeypatch.setattr(secretpartners, 'resolve_text', lambda table, _: table)
+    monkeypatch.setattr(secretpartners, 'check_export_current', lambda _: None)
     resources = tmp_path / 'res'
     output = tmp_path / 'data'
     with pytest.raises(FileNotFoundError, match='Missing existing puppet portrait'):
@@ -87,3 +93,64 @@ def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch
     result = secretpartners.build(tmp_path / 'raw', output, resources, reuse_assets=True)
     assert result['portraits'] == 1 and result['missing'] == []
     assert portrait.read_bytes() == b'existing-art'
+
+
+def test_stale_export_is_rejected_before_loading_tables(tmp_path: Path, monkeypatch):
+    def reject(_):
+        raise RuntimeError('Stale export')
+    monkeypatch.setattr(secretpartners, 'check_export_current', reject)
+    with pytest.raises(RuntimeError, match='Stale export'):
+        secretpartners.build(tmp_path / 'raw', tmp_path / 'data', tmp_path / 'res', reuse_assets=True)
+    assert not (tmp_path / 'data').exists()
+
+
+def growth_sample():
+    return (sample()[0], {'100': {'ID': 100, 'Type': 2, 'StarUpDescribe1': 'Max HP'}},
+            {'2': {'TalentID': 100, 'Star': 2, 'FightProp': {'MaxHp_P': [0.0035]}},
+             '1': {'TalentID': 100, 'Star': 1, 'FightProp': {'MaxHp_P': [0.0018]}}},
+            {'1': {'PropMode': 'MaxHp_P', 'ShowType': 1}}, {}, 2)
+
+
+def test_base_attributes_preserve_exact_per_level_values():
+    attributes = build_attributes(*growth_sample())
+    assert attributes[1] == [{'key': 'MaxHp_P', 'name': 'Max HP', 'format': 'percent',
+                              'values': [0.0018, 0.0035]}]
+    config, skills, upgrades, tags, _ = sample()
+    assert build_records(config, skills, upgrades, tags, attributes)[0]['attributes'] == attributes[1]
+
+
+def test_grouped_attributes_use_member_display_format():
+    config, talents, growth, modes, _, maximum = growth_sample()
+    for row in growth.values():
+        row['FightProp'] = {'AllAttack_N': [7]}
+    modes = {'1': {'PropMode': 'Physical_N', 'ShowType': 0}, '2': {'PropMode': 'Magic_N', 'ShowType': 0}}
+    groups = {'1': {'Prop': 'AllAttack_N', 'PropNameSet': ['Physical_N', 'Magic_N']}}
+    assert build_attributes(config, talents, growth, modes, groups, maximum)[1][0]['format'] == 'number'
+    modes['2']['ShowType'] = 1
+    with pytest.raises(ValueError, match='inconsistent attribute format'):
+        build_attributes(config, talents, growth, modes, groups, maximum)
+
+
+def test_decimal_display_type_is_not_a_percentage():
+    config, talents, growth, modes, groups, maximum = growth_sample()
+    modes['1']['ShowType'] = 2
+    assert build_attributes(config, talents, growth, modes, groups, maximum)[1][0]['format'] == 'number'
+
+
+@pytest.mark.parametrize('problem', ['missing', 'duplicate', 'key', 'value', 'talent', 'format'])
+def test_invalid_base_attribute_ladders_fail(problem):
+    config, talents, growth, modes, groups, maximum = growth_sample()
+    if problem == 'missing':
+        del growth['2']
+    elif problem == 'duplicate':
+        growth['3'] = growth['2'].copy()
+    elif problem == 'key':
+        growth['2']['FightProp'] = {'Other_N': [2]}
+    elif problem == 'value':
+        growth['2']['FightProp']['MaxHp_P'] = [1, 2]
+    elif problem == 'talent':
+        talents.clear()
+    else:
+        modes.clear()
+    with pytest.raises(ValueError):
+        build_attributes(config, talents, growth, modes, groups, maximum)

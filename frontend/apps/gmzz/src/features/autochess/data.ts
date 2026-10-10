@@ -1,4 +1,4 @@
-import { dataUrl, RES_BASE } from '@/lib/urls'
+import { dataUrl, RES_BASE } from '../../lib/urls'
 
 /**
  * 愚者棋局 — the auto-battler. `AutoChess` internally, which is why nothing in
@@ -46,6 +46,8 @@ export type AutoChessPiece = {
   bondIds: number[]
   positionDescription: string
   positionSuggestion: string
+  icon?: string
+  iconSource?: string
   /**
    * Skill art, empty for the 44 of 53 whose icon the export cannot reach.
    * One per piece, not per star — the client stores it on the base row.
@@ -172,6 +174,63 @@ export function autoChessItemIconUrl(icon: string): string {
 /** Skill art, for the 9 of 53 pieces that borrow an existing game icon. */
 export function autoChessSkillIconUrl(icon: string): string {
   return `${RES_BASE}/autochess/skills/${icon}.webp`
+}
+
+export const autoChessPieceIconUrl = (icon: string) => `${RES_BASE}/autochess/pieces/${icon}.webp`
+
+export function pieceSearch(search: Record<string, unknown>): { piece?: number } {
+  const piece = Number(search.piece)
+  return Number.isSafeInteger(piece) && piece > 0 ? { piece } : {}
+}
+
+export function membersByBond(pieces: AutoChessPiece[]) {
+  const members = new Map<number, AutoChessPiece[]>()
+  for (const piece of pieces) {
+    for (const id of piece.bondIds) members.set(id, [...(members.get(id) ?? []), piece])
+  }
+  for (const list of members.values()) list.sort((a, b) => a.cost - b.cost || a.baseId - b.baseId)
+  return members
+}
+
+export function filterPieces(pieces: AutoChessPiece[], bonds: Map<number, AutoChessBond>, query: string, cost: number, bondId: number, role: string) {
+  const needle = query.trim().toLocaleLowerCase()
+  return pieces.filter((piece) => (!cost || piece.cost === cost)
+    && (!bondId || piece.bondIds.includes(bondId)) && (!role || piece.role === role)
+    && (!needle || [piece.name, piece.role, piece.positionDescription,
+      ...piece.stars.map((star) => `${star.skill.name} ${plainText(star.skill.description)}`),
+      ...piece.bondIds.map((id) => bonds.get(id)?.name ?? '')].join(' ').toLocaleLowerCase().includes(needle)))
+}
+
+export function filterChessItems(items: AutoChessItem[], query: string, useType: number, typeName: string, rarity: number) {
+  const needle = query.trim().toLocaleLowerCase()
+  return items.filter((item) => (!useType || item.useType === useType)
+    && (!typeName || item.typeName === typeName) && (!rarity || item.rarity === rarity)
+    && (!needle || `${item.name} ${plainText(item.brief)} ${plainText(item.description)}`.toLocaleLowerCase().includes(needle)))
+}
+
+export function starValues(piece: AutoChessPiece, value: (star: AutoChessStar) => string | undefined) {
+  return [1, 2, 3].map((level) => {
+    const star = piece.stars.find((entry) => entry.starLevel === level)
+    return star ? value(star) ?? '-' : '-'
+  }).join('/')
+}
+
+export function starAttributeValues(piece: AutoChessPiece, attribute: AutoChessAttribute) {
+  return starValues(piece, (star) => {
+    const entry = star.attributes.find((entry) => entry.attributeId === attribute.id)
+    return entry ? formatAttributeValue(entry.value, attribute.format) : undefined
+  })
+}
+
+export function starSkills(piece: AutoChessPiece) {
+  const skills: { levels: number[]; name: string; description: string; valueDescription: string }[] = []
+  for (const star of [...piece.stars].sort((a, b) => a.starLevel - b.starLevel)) {
+    const skill = { name: star.skill.name, description: plainText(star.skill.description), valueDescription: plainText(star.skill.valueDescription) }
+    const existing = skills.find((entry) => entry.name === skill.name && entry.description === skill.description && entry.valueDescription === skill.valueDescription)
+    if (existing) existing.levels.push(star.starLevel)
+    else skills.push({ ...skill, levels: [star.starLevel] })
+  }
+  return skills
 }
 
 /**

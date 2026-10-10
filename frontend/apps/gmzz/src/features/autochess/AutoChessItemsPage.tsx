@@ -6,12 +6,15 @@ import {
   attributeMap,
   autoChessItemIconUrl,
   formatAttributeValue,
+  filterChessItems,
   loadAutoChessAttributes,
   loadAutoChessItems,
   plainText,
 } from '@/features/autochess/data'
 import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
+import { ITEM_QUALITY } from './quality'
+import { qualityPlateUrl } from '@/lib/urls'
 
 /**
  * The client's `UseType`. The split is its own; only the names here are ours,
@@ -20,14 +23,6 @@ import { useRemoteData } from '@/lib/useRemoteData'
  */
 const USE_TYPES = [1, 3, 2, 4] as const
 
-const RARITY_CLASS: Record<number, string> = {
-  1: 'border-border bg-card',
-  2: 'border-emerald-400/60 bg-emerald-50/40 dark:border-emerald-700 dark:bg-emerald-950/20',
-  4: 'border-sky-400/60 bg-sky-50/40 dark:border-sky-700 dark:bg-sky-950/20',
-  5: 'border-violet-400/70 bg-violet-50/40 dark:border-violet-700 dark:bg-violet-950/20',
-  6: 'border-amber-400/70 bg-amber-50/45 dark:border-amber-700 dark:bg-amber-950/20',
-}
-
 export default function AutoChessItemsPage() {
   const { t } = useTranslation()
   const items = useRemoteData(loadAutoChessItems)
@@ -35,6 +30,7 @@ export default function AutoChessItemsPage() {
   const [useType, setUseType] = useState(0)
   const [typeName, setTypeName] = useState('')
   const [query, setQuery] = useState('')
+  const [rarity, setRarity] = useState(0)
 
   useEffect(() => {
     document.title = `${t('autochess.items.title')} - ${t('siteTitle')}`
@@ -50,15 +46,8 @@ export default function AutoChessItemsPage() {
     [all],
   )
 
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase()
-    return all.filter((item) => {
-      if (useType && item.useType !== useType) return false
-      if (typeName && item.typeName !== typeName) return false
-      if (!needle) return true
-      return `${item.name} ${item.brief} ${item.description}`.toLocaleLowerCase().includes(needle)
-    })
-  }, [all, useType, typeName, query])
+  const rarities = useMemo(() => [...new Set(all.map((item) => item.rarity))].sort((a, b) => b - a), [all])
+  const filtered = useMemo(() => filterChessItems(all, query, useType, typeName, rarity), [all, useType, typeName, query, rarity])
 
   if (items.error || attributes.error) {
     return (
@@ -77,7 +66,13 @@ export default function AutoChessItemsPage() {
 
   return (
     <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide>
-      <FilterBar count={t('autochess.items.resultCount', { count: filtered.length })}>
+      <div className="mb-3 flex flex-col gap-2">
+        <FilterRow label={t('autochess.items.qualityFilter')}>
+          <Chip active={!rarity} onClick={() => setRarity(0)}>{t('autochess.all')}</Chip>
+          {rarities.map((value) => <Chip key={value} active={rarity === value} onClick={() => setRarity(value)}>
+            <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={`size-2.5 rounded-sm ${ITEM_QUALITY[value]?.color ?? 'bg-muted'}`} />{t(`autochess.items.quality${value}`)}</span>
+          </Chip>)}
+        </FilterRow>
         <FilterRow label={t('autochess.items.kindFilter')}>
           <Chip active={useType === 0} onClick={() => setUseType(0)}>{t('autochess.all')}</Chip>
           {USE_TYPES.map((value) => (
@@ -89,7 +84,6 @@ export default function AutoChessItemsPage() {
             </Chip>
           ))}
         </FilterRow>
-
         <FilterRow label={t('autochess.items.typeFilter')}>
           <Chip active={typeName === ''} onClick={() => setTypeName('')}>{t('autochess.all')}</Chip>
           {typeNames.map((value) => (
@@ -98,19 +92,22 @@ export default function AutoChessItemsPage() {
             </Chip>
           ))}
         </FilterRow>
-
+      </div>
+      <FilterBar count={t('autochess.items.resultCount', { count: filtered.length })}>
         <SearchField
           value={query}
           onChange={setQuery}
           placeholder={t('autochess.items.searchPlaceholder')}
         />
+        {(query || rarity || useType || typeName) ? <button type="button" className="text-sm text-primary hover:underline" onClick={() => { setQuery(''); setRarity(0); setUseType(0); setTypeName('') }}>{t('autochess.clearFilters')}</button> : null}
       </FilterBar>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((item) => (
           <article
             key={item.id}
-            className={`rounded-md border p-3 ${RARITY_CLASS[item.rarity] ?? 'border-border bg-card'}`}
+            data-item-id={item.id} data-item-quality={item.rarity}
+            className={`rounded-md border bg-card p-3 ${ITEM_QUALITY[item.rarity]?.border ?? 'border-border'}`}
           >
             <header className="flex items-start gap-2.5">
               {/* Only when there is art. 30 of the 107 rows have none — the 18
@@ -121,12 +118,14 @@ export default function AutoChessItemsPage() {
                   src={autoChessItemIconUrl(item.icon)}
                   alt=""
                   loading="lazy"
-                  className="size-10 shrink-0 rounded border border-border/70 bg-background/40 object-contain"
+                  className={`size-10 shrink-0 rounded border-2 bg-cover bg-center object-contain ${ITEM_QUALITY[item.rarity]?.border ?? 'border-border'}`}
+                  style={{ backgroundImage: `url("${qualityPlateUrl(item.rarity)}")` }}
                 />
               ) : null}
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-2">
                   <h2 className="font-semibold">{item.name}</h2>
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><span aria-hidden="true" className={`size-2 rounded-sm ${ITEM_QUALITY[item.rarity]?.color ?? 'bg-muted'}`} />{t(`autochess.items.quality${item.rarity}`)}</span>
                   {item.typeName ? (
                     <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
                       {item.typeName}

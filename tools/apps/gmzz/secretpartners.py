@@ -7,18 +7,60 @@ Run with --raw, --data-out and --res-out to use existing local exports.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 from pathlib import Path
 
 from PIL import Image
 
 from .common import is_nonempty_file, write_json
+from .env import check_export_current
 from .skill_text import has_formula, skill_text
 from .tables import EXCEL_DIR, load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
 
 
-def build_records(config: dict, skills: dict, upgrades: dict, tags: dict) -> list[dict]:
+def build_attributes(config, talents, growth, modes, groups, max_level):
+    by_talent = {int(row['ID']): row for row in talents.values()}
+    by_mode = {row['PropMode']: row for row in modes.values()}
+    by_group = {row['Prop']: row for row in groups.values()}
+    ladders = {}
+    for talent_id in {int(key) for row in config.values() for key in row['Prop_Talent']}:
+        if talent_id not in by_talent or by_talent[talent_id]['Type'] != 2:
+            raise ValueError(f'Missing base attribute talent {talent_id}')
+        # Each Star row is the current level's total, not an increment to sum.
+        rows = sorted((row for row in growth.values() if int(row['TalentID']) == talent_id),
+                      key=lambda row: row['Star'])
+        if [row['Star'] for row in rows] != list(range(1, max_level + 1)):
+            raise ValueError(f'Incomplete attribute ladder for {talent_id}')
+        keys = {key for row in rows for key in row['FightProp']}
+        if len(keys) != 1:
+            raise ValueError(f'Inconsistent attribute keys for {talent_id}')
+        key = next(iter(keys))
+        if key in by_mode:
+            metadata = [by_mode[key]]
+        elif key in by_group and all(name in by_mode for name in by_group[key]['PropNameSet']):
+            metadata = [by_mode[name] for name in by_group[key]['PropNameSet']]
+        else:
+            raise ValueError(f'Missing attribute metadata for {key}')
+        formats = {entry['ShowType'] for entry in metadata}
+        if len(formats) != 1 or not formats <= {0, 1, 2}:
+            raise ValueError(f'Missing or inconsistent attribute format for {key}')
+        values = []
+        for row in rows:
+            value = row['FightProp'].get(key)
+            if (not isinstance(value, list) or len(value) != 1
+                    or not isinstance(value[0], (int, float)) or not math.isfinite(value[0])):
+                raise ValueError(f'Invalid attribute value for {talent_id} at level {row["Star"]}')
+            values.append(value[0])
+        ladders[talent_id] = {
+            'key': key, 'name': by_talent[talent_id]['StarUpDescribe1'],
+            'format': 'percent' if formats.pop() == 1 else 'number', 'values': values,
+        }
+    return {int(row['ID']): [ladders[int(key)] for key in row['Prop_Talent']] for row in config.values()}
+
+
+def build_records(config: dict, skills: dict, upgrades: dict, tags: dict, attributes: dict) -> list[dict]:
     records = []
     known = {int(row['ID']) for row in config.values()}
     for row in upgrades.values():
@@ -45,6 +87,7 @@ def build_records(config: dict, skills: dict, upgrades: dict, tags: dict) -> lis
             'id': int(row['ID']), 'name': row['Name'], 'quality': int(row['Quality']),
             'description': row.get('Text', ''), 'portrait': '',
             'category': skill.get('Tag', ''),
+            'attributes': attributes[int(row['ID'])],
             'skill': {'id': skill_id, 'name': skill['Name'], 'tags': labels,
                       'cooldown': skill.get('CD'),
                       'description': skill_text(description),
@@ -69,6 +112,7 @@ def portrait_path(raw: Path, reference: str) -> Path | None:
 
 
 def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) -> dict:
+    check_export_current(raw)
     excel = raw / EXCEL_DIR
     strings = load_strings(excel)
     def table(name):
@@ -82,7 +126,11 @@ def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) 
         if wanted == set(skills):
             break
     tags = {int(row['ID']): row['Tag'] for row in table('SkillTagData').values()}
-    records = build_records(config, skills, table('SecretPartnerSkillStarUpData'), tags)
+    attributes = build_attributes(config, table('SecretPartnerTalentData'),
+                                  table('SecretPartnerTalentStarUpData'), table('FightPropModeData'),
+                                  table('FightPropModeSetData'),
+                                  int(table('SecretPartnerConstData')['SECRET_PARTNER_MAX_STAR']))
+    records = build_records(config, skills, table('SecretPartnerSkillStarUpData'), tags, attributes)
     sources = {int(row['ID']): row for row in config.values()}
     output = res_out / 'secretpartners'
     output.mkdir(parents=True, exist_ok=True)

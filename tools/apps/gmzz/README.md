@@ -232,6 +232,12 @@ available skill icons without writing artwork; a missing portrait stops the
 build. The same flag is supported by `gmzz.secretpartners`. Without the flag,
 both commands retain their raw-image conversion behavior.
 
+Puppet base attributes join `SecretPartnerConfigData.Prop_Talent` to
+`SecretPartnerTalentData` and the complete `SecretPartnerTalentStarUpData`
+ladder. Each `Star` row supplies the total for that level, not an increment.
+The export retains all 50 exact values and derives display units from
+`FightPropModeData.ShowType`, including grouped modes via `FightPropModeSetData`.
+
 The system is `Fellow` internally. **`SecretPartner` is a different system**
 (秘偶) whose table names also contain `Partner`, so a grep for that finds the
 wrong one first.
@@ -322,8 +328,11 @@ A turn's kind is resolved by which detail table its `TurnDetailID` lands in
 art is not in this build at all, rather than merely undownloaded. The `Fetter/`
 and `Talent/` icons *are* in the manifest but fall in the same `ConfigIcon` blind
 spot that leaves the reforge graces unillustrated (see above), so only
-`Property/` comes through. The pages are therefore typographic, as the reforge
-page is. If the portraits turn up, they are a small addition here.
+`Property/` comes through. Piece records retain the original `iconSource` and
+publish `icon` only for a nonempty WebP under `autochess/pieces/`. The converter
+can use the exact exported source path when portraits become available; reuse
+mode never writes artwork. Piece cards and bond members use an explicit chess
+placeholder until that art is recoverable, rather than another character's art.
 
 ## Utopian Theater (乌托邦剧场)
 

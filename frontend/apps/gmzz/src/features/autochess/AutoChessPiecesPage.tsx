@@ -1,47 +1,25 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-
 import { ContentPage } from '@/components/ContentPage'
-import { FilterBar, SearchField } from '@/components/Filters'
-import {
-  attributeMap,
-  autoChessSkillIconUrl,
-  formatAttributeValue,
-  loadAutoChessAttributes,
-  loadAutoChessBonds,
-  loadAutoChessPieces,
-  plainText,
-  type AutoChessAttribute,
-  type AutoChessBond,
-  type AutoChessPiece,
-  type AutoChessStar,
-} from '@/features/autochess/data'
+import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
+import { attributeMap, filterPieces, loadAutoChessAttributes, loadAutoChessBonds, loadAutoChessPieces, membersByBond, plainText } from './data'
+import { BondTag, PieceIcon, PieceStats } from './PieceDetails'
+import { PIECE_COST_BORDER } from './quality'
 
-/**
- * The client's own `TagColor`, which is what tints the role chip along the top
- * of every card in the game's 棋子图鉴.
- *
- * 0/1/3/4 are read off the game's own screen — 近战战士 green, 远程射手 and
- * 远程法师 blue, 前排坦克 amber, 中排辅助 and 远程辅助 red. **2 is a guess**: only
- * 近战刺客 uses it and no screenshot of that chip was available, so the hue is
- * ours rather than the game's. Everything else on this page is the client's.
- */
+// TagColor 2 still uses an unverified hue; the other role styles are client-matched.
 const ROLE_CLASS: Record<number, string> = {
-  0: 'bg-emerald-600/90 text-white',
-  1: 'bg-sky-600/90 text-white',
-  2: 'bg-violet-600/90 text-white',
-  3: 'bg-amber-500/90 text-black',
-  4: 'bg-rose-600/90 text-white',
+  0: 'bg-emerald-600/90 text-white', 1: 'bg-sky-600/90 text-white',
+  2: 'bg-violet-600/90 text-white', 3: 'bg-amber-500/90 text-black', 4: 'bg-rose-600/90 text-white',
 }
 
-/** Cost is the mode's rarity axis, and the game frames each card by it. */
-const COST_CLASS: Record<number, string> = {
-  1: 'border-border bg-card',
-  2: 'border-emerald-500/50 bg-emerald-50/30 dark:border-emerald-800 dark:bg-emerald-950/20',
-  3: 'border-sky-500/50 bg-sky-50/30 dark:border-sky-800 dark:bg-sky-950/20',
-  4: 'border-violet-500/50 bg-violet-50/30 dark:border-violet-800 dark:bg-violet-950/20',
-  5: 'border-amber-500/60 bg-amber-50/35 dark:border-amber-800 dark:bg-amber-950/20',
+const EMPTY_FILTERS = { cost: 0, bondId: 0, role: '', query: '' }
+
+function focusPiece(id: number) {
+  const target = document.getElementById(`piece-${id}`)
+  target?.focus({ preventScroll: true })
+  target?.scrollIntoView({ block: 'start' })
 }
 
 export default function AutoChessPiecesPage() {
@@ -49,264 +27,69 @@ export default function AutoChessPiecesPage() {
   const pieces = useRemoteData(loadAutoChessPieces)
   const bonds = useRemoteData(loadAutoChessBonds)
   const attributes = useRemoteData(loadAutoChessAttributes)
-
-  const [cost, setCost] = useState(0)
-  const [bondId, setBondId] = useState(0)
-  const [query, setQuery] = useState('')
-  const [openId, setOpenId] = useState<number | null>(null)
-
-  useEffect(() => {
-    document.title = `${t('autochess.pieces.title')} - ${t('siteTitle')}`
-  }, [t])
-
-  const bondsById = useMemo(
-    () => new Map((bonds.data ?? []).map((bond) => [bond.id, bond])),
-    [bonds.data],
-  )
-  const attrs = useMemo(() => attributeMap(attributes.data ?? []), [attributes.data])
+  const selected = useSearch({ from: '/autochess/chess' }).piece
+  const [filters, setFilters] = useState({ ...EMPTY_FILTERS, piece: selected })
+  // Adjust before committing a query change so history navigation also reveals its target.
+  if (filters.piece !== selected) setFilters({ ...EMPTY_FILTERS, piece: selected })
+  const { cost, bondId, role, query } = filters.piece === selected ? filters : EMPTY_FILTERS
+  const updateFilters = (patch: Partial<typeof EMPTY_FILTERS>) => setFilters({ ...filters, ...patch, piece: selected })
+  const setCost = (value: number) => updateFilters({ cost: value })
+  const setBondId = (value: number) => updateFilters({ bondId: value })
+  const setRole = (value: string) => updateFilters({ role: value })
+  const setQuery = (value: string) => updateFilters({ query: value })
   const all = useMemo(() => pieces.data ?? [], [pieces.data])
+  const bondsById = useMemo(() => new Map((bonds.data ?? []).map((bond) => [bond.id, bond])), [bonds.data])
+  const members = useMemo(() => membersByBond(all), [all])
+  const attrs = useMemo(() => attributeMap(attributes.data ?? []), [attributes.data])
+  const costs = useMemo(() => [...new Set(all.map((piece) => piece.cost))].sort((a, b) => b - a), [all])
+  const roles = useMemo(() => [...new Set(all.map((piece) => piece.role))], [all])
+  const filtered = useMemo(() => filterPieces(all, bondsById, query, cost, bondId, role), [all, bondsById, query, cost, bondId, role])
+  const reset = () => updateFilters(EMPTY_FILTERS)
+  const selectPiece = (id: number) => { reset(); requestAnimationFrame(() => focusPiece(id)) }
 
-  // Descending, as the game's own tab row runs: 全部, 花费5 … 花费1.
-  const costs = useMemo(
-    () => [...new Set(all.map((piece) => piece.cost))].sort((a, b) => b - a),
-    [all],
-  )
+  useEffect(() => { document.title = `${t('autochess.pieces.title')} - ${t('siteTitle')}` }, [t])
+  useEffect(() => {
+    if (!selected || pieces.loading || bonds.loading || attributes.loading) return
+    const frame = requestAnimationFrame(() => focusPiece(selected))
+    return () => cancelAnimationFrame(frame)
+  }, [selected, pieces.loading, bonds.loading, attributes.loading])
 
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase()
-    return all.filter((piece) => {
-      if (cost && piece.cost !== cost) return false
-      if (bondId && !piece.bondIds.includes(bondId)) return false
-      if (!needle) return true
-      const haystack = [
-        piece.name,
-        piece.role,
-        piece.positionDescription,
-        ...piece.stars.map((star) => `${star.skill.name} ${star.skill.description}`),
-        ...piece.bondIds.map((id) => bondsById.get(id)?.name ?? ''),
-      ]
-        .join(' ')
-        .toLocaleLowerCase()
-      return haystack.includes(needle)
-    })
-  }, [all, cost, bondId, query, bondsById])
-
-  if (pieces.error || bonds.error || attributes.error) {
-    return (
-      <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
-        <p className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
-      </ContentPage>
-    )
-  }
-  if (pieces.loading || bonds.loading || attributes.loading) {
-    return (
-      <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
-        <p className="text-sm text-muted-foreground">{t('loading')}</p>
-      </ContentPage>
-    )
-  }
-
-  return (
-    <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
-      {/* The game's own filter geometry — a cost tab row with the bond filter
-          as one select, since twenty-eight bond chips would bury the grid —
-          sharing its line with the search box and the count. */}
-      <FilterBar count={t('autochess.pieces.resultCount', { count: filtered.length })}>
-        <div className="flex flex-wrap items-center gap-1">
-          <CostTab active={cost === 0} onClick={() => setCost(0)}>{t('autochess.all')}</CostTab>
-          {costs.map((value) => (
-            <CostTab key={value} active={cost === value} onClick={() => setCost(value)}>
-              {t('autochess.pieces.costTab', { cost: value })}
-            </CostTab>
-          ))}
+  return <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
+    {pieces.error || bonds.error || attributes.error ? <p role="alert" className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
+      : pieces.loading || bonds.loading || attributes.loading ? <p role="status" className="text-sm text-muted-foreground">{t('loading')}</p> : <>
+        <div className="mb-3 flex flex-col gap-2">
+          <FilterRow label={t('autochess.pieces.costFilter')}>
+            <Chip active={!cost} onClick={() => setCost(0)}>{t('autochess.all')}</Chip>
+            {costs.map((value) => <Chip key={value} active={cost === value} onClick={() => setCost(value)}>{t('autochess.pieces.costTab', { cost: value })}</Chip>)}
+          </FilterRow>
+          <FilterRow label={t('autochess.pieces.bondFilter')}>
+            <Chip active={!bondId} onClick={() => setBondId(0)}>{t('autochess.all')}</Chip>
+            {(bonds.data ?? []).filter((bond) => members.has(bond.id)).map((bond) => <Chip key={bond.id} active={bondId === bond.id} onClick={() => setBondId(bond.id)}>{bond.name}</Chip>)}
+          </FilterRow>
+          <FilterRow label={t('autochess.pieces.roleFilter')}>
+            <Chip active={!role} onClick={() => setRole('')}>{t('autochess.all')}</Chip>
+            {roles.map((value) => <Chip key={value} active={role === value} onClick={() => setRole(value)}>{value}</Chip>)}
+          </FilterRow>
         </div>
-
-        <select
-          value={bondId}
-          onChange={(event) => setBondId(Number(event.target.value))}
-          aria-label={t('autochess.pieces.bondFilter')}
-          className="h-8 shrink-0 rounded-md border border-border bg-card px-2 text-sm md:w-40"
-        >
-          <option value={0}>{t('autochess.pieces.allBonds')}</option>
-          {(bonds.data ?? []).map((bond) => (
-            <option key={bond.id} value={bond.id}>{bond.name}</option>
-          ))}
-        </select>
-
-        <SearchField
-          value={query}
-          onChange={setQuery}
-          placeholder={t('autochess.pieces.searchPlaceholder')}
-        />
-      </FilterBar>
-
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((piece) => (
-          <PieceCard
-            key={piece.baseId}
-            piece={piece}
-            bondsById={bondsById}
-            attrs={attrs}
-            open={openId === piece.baseId}
-            onToggle={() => setOpenId(openId === piece.baseId ? null : piece.baseId)}
-          />
-        ))}
-      </div>
-
-      {filtered.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{t('autochess.empty')}</p>
-      ) : null}
-    </ContentPage>
-  )
-}
-
-function CostTab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={
-        active
-          ? 'border-b-2 border-primary px-2.5 py-1 text-sm font-semibold text-primary'
-          : 'border-b-2 border-transparent px-2.5 py-1 text-sm text-muted-foreground hover:text-foreground'
-      }
-    >
-      {children}
-    </button>
-  )
-}
-
-function PieceCard({
-  piece,
-  bondsById,
-  attrs,
-  open,
-  onToggle,
-}: {
-  piece: AutoChessPiece
-  bondsById: Map<number, AutoChessBond>
-  attrs: Map<number, AutoChessAttribute>
-  open: boolean
-  onToggle: () => void
-}) {
-  const { t } = useTranslation()
-  // Highest star first: it is the form a player plans around.
-  const stars = [...piece.stars].sort((a, b) => b.starLevel - a.starLevel)
-
-  return (
-    <article
-      className={`flex flex-col overflow-hidden rounded-md border ${COST_CLASS[piece.cost] ?? 'border-border bg-card'}`}
-    >
-      {/* Role chip on its own strip, as the game draws it. There is no portrait
-          here: the client's `ChessBaseData.Icon` points into
-          ConfigIcon/AutoChess/Avatar, which no container we can mount carries.
-          A blank frame would read as a broken image, so the card is built to
-          stand without one rather than around a hole. */}
-      <div className={`px-3 py-1 text-xs font-medium ${ROLE_CLASS[piece.roleColor] ?? 'bg-muted text-foreground'}`}>
-        {piece.role}
-      </div>
-
-      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-base font-semibold">{piece.name}</h2>
-          <span className="shrink-0 rounded-full border border-amber-500/70 px-2 py-0.5 text-xs tabular-nums text-amber-700 dark:text-amber-300">
-            {t('autochess.pieces.cost', { cost: piece.cost })}
-          </span>
-        </div>
-
-        <ul className="flex flex-wrap gap-1">
-          {piece.bondIds.map((id) => (
-            <li key={id} className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
-              {bondsById.get(id)?.name ?? id}
-            </li>
-          ))}
-        </ul>
-
-        <p className="text-sm text-muted-foreground">{plainText(piece.positionDescription)}</p>
-
-        {(open ? stars : stars.slice(0, 1)).map((star) => (
-          <StarBlock key={star.chessId} star={star} attrs={attrs} skillIcon={piece.skillIcon} />
-        ))}
-
-        {stars.length > 1 ? (
-          <button
-            type="button"
-            onClick={onToggle}
-            className="mt-auto self-start pt-1 text-sm font-medium text-primary hover:underline"
-          >
-            {open ? t('autochess.pieces.collapse') : t('autochess.pieces.expand', { count: stars.length })}
-          </button>
-        ) : null}
-      </div>
-    </article>
-  )
-}
-
-function StarBlock({
-  star,
-  attrs,
-  skillIcon,
-}: {
-  star: AutoChessStar
-  attrs: Map<number, AutoChessAttribute>
-  skillIcon: string
-}) {
-  const { t } = useTranslation()
-  return (
-    <section className="border-t border-border/70 pt-1.5">
-      <h3 className="text-sm font-semibold">
-        {t('autochess.pieces.star', { star: star.starLevel })}
-        <span className="ml-2 font-normal text-muted-foreground">
-          {t('autochess.pieces.attackRange', { range: star.attackRange })}
-        </span>
-      </h3>
-
-      <dl className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 text-sm">
-        {star.attributes.map((entry) => {
-          const attribute = attrs.get(entry.attributeId)
-          if (!attribute) return null
-          return (
-            <div key={entry.attributeId} className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{attribute.name}</dt>
-              <dd className="font-medium tabular-nums">
-                {formatAttributeValue(entry.value, attribute.format)}
-              </dd>
+        <FilterBar count={t('autochess.pieces.resultCount', { count: filtered.length })}>
+          <SearchField value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
+          {(cost || bondId || role || query) ? <button type="button" onClick={reset} className="text-sm text-primary hover:underline">{t('autochess.clearFilters')}</button> : null}
+        </FilterBar>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((piece) => <article key={piece.baseId} id={`piece-${piece.baseId}`} tabIndex={-1} data-piece-id={piece.baseId} className={`min-w-0 scroll-mt-24 overflow-hidden rounded-md border bg-card focus:outline-none ${PIECE_COST_BORDER[piece.cost] ?? 'border-border'} ${selected === piece.baseId ? 'ring-2 ring-ring' : ''}`}>
+            <div className={`px-3 py-1 text-xs font-medium ${ROLE_CLASS[piece.roleColor] ?? 'bg-muted text-foreground'}`}>{piece.role}</div>
+            <div className="flex flex-col gap-2 p-3">
+              <header className="flex items-center gap-2.5"><PieceIcon piece={piece} /><h2 className="min-w-0 flex-1 break-words text-base font-semibold">{piece.name}</h2><span className="shrink-0 text-xs tabular-nums text-muted-foreground">{t('autochess.pieces.cost', { cost: piece.cost })}</span></header>
+              <div className="flex flex-wrap gap-1">{piece.bondIds.map((id) => {
+                const bond = bondsById.get(id)
+                return bond ? <BondTag key={id} bond={bond} members={members.get(id) ?? []} attrs={attrs} onSelect={selectPiece} /> : null
+              })}</div>
+              <p className="text-sm text-muted-foreground">{plainText(piece.positionDescription)}</p>
+              <PieceStats piece={piece} attrs={attrs} />
             </div>
-          )
-        })}
-      </dl>
-
-      {star.skill.name ? (
-        <div className="mt-1.5">
-          {/* Inline beside the name rather than as a tile: only 9 of the 53
-              pieces have reachable skill art, and a grid of mostly-empty
-              frames would read as a broken page. */}
-          <p className="flex items-center gap-1.5 text-sm font-medium">
-            {skillIcon ? (
-              <img
-                src={autoChessSkillIconUrl(skillIcon)}
-                alt=""
-                loading="lazy"
-                className="size-5 shrink-0 rounded-sm object-contain"
-              />
-            ) : null}
-            {star.skill.name}
-          </p>
-          <p className="text-sm text-muted-foreground">{plainText(star.skill.description)}</p>
-          {star.skill.valueDescription ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">{plainText(star.skill.valueDescription)}</p>
-          ) : null}
+          </article>)}
         </div>
-      ) : null}
-    </section>
-  )
+        {!filtered.length && <p role="status" className="py-8 text-center text-sm text-muted-foreground">{t('autochess.empty')}</p>}
+      </>}
+  </ContentPage>
 }

@@ -186,6 +186,8 @@ def build_pieces(tables: dict) -> list[dict]:
             "bondIds": [int(b) for b in _list(row["BondList"])],
             "positionDescription": row["PositionDesc"],
             "positionSuggestion": row.get("PosSuggest", ""),
+            "icon": _icon_name(row.get("Icon")),
+            "iconSource": row.get("Icon", ""),
             # One icon per piece, not per star. Blanked later for the 44 that
             # name a file under Skill/AutoChess, which does not mount.
             "skillIcon": _icon_name(row.get("SkillIcon")),
@@ -511,6 +513,7 @@ def build(excel: Path, raw: Path | None, data_out: Path, res_out: Path, reuse_as
         icons = _convert_property_icons(raw, res_out)
     item_icons, item_missing = _convert_item_icons(raw, res_out, payloads["items"], reuse_assets)
     skill_icons, skill_missing = _convert_skill_icons(raw, res_out, payloads["chess"], reuse_assets)
+    piece_icons, _ = _convert_piece_icons(raw, res_out, payloads["chess"], reuse_assets)
     for name, payload in payloads.items():
         write_json(Path(data_out) / OUT_DIR / f"{name}.json", payload)
 
@@ -518,7 +521,7 @@ def build(excel: Path, raw: Path | None, data_out: Path, res_out: Path, reuse_as
     print(
         f"autochess: {counts['chess']} pieces, {counts['bonds']} bonds, {counts['items']} items, "
         f"{counts['talents']} talents, {len(payloads['rules']['turns'])} turns "
-        f"-> {OUT_DIR}/, {icons} attribute + {item_icons} item + {skill_icons} skill webp "
+        f"-> {OUT_DIR}/, {icons} attribute + {item_icons} item + {skill_icons} skill + {piece_icons} piece webp "
         f"-> {res_out}/{ICON_SUBDIR}"
     )
     if item_missing or skill_missing:
@@ -529,6 +532,43 @@ def build(excel: Path, raw: Path | None, data_out: Path, res_out: Path, reuse_as
             f"this mode's own art is not in any mountable container (see README)"
         )
     return counts
+
+
+def _convert_piece_icons(raw: Path | None, res_out: Path, pieces: list[dict], reuse_assets: bool = False) -> tuple[int, int]:
+    target = Path(res_out) / ICON_SUBDIR / 'pieces'
+    converted = missing = 0
+    for piece in pieces:
+        name = piece['icon']
+        destination = (target / f'{name}.webp').resolve()
+        if name and (Path(name).name != name or ':' in name or '\\' in name
+                     or not destination.is_relative_to(target.resolve())):
+            raise ValueError('Piece portrait name escapes resource directory')
+        if reuse_assets:
+            if name and is_nonempty_file(destination):
+                converted += 1
+            else:
+                piece['icon'] = ''
+                missing += 1
+            continue
+        match = _OBJECT_PATH.match(piece['iconSource'])
+        source = (Path(raw) / 'C7/Content' / f'{match.group("path")}.png') if raw and match else None
+        if source is None:
+            piece['icon'] = ''
+            missing += 1
+            continue
+        if not source.resolve().is_relative_to(Path(raw).resolve()):
+            raise ValueError('Piece portrait path escapes raw export')
+        if not source.is_file():
+            piece['icon'] = ''
+            missing += 1
+            continue
+        target.mkdir(parents=True, exist_ok=True)
+        with Image.open(source) as image:
+            image.convert('RGBA').save(destination, 'WEBP', quality=WEBP_QUALITY)
+        converted += 1
+    if missing:
+        print(f'autochess: {missing} piece portraits unavailable; source references retained')
+    return converted, missing
 
 
 def _reuse_property_icons(res_out: Path, attributes: list[dict]) -> int:
