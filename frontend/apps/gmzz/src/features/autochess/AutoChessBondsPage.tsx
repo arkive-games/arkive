@@ -56,7 +56,7 @@ export default function AutoChessBondsPage() {
   }
 
   return (
-    <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide resultsKey={group} toolbar={
+    <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide resultsKey={group} filtersActive={group !== ''} toolbar={
       <FilterBar>
         <FilterRow label={t('autochess.bonds.groupFilter')}>
           <Chip active={group === ''} onClick={() => setGroup('')}>

@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { cn, SiteFooter } from '@gamemap/ui'
+import { cn, FilterDisclosure, SiteFooter } from '@gamemap/ui'
 import { ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
@@ -15,14 +15,19 @@ export interface ContentPageProps {
   heading?: boolean
   /** Widen past the default for dense grids. */
   wide?: boolean
-  /** Catalogue controls stay outside the results scroller. */
+  /**
+   * Catalogue controls stay outside the results scroller. Phones can fold them
+   * away behind the shared `FilterDisclosure` toggle; desktop shows no toggle.
+   */
   toolbar?: ReactNode
+  /** `true` while the toolbar holds a non-default selection; dots the phone toggle. */
+  filtersActive?: boolean
   /** Only result-scope changes reset reading position, not edits inside cards. */
   resultsKey?: string
   children: ReactNode
 }
 
-export function ContentPage({ active, title, heading = false, wide = false, toolbar, resultsKey, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, wide = false, toolbar, filtersActive = false, resultsKey, children }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
@@ -47,7 +52,9 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
         {toolbar != null ? <div data-content-toolbar className="max-h-[50%] shrink-0 overflow-y-auto overscroll-contain border-b border-border bg-background">
           <div className={cn('arkive-content-page mx-auto w-full pb-3', contentWidth)}>
             {heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null}
-            {toolbar}
+            <FilterDisclosure label={t('filterToggle')} active={filtersActive} testId="content-toolbar-filters">
+              {toolbar}
+            </FilterDisclosure>
           </div>
         </div> : null}
         {/* Keep absolute descendants contained by the results scroller. */}

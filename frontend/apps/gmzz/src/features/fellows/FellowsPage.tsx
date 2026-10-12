@@ -105,7 +105,7 @@ export default function FellowsPage() {
   }
 
   return (
-    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide resultsKey={JSON.stringify([query, quality, label])} toolbar={<>
+    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide resultsKey={JSON.stringify([query, quality, label])} filtersActive={Boolean(query || quality || label)} toolbar={<>
       <FellowsTabs current="/fellows" />
       <p className="mb-4 text-sm text-muted-foreground">
         {t('fellows.description', { count: all.length })}

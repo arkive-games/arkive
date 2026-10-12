@@ -65,7 +65,7 @@ export default function AutoChessTalentsPage() {
   const hidden = all.filter((talent) => !talent.inHandbook).length
 
   return (
-    <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide resultsKey={JSON.stringify([query, rarity, showHidden])} toolbar={
+    <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide resultsKey={JSON.stringify([query, rarity, showHidden])} filtersActive={Boolean(query || rarity || showHidden)} toolbar={
       <FilterBar count={t('autochess.talents.resultCount', { count: filtered.length })}>
         <FilterRow label={t('autochess.talents.rarityFilter')}>
           <Chip active={rarity === 0} onClick={() => setRarity(0)}>{t('autochess.all')}</Chip>

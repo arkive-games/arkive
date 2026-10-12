@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowUp } from 'lucide-react'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { cn, useIsMobile, SiteFooter } from '@gamemap/ui'
+import { cn, FilterDisclosure, useIsMobile, SiteFooter } from '@gamemap/ui'
 import { ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
@@ -26,16 +26,14 @@ export interface ContentPageProps {
   heading?: boolean
   /**
    * The page's filter controls (chip rows). Handed to the shell instead of
-   * rendered directly so ONE place decides where they live: desktop keeps them
-   * in the page flow — drop a `<ContentPageFilters />` marker where they used to
-   * sit — while phones move them behind the mobile header's filter icon into a
-   * bottom sheet, the same gesture as the map's filter FAB.
+   * rendered directly so ONE place decides how they render: drop a
+   * `<ContentPageFilters />` marker where they sit. Desktop shows them as-is;
+   * phones get the shared `FilterDisclosure` toggle so they can be folded away.
    */
   filters?: ReactNode
   /**
    * `true` while `filters` holds a non-default selection. Dots the mobile filter
-   * icon so an active filter is still visible with the sheet closed (the chips
-   * themselves are then off-screen).
+   * toggle so an active filter is still visible with the panel collapsed.
    */
   filtersActive?: boolean
   /** Hide the site footer on phones while keeping it on desktop. */
@@ -47,30 +45,26 @@ export interface ContentPageProps {
 // Was max-w-6xl (72rem), which matched the Paldeck rather than any spec role.
 const CONTENT_MAX_WIDTH = 'max-w-[var(--arkive-content-standard)]'
 
-/**
- * The filter node plus who owns it this breakpoint. `inSheet` is the single
- * boolean deciding the mount point, so the inline slot and the sheet can never
- * disagree.
- */
-const FiltersContext = createContext<ReactNode>(null)
+/** The page's filter node plus whether it holds a non-default selection. */
+const FiltersContext = createContext<{ node: ReactNode; active: boolean }>({ node: null, active: false })
 
 /**
  * Inline slot for {@link ContentPageProps.filters}: renders the filter node
- * exactly where the page puts this marker on desktop, and nothing on phones
- * (where the header's filter sheet mounts it instead).
+ * exactly where the page puts this marker, inside the shared
+ * `FilterDisclosure` so phones can collapse it (desktop shows no toggle).
  *
- * The node is mounted in exactly ONE place per breakpoint — never rendered twice
- * with one copy hidden by CSS — because the filter controls carry React state of
- * their own (open comboboxes, tooltip state); a second copy would duplicate it
- * and reset whichever copy the breakpoint flip unmounts.
+ * `className` is the spacing/layout wrapper the page used to have around its
+ * chip rows.
  */
 export function ContentPageFilters({ className }: { className?: string }) {
-  const node = useContext(FiltersContext)
+  const { t } = useTranslation()
+  const { node, active } = useContext(FiltersContext)
   if (!node) return null
-  // `className` is the spacing/layout wrapper the page used to have around its
-  // chip rows; without one the node is rendered bare so pages whose filter node
-  // already carries its own wrapper keep byte-identical desktop markup.
-  return className ? <div className={className}>{node}</div> : <>{node}</>
+  return (
+    <FilterDisclosure label={t('filter')} active={active} bodyClassName={className} testId="content-page-filters">
+      {node}
+    </FilterDisclosure>
+  )
 }
 
 /**
@@ -85,19 +79,16 @@ export function ContentPage({
   title,
   heading = false,
   filters,
-  filtersActive: _filtersActive = false,
+  filtersActive = false,
   hideMobileFooter = false,
   children,
 }: ContentPageProps) {
-  void _filtersActive
   const { t, i18n } = useTranslation()
   const isMobile = useIsMobile()
   const [showBackToTop, setShowBackToTop] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
-  // Phones only: on desktop the filters stay in the page flow, so no icon and no
-  // sheet — and the pages without filters keep the plain title header.
 
   useEffect(() => {
     if (!isMobile) {
@@ -120,7 +111,7 @@ export function ContentPage({
   }
 
   return (
-    <FiltersContext.Provider value={filters ?? null}>
+    <FiltersContext.Provider value={{ node: filters ?? null, active: filtersActive }}>
       <div className="flex h-dvh flex-col bg-background text-foreground">
         <TopNav active={active} />
         <ArkiveMobileHeader

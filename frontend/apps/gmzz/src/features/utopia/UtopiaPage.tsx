@@ -128,7 +128,7 @@ export default function UtopianTheaterPage() {
   }
 
   return (
-    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} toolbar={<div className="space-y-3">
+    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} filtersActive={Boolean(query || tag) || quality !== "all"} toolbar={<div className="space-y-3">
       <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">

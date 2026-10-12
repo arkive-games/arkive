@@ -15,7 +15,8 @@ vi.mock('@gamemap/map-shell', () => ({
   resolveArkiveHomeUrl: () => 'http://localhost:15172',
 }))
 vi.mock('@gamemap/ui', () => ({
-  cn: (...values: string[]) => values.join(' '),
+  cn: (...values: string[]) => values.filter(Boolean).join(' '),
+  FilterDisclosure: ({ children }: { children: ReactNode }) => <>{children}</>,
   SiteFooter: () => <footer />,
 }))
 vi.mock('@tanstack/react-router', () => ({ Link: ({ children }: { children: ReactNode }) => <a>{children}</a> }))

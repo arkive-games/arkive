@@ -65,7 +65,7 @@ export default function AutoChessItemsPage() {
   }
 
   return (
-    <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide resultsKey={JSON.stringify([query, rarity, useType, typeName])} toolbar={<>
+    <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide resultsKey={JSON.stringify([query, rarity, useType, typeName])} filtersActive={Boolean(query || rarity || useType || typeName)} toolbar={<>
       <div className="mb-3 flex flex-col gap-2">
         <FilterRow label={t('autochess.items.qualityFilter')}>
           <Chip active={!rarity} onClick={() => setRarity(0)}>{t('autochess.all')}</Chip>

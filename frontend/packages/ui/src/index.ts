@@ -31,3 +31,4 @@ export {
   type ArkiveThemeStorageEnvironment,
   type CreateArkiveThemeStorageOptions,
 } from "./arkive-theme-storage"
+export * from "./filter-disclosure"

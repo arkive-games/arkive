@@ -74,7 +74,7 @@ export default function AutoChessPiecesPage() {
           {(cost || bondId || role || query) ? <button type="button" onClick={reset} className="text-sm text-primary hover:underline">{t('autochess.clearFilters')}</button> : null}
         </FilterBar>
   </>
-  return <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide resultsKey={JSON.stringify([cost, bondId, role, query])} toolbar={pieces.error || bonds.error || attributes.error || pieces.loading || bonds.loading || attributes.loading ? undefined : toolbar}>
+  return <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide resultsKey={JSON.stringify([cost, bondId, role, query])} filtersActive={Boolean(cost || bondId || role || query)} toolbar={pieces.error || bonds.error || attributes.error || pieces.loading || bonds.loading || attributes.loading ? undefined : toolbar}>
     {pieces.error || bonds.error || attributes.error ? <p role="alert" className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
       : pieces.loading || bonds.loading || attributes.loading ? <p role="status" className="text-sm text-muted-foreground">{t('loading')}</p> : <>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

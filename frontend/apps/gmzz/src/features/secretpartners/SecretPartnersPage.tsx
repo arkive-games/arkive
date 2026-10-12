@@ -46,7 +46,7 @@ export default function SecretPartnersPage() {
   </>
 
   return (
-    <ContentPage active="/secretpartners" title={t('secretpartners.title')} heading wide resultsKey={JSON.stringify([query, category, quality, attribute])} toolbar={remote.error || remote.loading ? undefined : toolbar}>
+    <ContentPage active="/secretpartners" title={t('secretpartners.title')} heading wide resultsKey={JSON.stringify([query, category, quality, attribute])} filtersActive={Boolean(query || category || quality || attribute)} toolbar={remote.error || remote.loading ? undefined : toolbar}>
       {remote.error ? <div role="alert" className="text-sm">
         <p>{t('secretpartners.error')}</p>
         <button type="button" className="mt-2 rounded-lg border px-3 py-2 text-primary" onClick={() => window.location.reload()}>{t('secretpartners.reload')}</button>

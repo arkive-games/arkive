@@ -133,7 +133,7 @@ export default function TrainTradeGoodsPage() {
   }
 
   return (
-    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide resultsKey={JSON.stringify([query, category, quality, view, currentPage])} toolbar={<div className="space-y-3">
+    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide resultsKey={JSON.stringify([query, category, quality, view, currentPage])} filtersActive={Boolean(query) || category !== "all" || quality !== "all"} toolbar={<div className="space-y-3">
       <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">

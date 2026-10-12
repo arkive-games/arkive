@@ -149,7 +149,7 @@ export default function ReforgePage() {
   }
 
   return (
-    <ContentPage active="/reforge" title={t('reforge.title')} wide resultsKey={JSON.stringify([query, slot, affixCount])} toolbar={<div className="space-y-3">
+    <ContentPage active="/reforge" title={t('reforge.title')} wide resultsKey={JSON.stringify([query, slot, affixCount])} filtersActive={Boolean(query || slot || affixCount)} toolbar={<div className="space-y-3">
         <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
           <div className="min-w-0">
             <h1 className="text-3xl font-bold text-foreground">{t('reforge.title')}</h1>
