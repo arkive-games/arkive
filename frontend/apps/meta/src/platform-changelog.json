@@ -1,6 +1,24 @@
 {
   "entries": [
     {
+      "date": "2026-10-13",
+      "commit": "66537f669efc9d9a568cc37753a4027c650e357f",
+      "targets": [
+        "gmzz",
+        "palworld"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "On phones, catalogue filters fold away behind a Filters toggle, giving the results more of the screen; a dot on the toggle shows when a filter is still active.",
+            "zh-CN": "手机端的图鉴筛选栏可通过“筛选”按钮收起，为结果腾出更多空间；按钮上的圆点提示仍有筛选生效。",
+            "zh-TW": "手機端的圖鑑篩選欄可透過「篩選」按鈕收起，為結果騰出更多空間；按鈕上的圓點提示仍有篩選生效。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-09-27",
       "commit": "c1dd30ef1c3117ea4cc7d1cc00f25b44a90f3cbc",
       "targets": [
