@@ -52,7 +52,7 @@ export default function WikiEntityCatalog({
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    rootRef.current?.closest("main")?.scrollTo({ top: 0, left: 0 });
+    rootRef.current?.closest("[data-content-scroll]")?.scrollTo({ top: 0, left: 0 });
   }, [currentId]);
 
   const groupDocs = useMemo(() => {

@@ -3,7 +3,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArkiveAccountControl } from "@gamemap/auth";
 import { cn, SiteFooter, useIsMobile } from "@gamemap/ui";
-import { ArkiveMobileHeader, getArkiveBrandName } from "@gamemap/map-shell";
+import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from "@gamemap/map-shell";
 
 import TopNavbar from "@/components/TopNavbar";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
@@ -40,46 +40,36 @@ export default function ContentLayout({
     : t("mobileNav.wiki"));
 
   return (
-    <div
-      className={cn(
-        "flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground",
-        className,
-      )}
-    >
-      {isMobile ? (
-        <ArkiveMobileHeader
-          homeUrl={ARKIVE_HOME_URL}
-          homeLabel={t("brand.name")}
-          brandName={brandName}
-          pageTitle={mobileTitle}
-          loginLabel={t("auth.login")}
-          accountControl={<ArkiveAccountControl language={currentLng} variant="mobileHeader" />}
-          actions={<GlobalSearchWidget />}
-        />
-      ) : (
-        <TopNavbar />
-      )}
-      <main className="flex-1 overflow-y-auto">
-        <div className="flex min-h-full flex-col">
-          <div
-            className={cn(
-              "arkive-content-page mx-auto w-full max-w-[var(--arkive-content-standard)] flex-1 pb-6",
-              contentClassName,
-            )}
-          >
-            {children}
-          </div>
-          {/* Last element in the scroll column, so its bottom padding is what
-              lifts content clear of the fixed bottom tab bar + safe area. */}
-          <SiteFooter
-            className="pb-[calc(env(safe-area-inset-bottom)+4.5rem)] md:pb-4"
+    <ArkiveContentPage
+      className={cn("w-screen overflow-hidden", className)}
+      contentClassName={contentClassName}
+      mobileHeader={
+        isMobile ? (
+          <ArkiveMobileHeader
             homeUrl={ARKIVE_HOME_URL}
-            githubUrl={import.meta.env.VITE_GITHUB_URL}
-            icpBeian={import.meta.env.VITE_ICP_BEIAN}
-            versionLink={<Link to="/changelog">v{SITE_VERSION}</Link>}
+            homeLabel={t("brand.name")}
+            brandName={brandName}
+            pageTitle={mobileTitle}
+            loginLabel={t("auth.login")}
+            accountControl={<ArkiveAccountControl language={currentLng} variant="mobileHeader" />}
+            actions={<GlobalSearchWidget />}
           />
-        </div>
-      </main>
-    </div>
+        ) : null
+      }
+      topBar={isMobile ? null : <TopNavbar />}
+      // Last element in the scroll column, so its bottom padding is what lifts
+      // content clear of the fixed bottom tab bar + safe area.
+      footer={
+        <SiteFooter
+          className="pb-[calc(env(safe-area-inset-bottom)+4.5rem)] md:pb-4"
+          homeUrl={ARKIVE_HOME_URL}
+          githubUrl={import.meta.env.VITE_GITHUB_URL}
+          icpBeian={import.meta.env.VITE_ICP_BEIAN}
+          versionLink={<Link to="/changelog">v{SITE_VERSION}</Link>}
+        />
+      }
+    >
+      {children}
+    </ArkiveContentPage>
   );
 }

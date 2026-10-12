@@ -88,7 +88,7 @@ test.describe("wiki", () => {
     await expect(page.getByTestId("wiki-group-list")).toBeVisible();
     await expect(page.getByTestId("wiki-section-nav")).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "Other" })).toHaveCount(0);
-    const scrollPane = page.locator("main");
+    const scrollPane = page.locator("[data-content-scroll]");
     const lastFlatEntry = page.locator('[data-testid^="wiki-entry-"]').last();
     await lastFlatEntry.scrollIntoViewIfNeeded();
     await lastFlatEntry.click();

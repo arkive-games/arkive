@@ -22,6 +22,7 @@ export {
   type ArkiveMobileAccountButtonProps,
   type ArkiveMobileHeaderProps,
 } from "./ArkiveMobileHeader"
+export { ArkiveContentPage, type ArkiveContentPageProps } from "./ArkiveContentPage"
 export {
   ArkiveMobileMapControls,
   type ArkiveMobileMapControlsProps,
