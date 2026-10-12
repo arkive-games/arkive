@@ -218,7 +218,10 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        aria-label={caption == null ? (label ?? placeholder) : label}
+        // The visible caption is what names the box, matching the wrapping
+        // <label> these boxes used to have; without one, the explicit label,
+        // then the placeholder.
+        aria-label={typeof caption === "string" ? caption : (label ?? placeholder)}
         data-testid={testId}
         className={cn(size === "sm" ? "h-8 pl-8 text-sm" : "pl-9", clearLabel && "pr-9", inputClassName)}
       />

@@ -160,8 +160,8 @@ export default function ReforgePage() {
           <SearchInput
             value={query}
             onChange={setQuery}
-            label={t('reforge.searchPlaceholder')}
             caption={t('reforge.searchLabel')}
+            inputClassName="h-10 border-border bg-background text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
             placeholder={t('reforge.searchPlaceholder')}
             clearOnEscape
             type="search"
@@ -170,12 +170,12 @@ export default function ReforgePage() {
         </header>} toolbar={<div className="space-y-3">
         <section aria-label={t('reforge.filters')} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
           <FilterGroup label={t('reforge.slotLabel')} hint={t('reforge.slotHint')}>
-            <FilterChip active={slot === 0} onClick={() => setSlot(0)} testId="reforge-slot-all">
+            <FilterChip variant="accent" active={slot === 0} onClick={() => setSlot(0)} testId="reforge-slot-all">
               {t('reforge.all')}
               <span className="tabular-nums text-muted-foreground">{merged.length}</span>
             </FilterChip>
             {slots.map((entry) => (
-              <FilterChip
+              <FilterChip variant="accent"
                 key={entry.id}
                 active={slot === entry.id}
                 onClick={() => setSlot(entry.id)}
@@ -187,12 +187,12 @@ export default function ReforgePage() {
             ))}
           </FilterGroup>
           <FilterGroup label={t('reforge.affixCountLabel')} hint={t('reforge.affixCountHint')}>
-            <FilterChip active={affixCount === 0} onClick={() => setAffixCount(0)} testId="reforge-count-all">
+            <FilterChip variant="accent" active={affixCount === 0} onClick={() => setAffixCount(0)} testId="reforge-count-all">
               {t('reforge.all')}
               <span className="tabular-nums text-muted-foreground">{merged.length}</span>
             </FilterChip>
             {counts.map((count) => (
-              <FilterChip
+              <FilterChip variant="accent"
                 key={count}
                 active={affixCount === count}
                 onClick={() => setAffixCount(count)}

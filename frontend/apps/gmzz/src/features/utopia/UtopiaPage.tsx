@@ -141,8 +141,8 @@ export default function UtopianTheaterPage() {
             setQuery(value);
             setPage(1);
           }}
-          label={t("utopianTheater.searchPlaceholder")}
           caption={t("utopianTheater.searchLabel")}
+          inputClassName="h-10 border-border bg-background text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
           placeholder={t("utopianTheater.searchPlaceholder")}
           clearOnEscape
           type="search"
@@ -155,7 +155,7 @@ export default function UtopianTheaterPage() {
       >
         <FilterGroup label={t("utopianTheater.tagLabel")} hint={t("utopianTheater.tagHint")}>
           {["", ...tags].map((value) => (
-            <FilterChip
+            <FilterChip variant="accent"
               key={value || "all"}
               active={tag === value}
               onClick={() => {
@@ -171,7 +171,7 @@ export default function UtopianTheaterPage() {
         </FilterGroup>
         <FilterGroup label={t("utopianTheater.quality")} hint={t("utopianTheater.qualityHint")}>
           {QUALITY_OPTIONS.map((value) => (
-            <FilterChip
+            <FilterChip variant="accent"
               key={value}
               active={quality === value}
               onClick={() => {

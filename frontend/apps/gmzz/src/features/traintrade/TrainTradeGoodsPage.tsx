@@ -145,8 +145,8 @@ export default function TrainTradeGoodsPage() {
             setQuery(value);
             setPage(1);
           }}
-          label={t("trainTrade.searchPlaceholder")}
           caption={t("trainTrade.searchLabel")}
+          inputClassName="h-10 border-border bg-background text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
           placeholder={t("trainTrade.searchPlaceholder")}
           clearOnEscape
           type="search"
@@ -156,7 +156,7 @@ export default function TrainTradeGoodsPage() {
       <section aria-label={t("trainTrade.filters")} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
         <FilterGroup label={t("trainTrade.categoryLabel")} hint={t("trainTrade.categoryHint")}>
           {visibleCategories.map((option) => (
-            <FilterChip key={option} active={category === option} onClick={() => { setCategory(option); setPage(1); }} testId={`train-trade-category-${option}`}>
+            <FilterChip variant="accent" key={option} active={category === option} onClick={() => { setCategory(option); setPage(1); }} testId={`train-trade-category-${option}`}>
               {t(`trainTrade.category.${option}`)}
               <span className="tabular-nums text-muted-foreground">{counts[option]}</span>
             </FilterChip>
@@ -164,7 +164,7 @@ export default function TrainTradeGoodsPage() {
         </FilterGroup>
         <FilterGroup label={t("trainTrade.qualityLabel")} hint={t("trainTrade.qualityHint")}>
           {visibleQualities.map((option) => (
-            <FilterChip key={option} active={quality === option} onClick={() => { setQuality(option); setPage(1); }} testId={`train-trade-quality-${option}`}>
+            <FilterChip variant="accent" key={option} active={quality === option} onClick={() => { setQuality(option); setPage(1); }} testId={`train-trade-quality-${option}`}>
               {option === "all" ? t("trainTrade.all") : t("trainTrade.qualityValue", { value: option })}
               <span className="tabular-nums text-muted-foreground">{qualityCounts[option]}</span>
             </FilterChip>

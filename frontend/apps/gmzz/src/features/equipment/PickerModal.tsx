@@ -106,6 +106,7 @@ export default function PickerModal({
           value={query}
           onChange={setQuery}
           label={t('equip.pickerSearch')}
+          inputClassName="h-9 border-border bg-background text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
           placeholder={t('equip.pickerSearch')}
           type="search"
           testId={`${testIdPrefix}-search`}
