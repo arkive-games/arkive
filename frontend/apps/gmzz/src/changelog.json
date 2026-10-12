@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.14.0",
+      "date": "2026-10-12",
+      "commit": "b0e3a3a4836c9bf7ea48f51e2c3cdee688f1c49d",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Adjust and remember each puppet's level independently, with unlocked skill upgrades highlighted.",
+            "zh-CN": "每只秘偶可独立调整并保存等级，按等级高亮已激活的技能升级效果。",
+            "zh-TW": "每隻秘偶可獨立調整並儲存等級，依等級醒目顯示已啟用的技能升階效果。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep catalogue filters visible while results scroll, and return to the first result when filters change.",
+            "zh-CN": "各目录页面筛选栏固定显示，切换筛选时回到首条结果。",
+            "zh-TW": "各目錄頁面篩選列固定顯示，切換篩選時回到首筆結果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.13.0",
       "date": "2026-10-11",
       "commit": "bc9a7ba9b4e292451daad96558728dffdf1385da",
