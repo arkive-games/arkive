@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import {
@@ -32,9 +33,7 @@ export default function AutoChessItemsPage() {
   const [query, setQuery] = useState('')
   const [rarity, setRarity] = useState(0)
 
-  useEffect(() => {
-    document.title = `${t('autochess.items.title')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('autochess.items.title')} - ${t('siteTitle')}`)
 
   const attrs = useMemo(() => attributeMap(attributes.data ?? []), [attributes.data])
   // Memoised so the filters below key on a stable identity — see the note in

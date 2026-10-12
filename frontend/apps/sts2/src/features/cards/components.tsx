@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Button, cn } from '@gamemap/ui'
+import { Button, cn, NotFoundMessage } from '@gamemap/ui'
 import type { Bundle, Card, Character } from '../../lib/data'
 import { iconUrl } from '../../lib/urls'
 import { CardText } from '../../lib/cardText'
@@ -199,7 +199,7 @@ export function PageLoading() {
 
 export function NotFound() {
   const { t } = useTranslation()
-  return <div className="mt-12 text-center text-sm text-muted-foreground">{t('notFound')}</div>
+  return <NotFoundMessage className="mt-12 text-center text-sm" message={t('notFound')} />
 }
 
 /** Character portrait + name, used by both the roster and card detail. */

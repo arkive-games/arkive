@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { IconDatabase, IconInfoCircle } from '@tabler/icons-react'
 import { useMemory } from '@gamemap/state-memory'
-import { Input } from '@gamemap/ui'
+import { Input, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -159,9 +159,7 @@ export default function ScorePage() {
     }
   }, [])
 
-  useEffect(() => {
-    document.title = `${t('score.title')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('score.title')} - ${t('siteTitle')}`)
 
   // Stored levels are clamped to the dataset's range, so a draft written under
   // a higher cap cannot push a benchmark past the curve it is read from.

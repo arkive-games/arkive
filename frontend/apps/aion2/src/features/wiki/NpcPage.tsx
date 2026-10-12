@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useDocumentTitle } from "@gamemap/ui";
 
 import EmbeddedMap from "@/features/wiki/EmbeddedMap";
 import WikiEntityCatalog from "@/features/wiki/WikiEntityCatalog";
@@ -65,9 +66,7 @@ export default function NpcPage({ id }: { id: string }) {
   const err = errorId === id;
   useRememberWikiEntry("npc", npc?.id);
 
-  useEffect(() => {
-    if (npc) document.title = `${lt(npc.name, i18n.language)} - AION2 Wiki`;
-  }, [npc, i18n.language]);
+  useDocumentTitle(npc ? `${lt(npc.name, i18n.language)} - AION2 Wiki` : undefined);
 
   if (err) return <WikiNotFound id={id} />;
   if (!npc) return <WikiLoading />;

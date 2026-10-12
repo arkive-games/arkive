@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { IconSearch } from '@tabler/icons-react'
-import { Input } from '@gamemap/ui'
+import { Input, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -45,9 +45,7 @@ export default function FellowsPage() {
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState<number | null>(null)
 
-  useEffect(() => {
-    document.title = `${t('fellows.sectionTitle')} · ${t('fellows.title')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('fellows.sectionTitle')} · ${t('fellows.title')} - ${t('siteTitle')}`)
 
   const all = useMemo(() => fellows.data ?? [], [fellows.data])
   const relationsById = useMemo(

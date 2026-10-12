@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useDocumentTitle } from "@gamemap/ui";
 
 import WikiCatalogToolbar, {
   type WikiCatalogSource,
@@ -84,9 +85,7 @@ export default function WikiHome() {
     };
   }, [wantsSearch]);
 
-  useEffect(() => {
-    document.title = t("wiki:home.title");
-  }, [t]);
+  useDocumentTitle(t("wiki:home.title"));
 
   const searchSources = useMemo<WikiCatalogSource[]>(
     () => WIKI_TYPES.map((type) => ({ type, docs: indexes[type] })),

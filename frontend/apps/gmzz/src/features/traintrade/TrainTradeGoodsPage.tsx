@@ -7,7 +7,7 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Input } from "@gamemap/ui";
+import { Input, useDocumentTitle } from "@gamemap/ui";
 import { ContentPage } from "@/components/ContentPage";
 import CatalogPagination from "@/features/traintrade/CatalogPagination";
 import { loadTrainTradeGoods, iconFor, type TrainTradeGoods } from "@/features/traintrade/data";
@@ -56,8 +56,9 @@ export default function TrainTradeGoodsPage() {
   const [error, setError] = useState(false);
   const resultsAnchorRef = useRef<HTMLDivElement>(null);
 
+  useDocumentTitle(`${t("trainTrade.title")} - ${t("utopianTheater.siteTitle")}`);
+
   useEffect(() => {
-    document.title = `${t("trainTrade.title")} - ${t("utopianTheater.siteTitle")}`;
     let active = true;
     loadTrainTradeGoods()
       .then((entries) => {

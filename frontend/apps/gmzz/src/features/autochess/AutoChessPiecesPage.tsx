@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '@gamemap/ui'
 import { ContentPage } from '@/components/ContentPage'
 import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
@@ -47,7 +48,7 @@ export default function AutoChessPiecesPage() {
   const reset = () => updateFilters(EMPTY_FILTERS)
   const selectPiece = (id: number) => { reset(); requestAnimationFrame(() => focusPiece(id)) }
 
-  useEffect(() => { document.title = `${t('autochess.pieces.title')} - ${t('siteTitle')}` }, [t])
+  useDocumentTitle(`${t('autochess.pieces.title')} - ${t('siteTitle')}`)
   useEffect(() => {
     if (!selected || pieces.loading || bonds.loading || attributes.loading) return
     const frame = requestAnimationFrame(() => focusPiece(selected))

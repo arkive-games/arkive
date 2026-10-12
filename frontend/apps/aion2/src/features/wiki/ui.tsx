@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { NotFoundMessage, PageSkeleton } from "@gamemap/ui";
 
 import { getStaticUrl } from "@/lib/url";
 import type { ItemGrade } from "@/types/wiki";
@@ -146,27 +147,12 @@ export function ItemIcon({
 
 export function WikiLoading() {
   const { t } = useTranslation(["wiki"]);
-  return (
-    <div
-      className="space-y-4"
-      role="status"
-      aria-label={t("wiki:common.loading")}
-    >
-      <div className="h-7 w-56 animate-pulse rounded bg-secondary" />
-      <div className="h-4 w-full max-w-xl animate-pulse rounded bg-secondary" />
-      <div className="h-4 w-2/3 max-w-md animate-pulse rounded bg-secondary" />
-      <div className="h-64 w-full animate-pulse rounded-md bg-secondary" />
-    </div>
-  );
+  return <PageSkeleton label={t("wiki:common.loading")} />;
 }
 
 export function WikiNotFound({ id }: { id: string }) {
   const { t } = useTranslation(["wiki"]);
-  return (
-    <p className="text-muted-foreground">
-      {t("wiki:common.notFound", { id })}
-    </p>
-  );
+  return <NotFoundMessage message={t("wiki:common.notFound", { id })} />;
 }
 
 export function Breadcrumb({

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import { loadAutoChessTalents, plainText } from '@/features/autochess/data'
@@ -23,9 +24,7 @@ export default function AutoChessTalentsPage() {
   // keeps internal entries off the page unless asked for.
   const [showHidden, setShowHidden] = useState(false)
 
-  useEffect(() => {
-    document.title = `${t('autochess.talents.title')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('autochess.talents.title')} - ${t('siteTitle')}`)
 
   // Memoised so the filters below key on a stable identity — see the note in
   // AutoChessPiecesPage.

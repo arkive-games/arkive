@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import { FellowsTabs } from '@/features/fellows/FellowsTabs'
@@ -23,9 +24,7 @@ export default function FellowRelationsPage() {
   const effects = useRemoteData(loadRelationEffects)
   const [openId, setOpenId] = useState<number | null>(null)
 
-  useEffect(() => {
-    document.title = `${t('fellows.sectionTitle')} · ${t('fellows.relationsTitle')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('fellows.sectionTitle')} · ${t('fellows.relationsTitle')} - ${t('siteTitle')}`)
 
   const fellowsById = useMemo(
     () => new Map((fellows.data ?? []).map((fellow) => [fellow.id, fellow])),

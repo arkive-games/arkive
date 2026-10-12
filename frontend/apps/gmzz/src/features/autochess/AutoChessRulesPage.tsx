@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import {
@@ -107,9 +108,7 @@ export default function AutoChessRulesPage() {
   const { t } = useTranslation()
   const rules = useRemoteData(loadAutoChessRules)
 
-  useEffect(() => {
-    document.title = `${t('autochess.title')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('autochess.title')} - ${t('siteTitle')}`)
 
   /** Turns grouped by their round, so the ladder reads the way it is played. */
   const rounds = useMemo(() => {

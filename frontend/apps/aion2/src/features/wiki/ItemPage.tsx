@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useDocumentTitle } from "@gamemap/ui";
 
 import {
   Breadcrumb,
@@ -64,9 +65,7 @@ export default function ItemPage({ id }: { id: string }) {
   const err = errorId === id;
   useRememberWikiEntry("item", item?.id);
 
-  useEffect(() => {
-    if (item) document.title = `${lt(item.name, i18n.language)} - AION2 Wiki`;
-  }, [item, i18n.language]);
+  useDocumentTitle(item ? `${lt(item.name, i18n.language)} - AION2 Wiki` : undefined);
 
   if (err) return <WikiNotFound id={id} />;
   if (!item) return <WikiLoading />;

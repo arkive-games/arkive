@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMemory } from '@gamemap/state-memory'
 import { IconCheck, IconLock, IconRotateClockwise } from '@tabler/icons-react'
+import { useDocumentTitle } from '@gamemap/ui'
 import { ContentPage } from '@/components/ContentPage'
 import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
@@ -20,7 +21,7 @@ export default function SecretPartnersPage() {
   const qualities = useMemo(() => [...new Set(records.map((record) => record.quality))].sort((a, b) => b - a), [records])
   const attributes = useMemo(() => [...new Map(records.flatMap((record) => (record.attributes ?? []).map((entry) => [entry.key, entry.name] as const)))], [records])
   const shown = useMemo(() => filterPartners(records, query, category, quality, attribute), [records, query, category, quality, attribute])
-  useEffect(() => { document.title = `${t('secretpartners.title')} - ${t('siteTitle')}` }, [t])
+  useDocumentTitle(`${t('secretpartners.title')} - ${t('siteTitle')}`)
 
   const toolbar = <>
         <div className="mb-3 flex flex-col gap-2">

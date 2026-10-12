@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { IconDatabase, IconInfoCircle, IconSearch } from '@tabler/icons-react'
-import { Input } from '@gamemap/ui'
+import { Input, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -66,9 +66,7 @@ export default function ReforgePage() {
     }
   }, [])
 
-  useEffect(() => {
-    document.title = `${t('reforge.title')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('reforge.title')} - ${t('siteTitle')}`)
 
   const merged = useMemo(() => mergeGraces(graces), [graces])
   const counts = useMemo(() => affixCountsOf(graces), [graces])

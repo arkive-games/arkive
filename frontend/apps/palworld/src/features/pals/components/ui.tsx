@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { cn, NotFoundMessage, PageSkeleton } from '@gamemap/ui'
 
 /** A titled panel — the encyclopedia's section container. */
 export function PalSection({
@@ -87,24 +87,19 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
 
 export function PalPageLoading() {
   const { t } = useTranslation()
-  return (
-    <div className="space-y-4" role="status" aria-label={t('pal.loading')}>
-      <div className="h-7 w-56 animate-pulse rounded bg-secondary" />
-      <div className="h-4 w-full max-w-xl animate-pulse rounded bg-secondary" />
-      <div className="h-4 w-2/3 max-w-md animate-pulse rounded bg-secondary" />
-      <div className="h-64 w-full animate-pulse rounded-md bg-secondary" />
-    </div>
-  )
+  return <PageSkeleton label={t('pal.loading')} />
 }
 
 export function PalNotFound({ id }: { id: string }) {
   const { t } = useTranslation()
   return (
-    <div className="space-y-3">
-      <p className="text-muted-foreground">{t('pal.notFound', { id })}</p>
-      <Link to="/pals" className="text-sm text-primary hover:underline">
-        {t('pal.backToList')}
-      </Link>
-    </div>
+    <NotFoundMessage
+      message={t('pal.notFound', { id })}
+      action={
+        <Link to="/pals" className="text-sm text-primary hover:underline">
+          {t('pal.backToList')}
+        </Link>
+      }
+    />
   )
 }

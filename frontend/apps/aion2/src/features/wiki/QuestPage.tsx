@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useDocumentTitle } from "@gamemap/ui";
 
 import EmbeddedMap, { type EmbeddedPoi } from "@/features/wiki/EmbeddedMap";
 import WikiEntityCatalog from "@/features/wiki/WikiEntityCatalog";
@@ -83,9 +84,7 @@ export default function QuestPage({ id }: { id: string }) {
     return markers.length ? markers : allObjectives;
   }, [allObjectives]);
 
-  useEffect(() => {
-    if (q) document.title = `${lt(q.name, i18n.language)} - AION2 Wiki`;
-  }, [q, i18n.language]);
+  useDocumentTitle(q ? `${lt(q.name, i18n.language)} - AION2 Wiki` : undefined);
 
   if (err) return <WikiNotFound id={id} />;
   if (!q) return <WikiLoading />;

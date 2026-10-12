@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import {
@@ -30,9 +31,7 @@ export default function AutoChessBondsPage() {
   const attrs = useMemo(() => attributeMap(attributes.data ?? []), [attributes.data])
   const [group, setGroup] = useState<AutoChessBondGroup | ''>('')
 
-  useEffect(() => {
-    document.title = `${t('autochess.bonds.title')} - ${t('siteTitle')}`
-  }, [t])
+  useDocumentTitle(`${t('autochess.bonds.title')} - ${t('siteTitle')}`)
 
   /** Which pieces carry each bond — the question a player actually has. */
   const members = useMemo(() => membersByBond(pieces.data ?? []), [pieces.data])

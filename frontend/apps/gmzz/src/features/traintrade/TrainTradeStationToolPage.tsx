@@ -7,6 +7,7 @@ import {
   IconRefresh,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
+import { useDocumentTitle } from "@gamemap/ui";
 import { ContentPage } from "@/components/ContentPage";
 import {
   loadTrainTradeRouteProfiles,
@@ -69,9 +70,7 @@ export default function TrainTradeStationToolPage() {
   const quotaTotal = STATION_TYPES.reduce((sum, type) => sum + totals[type], 0);
   const quotaValid = Boolean(difficultyProfile?.variants.some((variant) => stationTotalsEqual(variant, totals)));
 
-  useEffect(() => {
-    document.title = `${t("trainTrade.stationTool.title")} - ${t("trainTrade.stationTool.productTitle")}`;
-  }, [t]);
+  useDocumentTitle(`${t("trainTrade.stationTool.title")} - ${t("trainTrade.stationTool.productTitle")}`);
 
   useEffect(() => {
     let active = true;

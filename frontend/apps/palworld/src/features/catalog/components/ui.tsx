@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@gamemap/ui'
+import { cn, NotFoundMessage, PageSkeleton } from '@gamemap/ui'
 import { buildingIconUrl } from '../../../lib/catalog'
 import { itemIconUrl } from '../../../lib/assets'
 
@@ -69,14 +69,7 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
 
 export function CatalogPageLoading() {
   const { t } = useTranslation()
-  return (
-    <div className="space-y-4" role="status" aria-label={t('catalogLoading')}>
-      <div className="h-7 w-56 animate-pulse rounded bg-secondary" />
-      <div className="h-4 w-full max-w-xl animate-pulse rounded bg-secondary" />
-      <div className="h-4 w-2/3 max-w-md animate-pulse rounded bg-secondary" />
-      <div className="h-64 w-full animate-pulse rounded-md bg-secondary" />
-    </div>
-  )
+  return <PageSkeleton label={t('catalogLoading')} />
 }
 
 export function CatalogNotFound({
@@ -89,12 +82,14 @@ export function CatalogNotFound({
   backLabel: string
 }) {
   return (
-    <div className="space-y-3">
-      <p className="text-muted-foreground">{message}</p>
-      <Link to={to} className="text-sm text-primary hover:underline">
-        {backLabel}
-      </Link>
-    </div>
+    <NotFoundMessage
+      message={message}
+      action={
+        <Link to={to} className="text-sm text-primary hover:underline">
+          {backLabel}
+        </Link>
+      }
+    />
   )
 }
 

@@ -18,6 +18,7 @@ vi.mock('@gamemap/ui', () => ({
   cn: (...values: string[]) => values.filter(Boolean).join(' '),
   FilterDisclosure: ({ children }: { children: ReactNode }) => <>{children}</>,
   SiteFooter: () => <footer />,
+  currentVersion: (file: { entries: Array<{ version: string }> }) => file.entries[0].version,
 }))
 vi.mock('@tanstack/react-router', () => ({ Link: ({ children }: { children: ReactNode }) => <a>{children}</a> }))
 

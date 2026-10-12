@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { defineMemoryRecord, memoryPolicy, useMemoryState } from "@gamemap/state-memory";
+import { useDocumentTitle } from "@gamemap/ui";
 
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
@@ -46,9 +47,7 @@ export default function GroupList({
     loadWikiIndex(type).then((r) => setDocs(r.docs)).catch(console.error);
   }, [type]);
 
-  useEffect(() => {
-    document.title = `${t(`wiki/taxonomy:groups.${type}.${group}.name`)} - AION2 Wiki`;
-  }, [t, type, group]);
+  useDocumentTitle(`${t(`wiki/taxonomy:groups.${type}.${group}.name`)} - AION2 Wiki`);
 
   const sections = useMemo(() => {
     const mine = docs.filter(

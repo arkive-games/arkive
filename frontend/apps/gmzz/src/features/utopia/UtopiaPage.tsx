@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { IconDatabase, IconInfoCircle, IconSearch } from "@tabler/icons-react";
 import { Grid2X2, List } from "lucide-react";
-import { Input } from "@gamemap/ui";
+import { Input, useDocumentTitle } from "@gamemap/ui";
 import { useTranslation } from "react-i18next";
 
 import { ContentPage } from "@/components/ContentPage";
@@ -60,9 +60,7 @@ export default function UtopianTheaterPage() {
     };
   }, []);
 
-  useEffect(() => {
-    document.title = `${t("utopianTheater.title")} - ${t("utopianTheater.siteTitle")}`;
-  }, [t]);
+  useDocumentTitle(`${t("utopianTheater.title")} - ${t("utopianTheater.siteTitle")}`);
 
   // Groups come from the data rather than a fixed list: the client's Tag is the
   // only grouping it actually carries (see features/utopia/data.ts).

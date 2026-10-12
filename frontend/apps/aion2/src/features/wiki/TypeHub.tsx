@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useDocumentTitle } from "@gamemap/ui";
 
 import WikiCatalogToolbar, {
   type WikiCatalogSource,
@@ -119,10 +120,7 @@ export default function TypeHub({ type }: { type: string }) {
       ? visibleBuckets
       : [activeFaction];
 
-  useEffect(() => {
-    if (!node) return;
-    document.title = `${t(`wiki/taxonomy:types.${type}.name`)} - AION2 Wiki`;
-  }, [node, t, type]);
+  useDocumentTitle(node ? `${t(`wiki/taxonomy:types.${type}.name`)} - AION2 Wiki` : undefined);
 
   if (loading) return <HubLoading />;
   if (!node || !activeGroup) {
