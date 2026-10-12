@@ -23,6 +23,7 @@ export {
   type ArkiveMobileHeaderProps,
 } from "./ArkiveMobileHeader"
 export { ArkiveContentPage, type ArkiveContentPageProps } from "./ArkiveContentPage"
+export { ArkiveSiteInfoDialog, type ArkiveSiteInfoDialogLabels } from "./ArkiveSiteInfoDialog"
 export {
   ArkiveMobileMapControls,
   type ArkiveMobileMapControlsProps,

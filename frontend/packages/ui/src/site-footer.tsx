@@ -41,6 +41,13 @@ export interface SiteFooterProps extends React.ComponentProps<"footer"> {
  */
 export const ARKIVE_ICP_RECORD = "沪ICP备2025152827号-1"
 
+/**
+ * The Arkive player feedback QQ group. One number for every site: it is the
+ * same group behind the footer link, the About panel and the meta portal, and
+ * a per-app copy of it is how they drift apart.
+ */
+export const ARKIVE_FEEDBACK_QQ_GROUP = "1091411026"
+
 function SiteFooter({
   homeUrl = "https://tc-imba.com",
   homeLinkProps,

@@ -5,8 +5,3 @@ export const VISIBLE_SUBTYPES_STORAGE_PREFIX = `${STORAGE_PREFIX}.visibleSubtype
 export const VISIBLE_REGIONS_STORAGE_PREFIX = `${STORAGE_PREFIX}.visibleRegions.v1.`;
 export const SEARCH_DEBOUNCE_MS = 300;
 export const MAP_FLY_TO_DURATION = 0.5;
-/**
- * Feedback / suggestions / bug-report group, shared by both sites. Kept in
- * code rather than the locale files: a group number is not a translation.
- */
-export const FEEDBACK_QQ_GROUP = "1091411026";

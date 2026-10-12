@@ -1,11 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { ARKIVE_ICP_RECORD } from '@gamemap/ui'
+import { ARKIVE_FEEDBACK_QQ_GROUP, ARKIVE_ICP_RECORD } from '@gamemap/ui'
 import { ICP_BEIAN } from '../lib/brand'
 import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from '@gamemap/map-shell'
 import { ARKIVE_HOME_LINK_PROPS, ARKIVE_HOME_URL, IS_TOY } from '../lib/brand'
 import { SITE_VERSION } from '../lib/siteVersion'
 
-export const FEEDBACK_QQ_GROUP = '1091411026'
 export function SiteInfo({ className }: { className?: string }) {
   const { t } = useTranslation()
   const strings: ArkiveSiteInfoStrings = {
@@ -32,7 +31,7 @@ export function SiteInfo({ className }: { className?: string }) {
       gameUpdatesUrl={IS_TOY ? '#/changelog' : '/changelog'}
       feedbackGroup={{
         label: t('siteInfo.feedbackGroupLabel'),
-        number: FEEDBACK_QQ_GROUP,
+        number: ARKIVE_FEEDBACK_QQ_GROUP,
         copyLabel: t('siteInfo.copy'),
         copiedLabel: t('siteInfo.copied'),
       }}

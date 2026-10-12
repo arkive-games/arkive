@@ -1,9 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { ARKIVE_ICP_RECORD } from "@gamemap/ui"
+import { ARKIVE_FEEDBACK_QQ_GROUP, ARKIVE_ICP_RECORD } from "@gamemap/ui"
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArkiveSiteInfo, type ArkiveSiteInfoStrings } from "@gamemap/map-shell";
-import { FEEDBACK_QQ_GROUP } from "@/lib/constants";
 import { ARKIVE_HOME_URL, IS_TOY } from "@/lib/brand";
 import { SITE_VERSION } from "@/lib/siteVersion";
 
@@ -55,7 +54,7 @@ export default function SiteInfo({ className }: { className?: string }) {
       gameContact={contactContent ? <ContactBody>{contactContent}</ContactBody> : undefined}
       feedbackGroup={{
         label: t("common:siteInfo.feedback.label"),
-        number: FEEDBACK_QQ_GROUP,
+        number: ARKIVE_FEEDBACK_QQ_GROUP,
         copyLabel: t("common:ui.copy", "Copy"),
         copiedLabel: t("common:ui.copied", "Copied"),
       }}

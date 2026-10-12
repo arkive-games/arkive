@@ -2,13 +2,7 @@ import { useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { IconArrowUpRight, IconCheck, IconCopy } from '@tabler/icons-react'
 import { ArkiveMark, settingsStringsFor } from '@gamemap/map-shell'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@gamemap/ui'
+import { ARKIVE_FEEDBACK_QQ_GROUP, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@gamemap/ui'
 import { FEATURES } from './featureCatalog'
 import { IS_TOY, VISIBLE_SITES, siteHref } from './sites'
 
@@ -16,7 +10,6 @@ import { IS_TOY, VISIBLE_SITES, siteHref } from './sites'
 // spelled out once here rather than repeated in each locale's copy.
 const ARKIVE_DOMAIN = 'www.Arkive.games'
 const SLOGANS = ['万千攻略，藏于一舟', 'Sail Games With Us.'] as const
-const FEEDBACK_QQ_GROUP = '1091411026'
 const CREATORS = [
   { name: '双酿', handle: 'liuyh615' },
   { name: '苏烟', handle: 'Suyn77' },
@@ -163,7 +156,7 @@ function ContactDialog({ open, onOpenChange }: {
 }) {
   const { t } = useTranslation()
   const rows = [
-    { key: 'qq', label: t('footerDialogs.contact.feedbackGroup'), value: FEEDBACK_QQ_GROUP },
+    { key: 'qq', label: t('footerDialogs.contact.feedbackGroup'), value: ARKIVE_FEEDBACK_QQ_GROUP },
     ...CREATORS.map((creator) => ({
       key: creator.handle,
       label: t('footerDialogs.contact.creator', { name: creator.name }),
