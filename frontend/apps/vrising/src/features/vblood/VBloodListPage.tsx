@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Check, MapPin, Search, Swords } from 'lucide-react'
-import { Input } from '@gamemap/ui'
+import { Check, MapPin, Swords } from 'lucide-react'
+import { SearchInput } from '@gamemap/ui'
 import { defineMemoryRecord, isBoolean, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import { loadVBloodBosses, useCompletedVBlood, type VBloodBoss } from '../../lib/vblood'
@@ -148,16 +148,14 @@ export default function VBloodListPage() {
       </div>
 
       <div className="mb-5 space-y-3">
-        <div className="relative max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('vblood.searchPlaceholder')}
-            aria-label={t('vblood.searchPlaceholder')}
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+  value={query}
+  onChange={setQuery}
+  label={t('vblood.searchPlaceholder')}
+  placeholder={t('vblood.searchPlaceholder')}
+  type="search"
+  className="max-w-md"
+/>
         <div className="flex flex-wrap items-center gap-2" aria-label={t('filter')}>
           <button
             type="button"

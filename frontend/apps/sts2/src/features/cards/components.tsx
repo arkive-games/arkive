@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { Button, cn, NotFoundMessage } from '@gamemap/ui'
+import { Button, cn, FilterChip, FilterRow, NotFoundMessage, toggleValue } from '@gamemap/ui'
 import type { Bundle, Card, Character } from '../../lib/data'
 import { iconUrl } from '../../lib/urls'
 import { CardText } from '../../lib/cardText'
-import { toggle, type CardFilter } from './useFilteredCards'
+import type { CardFilter } from './useFilteredCards'
 
 /** Deck accent colour, taken from the game's own card pool. */
 export function usePoolColors(bundle: Bundle | null): Record<string, string> {
@@ -102,43 +102,6 @@ export function CardDescription({
   )
 }
 
-function Chip({
-  active,
-  onClick,
-  children,
-  color,
-}: {
-  active: boolean
-  onClick: () => void
-  children: ReactNode
-  color?: string
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        'rounded-full border px-3 py-1 text-xs transition',
-        active
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-card text-muted-foreground hover:bg-accent/10',
-      )}
-      style={active && color ? { backgroundColor: color, borderColor: color, color: '#fff' } : undefined}
-    >
-      {children}
-    </button>
-  )
-}
-
-function Group({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 text-xs font-medium text-muted-foreground">{label}</span>
-      {children}
-    </div>
-  )
-}
 
 export function CardFilters({
   bundle,
@@ -155,39 +118,39 @@ export function CardFilters({
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
-      <Group label={t('card.filters.pool')}>
+      <FilterRow layout="column" label={t('card.filters.pool')}>
         {pools.map((p) => (
-          <Chip
+          <FilterChip variant="solid"
             key={p}
             active={filter.pools.includes(p)}
             color={colors[p]}
-            onClick={() => onChange({ ...filter, pools: toggle(filter.pools, p) })}
+            onClick={() => onChange({ ...filter, pools: toggleValue(filter.pools, p) })}
           >
             {p}
-          </Chip>
+          </FilterChip>
         ))}
-      </Group>
-      <Group label={t('card.filters.type')}>
+      </FilterRow>
+      <FilterRow layout="column" label={t('card.filters.type')}>
         {types.map((x) => (
-          <Chip key={x} active={filter.types.includes(x)} onClick={() => onChange({ ...filter, types: toggle(filter.types, x) })}>
+          <FilterChip variant="solid" key={x} active={filter.types.includes(x)} onClick={() => onChange({ ...filter, types: toggleValue(filter.types, x) })}>
             {x}
-          </Chip>
+          </FilterChip>
         ))}
-      </Group>
-      <Group label={t('card.filters.rarity')}>
+      </FilterRow>
+      <FilterRow layout="column" label={t('card.filters.rarity')}>
         {rarities.map((x) => (
-          <Chip key={x} active={filter.rarities.includes(x)} onClick={() => onChange({ ...filter, rarities: toggle(filter.rarities, x) })}>
+          <FilterChip variant="solid" key={x} active={filter.rarities.includes(x)} onClick={() => onChange({ ...filter, rarities: toggleValue(filter.rarities, x) })}>
             {x}
-          </Chip>
+          </FilterChip>
         ))}
-      </Group>
-      <Group label={t('card.filters.cost')}>
+      </FilterRow>
+      <FilterRow layout="column" label={t('card.filters.cost')}>
         {costs.map((x) => (
-          <Chip key={x} active={filter.costs.includes(x)} onClick={() => onChange({ ...filter, costs: toggle(filter.costs, x) })}>
+          <FilterChip variant="solid" key={x} active={filter.costs.includes(x)} onClick={() => onChange({ ...filter, costs: toggleValue(filter.costs, x) })}>
             {x}
-          </Chip>
+          </FilterChip>
         ))}
-      </Group>
+      </FilterRow>
     </div>
   )
 }

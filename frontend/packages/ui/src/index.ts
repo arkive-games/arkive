@@ -34,3 +34,4 @@ export {
 export * from "./filter-disclosure"
 export * from "./page-status"
 export * from "./use-document-title"
+export * from "./filter-controls"

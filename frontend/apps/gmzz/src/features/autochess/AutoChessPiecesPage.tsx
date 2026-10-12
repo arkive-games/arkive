@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useDocumentTitle } from '@gamemap/ui'
+import { useDocumentTitle, FilterChip, FilterBar, FilterRow, SearchInput } from '@gamemap/ui'
 import { ContentPage } from '@/components/ContentPage'
-import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 import { attributeMap, filterPieces, loadAutoChessAttributes, loadAutoChessBonds, loadAutoChessPieces, membersByBond, plainText } from './data'
 import { BondTag, PieceIcon, PieceStats } from './PieceDetails'
@@ -58,20 +57,20 @@ export default function AutoChessPiecesPage() {
   const toolbar = <>
         <div className="mb-3 flex flex-col gap-2">
           <FilterRow label={t('autochess.pieces.costFilter')}>
-            <Chip active={!cost} onClick={() => setCost(0)}>{t('autochess.all')}</Chip>
-            {costs.map((value) => <Chip key={value} active={cost === value} onClick={() => setCost(value)}>{t('autochess.pieces.costTab', { cost: value })}</Chip>)}
+            <FilterChip active={!cost} onClick={() => setCost(0)}>{t('autochess.all')}</FilterChip>
+            {costs.map((value) => <FilterChip key={value} active={cost === value} onClick={() => setCost(value)}>{t('autochess.pieces.costTab', { cost: value })}</FilterChip>)}
           </FilterRow>
           <FilterRow label={t('autochess.pieces.bondFilter')}>
-            <Chip active={!bondId} onClick={() => setBondId(0)}>{t('autochess.all')}</Chip>
-            {(bonds.data ?? []).filter((bond) => members.has(bond.id)).map((bond) => <Chip key={bond.id} active={bondId === bond.id} onClick={() => setBondId(bond.id)}>{bond.name}</Chip>)}
+            <FilterChip active={!bondId} onClick={() => setBondId(0)}>{t('autochess.all')}</FilterChip>
+            {(bonds.data ?? []).filter((bond) => members.has(bond.id)).map((bond) => <FilterChip key={bond.id} active={bondId === bond.id} onClick={() => setBondId(bond.id)}>{bond.name}</FilterChip>)}
           </FilterRow>
           <FilterRow label={t('autochess.pieces.roleFilter')}>
-            <Chip active={!role} onClick={() => setRole('')}>{t('autochess.all')}</Chip>
-            {roles.map((value) => <Chip key={value} active={role === value} onClick={() => setRole(value)}>{value}</Chip>)}
+            <FilterChip active={!role} onClick={() => setRole('')}>{t('autochess.all')}</FilterChip>
+            {roles.map((value) => <FilterChip key={value} active={role === value} onClick={() => setRole(value)}>{value}</FilterChip>)}
           </FilterRow>
         </div>
         <FilterBar count={t('autochess.pieces.resultCount', { count: filtered.length })}>
-          <SearchField value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
+          <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs" value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
           {(cost || bondId || role || query) ? <button type="button" onClick={reset} className="text-sm text-primary hover:underline">{t('autochess.clearFilters')}</button> : null}
         </FilterBar>
   </>

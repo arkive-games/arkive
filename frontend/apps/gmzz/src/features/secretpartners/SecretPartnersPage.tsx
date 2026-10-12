@@ -2,9 +2,8 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMemory } from '@gamemap/state-memory'
 import { IconCheck, IconLock, IconRotateClockwise } from '@tabler/icons-react'
-import { useDocumentTitle } from '@gamemap/ui'
+import { useDocumentTitle, FilterChip, FilterBar, FilterRow, SearchInput } from '@gamemap/ui'
 import { ContentPage } from '@/components/ContentPage'
-import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 import { clampPartnerLevel, filterPartners, formatPartnerAttribute, loadSecretPartners, PARTNER_QUALITY, partnerLevelBounds, plainText, portraitUrl, type SecretPartner } from './data'
 import { partnerLevel } from './memory'
@@ -26,22 +25,22 @@ export default function SecretPartnersPage() {
   const toolbar = <>
         <div className="mb-3 flex flex-col gap-2">
           <FilterRow label={t('secretpartners.quality')}>
-            <Chip active={!quality} onClick={() => setQuality(0)}>{t('secretpartners.all')}</Chip>
-            {qualities.map((value) => <Chip key={value} active={quality === value} onClick={() => setQuality(value)}>
+            <FilterChip active={!quality} onClick={() => setQuality(0)}>{t('secretpartners.all')}</FilterChip>
+            {qualities.map((value) => <FilterChip key={value} active={quality === value} onClick={() => setQuality(value)}>
               <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={`size-2.5 shrink-0 rounded-sm ${PARTNER_QUALITY[value]?.color ?? 'bg-muted'}`} />{t(`secretpartners.quality${value}`)}</span>
-            </Chip>)}
+            </FilterChip>)}
           </FilterRow>
           <FilterRow label={t('secretpartners.attributes')}>
-            <Chip active={!attribute} onClick={() => setAttribute('')}>{t('secretpartners.all')}</Chip>
-            {attributes.map(([key, name]) => <Chip key={key} active={attribute === key} onClick={() => setAttribute(key)}>{name}</Chip>)}
+            <FilterChip active={!attribute} onClick={() => setAttribute('')}>{t('secretpartners.all')}</FilterChip>
+            {attributes.map(([key, name]) => <FilterChip key={key} active={attribute === key} onClick={() => setAttribute(key)}>{name}</FilterChip>)}
           </FilterRow>
           <FilterRow label={t('secretpartners.category')}>
-            <Chip active={!category} onClick={() => setCategory('')}>{t('secretpartners.all')}</Chip>
-            {categories.map((value) => <Chip key={value} active={category === value} onClick={() => setCategory(value)}>{value}</Chip>)}
+            <FilterChip active={!category} onClick={() => setCategory('')}>{t('secretpartners.all')}</FilterChip>
+            {categories.map((value) => <FilterChip key={value} active={category === value} onClick={() => setCategory(value)}>{value}</FilterChip>)}
           </FilterRow>
         </div>
         <FilterBar count={t('secretpartners.count', { count: shown.length })}>
-          <SearchField value={query} onChange={setQuery} placeholder={t('secretpartners.search')} />
+          <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs" value={query} onChange={setQuery} placeholder={t('secretpartners.search')} />
           {(query || category || quality || attribute) && <button type="button" className="text-sm text-primary hover:underline" onClick={() => { setQuery(''); setCategory(''); setQuality(0); setAttribute('') }}>{t('secretpartners.reset')}</button>}
         </FilterBar>
   </>

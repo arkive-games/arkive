@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Card } from '../../lib/data'
-import { EMPTY_FILTER, filterCards, isFilterActive, toggle } from './useFilteredCards'
+import { toggleValue } from '@gamemap/ui'
+import { EMPTY_FILTER, filterCards, isFilterActive } from './useFilteredCards'
 
 const cards: Card[] = [
   { id: 'ANGER', type: 'Attack', rarity: 'Common', cost: 0, target: 'AnyEnemy', pool: 'ironclad', vars: { Damage: { base: 6 } } },
@@ -53,7 +54,7 @@ describe('filter helpers', () => {
   })
 
   it('toggles a value in and out', () => {
-    expect(toggle(['a'], 'b')).toEqual(['a', 'b'])
-    expect(toggle(['a', 'b'], 'a')).toEqual(['b'])
+    expect(toggleValue(['a'], 'b')).toEqual(['a', 'b'])
+    expect(toggleValue(['a', 'b'], 'a')).toEqual(['b'])
   })
 })

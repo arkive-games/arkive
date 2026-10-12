@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { Input } from '@gamemap/ui'
+import { FilterChip, FilterRow, Input } from '@gamemap/ui'
 import { MapPin } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
-import { FilterChip, FilterRow } from '../../components/FilterChip'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
@@ -83,6 +82,7 @@ export default function MerchantListPage() {
         <FilterRow label={t('filters.category')} testId="merchant-category-filter">
           {['all', ...categories].map((key) => (
             <FilterChip
+              variant="pill"
               key={key}
               active={category === key}
               onClick={() => setCategory(key)}

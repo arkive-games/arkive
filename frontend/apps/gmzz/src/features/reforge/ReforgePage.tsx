@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { IconDatabase, IconInfoCircle, IconSearch } from '@tabler/icons-react'
-import { Input, useDocumentTitle } from '@gamemap/ui'
+import { useEffect, useMemo, useState } from 'react'
+import { IconDatabase, IconInfoCircle } from '@tabler/icons-react'
+import { FilterChip, FilterGroup, SearchInput, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -157,22 +157,16 @@ export default function ReforgePage() {
               {t('reforge.mechanicNote')}
             </p>
           </div>
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold text-muted-foreground">{t('reforge.searchLabel')}</span>
-            <span className="relative block">
-              <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" stroke={1.8} aria-hidden />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Escape') setQuery('')
-                }}
-                placeholder={t('reforge.searchPlaceholder')}
-                className="h-10 border-border bg-background pl-9 text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
-                data-testid="reforge-search"
-              />
-            </span>
-          </label>
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            label={t('reforge.searchPlaceholder')}
+            caption={t('reforge.searchLabel')}
+            placeholder={t('reforge.searchPlaceholder')}
+            clearOnEscape
+            type="search"
+            testId="reforge-search"
+          />
         </header>} toolbar={<div className="space-y-3">
         <section aria-label={t('reforge.filters')} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
           <FilterGroup label={t('reforge.slotLabel')} hint={t('reforge.slotHint')}>
@@ -350,42 +344,3 @@ function UnlockNote({ unlock }: { unlock: GraceUnlock | null }) {
   return <span title={unlock.raw}>{t('reforge.unlockSeasonDay', { day: unlock.day })}</span>
 }
 
-function FilterGroup({ label, hint, children }: { label: string; hint: string; children: ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <h2 className="text-sm font-bold text-foreground">{label}</h2>
-        <span className="text-xs text-muted-foreground">{hint}</span>
-      </div>
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div>
-    </div>
-  )
-}
-
-function FilterChip({
-  active,
-  onClick,
-  testId,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  testId: string
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      data-testid={testId}
-      className={`inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] ${
-        active
-          ? 'border-[color:var(--arkive-nav-accent)] bg-[color:var(--arkive-filter-active)] text-foreground'
-          : 'border-border bg-background text-muted-foreground hover:border-[color:var(--arkive-nav-accent)]/60 hover:text-foreground'
-      }`}
-    >
-      {children}
-    </button>
-  )
-}

@@ -1,6 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { IconSearch } from '@tabler/icons-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@gamemap/ui'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, SearchInput } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { qualityPlateUrl } from '@/lib/urls'
@@ -103,22 +102,14 @@ export default function PickerModal({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
-        <label className="block">
-          <span className="relative block">
-            <IconSearch
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              stroke={1.8}
-              aria-hidden
-            />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t('equip.pickerSearch')}
-              className="h-9 border-border bg-background pl-9 text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
-              data-testid={`${testIdPrefix}-search`}
-            />
-          </span>
-        </label>
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          label={t('equip.pickerSearch')}
+          placeholder={t('equip.pickerSearch')}
+          type="search"
+          testId={`${testIdPrefix}-search`}
+        />
 
         {shown.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t('equip.pickerEmpty')}</p>

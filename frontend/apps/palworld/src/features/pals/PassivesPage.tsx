@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { Hint, Input, TooltipProvider } from '@gamemap/ui'
+import { FilterChip, FilterRow, Hint, Input, toggleValue, TooltipProvider } from '@gamemap/ui'
 import { ArrowRight, Coins, Dna, Dices, PawPrint, Sparkles, Stethoscope, TreePine } from 'lucide-react'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
-import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
   passiveCategories,
@@ -278,7 +277,7 @@ export default function PassivesPage() {
             key={key}
             active={raritySel.includes(key)}
             onClick={() => setRaritySel((s) => toggleValue(s, key))}
-            tone="blue"
+            variant="emphasis"
             testId={`rarity-${key}`}
           >
             <PassiveRarity rank={repRank(key)} />
@@ -291,7 +290,7 @@ export default function PassivesPage() {
             key={c}
             active={categorySel.includes(c)}
             onClick={() => setCategorySel((s) => toggleValue(s, c))}
-            tone="blue"
+            variant="emphasis"
             testId={`category-${c}`}
           >
             {t(`passive.category.${c}`)}
@@ -309,7 +308,7 @@ export default function PassivesPage() {
               <FilterChip
                 active={innateOnly}
                 onClick={() => setInnateOnly((v) => !v)}
-                tone="blue"
+                variant="emphasis"
                 testId="category-innate"
               >
                 <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
@@ -330,7 +329,7 @@ export default function PassivesPage() {
               <FilterChip
                 active={mutationOnly}
                 onClick={() => setMutationOnly((v) => !v)}
-                tone="blue"
+                variant="emphasis"
                 testId="category-mutation"
               >
                 <span className="inline-block size-1.5 rounded-full bg-violet-500" />

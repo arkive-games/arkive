@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
-import { Search, X } from 'lucide-react'
-import { cn, Dialog, DialogContent, DialogTitle, Input } from '@gamemap/ui'
+import { FilterChip, FilterRow, SearchInput } from '@gamemap/ui'
+import { cn, Dialog, DialogContent, DialogTitle } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 
 /**
@@ -35,41 +35,7 @@ export function Tab({ active, onClick, children }: { active: boolean; onClick: (
   )
 }
 
-export function FilterRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      {children}
-    </div>
-  )
-}
-
-export function Chip({ active, onClick, children, disabled = false, count }: {
-  active: boolean
-  onClick: () => void
-  children: ReactNode
-  disabled?: boolean
-  /** How many records the chip would leave; shown after the label. */
-  count?: number
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      disabled={disabled}
-      className={cn(
-        'inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-45',
-        active
-          ? 'border-ring bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]'
-          : 'border-border text-muted-foreground enabled:hover:border-primary/60',
-      )}
-    >
-      {children}
-      {count !== undefined ? <span className="text-xs opacity-70">{count}</span> : null}
-    </button>
-  )
-}
+export { FilterChip as Chip, FilterRow }
 
 export function SearchField({ value, onChange, label, placeholder, className }: {
   value: string
@@ -79,27 +45,15 @@ export function SearchField({ value, onChange, label, placeholder, className }: 
   className?: string
 }) {
   return (
-    <label className={cn('relative block', className)}>
-      <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        type="search"
-        className="pl-9 pr-9"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        aria-label={label}
-      />
-      {value ? (
-        <button
-          type="button"
-          aria-label={content.search.clear}
-          onClick={() => onChange('')}
-          className="absolute right-2 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <X aria-hidden="true" className="size-4" />
-        </button>
-      ) : null}
-    </label>
+    <SearchInput
+      value={value}
+      onChange={onChange}
+      label={label}
+      placeholder={placeholder}
+      clearLabel={content.search.clear}
+      type="search"
+      className={className}
+    />
   )
 }
 

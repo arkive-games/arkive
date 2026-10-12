@@ -11,12 +11,14 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  cn,
+  FilterChip,
+  FilterRow,
+  toggleValue,
 } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
 import { SIZE_ORDER, type PalsBundle } from '../../../lib/pals'
 import { filterStrings } from '../filterStrings'
-import { isFilterActive, toggle, type PalFilter } from '../useFilteredPals'
+import { isFilterActive, type PalFilter } from '../useFilteredPals'
 
 /** An <img> that hides itself when the asset is missing. */
 function Glyph({ src, size = 18 }: { src: string; size?: number }) {
@@ -35,48 +37,6 @@ function Glyph({ src, size = 18 }: { src: string; size?: number }) {
   )
 }
 
-function Chip({
-  active,
-  onClick,
-  title,
-  testId,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  title?: string
-  testId?: string
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      aria-pressed={active}
-      data-testid={testId}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition',
-        active
-          ? 'border-primary bg-primary/15 text-foreground'
-          : 'border-border bg-secondary/40 text-muted-foreground hover:border-primary/50 hover:text-foreground',
-      )}
-    >
-      {children}
-    </button>
-  )
-}
-
-function Group({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-1.5">
-      <span className="mr-1 w-16 shrink-0 py-1 text-xs font-semibold text-muted-foreground">
-        {label}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">{children}</div>
-    </div>
-  )
-}
 
 export function PalFilters({
   bundle,
@@ -122,80 +82,80 @@ export function PalFilters({
   return (
     <div className="space-y-2 rounded-lg border border-border bg-card/50 p-3">
       {elements.length ? (
-        <Group label={fs.elements}>
+        <FilterRow layout="column" label={fs.elements}>
           {elements.map((e) => (
-            <Chip
+            <FilterChip variant="pill"
               key={e}
               active={filter.elements.includes(e)}
-              onClick={() => onChange({ ...filter, elements: toggle(filter.elements, e) })}
+              onClick={() => onChange({ ...filter, elements: toggleValue(filter.elements, e) })}
               title={bundle.enums.elements[e] ?? e}
               // Stable hooks for tests: the visible label is localized game text.
               testId={`pal-element-${e}`}
             >
               <Glyph src={elementIconUrl(e)} size={16} />
               {bundle.enums.elements[e] ?? e}
-            </Chip>
+            </FilterChip>
           ))}
-        </Group>
+        </FilterRow>
       ) : null}
 
       {works.length ? (
-        <Group label={fs.col.work}>
+        <FilterRow layout="column" label={fs.col.work}>
           {works.map((w) => (
-            <Chip
+            <FilterChip variant="pill"
               key={w}
               active={filter.works.includes(w)}
-              onClick={() => onChange({ ...filter, works: toggle(filter.works, w) })}
+              onClick={() => onChange({ ...filter, works: toggleValue(filter.works, w) })}
               title={bundle.enums.work[w] ?? w}
               testId={`pal-work-${w}`}
             >
               <Glyph src={workIconUrl(w)} size={16} />
               {bundle.enums.work[w] ?? w}
-            </Chip>
+            </FilterChip>
           ))}
-        </Group>
+        </FilterRow>
       ) : null}
 
       {reactions.length ? (
-        <Group label={fs.reaction}>
+        <FilterRow layout="column" label={fs.reaction}>
           {reactions.map((r) => (
-            <Chip
+            <FilterChip variant="pill"
               key={r}
               active={filter.reactions.includes(r)}
-              onClick={() => onChange({ ...filter, reactions: toggle(filter.reactions, r) })}
+              onClick={() => onChange({ ...filter, reactions: toggleValue(filter.reactions, r) })}
             >
               {fs.reactions[r] ?? r}
-            </Chip>
+            </FilterChip>
           ))}
-        </Group>
+        </FilterRow>
       ) : null}
 
       {sizes.length ? (
-        <Group label={t('pal.stat.size')}>
+        <FilterRow layout="column" label={t('pal.stat.size')}>
           {sizes.map((s) => (
-            <Chip
+            <FilterChip variant="pill"
               key={s}
               active={filter.sizes.includes(s)}
-              onClick={() => onChange({ ...filter, sizes: toggle(filter.sizes, s) })}
+              onClick={() => onChange({ ...filter, sizes: toggleValue(filter.sizes, s) })}
             >
               {s}
-            </Chip>
+            </FilterChip>
           ))}
-        </Group>
+        </FilterRow>
       ) : null}
 
       {bundle.filters.nocturnal ? (
-        <Group label={fs.nocturnal}>
-          <Chip
+        <FilterRow layout="column" label={fs.nocturnal}>
+          <FilterChip variant="pill"
             active={filter.nocturnal}
             onClick={() => onChange({ ...filter, nocturnal: !filter.nocturnal })}
           >
             {fs.nocturnalOnly}
-          </Chip>
-        </Group>
+          </FilterChip>
+        </FilterRow>
       ) : null}
 
-      <Group label={fs.loot}>
+      <FilterRow layout="column" label={fs.loot}>
         <Popover open={lootOpen} onOpenChange={setLootOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs font-normal">
@@ -240,11 +200,11 @@ export function PalFilters({
           </PopoverContent>
         </Popover>
         {filter.loot ? (
-          <Chip active onClick={() => onChange({ ...filter, loot: null })} title={fs.clear}>
+          <FilterChip variant="pill" active onClick={() => onChange({ ...filter, loot: null })} title={fs.clear}>
             ✕
-          </Chip>
+          </FilterChip>
         ) : null}
-      </Group>
+      </FilterRow>
 
       {isFilterActive(filter) ? (
         <div className="pt-1">

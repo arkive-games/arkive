@@ -1,11 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { IconSearch } from '@tabler/icons-react'
-import { Input, useDocumentTitle } from '@gamemap/ui'
+import { FilterChip, FilterRow, SearchInput, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
 import { FellowsTabs } from '@/features/fellows/FellowsTabs'
-import { Chip, FilterRow } from '@/components/Filters'
 import {
   fellowPortraitUrl,
   fellowSkillIconUrl,
@@ -112,33 +110,30 @@ export default function FellowsPage() {
 
       <div className="mb-4 flex flex-col gap-3">
         <FilterRow label={t('fellows.qualityFilter')}>
-          <Chip active={quality === 0} onClick={() => setQuality(0)}>{t('fellows.all')}</Chip>
+          <FilterChip active={quality === 0} onClick={() => setQuality(0)}>{t('fellows.all')}</FilterChip>
           {qualities.map((value) => (
-            <Chip key={value} active={quality === value} onClick={() => setQuality(value)}>
+            <FilterChip key={value} active={quality === value} onClick={() => setQuality(value)}>
               {t('fellows.quality', { quality: value })}
-            </Chip>
+            </FilterChip>
           ))}
         </FilterRow>
 
         <FilterRow label={t('fellows.labelFilter')}>
-          <Chip active={label === ''} onClick={() => setLabel('')}>{t('fellows.all')}</Chip>
+          <FilterChip active={label === ''} onClick={() => setLabel('')}>{t('fellows.all')}</FilterChip>
           {labels.map((value) => (
-            <Chip key={value} active={label === value} onClick={() => setLabel(value)}>
+            <FilterChip key={value} active={label === value} onClick={() => setLabel(value)}>
               {value}
-            </Chip>
+            </FilterChip>
           ))}
         </FilterRow>
 
-        <label className="relative block">
-          <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('fellows.searchPlaceholder')}
-            aria-label={t('fellows.searchPlaceholder')}
-          />
-        </label>
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          label={t('fellows.searchPlaceholder')}
+          placeholder={t('fellows.searchPlaceholder')}
+          type="search"
+        />
       </div>
 
       <p className="mb-3 text-sm text-muted-foreground">

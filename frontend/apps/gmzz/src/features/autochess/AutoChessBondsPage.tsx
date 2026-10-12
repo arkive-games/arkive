@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDocumentTitle } from '@gamemap/ui'
+import { useDocumentTitle, FilterChip, FilterBar, FilterRow } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import {
@@ -12,7 +12,6 @@ import {
   plainText,
   type AutoChessBondGroup,
 } from '@/features/autochess/data'
-import { Chip, FilterBar, FilterRow } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 import { PieceLink } from './PieceDetails'
 
@@ -58,17 +57,17 @@ export default function AutoChessBondsPage() {
     <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide resultsKey={group} filtersActive={group !== ''} toolbar={
       <FilterBar>
         <FilterRow label={t('autochess.bonds.groupFilter')}>
-          <Chip active={group === ''} onClick={() => setGroup('')}>
+          <FilterChip active={group === ''} onClick={() => setGroup('')}>
             {t('autochess.all')}
             <span className="ml-1 text-xs opacity-70">{all.length}</span>
-          </Chip>
+          </FilterChip>
           {GROUPS.map((value) => (
-            <Chip key={value} active={group === value} onClick={() => setGroup(value)}>
+            <FilterChip key={value} active={group === value} onClick={() => setGroup(value)}>
               {t(`autochess.bonds.group.${value}`)}
               <span className="ml-1 text-xs opacity-70">
                 {all.filter((bond) => bond.group === value).length}
               </span>
-            </Chip>
+            </FilterChip>
           ))}
         </FilterRow>
       </FilterBar>

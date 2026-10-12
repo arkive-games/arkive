@@ -20,10 +20,6 @@ export function isFilterActive(f: CardFilter): boolean {
   return Boolean(f.query || f.pools.length || f.types.length || f.rarities.length || f.costs.length)
 }
 
-export function toggle<T>(arr: T[], v: T): T[] {
-  return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]
-}
-
 /**
  * Search matches the localized name and the rendered description, so a player
  * can find a card by an effect they remember rather than only by its title.

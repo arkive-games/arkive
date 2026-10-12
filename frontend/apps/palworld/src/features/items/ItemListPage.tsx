@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { HoverCard, HoverCardTrigger, Input } from '@gamemap/ui'
+import { FilterChip, FilterRow, HoverCard, HoverCardTrigger, Input, toggleValue } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
-import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
   loadBuildings,
@@ -109,6 +108,7 @@ export default function ItemListPage() {
     <FilterRow label={t('filters.category')} testId="item-category-filter">
       {categories.map((c) => (
         <FilterChip
+          variant="pill"
           key={c}
           active={cats.includes(c)}
           onClick={() => setCats((s) => toggleValue(s, c))}

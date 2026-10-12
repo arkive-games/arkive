@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
-import { Input, useIsMobile } from '@gamemap/ui'
+import { FilterChip, FilterRow, Input, toggleValue, useIsMobile } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
-import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
   buildActiveSkills,
@@ -89,6 +88,7 @@ export default function ActiveSkillsPage() {
       <FilterRow label={t('activeSkill.element')} testId="active-skill-element-filter">
         {elements.map((e) => (
           <FilterChip
+            variant="pill"
             key={e}
             active={elementSel.includes(e)}
             onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}
@@ -104,6 +104,7 @@ export default function ActiveSkillsPage() {
       <FilterRow label={t('pal.type')} testId="active-skill-type-filter">
         {(['melee', 'ranged'] as const).map((tp) => (
           <FilterChip
+            variant="pill"
             key={tp}
             active={typeSel.includes(tp)}
             onClick={() => setTypeSel((s) => toggleValue(s, tp))}
@@ -116,6 +117,7 @@ export default function ActiveSkillsPage() {
       <FilterRow label={t('activeSkill.fruit')} testId="active-skill-source-filter">
         {(['fruit', 'default'] as const).map((src) => (
           <FilterChip
+            variant="pill"
             key={src}
             active={sourceSel.includes(src)}
             onClick={() => setSourceSel((s) => toggleValue(s, src))}

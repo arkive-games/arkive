@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { Input, useIsMobile } from '@gamemap/ui'
+import { FilterChip, FilterRow, Input, toggleValue, useIsMobile } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
-import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadPals,
   buildPartnerSkills,
@@ -117,6 +116,7 @@ export default function PartnerSkillsPage() {
       <FilterRow label={t('filters.category')} testId="partner-skill-category-filter">
         {categories.map((c) => (
           <FilterChip
+            variant="pill"
             key={c}
             active={categorySel.includes(c)}
             onClick={() => setCategorySel((s) => toggleValue(s, c) as PartnerCategory[])}
@@ -129,6 +129,7 @@ export default function PartnerSkillsPage() {
       <FilterRow label={t('activeSkill.element')} testId="partner-skill-element-filter">
         {elements.map((e) => (
           <FilterChip
+            variant="pill"
             key={e}
             active={elementSel.includes(e)}
             onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}

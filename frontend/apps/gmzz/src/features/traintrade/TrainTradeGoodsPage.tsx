@@ -3,11 +3,10 @@ import {
   IconGrid3x3,
   IconInfoCircle,
   IconList,
-  IconSearch,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { Input, useDocumentTitle } from "@gamemap/ui";
+import { FilterChip, FilterGroup, SearchInput, useDocumentTitle } from "@gamemap/ui";
 import { ContentPage } from "@/components/ContentPage";
 import CatalogPagination from "@/features/traintrade/CatalogPagination";
 import { loadTrainTradeGoods, iconFor, type TrainTradeGoods } from "@/features/traintrade/data";
@@ -140,25 +139,19 @@ export default function TrainTradeGoodsPage() {
             {t("trainTrade.description", { count: goods.length })}
           </p>
         </div>
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-muted-foreground">{t("trainTrade.searchLabel")}</span>
-          <span className="relative block">
-            <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" stroke={1.8} aria-hidden />
-            <Input
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(1);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") setQuery("");
-              }}
-              placeholder={t("trainTrade.searchPlaceholder")}
-              className="h-10 border-border bg-background pl-9 text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
-              data-testid="train-trade-search"
-            />
-          </span>
-        </label>
+        <SearchInput
+          value={query}
+          onChange={(value) => {
+            setQuery(value);
+            setPage(1);
+          }}
+          label={t("trainTrade.searchPlaceholder")}
+          caption={t("trainTrade.searchLabel")}
+          placeholder={t("trainTrade.searchPlaceholder")}
+          clearOnEscape
+          type="search"
+          testId="train-trade-search"
+        />
       </header>} toolbar={<div className="space-y-3">
       <section aria-label={t("trainTrade.filters")} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
         <FilterGroup label={t("trainTrade.categoryLabel")} hint={t("trainTrade.categoryHint")}>
@@ -282,14 +275,6 @@ function Price({ value, label, shortLabel }: { value: number; label: string; sho
 
 function QualityBadge({ quality, t }: { quality: number; t: (key: string, options?: Record<string, unknown>) => string }) {
   return <span className={`shrink-0 text-xs font-semibold ${QUALITY_CLASS[quality] ?? QUALITY_CLASS[1]}`}>{t("trainTrade.qualityValue", { value: quality })}</span>;
-}
-
-function FilterGroup({ label, hint, children }: { label: string; hint: string; children: ReactNode }) {
-  return <div className="min-w-0"><div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5"><h2 className="text-sm font-bold text-foreground">{label}</h2><span className="text-xs text-muted-foreground">{hint}</span></div><div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div></div>;
-}
-
-function FilterChip({ active, onClick, testId, children }: { active: boolean; onClick: () => void; testId: string; children: ReactNode }) {
-  return <button type="button" onClick={onClick} aria-pressed={active} data-testid={testId} className={`inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] ${active ? "border-[color:var(--arkive-nav-accent)] bg-[color:var(--arkive-filter-active)] text-foreground" : "border-border bg-background text-muted-foreground hover:border-[color:var(--arkive-nav-accent)]/60 hover:text-foreground"}`}>{children}</button>;
 }
 
 function ViewButton({ active, bordered = false, onClick, label, children }: { active: boolean; bordered?: boolean; onClick: () => void; label: string; children: ReactNode }) {

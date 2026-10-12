@@ -37,10 +37,6 @@ export function isFilterActive(f: PalFilter): boolean {
   )
 }
 
-/** Toggle a value in an array (add if absent, remove if present). */
-export function toggle<T>(arr: T[], v: T): T[] {
-  return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]
-}
 
 /** Filter + sort the roster (pure core of {@link useFilteredPals}). When a work
  *  filter is active, results are sorted by the max suitability level among the

@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDocumentTitle } from '@gamemap/ui'
+import { useDocumentTitle, FilterChip, FilterBar, FilterRow, SearchInput } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import { loadAutoChessTalents, plainText } from '@/features/autochess/data'
-import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 
 const RARITY_CLASS: Record<number, string> = {
@@ -67,15 +66,15 @@ export default function AutoChessTalentsPage() {
     <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide resultsKey={JSON.stringify([query, rarity, showHidden])} filtersActive={Boolean(query || rarity || showHidden)} toolbar={
       <FilterBar count={t('autochess.talents.resultCount', { count: filtered.length })}>
         <FilterRow label={t('autochess.talents.rarityFilter')}>
-          <Chip active={rarity === 0} onClick={() => setRarity(0)}>{t('autochess.all')}</Chip>
+          <FilterChip active={rarity === 0} onClick={() => setRarity(0)}>{t('autochess.all')}</FilterChip>
           {rarities.map((value) => (
-            <Chip key={value} active={rarity === value} onClick={() => setRarity(value)}>
+            <FilterChip key={value} active={rarity === value} onClick={() => setRarity(value)}>
               {t('autochess.talents.rarity', { rarity: value })}
-            </Chip>
+            </FilterChip>
           ))}
         </FilterRow>
 
-        <SearchField
+        <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs"
           value={query}
           onChange={setQuery}
           placeholder={t('autochess.talents.searchPlaceholder')}

@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Input } from '@gamemap/ui'
+import { FilterChip, FilterRow, Input, toggleValue } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
-import { FilterChip, FilterRow, toggleValue } from '../../components/FilterChip'
 import {
   loadItems,
   loadBuildings,
@@ -104,6 +103,7 @@ export default function BuildingListPage() {
     <FilterRow label={t('filters.category')} testId="building-category-filter">
       {categories.map((c) => (
         <FilterChip
+          variant="pill"
           key={c}
           active={cats.includes(c)}
           onClick={() => setCats((s) => toggleValue(s, c))}

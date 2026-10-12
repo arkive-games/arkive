@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDocumentTitle } from '@gamemap/ui'
+import { useDocumentTitle, FilterChip, FilterBar, FilterRow, SearchInput } from '@gamemap/ui'
 
 import { ContentPage } from '@/components/ContentPage'
 import {
@@ -12,7 +12,6 @@ import {
   loadAutoChessItems,
   plainText,
 } from '@/features/autochess/data'
-import { Chip, FilterBar, FilterRow, SearchField } from '@/components/Filters'
 import { useRemoteData } from '@/lib/useRemoteData'
 import { ITEM_QUALITY } from './quality'
 import { qualityPlateUrl } from '@/lib/urls'
@@ -67,33 +66,33 @@ export default function AutoChessItemsPage() {
     <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide resultsKey={JSON.stringify([query, rarity, useType, typeName])} filtersActive={Boolean(query || rarity || useType || typeName)} toolbar={<>
       <div className="mb-3 flex flex-col gap-2">
         <FilterRow label={t('autochess.items.qualityFilter')}>
-          <Chip active={!rarity} onClick={() => setRarity(0)}>{t('autochess.all')}</Chip>
-          {rarities.map((value) => <Chip key={value} active={rarity === value} onClick={() => setRarity(value)}>
+          <FilterChip active={!rarity} onClick={() => setRarity(0)}>{t('autochess.all')}</FilterChip>
+          {rarities.map((value) => <FilterChip key={value} active={rarity === value} onClick={() => setRarity(value)}>
             <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={`size-2.5 rounded-sm ${ITEM_QUALITY[value]?.color ?? 'bg-muted'}`} />{t(`autochess.items.quality${value}`)}</span>
-          </Chip>)}
+          </FilterChip>)}
         </FilterRow>
         <FilterRow label={t('autochess.items.kindFilter')}>
-          <Chip active={useType === 0} onClick={() => setUseType(0)}>{t('autochess.all')}</Chip>
+          <FilterChip active={useType === 0} onClick={() => setUseType(0)}>{t('autochess.all')}</FilterChip>
           {USE_TYPES.map((value) => (
-            <Chip key={value} active={useType === value} onClick={() => setUseType(value)}>
+            <FilterChip key={value} active={useType === value} onClick={() => setUseType(value)}>
               {t(`autochess.items.useType.${value}`)}
               <span className="ml-1 text-xs opacity-70">
                 {all.filter((item) => item.useType === value).length}
               </span>
-            </Chip>
+            </FilterChip>
           ))}
         </FilterRow>
         <FilterRow label={t('autochess.items.typeFilter')}>
-          <Chip active={typeName === ''} onClick={() => setTypeName('')}>{t('autochess.all')}</Chip>
+          <FilterChip active={typeName === ''} onClick={() => setTypeName('')}>{t('autochess.all')}</FilterChip>
           {typeNames.map((value) => (
-            <Chip key={value} active={typeName === value} onClick={() => setTypeName(value)}>
+            <FilterChip key={value} active={typeName === value} onClick={() => setTypeName(value)}>
               {value}
-            </Chip>
+            </FilterChip>
           ))}
         </FilterRow>
       </div>
       <FilterBar count={t('autochess.items.resultCount', { count: filtered.length })}>
-        <SearchField
+        <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs"
           value={query}
           onChange={setQuery}
           placeholder={t('autochess.items.searchPlaceholder')}

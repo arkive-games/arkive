@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { Anvil, BookOpen, Boxes, ChevronDown, FlaskConical, Hammer, Search, Shield, Sparkles, Swords } from 'lucide-react'
+import { Anvil, BookOpen, Boxes, ChevronDown, FlaskConical, Hammer, Shield, Sparkles, Swords } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { SearchInput } from '@gamemap/ui'
 import { defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import type { NavKey } from '../../components/TopNav'
@@ -254,15 +255,14 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
                 {t(selected === 'passives' ? 'knowledge.passiveSourceCaption' : 'knowledge.sourceCaption')}
               </p>
             </div>
-            <label className="relative block w-full md:max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(event) => { setQuery(event.target.value); setVisibleCount(48) }}
-                placeholder={t('knowledge.searchPlaceholder')}
-                className="h-10 w-full rounded-lg border border-primary/15 bg-card pl-9 pr-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary/45 focus:ring-2 focus:ring-primary/10"
-              />
-            </label>
+            <SearchInput
+  value={query}
+  onChange={(value) => { setQuery(value); setVisibleCount(48) }}
+  label={t('knowledge.searchPlaceholder')}
+  placeholder={t('knowledge.searchPlaceholder')}
+  type="search"
+  className="w-full md:max-w-sm"
+/>
           </div>
 
           <p className="mt-4 text-xs font-medium text-muted-foreground">
