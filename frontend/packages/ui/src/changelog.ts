@@ -33,6 +33,11 @@ export interface ChangelogFile {
   entries: ChangelogEntry[]
 }
 
+/** The app's current version: the newest entry of its changelog. */
+export function currentVersion(file: ChangelogFile): string {
+  return file.entries[0].version
+}
+
 export interface ResolvedChange {
   kind: ChangeKind
   text: string

@@ -10,6 +10,24 @@ export interface VersionHistoryLabels {
   empty?: string
 }
 
+/**
+ * The labels every app's changelog page builds from the same message keys
+ * (`changelog.current`, `changelog.empty`, `changelog.kind.<kind>`). Takes
+ * the app's translate function so the package stays i18n-free.
+ */
+export function changelogLabels(t: (key: string) => string): VersionHistoryLabels {
+  return {
+    current: t("changelog.current"),
+    empty: t("changelog.empty"),
+    kinds: {
+      feature: t("changelog.kind.feature"),
+      improvement: t("changelog.kind.improvement"),
+      fix: t("changelog.kind.fix"),
+      data: t("changelog.kind.data"),
+    },
+  }
+}
+
 export interface VersionHistoryProps {
   /** Locale-resolved entries, newest first (see `resolveChangelog`). */
   entries: ResolvedEntry[]

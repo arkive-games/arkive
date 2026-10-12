@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { VersionHistory, resolveChangelog } from '@gamemap/ui'
+import { VersionHistory, changelogLabels, resolveChangelog } from '@gamemap/ui'
 
 import { ContentPage } from '../../components/ContentPage'
 import { changelog } from '../../lib/siteVersion'
@@ -18,16 +18,7 @@ export default function ChangelogPage() {
         // null in a toy build: versions and hashes render as plain text rather
         // than one dead GitHub link per release.
         repoUrl={REPO_URL}
-        labels={{
-          current: t('changelog.current'),
-          empty: t('changelog.empty'),
-          kinds: {
-            feature: t('changelog.kind.feature'),
-            improvement: t('changelog.kind.improvement'),
-            fix: t('changelog.kind.fix'),
-            data: t('changelog.kind.data'),
-          },
-        }}
+        labels={changelogLabels(t)}
       />
     </ContentPage>
   )

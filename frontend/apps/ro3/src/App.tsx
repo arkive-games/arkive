@@ -3,6 +3,7 @@ import { BookOpen, Check, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
   Button,
+  currentVersion,
   resolveChangelog,
   VersionHistory,
   type ChangelogFile,
@@ -56,7 +57,7 @@ import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
 
 const CHANGELOG = changelogRaw as ChangelogFile
-const SITE_VERSION = CHANGELOG.entries[0].version
+const SITE_VERSION = currentVersion(CHANGELOG)
 
 const CARD_PART_ASSETS: Record<number, string | null> = {
   1: 'icons/other/icon_equip_weapon_02.webp',
