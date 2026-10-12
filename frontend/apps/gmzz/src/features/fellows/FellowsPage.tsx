@@ -105,7 +105,7 @@ export default function FellowsPage() {
   }
 
   return (
-    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide>
+    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide resultsKey={JSON.stringify([query, quality, label])} toolbar={<>
       <FellowsTabs current="/fellows" />
       <p className="mb-4 text-sm text-muted-foreground">
         {t('fellows.description', { count: all.length })}
@@ -145,7 +145,7 @@ export default function FellowsPage() {
       <p className="mb-3 text-sm text-muted-foreground">
         {t('fellows.resultCount', { count: filtered.length })}
       </p>
-
+      </>}>
       <div className="grid gap-3 lg:grid-cols-2">
         {filtered.map((fellow) => (
           <FellowCard

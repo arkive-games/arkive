@@ -56,7 +56,7 @@ export default function AutoChessBondsPage() {
   }
 
   return (
-    <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide>
+    <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide resultsKey={group} toolbar={
       <FilterBar>
         <FilterRow label={t('autochess.bonds.groupFilter')}>
           <Chip active={group === ''} onClick={() => setGroup('')}>
@@ -73,7 +73,7 @@ export default function AutoChessBondsPage() {
           ))}
         </FilterRow>
       </FilterBar>
-
+      }>
       <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
         {shown.map((bond) => {
           const roster = members.get(bond.id) ?? []

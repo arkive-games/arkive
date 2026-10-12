@@ -54,7 +54,7 @@ export default function TrainTradeGoodsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [page, setPage] = useState(1);
   const [error, setError] = useState(false);
-  const resultsAnchorRef = useRef<HTMLElement>(null);
+  const resultsAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.title = `${t("trainTrade.title")} - ${t("utopianTheater.siteTitle")}`;
@@ -133,8 +133,7 @@ export default function TrainTradeGoodsPage() {
   }
 
   return (
-    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide>
-    <div className="space-y-3" data-testid="train-trade-page">
+    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide resultsKey={JSON.stringify([query, category, quality, view, currentPage])} toolbar={<div className="space-y-3">
       <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -181,14 +180,15 @@ export default function TrainTradeGoodsPage() {
         </FilterGroup>
       </section>
 
-      <section ref={resultsAnchorRef} data-pagination-anchor className="flex min-h-9 scroll-mt-4 items-center justify-between gap-3 border-b border-border pb-2">
+      <section className="flex min-h-9 items-center justify-between gap-3 border-b border-border pb-2">
         <span className="text-sm tabular-nums text-muted-foreground">{t("trainTrade.resultCount", { count: filtered.length })}</span>
         <div className="inline-flex shrink-0 overflow-hidden rounded-md border border-border" role="group" aria-label={t("trainTrade.view")}>
           <ViewButton active={view === "grid"} onClick={() => { setView("grid"); setPage(1); }} label={t("trainTrade.viewGrid")}><IconGrid3x3 className="size-4" aria-hidden /></ViewButton>
           <ViewButton active={view === "list"} onClick={() => { setView("list"); setPage(1); }} label={t("trainTrade.viewList")} bordered><IconList className="size-4" aria-hidden /></ViewButton>
         </div>
       </section>
-
+    </div>}>
+    <div ref={resultsAnchorRef} data-pagination-anchor className="space-y-3" data-testid="train-trade-page">
       {filtered.length === 0 ? (
         <p className="border-y border-border py-12 text-center text-sm text-muted-foreground">{t("trainTrade.empty")}</p>
       ) : view === "grid" ? (

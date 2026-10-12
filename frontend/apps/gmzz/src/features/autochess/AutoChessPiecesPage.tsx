@@ -54,9 +54,7 @@ export default function AutoChessPiecesPage() {
     return () => cancelAnimationFrame(frame)
   }, [selected, pieces.loading, bonds.loading, attributes.loading])
 
-  return <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide>
-    {pieces.error || bonds.error || attributes.error ? <p role="alert" className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
-      : pieces.loading || bonds.loading || attributes.loading ? <p role="status" className="text-sm text-muted-foreground">{t('loading')}</p> : <>
+  const toolbar = <>
         <div className="mb-3 flex flex-col gap-2">
           <FilterRow label={t('autochess.pieces.costFilter')}>
             <Chip active={!cost} onClick={() => setCost(0)}>{t('autochess.all')}</Chip>
@@ -75,6 +73,10 @@ export default function AutoChessPiecesPage() {
           <SearchField value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
           {(cost || bondId || role || query) ? <button type="button" onClick={reset} className="text-sm text-primary hover:underline">{t('autochess.clearFilters')}</button> : null}
         </FilterBar>
+  </>
+  return <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide resultsKey={JSON.stringify([cost, bondId, role, query])} toolbar={pieces.error || bonds.error || attributes.error || pieces.loading || bonds.loading || attributes.loading ? undefined : toolbar}>
+    {pieces.error || bonds.error || attributes.error ? <p role="alert" className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
+      : pieces.loading || bonds.loading || attributes.loading ? <p role="status" className="text-sm text-muted-foreground">{t('loading')}</p> : <>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((piece) => <article key={piece.baseId} id={`piece-${piece.baseId}`} tabIndex={-1} data-piece-id={piece.baseId} className={`min-w-0 scroll-mt-24 overflow-hidden rounded-md border bg-card focus:outline-none ${PIECE_COST_BORDER[piece.cost] ?? 'border-border'} ${selected === piece.baseId ? 'ring-2 ring-ring' : ''}`}>
             <div className={`px-3 py-1 text-xs font-medium ${ROLE_CLASS[piece.roleColor] ?? 'bg-muted text-foreground'}`}>{piece.role}</div>

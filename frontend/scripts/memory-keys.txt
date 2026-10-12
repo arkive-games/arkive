@@ -12,6 +12,7 @@ arkive.memory.gmzz.score.character	-	apps/gmzz/src/features/score/ScorePage.tsx
 arkive.memory.gmzz.score.equipment	-	apps/gmzz/src/features/equipment/EquipmentSection.tsx
 arkive.memory.gmzz.score.equipment-layout	-	apps/gmzz/src/features/equipment/EquipmentSection.tsx
 arkive.memory.gmzz.score.relics	-	apps/gmzz/src/features/relics/RelicSection.tsx
+arkive.memory.gmzz.secretpartners.level	partner	apps/gmzz/src/features/secretpartners/memory.ts
 arkive.memory.lostark.combat-power.loadout	-	apps/lostark/src/lib/loadout.ts
 arkive.memory.palworld.breeding.chain-generations	-	apps/palworld/src/features/breeding/BreedingPage.tsx
 arkive.memory.palworld.breeding.favorites	-	apps/palworld/src/features/breeding/BreedingPage.tsx

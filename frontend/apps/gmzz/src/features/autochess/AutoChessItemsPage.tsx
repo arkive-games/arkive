@@ -65,7 +65,7 @@ export default function AutoChessItemsPage() {
   }
 
   return (
-    <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide>
+    <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide resultsKey={JSON.stringify([query, rarity, useType, typeName])} toolbar={<>
       <div className="mb-3 flex flex-col gap-2">
         <FilterRow label={t('autochess.items.qualityFilter')}>
           <Chip active={!rarity} onClick={() => setRarity(0)}>{t('autochess.all')}</Chip>
@@ -101,7 +101,7 @@ export default function AutoChessItemsPage() {
         />
         {(query || rarity || useType || typeName) ? <button type="button" className="text-sm text-primary hover:underline" onClick={() => { setQuery(''); setRarity(0); setUseType(0); setTypeName('') }}>{t('autochess.clearFilters')}</button> : null}
       </FilterBar>
-
+      </>}>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((item) => (
           <article

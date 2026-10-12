@@ -40,7 +40,7 @@ export default function UtopianTheaterPage() {
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ViewMode>("grid");
   const [page, setPage] = useState(1);
-  const resultsAnchorRef = useRef<HTMLElement>(null);
+  const resultsAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let live = true;
@@ -128,8 +128,7 @@ export default function UtopianTheaterPage() {
   }
 
   return (
-    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide>
-    <div data-testid="utopian-theater-page" className="space-y-3">
+    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} toolbar={<div className="space-y-3">
       <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -201,7 +200,7 @@ export default function UtopianTheaterPage() {
         </FilterGroup>
       </section>
 
-      <section ref={resultsAnchorRef} data-pagination-anchor className="flex min-h-9 scroll-mt-4 items-center justify-between gap-3 border-b border-border pb-2">
+      <section className="flex min-h-9 items-center justify-between gap-3 border-b border-border pb-2">
         <span className="text-sm tabular-nums text-muted-foreground">
           {t("utopianTheater.resultCount", { count: filtered.length })}
         </span>
@@ -234,7 +233,8 @@ export default function UtopianTheaterPage() {
           </button>
         </div>
       </section>
-
+    </div>}>
+    <div ref={resultsAnchorRef} data-pagination-anchor data-testid="utopian-theater-page" className="space-y-3">
       {filtered.length === 0 ? (
         <p className="border-y border-border py-12 text-center text-sm text-muted-foreground">{t("utopianTheater.empty")}</p>
       ) : view === "grid" ? (
