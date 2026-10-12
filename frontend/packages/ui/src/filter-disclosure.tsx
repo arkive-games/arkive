@@ -19,8 +19,11 @@ export interface FilterDisclosureProps {
   defaultExpanded?: boolean
   expanded?: boolean
   onExpandedChange?: (expanded: boolean) => void
-  className?: string
-  /** Classes for the wrapper around `children` (spacing the page used to own). */
+  /**
+   * Layout classes for a wrapper around `children` (the spacing the page used
+   * to own). Kept on its own element so a display utility here (`flex`,
+   * `grid`) can never fight the visibility classes.
+   */
   bodyClassName?: string
   testId?: string
   children: ReactNode
@@ -33,6 +36,11 @@ export interface FilterDisclosureProps {
  * Collapsing hides the body with CSS rather than unmounting it: the controls
  * carry state of their own (search text, open comboboxes), and the same node is
  * the desktop copy, so it must be mounted exactly once on every breakpoint.
+ *
+ * From `md` up both wrappers are `display: contents`, so desktop markup is
+ * layout-identical to rendering `children` bare (or inside `bodyClassName`).
+ * On phones the disclosure takes a full row (`w-full`) even inside a
+ * wrapping flex parent.
  */
 export function FilterDisclosure({
   label,
@@ -43,7 +51,6 @@ export function FilterDisclosure({
   defaultExpanded = true,
   expanded: controlledExpanded,
   onExpandedChange,
-  className,
   bodyClassName,
   testId,
   children,
@@ -59,7 +66,7 @@ export function FilterDisclosure({
   }
 
   return (
-    <div className={className} data-testid={testId} data-expanded={expanded}>
+    <div className="w-full md:contents" data-testid={testId} data-expanded={expanded}>
       <button
         type="button"
         data-testid="filter-disclosure-toggle"
@@ -96,8 +103,8 @@ export function FilterDisclosure({
           )}
         />
       </button>
-      <div id={bodyId} className={cn(!expanded && "hidden md:block", bodyClassName)}>
-        {children}
+      <div id={bodyId} className={cn("md:contents", !expanded && "hidden")}>
+        {bodyClassName ? <div className={bodyClassName}>{children}</div> : children}
       </div>
     </div>
   )

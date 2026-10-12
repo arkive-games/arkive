@@ -105,11 +105,12 @@ export default function FellowsPage() {
   }
 
   return (
-    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide resultsKey={JSON.stringify([query, quality, label])} filtersActive={Boolean(query || quality || label)} toolbar={<>
+    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide resultsKey={JSON.stringify([query, quality, label])} filtersActive={Boolean(query || quality || label)} toolbarLead={<>
       <FellowsTabs current="/fellows" />
       <p className="mb-4 text-sm text-muted-foreground">
         {t('fellows.description', { count: all.length })}
       </p>
+    </>} toolbar={<>
 
       <div className="mb-4 flex flex-col gap-3">
         <FilterRow label={t('fellows.qualityFilter')}>

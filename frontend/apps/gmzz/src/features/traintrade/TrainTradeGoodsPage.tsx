@@ -133,8 +133,7 @@ export default function TrainTradeGoodsPage() {
   }
 
   return (
-    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide resultsKey={JSON.stringify([query, category, quality, view, currentPage])} filtersActive={Boolean(query) || category !== "all" || quality !== "all"} toolbar={<div className="space-y-3">
-      <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
+    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide resultsKey={JSON.stringify([query, category, quality, view, currentPage])} filtersActive={Boolean(query) || category !== "all" || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
             {t("trainTrade.description", { count: goods.length })}
@@ -159,8 +158,7 @@ export default function TrainTradeGoodsPage() {
             />
           </span>
         </label>
-      </header>
-
+      </header>} toolbar={<div className="space-y-3">
       <section aria-label={t("trainTrade.filters")} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
         <FilterGroup label={t("trainTrade.categoryLabel")} hint={t("trainTrade.categoryHint")}>
           {visibleCategories.map((option) => (

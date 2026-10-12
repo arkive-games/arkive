@@ -149,8 +149,7 @@ export default function ReforgePage() {
   }
 
   return (
-    <ContentPage active="/reforge" title={t('reforge.title')} wide resultsKey={JSON.stringify([query, slot, affixCount])} filtersActive={Boolean(query || slot || affixCount)} toolbar={<div className="space-y-3">
-        <header className="grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
+    <ContentPage active="/reforge" title={t('reforge.title')} wide resultsKey={JSON.stringify([query, slot, affixCount])} filtersActive={Boolean(query || slot || affixCount)} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
           <div className="min-w-0">
             <h1 className="text-3xl font-bold text-foreground">{t('reforge.title')}</h1>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -176,8 +175,7 @@ export default function ReforgePage() {
               />
             </span>
           </label>
-        </header>
-
+        </header>} toolbar={<div className="space-y-3">
         <section aria-label={t('reforge.filters')} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
           <FilterGroup label={t('reforge.slotLabel')} hint={t('reforge.slotHint')}>
             <FilterChip active={slot === 0} onClick={() => setSlot(0)} testId="reforge-slot-all">

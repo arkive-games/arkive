@@ -20,6 +20,11 @@ export interface ContentPageProps {
    * away behind the shared `FilterDisclosure` toggle; desktop shows no toggle.
    */
   toolbar?: ReactNode
+  /**
+   * Toolbar content that must stay visible when the phone filters are folded
+   * away: section tabs, the page description, the search box.
+   */
+  toolbarLead?: ReactNode
   /** `true` while the toolbar holds a non-default selection; dots the phone toggle. */
   filtersActive?: boolean
   /** Only result-scope changes reset reading position, not edits inside cards. */
@@ -27,7 +32,7 @@ export interface ContentPageProps {
   children: ReactNode
 }
 
-export function ContentPage({ active, title, heading = false, wide = false, toolbar, filtersActive = false, resultsKey, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, wide = false, toolbar, toolbarLead, filtersActive = false, resultsKey, children }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
@@ -52,6 +57,7 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
         {toolbar != null ? <div data-content-toolbar className="max-h-[50%] shrink-0 overflow-y-auto overscroll-contain border-b border-border bg-background">
           <div className={cn('arkive-content-page mx-auto w-full pb-3', contentWidth)}>
             {heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null}
+            {toolbarLead}
             <FilterDisclosure label={t('filterToggle')} active={filtersActive} testId="content-toolbar-filters">
               {toolbar}
             </FilterDisclosure>
