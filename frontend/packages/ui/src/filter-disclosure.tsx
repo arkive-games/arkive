@@ -40,7 +40,10 @@ export interface FilterDisclosureProps {
  * From `md` up both wrappers are `display: contents`, so desktop markup is
  * layout-identical to rendering `children` bare (or inside `bodyClassName`).
  * On phones the disclosure takes a full row (`w-full`) even inside a
- * wrapping flex parent.
+ * wrapping flex parent. `display: contents` drops the boxes but not the DOM
+ * nodes, so a parent spacing its children with `gap` is unaffected while one
+ * using a child-combinator rule (`space-y-*`, `divide-*`) would style the
+ * wrapper instead — space such parents with `gap`.
  */
 export function FilterDisclosure({
   label,

@@ -54,20 +54,20 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
         accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" />}
       />
       <div className="flex min-h-0 flex-1 flex-col">
-        {toolbar != null ? <div data-content-toolbar className="max-h-[50%] shrink-0 overflow-y-auto overscroll-contain border-b border-border bg-background">
+        {toolbar != null || toolbarLead != null ? <div data-content-toolbar className="max-h-[50%] shrink-0 overflow-y-auto overscroll-contain border-b border-border bg-background">
           <div className={cn('arkive-content-page mx-auto w-full pb-3', contentWidth)}>
             {heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null}
             {toolbarLead}
-            <FilterDisclosure label={t('filterToggle')} active={filtersActive} testId="content-toolbar-filters">
+            {toolbar != null ? <FilterDisclosure label={t('filterToggle')} active={filtersActive} testId="content-toolbar-filters">
               {toolbar}
-            </FilterDisclosure>
+            </FilterDisclosure> : null}
           </div>
         </div> : null}
         {/* Keep absolute descendants contained by the results scroller. */}
         <div ref={resultsRef} data-content-scroll className="relative min-h-0 flex-1 overflow-y-auto">
           <div className="flex min-h-full flex-col">
             <div className={cn('arkive-content-page mx-auto w-full flex-1 pb-6', contentWidth)}>
-              {heading && toolbar == null ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null}
+              {heading && toolbar == null && toolbarLead == null ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null}
               {children}
             </div>
             <SiteFooter

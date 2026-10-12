@@ -50,6 +50,13 @@ describe('ContentPage catalogue toolbar', () => {
     expect(toolbar.className).toContain('overflow-y-auto')
   })
 
+  it('renders a lead-only toolbar instead of dropping it', () => {
+    act(() => root.render(<ContentPage active="/fellows" title="Fellows" heading toolbarLead={<aside>Tabs</aside>}><article>Result</article></ContentPage>))
+    const toolbar = container.querySelector('[data-content-toolbar]')!
+    expect(toolbar.contains(container.querySelector('aside'))).toBe(true)
+    expect(container.querySelectorAll('h1')).toHaveLength(1)
+  })
+
   it('preserves the scrolling heading for pages without filters', () => {
     act(() => root.render(<ContentPage active="/changelog" title="History" heading><p>Release</p></ContentPage>))
     expect(container.querySelector('[data-content-toolbar]')).toBeNull()
