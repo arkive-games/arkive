@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { BookOpen, Gem, Ghost, History, Home, Menu, PawPrint, ScrollText, Shield, Sparkles, Swords } from 'lucide-react'
-import { ShellBottomNav, useTheme, type Theme } from '@gamemap/map-shell'
+import { ShellBottomNav } from '@gamemap/map-shell'
 import content from '../locales/zh-CN.json'
 import { SETTINGS } from '../lib/brand'
 import { hrefForKey, navigateOnClick, type NavKey, type NavigationProps } from '../navigation'
@@ -14,7 +14,6 @@ const icon = (Icon: typeof Home): ReactNode => <Icon className="size-5" strokeWi
  * a page left out of both would have no entry point at all.
  */
 export function BottomTabBar({ active, onNavigate }: NavigationProps) {
-  const { theme, setTheme } = useTheme()
 
   const tabs: { key: NavKey; label: string; icon: ReactNode }[] = [
     { key: 'overview', label: content.nav.home, icon: icon(Home) },
@@ -65,8 +64,6 @@ export function BottomTabBar({ active, onNavigate }: NavigationProps) {
       }}
       theme={{
         options: SETTINGS.themeOptions ?? [],
-        current: theme,
-        onChange: (value) => setTheme(value as Theme),
         rowLabel: content.themeMenu,
       }}
       settings={{ backLabel: content.nav.back, config: SETTINGS }}

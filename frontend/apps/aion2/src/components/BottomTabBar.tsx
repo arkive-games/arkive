@@ -9,7 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { ShellBottomNav } from "@gamemap/map-shell";
-import { useTheme, type Theme } from "@/context/ThemeContext";
+import { type Theme } from "@/context/ThemeContext";
 import i18n, { changeLanguagePreference, SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from "@/i18n";
 import SiteInfo from "@/components/SiteInfo";
 import { useSettingsConfig } from "@/lib/settings";
@@ -48,7 +48,6 @@ export function activeTab(pathname: string): ActiveTab {
 
 export default function BottomTabBar() {
   const { t } = useTranslation(["common"]);
-  const { theme, setTheme } = useTheme();
   const settings = useSettingsConfig();
   const { pathname } = useLocation();
   const active = activeTab(pathname);
@@ -134,8 +133,6 @@ export default function BottomTabBar() {
           value,
           label: t(`common:theme.short.${value}`),
         })),
-        current: theme,
-        onChange: (value) => setTheme(value as Theme),
         rowLabel: t("common:menu.switchTheme", "Switch theme"),
       }}
       settings={{

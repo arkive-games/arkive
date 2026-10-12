@@ -1,5 +1,5 @@
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { ArkiveMapTopBar, useTheme, type ShellNavItem } from '@gamemap/map-shell'
+import { ArkiveMapTopBar, type ShellNavItem } from '@gamemap/map-shell'
 import content from '../locales/zh-CN.json'
 import { HOME_URL, SETTINGS } from '../lib/brand'
 import { hrefForKey, navigateOnClick, WIKI_VIEWS, type NavKey, type NavigationProps } from '../navigation'
@@ -10,7 +10,6 @@ import { hrefForKey, navigateOnClick, WIKI_VIEWS, type NavKey, type NavigationPr
  * rather than a second row of tabs under the bar.
  */
 export function TopNav({ active, onNavigate }: NavigationProps) {
-  const { theme, setTheme } = useTheme()
 
   const items: ShellNavItem[] = [
     { key: 'overview', label: content.nav.home, active: active === 'overview' },
@@ -54,8 +53,6 @@ export function TopNav({ active, onNavigate }: NavigationProps) {
       }}
       themeSwitcher={{
         labels: content.theme,
-        current: theme,
-        onChange: setTheme,
         menuLabel: content.themeMenu,
         shortLabel: content.themeMenu,
       }}

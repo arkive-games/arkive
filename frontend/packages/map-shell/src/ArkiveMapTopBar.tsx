@@ -7,6 +7,7 @@ import {
 } from "react"
 import { IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
+import { useOptionalTheme } from "./theme/ThemeProvider"
 import {
   ShellTopBar,
   TOP_BAR_MENU_CLASS,
@@ -29,8 +30,12 @@ export interface ArkiveMapTopBarProps {
   nav: Omit<ShellTopBarNav, "classNames">
   languageSwitcher: NonNullable<ShellTopBarProps["languageSwitcher"]>
   themeSwitcher: {
-    current: ArkiveMapTheme
-    onChange: (value: ArkiveMapTheme) => void
+    /**
+     * Default to the surrounding `ThemeProvider`, which every app mounts; pass
+     * them only to drive the menu from somewhere else.
+     */
+    current?: ArkiveMapTheme
+    onChange?: (value: ArkiveMapTheme) => void
     labels: Record<ArkiveMapTheme, string>
     menuLabel: string
     shortLabel?: string
@@ -114,6 +119,9 @@ export function ArkiveMapTopBar({
   accountSlot,
   className,
 }: ArkiveMapTopBarProps) {
+  const themeContext = useOptionalTheme()
+  const currentTheme = themeSwitcher.current ?? themeContext?.theme ?? "auto"
+  const setTheme = themeSwitcher.onChange ?? themeContext?.setTheme
   return (
     <ShellTopBar
       classNames={{
@@ -163,8 +171,8 @@ export function ArkiveMapTopBar({
           value,
           label: themeSwitcher.labels[value],
         })),
-        current: themeSwitcher.current,
-        onChange: (value) => themeSwitcher.onChange(value as ArkiveMapTheme),
+        current: currentTheme,
+        onChange: (value) => setTheme?.(value as ArkiveMapTheme),
         menuLabel: themeSwitcher.menuLabel,
         shortLabel: themeSwitcher.shortLabel,
       }}

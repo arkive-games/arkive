@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ShellBottomNav, type ShellBottomNavProps } from "./ShellBottomNav"
+import { ThemeProvider } from "./theme/ThemeProvider"
 
 /**
  * jsdom ships no `matchMedia`, and `useIsMobile` calls it unguarded. The stub is
@@ -102,6 +103,20 @@ describe("ShellBottomNav", () => {
     )
     expect(api.getByTestId("more-lang-open")).toBeTruthy()
     expect(api.getByTestId("more-theme-auto")).toBeTruthy()
+  })
+
+  it("drives the theme pills from the surrounding ThemeProvider when not wired by hand", () => {
+    const base = props()
+    const api = render(
+      <ThemeProvider>
+        <ShellBottomNav {...base} theme={{ options: base.theme.options, rowLabel: "Theme" }} />
+      </ThemeProvider>,
+    )
+    open(api)
+    expect(api.getByTestId("more-theme-auto").getAttribute("aria-pressed")).toBe("true")
+    fireEvent.click(api.getByTestId("more-theme-dark"))
+    expect(api.getByTestId("more-theme-dark").getAttribute("aria-pressed")).toBe("true")
+    expect(api.getByTestId("more-theme-auto").getAttribute("aria-pressed")).toBe("false")
   })
 
   describe("the language drill-down", () => {

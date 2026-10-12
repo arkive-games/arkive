@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react"
+import { useOptionalTheme, type Theme } from "./theme/ThemeProvider"
 import {
   IconCheck,
   IconChevronLeft,
@@ -79,8 +80,9 @@ export interface ShellBottomNavProps {
   }
   theme: {
     options: { value: string; label: string }[]
-    current: string
-    onChange: (value: string) => void
+    /** Default to the surrounding `ThemeProvider`, which every app mounts. */
+    current?: string
+    onChange?: (value: string) => void
     rowLabel: ReactNode
   }
   /**
@@ -156,6 +158,9 @@ export function ShellBottomNav({
   // stacked on a phone is the overlay trap the language pane exists to avoid.
   const [openGroup, setOpenGroup] = useState<string | null>(null)
   const isMobile = useIsMobile()
+  const themeContext = useOptionalTheme()
+  const currentTheme = theme.current ?? themeContext?.theme ?? "auto"
+  const setTheme = theme.onChange ?? ((value: string) => themeContext?.setTheme(value as Theme))
   // Unconditional: hooks cannot be skipped, and an empty config is never
   // rendered because the pane only opens when `settings` is present.
   const settingsProps = useArkiveSettingsProps(settings?.config ?? {})
@@ -350,9 +355,9 @@ export function ShellBottomNav({
                           key={value}
                           type="button"
                           data-testid={`more-theme-${value}`}
-                          aria-pressed={theme.current === value}
-                          onClick={() => theme.onChange(value)}
-                          className={pillClass(theme.current === value)}
+                          aria-pressed={currentTheme === value}
+                          onClick={() => setTheme(value)}
+                          className={pillClass(currentTheme === value)}
                         >
                           {label}
                         </button>

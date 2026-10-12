@@ -3,8 +3,6 @@ import { BookOpen, Database, History, Map, Menu, Swords } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
   ShellBottomNav,
-  useTheme,
-  type Theme,
 } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SiteInfo } from './SiteInfo'
@@ -22,7 +20,6 @@ function activeKey(pathname: string): NavKey {
 export function BottomTabBar() {
   const { t, i18n } = useTranslation()
   const { pathname } = useLocation()
-  const { theme, setTheme } = useTheme()
   const settings = useSettingsConfig()
   const lng = LANGUAGES.find((code) => code === i18n.resolvedLanguage) ?? 'en-US'
   const active = activeKey(pathname)
@@ -76,8 +73,6 @@ export function BottomTabBar() {
           { value: 'light', label: t('themeLight') },
           { value: 'dark', label: t('themeDark') },
         ],
-        current: theme,
-        onChange: (value) => setTheme(value as Theme),
         rowLabel: t('themeMenu'),
       }}
       settings={{

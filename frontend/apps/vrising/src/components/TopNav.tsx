@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { ArkiveMapTopBar, getArkiveBrandName, useTheme, type ShellNavItem } from '@gamemap/map-shell'
+import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
@@ -10,7 +10,6 @@ export type NavKey = '/' | '/vblood' | '/database' | '/systems' | '/changelog'
 
 export function TopNav({ active }: { active: NavKey }) {
   const { t, i18n } = useTranslation()
-  const { theme, setTheme } = useTheme()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
@@ -51,8 +50,6 @@ export function TopNav({ active }: { active: NavKey }) {
           light: t('themeLight'),
           dark: t('themeDark'),
         },
-        current: theme,
-        onChange: setTheme,
         menuLabel: t('themeMenu'),
         shortLabel: t('themeMenu'),
       }}

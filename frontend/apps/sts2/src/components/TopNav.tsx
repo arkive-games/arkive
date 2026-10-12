@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { ArkiveMapTopBar, getArkiveBrandName, useTheme } from '@gamemap/map-shell'
+import { ArkiveMapTopBar, getArkiveBrandName } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
@@ -16,7 +16,6 @@ const ITEMS: { key: NavKey; labelKey: string }[] = [
 
 export function TopNav({ active }: { active: NavKey }) {
   const { t, i18n } = useTranslation()
-  const { theme, setTheme } = useTheme()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
@@ -33,9 +32,11 @@ export function TopNav({ active }: { active: NavKey }) {
           label: t(item.labelKey),
           active: active === item.key,
         })),
-        renderItem: (item, className) => (
+        renderItem: (item, className, labelClassName) => (
           <Link to={item.key} className={className}>
-            {item.label}
+            {labelClassName ? (
+              <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
+            ) : item.label}
           </Link>
         ),
       }}
@@ -52,8 +53,6 @@ export function TopNav({ active }: { active: NavKey }) {
           light: t('themeLight'),
           dark: t('themeDark'),
         },
-        current: theme,
-        onChange: setTheme,
         menuLabel: t('themeMenu'),
         shortLabel: t('themeMenu'),
       }}

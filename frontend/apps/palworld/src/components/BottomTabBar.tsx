@@ -20,11 +20,7 @@ import {
   Swords,
   Tent,
 } from 'lucide-react'
-import {
-  ShellBottomNav,
-  useTheme,
-  type Theme,
-} from '@gamemap/map-shell'
+import { ShellBottomNav, type Theme } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import type { NavKey } from './TopNav'
 import { SiteInfo } from './SiteInfo'
@@ -66,7 +62,6 @@ export function BottomTabBar() {
   const lng = LANGUAGES.find((code) => code === i18n.resolvedLanguage) ?? 'en-US'
   const { pathname } = useLocation()
   const active = activeKey(pathname)
-  const { theme, setTheme } = useTheme()
 
   // Five slots is the most a phone can fit without shrinking the labels below
   // `text-xs`, so the bar carries the map plus the three most-used tools and
@@ -149,8 +144,6 @@ export function BottomTabBar() {
       }}
       theme={{
         options: themeTabs.map(({ value, label }) => ({ value, label })),
-        current: theme,
-        onChange: (value) => setTheme(value as Theme),
         rowLabel: t('settings.theme'),
       }}
       settings={{
