@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.16.2",
+      "date": "2026-10-14",
+      "commit": "72633b55ef03b0dd380ac49adb0c4cb61ff91d98",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Fix overlapping icons and text in account dialogs.",
+            "zh-CN": "修复登录等账号弹窗的图标与文字重叠问题。",
+            "zh-TW": "修復登入等帳號彈窗的圖示與文字重疊問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.16.1",
       "date": "2026-09-28",
       "commit": "3c902d72f30d422c67258ac89fc1390e1df70661",
