@@ -8,9 +8,8 @@ import {
   IconSpeakerphone,
   IconThumbUp,
 } from '@tabler/icons-react'
-import { useAuth } from '@gamemap/auth'
+import { ArkiveAccountControl, useAuth } from '@gamemap/auth'
 import { MENU_CONTENT_CLASS, MENU_ITEM_CLASS, cn } from '@gamemap/ui'
-import { DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { useUserSystem } from './UserSystemState'
 
 const NOTIFICATION_LINKS = [
@@ -20,8 +19,8 @@ const NOTIFICATION_LINKS = [
   { key: 'system', icon: IconSpeakerphone },
 ] as const
 
-export function AuthenticatedControls() {
-  const { t } = useTranslation()
+export function AuthenticatedControls({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { state } = useUserSystem()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -30,7 +29,6 @@ export function AuthenticatedControls() {
   const skipNextFocusOpenRef = useRef(false)
   if (!user) return null
 
-  const avatarSrc = state.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
   const hasUnread = state.readNotificationSections.length < NOTIFICATION_LINKS.length
   const closeNotificationsAndRestoreFocus = () => {
     skipNextFocusOpenRef.current = true
@@ -129,9 +127,7 @@ export function AuthenticatedControls() {
         )}
       </div>
 
-      <a href="#account/edit" className="account-avatar-link" aria-label={t('userSystem.account.open')}>
-        <img src={avatarSrc} alt={user.name} />
-      </a>
+      <ArkiveAccountControl language={i18n.language} homeUrl="" onOpenSettings={onOpenSettings} />
     </div>
   )
 }

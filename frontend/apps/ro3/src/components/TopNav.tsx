@@ -57,7 +57,7 @@ export function TopNav({ active, onNavigate }: NavigationProps) {
         shortLabel: content.themeMenu,
       }}
       loginLabel={content.login}
-      accountSlot={<ArkiveAccountControl language="zh-CN" settings={SETTINGS} />}
+      accountSlot={<ArkiveAccountControl language="zh-CN" settings={SETTINGS} homeUrl={HOME_URL} />}
     />
   )
 }

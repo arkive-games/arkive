@@ -79,7 +79,7 @@ export function TopNav({ active }: { active: NavKey }) {
         shortLabel: t('settings.theme'),
       }}
       loginLabel={t('auth.login')}
-      accountSlot={<ArkiveAccountControl language={lng} settings={settings} />}
+      accountSlot={<ArkiveAccountControl language={lng} settings={settings} homeUrl={ARKIVE_HOME_URL} />}
     />
   )
 }

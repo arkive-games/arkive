@@ -9,6 +9,7 @@ import TopNavbar from "@/components/TopNavbar";
 import GlobalSearchWidget from "@/components/GlobalSearchWidget";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
 import { SITE_VERSION } from "@/lib/siteVersion";
+import { useSettingsConfig } from "@/lib/settings";
 
 /**
  * Shared chrome for every non-map page (wiki + changelog): desktop top bar or a
@@ -30,6 +31,7 @@ export default function ContentLayout({
   // elements share `data-testid="global-search-button"` — which breaks strict
   // locators in this app's existing e2e specs.
   const isMobile = useIsMobile();
+  const settings = useSettingsConfig();
   const { t, i18n } = useTranslation("common");
   const { pathname } = useLocation();
   const currentLng = i18n.resolvedLanguage ?? i18n.language;
@@ -51,7 +53,7 @@ export default function ContentLayout({
             brandName={brandName}
             pageTitle={mobileTitle}
             loginLabel={t("auth.login")}
-            accountControl={<ArkiveAccountControl language={currentLng} variant="mobileHeader" />}
+            accountControl={<ArkiveAccountControl language={currentLng} variant="mobileHeader" homeUrl={ARKIVE_HOME_URL} settings={settings} />}
             actions={<GlobalSearchWidget />}
           />
         ) : null

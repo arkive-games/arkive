@@ -82,7 +82,7 @@ export default function TopNavbar() {
         shortLabel: t("common:theme.label"),
       }}
       loginLabel={t("common:auth.login")}
-      accountSlot={<ArkiveAccountControl language={currentLng} settings={settings} />}
+      accountSlot={<ArkiveAccountControl language={currentLng} settings={settings} homeUrl={ARKIVE_HOME_URL} />}
     />
   );
 }

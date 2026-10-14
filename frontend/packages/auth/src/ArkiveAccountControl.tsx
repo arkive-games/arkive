@@ -14,6 +14,7 @@ import { AccountDialog } from "./AccountDialog"
 import { useAuth } from "./AuthProvider"
 import { authStringsFor } from "./locales"
 import type { AuthStrings } from "./strings"
+import { accountMenuCopy, accountProfileHref } from './accountMenuCopy'
 
 export interface ArkiveAccountControlProps {
   /**
@@ -39,6 +40,9 @@ export interface ArkiveAccountControlProps {
    * same state, strings and assembly.
    */
   settings?: ArkiveSettingsConfig
+  /** Resolved portal URL supplied by the host, including development/Toy overrides. */
+  homeUrl?: string
+  onOpenSettings?: () => void
 }
 
 /**
@@ -61,6 +65,8 @@ export function ArkiveAccountControl({
   variant = "topbar",
   fallback = null,
   settings,
+  homeUrl = 'https://tc-imba.com',
+  onOpenSettings,
 }: ArkiveAccountControlProps) {
   const auth = useAuth()
   const [open, setOpen] = useState(false)
@@ -122,9 +128,13 @@ export function ArkiveAccountControl({
     ? { ...base, ...overrides, errors: { ...base.errors, ...overrides.errors } }
     : base
 
+  const menuCopy = accountMenuCopy(language)
   const account = {
     status: auth.status,
     userName: auth.user?.name,
+    avatarUrl: auth.user?.avatarUrl,
+    accountNumber: auth.user ? String(auth.user.specialUid ?? auth.user.uid) : undefined,
+    mobileAvatar: variant === 'mobileHeader',
     signInLabel: strings.signIn,
     signOutLabel: strings.signOut,
     accountLabel: strings.account,
@@ -132,9 +142,9 @@ export function ArkiveAccountControl({
     onSignOut: () => {
       void auth.logout()
     },
-    items,
-    settings: settings
-      ? { label: settingsProps.strings.title, onSelect: () => setSettingsOpen(true) }
+    items: [{ key: 'profile', label: menuCopy.profile, onSelect: () => { window.location.assign(accountProfileHref(homeUrl)) } }, ...(items ?? [])],
+    settings: settings || onOpenSettings
+      ? { label: menuCopy.settings, onSelect: onOpenSettings ?? (() => setSettingsOpen(true)) }
       : undefined,
   }
 

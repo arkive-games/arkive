@@ -3,7 +3,7 @@ import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveContentPage, ArkiveMobileHeader } from '@gamemap/map-shell'
 import { SiteFooter } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
-import { HOME_URL } from '../lib/brand'
+import { HOME_URL, SETTINGS } from '../lib/brand'
 import { navigateOnClick, type NavigationProps } from '../navigation'
 import { TopNav } from './TopNav'
 import { BottomTabBar } from './BottomTabBar'
@@ -35,7 +35,7 @@ export function ContentPage({ active, onNavigate, title, heading = false, wide =
           brandName={content.brandName}
           pageTitle={title}
           loginLabel={content.login}
-          accountControl={<ArkiveAccountControl language="zh-CN" variant="mobileHeader" />}
+          accountControl={<ArkiveAccountControl language="zh-CN" variant="mobileHeader" homeUrl={HOME_URL} settings={SETTINGS} />}
         />
       }
       footer={

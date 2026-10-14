@@ -7,6 +7,7 @@ import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@game
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { ARKIVE_HOME_URL } from '../lib/brand'
+import { useSettingsConfig } from '../lib/settings'
 
 export interface ContentPageProps {
   active: NavKey
@@ -23,6 +24,7 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
+  const settings = useSettingsConfig()
 
   return (
     <ArkiveContentPage
@@ -34,7 +36,7 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
           brandName={brandName}
           pageTitle={title}
           loginLabel={t('login')}
-          accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" />}
+          accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" homeUrl={ARKIVE_HOME_URL} settings={settings} />}
         />
       }
       footer={

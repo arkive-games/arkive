@@ -1,6 +1,8 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
+import { ARKIVE_HOME_URL } from '../../lib/brand'
+import { useSettingsConfig } from '../../lib/settings'
 // Types erase at build time, and `/coords` is a three-free module, so the engine
 // itself stays out of the entry chunk (it arrives through the `lazy()` boundary
 // below). Importing `worldToPixel` from the barrel instead would undo that.
@@ -51,6 +53,7 @@ const GameMapView = lazy(() => import('./GlMapView'))
 
 export default function MapPage() {
   const { t, i18n } = useTranslation()
+  const settings = useSettingsConfig()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   // A small {getCenter,getZoom,flyTo,project,dispose} handle, not a DOM map.
   const glMapRef = useRef<GlMapRef | null>(null)
@@ -498,7 +501,7 @@ export default function MapPage() {
         <ArkiveMobileMapControls
           // The map route renders no header, so this is the only account surface
           // on V Rising's landing page.
-          account={<ArkiveAccountControl language={i18n.resolvedLanguage ?? i18n.language} variant="mobileHeader" />}
+          account={<ArkiveAccountControl language={i18n.resolvedLanguage ?? i18n.language} variant="mobileHeader" homeUrl={ARKIVE_HOME_URL} settings={settings} />}
           search={{
             label: t('search'),
             open: searchSheetOpen,

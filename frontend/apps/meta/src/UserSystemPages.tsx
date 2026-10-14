@@ -18,6 +18,8 @@ import {
   type UserPublic,
 } from '@gamemap/api-core'
 import { calendarDate } from './forumModel'
+import { avatarCopy } from './avatarCopy'
+import { saveAccountAvatar } from './saveAvatar'
 import { browserMemory, defineMemoryRecord, memoryPolicy } from '@gamemap/state-memory'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
@@ -443,9 +445,26 @@ export function AccountCenterPage({
     return () => window.clearTimeout(timeout)
   }, [profile, profileDraftRecord, user])
 
+  const avatarOwner = useRef(user?.id)
+  useEffect(() => {
+    avatarOwner.current = user?.id
+    return () => { avatarOwner.current = undefined }
+  }, [user?.id])
+
   if (!user) return null
 
-  const avatarSrc = state.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
+  const avatarSrc = user.avatarUrl ?? DEFAULT_AVATAR_SRC
+  const saveAvatar = async (src: string) => {
+    const verifyOwner = async () => {
+      if (avatarOwner.current !== user.id) throw new Error('Account changed during save')
+      const current = await auth.client.currentUserOrNull()
+      if (current?.id !== user.id || avatarOwner.current !== user.id) throw new Error('Account changed during save')
+    }
+    await saveAccountAvatar(auth.client.requestClient, src, verifyOwner)
+    if (avatarOwner.current !== user.id) throw new Error('Account changed during save')
+    await auth.refresh({ preserveOnError: true, expectedUserId: user.id })
+    updateLocalProfile({ avatarSrc: null })
+  }
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const form = event.currentTarget
@@ -540,7 +559,7 @@ export function AccountCenterPage({
                 setSaveError('')
                 setProfile((current) => ({ ...current, [field]: value }))
               }}
-              onAvatarChange={(src) => updateLocalProfile({ avatarSrc: src })}
+              onAvatarChange={saveAvatar}
             />
           </section>
         </div>
@@ -581,7 +600,7 @@ function AccountContent({
   onSave: (event: FormEvent<HTMLFormElement>) => Promise<void>
   onEdit: () => void
   onProfileChange: (field: 'name' | 'email' | 'bio', value: string) => void
-  onAvatarChange: (src: string) => void
+  onAvatarChange: (src: string) => Promise<void>
   onAuthRequired: () => void
 }) {
   const { t } = useTranslation()
@@ -679,9 +698,12 @@ function AvatarUploadDialog({
   onChange,
 }: {
   currentSrc: string
-  onChange: (src: string) => void
+  onChange: (src: string) => Promise<void>
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const copy = avatarCopy(i18n.resolvedLanguage ?? i18n.language)
+  const { state: legacyState } = useUserSystem()
+  const legacyAvatar = legacyState.profile.avatarSrc
   const [open, setOpen] = useState(false)
   const [selectedSrc, setSelectedSrc] = useState<string | null>(null)
   const [fileName, setFileName] = useState('')
@@ -692,9 +714,10 @@ function AvatarUploadDialog({
   const [error, setError] = useState('')
 
   const changeOpen = (nextOpen: boolean) => {
+    if (processing) return
     setOpen(nextOpen)
     if (nextOpen) {
-      setSelectedSrc(null)
+      setSelectedSrc(legacyAvatar?.startsWith('data:image/') ? legacyAvatar : null)
       setFileName('')
       setCrop({ x: 0, y: 0 })
       setZoom(AVATAR_MIN_ZOOM)
@@ -740,10 +763,10 @@ function AvatarUploadDialog({
     setError('')
     try {
       const avatar = await createSquareAvatar(selectedSrc, croppedAreaPixels)
-      onChange(avatar)
+      await onChange(avatar)
       setOpen(false)
     } catch {
-      setError(t('userSystem.account.avatarDialog.errors.read'))
+      setError(copy.failed)
     } finally {
       setProcessing(false)
     }
@@ -758,9 +781,18 @@ function AvatarUploadDialog({
     setZoom(AVATAR_MIN_ZOOM)
   }
 
-  const selectPreset = (src: string) => {
-    onChange(src)
-    setOpen(false)
+  const selectPreset = async (src: string) => {
+    if (processing) return
+    setProcessing(true)
+    setError('')
+    try {
+      await onChange(src)
+      setOpen(false)
+    } catch {
+      setError(copy.failed)
+    } finally {
+      setProcessing(false)
+    }
   }
 
   return (
@@ -804,6 +836,8 @@ function AvatarUploadDialog({
         </div>
 
         <div className="px-6 py-6">
+          {selectedSrc && selectedSrc === legacyAvatar && <p className="mb-4 text-sm text-muted-foreground" role="status">{copy.legacy}</p>}
+          <fieldset disabled={processing} className="min-w-0 border-0 p-0 m-0">
           {selectedSrc ? (
             <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_13rem] sm:items-start">
               <div className="avatar-crop-stage">
@@ -951,6 +985,7 @@ function AvatarUploadDialog({
             </div>
           )}
 
+          </fieldset>
           {error && <p className="mt-4 text-xs font-semibold text-destructive" role="alert">{error}</p>}
         </div>
 
@@ -963,7 +998,7 @@ function AvatarUploadDialog({
           <Button
             type="button"
             className="h-11 rounded-lg bg-primary px-5 font-semibold text-white"
-            disabled={!selectedSrc || !croppedAreaPixels || Boolean(error) || processing}
+            disabled={!selectedSrc || !croppedAreaPixels || processing}
             onClick={() => void applyAvatar()}
           >
             {t(processing ? 'userSystem.account.avatarDialog.processing' : 'userSystem.account.avatarDialog.confirm')}

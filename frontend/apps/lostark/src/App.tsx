@@ -308,6 +308,7 @@ export default function App() {
             {/* This app has no i18n and renders Chinese throughout, so the
                 locale is a literal rather than a lookup. */}
             <ArkiveAccountControl
+              homeUrl={import.meta.env.VITE_HOME_URL ?? (import.meta.env.DEV ? 'http://localhost:15172' : 'https://tc-imba.com')}
               language="zh-CN"
               settings={{
                 locale: 'zh-CN',

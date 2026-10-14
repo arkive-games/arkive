@@ -54,9 +54,6 @@ import { useSettingsConfig } from './lib/settings'
 import { AUTH_CONFIG } from './lib/auth'
 import { HomeFooter } from './HomeFooter'
 import { resolveMetaFooterKind } from './footerPolicy'
-import { DEFAULT_AVATAR_SRC } from './avatarPresets'
-import { avatarUrl } from './userSystemData'
-import { useUserSystem } from './UserSystemState'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -275,7 +272,6 @@ export default function App() {
   const authStrings = authStringsFor(i18n.language)
   const isSignedIn = auth.status === 'authenticated'
   const footerKind = resolveMetaFooterKind(activeRoute.view, isSignedIn)
-  const { state: userSystemState } = useUserSystem()
   const [recentDestinations, setRecentDestinations] = useMemoryState(recentDestinationsRecord)
   const [memoryNow] = useState(Date.now)
   const remember = (destination: RecentDestination) => {
@@ -341,9 +337,6 @@ export default function App() {
 
     return () => { active = false }
   }, [])
-  const currentAvatar = auth.user
-    ? userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
-    : avatarUrl('arkive-anonymous', 96)
   const logout = () => {
     void auth.logout()
     window.location.hash = '#top'
@@ -382,21 +375,7 @@ export default function App() {
         homeLabel={brandName}
         brandName={brandName}
         loginLabel={t('auth.login')}
-        accountControl={isSignedIn ? (
-          <a
-            href="#account/edit"
-            aria-label={t('userSystem.account.open')}
-            className="size-11 shrink-0 overflow-hidden rounded-full border-2 border-primary/45 bg-muted p-0.5"
-          >
-            <img
-              src={currentAvatar}
-              alt={auth.user?.name ?? ''}
-              className="size-full rounded-full object-cover"
-            />
-          </a>
-        ) : (
-          <ArkiveAccountControl language={i18n.language} variant="mobileHeader" />
-        )}
+        accountControl={<ArkiveAccountControl language={i18n.language} variant="mobileHeader" homeUrl="" onOpenSettings={() => setSettingsOpen(true)} />}
       />
       <ArkiveMapTopBar
         homeUrl="#top"
@@ -470,7 +449,7 @@ export default function App() {
         }}
         loginLabel={t('auth.login')}
         accountSlot={isSignedIn
-          ? <AuthenticatedControls />
+          ? <AuthenticatedControls onOpenSettings={() => setSettingsOpen(true)} />
           : <ArkiveAccountControl language={i18n.language} />}
       />
 

@@ -80,6 +80,9 @@ export interface ArkiveMapTopBarAccount {
   status: "loading" | "anonymous" | "authenticated"
   /** Shown on the trigger when signed in. */
   userName?: string
+  avatarUrl?: string
+  accountNumber?: string
+  mobileAvatar?: boolean
   signInLabel: string
   signOutLabel: string
   accountLabel: string
@@ -243,7 +246,7 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
       )}
     >
       {header && (
-        <p className="truncate px-3 py-1.5 text-xs text-muted-foreground">{header}</p>
+        <div className="px-3 py-1.5 text-xs text-muted-foreground"><p className="truncate">{header}</p>{account.accountNumber && <p className="mt-1">UID: {account.accountNumber}</p>}</div>
       )}
       {entries.map((entry) => (
         <button
@@ -323,8 +326,8 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
   }
 
   const entries: ArkiveMapTopBarAccountItem[] = [
-    ...settingsEntry,
     ...(account.items ?? []),
+    ...settingsEntry,
     { key: "sign-out", label: account.signOutLabel, onSelect: account.onSignOut },
   ]
 
@@ -339,7 +342,7 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
       <Button
         ref={triggerRef}
         type="button"
-        className={ACCOUNT_TRIGGER_CLASS}
+        className={account.avatarUrl ? `shrink-0 overflow-hidden rounded-full border border-border bg-muted p-0 ${account.mobileAvatar ? 'size-11' : 'size-9'}` : ACCOUNT_TRIGGER_CLASS}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={account.accountLabel}
@@ -361,12 +364,10 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
           }
         }}
       >
-        <IconUserCircle className="size-5" stroke={1.8} />
-        {/* A long display name must not push the nav around, so it is clamped
-            rather than allowed to size the trigger. */}
-        <span className="max-w-28 truncate text-sm font-semibold">
-          {account.userName ?? account.accountLabel}
-        </span>
+        {account.avatarUrl ? <img src={account.avatarUrl} alt="" className="size-full rounded-full object-cover" /> : <>
+          <IconUserCircle className="size-5" stroke={1.8} />
+          <span className="max-w-28 truncate text-sm font-semibold">{account.userName ?? account.accountLabel}</span>
+        </>}
       </Button>
       {open && menu(entries, account.userName)}
     </div>

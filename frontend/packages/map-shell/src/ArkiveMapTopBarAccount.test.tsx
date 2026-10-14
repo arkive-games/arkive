@@ -54,6 +54,14 @@ function account(overrides: Partial<ArkiveMapTopBarAccount> = {}): ArkiveMapTopB
 }
 
 describe("ArkiveMapTopBar account control", () => {
+  it.each([false, true])('renders the server avatar at the correct surface size (mobile=%s)', (mobileAvatar) => {
+    const { getByTestId } = renderTopBar(account({ status: 'authenticated', userName: 'Reader', avatarUrl: '/uploaded.webp', mobileAvatar }))
+    const trigger = getByTestId('account-menu')
+    expect(trigger.className).toContain(mobileAvatar ? 'size-11' : 'size-9')
+    expect(trigger.querySelector('img')?.getAttribute('src')).toBe('/uploaded.webp')
+    fireEvent.click(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  })
   it("keeps the plain login button when no account prop is supplied", () => {
     const onLogin = vi.fn()
     const { getByRole, queryByTestId } = renderTopBar(undefined, onLogin)
@@ -130,7 +138,7 @@ describe("ArkiveMapTopBar account control", () => {
     expect(getByTestId("account-sign-in").getAttribute("aria-haspopup")).toBeNull()
   })
 
-  it("puts settings above host entries and sign out when signed in", () => {
+  it("puts profile entries before settings and sign out when signed in", () => {
     const { getByTestId, getAllByRole } = renderTopBar(
       account({
         status: "authenticated",
@@ -142,8 +150,8 @@ describe("ArkiveMapTopBar account control", () => {
 
     fireEvent.pointerEnter(getByTestId("account-menu").parentElement as HTMLElement)
     expect(getAllByRole("menuitem").map((node) => node.textContent)).toEqual([
-      "Settings",
       "Profile",
+      "Settings",
       "Sign out",
     ])
   })

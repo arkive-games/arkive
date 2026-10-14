@@ -55,7 +55,7 @@ export interface AuthContextValue {
   login(email: string, password: string): Promise<User>
   register(input: { name: string; email: string; password: string; altcha: string }): Promise<User>
   logout(): Promise<void>
-  refresh(): Promise<void>
+  refresh(options?: { preserveOnError: boolean; expectedUserId: string }): Promise<void>
   clearError(): void
 }
 
@@ -120,7 +120,7 @@ export function AuthProvider({
   // an older probe overwriting a newer one when baseUrl changes.
   const generation = useRef(0)
 
-  const probe = useCallback(async () => {
+  const probe = useCallback(async (options?: { preserveOnError: boolean; expectedUserId: string }) => {
     if (!enabled) {
       setStatus("anonymous")
       setUser(null)
@@ -129,10 +129,15 @@ export function AuthProvider({
     const mine = ++generation.current
     try {
       const found = await client.currentUserOrNull()
-      if (mine !== generation.current) return
+      if (mine !== generation.current) {
+        if (options?.preserveOnError) throw new Error('Account refresh superseded')
+        return
+      }
+      if (options && found?.id !== options.expectedUserId) throw new Error('Account changed during save')
       setUser(found)
       setStatus(found ? "authenticated" : "anonymous")
     } catch (caught) {
+      if (options?.preserveOnError) throw caught
       if (mine !== generation.current) return
       // A failed probe is not a failed login. The visitor is treated as
       // anonymous and no error is surfaced, because an unreachable API should

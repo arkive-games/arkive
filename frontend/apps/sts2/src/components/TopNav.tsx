@@ -57,7 +57,7 @@ export function TopNav({ active }: { active: NavKey }) {
         shortLabel: t('themeMenu'),
       }}
       loginLabel={t('login')}
-      accountSlot={<ArkiveAccountControl language={i18n.language} settings={settings} />}
+      accountSlot={<ArkiveAccountControl language={i18n.language} settings={settings} homeUrl={ARKIVE_HOME_URL} />}
     />
   )
 }

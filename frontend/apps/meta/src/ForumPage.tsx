@@ -225,7 +225,7 @@ export function ForumPage({
    */
   const [followedUids, setFollowedUids] = useState<ReadonlySet<string>>(new Set())
   const signedIn = status === 'authenticated'
-  const currentAvatar = userSystemState.profile.avatarSrc ?? DEFAULT_AVATAR_SRC
+  const currentAvatar = user?.avatarUrl ?? DEFAULT_AVATAR_SRC
 
   // Keyed by plain string, not by SiteCard['id']. The ids are a closed union now,
   // but the things looked up here are not: a persisted draft or a hash fragment can

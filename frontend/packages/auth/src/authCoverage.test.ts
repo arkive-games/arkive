@@ -97,25 +97,12 @@ const GENERATED_NAME: Record<string, string> = {
  * say whether that was intended.
  */
 const NOT_NEEDED: Record<string, string> = {
-  // All four say the same thing, because one fact explains all four: the avatar
-  // editor is BUILT and is not connected to the backend.
-  //
-  // `apps/meta/src/UserSystemPages.tsx` ships `AvatarUploadDialog` with a file
-  // picker, type and size validation, zoom and crop, and its own `AVATAR_PRESETS`
-  // gallery; the same page already calls `updateCurrentUser` for name, email and
-  // password. What the chosen avatar reaches is `updateLocalProfile({ avatarSrc })`
-  // -- browser memory -- so it does not follow the account to another browser
-  // even though every endpoint it would need exists.
-  //
-  // Recorded this way deliberately. Saying "no avatar UI yet" would be the same
-  // mistake this file was widened to correct: an inaccurate note that leaves the
-  // next reader believing there is UI to build, when what is missing is one client
-  // call per operation. Wiring it is frontend work outside this package, so these
-  // stay declined until it happens -- but declined for the true reason.
+  // Avatar mutations are integrated by the portal through requestClient rather
+  // than CoreClient wrappers. The portal's transport tests cover both operations.
   listAvatarPresets: "the preset gallery is local (apps/meta AVATAR_PRESETS), not fetched from core",
-  setCurrentUserAvatar: "AvatarUploadDialog crops and then stores locally, never uploading",
-  setCurrentUserAvatarPreset: "a chosen preset is stored locally, not sent to core",
-  deleteCurrentUserAvatar: "nothing sends an avatar to core, so there is none there to clear",
+  setCurrentUserAvatar: "called by apps/meta/src/saveAvatar.ts using CoreClient.requestClient; covered by saveAvatar.test.ts",
+  setCurrentUserAvatarPreset: "called by apps/meta/src/saveAvatar.ts using CoreClient.requestClient; covered by saveAvatar.test.ts",
+  deleteCurrentUserAvatar: "the editor replaces uploads or chooses a preset; it has no reset-to-default action",
 }
 
 interface OpenApiDocument {

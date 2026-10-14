@@ -6,6 +6,7 @@ import { FilterDisclosure, SiteFooter } from '@gamemap/ui'
 import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
+import { useSettingsConfig } from '../lib/settings'
 import {
   ARKIVE_HOME_LINK_PROPS,
   ARKIVE_HOME_URL,
@@ -80,6 +81,7 @@ export function ContentPage({
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
+  const settings = useSettingsConfig()
 
   return (
     <FiltersContext.Provider value={{ node: filters ?? null, active: filtersActive }}>
@@ -92,7 +94,7 @@ export function ContentPage({
             brandName={brandName}
             pageTitle={title}
             loginLabel={t('auth.login')}
-            accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" />}
+            accountControl={<ArkiveAccountControl language={lng} variant="mobileHeader" homeUrl={ARKIVE_HOME_URL} settings={settings} />}
           />
         }
         // Every outbound link goes through lib/brand, so a toy build points the

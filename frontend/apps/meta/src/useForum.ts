@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { ApiClient } from '@gamemap/api-core'
+import { useAuth } from '@gamemap/auth'
 
 import { fetchComments, fetchFeed, fetchPost, type FeedQuery } from './forumApi'
 import type { ForumComment, ForumPost, TagLabellers } from './forumModel'
@@ -48,6 +49,7 @@ export function useForumFeed(
   viewerUid: number | null,
   errorMessage: string,
 ): FeedState {
+  const avatarRevision = useAuth().user?.avatarUrl
   const [posts, setPosts] = useState<ForumPost[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -92,7 +94,7 @@ export function useForumFeed(
     // identity on every render because they close over `t`, and including them
     // would refetch on each one.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, key, nonce])
+  }, [client, key, nonce, avatarRevision])
 
   const reload = useCallback(() => setNonce((n) => n + 1), [])
   const patch = useCallback((postNo: number, changes: Partial<ForumPost>) => {
@@ -131,6 +133,7 @@ export function useForumThread(
   viewerUid: number | null,
   errorMessage: string,
 ): ThreadState {
+  const avatarRevision = useAuth().user?.avatarUrl
   const [post, setPost] = useState<ForumPost | null>(null)
   const [comments, setComments] = useState<ForumComment[]>([])
   const [commentTotal, setCommentTotal] = useState(0)
@@ -176,7 +179,7 @@ export function useForumThread(
         setLoading(false)
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, postNo, viewerUid, nonce])
+  }, [client, postNo, viewerUid, nonce, avatarRevision])
 
   const reload = useCallback(() => setNonce((n) => n + 1), [])
   const patchPost = useCallback((changes: Partial<ForumPost>) => {

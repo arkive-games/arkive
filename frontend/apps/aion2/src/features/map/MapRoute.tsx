@@ -18,6 +18,8 @@ import {
 } from "@gamemap/map-shell";
 import { useIsMobile } from "@gamemap/ui";
 import { ArkiveAccountControl } from "@gamemap/auth";
+import { ARKIVE_HOME_URL } from "@/lib/brand";
+import { useSettingsConfig } from "@/lib/settings";
 import { browserMemory, defineMemoryRecord, isString, memoryPolicy } from "@gamemap/state-memory";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
@@ -75,6 +77,7 @@ export default function MapRoute() {
     useGameData();
   const subzoneAt = useSubzoneLookup();
   const { t, i18n } = useTranslation();
+  const settings = useSettingsConfig();
 
   // Whether the user has actually changed the marker filter. Compared against the
   // map's DEFAULT set, not against every subtype: the default is a strict subset
@@ -397,7 +400,7 @@ export default function MapRoute() {
         <ArkiveMobileMapControls
           // The map route renders no header, so this is the only account surface
           // on aion2's landing page.
-          account={<ArkiveAccountControl language={i18n.resolvedLanguage ?? i18n.language} variant="mobileHeader" />}
+          account={<ArkiveAccountControl language={i18n.resolvedLanguage ?? i18n.language} variant="mobileHeader" homeUrl={ARKIVE_HOME_URL} settings={settings} />}
           search={{
             label: t("common:ui.search", "Search"),
             open: searchSheetOpen,
