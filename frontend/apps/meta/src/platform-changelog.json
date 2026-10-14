@@ -1,6 +1,28 @@
 {
   "entries": [
     {
+      "date": "2026-10-14",
+      "commit": "f596d9a59a9c7f9d6cccebc8493c3dde662831af",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "ro3",
+        "vrising",
+        "sts2"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Avatar changes now save to the account instead of only this browser. Account and forum surfaces use the server avatar, and recovered local images require confirmation before upload. Avatar menus consistently offer My profile, Website settings and Sign out across the portal and games.",
+            "zh-CN": "更换头像现在会保存到账户，而不再只存于当前浏览器。账户与论坛统一使用服务器头像，找回的旧本地图片需确认后才会上传。主站与游戏站的头像菜单统一提供个人主页、网站设置和退出登录。",
+            "zh-TW": "更換頭像現在會儲存至帳戶，而不再只存於目前瀏覽器。帳戶與論壇統一使用伺服器頭像，找回的舊本機圖片需確認後才會上傳。主站與遊戲站的頭像選單統一提供個人主頁、網站設定和登出。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-13",
       "commit": "66537f669efc9d9a568cc37753a4027c650e357f",
       "targets": [
