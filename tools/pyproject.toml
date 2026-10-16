@@ -15,7 +15,7 @@ dependencies = [
     "pillow>=12.3.0,<13.0.0",
     "shapely (>=2.1.2,<3.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
-    "openapi-python-client (>=0.27.1,<0.28.0)",
+    "openapi-python-client>=0.27.1,<0.30.0",
     "aion2_interactive_map_backend_client",
     "python-dotenv (>=1.2.1,<2.0.0)",
     "frida (>=17.5.1,<18.0.0)",

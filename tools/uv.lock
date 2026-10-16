@@ -74,7 +74,7 @@ requires-dist = [
     { name = "lupa", specifier = ">=2.8,<3.0" },
     { name = "lz4", specifier = ">=4.4.4,<5.0.0" },
     { name = "matplotlib", specifier = ">=3.10.8,<4.0.0" },
-    { name = "openapi-python-client", specifier = ">=0.27.1,<0.28.0" },
+    { name = "openapi-python-client", specifier = ">=0.27.1,<0.30.0" },
     { name = "opencc-python-reimplemented", specifier = ">=0.1.7,<0.2.0" },
     { name = "opencv-python", specifier = ">=4.12.0.88,<5.0.0.0" },
     { name = "openpyxl", specifier = ">=3.1.5,<4.0.0" },
@@ -1254,7 +1254,7 @@ wheels = [
 
 [[package]]
 name = "openapi-python-client"
-version = "0.27.1"
+version = "0.29.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -1262,15 +1262,14 @@ dependencies = [
     { name = "httpx" },
     { name = "jinja2" },
     { name = "pydantic" },
-    { name = "python-dateutil" },
     { name = "ruamel-yaml" },
     { name = "ruff" },
     { name = "shellingham" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/61/35a15cfcf3bcf580d4ae3d7d5b1f0c14241b5f134f383bd9fc089a0d5399/openapi_python_client-0.27.1.tar.gz", hash = "sha256:8c0d8806f96992b17ca9463cc980610d8da34fa82c07e9cedc6712ce43b17786", size = 125632, upload-time = "2025-11-03T15:31:27.218Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/78/2154014130a3c4d808221d48a10af2e6e90a8b487a457a217e6b0a6dba0e/openapi_python_client-0.29.1.tar.gz", hash = "sha256:7e05c904fb4840c17b4a9fff05cc53dfd97d45b486d9462ffb7ecf9c98e67e25", size = 129985, upload-time = "2026-08-30T19:39:59.634Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b5/8f/4f2131a6d10a705ed1a4194284222e5d83cd1ba5a00c053647491adc7025/openapi_python_client-0.27.1-py3-none-any.whl", hash = "sha256:00afef4be940fa1693624cbce818afac63e95639bb8f7675d4a6c2a29b038ea4", size = 182668, upload-time = "2025-11-03T15:31:25.457Z" },
+    { url = "https://files.pythonhosted.org/packages/96/66/445d54a84ba5e607e061afbb2b168c245a80c80b5f21f9271d15863ab401/openapi_python_client-0.29.1-py3-none-any.whl", hash = "sha256:9820490a2872dc56ce77ffbdea87f4562dae530a70a7207c66e39315ad20a89e", size = 189924, upload-time = "2026-08-30T19:39:57.994Z" },
 ]
 
 [[package]]
