@@ -5,6 +5,22 @@ project is `C7`. Paths come from `tools/.env` (`GMZZ_*`, see
 `tools/.env.example`). The client is not modified and nothing here reads
 launcher account files or game logs.
 
+## Packed tables (build 2218968)
+
+Current clients enable KSBC and retain stale Lua tables as a fallback. When
+`Data/Excel/ksbc/TableData.ksbc` exists, the pipeline requires the local
+`GMZZ_KSBC_MASK` environment variable (64 bytes encoded as hexadecimal).
+Never commit this machine-local value. Missing configuration fails rather than
+silently exporting the stale roster. Localization still comes from the Lua
+language shards; `LangStrSplit` references are resolved through the same string
+lookup. The packed `SkillDataNew` table replaces the old split files.
+
+`ksbc.py` validates the region footer and reads shared schemas, backward-relative
+constant slots, numeric keys, and nested tables. Unsupported types fail loudly.
+Build 2218968 contains 15 fellows and 53 playable chess pieces; the latter count
+excludes summoned units. Azik's explicitly referenced circle portrait is a
+fallback when the large and medium portraits are unavailable.
+
 ## Reading the client's tables
 
 Every game table lives under `C7/Content/ScriptOPCode/Data/Excel` as a LuaJIT

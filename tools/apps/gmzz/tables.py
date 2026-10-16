@@ -92,6 +92,15 @@ def load_table(excel: Path, name: str, subdir: str = "") -> dict:
     ``excel`` is the exported ``.../Data/Excel`` directory; ``name`` is the
     table's stem (``TrainTradeGoodsData``).
     """
+    packed = Path(excel) / 'ksbc/TableData.ksbc'
+    if not subdir and packed.is_file():
+        from .ksbc import reader
+
+        database = reader(packed)
+        if name in database.keys:
+            return database.table(name)
+        if name.startswith('SkillDataNew_split_') and 'SkillDataNew' in database.keys:
+            return database.table('SkillDataNew')
     path = Path(excel) / subdir / f"{name}.luac"
     dump = decrypt_file(path)
     runtime = _lua_runtime()

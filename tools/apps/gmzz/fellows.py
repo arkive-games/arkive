@@ -63,7 +63,7 @@ ICON_SUBDIR = "fellows"
 WEBP_QUALITY = 90
 
 #: Asserted against the client rather than assumed.
-FELLOW_COUNT = 14
+FELLOW_COUNT = 15
 UPGRADE_COUNT = 5
 GRADE_COUNT = 6
 
@@ -266,6 +266,7 @@ def build_fellows(tables: dict, skills: dict[int, dict], tags: dict[int, str]) -
             "_iconCandidates": [
                 _asset_name(row.get("IconPath")),
                 _asset_name(row.get("IconPath_M")),
+                _asset_name(row.get("IconPath_Circle")),
             ],
         })
 
@@ -347,7 +348,7 @@ def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict], reuse_asse
     """One portrait per fellow, preferring the large art the game's own panel uses."""
     target = Path(res_out) / ICON_SUBDIR
     target.mkdir(parents=True, exist_ok=True)
-    used = {"large": 0, "medium": 0, "reused": 0}
+    used = {"large": 0, "medium": 0, "circle": 0, "reused": 0}
     for fellow in fellows:
         candidates = fellow.pop("_iconCandidates")
         if reuse_assets:
@@ -358,7 +359,8 @@ def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict], reuse_asse
             used["reused"] += 1
             continue
         chosen = None
-        for directory, size in zip(PORTRAIT_DIRS, ("large", "medium")):
+        directories = (*PORTRAIT_DIRS, 'C7/Content/Arts/UI_2/Resource/ConfigIcon/Character/PlayerHead')
+        for directory, size in zip(directories, ("large", "medium", "circle")):
             for name in candidates:
                 png = Path(raw) / directory / f"{name}.png"
                 if name and png.is_file():
@@ -474,7 +476,7 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path, reuse_assets: b
     formulas = sum(1 for fellow in fellows if fellow["skill"]["hasFormula"])
     print(
         f"fellows: {len(fellows)} fellows, {len(relations)} relations, {len(effects)} effect sets "
-        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium + {used['reused']} reused portraits + "
+        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium + {used['circle']} circle + {used['reused']} reused portraits + "
         f"{skill_icons} skill icons -> {res_out}/{ICON_SUBDIR}"
     )
     if iconless:
