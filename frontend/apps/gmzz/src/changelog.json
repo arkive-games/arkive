@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.1",
+      "date": "2026-10-16",
+      "commit": "ee72427bb4444659c1b0a691966dfcba8b99016e",
+      "changes": [
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Add Azik and two Connections relations; refresh Fool's Gambit skills, attributes, bonds, items and talents from game build 2218968.",
+            "zh-CN": "新增阿兹克及两条人脉关系，依据游戏2218968版本更新愚者棋局技能、属性、羁绊、道具与天赋。",
+            "zh-TW": "新增阿茲克及兩條人脈關係，依據遊戲2218968版本更新愚者棋局技能、屬性、羈絆、道具與天賦。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.0",
       "date": "2026-10-12",
       "commit": "b0e3a3a4836c9bf7ea48f51e2c3cdee688f1c49d",
