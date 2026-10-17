@@ -58,7 +58,7 @@ export default function FellowRelationsPage() {
         {t('fellows.relationsDescription', { count: all.length })}
       </p>
 
-      <div className="space-y-3">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {all.map((relation) => (
           <RelationCard
             key={relation.id}
@@ -91,9 +91,9 @@ function RelationCard({
   const { t } = useTranslation()
 
   return (
-    <article className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <article className="flex min-w-0 flex-col rounded-lg border border-border bg-card p-3">
       <header className="flex flex-wrap items-baseline gap-2">
-        <h2 className="text-lg font-semibold">{relation.name}</h2>
+        <h2 className="text-base font-semibold">{relation.name}</h2>
         {relation.isOriginal ? (
           <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
             {t('fellows.original')}
@@ -103,7 +103,7 @@ function RelationCard({
 
       {/* Members carry their own effect: the relation does not have one shared
           effect, and an id of 0 (null here) means story only. */}
-      <ul className="mt-3 flex flex-wrap gap-3">
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
         {relation.members.map((member) => {
           const fellow = fellowsById.get(member.fellowId)
           const effect = member.effectId ? effectsById.get(member.effectId) : undefined
@@ -114,7 +114,7 @@ function RelationCard({
                   src={fellowPortraitUrl(fellow.portrait)}
                   alt=""
                   loading="lazy"
-                  className="size-10 shrink-0 rounded border border-border/70 bg-background/40 object-cover"
+                  className="size-8 shrink-0 rounded border border-border/70 bg-background/40 object-cover"
                 />
               ) : null}
               <div>
@@ -133,7 +133,7 @@ function RelationCard({
           {relation.researchRewards?.length ? (
             <section>
               <h3 className="text-sm font-semibold">{t('fellows.researchRewards')}</h3>
-              <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-6">
+              <dl className="mt-2 grid grid-cols-3 gap-x-2 gap-y-1">
                 {relation.researchRewards.map((reward) => (
                   <div key={reward.grade} className="text-sm">
                     <dt className="text-muted-foreground">{reward.gradeName}</dt>
@@ -167,14 +167,6 @@ function RelationCard({
             )
           })}
 
-          {relation.story ? (
-            <section>
-              <h3 className="text-sm font-semibold">{t('fellows.story')}</h3>
-              <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
-                {plainText(relation.story)}
-              </p>
-            </section>
-          ) : null}
         </div>
       ) : null}
 
@@ -183,10 +175,16 @@ function RelationCard({
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={open ? `relation-details-${relation.id}` : undefined}
-        className="mt-3 min-h-11 text-sm font-medium text-primary hover:underline"
+        className="mt-auto min-h-11 self-start pt-1 text-sm font-medium text-primary hover:underline md:min-h-9"
       >
         {open ? t('fellows.collapse') : t('fellows.expandRelation')}
       </button>
+      {relation.story ? (
+        <details className="border-t border-border/70 pt-1">
+          <summary className="min-h-9 cursor-pointer py-2 text-sm font-medium text-primary">{t('fellows.story')}</summary>
+          <p className="whitespace-pre-line text-sm text-muted-foreground">{plainText(relation.story)}</p>
+        </details>
+      ) : null}
     </article>
   )
 }

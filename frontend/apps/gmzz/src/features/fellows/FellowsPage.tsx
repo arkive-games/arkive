@@ -101,14 +101,9 @@ export default function FellowsPage() {
   }
 
   return (
-    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide resultsKey={JSON.stringify([query, quality, label])} filtersActive={Boolean(query || quality || label)} toolbarLead={<>
+    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide>
       <FellowsTabs current="/fellows" />
-      <p className="mb-4 text-sm text-muted-foreground">
-        {t('fellows.description', { count: all.length })}
-      </p>
-    </>} toolbar={<>
-
-      <div className="mb-4 flex flex-col gap-3">
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <FilterRow label={t('fellows.qualityFilter')}>
           <FilterChip active={quality === 0} onClick={() => setQuality(0)}>{t('fellows.all')}</FilterChip>
           {qualities.map((value) => (
@@ -139,8 +134,7 @@ export default function FellowsPage() {
       <p className="mb-3 text-sm text-muted-foreground">
         {t('fellows.resultCount', { count: filtered.length })}
       </p>
-      </>}>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {filtered.map((fellow) => (
           <FellowCard
             key={fellow.id}
@@ -179,18 +173,18 @@ function FellowCard({
 
   return (
     <article
-      className={`rounded-lg border p-4 shadow-sm ${QUALITY_CLASS[fellow.quality] ?? 'border-border bg-card'}`}
+      className={`min-w-0 rounded-lg border p-3 ${QUALITY_CLASS[fellow.quality] ?? 'border-border bg-card'}`}
     >
       <header className="flex items-start gap-3">
         <img
           src={fellowPortraitUrl(fellow.portrait)}
           alt=""
           loading="lazy"
-          className="size-16 shrink-0 rounded-md border border-border/70 bg-background/40 object-cover"
+          className="size-12 shrink-0 rounded-md border border-border/70 bg-background/40 object-cover"
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-2">
-            <h2 className="text-lg font-semibold">{fellow.name}</h2>
+            <h2 className="text-base font-semibold">{fellow.name}</h2>
             <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
               {t('fellows.quality', { quality: fellow.quality })}
             </span>
@@ -204,40 +198,25 @@ function FellowCard({
         </div>
       </header>
 
-      {/* The game's own panel: the skill with its cooldown and target chips,
-          then the 一阶…五阶 rungs its stars unlock. Reading the five rungs as
-          five separate skills is the mistake this layout exists to prevent. */}
-      <section className="mt-3 border-t border-border/70 pt-2">
-        <div className="flex items-start gap-2">
-          {fellow.skill.icon ? (
-            <img
-              src={fellowSkillIconUrl(fellow.skill.icon)}
-              alt=""
-              loading="lazy"
-              className="size-10 shrink-0 rounded-md border border-border/70 bg-background/40"
-            />
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold">{fellow.skill.name}</h3>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {fellow.skill.cooldown ? (
-                <Tag>{t('fellows.cooldown', { seconds: fellow.skill.cooldown })}</Tag>
-              ) : null}
-              {fellow.skill.castTargets.map((target) => <Tag key={target}>{target}</Tag>)}
-              {fellow.skill.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}
-            </div>
-          </div>
-        </div>
-        <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
-          {plainText(fellow.skill.description) || plainText(fellow.skill.brief)}
-        </p>
-        {fellow.skill.hasFormula ? (
-          <p className="mt-1 text-xs text-muted-foreground/80">{t('fellows.formulaNote')}</p>
-        ) : null}
+      <section className="mt-2">
+      <h3 className="py-1 text-sm font-semibold">
+        {fellow.skill.icon ? <img src={fellowSkillIconUrl(fellow.skill.icon)} alt="" loading="lazy" className="mr-2 inline-block size-6 rounded-md align-middle" /> : null}
+        {fellow.skill.name}
+      </h3>
+      <div className="mt-1 flex flex-wrap gap-1">
+        {fellow.skill.cooldown ? <Tag>{t('fellows.cooldown', { seconds: fellow.skill.cooldown })}</Tag> : null}
+        {fellow.skill.castTargets.map((target) => <Tag key={target}>{target}</Tag>)}
+        {fellow.skill.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}
+      </div>
+      <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
+        {plainText(fellow.skill.description || fellow.skill.brief)}
+      </p>
       </section>
-
-      <section className="mt-3 border-t border-border/70 pt-2">
-        <h3 className="text-sm font-semibold">{t('fellows.upgrades')}</h3>
+      <details className="mt-2 border-t border-border/70 pt-1">
+        <summary className="min-h-9 cursor-pointer py-2 text-sm font-medium text-primary">
+          {t('fellows.upgrades')}
+        </summary>
+      <section className="pt-1">
         <ol className="mt-1 space-y-1">
           {fellow.upgrades.map((upgrade) => (
             <li key={upgrade.stage} className="flex gap-2 text-sm text-muted-foreground">
@@ -258,6 +237,8 @@ function FellowCard({
           {fellow.relationIds.map((id) => relationsById.get(id)?.name ?? id).join('、')}
         </p>
       ) : null}
+
+      </details>
 
       {open ? (
         <section className="mt-3 border-t border-border/70 pt-2">

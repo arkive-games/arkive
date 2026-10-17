@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.2",
+      "date": "2026-10-17",
+      "commit": "952da706788324cd02b4199bb12e4ba05b26f822",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Connections now scroll as one page with compact, equal-height card rows. Skills remain visible, while star upgrades, relation effects and stories expand separately without widening cards.",
+            "zh-CN": "人脉页面恢复整体滚动，卡片采用紧凑多列与同排等高布局。技能默认展示，星级强化、关系效果和剧情分别展开，不再撑满整行。",
+            "zh-TW": "人脈頁面恢復整體捲動，卡片採用緊湊多欄與同排等高版面。技能預設顯示，星級強化、關係效果和劇情分別展開，不再撐滿整行。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.1",
       "date": "2026-10-16",
       "commit": "ee72427bb4444659c1b0a691966dfcba8b99016e",
