@@ -80,7 +80,7 @@ const en = {
     "original": "Canon",
     "storyOnly": "Story only",
     "story": "Story",
-    "expandRelation": "Show effects and story",
+    "expandRelation": "Show effects",
     "collapse": "Collapse",
   },
   autochess: {
@@ -710,7 +710,7 @@ const zhCN: Strings = {
     "original": "原著",
     "storyOnly": "仅剧情，无战斗效果",
     "story": "剧情",
-    "expandRelation": "展开效果与剧情",
+    "expandRelation": "展开效果",
     "collapse": "收起",
   },
   autochess: {
@@ -1342,7 +1342,7 @@ const zhTW: Strings = {
     "original": "原著",
     "storyOnly": "僅劇情，無戰鬥效果",
     "story": "劇情",
-    "expandRelation": "展開效果與劇情",
+    "expandRelation": "展開效果",
     "collapse": "收起",
   },
   autochess: {
