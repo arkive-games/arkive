@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { FilterChip, FilterRow, SearchInput, useDocumentTitle } from '@gamemap/ui'
+import { FilterChip, FilterDisclosure, FilterRow, SearchInput, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -101,9 +101,26 @@ export default function FellowsPage() {
   }
 
   return (
-    <ContentPage active="/fellows" title={t('fellows.sectionTitle')} heading wide>
+    // The filters scroll with the cards rather than sitting in the shell's
+    // toolbar, so the page has one scroller; the disclosure still folds them on
+    // phones, and resultsKey still returns a changed result set to its top.
+    <ContentPage
+      active="/fellows"
+      title={t('fellows.sectionTitle')}
+      heading
+      wide
+      resultsKey={JSON.stringify([query, quality, label])}
+    >
       <FellowsTabs current="/fellows" />
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <p className="mb-3 text-sm text-muted-foreground">
+        {t('fellows.description', { count: all.length })}
+      </p>
+      <FilterDisclosure
+        label={t('filterToggle')}
+        active={Boolean(query || quality || label)}
+        bodyClassName="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2"
+        testId="fellows-filters"
+      >
         <FilterRow label={t('fellows.qualityFilter')}>
           <FilterChip active={quality === 0} onClick={() => setQuality(0)}>{t('fellows.all')}</FilterChip>
           {qualities.map((value) => (
@@ -129,7 +146,7 @@ export default function FellowsPage() {
           placeholder={t('fellows.searchPlaceholder')}
           type="search"
         />
-      </div>
+      </FilterDisclosure>
 
       <p className="mb-3 text-sm text-muted-foreground">
         {t('fellows.resultCount', { count: filtered.length })}
@@ -199,24 +216,37 @@ function FellowCard({
       </header>
 
       <section className="mt-2">
-      <h3 className="py-1 text-sm font-semibold">
-        {fellow.skill.icon ? <img src={fellowSkillIconUrl(fellow.skill.icon)} alt="" loading="lazy" className="mr-2 inline-block size-6 rounded-md align-middle" /> : null}
-        {fellow.skill.name}
-      </h3>
-      <div className="mt-1 flex flex-wrap gap-1">
-        {fellow.skill.cooldown ? <Tag>{t('fellows.cooldown', { seconds: fellow.skill.cooldown })}</Tag> : null}
-        {fellow.skill.castTargets.map((target) => <Tag key={target}>{target}</Tag>)}
-        {fellow.skill.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}
-      </div>
-      <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
-        {plainText(fellow.skill.description || fellow.skill.brief)}
-      </p>
+        <h3 className="py-1 text-sm font-semibold">
+          {fellow.skill.icon ? (
+            <img
+              src={fellowSkillIconUrl(fellow.skill.icon)}
+              alt=""
+              loading="lazy"
+              className="mr-2 inline-block size-6 rounded-md align-middle"
+            />
+          ) : null}
+          {fellow.skill.name}
+        </h3>
+        <div className="mt-1 flex flex-wrap gap-1">
+          {fellow.skill.cooldown ? <Tag>{t('fellows.cooldown', { seconds: fellow.skill.cooldown })}</Tag> : null}
+          {fellow.skill.castTargets.map((target) => <Tag key={target}>{target}</Tag>)}
+          {fellow.skill.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}
+        </div>
+        <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
+          {plainText(fellow.skill.description) || plainText(fellow.skill.brief)}
+        </p>
+        {fellow.skill.hasFormula ? (
+          <p className="mt-1 text-xs text-muted-foreground/80">{t('fellows.formulaNote')}</p>
+        ) : null}
       </section>
+
+      {/* The 一阶…五阶 rungs the stars unlock belong to the skill above.
+          Reading the five rungs as five separate skills is the mistake this
+          layout exists to prevent. */}
       <details className="mt-2 border-t border-border/70 pt-1">
         <summary className="min-h-9 cursor-pointer py-2 text-sm font-medium text-primary">
           {t('fellows.upgrades')}
         </summary>
-      <section className="pt-1">
         <ol className="mt-1 space-y-1">
           {fellow.upgrades.map((upgrade) => (
             <li key={upgrade.stage} className="flex gap-2 text-sm text-muted-foreground">
@@ -229,7 +259,7 @@ function FellowCard({
             </li>
           ))}
         </ol>
-      </section>
+      </details>
 
       {fellow.relationIds.length ? (
         <p className="mt-2 text-sm">
@@ -237,8 +267,6 @@ function FellowCard({
           {fellow.relationIds.map((id) => relationsById.get(id)?.name ?? id).join('、')}
         </p>
       ) : null}
-
-      </details>
 
       {open ? (
         <section className="mt-3 border-t border-border/70 pt-2">

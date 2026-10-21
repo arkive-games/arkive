@@ -180,7 +180,7 @@ function RelationCard({
         {open ? t('fellows.collapse') : t('fellows.expandRelation')}
       </button>
       {relation.story ? (
-        <details className="border-t border-border/70 pt-1">
+        <details className="mt-1 border-t border-border/70 pt-1">
           <summary className="min-h-9 cursor-pointer py-2 text-sm font-medium text-primary">{t('fellows.story')}</summary>
           <p className="whitespace-pre-line text-sm text-muted-foreground">{plainText(relation.story)}</p>
         </details>
