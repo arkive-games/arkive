@@ -112,9 +112,6 @@ export default function FellowsPage() {
       resultsKey={JSON.stringify([query, quality, label])}
     >
       <FellowsTabs current="/fellows" />
-      <p className="mb-3 text-sm text-muted-foreground">
-        {t('fellows.description', { count: all.length })}
-      </p>
       <FilterDisclosure
         label={t('filterToggle')}
         active={Boolean(query || quality || label)}
@@ -235,9 +232,6 @@ function FellowCard({
         <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
           {plainText(fellow.skill.description) || plainText(fellow.skill.brief)}
         </p>
-        {fellow.skill.hasFormula ? (
-          <p className="mt-1 text-xs text-muted-foreground/80">{t('fellows.formulaNote')}</p>
-        ) : null}
       </section>
 
       {/* The 一阶…五阶 rungs the stars unlock belong to the skill above.
