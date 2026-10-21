@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.14.3",
+      "date": "2026-10-21",
+      "commit": "99bfa9429afb9032f9027de57860ed31c7913520",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Removed the Connections page introduction and the note on unresolved skill figures to save space.",
+            "zh-CN": "人脉页面移除页面介绍和技能数值说明，节省版面。",
+            "zh-TW": "人脈頁面移除頁面介紹和技能數值說明，節省版面。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.2",
       "date": "2026-10-17",
       "commit": "952da706788324cd02b4199bb12e4ba05b26f822",
@@ -8,9 +23,9 @@
         {
           "kind": "improvement",
           "text": {
-            "en-US": "Connections now scroll as one page with compact, equal-height card rows. Skills remain visible, while star upgrades, relation effects and stories expand separately without widening cards. The page introduction and the note on unresolved skill figures were removed to save space.",
-            "zh-CN": "人脉页面恢复整体滚动，卡片采用紧凑多列与同排等高布局。技能默认展示，星级强化、关系效果和剧情分别展开，不再撑满整行。移除页面介绍和技能数值说明，节省版面。",
-            "zh-TW": "人脈頁面恢復整體捲動，卡片採用緊湊多欄與同排等高版面。技能預設顯示，星級強化、關係效果和劇情分別展開，不再撐滿整行。移除頁面介紹和技能數值說明，節省版面。"
+            "en-US": "Connections now scroll as one page with compact, equal-height card rows. Skills remain visible, while star upgrades, relation effects and stories expand separately without widening cards.",
+            "zh-CN": "人脉页面恢复整体滚动，卡片采用紧凑多列与同排等高布局。技能默认展示，星级强化、关系效果和剧情分别展开，不再撑满整行。",
+            "zh-TW": "人脈頁面恢復整體捲動，卡片採用緊湊多欄與同排等高版面。技能預設顯示，星級強化、關係效果和劇情分別展開，不再撐滿整行。"
           }
         }
       ]
