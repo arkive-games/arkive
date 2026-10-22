@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.15.0",
+      "date": "2026-10-22",
+      "commit": "6d55feabe651fbc8bcefea1e7390a02f6d916632",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rating calculator: the Extraordinary Figures group now scores puppet attributes from your owned puppets, their stage and dominate slots, and history research from your research rank; puppet skill and connection skill take the panel's figure.",
+            "zh-CN": "非凡评分计算器：非凡人物分组现可按拥有的秘偶、阶数与支配位推算秘偶属性评分，按研究段位推算历史研究评分；秘偶技能与人脉技能仍填面板数值。",
+            "zh-TW": "非凡評分計算器：非凡人物分組現可按擁有的秘偶、階數與支配位推算秘偶屬性評分，按研究段位推算歷史研究評分；秘偶技能與人脈技能仍填面板數值。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.3",
       "date": "2026-10-21",
       "commit": "99bfa9429afb9032f9027de57860ed31c7913520",
