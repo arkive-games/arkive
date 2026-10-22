@@ -1,8 +1,9 @@
+import json
 from pathlib import Path
 
 import pytest
 
-from gmzz.secretpartners import build_attributes, build_records, portrait_path
+from gmzz.secretpartners import build_attributes, build_records, build_scoring, portrait_path
 from gmzz import secretpartners
 
 
@@ -71,10 +72,10 @@ def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch
         'SkillTagData': {str(key): {'ID': key, 'Tag': value} for key, value in tags.items()},
         'SecretPartnerSkillStarUpData': upgrades,
         'SecretPartnerTalentData': {'100': {'ID': 100, 'Type': 2, 'StarUpDescribe1': 'Max HP'}},
-        'SecretPartnerTalentStarUpData': {'10001': {'TalentID': 100, 'Star': 1, 'FightProp': {'MaxHp_P': [0.0018]}}},
+        'SecretPartnerTalentStarUpData': {'10001': {'TalentID': 100, 'Star': 1, 'FightProp': {'MaxHp_P': [0.0018]}, 'Mark': 20}},
         'FightPropModeData': {'1': {'PropMode': 'MaxHp_P', 'ShowType': 1}},
         'FightPropModeSetData': {},
-        'SecretPartnerConstData': {'SECRET_PARTNER_MAX_STAR': 1},
+        'SecretPartnerConstData': {**scoring_sample(), 'SECRET_PARTNER_MAX_STAR': 1},
     }
     monkeypatch.setattr(secretpartners, 'load_strings', lambda _: {})
     monkeypatch.setattr(secretpartners, 'load_table', lambda _, name: tables[name])
@@ -93,6 +94,9 @@ def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch
     result = secretpartners.build(tmp_path / 'raw', output, resources, reuse_assets=True)
     assert result['portraits'] == 1 and result['missing'] == []
     assert portrait.read_bytes() == b'existing-art'
+    scoring = json.loads((output / 'secretpartners/scoring.json').read_text(encoding='utf-8'))
+    assert scoring == {'inDominateRate': 1, 'nonDominateRate': 0.35, 'initialDominateSlots': 1,
+                       'maxDominateSlots': 8, 'maxStar': 1}
 
 
 def test_stale_export_is_rejected_before_loading_tables(tmp_path: Path, monkeypatch):
@@ -106,15 +110,15 @@ def test_stale_export_is_rejected_before_loading_tables(tmp_path: Path, monkeypa
 
 def growth_sample():
     return (sample()[0], {'100': {'ID': 100, 'Type': 2, 'StarUpDescribe1': 'Max HP'}},
-            {'2': {'TalentID': 100, 'Star': 2, 'FightProp': {'MaxHp_P': [0.0035]}},
-             '1': {'TalentID': 100, 'Star': 1, 'FightProp': {'MaxHp_P': [0.0018]}}},
+            {'2': {'TalentID': 100, 'Star': 2, 'FightProp': {'MaxHp_P': [0.0035]}, 'Mark': 40},
+             '1': {'TalentID': 100, 'Star': 1, 'FightProp': {'MaxHp_P': [0.0018]}, 'Mark': 20}},
             {'1': {'PropMode': 'MaxHp_P', 'ShowType': 1}}, {}, 2)
 
 
 def test_base_attributes_preserve_exact_per_level_values():
     attributes = build_attributes(*growth_sample())
     assert attributes[1] == [{'key': 'MaxHp_P', 'name': 'Max HP', 'format': 'percent',
-                              'values': [0.0018, 0.0035]}]
+                              'values': [0.0018, 0.0035], 'marks': [20, 40]}]
     config, skills, upgrades, tags, _ = sample()
     assert build_records(config, skills, upgrades, tags, attributes)[0]['attributes'] == attributes[1]
 
@@ -137,7 +141,7 @@ def test_decimal_display_type_is_not_a_percentage():
     assert build_attributes(config, talents, growth, modes, groups, maximum)[1][0]['format'] == 'number'
 
 
-@pytest.mark.parametrize('problem', ['missing', 'duplicate', 'key', 'value', 'talent', 'format'])
+@pytest.mark.parametrize('problem', ['missing', 'duplicate', 'key', 'value', 'talent', 'format', 'mark'])
 def test_invalid_base_attribute_ladders_fail(problem):
     config, talents, growth, modes, groups, maximum = growth_sample()
     if problem == 'missing':
@@ -150,7 +154,35 @@ def test_invalid_base_attribute_ladders_fail(problem):
         growth['2']['FightProp']['MaxHp_P'] = [1, 2]
     elif problem == 'talent':
         talents.clear()
+    elif problem == 'mark':
+        growth['2']['Mark'] = 'high'
     else:
         modes.clear()
     with pytest.raises(ValueError):
         build_attributes(config, talents, growth, modes, groups, maximum)
+
+
+def scoring_sample():
+    return {'SECRET_PARTNER_IN_DOMINATE_RATE': 1, 'SECRET_PARTNER_NON_DOMINATE_RATE': 0.35,
+            'SECRET_PARTNER_INIT_DOMINATE_NUM': 1, 'SECRET_PARTNER_MAX_DOMINATE_NUM': 8,
+            'SECRET_PARTNER_MAX_STAR': 50, 'SECRET_PARTNER_STAR_STEP': 1}
+
+
+def test_scoring_constants_are_named_and_checked():
+    assert build_scoring(scoring_sample()) == {
+        'inDominateRate': 1, 'nonDominateRate': 0.35, 'initialDominateSlots': 1,
+        'maxDominateSlots': 8, 'maxStar': 50,
+    }
+
+
+@pytest.mark.parametrize('problem', ['missing', 'rates', 'slots'])
+def test_invalid_scoring_constants_fail(problem):
+    constants = scoring_sample()
+    if problem == 'missing':
+        del constants['SECRET_PARTNER_NON_DOMINATE_RATE']
+    elif problem == 'rates':
+        constants['SECRET_PARTNER_NON_DOMINATE_RATE'] = 2
+    else:
+        constants['SECRET_PARTNER_INIT_DOMINATE_NUM'] = 9
+    with pytest.raises(ValueError):
+        build_scoring(constants)

@@ -7,8 +7,11 @@ import { useTranslation } from 'react-i18next'
 import { ContentPage } from '@/components/ContentPage'
 import EquipmentSection from '@/features/equipment/EquipmentSection'
 import { loadEquipment, playableProfessions, type Equipment, type Grace } from '@/features/equipment/data'
+import { loadHistoryResearch, type HistoryResearchRank } from '@/features/fellows/data'
 import RelicSection from '@/features/relics/RelicSection'
 import { loadRelics, type Relics } from '@/features/relics/data'
+import BondsSection, { HISTORY_MODULE, PUPPET_GAIN_MODULE, type BondsData } from '@/features/score/BondsSection'
+import { emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
 import {
   clamp,
   evaluate,
@@ -16,8 +19,9 @@ import {
   loadRating,
   materialsFor,
   type Rating,
-  type SpeciesResult,
 } from '@/features/score/data'
+import { ItemRow } from '@/features/score/SpeciesRow'
+import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
 
@@ -52,43 +56,22 @@ const characterDraft = gmzzMemory.draft('score/character', {
   validate: isCharacterDraft,
 })
 
-/**
- * Band colours, worst to best.
- *
- * Indexed by the band's *position* in the sorted list rather than keyed by its
- * threshold. Keying on the threshold looks tidier but couples the palette to
- * the client's current numbers: re-tune 99 to 98 and the lookup misses, the bar
- * renders with no background class at all, and an invisible fill over the muted
- * track reads as a styling glitch rather than a stale palette. A position that
- * runs off the end falls back to the last colour, which is wrong but visible.
- */
-const BAND_CLASS = [
-  'text-rose-700 dark:text-rose-300',
-  'text-amber-700 dark:text-amber-300',
-  'text-sky-700 dark:text-sky-300',
-  'text-emerald-700 dark:text-emerald-300',
-]
-
-const BAND_BAR_CLASS = [
-  'bg-rose-500/70',
-  'bg-amber-500/70',
-  'bg-sky-500/70',
-  'bg-emerald-500/70',
-]
-
-function bandStyle(palette: string[], index: number): string {
-  return palette[Math.min(Math.max(index, 0), palette.length - 1)]
-}
+/** The 非凡人物 inputs: owned puppets with their stage and slot, and the research rank. Same draft class and life. */
+const bondsDraft = gmzzMemory.draft('score/bonds', {
+  default: emptyBondsDraft,
+  validate: isBondsDraft,
+})
 
 /**
  * Genus ids that have a purpose-built section instead of a score input.
  *
  * 2 装备 and 3 封印物 model their own state and derive their scores, so showing
  * the generic four-input group for them alongside would offer two places to
- * enter the same number and no way to tell which one counted. The remaining
- * groups (1 途径, 4 非凡人物) keep the input rows until they get sections too.
+ * enter the same number and no way to tell which one counted. 4 非凡人物 has a
+ * section that derives two of its four items and keeps the typed box for the
+ * other two. 1 途径 keeps the input rows until it gets a section too.
  */
-const SECTIONED_GENUS = new Set([2, 3])
+const SECTIONED_GENUS = new Set([2, 3, 4])
 
 /**
  * What is published. The equipment system ships first; the relic section, the
@@ -99,6 +82,8 @@ const SECTIONED_GENUS = new Set([2, 3])
 const LIVE = { relics: false, otherGenus: false, divinity: false, summary: false }
 /** The genus the equipment section answers for. */
 const EQUIPMENT_GENUS = 2
+/** The genus the bonds section answers for. */
+const BONDS_GENUS = 4
 
 export default function ScorePage() {
   const { t } = useTranslation()
@@ -106,8 +91,12 @@ export default function ScorePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [draft, setDraft] = useMemory(characterDraft)
+  const [bonds, setBonds] = useMemory(bondsDraft)
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
+  const [partners, setPartners] = useState<SecretPartner[] | null>(null)
+  const [scoring, setScoring] = useState<PartnerScoring | null>(null)
+  const [ranks, setRanks] = useState<HistoryResearchRank[] | null>(null)
   const setRoleLevel = (roleLevel: number) => setDraft((prev) => ({ ...prev, roleLevel }))
   const setDivinityLevel = (divinityLevel: number) => setDraft((prev) => ({ ...prev, divinityLevel }))
   const setProfessionId = (professionId: number | null) => setDraft((prev) => ({ ...prev, professionId }))
@@ -143,6 +132,23 @@ export default function ScorePage() {
         if (live) setRelics(data)
       })
       .catch((cause) => console.error(cause))
+    // The bonds section's three datasets, each on its own: a puppet calculator
+    // without the research ladder still works, and the other way round.
+    void loadSecretPartners()
+      .then((data) => {
+        if (live) setPartners(data)
+      })
+      .catch((cause) => console.error(cause))
+    void loadPartnerScoring()
+      .then((data) => {
+        if (live) setScoring(data)
+      })
+      .catch((cause) => console.error(cause))
+    void loadHistoryResearch()
+      .then((data) => {
+        if (live) setRanks(data)
+      })
+      .catch((cause) => console.error(cause))
     loadRating()
       .then((data) => {
         if (live) setRating(data)
@@ -165,11 +171,27 @@ export default function ScorePage() {
   // a higher cap cannot push a benchmark past the curve it is read from.
   const roleLevel = rating ? clamp(draft.roleLevel, 1, rating.maxRoleLevel) : draft.roleLevel
   const divinityLevel = rating ? clamp(draft.divinityLevel, 0, rating.maxDivinityLevel) : draft.divinityLevel
-  const scores = draft.scores
+  // The two derived bonds items are written over whatever the typed map holds
+  // for them, so one `evaluate` grades every item the same way and the group
+  // total needs no special case. Keyed by the client's module name rather than
+  // a species id, which is the dataset's to assign.
+  const scores = useMemo(() => {
+    const merged: Record<string, number> = { ...draft.scores }
+    if (!rating) return merged
+    const puppetGain = rating.species.find((species) => species.module === PUPPET_GAIN_MODULE)
+    const history = rating.species.find((species) => species.module === HISTORY_MODULE)
+    if (puppetGain) {
+      merged[puppetGain.id] =
+        partners && scoring ? evaluatePuppets(bonds.puppets, partners, scoring, bonds.dominateSlots).total : 0
+    }
+    if (history) merged[history.id] = ranks ? historyScore(ranks, bonds.historyRankId) : 0
+    return merged
+  }, [draft.scores, rating, partners, scoring, ranks, bonds])
   const result = useMemo(
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],
   )
+  const bondsData: BondsData = { partners, scoring, ranks }
   const gaps = useMemo(() => (result ? headroom(result).slice(0, 5) : []), [result])
 
   if (loading) {
@@ -261,11 +283,25 @@ export default function ScorePage() {
 
         {LIVE.relics && relics ? <RelicSection relics={relics} /> : null}
 
+        {result.groups
+          .filter((group) => group.genus.id === BONDS_GENUS)
+          .map((group) => (
+            <BondsSection
+              key={group.genus.id}
+              group={group}
+              rating={rating}
+              data={bondsData}
+              draft={bonds}
+              setDraft={setBonds}
+              onScore={setScore}
+            />
+          ))}
+
         {/* The parts not yet published, each under its own name so the page's
             shape is already the final one. */}
         <div className="space-y-4" data-testid="score-coming-soon">
           {result.groups
-            .filter((group) => group.genus.id !== EQUIPMENT_GENUS && !(LIVE.relics && group.genus.id === 3))
+            .filter((group) => group.genus.id !== EQUIPMENT_GENUS && group.genus.id !== BONDS_GENUS && !(LIVE.relics && group.genus.id === 3))
             .filter((group) => !(LIVE.otherGenus && !SECTIONED_GENUS.has(group.genus.id)))
             .map((group) => (
               <section key={group.genus.id} aria-label={group.genus.name} data-testid={`score-soon-${group.genus.id}`}>
@@ -372,86 +408,6 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{t('score.totalHint')}</p>
     </div>
-  )
-}
-
-function ItemRow({
-  item,
-  rating,
-  onScore,
-}: {
-  item: SpeciesResult
-  rating: Rating
-  onScore: (value: number) => void
-}) {
-  const { t } = useTranslation()
-  // Resolved here rather than passed in: the only valid producer is this one
-  // expression, and it belongs next to the bandStyle calls that consume it.
-  const bandIndex = rating.bands.findIndex((band) => band.id === item.band?.id)
-  // Guarded before it reaches a CSS width: a non-finite percentage would render
-  // as `width: NaN%`, which the browser drops, leaving a bar stuck full-width
-  // with no other symptom.
-  const percent = Number.isFinite(item.percent) ? Math.round(clamp(item.percent, 0, 1) * 100) : 0
-  const materials = materialsFor(rating, item.species)
-
-  return (
-    <article
-      className="grid gap-2 rounded-md border border-border bg-card p-2.5 md:grid-cols-[minmax(9rem,13rem)_minmax(7rem,9rem)_minmax(0,1fr)_minmax(8rem,11rem)] md:items-center"
-      data-testid={`score-item-${item.species.id}`}
-    >
-      <div className="min-w-0">
-        <div className={TYPE.name}>{item.species.name}</div>
-        {materials.length > 0 ? (
-          <div className="mt-0.5 truncate text-xs text-muted-foreground" title={materials.map((m) => `${m.name}: ${m.description}`).join('\n')}>
-            {materials.map((m) => m.name).join(' · ')}
-          </div>
-        ) : null}
-      </div>
-
-      <label className="block">
-        <span className="mb-0.5 block text-xs text-muted-foreground md:sr-only">{t('score.yourScore')}</span>
-        <Input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={item.score === 0 ? '' : item.score}
-          placeholder="0"
-          onChange={(event) => onScore(Math.max(0, Number(event.target.value) || 0))}
-          className="h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
-          data-testid={`score-input-${item.species.id}`}
-          aria-label={t('score.yourScoreFor', { name: item.species.name })}
-        />
-      </label>
-
-      <div className="min-w-0">
-        <div
-          className="h-2 w-full overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuenow={percent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={item.species.name}
-        >
-          <div className={`h-full rounded-full transition-all ${bandStyle(BAND_BAR_CLASS, bandIndex)}`} style={{ width: `${percent}%` }} />
-        </div>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-3 text-xs tabular-nums text-muted-foreground">
-          <span>{t('score.expectedValue', { value: item.expected.toLocaleString() })}</span>
-          <span>{t('score.maxValue', { value: item.max.toLocaleString() })}</span>
-          {item.toExpected > 0 ? (
-            <span className="text-foreground/80">{t('score.gapToExpected', { points: item.toExpected.toLocaleString() })}</span>
-          ) : item.toMax > 0 ? (
-            <span>{t('score.gapToMax', { points: item.toMax.toLocaleString() })}</span>
-          ) : (
-            <span className="text-emerald-700 dark:text-emerald-300">{t('score.atMax')}</span>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-baseline gap-2 md:justify-end">
-        <span className={`text-lg font-bold tabular-nums ${bandStyle(BAND_CLASS, bandIndex)}`}>{percent}%</span>
-        <span className={`text-xs font-semibold ${bandStyle(BAND_CLASS, bandIndex)}`}>{item.band?.label}</span>
-      </div>
-    </article>
   )
 }
 

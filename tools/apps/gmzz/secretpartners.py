@@ -3,6 +3,19 @@
 SkillStar is the skill tier; PartnerStar is its required puppet stage. Neither
 is a skill level. Dynamic skill formulas remain explicitly unavailable offline.
 Run with --raw, --data-out and --res-out to use existing local exports.
+
+Every attribute ladder also carries its ``marks`` -- the 非凡评分 points the
+client credits for that attribute at each stage -- and ``scoring.json`` holds the
+constants that turn them into the panel's 秘偶属性 figure. That species is the
+one bonds score the client computes itself: the 支配 page previews it as
+
+    round(sum over owned puppets of rate x sum over Prop_Talent of Mark(stage))
+
+with ``rate`` = ``SECRET_PARTNER_IN_DOMINATE_RATE`` for a puppet in a dominate
+slot and ``SECRET_PARTNER_NON_DOMINATE_RATE`` otherwise
+(``CalcDominateTalentMarkScore`` in ``SecretPartner_Dominate_Page.lua``). Only
+``Prop_Talent`` counts; the ``Talent`` column (workshop and travel perks) scores
+nothing there.
 """
 from __future__ import annotations
 
@@ -47,17 +60,53 @@ def build_attributes(config, talents, growth, modes, groups, max_level):
         if len(formats) != 1 or not formats <= {0, 1, 2}:
             raise ValueError(f'Missing or inconsistent attribute format for {key}')
         values = []
+        marks = []
         for row in rows:
             value = row['FightProp'].get(key)
             if (not isinstance(value, list) or len(value) != 1
                     or not isinstance(value[0], (int, float)) or not math.isfinite(value[0])):
                 raise ValueError(f'Invalid attribute value for {talent_id} at level {row["Star"]}')
             values.append(value[0])
+            # The rating points the attribute is worth at this stage. A ladder
+            # without one would score the puppet as nothing on the calculator
+            # while its attributes still displayed, so it is required.
+            mark = row.get('Mark')
+            if not isinstance(mark, int) or isinstance(mark, bool) or mark < 0:
+                raise ValueError(f'Invalid attribute mark for {talent_id} at level {row["Star"]}')
+            marks.append(mark)
         ladders[talent_id] = {
             'key': key, 'name': by_talent[talent_id]['StarUpDescribe1'],
             'format': 'percent' if formats.pop() == 1 else 'number', 'values': values,
+            'marks': marks,
         }
     return {int(row['ID']): [ladders[int(key)] for key in row['Prop_Talent']] for row in config.values()}
+
+
+def build_scoring(constants: dict) -> dict:
+    """The 秘偶属性 constants, named for what they do rather than by the client's keys.
+
+    ``maxDominateSlots`` is the most a player can ever hold; which season unlocks
+    which slot is in ``SecretPartnerDominateData`` and is the player's own
+    progression, so the calculator takes the count as input and only caps it.
+    """
+    wanted = {
+        'inDominateRate': 'SECRET_PARTNER_IN_DOMINATE_RATE',
+        'nonDominateRate': 'SECRET_PARTNER_NON_DOMINATE_RATE',
+        'initialDominateSlots': 'SECRET_PARTNER_INIT_DOMINATE_NUM',
+        'maxDominateSlots': 'SECRET_PARTNER_MAX_DOMINATE_NUM',
+        'maxStar': 'SECRET_PARTNER_MAX_STAR',
+    }
+    scoring = {}
+    for name, key in wanted.items():
+        value = constants.get(key)
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
+            raise ValueError(f'Missing puppet scoring constant {key}')
+        scoring[name] = value
+    if not 0 <= scoring['nonDominateRate'] <= scoring['inDominateRate']:
+        raise ValueError('Puppet dominate rates are not ordered')
+    if not 1 <= scoring['initialDominateSlots'] <= scoring['maxDominateSlots']:
+        raise ValueError('Puppet dominate slot counts are not ordered')
+    return scoring
 
 
 def build_records(config: dict, skills: dict, upgrades: dict, tags: dict, attributes: dict) -> list[dict]:
@@ -126,10 +175,12 @@ def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) 
         if wanted == set(skills):
             break
     tags = {int(row['ID']): row['Tag'] for row in table('SkillTagData').values()}
+    constants = table('SecretPartnerConstData')
     attributes = build_attributes(config, table('SecretPartnerTalentData'),
                                   table('SecretPartnerTalentStarUpData'), table('FightPropModeData'),
                                   table('FightPropModeSetData'),
-                                  int(table('SecretPartnerConstData')['SECRET_PARTNER_MAX_STAR']))
+                                  int(constants['SECRET_PARTNER_MAX_STAR']))
+    scoring = build_scoring(constants)
     records = build_records(config, skills, table('SecretPartnerSkillStarUpData'), tags, attributes)
     sources = {int(row['ID']): row for row in config.values()}
     output = res_out / 'secretpartners'
@@ -152,6 +203,7 @@ def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) 
             image.convert('RGBA').save(output / f'{name}.webp', 'WEBP', quality=90)
         record['portrait'] = name
     write_json(data_out / 'secretpartners/secretpartners.json', records)
+    write_json(data_out / 'secretpartners/scoring.json', scoring)
     return {'records': len(records), 'portraits': len(records) - len(missing), 'missing': missing}
 
 

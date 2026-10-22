@@ -26,6 +26,33 @@ export interface PartnerAttribute {
   name: string
   format: 'percent' | 'number'
   values: number[]
+  /**
+   * 非凡评分 points per stage, parallel to `values`. Optional because a dataset
+   * published before the ladder was emitted has none; the calculator then
+   * leaves that puppet out rather than scoring it at zero.
+   */
+  marks?: number[]
+}
+
+/**
+ * The constants the client's 支配 page turns talent Marks into the panel's
+ * 秘偶属性 figure with. `secretpartners/scoring.json`, from
+ * `SecretPartnerConstData`.
+ */
+export interface PartnerScoring {
+  /** A puppet's Marks count in full while it holds a dominate slot… */
+  inDominateRate: number
+  /** …and at this fraction when it does not. */
+  nonDominateRate: number
+  initialDominateSlots: number
+  maxDominateSlots: number
+  maxStar: number
+}
+
+export async function loadPartnerScoring(): Promise<PartnerScoring> {
+  const response = await fetch(dataUrl('secretpartners/scoring.json'))
+  if (!response.ok) throw new Error(`Unable to load puppet scoring (${response.status})`)
+  return response.json()
 }
 
 export const PARTNER_QUALITY: Record<number, { color: string; border: string }> = {

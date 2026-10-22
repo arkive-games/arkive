@@ -522,7 +522,35 @@ const en = {
     "headroomHint": "Items furthest from their expected benchmark, with the materials that raise them.",
     "loadError": "Rating data could not be loaded.",
     "dataNote": "Benchmarks and bands parsed from the local game package",
-    "aggregateNote": "The client only defines a per-item percentage, so group and overall figures average those \u2014 one maxed item cannot cover a neglected one. The totals are simply the items you entered added up; the game\u2019s own rating is a separate server value and is not stated to be their sum."
+    "aggregateNote": "The client only defines a per-item percentage, so group and overall figures average those \u2014 one maxed item cannot cover a neglected one. The totals are simply the items you entered added up; the game\u2019s own rating is a separate server value and is not stated to be their sum.",
+    "derivedScore": "Derived score"
+  },
+  bonds: {
+    "hint": "Puppet attributes and history research are derived with the client's own arithmetic. Puppet skill and connection skill are server values with no client formula, so copy those from the panel.",
+    "unavailable": "The data this item needs has not loaded.",
+    "typedHint": "Computed on the server with no client formula — copy the figure from the in-game Beyonder Rating panel.",
+    "slots": "Dominate slots",
+    "slotsHint": "Slots you have unlocked (up to {{max}})",
+    "add": "Add puppet",
+    "addAll": "Add all ({{count}})",
+    "dominated": "Dominated {{used}}/{{slots}}",
+    "empty": "No puppets yet. Add the ones you own, set their stage, and tick those holding a dominate slot.",
+    "stage": "Stage",
+    "stageValue": "Stage {{stage}}",
+    "dominate": "Dominate",
+    "remove": "Remove {{name}}",
+    "noMarks": "The dataset has no rating ladder for this puppet, so it scores nothing",
+    "rowMark": "Mark {{mark}} × {{rate}}",
+    "pickerTitle": "Choose a puppet",
+    "formula": "Same arithmetic as the game's dominate screen preview: each puppet's attribute-talent Marks summed, ×{{inRate}} while it holds a dominate slot and ×{{outRate}} otherwise, the total rounded. Only attribute talents count; workshop and travel talents do not.",
+    "rank": "Research rank",
+    "rankNone": "No research yet",
+    "rankTier": "Tier {{tier}}",
+    "rankOption": "{{name}} · Mark {{mark}}",
+    "rankNext": "Next rank {{name}}: {{points}} research in total, +{{mark}} points",
+    "rankTop": "Already the top rank",
+    "points": "Research points",
+    "pointsHint": "Enter the panel's cumulative history research points to locate the rank"
   },
   league: {
     "title": "League points simulator", "homeDescription": "Enter weekly placements or a total and explore top-four qualification.", "eyebrow": "Strategy server · Four-way league", "description": "Enter each guild's name, weekly placement, group, and optional total. The tool calculates every weekly score and can infer missing placements when the possibilities stay manageable.", "rulesTitle": "Scoring rules", "rulesHint": "Match points and both round-final bonus tables are editable.", "reset": "Reset example", "matchPoints": "Match points", "round1Bonuses": "Round 1 final points", "round2Bonuses": "Round 2 final points", "place": "Place {{rank}}", "rosterTitle": "Guilds and weekly inputs", "rosterHint": "Enter up to eight guilds. Leave a placement blank to infer it; enter a total to filter possible weekly combinations.", "target": "Target guild", "guild": "Guild", "startingPoints": "Starting points", "weekTotal": "R1 / R2 / Total", "weekShort": "Week {{week}}", "targetTotal": "Known total", "group": "Group", "winner": "Winner group", "loser": "Loser group", "remove": "Remove guild", "newGuild": "New guild", "addGuild": "Add guild", "rosterInvalid": "Need eight guilds with four winner and four loser entries in weeks 2 and 4.", "inputHint": "Week 1 and 3 use the overall ranking; weeks 2 and 4 use separate winner/loser groups.", "summaryTitle": "Qualification summary", "completeRoster": "Complete the eight-guild roster before calculating.", "possibleRanks": "Possible final ranks for the target", "scenarioCount": "{{count}} matching combinations", "canQualify": "Qualification is possible", "qualifyCount": "{{count}} matching combinations finish in the top four.", "noMatch": "No weekly combination matches this total.", "pathsTitle": "Possible weekly paths", "noPath": "No path can be shown with these inputs.", "tooMany": "There are more than {{limit}} possible combinations. Add more weekly placements or totals to continue.", "currentTitle": "Calculated scores", "round1Total": "Round 1", "round2Total": "Round 2", "finalTotal": "Final total", "finalRank": "Final rank", "rankValue": "Rank {{rank}}", "points": "points", "weekPath": "Weekly placements"
@@ -584,7 +612,8 @@ const en = {
     "tierSpecial": "Special",
     "reforgeScore": "Reforge score {{score}}",
     "pieceAdded": " + {{added}}",
-    "reforgeParts": "affixes {{mark}} + extraordinary bonus {{bonus}}",
+    "reforgeParts": "affixes {{mark}} + extraordinary bonus {{bonus}}",
+
     "noGrace": "No grace for this combination"
   },
   relic: {
@@ -1150,7 +1179,35 @@ const zhCN: Strings = {
     "headroomHint": "距期望值差距最大的项目，并列出对应的提升材料。",
     "loadError": "评分数据加载失败。",
     "dataNote": "期望值与评价档位解析自本地游戏客户端",
-    "aggregateNote": "客户端只定义了单项百分比，分组与总体完成度因此由各单项取平均——某一项拉满不会替另一项补分。合计一栏只是你填入各项的加总；游戏自己的非凡评分是另一个服务器数值，并没有说明它等于各项之和。"
+    "aggregateNote": "客户端只定义了单项百分比，分组与总体完成度因此由各单项取平均——某一项拉满不会替另一项补分。合计一栏只是你填入各项的加总；游戏自己的非凡评分是另一个服务器数值，并没有说明它等于各项之和。",
+    "derivedScore": "推算分数"
+  },
+  bonds: {
+    "hint": "秘偶属性与历史研究按客户端自己的算法推算；秘偶技能与人脉技能由服务器计算、客户端没有公式，请抄面板数值。",
+    "unavailable": "该项所需的数据暂未加载。",
+    "typedHint": "该项由服务器计算，客户端没有公式——请直接抄游戏内非凡评分面板上的数字。",
+    "slots": "支配位数量",
+    "slotsHint": "你当前已解锁的支配位（最多 {{max}} 个）",
+    "add": "添加秘偶",
+    "addAll": "添加全部（{{count}}）",
+    "dominated": "已支配 {{used}}/{{slots}}",
+    "empty": "尚未添加秘偶。添加你拥有的秘偶，设置阶数，并勾选占用支配位的那些。",
+    "stage": "阶数",
+    "stageValue": "{{stage}} 阶",
+    "dominate": "支配",
+    "remove": "移除 {{name}}",
+    "noMarks": "数据集未包含该秘偶的评分阶梯，暂不计分",
+    "rowMark": "Mark {{mark}} × {{rate}}",
+    "pickerTitle": "选择秘偶",
+    "formula": "算法与游戏支配界面的预览一致：每只秘偶的属性天赋 Mark 之和，占支配位的按 ×{{inRate}} 计，未支配的按 ×{{outRate}} 计，总和四舍五入。仅属性天赋计分，工坊与游历天赋不计。",
+    "rank": "研究段位",
+    "rankNone": "尚未开始研究",
+    "rankTier": "第 {{tier}} 阶",
+    "rankOption": "{{name}} · Mark {{mark}}",
+    "rankNext": "下一段位 {{name}}：累计 {{points}} 点研究，+{{mark}} 分",
+    "rankTop": "已是最高段位",
+    "points": "累计研究点数",
+    "pointsHint": "填入面板上的累计历史研究点数，自动定位段位"
   },
   league: {
     "title": "诡秘之主战略服积分推演器", "homeDescription": "输入每周排名和积分，推演晋级前四的所有路径。", "eyebrow": "战略服 · 四方联赛",
@@ -1213,7 +1270,8 @@ const zhCN: Strings = {
     "tierSpecial": "特殊",
     "reforgeScore": "重塑评分 {{score}}",
     "pieceAdded": " + {{added}}",
-    "reforgeParts": "词条 {{mark}} + 非凡加成 {{bonus}}",
+    "reforgeParts": "词条 {{mark}} + 非凡加成 {{bonus}}",
+
     "noGrace": "该组合没有对应恩赐"
   },
   relic: {
@@ -1780,7 +1838,35 @@ const zhTW: Strings = {
     "headroomHint": "距期望值差距最大的項目，並列出對應的提升材料。",
     "loadError": "評分資料載入失敗。",
     "dataNote": "期望值與評價檔位解析自本機遊戲客戶端",
-    "aggregateNote": "客戶端只定義了單項百分比，分組與總體完成度因此由各單項取平均——某一項拉滿不會替另一項補分。合計一欄只是你填入各項的加總；遊戲自己的非凡評分是另一個伺服器數值，並沒有說明它等於各項之和。"
+    "aggregateNote": "客戶端只定義了單項百分比，分組與總體完成度因此由各單項取平均——某一項拉滿不會替另一項補分。合計一欄只是你填入各項的加總；遊戲自己的非凡評分是另一個伺服器數值，並沒有說明它等於各項之和。",
+    "derivedScore": "推算分數"
+  },
+  bonds: {
+    "hint": "秘偶屬性與歷史研究按客戶端自己的演算法推算；秘偶技能與人脈技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
+    "unavailable": "該項所需的資料尚未載入。",
+    "typedHint": "該項由伺服器計算，客戶端沒有公式——請直接抄遊戲內非凡評分面板上的數字。",
+    "slots": "支配位數量",
+    "slotsHint": "你目前已解鎖的支配位（最多 {{max}} 個）",
+    "add": "新增秘偶",
+    "addAll": "新增全部（{{count}}）",
+    "dominated": "已支配 {{used}}/{{slots}}",
+    "empty": "尚未新增秘偶。新增你擁有的秘偶，設定階數，並勾選佔用支配位的那些。",
+    "stage": "階數",
+    "stageValue": "{{stage}} 階",
+    "dominate": "支配",
+    "remove": "移除 {{name}}",
+    "noMarks": "資料集未包含該秘偶的評分階梯，暫不計分",
+    "rowMark": "Mark {{mark}} × {{rate}}",
+    "pickerTitle": "選擇秘偶",
+    "formula": "演算法與遊戲支配介面的預覽一致：每隻秘偶的屬性天賦 Mark 之和，佔支配位的按 ×{{inRate}} 計，未支配的按 ×{{outRate}} 計，總和四捨五入。僅屬性天賦計分，工坊與遊歷天賦不計。",
+    "rank": "研究段位",
+    "rankNone": "尚未開始研究",
+    "rankTier": "第 {{tier}} 階",
+    "rankOption": "{{name}} · Mark {{mark}}",
+    "rankNext": "下一段位 {{name}}：累計 {{points}} 點研究，+{{mark}} 分",
+    "rankTop": "已是最高段位",
+    "points": "累計研究點數",
+    "pointsHint": "填入面板上的累計歷史研究點數，自動定位段位"
   },
   league: {
     "title": "詭秘之主戰略服積分推演器", "homeDescription": "輸入每週排名和積分，推演晉級前四的所有路徑。", "eyebrow": "戰略服 · 四方聯賽",
@@ -1843,7 +1929,8 @@ const zhTW: Strings = {
     "tierSpecial": "特殊",
     "reforgeScore": "重塑評分 {{score}}",
     "pieceAdded": " + {{added}}",
-    "reforgeParts": "詞條 {{mark}} + 非凡加成 {{bonus}}",
+    "reforgeParts": "詞條 {{mark}} + 非凡加成 {{bonus}}",
+
     "noGrace": "該組合沒有對應恩賜"
   },
   relic: {

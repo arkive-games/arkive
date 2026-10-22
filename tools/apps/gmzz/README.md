@@ -399,6 +399,25 @@ grading side, and that is what ships: the benchmark curves, the completion
 formula (`Min(1, Min(1, s/expected) * 0.9 + Min(1, s/max) * 0.1)`), the bands
 (推荐提升 / 稳步增长 / 趋于完善 / 登峰造极) and the materials each item consumes.
 
+Two of the 非凡人物 items are the exception, and the calculator derives them:
+
+- **秘偶属性** is previewed by the client's own 支配 page
+  (`SecretPartner_Dominate_Page.lua`, `CalcDominateTalentMarkScore`): for every
+  owned puppet, the `Mark` of each `Prop_Talent` ladder at its stage
+  (`SecretPartnerTalentStarUpData`), summed, times
+  `SECRET_PARTNER_IN_DOMINATE_RATE` (1) in a dominate slot or
+  `SECRET_PARTNER_NON_DOMINATE_RATE` (0.35) otherwise, rounded half up. The
+  `Talent` column (workshop and travel perks) carries no Mark. `gmzz.secretpartners`
+  emits each ladder's `marks` and the constants as `secretpartners/scoring.json`.
+- **历史研究** is the `Mark` of the research rank reached (`HistoryResearchData`,
+  already in `fellows/history-research.json`). No client code says so — the rank
+  page only shows research points — but the species' max curve lands on 23265
+  and its expected curve on 8087, which are the Marks of ranks 17 and 8 exactly.
+
+The other two, 秘偶技能 and 人脉技能, have no client formula at all:
+`SkillScoreData` ships as 25 bare ids with every other column stripped, and no
+script references it. They stay typed in from the panel.
+
 Three traps, all of which cost time:
 
 - **The static `ExpectedScore` / `MaxScore` columns match no level.** Fitting all

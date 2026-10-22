@@ -8,6 +8,7 @@ arkive.memory.aion2.map.view	-	apps/aion2/src/features/map/MapRoute.tsx
 arkive.memory.aion2.wiki-catalog.faction	-	apps/aion2/src/features/wiki/GroupList.tsx
 arkive.memory.aion2.wiki-catalog.query	-	apps/aion2/src/features/wiki/WikiCatalogToolbar.tsx
 arkive.memory.aion2.wiki.recent-entries	-	apps/aion2/src/features/wiki/wikiRecent.ts
+arkive.memory.gmzz.score.bonds	-	apps/gmzz/src/features/score/ScorePage.tsx
 arkive.memory.gmzz.score.character	-	apps/gmzz/src/features/score/ScorePage.tsx
 arkive.memory.gmzz.score.equipment	-	apps/gmzz/src/features/equipment/EquipmentSection.tsx
 arkive.memory.gmzz.score.equipment-layout	-	apps/gmzz/src/features/equipment/EquipmentSection.tsx
