@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.16.0",
+      "date": "2026-10-23",
+      "commit": "ff6eba6419297f5b9568ff75a51f2c40b6b0ad19",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rating calculator: every item of the in-game panel now has a row. Extraordinary talent is derived from your active talent tree, the relic section is live with resonance scored the way the game does it (including the server grade cap), equipment and relic totals are graded against their benchmarks, and the divinity level and overall summary are shown.",
+            "zh-CN": "非凡评分计算器：面板的 14 项全部到齐。非凡天赋按当前生效的天赋树推算；封印物分组上线，共鸣按游戏自己的算法计分（含本服/跨服等级上限）；装备与封印物各项对照基准评级；神性等级与总览摘要开放。",
+            "zh-TW": "非凡評分計算器：面板的 14 項全部到齊。非凡天賦按目前生效的天賦樹推算；封印物分組上線，共鳴按遊戲自己的演算法計分（含本服/跨服等級上限）；裝備與封印物各項對照基準評級；神性等級與總覽摘要開放。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.15.0",
       "date": "2026-10-22",
       "commit": "6d55feabe651fbc8bcefea1e7390a02f6d916632",
