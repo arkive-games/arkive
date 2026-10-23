@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { IconDatabase, IconInfoCircle } from '@tabler/icons-react'
 import { useMemory } from '@gamemap/state-memory'
 import { Input, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
-import EquipmentSection from '@/features/equipment/EquipmentSection'
+import EquipmentSection, { type EquipmentTotals } from '@/features/equipment/EquipmentSection'
 import { loadEquipment, playableProfessions, type Equipment, type Grace } from '@/features/equipment/data'
 import { loadHistoryResearch, type HistoryResearchRank } from '@/features/fellows/data'
-import RelicSection from '@/features/relics/RelicSection'
+import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { HISTORY_MODULE, PUPPET_GAIN_MODULE, type BondsData } from '@/features/score/BondsSection'
 import { emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
@@ -18,9 +18,12 @@ import {
   headroom,
   loadRating,
   materialsFor,
+  type GenusResult,
   type Rating,
 } from '@/features/score/data'
-import { ItemRow } from '@/features/score/SpeciesRow'
+import { GroupSection } from '@/features/score/GroupSection'
+import PathwaySection, { TALENT_MODULE } from '@/features/score/PathwaySection'
+import { emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, treeFor, type Talents } from '@/features/score/talents'
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
@@ -62,27 +65,33 @@ const bondsDraft = gmzzMemory.draft('score/bonds', {
   validate: isBondsDraft,
 })
 
-/**
- * Genus ids that have a purpose-built section instead of a score input.
- *
- * 2 装备 and 3 封印物 model their own state and derive their scores, so showing
- * the generic four-input group for them alongside would offer two places to
- * enter the same number and no way to tell which one counted. 4 非凡人物 has a
- * section that derives two of its four items and keeps the typed box for the
- * other two. 1 途径 keeps the input rows until it gets a section too.
- */
-const SECTIONED_GENUS = new Set([2, 3, 4])
+/** The 途径 inputs: the active talent tree and every node's level. */
+const talentDraft = gmzzMemory.draft('score/talents', {
+  default: emptyTalentDraft,
+  validate: isTalentDraft,
+})
 
 /**
- * What is published. The equipment system ships first; the relic section, the
- * generic score inputs for 途径 and 非凡人物, the divinity level and the overall
- * summary stay in the code but off the page until their numbers are checked
- * against the game the way the equipment's were. Flip these to bring them back.
+ * The client's module keys for the items whose score a section derives and
+ * reports upward. Keyed by module rather than species id, which is the
+ * dataset's to assign.
  */
-const LIVE = { relics: false, otherGenus: false, divinity: false, summary: false }
-/** The genus the equipment section answers for. */
+const EQUIPMENT_MODULES: Record<keyof Omit<EquipmentTotals, 'total'>, string> = {
+  base: 'Equip_Basic',
+  reforge: 'Equip_Word',
+  enhance: 'Equip_Grow',
+  suit: 'Equip_Suit',
+}
+const RELIC_MODULES: Record<keyof Omit<RelicTotals, 'total'>, string> = {
+  assembly: 'Relics_Basic',
+  resonance: 'Relics_Main',
+  affix: 'Relics_Word',
+}
+
+/** `CEGenusData` ids, in the panel's order. */
+const PATHWAY_GENUS = 1
 const EQUIPMENT_GENUS = 2
-/** The genus the bonds section answers for. */
+const RELICS_GENUS = 3
 const BONDS_GENUS = 4
 
 export default function ScorePage() {
@@ -92,11 +101,20 @@ export default function ScorePage() {
   const [error, setError] = useState(false)
   const [draft, setDraft] = useMemory(characterDraft)
   const [bonds, setBonds] = useMemory(bondsDraft)
+  const [talentState, setTalentState] = useMemory(talentDraft)
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
+  const [talents, setTalents] = useState<Talents | null>(null)
   const [partners, setPartners] = useState<SecretPartner[] | null>(null)
   const [scoring, setScoring] = useState<PartnerScoring | null>(null)
   const [ranks, setRanks] = useState<HistoryResearchRank[] | null>(null)
+  // What the two self-contained calculators last reported. They own their own
+  // drafts, so their figures arrive by callback rather than being recomputed
+  // here; a null is "not loaded yet", which scores as nothing.
+  const [equipmentTotals, setEquipmentTotals] = useState<EquipmentTotals | null>(null)
+  const [relicTotals, setRelicTotals] = useState<RelicTotals | null>(null)
+  const onEquipmentTotals = useCallback((totals: EquipmentTotals) => setEquipmentTotals(totals), [])
+  const onRelicTotals = useCallback((totals: RelicTotals) => setRelicTotals(totals), [])
   const setRoleLevel = (roleLevel: number) => setDraft((prev) => ({ ...prev, roleLevel }))
   const setDivinityLevel = (divinityLevel: number) => setDraft((prev) => ({ ...prev, divinityLevel }))
   const setProfessionId = (professionId: number | null) => setDraft((prev) => ({ ...prev, professionId }))
@@ -104,10 +122,10 @@ export default function ScorePage() {
     setDraft((prev) => ({ ...prev, scores: { ...prev.scores, [speciesId]: value } }))
   /**
    * The character's pathway. Global, not per-section: it gates which weapons
-   * exist for this character, and 途径技能 and the 非凡人物 group will read it
-   * too. Read against the dataset rather than trusted: a stored pathway the
-   * data no longer offers falls back to the first playable one, as does an
-   * unset one, because the page has no default of its own.
+   * exist for this character and which talent trees. Read against the dataset
+   * rather than trusted: a stored pathway the data no longer offers falls back
+   * to the first playable one, as does an unset one, because the page has no
+   * default of its own.
    */
   const professionId = useMemo(() => {
     if (!equipment) return draft.professionId
@@ -119,36 +137,21 @@ export default function ScorePage() {
 
   useEffect(() => {
     let live = true
-    // The two sections' data is loaded alongside the rating rather than gating
-    // it: a section that fails to load hides itself, and the rest of the page
-    // still works.
-    void loadEquipment()
-      .then((data) => {
-        if (live) setEquipment(data)
-      })
-      .catch((cause) => console.error(cause))
-    void loadRelics()
-      .then((data) => {
-        if (live) setRelics(data)
-      })
-      .catch((cause) => console.error(cause))
-    // The bonds section's three datasets, each on its own: a puppet calculator
-    // without the research ladder still works, and the other way round.
-    void loadSecretPartners()
-      .then((data) => {
-        if (live) setPartners(data)
-      })
-      .catch((cause) => console.error(cause))
-    void loadPartnerScoring()
-      .then((data) => {
-        if (live) setScoring(data)
-      })
-      .catch((cause) => console.error(cause))
-    void loadHistoryResearch()
-      .then((data) => {
-        if (live) setRanks(data)
-      })
-      .catch((cause) => console.error(cause))
+    // Every section's data is loaded alongside the rating rather than gating
+    // it: a section that fails to load says so in place, and the rest of the
+    // page still works.
+    const load = <T,>(loader: () => Promise<T>, set: (data: T) => void) =>
+      void loader()
+        .then((data) => {
+          if (live) set(data)
+        })
+        .catch((cause) => console.error(cause))
+    load(loadEquipment, setEquipment)
+    load(loadRelics, setRelics)
+    load(loadTalents, setTalents)
+    load(loadSecretPartners, setPartners)
+    load(loadPartnerScoring, setScoring)
+    load(loadHistoryResearch, setRanks)
     loadRating()
       .then((data) => {
         if (live) setRating(data)
@@ -171,22 +174,27 @@ export default function ScorePage() {
   // a higher cap cannot push a benchmark past the curve it is read from.
   const roleLevel = rating ? clamp(draft.roleLevel, 1, rating.maxRoleLevel) : draft.roleLevel
   const divinityLevel = rating ? clamp(draft.divinityLevel, 0, rating.maxDivinityLevel) : draft.divinityLevel
-  // The two derived bonds items are written over whatever the typed map holds
-  // for them, so one `evaluate` grades every item the same way and the group
-  // total needs no special case. Keyed by the client's module name rather than
-  // a species id, which is the dataset's to assign.
+  // Every derived item is written over whatever the typed map holds for it,
+  // so one `evaluate` grades all fourteen the same way and no group total
+  // needs a special case.
   const scores = useMemo(() => {
     const merged: Record<string, number> = { ...draft.scores }
     if (!rating) return merged
-    const puppetGain = rating.species.find((species) => species.module === PUPPET_GAIN_MODULE)
-    const history = rating.species.find((species) => species.module === HISTORY_MODULE)
-    if (puppetGain) {
-      merged[puppetGain.id] =
-        partners && scoring ? evaluatePuppets(bonds.puppets, partners, scoring, bonds.dominateSlots).total : 0
+    const put = (module: string, value: number) => {
+      const species = rating.species.find((entry) => entry.module === module)
+      if (species) merged[species.id] = value
     }
-    if (history) merged[history.id] = ranks ? historyScore(ranks, bonds.historyRankId) : 0
+    put(TALENT_MODULE, talents ? evaluateTalents(treeFor(talents, professionId, talentState.treeId), talentState.levels).total : 0)
+    for (const [part, module] of Object.entries(EQUIPMENT_MODULES)) {
+      put(module, equipmentTotals?.[part as keyof EquipmentTotals] ?? 0)
+    }
+    for (const [part, module] of Object.entries(RELIC_MODULES)) {
+      put(module, relicTotals?.[part as keyof RelicTotals] ?? 0)
+    }
+    put(PUPPET_GAIN_MODULE, partners && scoring ? evaluatePuppets(bonds.puppets, partners, scoring, bonds.dominateSlots).total : 0)
+    put(HISTORY_MODULE, ranks ? historyScore(ranks, bonds.historyRankId) : 0)
     return merged
-  }, [draft.scores, rating, partners, scoring, ranks, bonds])
+  }, [draft.scores, rating, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, bonds])
   const result = useMemo(
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],
@@ -215,6 +223,12 @@ export default function ScorePage() {
   }
 
   const atCap = roleLevel >= rating.maxRoleLevel
+  const groupById = new Map(result.groups.map((group) => [group.genus.id, group]))
+  /** A group section, or nothing if the dataset has no such group. */
+  const section = (id: number, render: (group: GenusResult) => React.ReactNode) => {
+    const group = groupById.get(id)
+    return group ? render(group) : null
+  }
 
   return (
     <ContentPage active="/score" title={t('score.title')} wide>
@@ -229,11 +243,7 @@ export default function ScorePage() {
             items rather than beside them. */}
         <section
           aria-label={t('score.progression')}
-          className={`grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-2 ${
-            LIVE.summary
-              ? 'lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)_minmax(0,1fr)]'
-              : 'lg:grid-cols-[minmax(0,10rem)_minmax(0,16rem)]'
-          }`}
+          className="grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)_minmax(0,1fr)]"
         >
           <LevelField
             label={t('score.roleLevel')}
@@ -244,18 +254,16 @@ export default function ScorePage() {
             onChange={setRoleLevel}
             testId="score-role-level"
           />
-          {LIVE.divinity ? (
-            <LevelField
-              label={t('score.divinityLevel')}
-              hint={atCap ? t('score.divinityHint') : t('score.divinityInactive', { level: rating.maxRoleLevel })}
-              value={divinityLevel}
-              min={0}
-              max={rating.maxDivinityLevel}
-              onChange={setDivinityLevel}
-              disabled={!atCap}
-              testId="score-divinity-level"
-            />
-          ) : null}
+          <LevelField
+            label={t('score.divinityLevel')}
+            hint={atCap ? t('score.divinityHint') : t('score.divinityInactive', { level: rating.maxRoleLevel })}
+            value={divinityLevel}
+            min={0}
+            max={rating.maxDivinityLevel}
+            onChange={setDivinityLevel}
+            disabled={!atCap}
+            testId="score-divinity-level"
+          />
           {equipment ? (
             <label className="block">
               <span className={`block ${TYPE.label}`}>{t('score.pathway')}</span>
@@ -274,73 +282,51 @@ export default function ScorePage() {
               <span className="mt-0.5 block text-xs text-muted-foreground">{t('score.pathwayHint')}</span>
             </label>
           ) : null}
-          {LIVE.summary ? <Summary result={result} /> : null}
+          <Summary result={result} />
         </section>
 
-        {equipment ? (
-          <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} />
-        ) : null}
+        {section(PATHWAY_GENUS, (group) => (
+          <PathwaySection
+            key={group.genus.id}
+            group={group}
+            rating={rating}
+            talents={talents}
+            professionId={professionId}
+            draft={talentState}
+            setDraft={setTalentState}
+            onScore={setScore}
+          />
+        ))}
 
-        {LIVE.relics && relics ? <RelicSection relics={relics} /> : null}
+        {section(EQUIPMENT_GENUS, (group) => (
+          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.equipmentHint')} onScore={setScore} present={() => ({ kind: 'derived' })}>
+            {equipment ? (
+              <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals} />
+            ) : (
+              <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>
+            )}
+          </GroupSection>
+        ))}
 
-        {result.groups
-          .filter((group) => group.genus.id === BONDS_GENUS)
-          .map((group) => (
-            <BondsSection
-              key={group.genus.id}
-              group={group}
-              rating={rating}
-              data={bondsData}
-              draft={bonds}
-              setDraft={setBonds}
-              onScore={setScore}
-            />
-          ))}
+        {section(RELICS_GENUS, (group) => (
+          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.relicsHint')} onScore={setScore} present={() => ({ kind: 'derived' })}>
+            {relics ? <RelicSection relics={relics} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
+          </GroupSection>
+        ))}
 
-        {/* The parts not yet published, each under its own name so the page's
-            shape is already the final one. */}
-        <div className="space-y-4" data-testid="score-coming-soon">
-          {result.groups
-            .filter((group) => group.genus.id !== EQUIPMENT_GENUS && group.genus.id !== BONDS_GENUS && !(LIVE.relics && group.genus.id === 3))
-            .filter((group) => !(LIVE.otherGenus && !SECTIONED_GENUS.has(group.genus.id)))
-            .map((group) => (
-              <section key={group.genus.id} aria-label={group.genus.name} data-testid={`score-soon-${group.genus.id}`}>
-                <h2 className={`border-b border-border pb-1.5 ${TYPE.sectionTitle}`}>{group.genus.name}</h2>
-                <p className={`mt-2 rounded-md border border-dashed border-border p-4 text-center ${TYPE.body}`}>
-                  {t('score.comingSoon')}
-                </p>
-              </section>
-            ))}
-        </div>
+        {section(BONDS_GENUS, (group) => (
+          <BondsSection
+            key={group.genus.id}
+            group={group}
+            rating={rating}
+            data={bondsData}
+            draft={bonds}
+            setDraft={setBonds}
+            onScore={setScore}
+          />
+        ))}
 
-        <div className="space-y-4" data-testid="score-groups">
-          {result.groups.filter((group) => LIVE.otherGenus && !SECTIONED_GENUS.has(group.genus.id)).map((group) => (
-            <section key={group.genus.id} aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
-              <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1.5">
-                <span className={TYPE.sectionTitle}>{group.genus.name}</span>
-                <span className="text-xs font-normal tabular-nums text-muted-foreground">
-                  {t('score.groupTotal', {
-                    score: group.score.toLocaleString(),
-                    expected: group.expected.toLocaleString(),
-                    percent: Math.round(group.percent * 100),
-                  })}
-                </span>
-              </h2>
-              <div className="mt-2 space-y-2">
-                {group.items.map((item) => (
-                  <ItemRow
-                    key={item.species.id}
-                    item={item}
-                    rating={rating}
-                    onScore={(value) => setScore(item.species.id, value)}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-
-        {LIVE.summary && gaps.length > 0 ? (
+        {gaps.length > 0 ? (
           <section aria-label={t('score.headroom')} className="rounded-md border border-border bg-card p-3">
             <h2 className="text-sm font-bold text-foreground">{t('score.headroom')}</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">{t('score.headroomHint')}</p>
@@ -389,7 +375,7 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
             against it instead of against the total. */}
         <div>
           <div className={TYPE.label}>{t('score.total')}</div>
-          <div className="text-3xl font-bold tabular-nums text-foreground">{result.score.toLocaleString()}</div>
+          <div className="text-3xl font-bold tabular-nums text-foreground" data-testid="score-total">{result.score.toLocaleString()}</div>
         </div>
         <div>
           <div className={TYPE.label}>{t('score.expectedTotal')}</div>

@@ -141,6 +141,7 @@ def promotion(excel: Path, strings: dict) -> dict:
     build fails if an artifact ever disagrees.
     """
     by_grade: dict[int, set[int]] = collections.defaultdict(set)
+    tiers: dict[int, set[int]] = collections.defaultdict(set)
     caps: dict[int, set[str]] = collections.defaultdict(set)
     # Nested: artifact id -> grade -> row.
     for per_artifact in _rows(resolve_text(load_table(excel, PROMOTE_TABLE), strings)):
@@ -149,6 +150,16 @@ def promotion(excel: Path, strings: dict) -> dict:
             if grade is None:
                 continue
             by_grade[grade].add(row.get("Mark"))
+            # `AttributeImproveType` is the resonance group the grade reads from,
+            # as group id × 100 + tier: 101 / 102 / 103 for an attack artifact at
+            # grade 3 / 2 / 1-or-0. Only the tier digit is kept, because the group
+            # half is the artifact's own and the ladder is one for all artifacts.
+            # The client picks the 非凡共鸣 row by this field
+            # (`getSealedMainPropConfig`), so it is the join and the digit order
+            # is NOT the grade order — the best grades map to the highest tier.
+            kind = row.get("AttributeImproveType")
+            if isinstance(kind, int) and kind > 0:
+                tiers[grade].add(kind % 100)
             title = _plain(row.get("AttributeImproveTitle"))
             if title:
                 caps[grade].add(title)
@@ -161,9 +172,15 @@ def promotion(excel: Path, strings: dict) -> dict:
                 f"{PROMOTE_TABLE} grade {grade} has several Mark values {sorted(marks)} — "
                 f"the ladder is per-artifact after all, emit it that way"
             )
+        if len(tiers[grade]) != 1:
+            raise RuntimeError(
+                f"{PROMOTE_TABLE} grade {grade} reads resonance tier {sorted(tiers[grade])} — "
+                f"expected exactly one AttributeImproveType tier per grade"
+            )
         ladder.append({
             "grade": grade,
             "mark": marks.pop(),
+            "resonanceTier": tiers[grade].pop(),
             "note": sorted(caps[grade])[0] if caps[grade] else "",
         })
     # Lower grade is better; say so in the data rather than only in the docs.

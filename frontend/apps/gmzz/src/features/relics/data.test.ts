@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest'
 import {
   displayedValue,
   effectiveAffixCap,
+  effectiveGrade,
   evaluateRelicSlot,
+  k1For,
   k2For,
   markForStat,
   materialScore,
@@ -26,23 +28,34 @@ const RELICS: Relics = {
   ],
   promotion: {
     ladder: [
-      { grade: 3, mark: 500, note: '3级封印物最多生效4条词条' },
-      { grade: 2, mark: 2500, note: '2级封印物最多生效5条词条' },
-      { grade: 1, mark: 4500, note: '' },
-      { grade: 0, mark: 6500, note: '' },
+      { grade: 3, mark: 500, note: '3级封印物最多生效4条词条', resonanceTier: 1 },
+      { grade: 2, mark: 2500, note: '2级封印物最多生效5条词条', resonanceTier: 2 },
+      { grade: 1, mark: 4500, note: '', resonanceTier: 3 },
+      { grade: 0, mark: 6500, note: '', resonanceTier: 3 },
     ],
     bestGrade: 0,
     worstGrade: 3,
   },
   risks: [{ id: 1, level: '有一定危险', name: '有一定危险', description: '' }],
+  // The real shape: tier x01 plateaus at four affixes, x02 at five, x03 at six.
   resonance: {
     '103': {
-      '101': [{ affixCount: 4, mark: 7662, stats: [['Atk_N', 903]] }],
-      '103': [
-        { affixCount: 1, mark: 1352, stats: [['Atk_N', 301]] },
-        { affixCount: 2, mark: 2704, stats: [['Atk_N', 602]] },
+      '101': [
+        { affixCount: 1, mark: 1352, stats: [['Atk_N', 258]] },
+        { affixCount: 2, mark: 2704, stats: [['Atk_N', 516]] },
         { affixCount: 3, mark: 4732, stats: [['Atk_N', 903]] },
-        { affixCount: 4, mark: 7662, stats: [['Atk_N', 1204]] },
+        { affixCount: 4, mark: 7662, stats: [['Atk_N', 1462]] },
+        { affixCount: 5, mark: 7662, stats: [['Atk_N', 1462]] },
+        { affixCount: 6, mark: 7662, stats: [['Atk_N', 1462]] },
+      ],
+      '102': [
+        { affixCount: 4, mark: 7662, stats: [['Atk_N', 1462]] },
+        { affixCount: 5, mark: 11268, stats: [['Atk_N', 2150]] },
+        { affixCount: 6, mark: 11268, stats: [['Atk_N', 2150]] },
+      ],
+      '103': [
+        { affixCount: 5, mark: 11268, stats: [['Atk_N', 2150]] },
+        { affixCount: 6, mark: 15776, stats: [['Atk_N', 3010]] },
       ],
     },
   },
@@ -70,7 +83,12 @@ const RELICS: Relics = {
       },
     },
   },
-  constants: { MainAttributeTipsEntryNumber: [6, 6, 5, 4], XMatMaxWordNum: 6 },
+  constants: {
+    MainAttributeTipsEntryNumber: [6, 6, 5, 4],
+    XMatMaxWordNum: 6,
+    SealEffectBestGradeAtLocalServer: 2,
+    SealEffectBestGradeAtCrossServer: 1,
+  },
   groupNames: { '1': '攻击', '2': '防御', '3': '特化' },
   scoreRule: 'floor(k2 * sum(affixMark))',
 }
@@ -149,17 +167,44 @@ describe('effectiveAffixCap', () => {
 })
 
 describe('resonanceKey', () => {
-  it('is groupId * 100 + tier, for the real group ids 1/2/3', () => {
+  it('is groupId * 100 + the grade\'s tier, which runs the other way from the grade', () => {
     // The table is keyed 101..303. String concatenation would give "13" here
     // and miss every row, which looks like 非凡共鸣 simply being worth zero.
-    expect(resonanceKey(1, 3)).toBe('103')
-    expect(resonanceKey(2, 1)).toBe('201')
-    expect(resonanceKey(3, 2)).toBe('302')
+    // And the tier is NOT the grade: the promote rows send the worst grade to
+    // x01 and the two best to x03.
+    expect(resonanceKey(RELICS, 1, 3)).toBe('101')
+    expect(resonanceKey(RELICS, 2, 2)).toBe('202')
+    expect(resonanceKey(RELICS, 3, 1)).toBe('303')
+    expect(resonanceKey(RELICS, 1, 0)).toBe('103')
   })
 
-  it('clamps grade 0 onto tier 1, which it shares', () => {
-    expect(resonanceKey(1, 0)).toBe('101')
-    expect(resonanceKey(1, 1)).toBe('101')
+  it('falls back to the clamped grade for a dataset without the tier', () => {
+    const bare: Relics = {
+      ...RELICS,
+      promotion: {
+        ...RELICS.promotion,
+        ladder: RELICS.promotion.ladder.map(({ grade, mark, note }) => ({ grade, mark, note })),
+      },
+    }
+    expect(resonanceKey(bare, 1, 3)).toBe('103')
+    expect(resonanceKey(bare, 1, 0)).toBe('101')
+  })
+})
+
+describe('effectiveGrade', () => {
+  it('caps the best grades at the server\'s own, and leaves the rest alone', () => {
+    expect(effectiveGrade(RELICS, 0, 'local')).toBe(2)
+    expect(effectiveGrade(RELICS, 1, 'local')).toBe(2)
+    expect(effectiveGrade(RELICS, 3, 'local')).toBe(3)
+    expect(effectiveGrade(RELICS, 0, 'cross')).toBe(1)
+    expect(effectiveGrade(RELICS, 2, 'cross')).toBe(2)
+  })
+})
+
+describe('k1For', () => {
+  it('reads k1, not k2, off the ladder', () => {
+    expect(k1For(RELICS, 11)).toBe(0.32)
+    expect(k1For(RELICS, 99)).toBe(0.1)
   })
 })
 
@@ -192,9 +237,33 @@ describe('evaluateRelicSlot', () => {
     ]
     const result = evaluateRelicSlot(RELICS, { ...base, affixes }, 11, 103)
     expect(result.assemblyScore).toBe(500)
-    expect(result.resonanceScore).toBe(4732)
+    // calcSealedEnhanceMark: floor(4732 × k1 0.32) = floor(1514.24)
+    expect(result.resonanceScore).toBe(1514)
     expect(result.affixScore).toBe(1269)
-    expect(result.total).toBe(500 + 4732 + 1269)
+    expect(result.total).toBe(500 + 1514 + 1269)
+  })
+
+  it('scales resonance by k1 and floors once, as the client does', () => {
+    const one = [{ stat: 'Atk_N', value: 490, mark: 1284 }]
+    expect(evaluateRelicSlot(RELICS, { ...base, affixes: one }, 0, 103).resonanceScore).toBe(Math.floor(1352 * 0.1))
+    expect(evaluateRelicSlot(RELICS, { ...base, affixes: one }, 11, 103).resonanceScore).toBe(Math.floor(1352 * 0.32))
+  })
+
+  it('reads a best-grade relic at the server cap: grade 2 locally, grade 1 cross-server', () => {
+    const six = Array.from({ length: 6 }, () => ({ stat: 'Atk_N', value: 490, mark: 1284 }))
+    const local = evaluateRelicSlot(RELICS, { ...base, grade: 0, affixes: six }, 11, 103, 'local')
+    // Capped to grade 2: five words count, tier x02 at five pays 11268.
+    expect(local.resonanceGrade).toBe(2)
+    expect(local.cappedOut).toBe(1)
+    expect(local.resonanceScore).toBe(Math.floor(11268 * 0.32))
+    const cross = evaluateRelicSlot(RELICS, { ...base, grade: 0, affixes: six }, 11, 103, 'cross')
+    // Capped to grade 1: all six count, tier x03 at six pays 15776.
+    expect(cross.resonanceGrade).toBe(1)
+    expect(cross.cappedOut).toBe(0)
+    expect(cross.resonanceScore).toBe(Math.floor(15776 * 0.32))
+    // Assembly is the real grade's Mark either way.
+    expect(local.assemblyScore).toBe(6500)
+    expect(cross.assemblyScore).toBe(6500)
   })
 
   it('stops paying past the grade cap and says how many were dropped', () => {
@@ -203,7 +272,7 @@ describe('evaluateRelicSlot', () => {
     const result = evaluateRelicSlot(RELICS, { ...base, affixes: five }, 11, 103)
     expect(result.cappedOut).toBe(1)
     expect(result.affixScore).toBe(Math.floor(0.32 * 1284 * 4))
-    expect(result.resonanceScore).toBe(7662)
+    expect(result.resonanceScore).toBe(Math.floor(7662 * 0.32))
   })
 
   it('a better grade pays more assembly and lifts the cap', () => {

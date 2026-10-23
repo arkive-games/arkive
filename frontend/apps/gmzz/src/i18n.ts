@@ -523,7 +523,25 @@ const en = {
     "loadError": "Rating data could not be loaded.",
     "dataNote": "Benchmarks and bands parsed from the local game package",
     "aggregateNote": "The client only defines a per-item percentage, so group and overall figures average those \u2014 one maxed item cannot cover a neglected one. The totals are simply the items you entered added up; the game\u2019s own rating is a separate server value and is not stated to be their sum.",
-    "derivedScore": "Derived score"
+    "derivedScore": "Derived score",
+    "equipmentHint": "All four items are derived from the loadout below. Enter what you wear and the figures follow; the panel's own numbers should match to the point.",
+    "relicsHint": "All three items are derived from the relics below: assembly is the grade's Mark, resonance is the ladder's Mark scaled by k1, affixes are their Marks scaled by k2.",
+    "sectionUnavailable": "The data this group needs has not loaded."
+  },
+  pathway: {
+    "hint": "Extraordinary talent is derived from the active talent tree. Level and pathway skill are server values with no client formula, so copy those from the panel.",
+    "unavailable": "The talent trees have not loaded.",
+    "noTrees": "This pathway has no talent tree in the data yet.",
+    "levelNote": "Computed on the server; nothing in the client package maps a level to points. Copy the figure from the in-game Beyonder Rating panel.",
+    "skillNote": "Computed on the server; the skill score table ships empty. Copy the figure from the in-game Beyonder Rating panel.",
+    "tree": "Talent tree",
+    "points": "Points spent {{spent}}/{{cap}}",
+    "fill": "Max everything",
+    "clear": "Clear",
+    "nodeLevel": "{{name}} level",
+    "levelValue": "Lv {{level}}/{{max}}",
+    "inactive": "Not activated",
+    "formula": "Each level of a talent node is worth {{normal}} points and each activated core talent {{special}}; only the active tree counts, which is exactly the shape of the game's own benchmark for this item."
   },
   bonds: {
     "hint": "Puppet attributes and history research are derived with the client's own arithmetic. Puppet skill and connection skill are server values with no client formula, so copy those from the panel.",
@@ -656,7 +674,12 @@ const en = {
     "grandTotal": "Relic total",
     "subtotalAssembly": "Assembly {{value}}",
     "subtotalResonance": "Resonance {{value}}",
-    "subtotalAffix": "Affixes {{value}}"
+    "subtotalAffix": "Affixes {{value}}",
+    "server": "Scored on",
+    "serverLocal": "This server (grade ≥ {{grade}} counts)",
+    "serverCross": "Cross-server (grade ≥ {{grade}} counts)",
+    "serverHint": "The game caps the grade whose resonance applies: better relics resonate as this grade here.",
+    "scoredAsGrade": "scored as grade {{grade}}"
   },
   catalogPagination: {
     "label": "Catalog pages",
@@ -1180,7 +1203,25 @@ const zhCN: Strings = {
     "loadError": "评分数据加载失败。",
     "dataNote": "期望值与评价档位解析自本地游戏客户端",
     "aggregateNote": "客户端只定义了单项百分比，分组与总体完成度因此由各单项取平均——某一项拉满不会替另一项补分。合计一栏只是你填入各项的加总；游戏自己的非凡评分是另一个服务器数值，并没有说明它等于各项之和。",
-    "derivedScore": "推算分数"
+    "derivedScore": "推算分数",
+    "equipmentHint": "四项均由下方装备推算：填入当前穿戴的装备即得各项分数，与面板数字应逐一吻合。",
+    "relicsHint": "三项均由下方封印物推算：装配为等级 Mark，共鸣为阶梯 Mark × k1，词条为词条 Mark × k2。",
+    "sectionUnavailable": "该分组所需的数据暂未加载。"
+  },
+  pathway: {
+    "hint": "非凡天赋按当前生效的天赋树推算；等级与途径技能由服务器计算、客户端没有公式，请抄面板数值。",
+    "unavailable": "天赋树数据暂未加载。",
+    "noTrees": "数据中暂无该途径的天赋树。",
+    "levelNote": "该项由服务器计算，客户端资源中没有等级到分数的对应——请直接抄游戏内非凡评分面板上的数字。",
+    "skillNote": "该项由服务器计算，技能评分表在客户端为空——请直接抄游戏内非凡评分面板上的数字。",
+    "tree": "天赋树",
+    "points": "已用天赋点 {{spent}}/{{cap}}",
+    "fill": "全部点满",
+    "clear": "清空",
+    "nodeLevel": "{{name}} 等级",
+    "levelValue": "Lv {{level}}/{{max}}",
+    "inactive": "未激活",
+    "formula": "天赋节点每级 {{normal}} 分，每个激活的核心天赋 {{special}} 分，只计当前生效的天赋树——这正是游戏为该项设定的基准值的构成方式。"
   },
   bonds: {
     "hint": "秘偶属性与历史研究按客户端自己的算法推算；秘偶技能与人脉技能由服务器计算、客户端没有公式，请抄面板数值。",
@@ -1314,7 +1355,12 @@ const zhCN: Strings = {
     "grandTotal": "封印物总分",
     "subtotalAssembly": "装配 {{value}}",
     "subtotalResonance": "共鸣 {{value}}",
-    "subtotalAffix": "词条 {{value}}"
+    "subtotalAffix": "词条 {{value}}",
+    "server": "计分环境",
+    "serverLocal": "本服（最高按 {{grade}} 级生效）",
+    "serverCross": "跨服（最高按 {{grade}} 级生效）",
+    "serverHint": "游戏对共鸣生效的等级设有上限：更高等级的封印物在此按该等级计共鸣。",
+    "scoredAsGrade": "按 {{grade}} 级计分"
   },
   catalogPagination: {
     "label": "目录分页",
@@ -1839,7 +1885,25 @@ const zhTW: Strings = {
     "loadError": "評分資料載入失敗。",
     "dataNote": "期望值與評價檔位解析自本機遊戲客戶端",
     "aggregateNote": "客戶端只定義了單項百分比，分組與總體完成度因此由各單項取平均——某一項拉滿不會替另一項補分。合計一欄只是你填入各項的加總；遊戲自己的非凡評分是另一個伺服器數值，並沒有說明它等於各項之和。",
-    "derivedScore": "推算分數"
+    "derivedScore": "推算分數",
+    "equipmentHint": "四項均由下方裝備推算：填入目前穿戴的裝備即得各項分數，與面板數字應逐一吻合。",
+    "relicsHint": "三項均由下方封印物推算：裝配為等級 Mark，共鳴為階梯 Mark × k1，詞條為詞條 Mark × k2。",
+    "sectionUnavailable": "該分組所需的資料尚未載入。"
+  },
+  pathway: {
+    "hint": "非凡天賦按目前生效的天賦樹推算；等級與途徑技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
+    "unavailable": "天賦樹資料尚未載入。",
+    "noTrees": "資料中尚無該途徑的天賦樹。",
+    "levelNote": "該項由伺服器計算，客戶端資源中沒有等級到分數的對應——請直接抄遊戲內非凡評分面板上的數字。",
+    "skillNote": "該項由伺服器計算，技能評分表在客戶端為空——請直接抄遊戲內非凡評分面板上的數字。",
+    "tree": "天賦樹",
+    "points": "已用天賦點 {{spent}}/{{cap}}",
+    "fill": "全部點滿",
+    "clear": "清空",
+    "nodeLevel": "{{name}} 等級",
+    "levelValue": "Lv {{level}}/{{max}}",
+    "inactive": "未啟用",
+    "formula": "天賦節點每級 {{normal}} 分，每個啟用的核心天賦 {{special}} 分，只計目前生效的天賦樹——這正是遊戲為該項設定的基準值的構成方式。"
   },
   bonds: {
     "hint": "秘偶屬性與歷史研究按客戶端自己的演算法推算；秘偶技能與人脈技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
@@ -1973,7 +2037,12 @@ const zhTW: Strings = {
     "grandTotal": "封印物總分",
     "subtotalAssembly": "裝配 {{value}}",
     "subtotalResonance": "共鳴 {{value}}",
-    "subtotalAffix": "詞條 {{value}}"
+    "subtotalAffix": "詞條 {{value}}",
+    "server": "計分環境",
+    "serverLocal": "本服（最高按 {{grade}} 級生效）",
+    "serverCross": "跨服（最高按 {{grade}} 級生效）",
+    "serverHint": "遊戲對共鳴生效的等級設有上限：更高等級的封印物在此按該等級計共鳴。",
+    "scoredAsGrade": "按 {{grade}} 級計分"
   },
   catalogPagination: {
     "label": "目錄分頁",

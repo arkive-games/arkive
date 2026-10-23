@@ -17,7 +17,7 @@ import {
   type PuppetResult,
 } from '@/features/score/bonds'
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
-import { ItemRow } from '@/features/score/SpeciesRow'
+import { GroupSection } from '@/features/score/GroupSection'
 import { portraitUrl, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { TYPE } from '@/lib/typography'
 
@@ -66,50 +66,36 @@ export default function BondsSection({
   const { t } = useTranslation()
 
   return (
-    <section aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
-      <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1.5">
-        <span className={TYPE.sectionTitle}>{group.genus.name}</span>
-        <span className="text-xs font-normal tabular-nums text-muted-foreground">
-          {t('score.groupTotal', {
-            score: group.score.toLocaleString(),
-            expected: group.expected.toLocaleString(),
-            percent: Math.round(group.percent * 100),
-          })}
-        </span>
-      </h2>
-      <p className={`mt-1 ${TYPE.body}`}>{t('bonds.hint')}</p>
-      <div className="mt-2 space-y-2">
-        {group.items.map((item) => {
-          if (item.species.module === PUPPET_GAIN_MODULE) {
-            return (
-              <ItemRow key={item.species.id} item={item} rating={rating}>
-                {data.partners && data.scoring ? (
-                  <PuppetCalculator partners={data.partners} scoring={data.scoring} draft={draft} setDraft={setDraft} />
-                ) : (
-                  <p className={TYPE.body}>{t('bonds.unavailable')}</p>
-                )}
-              </ItemRow>
-            )
+    <GroupSection
+      group={group}
+      rating={rating}
+      hint={t('bonds.hint')}
+      onScore={onScore}
+      present={(item) => {
+        if (item.species.module === PUPPET_GAIN_MODULE) {
+          return {
+            kind: 'derived',
+            calculator:
+              data.partners && data.scoring ? (
+                <PuppetCalculator partners={data.partners} scoring={data.scoring} draft={draft} setDraft={setDraft} />
+              ) : (
+                <p className={TYPE.body}>{t('bonds.unavailable')}</p>
+              ),
           }
-          if (item.species.module === HISTORY_MODULE) {
-            return (
-              <ItemRow key={item.species.id} item={item} rating={rating}>
-                {data.ranks ? (
-                  <HistoryPicker ranks={data.ranks} item={item} draft={draft} setDraft={setDraft} />
-                ) : (
-                  <p className={TYPE.body}>{t('bonds.unavailable')}</p>
-                )}
-              </ItemRow>
-            )
+        }
+        if (item.species.module === HISTORY_MODULE) {
+          return {
+            kind: 'derived',
+            calculator: data.ranks ? (
+              <HistoryPicker ranks={data.ranks} item={item} draft={draft} setDraft={setDraft} />
+            ) : (
+              <p className={TYPE.body}>{t('bonds.unavailable')}</p>
+            ),
           }
-          return (
-            <ItemRow key={item.species.id} item={item} rating={rating} onScore={(value) => onScore(item.species.id, value)}>
-              <p className={TYPE.body}>{t('bonds.typedHint')}</p>
-            </ItemRow>
-          )
-        })}
-      </div>
-    </section>
+        }
+        return { kind: 'typed', note: t('bonds.typedHint') }
+      }}
+    />
   )
 }
 

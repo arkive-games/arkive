@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
@@ -789,13 +789,22 @@ function PieceCard({ equipment, slotName, kind, result, onPatch, onOpenPicker }:
   )
 }
 
+/** The four 装备 items as the page's rating grades them. */
+export type EquipmentTotals = { base: number; enhance: number; reforge: number; suit: number; total: number }
+
 export default function EquipmentSection({
   equipment,
   graces,
   professionId,
+  onTotals,
 }: {
   equipment: Equipment
   graces: Grace[]
+  /**
+   * Reports the four subtotals whenever they change, so the page can grade
+   * them against the rating's benchmarks alongside everything else.
+   */
+  onTotals?: (totals: EquipmentTotals) => void
   /**
    * The character's pathway, owned by the page.
    *
@@ -884,6 +893,9 @@ export default function EquipmentSection({
     const enhance = pieceSums.pieces + (bodyTier?.mark ?? 0) + (refineTier?.mark ?? 0)
     return { ...pieceSums, enhance, suit, total: pieceSums.base + enhance + pieceSums.reforge + suit }
   }, [bodyTier, chosenSuit, refineTier, results])
+  useEffect(() => {
+    onTotals?.(totals)
+  }, [onTotals, totals])
 
   const patchPiece = (index: number, patch: Partial<PieceState>) =>
     writePieces(pieces.map((piece, at) => (at === index ? { ...piece, ...patch } : piece)))
@@ -906,7 +918,8 @@ export default function EquipmentSection({
     <section className="space-y-3" data-testid="equip-section" aria-label={t('equip.title')}>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
         <div className="min-w-0">
-          <h2 className={TYPE.sectionTitle}>{t('equip.title')}</h2>
+          {/* A sub-heading: the page draws the group's own heading and rows above this. */}
+          <h3 className="text-base font-semibold text-foreground">{t('equip.title')}</h3>
           <p className={`mt-0.5 max-w-3xl ${TYPE.body}`}>{t('equip.hint')}</p>
         </div>
         <div className="inline-flex shrink-0 overflow-hidden rounded-md border border-border" role="group" aria-label={t('equip.layout')}>

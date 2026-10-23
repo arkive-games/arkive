@@ -418,6 +418,51 @@ The other two, 秘偶技能 and 人脉技能, have no client formula at all:
 `SkillScoreData` ships as 25 bare ids with every other column stripped, and no
 script references it. They stay typed in from the panel.
 
+### 非凡天赋 (`gmzz.talents`)
+
+```bash
+uv run python -m gmzz.talents
+```
+
+Writes `data-gmzz/score/talents.json`: the twelve talent trees
+(`TalentTreeData`, two per playable pathway) with their nodes (`TalentNodeData`)
+and each node's `Mark`. No client script reads that Mark, but the species'
+benchmark curve is made of it and nothing else: every tree is five levelled
+nodes (Mark 180, 15 levels) and four activate-only ones (Mark 1000), so one
+tree maxes at `5 × 15 × 180 + 4 × 1000 = 17500` — the species' ceiling at 神性 30
+— and the curve's early steps are `1000 + 3 × 180`, `1000 + 5 × 180`, … climbing
+360 a step. The score is `Σ Mark × level` plus `Σ Mark` over activated special
+nodes, for the active tree only. The build asserts the shape it rests on
+(node types, a Mark on every node, the tree's last point cap equalling its
+levels) and drops `TalentTreeData`'s two blank rows for the pathway without
+talents. `TalentNodeDevData` is the designers' working copy and is not read.
+
+Three of the fourteen items remain typed in from the panel with no client
+formula: 等级 (no Mark anywhere maps a level to points), 途径技能
+(`SkillScoreData` is bare ids), and the two bonds skills above.
+
+### 封印物: what the client's own `calcSealedEnhanceMark` does
+
+The relic calculator reproduces `SealedSystem.lua`, read from the bytecode:
+
+- **非凡共鸣** is `floor(Mark × professionCoef × k1)`, where the Mark comes
+  from `SealedInfoAttrData[season][AttributeImproveType][effectiveWords]`. The
+  `AttributeImproveType` is the grade's promote row and **runs the other way
+  from the grade**: grade 3 → x01 (plateaus at 4 words), grade 2 → x02 (5),
+  grades 1 and 0 → x03 (6). `relics.py` emits it as `resonanceTier` on the
+  grade ladder; before that the page clamped the grade onto the tier and read
+  grades 0 and 1 off the x01 ladder — half their worth. The profession
+  coefficients (`SunCoef` …) are 1 in every row shipped and are not modelled.
+- **The grade is capped by server** before any of that:
+  `max(grade, SealEffectBestGradeAtLocalServer = 2)` on a local server and
+  `… AtCrossServer = 1` cross-server (`getSealedMainPropConfig`), so a grade-0
+  relic resonates as grade 2 at home. The page offers the two as a toggle.
+- **封印物词条** is `floor(Σ Mark × k2)` (`calcXtraMatMarkForItem`, every
+  `XtraMatRandomGroupData` row names `k2`), summed first, floored once — the
+  rule the screenshot in the docstring already pinned.
+- **封印物装配** is the promote row's Mark as is: the promote tab previews it as
+  `+%d` with no coefficient (`Sealed_Equip_Panel`).
+
 Three traps, all of which cost time:
 
 - **The static `ExpectedScore` / `MaxScore` columns match no level.** Fitting all

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMemory } from '@gamemap/state-memory'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
@@ -9,14 +9,19 @@ import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/me
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
 import {
-  artifactsInGroup, currentSeason, displayedValue, effectiveAffixCap, evaluateRelicSlot,
-  gradeOptions, gradeRung, k2For, knowledgeLadder, markForStat, materialsForGroup, maxAffixes,
+  artifactsInGroup, currentSeason, displayedValue, effectiveAffixCap, effectiveGrade, evaluateRelicSlot,
+  gradeOptions, gradeRung, k1For, k2For, knowledgeLadder, markForStat, materialsForGroup, maxAffixes,
   newRelicSlot, poolFor, poolRungs, poolStats,
-  type Artifact, type ChosenRelicAffix, type Material, type PoolAffix, type Relics, type RelicSlotState,
+  type Artifact, type ChosenRelicAffix, type Material, type PoolAffix, type Relics, type RelicServer, type RelicSlotState,
 } from '@/features/relics/data'
 
-/** The three slots as stored. `knowledgeLevel` is null until the player moves it, so the dataset's first level applies. */
-type RelicDraft = { knowledgeLevel: number | null; slots: RelicSlotState[] }
+/**
+ * The three slots as stored. `knowledgeLevel` is null until the player moves
+ * it, so the dataset's first level applies; `server` is where the resonance is
+ * scored (see `effectiveGrade`), and is absent in drafts written before it
+ * existed, which read as the local server.
+ */
+type RelicDraft = { knowledgeLevel: number | null; slots: RelicSlotState[]; server?: RelicServer }
 
 function isRelicAffix(value: unknown): value is ChosenRelicAffix {
   return (
@@ -45,9 +50,15 @@ function isRelicDraft(value: unknown): value is RelicDraft {
     isRecord(value) &&
     isNullableNumber(value.knowledgeLevel) &&
     Array.isArray(value.slots) &&
-    value.slots.every(isRelicSlotState)
+    value.slots.every(isRelicSlotState) &&
+    (value.server === undefined || value.server === 'local' || value.server === 'cross')
   )
 }
+
+const SERVERS: RelicServer[] = ['local', 'cross']
+
+/** The three 封印物 items as the page's rating grades them. */
+export type RelicTotals = { assembly: number; resonance: number; affix: number; total: number }
 
 /** The relic inputs survive a reload; a calculator's configuration is a draft, so it takes that class's thirty-day life. */
 const relicDraft = gmzzMemory.draft('score/relics', {
@@ -241,9 +252,9 @@ function KnowledgeBar({ relics, level, k2, season, onChange }: {
   )
 }
 
-function RelicCard({ relics, slot, result, k2, season, onChange }: {
+function RelicCard({ relics, slot, result, k1, k2, season, onChange }: {
   relics: Relics; slot: RelicSlotState; result: ReturnType<typeof evaluateRelicSlot>
-  k2: number; season: number | undefined; onChange: (next: RelicSlotState) => void
+  k1: number; k2: number; season: number | undefined; onChange: (next: RelicSlotState) => void
 }) {
   const { t } = useTranslation()
   const groupId = slot.groupId
@@ -254,7 +265,8 @@ function RelicCard({ relics, slot, result, k2, season, onChange }: {
   const specType = material?.type ?? SPEC_TYPES[0]
   const offered = groupId === SPEC_GROUP ? materials.filter((entry) => entry.type === specType) : materials
   const pool = poolFor(relics, material?.poolSet ?? null)
-  const cap = effectiveAffixCap(relics, slot.grade)
+  // The cap follows the grade the server scores at, not the grade owned.
+  const cap = effectiveAffixCap(relics, result.resonanceGrade)
   const max = maxAffixes(relics)
   const testPrefix = `relic-affix-${groupId}`
   const title = t('relic.groupTitle', { group: relics.groupNames[String(groupId)] ?? '' })
@@ -281,7 +293,10 @@ function RelicCard({ relics, slot, result, k2, season, onChange }: {
       <header className="flex min-w-0 items-start justify-between gap-2 border-b border-border p-2.5">
         <div className="min-w-0">
           <h3 className="text-base font-bold text-foreground">{title}</h3>
-          <p className="text-xs text-muted-foreground">{t('relic.affixCap', { cap })}</p>
+          <p className="text-xs text-muted-foreground">
+            {t('relic.affixCap', { cap })}
+            {result.resonanceGrade !== slot.grade ? ` · ${t('relic.scoredAsGrade', { grade: result.resonanceGrade })}` : ''}
+          </p>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-xs font-semibold text-muted-foreground">{t('relic.slotTotal')}</div>
@@ -365,8 +380,9 @@ function RelicCard({ relics, slot, result, k2, season, onChange }: {
             {result.resonanceStats.map(([stat, value]) => (
               <li key={stat} className="flex flex-wrap items-baseline justify-between gap-x-2">
                 <span>{stat}</span>
+                {/* The table value scaled by k1 and floored, which is what the panel prints. */}
                 <span className="tabular-nums">
-                  {t('relic.resonanceStat', { value, mark: markForStat(relics, stat, value, season) })}
+                  {t('relic.resonanceStat', { value: Math.floor(value * k1), mark: markForStat(relics, stat, value, season) })}
                 </span>
               </li>
             ))}
@@ -388,10 +404,16 @@ function Line({ label, value, strong = false }: { label: string; value: number; 
   )
 }
 
-export default function RelicSection({ relics }: { relics: Relics }) {
+export default function RelicSection({ relics, onTotals }: {
+  relics: Relics
+  /** Reports the three subtotals whenever they change, for the page's rating rows. */
+  onTotals?: (totals: RelicTotals) => void
+}) {
   const { t } = useTranslation()
   const season = useMemo(() => currentSeason(relics), [relics])
   const [draft, setDraft] = useMemory(relicDraft)
+  const server: RelicServer = draft.server ?? 'local'
+  const setServer = (next: RelicServer) => setDraft((prev) => ({ ...prev, server: next }))
   const knowledgeLevel = useMemo(() => {
     const ladder = knowledgeLadder(relics, season)
     const known = ladder.some((rung) => rung.level === draft.knowledgeLevel)
@@ -429,9 +451,10 @@ export default function RelicSection({ relics }: { relics: Relics }) {
     setDraft((prev) => ({ ...prev, slots: update(slots) }))
 
   const k2 = k2For(relics, knowledgeLevel, season)
+  const k1 = k1For(relics, knowledgeLevel, season)
   const results = useMemo(
-    () => slots.map((slot) => evaluateRelicSlot(relics, slot, knowledgeLevel, season)),
-    [relics, slots, knowledgeLevel, season],
+    () => slots.map((slot) => evaluateRelicSlot(relics, slot, knowledgeLevel, season, server)),
+    [relics, slots, knowledgeLevel, season, server],
   )
   const totals = useMemo(
     () =>
@@ -446,19 +469,49 @@ export default function RelicSection({ relics }: { relics: Relics }) {
       ),
     [results],
   )
+  useEffect(() => {
+    onTotals?.(totals)
+  }, [onTotals, totals])
 
   return (
     <section className="space-y-3" data-testid="relic-section" aria-label={t('relic.title')}>
-      <div className="border-b border-border pb-3">
-        <h2 className={TYPE.sectionTitle}>{t('relic.title')}</h2>
-        <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">{t('relic.hint')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
+        <div className="min-w-0">
+          {/* A sub-heading: the page draws the group's own heading and rows above this. */}
+          <h3 className="text-base font-semibold text-foreground">{t('relic.title')}</h3>
+          <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">{t('relic.hint')}</p>
+        </div>
+        <div className="shrink-0">
+          <span className={LABEL_CLASS}>{t('relic.server')}</span>
+          <div className="inline-flex overflow-hidden rounded-md border border-border" role="group" aria-label={t('relic.server')}>
+            {SERVERS.map((entry, index) => (
+              <button
+                key={entry}
+                type="button"
+                aria-pressed={entry === server}
+                onClick={() => setServer(entry)}
+                className={`inline-flex min-h-9 items-center px-3 ${TYPE.control} font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)] ${index > 0 ? 'border-l border-border' : ''} ${
+                  entry === server
+                    ? 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                }`}
+                data-testid={`relic-server-${entry}`}
+              >
+                {t(entry === 'local' ? 'relic.serverLocal' : 'relic.serverCross', {
+                  grade: effectiveGrade(relics, relics.promotion.bestGrade, entry),
+                })}
+              </button>
+            ))}
+          </div>
+          <p className="mt-0.5 max-w-xs text-xs text-muted-foreground">{t('relic.serverHint')}</p>
+        </div>
       </div>
 
       <KnowledgeBar relics={relics} level={knowledgeLevel} k2={k2} season={season} onChange={setKnowledgeLevel} />
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         {slots.map((slot, index) => (
-          <RelicCard key={slot.groupId} relics={relics} slot={slot} result={results[index]} k2={k2} season={season}
+          <RelicCard key={slot.groupId} relics={relics} slot={slot} result={results[index]} k1={k1} k2={k2} season={season}
             onChange={(next) => setSlots((prev) => prev.map((entry, at) => (at === index ? next : entry)))} />
         ))}
       </div>

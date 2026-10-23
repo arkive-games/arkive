@@ -23,13 +23,13 @@ ARTIFACTS = {
 # Nested two levels: artifact id -> grade -> row.
 PROMOTE = {
     "2085029": {
-        "3": {"Grade": 3, "Mark": 500, "AttributeImproveTitle": "3级封印物最多生效4条词条"},
-        "2": {"Grade": 2, "Mark": 2500, "AttributeImproveTitle": "2级封印物最多生效5条词条"},
-        "1": {"Grade": 1, "Mark": 4500, "AttributeImproveTitle": ""},
-        "0": {"Grade": 0, "Mark": 6500, "AttributeImproveTitle": ""},
+        "3": {"Grade": 3, "Mark": 500, "AttributeImproveType": 101, "AttributeImproveTitle": "3级封印物最多生效4条词条"},
+        "2": {"Grade": 2, "Mark": 2500, "AttributeImproveType": 102, "AttributeImproveTitle": "2级封印物最多生效5条词条"},
+        "1": {"Grade": 1, "Mark": 4500, "AttributeImproveType": 103, "AttributeImproveTitle": ""},
+        "0": {"Grade": 0, "Mark": 6500, "AttributeImproveType": 103, "AttributeImproveTitle": ""},
     },
     "2085004": {
-        "3": {"Grade": 3, "Mark": 500, "AttributeImproveTitle": ""},
+        "3": {"Grade": 3, "Mark": 500, "AttributeImproveType": 201, "AttributeImproveTitle": ""},
     },
 }
 
@@ -127,6 +127,19 @@ def test_promotion_reads_the_nested_shape_and_orders_worst_first(stub):
     assert ladder["bestGrade"] == 0
     assert ladder["worstGrade"] == 3
     assert "4条词条" in ladder["ladder"][0]["note"]
+    # The resonance tier runs the OTHER way from the grade: the worst grade
+    # reads the x01 ladder (capped at 4 affixes) and both best grades the x03.
+    assert [r["resonanceTier"] for r in ladder["ladder"]] == [1, 2, 3, 3]
+
+
+def test_promotion_refuses_a_grade_with_two_resonance_tiers(stub, monkeypatch):
+    # Copied, not edited in place: the fixture tables are module-level and a
+    # mutation would leak into the build test that runs after this one.
+    broken = json.loads(json.dumps(PROMOTE))
+    broken["2085004"]["3"]["AttributeImproveType"] = 203
+    monkeypatch.setitem(stub, relics.PROMOTE_TABLE, broken)
+    with pytest.raises(RuntimeError, match="resonance tier"):
+        relics.promotion(None, {})
 
 
 def test_promotion_refuses_a_grade_whose_mark_differs_between_artifacts(stub, monkeypatch):

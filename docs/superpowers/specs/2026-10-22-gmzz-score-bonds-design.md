@@ -39,7 +39,29 @@ a `jit.util` lister) rather than guessed:
   group total and bands are graded like every other item. Inputs persist in the
   `score/bonds` draft (thirty-day class, same as the character draft).
 
-## Out of scope
+## Follow-up (2026-10-23): the rest of the panel
 
-途径 stays "coming soon". 人脉回响 (`FellowEchoData`) has a Mark ladder too but no
-species claims it; it is not shown until something does.
+Every one of the fourteen items now has a row, under the four groups in the
+panel's order, graded by the one `evaluate` call:
+
+| group | derived by the page | typed from the panel |
+| --- | --- | --- |
+| 途径 | 非凡天赋 (`Σ node Mark × level` over the active tree; `TalentNodeData`) | 等级, 途径技能 |
+| 装备 | all four, reported up by `EquipmentSection` | — |
+| 封印物 | all three, reported up by `RelicSection` | — |
+| 非凡人物 | 秘偶属性, 历史研究 | 秘偶技能, 人脉技能 |
+
+The relic section, hidden since it was written, now follows the client's own
+`calcSealedEnhanceMark`: resonance is `floor(Mark × k1)` read at the grade's
+`AttributeImproveType` tier (which runs opposite to the grade; the earlier
+clamp read grades 0 and 1 off the wrong ladder) after the server's grade cap
+(local ≥ 2, cross-server ≥ 1, offered as a toggle). The two self-contained
+sections report their subtotals through an `onTotals` callback rather than
+being lifted, because each owns a draft of its own.
+
+What is still not verified against a real account: the 非凡天赋 formula rests
+on the benchmark curve being built from the Marks (an exact structural fit,
+not a client call), and the relic server cap on `getSealedMainPropConfig`
+rather than on the server's score property. One panel reading would settle
+each. 人脉回响 (`FellowEchoData`) has a Mark ladder too but no species claims
+it; it is not shown until something does.

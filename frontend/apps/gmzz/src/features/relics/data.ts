@@ -18,8 +18,17 @@ export type Artifact = {
   seasons: number[]
 }
 
-/** Grade ladder. **Lower grade is better** — 3 is the starting grade, 0 the best. */
-export type GradeRung = { grade: number; mark: number; note: string }
+/**
+ * Grade ladder. **Lower grade is better** — 3 is the starting grade, 0 the best.
+ *
+ * `resonanceTier` is the digit the 非凡共鸣 ladder is keyed by for this grade
+ * (`SealedPromoteData.AttributeImproveType % 100`): grade 3 reads tier 1, grade 2
+ * tier 2, grades 1 and 0 tier 3. It runs the other way from the grade, which is
+ * why it is data rather than arithmetic. Optional because a dataset published
+ * before it was emitted has none; `resonanceKey` then falls back to the old
+ * guess, which is right for grades 2 and 3 only.
+ */
+export type GradeRung = { grade: number; mark: number; note: string; resonanceTier?: number }
 
 export type Risk = {
   id: number | null
@@ -110,6 +119,20 @@ export function k2For(relics: Relics, level: number, season?: number): number {
   return exact?.k2 ?? ladder[0]?.k2 ?? 0
 }
 
+/**
+ * `k1` at a knowledge level — the coefficient 非凡共鸣 scales by.
+ *
+ * The table carries k1 and k2 as separate columns and every resonance row names
+ * `k1` (`SealedInfoAttrData.KnowledgeCoef`) while every affix group names `k2`.
+ * They happen to be equal in the shipped ladder; reading the right one keeps the
+ * page correct the day they are not.
+ */
+export function k1For(relics: Relics, level: number, season?: number): number {
+  const ladder = knowledgeLadder(relics, season)
+  const exact = ladder.find((rung) => rung.level === level)
+  return exact?.k1 ?? ladder[0]?.k1 ?? 0
+}
+
 export function worthFor(relics: Relics, stat: string, season?: number): number {
   return forSeason(relics.worths, season)?.[stat] ?? 0
 }
@@ -197,9 +220,12 @@ export type RelicSlotResult = {
   artifact: Artifact | null
   /** 封印物装配 — the grade ladder's mark. */
   assemblyScore: number
-  /** 非凡共鸣 — from the resonance ladder at the effective affix count. */
+  /** 非凡共鸣 — `floor(mark × k1)` at the effective affix count, as `calcSealedEnhanceMark` does. */
   resonanceScore: number
+  /** The ladder's table stats; the game shows `floor(value × k1)`. */
   resonanceStats: [string, number][]
+  /** The grade the resonance was read at, after the server cap. */
+  resonanceGrade: number
   /** 封印物词条 — floor(k2 * sum(mark)). */
   affixScore: number
   /** Affixes beyond the grade's cap, which pay nothing. */
@@ -208,18 +234,40 @@ export type RelicSlotResult = {
 }
 
 /**
+ * Where a relic's effect is scored.
+ *
+ * The client caps the grade whose 非凡共鸣 applies by server: on a local
+ * server a grade-0 or grade-1 relic resonates as grade 2
+ * (`SealEffectBestGradeAtLocalServer`), on a cross-server one as grade 1
+ * (`SealEffectBestGradeAtCrossServer`); `getSealedMainPropConfig` takes
+ * `max(grade, cap)`. Assembly and affixes are not capped.
+ */
+export type RelicServer = 'local' | 'cross'
+
+/** The grade whose resonance ladder applies on a server, which is never better than that server's cap. */
+export function effectiveGrade(relics: Relics, grade: number, server: RelicServer): number {
+  const key = server === 'cross' ? 'SealEffectBestGradeAtCrossServer' : 'SealEffectBestGradeAtLocalServer'
+  const cap = relics.constants[key]
+  return typeof cap === 'number' ? Math.max(grade, cap) : grade
+}
+
+/**
  * The resonance tier key for an artifact at a grade.
  *
- * `Group` in the resonance table is the group id and a grade tier concatenated:
- * 101/102/103 are attack at tier 1/2/3. The tier is the *effective* grade,
- * clamped to 1..3 because grade 0 shares grade 1's tier.
+ * `Group` in the resonance table is the group id and a tier concatenated:
+ * 101/102/103 are attack at tier 1/2/3. The tier comes from the grade's own
+ * promote row (`GradeRung.resonanceTier`) and runs the OTHER way from the
+ * grade — grade 3 is tier 1, grades 1 and 0 are tier 3 — so a dataset without
+ * the field falls back to the clamped grade, which was the earlier reading and
+ * is right only for grades 2 and 3.
  */
-export function resonanceKey(groupId: number, grade: number): string {
+export function resonanceKey(relics: Relics, groupId: number, grade: number): string {
   // `groupId * 100 + tier`, not string concatenation: the real group ids are
   // 1/2/3, so concatenating gives "13" where the table is keyed "103" and every
   // lookup misses — which reads as 非凡共鸣 being worth zero rather than as an
-  // error. Grade 0 shares grade 1's tier.
-  return String(groupId * 100 + Math.min(3, Math.max(1, grade)))
+  // error.
+  const tier = gradeRung(relics, grade)?.resonanceTier ?? Math.min(3, Math.max(1, grade))
+  return String(groupId * 100 + tier)
 }
 
 export function evaluateRelicSlot(
@@ -227,19 +275,31 @@ export function evaluateRelicSlot(
   state: RelicSlotState,
   knowledgeLevel: number,
   season?: number,
+  server: RelicServer = 'local',
 ): RelicSlotResult {
   const artifact = relics.artifacts.find((a) => a.id === state.artifactId) ?? null
   const k2 = k2For(relics, knowledgeLevel, season)
+  const k1 = k1For(relics, knowledgeLevel, season)
 
+  // The promote tab previews the grade's Mark as `+%d`, unscaled, so assembly
+  // takes no knowledge coefficient.
   const assemblyScore = gradeRung(relics, state.grade)?.mark ?? 0
 
-  const cap = effectiveAffixCap(relics, state.grade)
+  // Resonance is read at the server-capped grade, and so is the affix cap: the
+  // ladder plateaus at that grade's word count, so both must agree or a
+  // grade-0 relic on a local server would count six affixes against a
+  // five-word ladder.
+  const resonanceGrade = effectiveGrade(relics, state.grade, server)
+  const cap = effectiveAffixCap(relics, resonanceGrade)
   const effective = state.affixes.slice(0, cap)
   const cappedOut = Math.max(0, state.affixes.length - cap)
 
-  const ladder = forSeason(relics.resonance, season)?.[resonanceKey(state.groupId, state.grade)] ?? []
+  const ladder = forSeason(relics.resonance, season)?.[resonanceKey(relics, state.groupId, resonanceGrade)] ?? []
   const rung = ladder.find((r) => r.affixCount === effective.length)
-  const resonanceScore = rung?.mark ?? 0
+  // `calcSealedEnhanceMark`: floor(Mark × professionCoefficient × k1). The
+  // profession coefficients are 1 for every row shipped, so they are not
+  // modelled; the floor is the client's.
+  const resonanceScore = rung ? Math.floor((rung.mark ?? 0) * k1) : 0
   const resonanceStats = rung?.stats ?? []
 
   const affixScore = materialScore(effective, k2)
@@ -250,6 +310,7 @@ export function evaluateRelicSlot(
     assemblyScore,
     resonanceScore,
     resonanceStats,
+    resonanceGrade,
     affixScore,
     cappedOut,
     total: assemblyScore + resonanceScore + affixScore,
