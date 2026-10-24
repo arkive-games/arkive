@@ -13,6 +13,7 @@ import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { HISTORY_MODULE, PUPPET_GAIN_MODULE, type BondsData } from '@/features/score/BondsSection'
 import { emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
 import {
+  benchmarkAt,
   clamp,
   evaluate,
   headroom,
@@ -22,7 +23,7 @@ import {
   type Rating,
 } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
-import PathwaySection, { TALENT_MODULE } from '@/features/score/PathwaySection'
+import PathwaySection, { LEVEL_MODULE, TALENT_MODULE } from '@/features/score/PathwaySection'
 import { emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, treeFor, type Talents } from '@/features/score/talents'
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
@@ -184,6 +185,12 @@ export default function ScorePage() {
       const species = rating.species.find((entry) => entry.module === module)
       if (species) merged[species.id] = value
     }
+    // 等级 scores exactly its expected benchmark at the chosen role and divinity
+    // level — the panel shows the two equal — so it follows the level inputs
+    // rather than being typed. Its expected and max curves are identical, so
+    // the item always grades at 100%.
+    const level = rating.species.find((entry) => entry.module === LEVEL_MODULE)
+    if (level) put(LEVEL_MODULE, benchmarkAt(level.expected, roleLevel, divinityLevel, rating.maxRoleLevel))
     put(TALENT_MODULE, talents ? evaluateTalents(treeFor(talents, professionId, talentState.treeId), talentState.levels).total : 0)
     for (const [part, module] of Object.entries(EQUIPMENT_MODULES)) {
       put(module, equipmentTotals?.[part as keyof EquipmentTotals] ?? 0)
@@ -194,7 +201,7 @@ export default function ScorePage() {
     put(PUPPET_GAIN_MODULE, partners && scoring ? evaluatePuppets(bonds.puppets, partners, scoring, bonds.dominateSlots).total : 0)
     put(HISTORY_MODULE, ranks ? historyScore(ranks, bonds.historyRankId) : 0)
     return merged
-  }, [draft.scores, rating, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, bonds])
+  }, [draft.scores, rating, roleLevel, divinityLevel, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, bonds])
   const result = useMemo(
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],

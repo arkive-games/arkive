@@ -489,9 +489,16 @@ nodes, for the active tree only. The build asserts the shape it rests on
 levels) and drops `TalentTreeData`'s two blank rows for the pathway without
 talents. `TalentNodeDevData` is the designers' working copy and is not read.
 
+等级 has no Mark anywhere in the package, but the in-game panel always shows
+its score equal to its expected benchmark — which, for this species, is also
+its max: the two curves are identical. The page therefore scores it as the
+expected curve at the chosen role and divinity level, so it always grades at
+100%. This is an observation from the panel, not something the client spells
+out.
+
 Three of the fourteen items remain typed in from the panel with no client
-formula: 等级 (no Mark anywhere maps a level to points), 途径技能
-(`SkillScoreData` is bare ids), and the two bonds skills above.
+formula: 途径技能 (`SkillScoreData` is bare ids) and the two bonds skills
+above.
 
 ### 封印物: what the client's own `calcSealedEnhanceMark` does
 

@@ -530,10 +530,10 @@ const en = {
     "sectionUnavailable": "The data this group needs has not loaded."
   },
   pathway: {
-    "hint": "Extraordinary talent is derived from the active talent tree. Level and pathway skill are server values with no client formula, so copy those from the panel.",
+    "hint": "Level equals its expected benchmark and extraordinary talent is derived from the active talent tree. Pathway skill is a server value with no client formula, so copy it from the panel.",
     "unavailable": "The talent trees have not loaded.",
     "noTrees": "This pathway has no talent tree in the data yet.",
-    "levelNote": "Computed on the server; nothing in the client package maps a level to points. Copy the figure from the in-game Beyonder Rating panel.",
+    "levelNote": "The level score always equals its expected benchmark (which is also its cap), so it follows the role and divinity level set above.",
     "skillNote": "Computed on the server; the skill score table ships empty. Copy the figure from the in-game Beyonder Rating panel.",
     "tree": "Talent tree",
     "points": "Points spent {{spent}}/{{cap}}",
@@ -1210,10 +1210,10 @@ const zhCN: Strings = {
     "sectionUnavailable": "该分组所需的数据暂未加载。"
   },
   pathway: {
-    "hint": "非凡天赋按当前生效的天赋树推算；等级与途径技能由服务器计算、客户端没有公式，请抄面板数值。",
+    "hint": "等级分数等于其期望值；非凡天赋按当前生效的天赋树推算；途径技能由服务器计算、客户端没有公式，请抄面板数值。",
     "unavailable": "天赋树数据暂未加载。",
     "noTrees": "数据中暂无该途径的天赋树。",
-    "levelNote": "该项由服务器计算，客户端资源中没有等级到分数的对应——请直接抄游戏内非凡评分面板上的数字。",
+    "levelNote": "等级分数始终等于期望值（也是上限），随上方的角色等级与神性等级自动计算。",
     "skillNote": "该项由服务器计算，技能评分表在客户端为空——请直接抄游戏内非凡评分面板上的数字。",
     "tree": "天赋树",
     "points": "已用天赋点 {{spent}}/{{cap}}",
@@ -1892,10 +1892,10 @@ const zhTW: Strings = {
     "sectionUnavailable": "該分組所需的資料尚未載入。"
   },
   pathway: {
-    "hint": "非凡天賦按目前生效的天賦樹推算；等級與途徑技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
+    "hint": "等級分數等於其期望值；非凡天賦按目前生效的天賦樹推算；途徑技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
     "unavailable": "天賦樹資料尚未載入。",
     "noTrees": "資料中尚無該途徑的天賦樹。",
-    "levelNote": "該項由伺服器計算，客戶端資源中沒有等級到分數的對應——請直接抄遊戲內非凡評分面板上的數字。",
+    "levelNote": "等級分數始終等於期望值（也是上限），隨上方的角色等級與神性等級自動計算。",
     "skillNote": "該項由伺服器計算，技能評分表在客戶端為空——請直接抄遊戲內非凡評分面板上的數字。",
     "tree": "天賦樹",
     "points": "已用天賦點 {{spent}}/{{cap}}",

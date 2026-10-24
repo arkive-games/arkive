@@ -28,12 +28,12 @@ const TAB_CLASS = `inline-flex min-h-9 items-center gap-1.5 px-3 ${TYPE.control}
 const BUTTON_CLASS = `inline-flex h-8 items-center justify-center rounded-md border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 
 /**
- * The 途径 group: 等级 and 途径技能 typed from the panel, 非凡天赋 derived from
- * the active talent tree.
+ * The 途径 group: 等级 and 非凡天赋 derived, 途径技能 typed from the panel.
  *
- * 等级 and 途径技能 have no client formula — the level score is a server value
- * with no Mark anywhere in the package, and `SkillScoreData` ships as bare ids
- * — so they stay typed. 非凡天赋 follows the tree's Marks; see `talents.ts`.
+ * 等级 has no Mark anywhere in the package, but the panel always shows it equal
+ * to its expected benchmark, so the page scores it as that benchmark at the
+ * chosen levels. 途径技能 stays typed: `SkillScoreData` ships as bare ids.
+ * 非凡天赋 follows the tree's Marks; see `talents.ts`.
  */
 export default function PathwaySection({
   group,
@@ -71,7 +71,10 @@ export default function PathwaySection({
             ),
           }
         }
-        return { kind: 'typed', note: t(item.species.module === LEVEL_MODULE ? 'pathway.levelNote' : 'pathway.skillNote') }
+        if (item.species.module === LEVEL_MODULE) {
+          return { kind: 'derived', calculator: <p className={TYPE.body}>{t('pathway.levelNote')}</p> }
+        }
+        return { kind: 'typed', note: t('pathway.skillNote') }
       }}
     />
   )
