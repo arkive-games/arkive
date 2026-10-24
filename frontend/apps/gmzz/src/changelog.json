@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.17.0",
+      "date": "2026-10-25",
+      "commit": "d40de664f7788749d24b4840b1897b2ef4483be7",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "New Trade War guide: trading rules, goods ranked by margin per load, stations and routes, caravan upgrades, a profit calculator using the game's tax formulas, and the commission list.",
+            "zh-CN": "新增贸易战攻略：交易规则、按每负重价差排序的特产、贸易站与路线、商队升级、按游戏税率公式计算的利润计算器，以及委托列表。",
+            "zh-TW": "新增貿易戰攻略：交易規則、按每負重價差排序的特產、貿易站與路線、商隊升級、按遊戲稅率公式計算的利潤計算器，以及委託列表。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.16.0",
       "date": "2026-10-23",
       "commit": "ff6eba6419297f5b9568ff75a51f2c40b6b0ad19",
