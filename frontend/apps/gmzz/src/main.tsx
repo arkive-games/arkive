@@ -24,6 +24,8 @@ import AutoChessTalentsPage from './features/autochess/AutoChessTalentsPage'
 import SecretPartnersPage from './features/secretpartners/SecretPartnersPage'
 import FellowsPage from './features/fellows/FellowsPage'
 import FellowRelationsPage from './features/fellows/FellowRelationsPage'
+import ManagedTradePage from './features/managedtrade/ManagedTradePage'
+import { managedTradeSearch } from './features/managedtrade/data'
 import { initDataVersion } from './lib/urls'
 import { BottomTabBar } from './components/BottomTabBar'
 
@@ -61,10 +63,14 @@ const autoChessTalentsRoute = createRoute({ getParentRoute: () => rootRoute, pat
 const fellowsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/fellows', component: FellowsPage })
 const fellowRelationsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/fellows/relations', component: FellowRelationsPage })
 
+// 贸易战. One page: the sections are tabs carried in `?tab=`, so each can be
+// linked without a route of its own.
+const managedTradeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/managedtrade', validateSearch: managedTradeSearch, component: ManagedTradePage })
+
 const routeTree = rootRoute.addChildren([
   homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, changelogRoute, leaguePointsRoute,
   autoChessRoute, autoChessPiecesRoute, autoChessBondsRoute, autoChessItemsRoute, autoChessTalentsRoute,
-  fellowsRoute, fellowRelationsRoute,
+  fellowsRoute, fellowRelationsRoute, managedTradeRoute,
   createRoute({ getParentRoute: () => rootRoute, path: '/secretpartners', component: SecretPartnersPage }),
 ])
 

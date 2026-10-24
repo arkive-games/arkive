@@ -11,6 +11,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/managedtrade",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/managedtrade*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/utopia",
       "destination": "/index.html"
     },

@@ -1,5 +1,6 @@
 import i18n from 'i18next'
 import { secretPartnerMessages } from './features/secretpartners/messages'
+import { managedTradeMessages } from './features/managedtrade/messages'
 import { initReactI18next } from 'react-i18next'
 import { createLanguagePreference, detectLanguagePreference } from '@gamemap/state-memory'
 import { bindArkiveDocumentLocale } from '@gamemap/map-shell'
@@ -2089,7 +2090,7 @@ export function applyLanguage(code: string) {
 void i18n.use(initReactI18next).init({
   lng: detectLanguagePreference(LANGUAGES, 'en-US'),
   resources: Object.fromEntries(
-    LANGUAGES.map((lng) => [lng, { translation: { ...(UI[lng] ?? en), secretpartners: secretPartnerMessages[lng] } }]),
+    LANGUAGES.map((lng) => [lng, { translation: { ...(UI[lng] ?? en), secretpartners: secretPartnerMessages[lng], managedtrade: managedTradeMessages[lng] } }]),
   ),
   supportedLngs: [...LANGUAGES],
   fallbackLng: 'en-US',

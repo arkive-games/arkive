@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Coins,
   Contact,
   Gauge,
   Grid3X3,
@@ -20,6 +21,7 @@ import {
 export type NavKey =
   | '/'
   | '/traintrade'
+  | '/managedtrade'
   | '/tools/traintrade-station'
   | '/utopia'
   | '/reforge'
@@ -89,6 +91,8 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: BookOpen,
     children: [
       { key: '/traintrade', labelKey: 'trainTrade.title', art: 'icons/2000235', icon: Package },
+      // A trade-war specialty, so the two trade modes are told apart by their goods.
+      { key: '/managedtrade', labelKey: 'managedtrade.title', art: 'icons/2000292', icon: Coins },
       // One entry for both Connections pages: the menu is a single level, and
       // Roster and Relations switch between each other from their own tab control.
       { key: '/fellows', labelKey: 'nav.fellows', art: 'fellows/7_Klein', icon: Contact },
