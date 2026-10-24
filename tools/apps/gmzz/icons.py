@@ -1,15 +1,16 @@
-"""Emit the train-trade goods icons into ``resource-gmzz``.
+"""Emit the trade-mode goods icons into ``resource-gmzz``.
 
-Run from ``tools/`` (after ``gmzz.traintrade``)::
+Run from ``tools/`` (after ``gmzz.traintrade`` and ``gmzz.managedtrade``)::
 
     uv run python -m gmzz.icons
 
-Goods do not carry an icon path. The chain is
-``TrainTradeGoodsData.SystemItemID`` → ``ItemNewData.icon`` → a numeric asset
-under ``C7/Content/Arts/UI_2/Resource/Item/{Large,Middle,Small}/<icon>.uasset``,
-so the icon id is resolved here and written alongside the images as
-``traintrade/icons.json``. It is kept out of ``goods.json`` on purpose: every
-field there is the client's own, and this one is a join we performed.
+Goods do not carry an icon path. The chain is the goods row's item id
+(``TrainTradeGoodsData.SystemItemID``, ``ManagedTradeGoodsData.ItemDisplayId``)
+→ ``ItemNewData.icon`` → a numeric asset under
+``C7/Content/Arts/UI_2/Resource/Item/{Large,Middle,Small}/<icon>.uasset``, so
+the icon id is resolved here and written alongside the images as
+``<mode>/icons.json``. It is kept out of ``goods.json`` on purpose: every field
+there is the client's own, and this one is a join we performed.
 
 Reaching those assets at all requires uex's ``GAME_LordOfMysteries`` provider
 with ``paksDir`` set to the **game root** — see this app's README.
@@ -34,7 +35,17 @@ OUT_SUBDIR = "icons"
 WEBP_QUALITY = 90
 
 
-def goods_icon_ids(excel: Path, goods: list[dict]) -> dict[str, str]:
+#: ``(dataset subdir, goods id column, item id column)``. The two trade modes
+#: spell the same join with different column names, and neither is renamed.
+DATASETS = (
+    ("traintrade", "ID", "SystemItemID"),
+    ("managedtrade", "Id", "ItemDisplayId"),
+)
+
+
+def goods_icon_ids(
+    excel: Path, goods: list[dict], id_field: str = "ID", item_field: str = "SystemItemID"
+) -> dict[str, str]:
     """``{goods id: icon id}`` for every row, via the item table.
 
     Raises if any row fails to resolve: a goods entry with no icon would render
@@ -44,12 +55,12 @@ def goods_icon_ids(excel: Path, goods: list[dict]) -> dict[str, str]:
     out: dict[str, str] = {}
     unresolved: list[int] = []
     for row in goods:
-        item = items.get(str(row["SystemItemID"]))
+        item = items.get(str(row[item_field]))
         icon = (item or {}).get("icon")
         if not icon:
-            unresolved.append(row["ID"])
+            unresolved.append(row[id_field])
             continue
-        out[str(row["ID"])] = str(icon)
+        out[str(row[id_field])] = str(icon)
     if unresolved:
         raise RuntimeError(
             f"{len(unresolved)} goods had no icon via ItemNewData, e.g. {unresolved[:5]}"
@@ -58,8 +69,15 @@ def goods_icon_ids(excel: Path, goods: list[dict]) -> dict[str, str]:
 
 
 def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> int:
-    goods = read_json(Path(data_out) / "traintrade" / "goods.json")
-    icons = goods_icon_ids(excel, goods)
+    # A mode whose dataset has not been emitted yet is skipped, not an error:
+    # each mode's stage runs on its own. At least one must be there, though.
+    mappings: dict[str, dict[str, str]] = {}
+    for subdir, id_field, item_field in DATASETS:
+        goods_file = Path(data_out) / subdir / "goods.json"
+        if goods_file.is_file():
+            mappings[subdir] = goods_icon_ids(excel, read_json(goods_file), id_field, item_field)
+    if not mappings:
+        raise FileNotFoundError(f"no goods.json under {data_out} — run gmzz.traintrade / gmzz.managedtrade first")
 
     # Everything is validated before anything is written. Writing icons.json first
     # and then failing on a missing PNG would leave the dataset claiming icons that
@@ -70,7 +88,7 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> int:
     if not source.is_dir():
         raise FileNotFoundError(f"{source} not found — {export_hint}")
     # The HIGH_ tiers share art with their base tier, so distinct ids < goods rows.
-    wanted = sorted(set(icons.values()))
+    wanted = sorted({icon for icons in mappings.values() for icon in icons.values()})
     missing = [icon for icon in wanted if not (source / f"{icon}.png").is_file()]
     if missing:
         raise FileNotFoundError(
@@ -83,9 +101,11 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> int:
     for icon in wanted:
         with Image.open(source / f"{icon}.png") as img:
             img.save(target / f"{icon}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
-    write_json(Path(data_out) / "traintrade" / "icons.json", icons)
+    for subdir, icons in mappings.items():
+        write_json(Path(data_out) / subdir / "icons.json", icons)
+        print(f"icons: {subdir}: {len(icons)} goods")
 
-    print(f"icons: {len(wanted)} webp for {len(icons)} goods -> {target}")
+    print(f"icons: {len(wanted)} webp -> {target}")
     return len(wanted)
 
 

@@ -154,6 +154,56 @@ ships as six bare ids with no membership, so emitting it would promise a
 card-to-pool mapping the export does not contain — the same reason the Utopian
 Theater dataset drops its `pool` field.
 
+## Trade war (贸易战)
+
+```bash
+uv run python -m gmzz.managedtrade
+uv run python -m gmzz.icons
+```
+
+Writes `managedtrade/{goods,sites,routes,caravans,caravan_parts,caravan_props,
+commissions,constants,formulas}.json` into `GMZZ_DATA_OUT`. The client calls the
+mode `ManagedTrade` and its constants `TRADEWAR_*`; it is the guild caravan
+board, unrelated to Train trade above. `formulas.json` is the two `FormulaData`
+rows the client prices with, verbatim.
+
+**Live prices are not in the client and cannot be emitted.** The service's
+`siteTradeInfo` (`ManagedTradeService.xml`, `SERVER_ONLY`, written by shard 0
+only) holds every station's stock and price; a client gets one station's
+snapshot by sending `ReqSyncTradeStationGoods` and receiving
+`RetSyncTradeStationGoods` (snapshot, rumors, next refresh time). Buy and sell
+requests carry the price and tax the client displayed, and the service rejects
+any mismatch (`PRICE_MISMATCH`). The NetDef comments describe the server's
+model: a refresh every `PRICE_UPDATE_INTERVAL` minutes, and per 4-hour slot a
+random peak time inside `TRADEWAR_PEAK_TIME_RANGE` before which the price heads
+for `floor(mid × ratioMax)` and after which for `floor(mid × ratioMin)`. The
+ratios themselves are drawn server-side and never sent.
+
+What the client *does* decide, read from `ManagedTradeSystem` /
+`ManagedTradeUtils` bytecode:
+
+- **Goods `Sell*`/`Buy*` are the station's side.** The price a player pays is
+  graded against `SellMin..SellMax`, the price a player is paid against
+  `BuyMin..BuyMax` (`GetStationGoods{Sell,Buy}PriceLevel` cross over to
+  `GetGoods{Buy,Sell}PriceLevel`). Read the other way, every good loses money.
+- **Tax both ways:** `TradeWar_BuyPrice = floor($1*(100+max($2-$3,0))/100)` and
+  `TradeWar_SellPrice = floor($1*(100-max($2-$3,0))/100)`, with $1 the untaxed
+  price, $2 the station's tax and $3 the caravan's tax reduction.
+- **Price level:** `(price − min) / (max − min)` cut at 0.2 / 0.4 / 0.6 / 0.8,
+  each cut inclusive of the band below; a degenerate range is "medium".
+- **Caravan attributes** (`GetCaravanAttrValue`): the caravan level's column
+  plus each part's bonus at its level, from the part ladder *of that caravan
+  level* — `CARAVAN_ATTR_FIELD` in `Shared.Const.ManagedTradeConst` pairs the
+  columns (`MaxLoad`+`LoadBonus`, `TaxReduction`+`TaxReduceBonus`, …).
+- **Specialties:** a station only sells its `SpecialtyGoods` (`GOODS_NOT_SPECIALTY`)
+  and never buys them (`SELL_OWN_SPECIALTY`). Trading stops between
+  `TRADEWAR_NIGHT_START` and `TRADEWAR_NIGHT_END` o'clock.
+
+`ManagedTradeEventData` is **not** emitted: its 21 market events name goods
+1001–4101 while the goods table holds 5101–5403, so every event points at a good
+that no longer exists. The stage checks that every goods and site id the shipped
+tables name resolves, so the others cannot drift the same way unnoticed.
+
 ## Goods icons
 
 ```bash
@@ -161,12 +211,14 @@ uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Item/Large
 uv run python -m gmzz.icons
 ```
 
-Goods carry no icon path. The chain is `TrainTradeGoodsData.SystemItemID` →
-`ItemNewData.icon` → `C7/Content/Arts/UI_2/Resource/Item/Large/<icon>.uasset`
-(400×400 DXT5). `gmzz.icons` resolves it, writes the 32 distinct WebP images
-into `GMZZ_RES_OUT/icons/` and the mapping into
-`data-gmzz/traintrade/icons.json`. Thirty-two, not sixty-four: the `HIGH_` tiers
-share art with their base tier, as they share descriptions.
+Goods carry no icon path. The chain is `TrainTradeGoodsData.SystemItemID` (or
+`ManagedTradeGoodsData.ItemDisplayId`) → `ItemNewData.icon` →
+`C7/Content/Arts/UI_2/Resource/Item/Large/<icon>.uasset` (400×400 DXT5).
+`gmzz.icons` resolves it for every trade mode whose `goods.json` has been
+emitted, writes the distinct WebP images into `GMZZ_RES_OUT/icons/` and one
+mapping per mode into `data-gmzz/<mode>/icons.json`. Train trade has 32 images
+for 64 goods: the `HIGH_` tiers share art with their base tier, as they share
+descriptions.
 
 The icon id stays out of `goods.json` deliberately — every field there is the
 client's own, and this one is a join we performed. The stage fails rather than
