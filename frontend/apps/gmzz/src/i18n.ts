@@ -341,6 +341,12 @@ const en = {
             "description": "Pursue the optimal line through Train Tycoon's most complex map.",
             "price": "Buy 0.7-1.4x · Sell 0.6-1.5x",
             "stock": "Contract stock bonus 10% / 75% / 150% / 225%"
+          },
+          "frenzy": {
+            "name": "Frenzy route",
+            "description": "Unlocks the strategy-card frenzy mechanic: when to cash in for the biggest payoff tests your nerve and your luck.",
+            "price": "Buy 0.7-1.4x · Sell 0.6-1.5x",
+            "stock": "Contract stock bonus 10% / 75% / 150% / 225%"
           }
         },
         "quotaHeading": "Total station quota",
@@ -1019,6 +1025,12 @@ const zhCN: Strings = {
           "challenge": {
             "name": "挑战线路",
             "description": "在复杂地图中追逐最优解，铁路大亨的试炼场。",
+            "price": "买入 0.7-1.4 倍 · 卖出 0.6-1.5 倍",
+            "stock": "合同库存加成 10% / 75% / 150% / 225%"
+          },
+          "frenzy": {
+            "name": "狂热线路",
+            "description": "策略卡狂热机制解锁，何时能爆发最大收益考验你的魄力和运气。",
             "price": "买入 0.7-1.4 倍 · 卖出 0.6-1.5 倍",
             "stock": "合同库存加成 10% / 75% / 150% / 225%"
           }
@@ -1701,6 +1713,12 @@ const zhTW: Strings = {
           "challenge": {
             "name": "挑戰線路",
             "description": "在複雜地圖中追逐最優解，鐵路大亨的試煉場。",
+            "price": "買入 0.7-1.4 倍 · 賣出 0.6-1.5 倍",
+            "stock": "合約庫存加成 10% / 75% / 150% / 225%"
+          },
+          "frenzy": {
+            "name": "狂熱線路",
+            "description": "策略卡狂熱機制解鎖，何時能爆發最大收益考驗你的魄力和運氣。",
             "price": "買入 0.7-1.4 倍 · 賣出 0.6-1.5 倍",
             "stock": "合約庫存加成 10% / 75% / 150% / 225%"
           }

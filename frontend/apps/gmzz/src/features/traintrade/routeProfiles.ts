@@ -1,6 +1,6 @@
 import { STATION_TYPES, type StationTotals, type StationType } from './stationSolver'
 
-const DIFFICULTY_IDS = ['beginner', 'normal', 'advanced', 'hard', 'challenge'] as const
+const DIFFICULTY_IDS = ['beginner', 'normal', 'advanced', 'hard', 'challenge', 'frenzy'] as const
 export type TrainTradeDifficultyId = (typeof DIFFICULTY_IDS)[number]
 
 export type RawDifficulty = {
@@ -35,8 +35,13 @@ export function parseTrainTradeRouteProfiles(
   }
   const stationTypes = new Map(stations.map((station) => [station.ID, station.StationType]))
 
-  return DIFFICULTY_IDS.map((id, index) => {
-    const dataId = index + 1
+  // A route the dataset does not define yet is left out rather than fatal, so
+  // the page keeps working while the data deploy trails the frontend one. A
+  // route that IS defined but has no maps is still an error.
+  const defined = DIFFICULTY_IDS
+    .map((id, index) => ({ id, dataId: index + 1 }))
+    .filter(({ dataId }) => difficulties.some((entry) => entry.ID === dataId))
+  return defined.map(({ id, dataId }) => {
     const difficulty = difficulties.find((entry) => entry.ID === dataId)
     const routeMaps = maps.filter((entry) => Math.floor(entry.ID / 100) % 100 === dataId)
     if (!difficulty || routeMaps.length === 0) throw new Error(`Missing Train Trade route ${dataId}`)
