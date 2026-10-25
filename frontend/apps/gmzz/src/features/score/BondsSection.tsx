@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import type { HistoryResearchRank } from '@/features/fellows/data'
+import { HistoryResearchSlider } from '@/features/fellows/HistoryResearchSlider'
 import {
   clampSlots,
   clampStage,
@@ -26,7 +27,6 @@ export const PUPPET_GAIN_MODULE = 'Bonds_PartnerGain'
 export const HISTORY_MODULE = 'Bonds_FellowGain'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none ${FOCUS}`
 const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const BUTTON_CLASS = `inline-flex h-9 items-center justify-center gap-1 rounded-md border border-border px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 const ICON_BUTTON_CLASS = `inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground ${FOCUS}`
@@ -313,11 +313,6 @@ function HistoryPicker({
   const [points, setPoints] = useState('')
   const current = historyRankById(ranks, draft.historyRankId)
   const sorted = useMemo(() => [...ranks].sort((a, b) => a.score - b.score), [ranks])
-  const tiers = useMemo(() => {
-    const groups = new Map<number, HistoryResearchRank[]>()
-    for (const rank of sorted) groups.set(rank.rank, [...(groups.get(rank.rank) ?? []), rank])
-    return [...groups.entries()]
-  }, [sorted])
   const next = current ? sorted[sorted.findIndex((rank) => rank.id === current.id) + 1] : sorted[0]
 
   const pickRank = (id: number | null) => {
@@ -332,32 +327,16 @@ function HistoryPicker({
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)]" data-testid="bonds-history">
-      <label className="block">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,11rem)]" data-testid="bonds-history">
+      <div className="min-w-0">
         <span className={LABEL_CLASS}>{t('bonds.rank')}</span>
-        <select
-          value={current?.id ?? ''}
-          className={SELECT_CLASS}
-          onChange={(event) => pickRank(event.target.value === '' ? null : Number(event.target.value))}
-          data-testid="bonds-rank"
-        >
-          <option value="">{t('bonds.rankNone')}</option>
-          {tiers.map(([tier, members]) => (
-            <optgroup key={tier} label={t('bonds.rankTier', { tier })}>
-              {members.map((rank) => (
-                <option key={rank.id} value={rank.id}>
-                  {t('bonds.rankOption', { name: rank.name, mark: rank.mark.toLocaleString() })}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        <span className="mt-0.5 block text-xs text-muted-foreground">
+        <HistoryResearchSlider ranks={ranks} value={current?.id ?? null} onChange={pickRank} allowNone testId="bonds-rank" />
+        <span className="mt-1 block text-xs text-muted-foreground">
           {next
             ? t('bonds.rankNext', { name: next.name, points: next.score.toLocaleString(), mark: (next.mark - item.score).toLocaleString() })
             : t('bonds.rankTop')}
         </span>
-      </label>
+      </div>
       <label className="block">
         <span className={LABEL_CLASS}>{t('bonds.points')}</span>
         <Input
