@@ -360,7 +360,12 @@
   animation-play-state: paused;
 }
 
-/* The pause button sits at the end of the dot row, as small as the dots allow. */
+/* The pause button sits at the end of the dot row, as small as the dots allow;
+   the row is padded by the same 1.75rem on the left so the dots stay centred. */
+.home-hero-dots:has(.home-hero-toggle) {
+  padding-left: 1.75rem;
+}
+
 .home-hero-dots .home-hero-toggle {
   width: 1.5rem;
   margin-left: 0.25rem;

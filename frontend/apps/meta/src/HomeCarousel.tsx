@@ -109,6 +109,15 @@ export function HomeCarousel({ sites, onOpenSite }: {
     setCycle((value) => value + 1)
   }
   const go = (step: number) => to((active + step + length) % length)
+  // Play overrides the hover and focus pauses the press itself set off, so
+  // the carousel moves at once rather than when the pointer or focus leaves.
+  const togglePlay = () => {
+    if (stopped) {
+      setHovered(false)
+      setFocused(false)
+    }
+    setStopped(!stopped)
+  }
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
     const start = swipe.current
@@ -133,11 +142,12 @@ export function HomeCarousel({ sites, onOpenSite }: {
       style={{ ...size, '--glow': slides[active].color ?? 'var(--primary)' } as CSSProperties}
       aria-roledescription="carousel"
       aria-label={t('landing.carousel.label')}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      // Focus on the pause button does not count, or pressing play from the
-      // keyboard would leave the carousel standing still.
-      onFocusCapture={(event) => setFocused(!(event.target as HTMLElement).classList.contains('home-hero-toggle'))}
+      // Only a real mouse hovers: a tap fires a synthetic mouseenter with no
+      // mouseleave to follow, which would pause a phone's carousel for good.
+      onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHovered(true) }}
+      onPointerLeave={(event) => { if (event.pointerType === 'mouse') setHovered(false) }}
+      // Likewise only keyboard focus pauses; a tap focuses what it touches too.
+      onFocusCapture={(event) => setFocused((event.target as HTMLElement).matches(':focus-visible'))}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
       }}
@@ -227,7 +237,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
                 className="home-hero-toggle"
                 aria-label={t(stopped ? 'landing.carousel.play' : 'landing.carousel.pause')}
                 title={t(stopped ? 'landing.carousel.play' : 'landing.carousel.pause')}
-                onClick={() => setStopped((value) => !value)}
+                onClick={togglePlay}
               >
                 {stopped
                   ? <IconPlayerPlayFilled aria-hidden="true" />

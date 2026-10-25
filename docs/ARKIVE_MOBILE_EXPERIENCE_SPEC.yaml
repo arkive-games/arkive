@@ -78,7 +78,7 @@ viewport_shell:
   root:
     height: "Use dvh according to the UI-foundations specification."
     overflow: "No document-level horizontal overflow"
-    content_scroller: "One vertical scroller between the mobile header and fixed bottom navigation"
+    content_scroller: "One vertical scroller between the mobile header and fixed bottom navigation, or the bottom safe area on a route without one (see portal_home.navigation)"
   content_pages:
     header: "Use ArkiveMobileHeader; never compress the desktop top bar."
     height: "Use shared_header_height from the UI-foundations specification."
@@ -156,6 +156,13 @@ portal_home:
   # Owner decision (2026-10): no search on the homepage for now. Search lives on
   # the All games and Forum views; revisit with the site-wide navigation.
   search: "Do not place a search control on the homepage body."
+  # Owner decision (2026-10): the mobile website has no bottom tab bar on the
+  # homepage; that bar is reserved for a future native app or mini-program.
+  navigation: >-
+    The portal home omits bottom navigation. Its header carries language, theme
+    and a menu sheet holding every destination the bar would — account or login,
+    notifications, all games, tools, forum, favorites — plus a return to the top,
+    so bottom_navigation.route_inventory still holds. Settings stay in the footer.
   continue: "Use valid recent activity, not popularity presented as personal history."
   game_media: "Show inspectable game artwork in a stable frame: 3:1 carousel banners on desktop, 2:1 on a phone."
   participation: "Keep the join section unframed and separate it with one divider."
