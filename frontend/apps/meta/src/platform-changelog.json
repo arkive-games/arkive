@@ -1,6 +1,27 @@
 {
   "entries": [
     {
+      "date": "2026-10-26",
+      "commit": "2c2917447577843344814e7882347f97e546de3a",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned the Arkive homepage: a game cover carousel, round shortcuts with update badges, a tool dock, the latest forum posts and a new sea-wave footer. Search now lives on the All games and Forum pages.",
+            "zh-CN": "藏舟首页改版：游戏封面轮播、带更新角标的圆形快捷入口、工具码头、论坛最新帖子，以及全新的海浪页脚。搜索移至“全部游戏”和“论坛”页面。",
+            "zh-TW": "藏舟首頁改版：遊戲封面輪播、帶更新角標的圓形快捷入口、工具碼頭、論壇最新貼文，以及全新的海浪頁尾。搜尋移至「全部遊戲」和「論壇」頁面。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-14",
       "commit": "f596d9a59a9c7f9d6cccebc8493c3dde662831af",
       "targets": [
