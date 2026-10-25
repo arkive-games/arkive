@@ -207,7 +207,7 @@ marker_detail:
   component: "MarkerDetailDrawer"
   surface:
     desktop: "A compact marker-anchored surface, 22rem maximum width and 34rem maximum height, always centered above the selected marker."
-    mobile: "A content-sized full-width bottom sheet capped at 60dvh and 34rem, positioned above the fixed bottom navigation so every route remains reachable and selected-marker map context stays visible."
+    mobile: "A content-sized full-width bottom sheet capped at 60dvh and 34rem, positioned above the bottom safe area so the menu button stays reachable and selected-marker map context stays visible."
     radius: "Use standard_radius; mobile rounds only the top corners."
     overflow: "The outer surface clips overflow and never scrolls."
     elevation: "Use the shared elevated-surface shadow without obscuring the remaining map."

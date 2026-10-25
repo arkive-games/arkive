@@ -5907,10 +5907,9 @@ select {
     grid-template-columns: 1fr;
   }
 
-  /* Above the bottom strip, which is fixed to the same edge. */
   .ro3-toast {
     right: 1rem;
-    bottom: calc(env(safe-area-inset-bottom) + 5rem);
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
   }
 }
 

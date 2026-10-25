@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.mobile-experience"
 title: "Arkive Mobile Web Experience Specification"
 status: "canonical"
-last_reviewed: "2026-08-12"
+last_reviewed: "2026-10-26"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -78,7 +78,7 @@ viewport_shell:
   root:
     height: "Use dvh according to the UI-foundations specification."
     overflow: "No document-level horizontal overflow"
-    content_scroller: "One vertical scroller between the mobile header and fixed bottom navigation, or the bottom safe area on a route without one (see portal_home.navigation)"
+    content_scroller: "One vertical scroller between the mobile header and the bottom safe area"
   content_pages:
     header: "Use ArkiveMobileHeader; never compress the desktop top bar."
     height: "Use shared_header_height from the UI-foundations specification."
@@ -86,7 +86,7 @@ viewport_shell:
     top_spacing: "Use the shared content-page top-space token."
     composition: "Collapse multi-column content to one intentional reading flow."
     header_priority:
-      - "Arkive mark and compact localized brand name"
+      - "The English \"Arkive\" wordmark, in every language"
       - "Current page title, allowed to truncate only when the complete title remains available in page content"
       - "One account control or one page action, never both when 320px cannot contain them"
   interactive_maps:
@@ -98,21 +98,28 @@ viewport_shell:
     - "Preserve semantic task state through the state-memory contract."
     - "A mobile disclosure preference never hides desktop content."
 
+# Owner decision (2026-10): the mobile WEBSITE has no bottom tab bar. That
+# pattern is reserved for a future native app or mini-program; on the web it
+# hid the bottom of every page and map. The key keeps its historical name
+# because ShellBottomNav still owns the phone navigation.
 bottom_navigation:
-  height: "Use bottom_navigation_height from the UI-foundations specification."
+  menu_button:
+    placement: "Fixed in the top-right corner, below the top safe area, above page and map content"
+    size: "Use touch_target_standard from the UI-foundations specification; pill radius"
+    header: "A mobile header reserves room at its right edge so the button never covers a header control."
+    active_state: "Exposes data-active when the current route is reachable only through the drawer."
   composition:
-    maximum_visible_slots: 5
-    primary_routes: "At most four highest-frequency destinations"
-    final_slot: "More"
+    primary_routes: "Listed first in the drawer as one section"
+    groups: "A desktop dropdown group becomes a drawer section headed by its label"
     labels: "One line at the metadata type role; use the shortest clear localized label"
   route_inventory: >-
-    Every desktop destination remains reachable. Secondary routes live in More
-    and do not duplicate primary routes.
+    Every desktop destination remains reachable from the drawer. Secondary
+    routes follow the primary ones and do not duplicate them.
   active_state: >-
-    Use shape, icon, text, and color together. When the current route lives in
-    More, only More carries the primary active state.
+    Use shape, text, and color together: the current page's cell is filled.
   more_sheet:
-    layout: "Compact route grid followed by settings and site information"
+    side: "Right-side drawer, at most 22rem or 88 percent of the viewport wide"
+    layout: "Route sections, then language, theme, settings, and site information"
     required:
       - "Every secondary route"
       - "Only languages supported by the host game"
@@ -125,15 +132,15 @@ bottom_navigation:
     behavior:
       - "Reopen on the main pane, not a remembered language sub-page."
       - "Close after navigation and at the desktop breakpoint."
-      - "Scroll internally when content exceeds 90dvh."
+      - "Span the full viewport height and scroll internally."
 
 map_workspace:
   actions:
-    placement: "One right-edge vertical stack above bottom navigation and safe area"
+    placement: "One right-edge vertical stack above the bottom safe area"
     order: "Zoom, search, filters"
     target_size: "Use isolated_map_target from the UI-foundations specification."
     renderer: "Do not expose renderer selection on mobile."
-    rule: "Controls never overlap each other, marker details, or bottom navigation."
+    rule: "Controls never overlap each other, marker details, or the top-right menu button."
   search_sheet:
     empty: "Use content height without a decorative blank results area."
     populated: "Grow to an available-height maximum, then scroll internally."
@@ -156,13 +163,14 @@ portal_home:
   # Owner decision (2026-10): no search on the homepage for now. Search lives on
   # the All games and Forum views; revisit with the site-wide navigation.
   search: "Do not place a search control on the homepage body."
-  # Owner decision (2026-10): the mobile website has no bottom tab bar on the
-  # homepage; that bar is reserved for a future native app or mini-program.
+  # Owner decision (2026-10): the mobile website has no bottom tab bar; that bar
+  # is reserved for a future native app or mini-program.
   navigation: >-
-    The portal home omits bottom navigation. Its header carries language, theme
-    and a menu sheet holding every destination the bar would — account or login,
-    notifications, all games, tools, forum, favorites — plus a return to the top,
-    so bottom_navigation.route_inventory still holds. Settings stay in the footer.
+    Every portal view's header carries language, theme and a menu sheet holding
+    every destination — account or login, notifications, all games, tools,
+    forum, favorites, settings — plus a return to the top, so
+    bottom_navigation.route_inventory still holds. The forum keeps its own
+    in-page Home, Compose and Mine bar.
   continue: "Use valid recent activity, not popularity presented as personal history."
   game_media: "Show inspectable game artwork in a stable frame: 3:1 carousel banners on desktop, 2:1 on a phone."
   participation: "Keep the join section unframed and separate it with one divider."
@@ -258,7 +266,7 @@ overlays_safe_areas_and_input:
   hover_conversion: "Desktop hover-only information gains a tap, disclosure, icon action, or sheet on touch."
   back_to_top:
     show: "After the content scroller passes 500px on long pages"
-    placement: "Above fixed navigation and safe area"
+    placement: "Bottom-right, above the safe area"
     reduced_motion: "Use instant scrolling"
 
 text_and_localization:
@@ -282,8 +290,8 @@ footer:
     legal: "Place the legal line last, centered."
     spacing: "Use compact approved spacing steps and keep the footer one continuous surface without a lower bar."
   version_information: "Do not show site or game version identifiers in the mobile page footer."
-  dense_pages: "A route may hide the mobile footer when bottom navigation already provides navigation."
-  clearance: "Any remaining footer content clears bottom navigation and safe area."
+  dense_pages: "A route may hide the mobile footer when the menu drawer already provides navigation."
+  clearance: "Any remaining footer content clears the back-to-top button and safe area."
   fullscreen_map: "Render no footer, filing record, or legal text over the map workspace."
 
 accessibility:
@@ -295,11 +303,11 @@ accessibility:
     - "Pinch zoom and 200 percent text zoom remain usable."
 
 new_game_contract:
-  - "Configure at most four primary routes and an exhaustive More inventory."
+  - "Configure the primary routes and an exhaustive drawer inventory."
   - "Provide supported languages and all shared mobile labels."
-  - "Adopt shared header, bottom navigation, theme, account, and state-memory adapters."
+  - "Adopt shared header, menu drawer, theme, account, and state-memory adapters."
   - "Provide a mobile presentation for every desktop table wider than the viewport."
-  - "For maps, move search and filters into sheets and lift controls above bottom navigation."
+  - "For maps, move search and filters into sheets and keep controls clear of the menu button."
   - "Do not copy another game's mobile shell or geometry."
 
 verification:

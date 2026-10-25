@@ -5,7 +5,14 @@ import {
   type FocusEvent,
   type ReactNode,
 } from "react"
-import { IconLogout, IconSettings, IconUserCircle } from "@tabler/icons-react"
+import {
+  IconLogout,
+  IconMoon,
+  IconSettings,
+  IconSun,
+  IconSunMoon,
+  IconUserCircle,
+} from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
 import { useOptionalTheme } from "./theme/ThemeProvider"
 import {
@@ -24,9 +31,21 @@ type HomeLinkProps = Omit<
 export interface ArkiveMapTopBarProps {
   homeUrl: string
   homeLinkProps?: HomeLinkProps
+  /** Accessible name of the wordmark link. */
   homeLabel: string
-  brandName: string
-  brandSlogan: string
+  /**
+   * Kept for hosts that still pass them; the bar now shows the "Arkive"
+   * wordmark alone, whatever the language.
+   */
+  brandName?: string
+  brandSlogan?: string
+  /**
+   * `docked` spans the window under the page edge (game pages, maps);
+   * `floating` is a capsule hovering over the page (the portal home).
+   */
+  variant?: "docked" | "floating"
+  /** The game this site covers, shown as a chip beside the wordmark. */
+  game?: { name: string; icon?: string }
   nav: Omit<ShellTopBarNav, "classNames">
   languageSwitcher: NonNullable<ShellTopBarProps["languageSwitcher"]>
   themeSwitcher: {
@@ -38,6 +57,7 @@ export interface ArkiveMapTopBarProps {
     onChange?: (value: ArkiveMapTheme) => void
     labels: Record<ArkiveMapTheme, string>
     menuLabel: string
+    /** Ignored: the theme control is a round icon button showing the current theme. */
     shortLabel?: string
   }
   loginLabel: string
@@ -111,8 +131,8 @@ export function ArkiveMapTopBar({
   homeUrl,
   homeLinkProps,
   homeLabel,
-  brandName,
-  brandSlogan,
+  variant = "docked",
+  game,
   nav,
   languageSwitcher,
   themeSwitcher,
@@ -125,50 +145,61 @@ export function ArkiveMapTopBar({
   const themeContext = useOptionalTheme()
   const currentTheme = themeSwitcher.current ?? themeContext?.theme ?? "auto"
   const setTheme = themeSwitcher.onChange ?? themeContext?.setTheme
+  const ThemeIcon = THEME_ICONS[currentTheme]
+  const floating = variant === "floating"
   return (
     <ShellTopBar
       classNames={{
-        root: `arkive-map-topbar hidden h-14 border-b border-border bg-card text-card-foreground md:flex ${className ?? ""}`,
-        left: "gap-7",
-        nav: "gap-7",
-        right: "gap-1 lg:gap-2",
-        trigger:
-          "h-9 gap-2 rounded-lg border border-border bg-card px-3 text-foreground shadow-none hover:bg-accent",
-        menu: "rounded-lg border-border bg-popover text-popover-foreground shadow-lg",
+        root: cn(
+          "arkive-map-topbar hidden text-card-foreground md:flex",
+          floating
+            ? "arkive-map-topbar--floating sticky top-3 z-[var(--arkive-layer-sticky)] mx-auto mt-3 h-16 w-[calc(100%-2rem)] max-w-[var(--arkive-content-standard)] gap-4 rounded-full border border-border bg-card/85 !px-3 backdrop-blur-xl"
+            : "h-14 border-b border-border bg-card",
+          className,
+        ),
+        left: cn("gap-3 lg:gap-4", floating && "flex-1"),
+        nav: cn("gap-0.5 rounded-full bg-foreground/[0.06] p-1", floating && "mx-auto"),
+        right: "gap-1.5 lg:gap-2",
+        trigger: ROUND_BUTTON_CLASS,
       }}
       leftSlot={
-        <a
-          href={homeUrl}
-          {...homeLinkProps}
-          data-testid="brand-link"
-          aria-label={homeLabel}
-          title={homeLabel}
-          className="flex h-14 w-fit shrink-0 items-center gap-[0.6rem] whitespace-nowrap border-r border-border pr-3 text-foreground xl:gap-[0.7rem] xl:pr-4"
-        >
-          <ArkiveMark className="size-[2.125rem] text-[color:var(--arkive-nav-active)] xl:size-9" />
-          <span className="grid min-w-0 gap-[0.12rem] leading-none">
-            <strong data-testid="brand-name" className="text-sm font-bold leading-none">{brandName}</strong>
-            <small
-              data-testid="brand-slogan"
-              className="text-[0.7rem] font-medium leading-none text-[color:var(--arkive-brand-slogan)]"
+        <>
+          <a
+            href={homeUrl}
+            {...homeLinkProps}
+            data-testid="brand-link"
+            aria-label={homeLabel}
+            title={homeLabel}
+            className={cn(
+              "flex shrink-0 items-center rounded-full px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              floating ? "h-12" : "h-10",
+            )}
+          >
+            <span data-testid="brand-wordmark" className={cn("arkive-wordmark", floating ? "text-3xl" : "text-2xl")}>
+              Arkive
+            </span>
+          </a>
+          {game && (
+            <span
+              data-testid="game-chip"
+              className="inline-flex h-10 min-w-0 shrink-0 items-center gap-2 rounded-full bg-foreground/[0.06] pr-4 pl-1 text-sm font-bold text-foreground"
             >
-              {brandSlogan}
-            </small>
-          </span>
-        </a>
+              {game.icon && <img src={game.icon} alt="" className="size-8 shrink-0 rounded-full object-cover" />}
+              <span className="max-w-40 truncate">{game.name}</span>
+            </span>
+          )}
+        </>
       }
       nav={{
         ...nav,
         classNames: {
-          item:
-            "arkive-nav-item group relative inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-sm px-1 text-sm font-semibold text-foreground/70 hover:text-[color:var(--arkive-nav-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
-          itemActive:
-            "arkive-nav-item arkive-nav-item--highlighted group relative inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-sm px-1 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
-          label: "arkive-nav-item-label relative inline-flex h-full items-center whitespace-nowrap",
-          labelActive: "text-[color:var(--arkive-nav-active)]",
+          item: cn(NAV_ITEM_CLASS, "text-foreground/70 hover:text-foreground"),
+          itemActive: cn(NAV_ITEM_CLASS, "arkive-nav-item--highlighted text-background"),
+          label: "arkive-nav-item-label inline-flex h-full items-center whitespace-nowrap",
+          indicator: "arkive-nav-indicator",
         },
       }}
-      languageSwitcher={languageSwitcher}
+      languageSwitcher={{ ...languageSwitcher, shortLabel: undefined }}
       themeSwitcher={{
         options: ARKIVE_MAP_THEMES.map((value) => ({
           value,
@@ -177,7 +208,7 @@ export function ArkiveMapTopBar({
         current: currentTheme,
         onChange: (value) => setTheme?.(value as ArkiveMapTheme),
         menuLabel: themeSwitcher.menuLabel,
-        shortLabel: themeSwitcher.shortLabel,
+        icon: <ThemeIcon className="size-5" stroke={1.8} />,
       }}
       rightExtras={
         accountSlot ? (
@@ -200,8 +231,19 @@ export function ArkiveMapTopBar({
   )
 }
 
+const THEME_ICONS = { auto: IconSunMoon, light: IconSun, dark: IconMoon } as const
+
+const NAV_ITEM_CLASS =
+  "arkive-nav-item inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:px-4"
+
+const ROUND_BUTTON_CLASS =
+  "arkive-round-button size-10 rounded-full bg-foreground/[0.06] p-0 text-foreground shadow-none hover:bg-foreground/10 aria-expanded:bg-foreground/10"
+
 const ACCOUNT_TRIGGER_CLASS =
-  "h-9 gap-2 rounded-lg bg-[color:var(--arkive-nav-active)] px-4 text-[color:var(--arkive-nav-on-active)] hover:brightness-95"
+  "arkive-login-pill h-10 gap-2 rounded-full px-5"
+
+const ACCOUNT_NAME_CLASS =
+  "h-10 gap-2 rounded-full bg-foreground/[0.06] px-4 text-foreground shadow-none hover:bg-foreground/10"
 
 /**
  * Signed-out button, or signed-in name with a menu.
@@ -342,7 +384,9 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
       <Button
         ref={triggerRef}
         type="button"
-        className={account.avatarUrl ? `shrink-0 overflow-hidden rounded-full border border-border bg-muted p-0 ${account.mobileAvatar ? 'size-11' : 'size-9'}` : ACCOUNT_TRIGGER_CLASS}
+        className={account.avatarUrl
+          ? cn("arkive-avatar-ring shrink-0 overflow-hidden rounded-full", account.mobileAvatar ? "size-11" : "size-10")
+          : ACCOUNT_NAME_CLASS}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={account.accountLabel}

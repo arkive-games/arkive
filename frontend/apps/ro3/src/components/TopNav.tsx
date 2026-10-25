@@ -1,5 +1,6 @@
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, type ShellNavItem } from '@gamemap/map-shell'
+import gameIcon from '../assets/ro3-icon.webp'
 import content from '../locales/zh-CN.json'
 import { HOME_URL, SETTINGS } from '../lib/brand'
 import { hrefForKey, navigateOnClick, WIKI_VIEWS, type NavKey, type NavigationProps } from '../navigation'
@@ -31,7 +32,7 @@ export function TopNav({ active, onNavigate }: NavigationProps) {
       homeUrl={HOME_URL}
       homeLabel={content.homeLabel}
       brandName={content.brandName}
-      brandSlogan={content.brandSlogan}
+      game={{ name: content.pageTitle, icon: gameIcon }}
       nav={{
         items,
         // Only leaves reach this: the shell renders a dropdown's trigger as its

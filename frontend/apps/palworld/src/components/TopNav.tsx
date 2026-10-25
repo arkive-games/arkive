@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from '@gamemap/map-shell'
+import gameIcon from '../assets/palworld-icon.webp'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
@@ -51,7 +52,7 @@ export function TopNav({ active }: { active: NavKey }) {
       homeUrl={ARKIVE_HOME_URL}
       homeLabel={t('brandHome')}
       brandName={brandName}
-      brandSlogan={t('brandSlogan')}
+      game={{ name: t('siteInfo.gameName'), icon: gameIcon }}
       nav={{
         items,
         renderItem: (item, className, labelClassName) => (

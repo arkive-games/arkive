@@ -1,5 +1,6 @@
 fredoka-arkive.woff2 is a subset of Fredoka (weight 600, glyphs "Arkive" only),
-used for the homepage wordmark until the final logo is drawn.
+used for the Arkive wordmark in the shared navigation and the homepage footer
+until the final logo is drawn.
 
 Copyright 2016 The Fredoka Project Authors (https://github.com/hafontia/Fredoka-One)
 

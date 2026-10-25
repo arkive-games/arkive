@@ -2,17 +2,22 @@ import { test, expect } from '@playwright/test'
 
 test.use({ viewport: { width: 390, height: 844 } })
 
-test('bottom tab bar is visible and desktop nav is hidden on mobile', async ({ page }) => {
+test('the menu button is visible and desktop nav is hidden on mobile', async ({ page }) => {
   await page.goto('/pals')
-  await expect(page.getByTestId('bottom-tab-bar')).toBeVisible()
+  await expect(page.getByTestId('tab-more')).toBeVisible()
+  // No bottom tab bar on the phone website: sections live in the menu drawer.
+  await expect(page.getByTestId('bottom-tab-bar')).toHaveCount(0)
   // Desktop top bar (map-shell header) is hidden < md.
   await expect(page.getByTestId('lang-menu')).toBeHidden()
 })
 
-test('bottom tabs navigate between sections', async ({ page }) => {
+test('drawer sections navigate and close the drawer', async ({ page }) => {
   await page.goto('/')
+  await page.getByTestId('tab-more').click()
   await page.getByTestId('tab-/passives').click()
   await expect(page).toHaveURL(/\/passives$/)
+  await expect(page.getByTestId('more-sheet')).toHaveCount(0)
+  await page.getByTestId('tab-more').click()
   await page.getByTestId('tab-/partner-skills').click()
   await expect(page).toHaveURL(/\/partner-skills$/)
 })
@@ -25,8 +30,8 @@ test('More sheet opens and navigates to a secondary route', async ({ page }) => 
   await expect(page).toHaveURL(/\/buildings$/)
 })
 
-// Every page the desktop nav offers must be reachable from the phone: the More
-// grid is the only door to the pages that lost their bottom-tab slot.
+// Every page the desktop nav offers must be reachable from the phone through
+// the menu drawer.
 test('More sheet exposes every secondary page', async ({ page }) => {
   await page.goto('/')
   await page.getByTestId('tab-more').click()
@@ -49,11 +54,12 @@ test('More sheet exposes every secondary page', async ({ page }) => {
   }
 })
 
-test('the More tab highlights while a secondary page is open', async ({ page }) => {
+test('the drawer marks the open secondary page', async ({ page }) => {
   await page.goto('/fishing')
-  // `text-primary` is what `itemCls` gives the active slot.
-  await expect(page.getByTestId('tab-more')).toHaveClass(/text-primary/)
-  await expect(page.getByTestId('tab-/passives')).not.toHaveClass(/text-primary/)
+  await expect(page.getByTestId('tab-more')).toHaveAttribute('data-active', 'true')
+  await page.getByTestId('tab-more').click()
+  await expect(page.getByTestId('more-/fishing')).toHaveClass(/bg-primary/)
+  await expect(page.getByTestId('tab-/passives')).not.toHaveClass(/bg-primary/)
 })
 
 test('the language picker is a sub-page of the same sheet', async ({ page }) => {
@@ -136,11 +142,11 @@ test('map page shows FABs that open filter and search sheets', async ({ page }) 
   await expect(page.getByTestId('marker-search')).toBeVisible()
 })
 
-test('map controls form one ordered stack above navigation', async ({ page }) => {
+test('map controls form one ordered stack inside the viewport', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByTestId('gl-map-canvas')).toBeVisible({ timeout: 20_000 })
 
-  const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
+  const barTop = page.viewportSize()!.height
   const zoom = (await page.locator('.gmgl-zoom-pill').boundingBox())!
   const search = (await page.getByTestId('map-fab-search').boundingBox())!
   const filter = (await page.getByTestId('map-fab-filter').boundingBox())!
@@ -150,9 +156,9 @@ test('map controls form one ordered stack above navigation', async ({ page }) =>
   expect(filter.y + filter.height).toBeLessThanOrEqual(barTop)
 })
 
-test('map sheets clear navigation and the filter action exposes changed state', async ({ page }) => {
+test('map sheets stay inside the viewport and the filter action exposes changed state', async ({ page }) => {
   await page.goto('/')
-  const barTop = (await page.getByTestId('bottom-tab-bar').boundingBox())!.y
+  const barTop = page.viewportSize()!.height
   const filterAction = page.getByTestId('map-fab-filter')
 
   await expect(filterAction).toHaveAttribute('data-active', 'false')

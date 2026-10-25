@@ -5,14 +5,7 @@
    2.5rem between every block and 3.5rem before the footer. Phones use
    1rem / 0.75rem / 1.75rem / 2.5rem. */
 
-/* Only the glyphs of "Arkive", until the drawn logo replaces the wordmark.
-   License: ./assets/fredoka-arkive.LICENSE.txt */
-@font-face {
-  font-family: "Arkive Wordmark";
-  src: url("./assets/fredoka-arkive.woff2") format("woff2");
-  font-weight: 600;
-  font-display: swap;
-}
+/* "Arkive Wordmark" is declared by the shared arkive-map-theme.css. */
 
 @property --glow {
   syntax: "<color>";

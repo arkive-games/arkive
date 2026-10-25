@@ -54,7 +54,7 @@ describe("MarkerDetailDrawer", () => {
     const { getByTestId } = render(<MarkerDetailDrawer {...baseProps} description="Grassland boss." />)
     const drawer = getByTestId("marker-detail-drawer")
     expect(drawer.className).toContain("overflow-hidden")
-    expect(drawer.className).toContain("bottom-[calc(env(safe-area-inset-bottom)+4rem)]")
+    expect(drawer.className).toContain("bottom-[env(safe-area-inset-bottom)]")
     expect(getByTestId("marker-detail-drag-handle").nextElementSibling?.tagName).toBe("HEADER")
     expect(getByTestId("marker-detail-scroll").className).toContain("overflow-y-auto")
     expect(getByTestId("marker-detail-scroll").className).toContain("[scrollbar-width:none]")

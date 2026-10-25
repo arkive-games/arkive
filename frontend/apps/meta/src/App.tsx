@@ -49,7 +49,6 @@ import {
   type NotificationSection,
   type PublicProfileSection,
 } from './UserSystemPages'
-import { MetaMobileNav } from './MetaMobileNav'
 import { PlatformUpdatesPage } from './PlatformUpdatesPage'
 import { useSettingsConfig } from './lib/settings'
 import { AUTH_CONFIG } from './lib/auth'
@@ -196,7 +195,6 @@ export default function App() {
   const [forumComposerDirty, setForumComposerDirty] = useState(false)
   const [pendingForumHash, setPendingForumHash] = useState<string | null>(null)
   const forumComposerDirtyRef = useRef(false)
-  const isForumComposer = activeRoute.view === 'forum' && activeRoute.composer
   const lng = i18n.resolvedLanguage ?? 'zh-CN'
   const settingsProps = useArkiveSettingsProps(useSettingsConfig())
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -373,16 +371,16 @@ export default function App() {
   }
 
   return (
-    <div id="top" className={`min-h-dvh overflow-x-hidden text-foreground ${isForumComposer || isHome ? 'pb-0' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}>
-      {/* The homepage has no bottom tab bar on a phone: its header carries
-          language, theme and a site menu instead. */}
+    <div id="top" className="min-h-dvh overflow-x-hidden text-foreground">
+      {/* No bottom tab bar on a phone: every view's header carries language,
+          theme and a site menu instead. */}
       <ArkiveMobileHeader
         homeUrl="#top"
         homeLabel={brandName}
         brandName={brandName}
         loginLabel={t('auth.login')}
-        className={isHome ? 'gap-2' : undefined}
-        actions={isHome ? (
+        className="gap-2"
+        actions={
           <HomeMobileActions
             isSignedIn={isSignedIn}
             hasTools={HAS_TOOLS}
@@ -391,16 +389,16 @@ export default function App() {
             onLanguageChange={(code) => void changeLanguagePreference(code)}
             onThemeChange={setTheme}
             onLogin={() => setAccountOpen(true)}
+            onOpenSettings={() => setSettingsOpen(true)}
           />
-        ) : undefined}
-        showAccount={!isHome}
-        accountControl={<ArkiveAccountControl language={i18n.language} variant="mobileHeader" homeUrl="" onOpenSettings={() => setSettingsOpen(true)} />}
+        }
+        showAccount={false}
       />
       <ArkiveMapTopBar
         homeUrl="#top"
         homeLabel={brandName}
         brandName={brandName}
-        brandSlogan={t('brand.slogan')}
+        variant={isHome ? 'floating' : 'docked'}
         nav={{
           items: navItems,
           onDropdownTriggerClick: (item) => {
@@ -548,19 +546,6 @@ export default function App() {
             <small>{t('notice.description')}</small>
           </span>
         </div>
-      )}
-
-      {!isForumComposer && !isHome && activeRoute.view !== 'forum' && (
-        <MetaMobileNav
-          activeView={activeRoute.view}
-          noticeId={noticeId}
-          isSignedIn={isSignedIn}
-          language={lng}
-          theme={theme}
-          onLanguageChange={(code) => void changeLanguagePreference(code)}
-          onThemeChange={setTheme}
-          onComingSoon={showComingSoon}
-        />
       )}
 
       <AlertDialog

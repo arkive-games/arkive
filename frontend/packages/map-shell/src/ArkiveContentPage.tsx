@@ -9,7 +9,7 @@ export interface ArkiveContentPageProps {
   mobileHeader?: ReactNode
   /** The app's `SiteFooter`, which owns its links and bottom padding. */
   footer: ReactNode
-  /** Rendered after the scroller, e.g. a phone bottom tab bar the page owns. */
+  /** Rendered after the scroller, e.g. the phone menu button the page owns. */
   bottomNav?: ReactNode
   /** The desktop `<h1>` when `heading` is set. */
   title?: ReactNode
@@ -137,7 +137,7 @@ export function ArkiveContentPage({
             <main
               className={cn(
                 "arkive-content-page mx-auto w-full flex-1 pb-6",
-                hideMobileFooter && "pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-6",
+                hideMobileFooter && "pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-6",
                 contentWidth,
                 contentClassName,
               )}
@@ -156,7 +156,7 @@ export function ArkiveContentPage({
           aria-label={backToTopLabel}
           title={backToTopLabel}
           onClick={scrollToTop}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] right-4 z-[var(--arkive-layer-map-control)] flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-[var(--arkive-layer-map-control)] flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
         >
           <ArrowUp className="size-5" />
         </button>

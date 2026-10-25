@@ -2,6 +2,8 @@
   --radius: 0.5rem;
   --arkive-radius-compact: 0.375rem;
   --arkive-radius-standard: 0.5rem;
+  /* Surfaces that float free of the page: top-bar menus and the phone menu drawer. */
+  --arkive-radius-floating: 1rem;
   --arkive-touch-target: 2.75rem;
   --arkive-motion-immediate: 120ms;
   --arkive-motion-standard: 180ms;
@@ -183,74 +185,126 @@ textarea {
   }
 }
 
+/* Only the glyphs of "Arkive", until the drawn logo replaces the wordmark.
+   License: ./assets/fredoka-arkive.LICENSE.txt */
+@font-face {
+  font-family: "Arkive Wordmark";
+  src: url("./assets/fredoka-arkive.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+/* The brand in every top bar and phone header: the word "Arkive" alone. */
+.arkive-wordmark {
+  display: inline-block;
+  font-family: "Arkive Wordmark", system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  background: linear-gradient(100deg, #17181c 30%, #c98a0c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: transform var(--arkive-motion-panel) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dark .arkive-wordmark,
+.abyss .arkive-wordmark {
+  background-image: linear-gradient(100deg, #ffffff 30%, #ffd88a);
+}
+
+a:hover > .arkive-wordmark,
+a:focus-visible > .arkive-wordmark {
+  transform: rotate(-4deg) scale(1.04);
+}
+
 .arkive-map-topbar {
-  --arkive-mark-cutout: var(--card);
-  box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.06);
 }
 
+/* The homepage's bar floats over the page as a capsule. */
+.arkive-map-topbar--floating {
+  box-shadow:
+    0 0.75rem 2rem rgba(0, 0, 0, 0.1),
+    0 0.125rem 0.375rem rgba(0, 0, 0, 0.05);
+}
+
+/* Items sit above the sliding pill that marks the hovered or current one. */
 .arkive-nav-item {
-  isolation: isolate;
+  position: relative;
+  z-index: var(--arkive-layer-local-control);
 }
 
-.arkive-nav-item::before,
-.arkive-nav-item::after {
+.arkive-nav-indicator {
   position: absolute;
-  pointer-events: none;
-  content: "";
-  opacity: 0;
-}
-
-.arkive-nav-item::before {
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0;
   z-index: var(--arkive-layer-local-content);
-  top: 50%;
-  left: -0.85rem;
-  width: calc(100% + 1.7rem);
-  height: 1.35rem;
-  background: var(--arkive-filter-active);
-  clip-path: polygon(0 46%, 18% 25%, 81% 10%, 100% 50%, 81% 90%, 18% 76%);
-  transform: translate(-34%, -50%) scaleX(0.4);
-  transform-origin: left;
-  transition:
-    opacity var(--arkive-motion-immediate) var(--arkive-motion-easing),
-    transform var(--arkive-motion-panel) var(--arkive-motion-easing);
+  border-radius: 9999px;
+  background: var(--foreground);
+  pointer-events: none;
+  transition: opacity var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
-.arkive-nav-item::after {
-  box-sizing: content-box;
-  z-index: var(--arkive-layer-local-control);
-  top: 50%;
-  left: -0.65rem;
-  width: 0.425rem;
-  height: 0.425rem;
+.arkive-nav-indicator[data-animate="true"] {
+  transition:
+    left 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+/* Language, theme and other round icon buttons in the top bar. */
+.arkive-round-button svg {
+  transition: transform var(--arkive-motion-panel) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.arkive-round-button:hover svg,
+.arkive-round-button[aria-expanded="true"] svg {
+  transform: rotate(-12deg) scale(1.1);
+}
+
+.arkive-login-pill {
+  background: linear-gradient(120deg, #ffb347, #ff6a5c 55%, #ff4f9a);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0.375rem 1rem rgba(255, 79, 154, 0.28);
+  transition:
+    transform var(--arkive-motion-standard) var(--arkive-motion-easing),
+    box-shadow var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.arkive-login-pill:hover {
+  background: linear-gradient(120deg, #ffb347, #ff6a5c 55%, #ff4f9a);
+  transform: translateY(-1px);
+  box-shadow: 0 0.5rem 1.25rem rgba(255, 79, 154, 0.36);
+}
+
+/* A signed-in avatar inside a rainbow ring. */
+.arkive-avatar-ring {
+  padding: 2px;
+  background: conic-gradient(#ffcf5a, #ff7a59, #ff4f9a, #8a7bff, #4fb3ff, #ffcf5a);
+}
+
+.arkive-avatar-ring > img {
   border: 2px solid var(--card);
-  border-radius: 50%;
-  background: var(--arkive-nav-beacon);
-  transform: translateY(-50%) scale(0.25);
-  transition:
-    opacity var(--arkive-motion-immediate) var(--arkive-motion-easing),
-    transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
-.arkive-nav-item--highlighted::before,
-.arkive-nav-item--highlighted::after {
-  opacity: 1;
+.arkive-avatar-ring:hover {
+  background: conic-gradient(#ffcf5a, #ff7a59, #ff4f9a, #8a7bff, #4fb3ff, #ffcf5a);
 }
 
-.arkive-nav-item--highlighted::before {
-  transform: translate(0, -50%) scaleX(1);
-}
-
-.arkive-nav-item--highlighted::after {
-  transform: translateY(-50%) scale(1);
-}
-
-.arkive-nav-item-label {
-  z-index: var(--arkive-layer-local-control);
+.arkive-map-topbar [role="menu"] {
+  border-radius: var(--arkive-radius-floating);
+  padding: 0.375rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .arkive-nav-item::before,
-  .arkive-nav-item::after {
+  .arkive-wordmark,
+  .arkive-round-button svg,
+  .arkive-login-pill,
+  .arkive-nav-indicator,
+  .arkive-nav-indicator[data-animate="true"] {
     transition: none;
   }
 }
@@ -403,18 +457,28 @@ textarea {
     --arkive-page-gutter: 1rem;
   }
 
-  .arkive-mobile-header,
-  .arkive-bottom-nav {
+  .arkive-mobile-header {
     box-shadow: none;
     backdrop-filter: none;
   }
 
-  .arkive-bottom-tab svg,
+  .arkive-menu-button svg,
   .arkive-more-route svg {
     stroke-width: 1.8;
   }
 
-  .arkive-more-sheet,
+  /* The menu drawer slides in from the right, so only its inner edge rounds. */
+  .arkive-more-sheet {
+    border-radius: var(--arkive-radius-floating) 0 0 var(--arkive-radius-floating);
+    background: var(--background);
+    box-shadow: -0.75rem 0 2.5rem rgba(0, 0, 0, 0.16);
+  }
+
+  /* Clear the fixed menu button at the header's right edge. */
+  body:has(.arkive-menu-button) .arkive-mobile-header {
+    padding-right: calc(var(--arkive-page-gutter) + var(--arkive-touch-target) + 0.5rem);
+  }
+
   [data-testid="mobile-filter-sheet"],
   .arkive-mobile-map-sheet {
     border-radius: 0.5rem 0.5rem 0 0;
@@ -448,11 +512,17 @@ textarea {
   }
 
   .arkive-mobile-map-actions {
-    bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
   }
 
   .arkive-mobile-map .gmgl-zoom {
     right: 0.75rem;
+    bottom: calc(env(safe-area-inset-bottom) + 8rem);
+  }
+
+  /* A map that also stacks an account control (aion2, V Rising) is one 2.75rem
+     button taller, so the zoom pill moves up by that plus the gap. */
+  .arkive-mobile-map:has(.arkive-mobile-map-actions > :nth-child(3)) .gmgl-zoom {
     bottom: calc(env(safe-area-inset-bottom) + 11.5rem);
   }
 
@@ -466,7 +536,7 @@ textarea {
   }
 
   .arkive-mobile-map .gmgl-statusbar-stack {
-    bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+    bottom: calc(env(safe-area-inset-bottom) + 1rem);
   }
 
   .arkive-mobile-map .gmgl-statusbar-footer,

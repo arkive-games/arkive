@@ -82,29 +82,30 @@ function open(api: ReturnType<typeof render>) {
 }
 
 describe("ShellBottomNav", () => {
-  it("renders each tab through the app's renderer, with the shell's classes", () => {
+  it("renders each tab through the app's renderer, inside the drawer", () => {
     const api = render(<ShellBottomNav {...props()} />)
-    expect(api.getByTestId("tab-/").className).toContain("text-[color:var(--arkive-nav-active)]")
-    expect(api.getByTestId("tab-/x").className).toContain("text-muted-foreground")
+    // Nothing but the menu button is on the page until it is opened.
+    expect(api.queryByTestId("tab-/")).toBeNull()
+    open(api)
+    expect(api.getByTestId("tab-/").className).toContain("bg-primary")
+    expect(api.getByTestId("tab-/x").className).not.toContain("bg-primary")
     expect(api.getByTestId("i-map")).toBeTruthy()
   })
 
   it("keeps the testids the e2e suites depend on", () => {
     const api = render(<ShellBottomNav {...props()} />)
-    expect(api.getByTestId("bottom-tab-bar").className).toContain("arkive-bottom-nav")
-    expect(api.getByTestId("bottom-tab-bar").className).not.toContain("backdrop-blur")
-    expect(api.getByTestId("tab-/").className).toContain("min-h-16")
+    const button = api.getByTestId("tab-more")
+    // A round top-right button, not a bottom bar: the phone web has no tab bar.
+    expect(button.className).toContain("arkive-menu-button")
+    expect(button.className).toContain("md:hidden")
+    expect(button.getAttribute("aria-label")).toBe("More")
     open(api)
-    // The cap must subtract the sheet's OWN bottom offset (4rem + safe area) plus
-    // 1rem of top clearance. Reserving a flat 5rem overflowed the viewport top by
-    // the safe-area inset on home-indicator phones and clipped the close button.
-    expect(api.getByTestId("more-sheet").className).toContain(
-      "max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))]",
-    )
+    expect(api.getByTestId("more-sheet").className).toContain("arkive-more-sheet")
+    expect(api.getByTestId("bottom-tab-bar")).toBeTruthy()
+    expect(api.getByTestId("tab-/").className).toContain("min-h-16")
     expect(api.getByTestId("more-lang-open")).toBeTruthy()
     expect(api.getByTestId("more-theme-auto")).toBeTruthy()
   })
-
   it("drives the theme pills from the surrounding ThemeProvider when not wired by hand", () => {
     const base = props()
     const api = render(
@@ -181,7 +182,7 @@ describe("ShellBottomNav", () => {
   })
 
   it("closes when the viewport crosses to desktop", () => {
-    // The strip is md:hidden, but the sheet portals to <body> and so is not
+    // The button is md:hidden, but the drawer portals to <body> and so is not
     // hidden by that class. Rotating a phone to landscape crosses 768px, and
     // without this the sheet stays draped over the desktop layout.
     const api = render(<ShellBottomNav {...props()} />)
@@ -237,36 +238,32 @@ describe("ShellBottomNav", () => {
         ],
       })
 
-    it("opens its own sheet of children instead of rendering a link", () => {
+    it("lists its children under the group's label instead of rendering a link", () => {
       const api = render(<ShellBottomNav {...grouped()} />)
+      open(api)
       // The group's key is not a route, so it must never reach renderTab as a tab.
       expect(api.queryByTestId("tab-tools")).toBeNull()
-      fireEvent.click(api.getByTestId("tab-group-tools"))
-      expect(api.getByTestId("group-sheet-tools")).toBeTruthy()
-      expect(api.getByTestId("tab-/a")).toBeTruthy()
-      expect(api.getByTestId("tab-/b")).toBeTruthy()
-      // The current child is filled, exactly as in the More grid.
+      const section = api.getByTestId("tab-group-tools")
+      expect(section.textContent).toContain("Tools")
+      expect(section.contains(api.getByTestId("tab-/a"))).toBe(true)
+      expect(section.contains(api.getByTestId("tab-/b"))).toBe(true)
+      // The current child is filled, exactly as in the grid.
       expect(api.getByTestId("tab-/a").className).toContain("bg-primary")
       expect(api.getByTestId("tab-/b").className).not.toContain("bg-primary")
     })
 
-    it("marks the group tab current when one of its pages is", () => {
+    it("keeps leaf tabs in the primary section", () => {
       const api = render(<ShellBottomNav {...grouped()} />)
-      expect(api.getByTestId("tab-group-tools").getAttribute("aria-current")).toBe("page")
+      open(api)
+      expect(api.getByTestId("tab-group-primary").contains(api.getByTestId("tab-/"))).toBe(true)
     })
 
-    it("closes on navigation, like the More sheet", () => {
+    it("closes on navigation", () => {
       const api = render(<ShellBottomNav {...grouped()} />)
-      fireEvent.click(api.getByTestId("tab-group-tools"))
-      expect(api.queryByTestId("group-sheet-tools")).toBeTruthy()
+      open(api)
+      expect(api.queryByTestId("tab-/a")).toBeTruthy()
       api.rerender(<ShellBottomNav {...grouped()} pathname="/a" />)
-      expect(api.queryByTestId("group-sheet-tools")).toBeNull()
-    })
-
-    it("leaves a plain tab strip exactly as it was", () => {
-      const api = render(<ShellBottomNav {...props()} />)
-      expect(api.getByTestId("tab-/")).toBeTruthy()
-      expect(api.queryByTestId("tab-group-/")).toBeNull()
+      expect(api.queryByTestId("more-sheet")).toBeNull()
     })
   })
 })

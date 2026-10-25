@@ -1,7 +1,6 @@
 import type { AnchorHTMLAttributes, ComponentProps, ReactNode } from "react"
 import { IconUserCircle } from "@tabler/icons-react"
 import { cn } from "@gamemap/ui"
-import { ArkiveMark } from "./ArkiveMapTopBar"
 
 type HomeLinkProps = Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
@@ -11,8 +10,10 @@ type HomeLinkProps = Omit<
 export interface ArkiveMobileHeaderProps {
   homeUrl: string
   homeLinkProps?: HomeLinkProps
+  /** Accessible name of the wordmark link. */
   homeLabel: string
-  brandName: string
+  /** Kept for existing hosts; the header shows the "Arkive" wordmark alone. */
+  brandName?: string
   pageTitle?: ReactNode
   actions?: ReactNode
   accountControl?: ReactNode
@@ -25,14 +26,14 @@ export interface ArkiveMobileHeaderProps {
 
 /**
  * Compact mobile header for scrollable Arkive content pages. Interactive maps
- * deliberately omit it to preserve the playfield and expose the same account
- * action from their bottom navigation sheet instead.
+ * deliberately omit it to preserve the playfield. A page with the shared menu
+ * button (ShellBottomNav) leaves room for it at the right edge, see
+ * arkive-map-theme.css.
  */
 export function ArkiveMobileHeader({
   homeUrl,
   homeLinkProps,
   homeLabel,
-  brandName,
   pageTitle,
   actions,
   accountControl,
@@ -55,10 +56,9 @@ export function ArkiveMobileHeader({
         aria-label={homeLabel}
         title={homeLabel}
         data-testid="mobile-brand-link"
-        className="flex min-w-0 shrink items-center gap-2 text-[color:var(--arkive-nav-active)]"
+        className="flex shrink-0 items-center"
       >
-        <span className="shrink-0 [&>svg]:size-7"><ArkiveMark /></span>
-        <strong className="min-w-0 truncate text-base font-semibold">{brandName}</strong>
+        <span className="arkive-wordmark text-2xl">Arkive</span>
       </a>
 
       {pageTitle ? (
@@ -93,7 +93,7 @@ export function ArkiveMobileAccountButton({
       type="button"
       aria-label={label}
       title={label}
-      className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-[color:var(--arkive-nav-active)] transition-colors active:bg-accent"
+      className="flex size-11 shrink-0 items-center justify-center rounded-full bg-foreground/[0.06] text-foreground transition-colors active:bg-foreground/10"
     >
       <IconUserCircle className="size-6" stroke={1.8} />
     </button>

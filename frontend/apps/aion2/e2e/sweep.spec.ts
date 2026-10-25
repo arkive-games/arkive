@@ -13,22 +13,22 @@ const ROUTES = [
 ];
 
 for (const route of ROUTES) {
-  test(`no overflow, tab bar present: ${route}`, async ({ page }) => {
+  test(`no overflow, menu button present: ${route}`, async ({ page }) => {
     await page.goto(route);
     await page.waitForTimeout(1200);
     const r = await page.evaluate(() => ({
       scrollW: document.documentElement.scrollWidth,
       innerW: window.innerWidth,
-      // Visible, not merely present: a mistakenly `hidden md:hidden` bar would
+      // Visible, not merely present: a mistakenly `hidden md:hidden` button would
       // otherwise pass.
       bar: (() => {
-        const el = document.querySelector('[data-testid="bottom-tab-bar"]');
+        const el = document.querySelector('[data-testid="tab-more"]');
         if (!el) return "missing";
         const r = el.getBoundingClientRect();
         return r.width > 0 && r.height > 0 ? "visible" : "hidden";
       })(),
       // Overflow on EITHER edge. Includes the [data-testid] elements themselves
-      // (not just their descendants), so the tab bar / FABs / sheets / mobile
+      // (not just their descendants), so the menu button / FABs / sheets / mobile
       // header are measured too.
       wide: [
         ...document.querySelectorAll("main, main *, [data-testid], [data-testid] *"),
@@ -54,7 +54,7 @@ for (const route of ROUTES) {
         }),
     }));
     expect(r.scrollW, "horizontal overflow").toBe(r.innerW);
-    expect(r.bar, "tab bar visible").toBe("visible");
+    expect(r.bar, "menu button visible").toBe("visible");
     expect(r.wide, "elements past the right edge").toEqual([]);
   });
 }

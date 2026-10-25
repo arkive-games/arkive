@@ -57,7 +57,7 @@ describe("ArkiveMapTopBar account control", () => {
   it.each([false, true])('renders the server avatar at the correct surface size (mobile=%s)', (mobileAvatar) => {
     const { getByTestId } = renderTopBar(account({ status: 'authenticated', userName: 'Reader', avatarUrl: '/uploaded.webp', mobileAvatar }))
     const trigger = getByTestId('account-menu')
-    expect(trigger.className).toContain(mobileAvatar ? 'size-11' : 'size-9')
+    expect(trigger.className).toContain(mobileAvatar ? 'size-11' : 'size-10')
     expect(trigger.querySelector('img')?.getAttribute('src')).toBe('/uploaded.webp')
     fireEvent.click(trigger)
     expect(trigger.getAttribute('aria-expanded')).toBe('true')

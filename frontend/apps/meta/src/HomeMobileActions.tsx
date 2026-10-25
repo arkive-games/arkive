@@ -11,13 +11,14 @@ import {
   IconMenu2,
   IconMessageCircle,
   IconMoon,
+  IconSettings,
   IconSun,
   IconSunMoon,
   IconTool,
   IconUserCircle,
   IconX,
 } from '@tabler/icons-react'
-import type { ArkiveMapTheme } from '@gamemap/map-shell'
+import { settingsStringsFor, type ArkiveMapTheme } from '@gamemap/map-shell'
 
 import { LANGUAGES, LANGUAGE_LABELS } from './i18n'
 
@@ -27,11 +28,11 @@ const THEMES: readonly ArkiveMapTheme[] = ['auto', 'light', 'dark']
 const THEME_ICONS = { auto: IconSunMoon, light: IconSun, dark: IconMoon } as const
 
 /**
- * The homepage's phone header controls: language, theme and a site menu, as
- * three round buttons. The homepage has no bottom tab bar, so the menu sheet
- * carries what the bar would -- the sections, the account and a way back up.
+ * The portal's phone header controls on every view: language, theme and a site
+ * menu, as three round buttons. The phone site has no bottom tab bar, so the
+ * menu sheet carries the sections, the account, settings and a way back up.
  */
-export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLanguageChange, onThemeChange, onLogin }: {
+export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLanguageChange, onThemeChange, onLogin, onOpenSettings }: {
   isSignedIn: boolean
   hasTools: boolean
   language: string
@@ -39,6 +40,7 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
   onLanguageChange: (code: string) => void
   onThemeChange: (value: ArkiveMapTheme) => void
   onLogin: () => void
+  onOpenSettings: () => void
 }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState<Panel | null>(null)
@@ -156,6 +158,15 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
             onClick={isSignedIn ? close : login}
           />
           <hr />
+          <SheetRow
+            colors={['#9aa4b8', '#5c6880']}
+            icon={<IconSettings stroke={1.9} />}
+            label={settingsStringsFor(language).title}
+            onClick={() => {
+              close()
+              onOpenSettings()
+            }}
+          />
           <SheetRow
             colors={['#7eeac0', '#1fb39a']}
             icon={<IconArrowUp stroke={1.9} />}

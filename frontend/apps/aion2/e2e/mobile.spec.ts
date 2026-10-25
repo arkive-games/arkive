@@ -62,15 +62,15 @@ test.describe("mobile chrome", () => {
     await expect(searchSheet.getByTestId("search-results")).toBeVisible();
   });
 
-  // This one has bitten before: the lift that clears the tab bar is CSS keyed on
-  // the zoom pill's class, and a rule that matches nothing reports no error — the
+  // The lift that stacks the zoom pill above the FABs is CSS keyed on the zoom
+  // pill's class, and a rule that matches nothing reports no error — the
   // zoom-out button just silently goes untappable again.
-  test("map chrome is not trapped behind the bottom tab bar", async ({ page }) => {
+  test("map chrome stays inside the viewport and clear of the menu button", async ({ page }) => {
     await openMap(page);
-    const barTop = (await page.getByTestId("bottom-tab-bar").boundingBox())!.y;
+    const barTop = page.viewportSize()!.height;
+    const menu = (await page.getByTestId("tab-more").boundingBox())!;
 
-    // Every zoom button must be fully above the tab bar, or it cannot be
-    // tapped. The zoom-out half used to sit entirely underneath it.
+    // Every zoom button must be fully on screen, or it cannot be tapped.
     const buttons = zoomButtons(page);
     const n = await buttons.count();
     expect(n).toBeGreaterThan(0);
@@ -86,6 +86,8 @@ test.describe("mobile chrome", () => {
     expect(zoom.y + zoom.height).toBeLessThanOrEqual(search.y);
     expect(search.y + search.height).toBeLessThanOrEqual(filter.y);
     expect(filter.y + filter.height).toBeLessThanOrEqual(barTop);
+    // The menu button sits in the top-right corner, well above the stack.
+    expect(menu.y + menu.height).toBeLessThanOrEqual(zoom.y);
   });
 
   // Markers are not DOM, so what is counted is the permanent NAME LABELS
@@ -113,13 +115,17 @@ test.describe("mobile chrome", () => {
     await expect.poll(() => drawn.count(), { timeout: 10_000 }).toBeLessThan(before);
   });
 
-  test("bottom tab bar navigates and marks the active tab", async ({ page }) => {
+  test("the menu drawer navigates and marks the active page", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
-    const bar = page.getByTestId("bottom-tab-bar");
-    await expect(bar).toBeVisible();
+    // No bottom tab bar on the phone website: sections live in the drawer.
+    await expect(page.getByTestId("bottom-tab-bar")).toHaveCount(0);
+    await page.getByTestId("tab-more").click();
+    await expect(page.getByTestId("bottom-tab-bar")).toBeVisible();
 
     await page.getByTestId("tab-quest").click();
     await expect(page).toHaveURL(/\/wiki\/quest/);
+    await expect(page.getByTestId("more-sheet")).toHaveCount(0);
+    await page.getByTestId("tab-more").click();
     await expect(page.getByTestId("tab-quest")).toHaveAttribute(
       "data-active",
       "true",
@@ -162,7 +168,7 @@ test.describe("mobile chrome", () => {
     }
   });
 
-  test("wiki pages get a compact header and clear the tab bar", async ({ page }) => {
+  test("wiki pages get a compact header and keep the safe area", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
     await expect(page.getByTestId("arkive-mobile-header")).toBeVisible();
     // Global search must stay reachable now that the desktop bar is hidden.
@@ -171,30 +177,30 @@ test.describe("mobile chrome", () => {
     await page.keyboard.press("Escape");
 
     // The footer is the last element in the scroll column, so it carries the
-    // clearance for the fixed tab bar.
+    // bottom safe-area clearance (there is no fixed tab bar to clear any more).
     const pad = await page.evaluate(() => {
       const f = document.querySelector("footer");
       return f ? parseFloat(getComputedStyle(f).paddingBottom) : 0;
     });
-    expect(pad).toBeGreaterThanOrEqual(64);
+    expect(pad).toBeGreaterThanOrEqual(16);
   });
 });
 
 test.describe("desktop is unchanged", () => {
   test.use({ viewport: DESKTOP });
 
-  test("top bar shows, tab bar does not", async ({ page }) => {
+  test("top bar shows, the phone menu button does not", async ({ page }) => {
     await page.goto("/wiki?lng=en-US");
     await expect(page.getByRole("banner")).toBeVisible();
-    const bar = page.getByTestId("bottom-tab-bar");
-    await expect(bar).toHaveCount(1);
-    await expect(bar).toBeHidden();
+    const menu = page.getByTestId("tab-more");
+    await expect(menu).toHaveCount(1);
+    await expect(menu).toBeHidden();
     await expect(page.getByTestId("lang-menu")).toBeVisible();
     await expect(page.getByTestId("theme-menu")).toBeVisible();
   });
 
   test("an open More sheet does not survive to desktop", async ({ page }) => {
-    // The <nav> is md:hidden but the sheet portals to <body>, so without an
+    // The button is md:hidden but the drawer portals to <body>, so without an
     // explicit close it stayed draped over the desktop layout after a rotation.
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/wiki?lng=en-US");

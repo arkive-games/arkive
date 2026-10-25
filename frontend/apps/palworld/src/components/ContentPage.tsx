@@ -67,7 +67,7 @@ export function ContentPageFilters({ className }: { className?: string }) {
 /**
  * This game's navigation, strings and links in the shared page shell. Phones
  * get the compact title header, the back-to-top button, and bottom padding
- * that clears the fixed bottom tab bar; the content width is the standard one.
+ * that clears the bottom safe area; the content width is the standard one.
  */
 export function ContentPage({
   active,
@@ -102,7 +102,7 @@ export function ContentPage({
         // rather than falling back to the public-web defaults.
         footer={
           <SiteFooter
-            className="pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-4"
+            className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
             homeUrl={ARKIVE_HOME_URL}
             homeLinkProps={ARKIVE_HOME_LINK_PROPS}
             githubUrl={GITHUB_ORG_URL}

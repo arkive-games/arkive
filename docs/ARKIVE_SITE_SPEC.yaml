@@ -163,11 +163,12 @@ global_shell:
   mobile_shared_owners:
     - "frontend/packages/map-shell/src/ArkiveMobileHeader.tsx"
     - "frontend/packages/map-shell/src/ShellBottomNav.tsx"
+  # Owner decision (2026-10): the top bar carries the English "Arkive" wordmark
+  # alone; the localized name and slogan stay in the footer and metadata.
   brand_block:
     content:
-      - "Arkive mark"
-      - "Localized official site name"
-      - "Localized slogan"
+      - "The English \"Arkive\" wordmark, in every language"
+      - "On game pages, a game chip with the game's icon and localized name"
     visibility: "Always visible whenever the desktop top bar is visible."
     home_link: "Resolve through frontend/packages/map-shell/src/arkiveHome.ts."
   navigation:

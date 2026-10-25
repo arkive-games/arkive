@@ -701,7 +701,7 @@ export function MarkerDetailDrawer({
       onWheel={(event) => event.stopPropagation()}
       style={{ "--marker-detail-drag-y": `${dragOffset}px` } as CSSProperties}
       className={cn(
-        "absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4rem)] z-[var(--arkive-layer-sheet)] flex max-h-[min(60dvh,34rem,calc(100dvh-5rem-env(safe-area-inset-bottom)))] translate-y-[var(--marker-detail-drag-y)] flex-col overflow-hidden rounded-t-lg border border-border bg-background text-foreground shadow-[0_-1.2rem_3rem_rgba(21,40,45,0.22)] md:bottom-auto md:translate-y-0 md:rounded-lg md:shadow-[0_18px_50px_rgba(10,50,48,0.22)]",
+        "absolute inset-x-0 bottom-[env(safe-area-inset-bottom)] z-[var(--arkive-layer-sheet)] flex max-h-[min(60dvh,34rem,calc(100dvh-5rem-env(safe-area-inset-bottom)))] translate-y-[var(--marker-detail-drag-y)] flex-col overflow-hidden rounded-t-lg border border-border bg-background text-foreground shadow-[0_-1.2rem_3rem_rgba(21,40,45,0.22)] md:bottom-auto md:translate-y-0 md:rounded-lg md:shadow-[0_18px_50px_rgba(10,50,48,0.22)]",
         isDragging ? "transition-none" : "transition-transform duration-200 ease-out motion-reduce:transition-none",
         anchored
           ? "md:inset-auto md:left-0 md:top-0 md:w-[min(22rem,calc(100vw-1.5rem))] md:max-h-[min(34rem,calc(100dvh-7rem))] md:overflow-visible md:before:absolute md:before:-bottom-1.5 md:before:left-[var(--marker-detail-arrow-x,50%)] md:before:z-[-1] md:before:size-3 md:before:-translate-x-1/2 md:before:rotate-45 md:before:border md:before:border-border md:before:bg-background"

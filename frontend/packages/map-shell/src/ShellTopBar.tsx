@@ -1,6 +1,7 @@
 import {
   cloneElement,
   isValidElement,
+  useLayoutEffect,
   useRef,
   useState,
   type FocusEvent,
@@ -56,6 +57,11 @@ export interface ShellTopBarNav {
     itemActive?: string
     label?: string
     labelActive?: string
+    /**
+     * When set, a pill with this class slides under the hovered or current
+     * item. The nav itself becomes its positioning box.
+     */
+    indicator?: string
   }
 }
 
@@ -81,6 +87,7 @@ export interface ShellTopBarProps {
     onChange: (value: string) => void
     menuLabel: string
     shortLabel?: string
+    icon?: ReactNode
   }
   classNames?: {
     root?: string
@@ -105,6 +112,37 @@ export function ShellTopBar({
 }: ShellTopBarProps) {
   const [hoveredNavKey, setHoveredNavKey] = useState<string | null>(null)
   const [openUtilityMenu, setOpenUtilityMenu] = useState<"language" | "theme" | null>(null)
+  const navRef = useRef<HTMLElement>(null)
+  const [indicator, setIndicator] = useState<NavIndicator | null>(null)
+  const indicatorClass = nav?.classNames?.indicator
+  const highlightedNavKey = hoveredNavKey
+    ?? nav?.items.find((item) => item.active || item.children?.some((child) => child.active))?.key
+    ?? null
+
+  // Measure the highlighted item after layout, and again whenever the nav
+  // resizes (a web font arriving, a language change), so the pill always
+  // covers it. The first placement and a reappearance jump rather than slide.
+  useLayoutEffect(() => {
+    const root = navRef.current
+    if (!indicatorClass || !root) return
+    const measure = () => {
+      const target = Array.from(root.querySelectorAll<HTMLElement>("[data-nav-key]"))
+        .find((element) => element.dataset.navKey === highlightedNavKey)
+      setIndicator((previous) => target
+        ? {
+            left: target.offsetLeft,
+            width: target.offsetWidth,
+            visible: true,
+            animate: Boolean(previous?.visible),
+          }
+        : previous && { ...previous, visible: false, animate: false })
+    }
+    measure()
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(measure)
+    observer.observe(root)
+    return () => observer.disconnect()
+  }, [highlightedNavKey, indicatorClass])
 
   return (
     // The same page-gutter escalation as the content below it, so the bar's edge
@@ -117,7 +155,8 @@ export function ShellTopBar({
           {leftSlot}
           {nav && (
             <nav
-              className={cn("flex min-w-0 items-center gap-6", classNames?.nav)}
+              ref={navRef}
+              className={cn("flex min-w-0 items-center gap-6", indicatorClass && "relative", classNames?.nav)}
               onPointerLeave={() => setHoveredNavKey(null)}
               onBlur={(event) => {
                 if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -125,6 +164,19 @@ export function ShellTopBar({
                 }
               }}
             >
+              {indicatorClass && indicator && (
+                <span
+                  aria-hidden="true"
+                  data-testid="nav-indicator"
+                  data-animate={indicator.animate}
+                  className={indicatorClass}
+                  style={{
+                    left: indicator.left,
+                    width: indicator.width,
+                    opacity: indicator.visible ? 1 : 0,
+                  }}
+                />
+              )}
               {nav.items.map((item) => {
                 const groupActive = item.active || item.children?.some((child) => child.active)
                 const highlighted = hoveredNavKey === null ? groupActive : hoveredNavKey === item.key
@@ -139,6 +191,7 @@ export function ShellTopBar({
                 ) : (
                   <span
                     key={item.key}
+                    data-nav-key={item.key}
                     className="inline-flex items-center"
                     onPointerEnter={() => setHoveredNavKey(item.key)}
                     onFocus={() => setHoveredNavKey(item.key)}
@@ -198,7 +251,7 @@ export function ShellTopBar({
             onChange={themeSwitcher.onChange}
             menuLabel={themeSwitcher.menuLabel}
             shortLabel={themeSwitcher.shortLabel}
-            icon={<IconMoonStars className="size-5" stroke={1.8} />}
+            icon={themeSwitcher.icon ?? <IconMoonStars className="size-5" stroke={1.8} />}
             triggerClassName={classNames?.trigger}
             menuClassName={classNames?.menu}
           />
@@ -207,6 +260,13 @@ export function ShellTopBar({
       </div>
     </header>
   )
+}
+
+interface NavIndicator {
+  left: number
+  width: number
+  visible: boolean
+  animate: boolean
 }
 
 export interface ShellUtilityDropdownProps {
@@ -363,6 +423,7 @@ function NavDropdown({
 
   return (
     <div
+      data-nav-key={item.key}
       className="relative inline-flex items-center"
       onPointerEnter={() => {
         setOpen(true)

@@ -68,7 +68,7 @@ export function ArkiveMobileMapControls({
         <SheetContent
           side="bottom"
           data-testid="search-sheet"
-          className="arkive-mobile-map-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(72dvh,calc(100dvh-5rem))]"
+          className="arkive-mobile-map-sheet inset-x-2 bottom-0 pb-[env(safe-area-inset-bottom)] max-h-[min(72dvh,calc(100dvh-5rem))]"
         >
           <SheetTitle className="sr-only">{search.label}</SheetTitle>
           {search.content}
@@ -110,7 +110,7 @@ export function ArkiveMobileMapControls({
         <SheetContent
           side="bottom"
           data-testid="filter-sheet"
-          className="arkive-mobile-map-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(85dvh,calc(100dvh-5rem))]"
+          className="arkive-mobile-map-sheet inset-x-2 bottom-0 pb-[env(safe-area-inset-bottom)] max-h-[min(85dvh,calc(100dvh-5rem))]"
         >
           <SheetHeader className="shrink-0 pr-12">
             <SheetTitle>{filter.label}</SheetTitle>

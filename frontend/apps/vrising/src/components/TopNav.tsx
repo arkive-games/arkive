@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from '@gamemap/map-shell'
+import gameIcon from '../assets/vrising-icon.webp'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
@@ -26,7 +27,7 @@ export function TopNav({ active }: { active: NavKey }) {
       homeUrl={ARKIVE_HOME_URL}
       homeLabel={t('brandHome')}
       brandName={brandName}
-      brandSlogan={t('brandSlogan')}
+      game={{ name: t('gameName'), icon: gameIcon }}
       nav={{
         items,
         renderItem: (item, className, labelClassName) => (

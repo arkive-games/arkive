@@ -47,7 +47,7 @@ function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/partner-skills')) return '/partner-skills'
   if (pathname.startsWith('/stat-simulator')) return '/stat-simulator'
   if (pathname.startsWith('/breeding')) return '/breeding'
-  // The changelog is reached from the site-info panel, not from the tab bar, so
+  // The changelog is reached from the site-info panel, not from the menu drawer, so
   // it maps to itself: falling through to '/' would light up the Map tab on a
   // page that is not the map.
   if (pathname.startsWith('/changelog')) return '/changelog'

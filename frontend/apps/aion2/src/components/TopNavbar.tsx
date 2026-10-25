@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArkiveAccountControl } from "@gamemap/auth";
 import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from "@gamemap/map-shell";
+import gameIcon from "../assets/aion2-icon.webp";
 import i18n, { changeLanguagePreference, LANGUAGE_LABELS, SUPPORTED_LANGUAGES } from "@/i18n";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
 import { useSettingsConfig } from "@/lib/settings";
@@ -36,7 +37,7 @@ export default function TopNavbar() {
       homeUrl={ARKIVE_HOME_URL}
       homeLabel={t("common:brand.name")}
       brandName={brandName}
-      brandSlogan={t("common:brand.slogan")}
+      game={{ name: t("common:siteInfo.gameName"), icon: gameIcon }}
       nav={{
         items: navItems,
         renderItem: (item, className, labelClassName) => {

@@ -31,11 +31,10 @@ export interface ShellBottomTab {
   icon: ReactNode
   active?: boolean
   /**
-   * Makes this tab a group: tapping it opens a sheet of these pages instead of
-   * navigating. The mobile counterpart of a desktop `ShellNavItem` dropdown, so
-   * an app that groups its top bar can group its strip the same way rather than
-   * flattening every page into More. Children are drawn through `renderTab`,
-   * like any tab, and the group's own `key` is never navigated to.
+   * Makes this tab a group: its pages are listed under the group's label in
+   * the menu drawer. The mobile counterpart of a desktop `ShellNavItem`
+   * dropdown. Children are drawn through `renderTab`, like any tab, and the
+   * group's own `key` is never navigated to.
    *
    * Only honoured on `tabs`; a grid item with children is rendered as a leaf.
    */
@@ -43,10 +42,7 @@ export interface ShellBottomTab {
 }
 
 export interface ShellBottomNavProps {
-  /**
-   * The fixed strip. Five slots is the most a phone fits without shrinking
-   * labels below `text-xs`, and More occupies one — so four tabs.
-   */
+  /** The primary sections, listed first in the drawer. */
   tabs: ShellBottomTab[]
   /**
    * Wrap one tab in the app's own Link component. The shell computes the class
@@ -55,20 +51,22 @@ export interface ShellBottomNavProps {
    */
   renderTab: (tab: ShellBottomTab, className: string) => ReactNode
   more: {
+    /** Accessible name of the menu button. */
     label: ReactNode
+    /** The menu button's icon. */
     icon: ReactNode
-    /** True when the current page is reachable only through this sheet. */
+    /** True when the current page is reachable only through the drawer. */
     active?: boolean
     title: ReactNode
   }
-  /** Secondary pages, as a card grid inside the sheet. */
+  /** Secondary pages, as a card grid inside the drawer. */
   grid?: {
     items: ShellBottomTab[]
     renderItem: (item: ShellBottomTab, className: string) => ReactNode
   }
   /**
    * Rendered as a drill-down sub-page rather than an inline list: the full set
-   * would dominate the sheet at phone width, and stacking a second Radix
+   * would dominate the drawer at phone width, and stacking a second Radix
    * overlay inside a Sheet is a known z-index/focus trap in this UI kit.
    */
   language: {
@@ -102,14 +100,14 @@ export interface ShellBottomNavProps {
   /** Rendered last, e.g. the site-info panel. */
   footer?: ReactNode
   /**
-   * Current pathname. The sheet closes whenever it changes — a tap that
-   * navigates must not leave the sheet covering its own destination.
+   * Current pathname. The drawer closes whenever it changes — a tap that
+   * navigates must not leave the drawer covering its own destination.
    */
   pathname: string
   classNames?: { root?: string; tab?: string; tabActive?: string }
 }
 
-/** Which body the sheet is showing. */
+/** Which body the drawer is showing. */
 type MorePane = "main" | "language" | "settings"
 
 /**
@@ -117,9 +115,9 @@ type MorePane = "main" | "language" | "settings"
  *
  * `flex-wrap` is load-bearing, not decoration. Theme labels are per-app and can
  * be short ("System"/"Light"/"Dark") or long and flavoured ("Auto (Change with
- * Map)"/"Day Mode (Elyos)"). Without wrapping, the long set overflowed the row,
- * overlapped its own label and pushed the whole page into horizontal scroll at
- * phone width. Short labels still sit inline; long ones drop to their own line.
+ * Map)"/"Day Mode (Elyos)"). Without wrapping, the long set overflowed the row
+ * and overlapped its own label. Short labels still sit inline; long ones drop
+ * to their own line.
  */
 const ROW =
   "arkive-setting-row flex min-h-12 w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-md px-3 py-2 text-sm outline-none transition-[color,background-color,box-shadow] hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -133,12 +131,13 @@ function pillClass(selected: boolean) {
 }
 
 /**
- * The phone navigation: a fixed tab strip plus the "More" sheet holding
- * secondary pages, language, theme, and the site-info panel.
+ * The phone navigation: a round menu button pinned to the top-right corner,
+ * opening a drawer that holds every section, secondary pages, language, theme,
+ * settings and the site-info panel.
  *
- * Shared so the apps cannot drift into two different mobile designs, which is
- * exactly what had happened: one had a drill-down language picker and a
- * segmented theme control, the other loose pills under headings.
+ * The phone website has no bottom tab bar: that pattern is reserved for a
+ * future native app, and on the web it hid the bottom of every page and map.
+ * Shared so the apps cannot drift into different mobile designs.
  */
 export function ShellBottomNav({
   tabs,
@@ -154,9 +153,6 @@ export function ShellBottomNav({
 }: ShellBottomNavProps) {
   const [open, setOpen] = useState(false)
   const [pane, setPane] = useState<MorePane>("main")
-  // The key of the group tab whose sheet is open. One at a time: two sheets
-  // stacked on a phone is the overlay trap the language pane exists to avoid.
-  const [openGroup, setOpenGroup] = useState<string | null>(null)
   const isMobile = useIsMobile()
   const themeContext = useOptionalTheme()
   const currentTheme = theme.current ?? themeContext?.theme ?? "auto"
@@ -166,279 +162,239 @@ export function ShellBottomNav({
   const settingsProps = useArkiveSettingsProps(settings?.config ?? {})
   const settingsLabel = settings?.rowLabel ?? settingsProps.strings.title
 
-  // A tap that navigates must not leave the sheet over the destination.
+  // A tap that navigates must not leave the drawer over the destination.
   useEffect(() => {
     setOpen(false)
-    setOpenGroup(null)
   }, [pathname])
 
-  // The strip is `md:hidden`, but the sheet portals to <body> and so is NOT
-  // hidden by that class. Without this an open sheet stays draped over the
+  // The button is `md:hidden`, but the drawer portals to <body> and so is NOT
+  // hidden by that class. Without this an open drawer stays draped over the
   // desktop layout after a rotation past 768px (a landscape phone is 844px).
   useEffect(() => {
-    if (!isMobile) {
-      setOpen(false)
-      setOpenGroup(null)
-    }
+    if (!isMobile) setOpen(false)
   }, [isMobile])
 
-  const tabClass = (active?: boolean) =>
+  // One class for every page cell, so a page looks the same whichever section
+  // of the drawer lists it.
+  const cellClass = (active?: boolean) =>
     cn(
-      "arkive-bottom-tab relative flex min-h-16 flex-1 touch-manipulation flex-col items-center justify-center gap-1 px-0.5 py-1.5 text-xs font-semibold transition-colors active:bg-accent/70",
+      "arkive-more-route flex min-h-16 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-1 py-2 text-xs font-semibold transition-colors active:scale-[0.98]",
       active
-        ? "text-[color:var(--arkive-nav-active)] after:absolute after:left-1/2 after:top-0 after:h-[3px] after:w-10 after:-translate-x-1/2 after:rounded-b-sm after:bg-primary"
-        : "text-muted-foreground",
+        ? "bg-primary text-primary-foreground"
+        : "bg-foreground/[0.05] text-card-foreground hover:bg-foreground/10",
       classNames?.tab,
       active && classNames?.tabActive,
     )
 
-  // Shared by the More grid and every group sheet, so a page looks the same
-  // whichever sheet it is reached from.
-  const gridItemClass = (active?: boolean) =>
-    cn(
-      "arkive-more-route flex min-h-16 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg border border-border px-1 py-2 text-xs font-semibold active:scale-[0.98]",
-      active ? "bg-primary text-primary-foreground" : "bg-card text-card-foreground",
-    )
+  const leaves = tabs.filter((tab) => !tab.children || tab.children.length === 0)
+  const groups = tabs.filter((tab) => tab.children && tab.children.length > 0)
 
-  const sheetClass =
-    "arkive-more-sheet inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+4rem)] max-h-[min(90dvh,calc(100dvh-5rem-env(safe-area-inset-bottom)))] gap-0 overflow-y-auto rounded-t-lg border p-0 pt-5"
+  const section = (key: string, heading: ReactNode, cells: ReactNode) => (
+    <section key={key} data-testid={`tab-group-${key}`} className="mt-4 first:mt-0">
+      {heading && <h3 className="mb-2 px-1 text-xs font-bold text-muted-foreground">{heading}</h3>}
+      <div className="grid grid-cols-3 gap-1.5">{cells}</div>
+    </section>
+  )
 
-  const renderGroupTab = (tab: ShellBottomTab, children: ShellBottomTab[]) => (
+  return (
+    // SheetTrigger rather than a bare button so Radix knows the trigger and
+    // returns focus to it when the drawer closes via Escape or the X.
     <Sheet
-      open={openGroup === tab.key}
+      open={open}
       onOpenChange={(next) => {
-        setOpenGroup(next ? tab.key : null)
-        if (next) setOpen(false)
+        setOpen(next)
+        // Always reopen on the main body: a drawer that remembered it was left
+        // on the language sub-page would look like the wrong menu.
+        if (!next) setPane("main")
       }}
     >
       <SheetTrigger asChild>
         <button
           type="button"
-          data-testid={`tab-group-${tab.key}`}
-          data-active={tab.active}
-          aria-current={tab.active ? "page" : undefined}
-          aria-label={typeof tab.label === "string" ? tab.label : undefined}
-          className={tabClass(tab.active)}
+          data-testid="tab-more"
+          data-active={more.active}
+          aria-label={typeof more.label === "string" ? more.label : undefined}
+          title={typeof more.label === "string" ? more.label : undefined}
+          className={cn(
+            "arkive-menu-button fixed right-3 top-[calc(env(safe-area-inset-top)+0.375rem)] z-[var(--arkive-layer-map-control)] flex size-11 touch-manipulation items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md transition-colors active:bg-accent md:hidden",
+            classNames?.root,
+          )}
         >
-          {tab.icon}
-          <span className="max-w-full truncate px-0.5">{tab.label}</span>
+          {more.icon}
         </button>
       </SheetTrigger>
+
       <SheetContent
-        side="bottom"
-        data-testid={`group-sheet-${tab.key}`}
-        className={sheetClass}
-        style={{ paddingBottom: "1rem" }}
+        side="right"
+        data-testid="more-sheet"
+        className="arkive-more-sheet w-[min(22rem,88vw)] gap-0 overflow-y-auto p-0 pt-[env(safe-area-inset-top)] sm:max-w-none"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
+        // Radix skips links when choosing what to focus, so by default the
+        // language row took focus and showed a ring on every open. Focusing the
+        // drawer itself still moves focus into the dialog.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          const drawer = event.currentTarget as HTMLElement
+          drawer.focus()
+        }}
       >
-        <SheetHeader className="border-b border-border px-4 pb-3 pr-12 md:pr-10">
-          <SheetTitle>{tab.label}</SheetTitle>
+        {/* `pr-12` keeps the header clear of the drawer's absolute close button. */}
+        <SheetHeader className="border-b border-border px-4 pb-3 pt-4 pr-12">
+          {/* The title tracks the visible body so the sub-page is announced,
+              and SheetTitle stays mounted in every pane (Radix requires it). */}
+          <SheetTitle>
+            {pane === "language"
+              ? language.rowLabel
+              : pane === "settings"
+                ? settingsLabel
+                : more.title}
+          </SheetTitle>
         </SheetHeader>
-        <div className="grid grid-cols-4 gap-1.5 px-4 pb-4 pt-4">
-          {children.map((child) => (
-            <Fragment key={child.key}>{renderTab(child, gridItemClass(child.active))}</Fragment>
-          ))}
-        </div>
-      </SheetContent>
-    </Sheet>
-  )
 
-  return (
-    <>
-      <nav
-        data-testid="bottom-tab-bar"
-        className={cn(
-          "arkive-bottom-nav fixed inset-x-0 bottom-0 z-[var(--arkive-layer-sticky)] flex min-h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-border bg-background/98 text-foreground md:hidden",
-          classNames?.root,
-        )}
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        {tabs.map((tab) => (
-          <span key={tab.key} className="flex flex-1">
-            {tab.children && tab.children.length > 0
-              ? renderGroupTab(tab, tab.children)
-              : renderTab(tab, tabClass(tab.active))}
-          </span>
-        ))}
-        {/* SheetTrigger rather than a bare button so Radix knows the trigger and
-            returns focus to it when the sheet closes via Escape or the X. */}
-        <Sheet
-          open={open}
-          onOpenChange={(next) => {
-            setOpen(next)
-            if (next) setOpenGroup(null)
-            // Always reopen on the main body: a sheet that remembered it was
-            // left on the language sub-page would look like the wrong menu.
-            if (!next) setPane("main")
-          }}
-        >
-          <SheetTrigger asChild>
-            <button
-              type="button"
-              data-testid="tab-more"
-              data-active={more.active}
-              aria-current={more.active ? "page" : undefined}
-              aria-label={typeof more.label === "string" ? more.label : undefined}
-              className={tabClass(more.active)}
-            >
-              {more.icon}
-              <span className="px-0.5">{more.label}</span>
-            </button>
-          </SheetTrigger>
+        {pane === "main" ? (
+          <div className="px-4 pb-4 pt-4">
+            <nav data-testid="bottom-tab-bar">
+              {leaves.length > 0 && section(
+                "primary",
+                null,
+                leaves.map((tab) => <Fragment key={tab.key}>{renderTab(tab, cellClass(tab.active))}</Fragment>),
+              )}
+              {groups.map((group) => section(
+                group.key,
+                group.label,
+                (group.children ?? []).map((child) => (
+                  <Fragment key={child.key}>{renderTab(child, cellClass(child.active))}</Fragment>
+                )),
+              ))}
+              {grid && grid.items.length > 0 && section(
+                "more",
+                null,
+                grid.items.map((item) => (
+                  <Fragment key={item.key}>{grid.renderItem(item, cellClass(item.active))}</Fragment>
+                )),
+              )}
+            </nav>
 
-          <SheetContent
-            side="bottom"
-            data-testid="more-sheet"
-            className={sheetClass}
-            style={{ paddingBottom: "1rem" }}
-          >
-            {/* `pr-8` keeps the header clear of the sheet's absolute close button. */}
-            <SheetHeader className="border-b border-border px-4 pb-3 pr-12 md:pr-10">
-              {/* The title tracks the visible body so the sub-page is
-                  announced, and SheetTitle stays mounted in both panes
-                  (Radix requires it). */}
-              <SheetTitle>
-                {pane === "language"
-                  ? language.rowLabel
-                  : pane === "settings"
-                    ? settingsLabel
-                    : more.title}
-              </SheetTitle>
-            </SheetHeader>
+            <div className="mt-4 space-y-1 border-t border-border pt-3">
+              {/* One row showing the current language, not every option. */}
+              <button
+                type="button"
+                data-testid="more-lang-open"
+                onClick={() => setPane("language")}
+                className={ROW}
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <IconLanguage className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
+                  {language.rowLabel}
+                </span>
+                <span className="flex min-w-0 items-center gap-1 text-muted-foreground">
+                  <span className="truncate">
+                    {language.languages.find((l) => l.code === language.current)?.label ??
+                      language.current}
+                  </span>
+                  <IconChevronRight className="size-4 shrink-0" stroke={1.8} />
+                </span>
+              </button>
 
-            {pane === "main" ? (
-              <div className="px-4 pb-4 pt-4">
-                {grid && grid.items.length > 0 && (
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {grid.items.map((item) => (
-                      <Fragment key={item.key}>
-                        {grid.renderItem(item, gridItemClass(item.active))}
-                      </Fragment>
-                    ))}
-                  </div>
-                )}
-
-                <div className={cn("space-y-1 border-border", grid && "mt-3 border-t pt-3")}>
-                  {/* One row showing the current language, not every option. */}
-                  <button
-                    type="button"
-                    data-testid="more-lang-open"
-                    onClick={() => setPane("language")}
-                    className={ROW}
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <IconLanguage className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
-                      {language.rowLabel}
-                    </span>
-                    <span className="flex min-w-0 items-center gap-1 text-muted-foreground">
-                      <span className="truncate">
-                        {language.languages.find((l) => l.code === language.current)?.label ??
-                          language.current}
-                      </span>
-                      <IconChevronRight className="size-4 shrink-0" stroke={1.8} />
-                    </span>
-                  </button>
-
-                  <div className={ROW}>
-                    <span className="flex min-w-0 items-center gap-2">
-                      <IconMoonStars className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
-                      {theme.rowLabel}
-                    </span>
-                    {/* Segmented control rather than a cycling toggle: every
-                        state is visible, so "auto" is discoverable. */}
-                    <div
-                      role="group"
-                      aria-label={typeof theme.rowLabel === "string" ? theme.rowLabel : undefined}
-                      className="flex max-w-full overflow-hidden rounded-md border border-border"
-                    >
-                      {theme.options.map(({ value, label }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          data-testid={`more-theme-${value}`}
-                          aria-pressed={currentTheme === value}
-                          onClick={() => setTheme(value)}
-                          className={pillClass(currentTheme === value)}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {settings && (
-                    <button
-                      type="button"
-                      data-testid="more-settings-open"
-                      onClick={() => setPane("settings")}
-                      className={ROW}
-                    >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <IconSettings className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
-                        {settingsLabel}
-                      </span>
-                      <IconChevronRight className="size-4 shrink-0 text-muted-foreground" stroke={1.8} />
-                    </button>
-                  )}
-                </div>
-
-                {footer && <div className="mt-3 border-t border-border pt-3">{footer}</div>}
-              </div>
-            ) : pane === "settings" && settings ? (
-              <div className="px-4 pb-4 pt-4">
-                <button
-                  type="button"
-                  data-testid="more-settings-back"
-                  onClick={() => setPane("main")}
-                  className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground"
+              <div className={ROW}>
+                <span className="flex min-w-0 items-center gap-2">
+                  <IconMoonStars className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
+                  {theme.rowLabel}
+                </span>
+                {/* Segmented control rather than a cycling toggle: every state
+                    is visible, so "auto" is discoverable. */}
+                <div
+                  role="group"
+                  aria-label={typeof theme.rowLabel === "string" ? theme.rowLabel : undefined}
+                  className="flex max-w-full overflow-hidden rounded-md border border-border"
                 >
-                  <IconChevronLeft className="size-4" stroke={1.8} />
-                  {settings.backLabel}
-                </button>
-                <div className="mt-2">
-                  <ArkiveSettingsPanel {...settingsProps} />
-                </div>
-              </div>
-            ) : (
-              <div className="px-4 pb-4 pt-4">
-                <button
-                  type="button"
-                  data-testid="more-lang-back"
-                  onClick={() => setPane("main")}
-                  className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground"
-                >
-                  <IconChevronLeft className="size-4" stroke={1.8} />
-                  {language.backLabel}
-                </button>
-                <div className="mt-1 flex flex-col">
-                  {language.languages.map(({ code, label }) => (
+                  {theme.options.map(({ value, label }) => (
                     <button
-                      key={code}
+                      key={value}
                       type="button"
-                      data-testid={`more-lang-${code}`}
-                      aria-pressed={language.current === code}
-                      onClick={() => {
-                        language.onChange(code)
-                        // Straight back: the picked language is the answer, so
-                        // there is nothing left to do on this page.
-                        setPane("main")
-                      }}
-                      className={cn(
-                        "flex min-h-11 items-center justify-between gap-2 border-b border-border px-1 py-2.5 text-left text-sm last:border-b-0",
-                        language.current === code
-                          ? "font-semibold text-primary"
-                          : "text-card-foreground",
-                      )}
+                      data-testid={`more-theme-${value}`}
+                      aria-pressed={currentTheme === value}
+                      onClick={() => setTheme(value)}
+                      className={pillClass(currentTheme === value)}
                     >
-                      <span className="truncate">{label}</span>
-                      {language.current === code && <IconCheck className="size-4 shrink-0" stroke={1.8} />}
+                      {label}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
-          </SheetContent>
-        </Sheet>
-      </nav>
-    </>
+
+              {settings && (
+                <button
+                  type="button"
+                  data-testid="more-settings-open"
+                  onClick={() => setPane("settings")}
+                  className={ROW}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <IconSettings className="size-5 shrink-0 text-muted-foreground" stroke={1.8} />
+                    {settingsLabel}
+                  </span>
+                  <IconChevronRight className="size-4 shrink-0 text-muted-foreground" stroke={1.8} />
+                </button>
+              )}
+            </div>
+
+            {footer && <div className="mt-3 border-t border-border pt-3">{footer}</div>}
+          </div>
+        ) : pane === "settings" && settings ? (
+          <div className="px-4 pb-4 pt-4">
+            <button
+              type="button"
+              data-testid="more-settings-back"
+              onClick={() => setPane("main")}
+              className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground"
+            >
+              <IconChevronLeft className="size-4" stroke={1.8} />
+              {settings.backLabel}
+            </button>
+            <div className="mt-2">
+              <ArkiveSettingsPanel {...settingsProps} />
+            </div>
+          </div>
+        ) : (
+          <div className="px-4 pb-4 pt-4">
+            <button
+              type="button"
+              data-testid="more-lang-back"
+              onClick={() => setPane("main")}
+              className="-ml-1 inline-flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground"
+            >
+              <IconChevronLeft className="size-4" stroke={1.8} />
+              {language.backLabel}
+            </button>
+            <div className="mt-1 flex flex-col">
+              {language.languages.map(({ code, label }) => (
+                <button
+                  key={code}
+                  type="button"
+                  data-testid={`more-lang-${code}`}
+                  aria-pressed={language.current === code}
+                  onClick={() => {
+                    language.onChange(code)
+                    // Straight back: the picked language is the answer, so
+                    // there is nothing left to do on this page.
+                    setPane("main")
+                  }}
+                  className={cn(
+                    "flex min-h-11 items-center justify-between gap-2 border-b border-border px-1 py-2.5 text-left text-sm last:border-b-0",
+                    language.current === code
+                      ? "font-semibold text-primary"
+                      : "text-card-foreground",
+                  )}
+                >
+                  <span className="truncate">{label}</span>
+                  {language.current === code && <IconCheck className="size-4 shrink-0" stroke={1.8} />}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
   )
 }

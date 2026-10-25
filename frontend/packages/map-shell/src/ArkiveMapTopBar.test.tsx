@@ -1,19 +1,19 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/react"
+import type { ComponentProps } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { ArkiveMapTopBar } from "./ArkiveMapTopBar"
 
 afterEach(cleanup)
 
-function renderTopBar() {
+function renderTopBar(over: Partial<ComponentProps<typeof ArkiveMapTopBar>> = {}) {
   return render(
     <ArkiveMapTopBar
+      {...over}
       homeUrl="https://arkive.example"
       homeLinkProps={{ target: "_blank", rel: "noopener noreferrer" }}
       homeLabel="Arkive home"
-      brandName="Arkive"
-      brandSlogan="Sail Games With Us."
       nav={{
         items: [{ key: "map", label: "Map", active: true }],
         renderItem: (item, className, labelClassName) => (
@@ -52,27 +52,34 @@ describe("ArkiveMapTopBar", () => {
 
     expect(brand.getAttribute("href")).toBe("https://arkive.example")
     expect(brand.getAttribute("target")).toBe("_blank")
-    expect(brand.textContent).toContain("Arkive")
-    expect(brand.textContent).toContain("Sail Games With Us.")
-    expect(brand.className).toContain("w-fit")
-    expect(brand.className).toContain("h-14")
-    expect(brand.className).toContain("text-foreground")
-    expect(brand.className).toContain("gap-[0.6rem]")
-    expect(brand.className).toContain("xl:gap-[0.7rem]")
-    expect(brand.className).toContain("pr-3")
-    expect(brand.className).toContain("xl:pr-4")
-    expect(brand.querySelector("svg")?.getAttribute("class")).toContain("size-[2.125rem]")
-    expect(brand.querySelector("svg")?.getAttribute("class")).toContain("xl:size-9")
-    expect(getByTestId("brand-name").className).toContain("text-sm")
-    expect(getByTestId("brand-name").className).toContain("leading-none")
-    expect(getByTestId("brand-slogan").className).toContain("text-[0.7rem]")
-    expect(getByTestId("brand-slogan").className).toContain("leading-none")
-    expect(getByTestId("brand-slogan").className).toContain("var(--arkive-brand-slogan)")
+    expect(brand.getAttribute("aria-label")).toBe("Arkive home")
+    // The English wordmark alone, whatever the language: no slogan, no mark.
+    expect(brand.textContent).toBe("Arkive")
+    expect(brand.querySelector("svg")).toBeNull()
+    expect(getByTestId("brand-wordmark").className).toContain("arkive-wordmark")
     expect(brand.closest("header")?.className).toContain("h-14")
     expect(getByTestId("map-link").textContent).toBe("Map")
     expect(label.classList.contains("arkive-nav-item-label")).toBe(true)
     expect(getByTestId("map-link").classList.contains("arkive-nav-item--highlighted")).toBe(true)
-    expect(getByRole("navigation").className).toContain("gap-7")
+    expect(getByRole("navigation").className).toContain("rounded-full")
+    expect(getByTestId("nav-indicator").className).toContain("arkive-nav-indicator")
+  })
+
+  it("shows the game chip only when a game is given", () => {
+    expect(renderTopBar().queryByTestId("game-chip")).toBeNull()
+    cleanup()
+    const { getByTestId } = renderTopBar({ game: { name: "Palworld", icon: "/icon.webp" } })
+    expect(getByTestId("game-chip").textContent).toBe("Palworld")
+    expect(getByTestId("game-chip").querySelector("img")?.getAttribute("src")).toBe("/icon.webp")
+  })
+
+  it("floats as a capsule on the portal home and docks everywhere else", () => {
+    expect(renderTopBar().getByTestId("brand-link").closest("header")?.className)
+      .not.toContain("arkive-map-topbar--floating")
+    cleanup()
+    const header = renderTopBar({ variant: "floating" }).getByTestId("brand-link").closest("header")
+    expect(header?.className).toContain("arkive-map-topbar--floating")
+    expect(header?.className).toContain("rounded-full")
   })
 
   it("renders language, theme, and login controls in the shared right cluster", () => {

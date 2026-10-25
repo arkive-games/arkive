@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from '@gamemap/map-shell'
+import gameIcon from '../assets/gmzz-icon.webp'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
@@ -34,12 +35,11 @@ export function TopNav({ active }: { active: NavKey }) {
       homeUrl={ARKIVE_HOME_URL}
       homeLabel={t('brandHome')}
       brandName={brandName}
-      brandSlogan={t('brandSlogan')}
+      game={{ name: t('siteInfo.gameName'), icon: gameIcon }}
       nav={{
         items: ITEMS,
-        // The label needs the shell's own class to sit above the active item's
-        // `::before` highlight pill; without it the active label is painted
-        // over and reads as a blank chip.
+        // The label carries the shell's own class so it keeps the shell's
+        // alignment and colour above the sliding highlight pill.
         //
         // Only leaves reach this: the shell renders a dropdown's trigger as its
         // own button, so the group's non-route key ('autochess') never becomes

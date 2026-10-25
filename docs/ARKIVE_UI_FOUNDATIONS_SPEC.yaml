@@ -2,7 +2,7 @@ schema_version: "1.0.0"
 spec_id: "arkive.ui-foundations"
 title: "Arkive UI Foundations Specification"
 status: "canonical"
-last_reviewed: "2026-08-12"
+last_reviewed: "2026-10-26"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -128,26 +128,24 @@ typography:
     - "Use tabular numbers for counts, coordinates, ids, prices, and version values."
     - "Long-form text uses a readable measure no wider than 72ch."
     - "A compact panel title must not use page-title scale."
-    - "The desktop brand slogan may use 0.7rem so the two-line brand block fits the shared top bar; this is the only shared-chrome exception below text-xs."
     - "The document language follows the active application locale so browsers and assistive technology select the correct glyph and pronunciation rules."
 
 shared_component_contracts:
+  # Owner decision (2026-10): top bar "style A". The wordmark font is a
+  # placeholder (Fredoka, OFL) until the designed logo is delivered.
   desktop_brand_block:
-    medium_desktop:
-      mark_size: "2.125rem"
-      mark_to_copy_gap: "0.6rem"
-      trailing_padding: "0.75rem"
-    wide_desktop:
-      mark_size: "2.25rem"
-      mark_to_copy_gap: "0.7rem"
-      trailing_padding: "1rem"
-    name: "text-sm, weight 700, line height 1"
-    slogan: "0.7rem, weight 500, line height 1"
-    name_to_slogan_gap: "0.12rem"
+    wordmark: "The English \"Arkive\" wordmark in the Arkive Wordmark face, identical in every language; no mark or slogan"
+    game_chip: "Optional on game pages: a 2.5rem pill holding a 2rem round game icon and the localized game name"
     navigation_gap: "1.75rem"
     rules:
       - "The block fits its content and does not reserve an independent grid column."
-      - "The localized name and slogan remain visible without truncation."
+      - "The wordmark and game name remain visible without truncation."
+  desktop_top_bar:
+    owner: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
+    docked: "Full-width 3.5rem bar on game, map, and content pages"
+    floating: "A 4rem capsule with pill_radius, floating above the portal home"
+    navigation: "Pill tabs inside one rounded track, with a sliding indicator under the active or hovered tab"
+    utilities: "Round 2.5rem icon buttons for language and theme, a gradient login pill, and a ringed 2.5rem avatar"
   popup_surfaces:
     surface: "Use the shared floating or modal surface class from frontend/packages/ui/src/popup-styles.ts."
     menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500. Desktop top-bar hover menus are the sole compact exception: 2.25rem rows with no extra inter-row gap."
@@ -200,10 +198,12 @@ shape:
     compact_radius: "0.375rem"
     standard_radius: "0.5rem"
     pill_radius: "999rem"
+    floating_radius: "1rem"
   rules:
     - "Cards, inputs, popovers, dialogs, sheets, and tool surfaces use standard_radius."
     - "Small badges, checkboxes, and compact internal controls may use compact_radius."
-    - "Use pill_radius only for tags, segmented indicators, avatars, and controls whose shape communicates a real role."
+    - "Use pill_radius only for tags, segmented indicators, avatars, top-bar tabs and round buttons, the floating top bar, and controls whose shape communicates a real role."
+    - "floating_radius (1rem, --arkive-radius-floating) is reserved for floating chrome: the mobile menu drawer's leading corners and floating top-bar menus."
     - "Nested surfaces do not increase radius with every level."
     - "Arbitrary radii such as 0.55rem, 0.65rem, 0.8rem, or 1.35rem are not permitted."
 
@@ -214,7 +214,7 @@ control_geometry:
   touch_target_enhanced: "44px"
   isolated_map_target: "3rem"
   shared_header_height: "3.5rem before safe-area inset"
-  bottom_navigation_height: "4rem plus bottom safe-area inset"
+  mobile_menu_button: "touch_target_standard, round, fixed top-right below the top safe-area inset"
   rules:
     - "Shared mobile controls use touch_target_standard, which resolves to 46.75 CSS pixels at the 17px root size."
     - >-
@@ -282,7 +282,7 @@ elevation_and_layers:
     local_content: { css_variable: "--arkive-layer-local-content", value: 0, role: "Normal content inside an isolated component stacking context" }
     local_control: { css_variable: "--arkive-layer-local-control", value: 1, role: "Controls and labels above local content inside an isolated stacking context" }
     base: { css_variable: "--arkive-layer-base", value: 0, role: "Normal document and map content" }
-    sticky_shell: { css_variable: "--arkive-layer-sticky", value: 1800, role: "Sticky headers and fixed mobile navigation" }
+    sticky_shell: { css_variable: "--arkive-layer-sticky", value: 1800, role: "Sticky headers" }
     map_control: { css_variable: "--arkive-layer-map-control", value: 1900, role: "Map controls that must clear the sticky shell" }
     popover: { css_variable: "--arkive-layer-popover", value: 2000, role: "Dropdowns, search overlays, and popovers" }
     sheet_backdrop: { css_variable: "--arkive-layer-sheet-backdrop", value: 3000, role: "Sheet and dialog backdrops" }
