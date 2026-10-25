@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.19.0",
+      "date": "2026-10-25",
+      "commit": "c6318ae344ec7ac461943dc4b8e1457239383ed2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rating calculator: puppet skill is now calculated from the carried puppet's quality and skill tier, and puppets are picked from an icon grid — type each one's level and click an icon to deploy it (up to three).",
+            "zh-CN": "非凡评分计算器：秘偶技能按携带秘偶的品质与技能阶自动计算；秘偶改为头像网格，在头像下填写等级，点击头像即可上阵（默认最多 3 个）。",
+            "zh-TW": "非凡評分計算器：秘偶技能按攜帶秘偶的品質與技能階自動計算；秘偶改為頭像網格，在頭像下填寫等級，點擊頭像即可上陣（預設最多 3 個）。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.18.0",
       "date": "2026-10-25",
       "commit": "28b269ab4de3f5a9890bb2d0df9375a88cf46216",
