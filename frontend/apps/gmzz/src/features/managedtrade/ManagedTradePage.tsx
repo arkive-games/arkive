@@ -33,7 +33,7 @@ import {
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none ${FOCUS}`
-const SECTION_TITLE = 'mb-3 text-lg font-bold text-foreground'
+const SECTION_TITLE = `mb-3 ${TYPE.sectionTitle}`
 
 const RARITY_FRAME: Record<number, string> = {
   1: 'border-border bg-muted/35',
@@ -138,7 +138,9 @@ function Overview({ data, t }: { data: ManagedTradeData; t: T }) {
     t('managedtrade.rules.tax'),
     t('managedtrade.rules.refresh', { minutes: c.priceRefreshMinutes }),
     t('managedtrade.rules.levels'),
-    t('managedtrade.rules.night', { start: c.nightStart, end: c.nightEnd }),
+    // `IsInManagedTradeNight` is `start <= hour < end`, so start >= end is no
+    // rest at all — which is what build 2228458 ships (8 to 8).
+    ...(c.nightStart < c.nightEnd ? [t('managedtrade.rules.night', { start: c.nightStart, end: c.nightEnd })] : []),
     t('managedtrade.rules.start', { money: fmt(c.initialMoney), sites: c.defaultSitePool.map((id) => siteName(data, id)).join(' / ') }),
     t('managedtrade.rules.dump', { percent: Math.round(c.lowPriceSellMultiplier * 100) }),
     t('managedtrade.rules.commissions', { max: c.maxActiveCommissions, double: c.doubleCommissionCount }),
@@ -212,8 +214,8 @@ function GoodsSection({ data, t }: { data: ManagedTradeData; t: T }) {
             <tr className={TYPE.label}>
               <th className="px-3 py-2">{t('managedtrade.goods.name')}</th>
               <th className="px-3 py-2 text-right">{t('managedtrade.goods.weight')}</th>
-              <th className="px-3 py-2" title={t('managedtrade.goods.rangeHint')}>{t('managedtrade.goods.youBuy')}</th>
-              <th className="px-3 py-2" title={t('managedtrade.goods.rangeHint')}>{t('managedtrade.goods.youSell')}</th>
+              <th className="px-3 py-2">{t('managedtrade.goods.youBuy')}</th>
+              <th className="px-3 py-2">{t('managedtrade.goods.youSell')}</th>
               <th className="px-3 py-2 text-right">{t('managedtrade.goods.margin')}</th>
               <th className="px-3 py-2 text-right">{t('managedtrade.goods.marginPerLoad')}</th>
               <th className="px-3 py-2">{t('managedtrade.goods.producers')}</th>
@@ -497,7 +499,7 @@ function Calculator({ data, t }: { data: ManagedTradeData; t: T }) {
           </Field>
           <Field label={t('managedtrade.calc.sellPrice')}>
             <Input type="number" min={0} value={sellPrice} onChange={(event) => setSellPrice(intValue(event.target.value))} className="h-9 text-sm" data-testid="managed-trade-calc-sell" />
-            <PriceHint level={sellLevel} range={goods.stationBuys} t={t} />
+            <PriceHint level={sellLevel} range={goods.stationBuys} t={t} selling />
           </Field>
           <Field label={t('managedtrade.calc.buyTax')}>
             <Input type="number" min={0} max={100} value={buyTax} onChange={(event) => setBuyTax(Math.min(100, intValue(event.target.value)))} className="h-9 text-sm" />
@@ -588,10 +590,13 @@ function Calculator({ data, t }: { data: ManagedTradeData; t: T }) {
   )
 }
 
-function PriceHint({ level, range, t }: { level: PriceLevel; range: PriceRange; t: T }) {
+/** Buying, a low price is good (green); selling, a high one is, so the colours swap. */
+const SELL_LEVEL: Record<PriceLevel, PriceLevel> = { low: 'high', belowAvg: 'aboveAvg', medium: 'medium', aboveAvg: 'belowAvg', high: 'low' }
+
+function PriceHint({ level, range, t, selling = false }: { level: PriceLevel; range: PriceRange; t: T; selling?: boolean }) {
   return (
     <span className={TYPE.valueMuted}>
-      {t('managedtrade.calc.levelHint')}: <span className={cn('font-semibold', LEVEL_CLASS[level])}>{t(`managedtrade.level.${level}`)}</span> · {fmt(range.min)}–{fmt(range.max)}
+      {t('managedtrade.calc.levelHint')}: <span className={cn('font-semibold', LEVEL_CLASS[selling ? SELL_LEVEL[level] : level])}>{t(`managedtrade.level.${level}`)}</span> · {fmt(range.min)}–{fmt(range.max)}
     </span>
   )
 }

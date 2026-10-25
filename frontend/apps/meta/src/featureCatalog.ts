@@ -92,6 +92,7 @@ export const FEATURES: readonly GameFeature[] = [
     keywords: ['train', 'station', '火车', '火車', '站点', '站點'],
   },
   { id: 'gmzz-traintrade', gameId: 'gmzz', kind: 'wiki', path: '/traintrade', name: text('Train Tycoon', '铁路大亨', '鐵路大亨'), keywords: ['train', '火车', '火車', '货物', '貨物'] },
+  { id: 'gmzz-managedtrade', gameId: 'gmzz', kind: 'wiki', path: '/managedtrade', name: text('Trade War', '贸易战', '貿易戰'), keywords: ['trade', 'caravan', '贸易', '貿易', '商队', '商隊', '特产', '特產'] },
   { id: 'gmzz-autochess', gameId: 'gmzz', kind: 'wiki', path: '/autochess', name: text('Fool\'s Gambit', '愚者棋局', '愚者棋局'), keywords: ['autochess', 'chess', '自走棋', '棋子', '羁绊', '羈絆'] },
   { id: 'gmzz-fellows', gameId: 'gmzz', kind: 'wiki', path: '/fellows', name: text('Connections', '人脉', '人脈'), keywords: ['fellows', 'relations', '人脉关系', '人脈關係'] },
   { id: 'gmzz-secretpartners', gameId: 'gmzz', kind: 'wiki', path: '/secretpartners', name: text('Puppets', '秘偶', '秘偶'), keywords: ['puppets', 'secretpartner', '技能', '秘偶'] },

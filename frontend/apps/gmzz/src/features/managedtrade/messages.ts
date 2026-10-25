@@ -38,7 +38,6 @@ export const managedTradeMessages = {
     stations: {
       heading: 'Stations',
       level: 'Tier {{value}}',
-      specialties: 'Specialties',
       stock: 'Stock',
       stockValue: '{{max}} max, +{{recover}} per {{minutes}} min',
       purchase: 'Buys up to',
@@ -65,8 +64,6 @@ export const managedTradeMessages = {
       fullParts: 'All parts maxed',
       partsCost: 'All parts: {{cost}}',
       part: 'Part',
-      cost: 'Cost',
-      bonus: 'Bonus',
       note: 'Each caravan level has its own part ladder: upgrading the caravan needs every part at its top, and the parts start again from level 1 on the new caravan.',
     },
     calc: {
@@ -160,7 +157,6 @@ export const managedTradeMessages = {
     stations: {
       heading: '贸易站',
       level: '{{value}} 级站点',
-      specialties: '特产',
       stock: '出售库存',
       stockValue: '上限 {{max}}，每 {{minutes}} 分钟恢复 {{recover}}',
       purchase: '收购库存',
@@ -187,8 +183,6 @@ export const managedTradeMessages = {
       fullParts: '部件全满',
       partsCost: '部件升满共需 {{cost}}',
       part: '部件',
-      cost: '费用',
-      bonus: '加成',
       note: '每个商队等级有独立的部件等级：所有部件升满后才能升级商队，升级后的新商队部件从 1 级重新开始。',
     },
     calc: {
@@ -282,7 +276,6 @@ export const managedTradeMessages = {
     stations: {
       heading: '貿易站',
       level: '{{value}} 級站點',
-      specialties: '特產',
       stock: '出售庫存',
       stockValue: '上限 {{max}}，每 {{minutes}} 分鐘恢復 {{recover}}',
       purchase: '收購庫存',
@@ -309,8 +302,6 @@ export const managedTradeMessages = {
       fullParts: '部件全滿',
       partsCost: '部件升滿共需 {{cost}}',
       part: '部件',
-      cost: '費用',
-      bonus: '加成',
       note: '每個商隊等級有獨立的部件等級：所有部件升滿後才能升級商隊，升級後的新商隊部件從 1 級重新開始。',
     },
     calc: {

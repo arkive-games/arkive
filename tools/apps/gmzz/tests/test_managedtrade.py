@@ -21,7 +21,7 @@ def test_managedtrade_exports_every_table_but_the_stale_events():
 
 def _payload(**overrides):
     payload = {
-        "goods.json": [{"Id": 5101}],
+        "goods.json": [{"Id": 5101, "Weight": 15}],
         "sites.json": [{"Id": 101, "SpecialtyGoods": [5101]}, {"Id": 102, "SpecialtyGoods": []}],
         "routes.json": [{"RouteId": 1, "SiteA": 101, "SiteB": 102}],
         "commissions.json": [{"QuestId": 1001, "GoodsId": 5101}],
@@ -47,6 +47,12 @@ def test_reference_check_rejects_a_dangling_id(override):
     # shipped tables must not be allowed to drift the same way unnoticed.
     with pytest.raises(RuntimeError, match="dangling"):
         mt.check_references(_payload(**override))
+
+
+def test_reference_check_rejects_a_weightless_good():
+    # The page divides by weight to rank goods by margin per unit of load.
+    with pytest.raises(RuntimeError, match="no Weight"):
+        mt.check_references(_payload(**{"goods.json": [{"Id": 5101, "Weight": 0}]}))
 
 
 def test_formulas_must_both_be_present(monkeypatch, tmp_path):

@@ -1,4 +1,6 @@
-import { dataUrl, iconUrl } from '@/lib/urls'
+// Relative rather than `@/`: the root `vitest.config.ts` defines no aliases,
+// and this module's rules are what the tests cover.
+import { dataUrl, iconUrl } from '../../lib/urls'
 
 /*
  * 贸易战 — the client's `ManagedTrade` mode.
@@ -247,7 +249,7 @@ export async function loadManagedTrade(): Promise<ManagedTradeData> {
         rarity: row.Rarity,
         weight: row.Weight,
         order: row.GoodsOrder,
-        icon: icons[String(row.Id)] ?? String(row.ItemDisplayId),
+        icon: icons[String(row.Id)],
         stationSells: { min: row.SellMin, mid: row.SellMid, max: row.SellMax },
         stationBuys: { min: row.BuyMin, mid: row.BuyMid, max: row.BuyMax },
         producers: producers.get(row.Id) ?? [],
@@ -424,7 +426,11 @@ export function caravanStats(data: Pick<ManagedTradeData, 'caravans' | 'parts'>,
   }
 }
 
-/** Trade coin to raise every part of a caravan level from 1 to its top. */
+/**
+ * Trade coin to raise every part of a caravan level from 1 to its top. Each
+ * ladder's Lv 1 row has `UpgradeCost` 0 (it is the part as the caravan arrives),
+ * which is why the parts table can start its columns at Lv 2.
+ */
 export function partsUpgradeCost(parts: CaravanPart[]): number {
   return parts.reduce((sum, part) => sum + part.levels.reduce((inner, row) => inner + row.cost, 0), 0)
 }

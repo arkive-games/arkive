@@ -88,6 +88,10 @@ def check_references(payload: dict[str, object]) -> None:
     tables that are shipped from drifting the same way unnoticed.
     """
     goods = {row["Id"] for row in payload["goods.json"]}
+    weightless = [row["Id"] for row in payload["goods.json"] if not row.get("Weight")]
+    if weightless:
+        # The page ranks goods by margin per unit of load.
+        raise RuntimeError(f"goods with no Weight: {weightless}")
     sites = {row["Id"] for row in payload["sites.json"]}
     bad: list[str] = []
     for site in payload["sites.json"]:
