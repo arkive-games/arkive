@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.22.0",
+      "date": "2026-10-26",
+      "commit": "a4ba4858e04cdbf2c676fbda67d542a5a147dd6b",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Rating calculator: relic affixes now show Chinese stat names, rare affixes show their own name and effect, the material picker is gone (just attack or defence material), and the resonance bonus says how many active affixes it comes from.",
+            "zh-CN": "非凡评分计算器：封印物词条属性改为中文显示；稀有词条显示专属名称与效果；不再需要选择具体物质（只分攻击物质与防御物质）；非凡共鸣标明由几条已激活词条带来额外属性。",
+            "zh-TW": "非凡評分計算器：封印物詞條屬性改為中文顯示；稀有詞條顯示專屬名稱與效果；不再需要選擇具體物質（只分攻擊物質與防禦物質）；非凡共鳴標明由幾條已啟用詞條帶來額外屬性。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.21.0",
       "date": "2026-10-26",
       "commit": "927f76fa680ffdcd76a7f6c7b4e5555656719952",
