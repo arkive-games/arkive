@@ -920,11 +920,12 @@
 }
 
 /* The voyage: a route along the foot of the window that the page's scroll
-   fills with gold, carrying a small boat to the footer. */
+   fills with gold, carrying a small boat to the footer. It floats over the
+   page content but stays beneath the sticky header. */
 .home-voyage {
   position: fixed;
   inset: 0;
-  z-index: var(--arkive-layer-sticky);
+  z-index: calc(var(--arkive-layer-sticky) - 1);
   pointer-events: none;
 }
 

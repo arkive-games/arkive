@@ -108,18 +108,16 @@ product_model:
     unfinished_destination: "Show the localized coming-soon notice; do not navigate to a dead route."
     footer:
       owner: "frontend/apps/meta/src"
-      surface: "One continuous neutral surface; do not add a separate lower bar."
-      desktop_layout: "Four tracks with a wider brand track, then Browse, About, and Help, aligned to one top baseline."
+      # Owner decision (2026-10): the footer is a sea whose wave edge the page's
+      # voyage line rises into, and it carries only the wordmark, the About and
+      # Help links, and the legal line. Browse lives in the header and the
+      # homepage's own shortcut row, so the footer does not repeat it.
+      surface: "One continuous sea surface with a waved top edge; do not add a separate lower bar."
+      desktop_layout: "One row: the brand, then the About and Help links, then the legal line."
       brand:
-        - "Arkive mark"
-        - "Exactly one localized official site name from brand_identity"
-        - "Localized slogan from brand_identity"
-        - "Copyright and filing record on two intentional lines"
+        - "The Arkive wordmark only, in Latin script in every locale; the localized official site name stays in the header"
+        - "Copyright and filing record together on the legal line"
       navigation:
-        browse:
-          - "All games"
-          - "Arkive community"
-          - "Tools and mods"
         about:
           - "About Arkive"
           - "Contact us"

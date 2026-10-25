@@ -153,9 +153,11 @@ map_workspace:
 
 portal_home:
   first_screen: "Lead with game discovery or a real continuation task, never a marketing hero."
-  search: "Use one compact inline search control."
+  # Owner decision (2026-10): no search on the homepage for now. Search lives on
+  # the All games and Forum views; revisit with the site-wide navigation.
+  search: "Do not place a search control on the homepage body."
   continue: "Use valid recent activity, not popularity presented as personal history."
-  game_media: "Show inspectable game artwork in a stable 16:9 frame."
+  game_media: "Show inspectable game artwork in a stable frame: 3:1 carousel banners on desktop, 2:1 on a phone."
   participation: "Keep the join section unframed and separate it with one divider."
 
 catalogs_and_lists:
@@ -268,9 +270,9 @@ text_and_localization:
 footer:
   surface_selection: "Use the parent site's portal-home, standard-page, and full-screen-map classification without redefining it."
   portal_home:
-    brand: "Place the brand block across the full available width."
-    navigation: "Place Browse and About in two equal columns below the brand."
-    help: "Place Help across the full width; actions run horizontally and wrap together only when the viewport requires it."
+    brand: "Center the wordmark across the full available width."
+    navigation: "Run the About and Help links horizontally below the brand, wrapping together only when the viewport requires it."
+    legal: "Place the legal line last, centered."
     spacing: "Use compact approved spacing steps and keep the footer one continuous surface without a lower bar."
   version_information: "Do not show site or game version identifiers in the mobile page footer."
   dense_pages: "A route may hide the mobile footer when bottom navigation already provides navigation."
