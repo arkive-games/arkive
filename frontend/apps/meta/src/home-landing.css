@@ -360,6 +360,26 @@
   animation-play-state: paused;
 }
 
+/* The pause button sits at the end of the dot row, as small as the dots allow. */
+.home-hero-dots .home-hero-toggle {
+  width: 1.5rem;
+  margin-left: 0.25rem;
+  padding: 0;
+  color: var(--foreground);
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.home-hero-dots .home-hero-toggle:hover,
+.home-hero-dots .home-hero-toggle:focus-visible {
+  opacity: 1;
+}
+
+.home-hero-toggle svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
 @keyframes home-dot-fill {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }

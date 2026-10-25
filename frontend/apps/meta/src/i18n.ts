@@ -411,7 +411,7 @@ const FOOTER_DIALOG_COPY = {
  */
 const LANDING_COPY = {
   'zh-CN': {
-    carousel: { label: '游戏封面轮播', enter: '进入', slide: '第 {{n}} 个：{{name}}', previous: '上一个游戏', next: '下一个游戏' },
+    carousel: { label: '游戏封面轮播', enter: '进入', slide: '第 {{n}} 个：{{name}}', previous: '上一个游戏', next: '下一个游戏', pause: '暂停轮播', play: '继续轮播' },
     quick: { label: '快速入口', allGames: '全部游戏', tools: '工具库', forum: '论坛', updates: '更新日志', badge: '新' },
     dock: { title: '工具码头', subtitle: '不用翻资料，直接算出结果', all: '全部工具' },
     community: { title: '社区在聊', action: '去论坛' },
@@ -419,7 +419,7 @@ const LANDING_COPY = {
     arrived: '已抵达港口',
   },
   'zh-TW': {
-    carousel: { label: '遊戲封面輪播', enter: '進入', slide: '第 {{n}} 個：{{name}}', previous: '上一個遊戲', next: '下一個遊戲' },
+    carousel: { label: '遊戲封面輪播', enter: '進入', slide: '第 {{n}} 個：{{name}}', previous: '上一個遊戲', next: '下一個遊戲', pause: '暫停輪播', play: '繼續輪播' },
     quick: { label: '快速入口', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', updates: '更新日誌', badge: '新' },
     dock: { title: '工具碼頭', subtitle: '不用翻資料，直接算出結果', all: '全部工具' },
     community: { title: '社群在聊', action: '去論壇' },
@@ -427,7 +427,7 @@ const LANDING_COPY = {
     arrived: '已抵達港口',
   },
   'en-US': {
-    carousel: { label: 'Game carousel', enter: 'Enter', slide: 'Slide {{n}}: {{name}}', previous: 'Previous game', next: 'Next game' },
+    carousel: { label: 'Game carousel', enter: 'Enter', slide: 'Slide {{n}}: {{name}}', previous: 'Previous game', next: 'Next game', pause: 'Pause carousel', play: 'Play carousel' },
     quick: { label: 'Shortcuts', allGames: 'All games', tools: 'Tools', forum: 'Forum', updates: 'Updates', badge: 'NEW' },
     dock: { title: 'Tool dock', subtitle: 'Skip the spreadsheets and get the answer', all: 'All tools' },
     community: { title: 'Community talk', action: 'Visit the forum' },
@@ -435,7 +435,7 @@ const LANDING_COPY = {
     arrived: 'Arrived in port',
   },
   'ja-JP': {
-    carousel: { label: 'ゲームカルーセル', enter: '入る', slide: '{{n}} 枚目：{{name}}', previous: '前のゲーム', next: '次のゲーム' },
+    carousel: { label: 'ゲームカルーセル', enter: '入る', slide: '{{n}} 枚目：{{name}}', previous: '前のゲーム', next: '次のゲーム', pause: 'カルーセルを一時停止', play: 'カルーセルを再生' },
     quick: { label: 'ショートカット', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム', updates: '更新履歴', badge: '新着' },
     dock: { title: 'ツールドック', subtitle: '資料を探さず、すぐに結果を', all: 'すべてのツール' },
     community: { title: 'コミュニティの話題', action: 'フォーラムへ' },
@@ -443,7 +443,7 @@ const LANDING_COPY = {
     arrived: '港に到着しました',
   },
   'ko-KR': {
-    carousel: { label: '게임 캐러셀', enter: '입장', slide: '{{n}}번째: {{name}}', previous: '이전 게임', next: '다음 게임' },
+    carousel: { label: '게임 캐러셀', enter: '입장', slide: '{{n}}번째: {{name}}', previous: '이전 게임', next: '다음 게임', pause: '캐러셀 일시정지', play: '캐러셀 재생' },
     quick: { label: '바로가기', allGames: '전체 게임', tools: '도구', forum: '포럼', updates: '업데이트', badge: '신규' },
     dock: { title: '도구 부두', subtitle: '자료를 뒤질 필요 없이 바로 계산', all: '전체 도구' },
     community: { title: '커뮤니티 이야기', action: '포럼으로' },

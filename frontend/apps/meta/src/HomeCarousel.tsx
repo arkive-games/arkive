@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
+import { IconChevronLeft, IconChevronRight, IconPlayerPauseFilled, IconPlayerPlayFilled } from '@tabler/icons-react'
 import { GAME_LOGOS, siteHref, type SiteCard } from './sites'
 
 const AUTO_MS = 5000
@@ -40,8 +40,9 @@ function slotOf(index: number, current: number, length: number) {
 /**
  * A coverflow of the open games' banners: the middle one flat and linked, its
  * neighbours turned away either side. A tap on a neighbour brings it to the
- * middle rather than opening it. Advances every five seconds unless hovered,
- * focused, hidden, or the visitor prefers reduced motion.
+ * middle rather than opening it. Advances every five seconds unless stopped
+ * with the pause button, hovered, focused, hidden, or the visitor prefers
+ * reduced motion.
  */
 export function HomeCarousel({ sites, onOpenSite }: {
   sites: readonly SiteCard[]
@@ -55,6 +56,8 @@ export function HomeCarousel({ sites, onOpenSite }: {
   const [focused, setFocused] = useState(false)
   const [hidden, setHidden] = useState(false)
   const [reduced, setReduced] = useState(false)
+  // Set by the pause button, and kept until the visitor presses play again.
+  const [stopped, setStopped] = useState(false)
   const [size, setSize] = useState(carouselSize)
   // Bumped on every move so the active dot's progress fill restarts.
   const [cycle, setCycle] = useState(0)
@@ -83,7 +86,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
   }, [])
 
   const length = slides.length
-  const paused = hovered || focused || hidden || reduced
+  const paused = stopped || hovered || focused || hidden || reduced
   useEffect(() => {
     if (length < 2 || paused) return
     const timer = window.setTimeout(() => {
@@ -132,7 +135,9 @@ export function HomeCarousel({ sites, onOpenSite }: {
       aria-label={t('landing.carousel.label')}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)}
+      // Focus on the pause button does not count, or pressing play from the
+      // keyboard would leave the carousel standing still.
+      onFocusCapture={(event) => setFocused(!(event.target as HTMLElement).classList.contains('home-hero-toggle'))}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
       }}
@@ -215,6 +220,20 @@ export function HomeCarousel({ sites, onOpenSite }: {
                 <span>{index === active && <i key={cycle} />}</span>
               </button>
             ))}
+            {/* Reduced motion never advances, so there is nothing to pause. */}
+            {!reduced && (
+              <button
+                type="button"
+                className="home-hero-toggle"
+                aria-label={t(stopped ? 'landing.carousel.play' : 'landing.carousel.pause')}
+                title={t(stopped ? 'landing.carousel.play' : 'landing.carousel.pause')}
+                onClick={() => setStopped((value) => !value)}
+              >
+                {stopped
+                  ? <IconPlayerPlayFilled aria-hidden="true" />
+                  : <IconPlayerPauseFilled aria-hidden="true" />}
+              </button>
+            )}
           </div>
         </>
       )}
