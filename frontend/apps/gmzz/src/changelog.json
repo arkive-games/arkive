@@ -1,6 +1,37 @@
 {
   "entries": [
     {
+      "version": "0.21.0",
+      "date": "2026-10-26",
+      "commit": "927f76fa680ffdcd76a7f6c7b4e5555656719952",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rating calculator: connection skill is now computed — set each connection's star, the relation tiers follow automatically, and the carried skill can pick which boosting relation it scores with. Puppet skill now follows the skill level exactly instead of an estimate.",
+            "zh-CN": "非凡评分计算器：人脉技能改为自动计算——为每个人脉选择星级，关系阶数自动算出，携带的技能可选择按哪个加成关系计分；秘偶技能分数现在随技能等级精确计算，不再是估算。",
+            "zh-TW": "非凡評分計算器：人脈技能改為自動計算——為每個人脈選擇星級，關係階數自動算出，攜帶的技能可選擇按哪個加成關係計分；秘偶技能分數現在隨技能等級精確計算，不再是估算。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Puppet deploy and the carried puppet skill now share one lineup — fill the slots from pickers ranked by attribute or skill score, and see both figures under every puppet.",
+            "zh-CN": "秘偶上阵与携带技能合并为一个阵容——从按属性分或技能分排序的列表中选择，每只秘偶下方同时显示两项分数。",
+            "zh-TW": "秘偶上陣與攜帶技能合併為一個陣容——從按屬性分或技能分排序的列表中選擇，每隻秘偶下方同時顯示兩項分數。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "History research is now computed from your relation tiers plus points from other sources, the skill level follows your role and divinity level up to its cap, and connections are listed in gold and purple rows.",
+            "zh-CN": "历史研究改为按关系阶数自动计算（可补充其他来源的研究值）；技能等级随人物等级与神性等级自动设为上限；人脉按金色、紫色分行列出。",
+            "zh-TW": "歷史研究改為按關係階數自動計算（可補充其他來源的研究值）；技能等級隨人物等級與神性等級自動設為上限；人脈按金色、紫色分行列出。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.20.0",
       "date": "2026-10-25",
       "commit": "d952f28524dea106da384b1cd66a22b8cb4f3fc0",
