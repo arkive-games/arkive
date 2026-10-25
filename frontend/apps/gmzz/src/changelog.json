@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.18.0",
+      "date": "2026-10-25",
+      "commit": "28b269ab4de3f5a9890bb2d0df9375a88cf46216",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rating calculator: the level item now scores its expected benchmark automatically, and history research is picked on a slider marked with every threshold, listing each rank's attribute bonuses and what it adds over the rank before.",
+            "zh-CN": "非凡评分计算器：等级一项自动取期望分；历史研究改为滑动条，标出各段位阈值，并列出每个段位的属性加成及相比上一段位的提升。",
+            "zh-TW": "非凡評分計算器：等級一項自動取期望分；歷史研究改為滑動條，標出各段位閾值，並列出每個段位的屬性加成及相比上一段位的提升。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Train Tycoon station planner: adds the new Frenzy route.",
+            "zh-CN": "铁路大亨站点推演：新增狂热线路。",
+            "zh-TW": "鐵路大亨站點推演：新增狂熱線路。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "date": "2026-10-25",
       "commit": "d40de664f7788749d24b4840b1897b2ef4483be7",
