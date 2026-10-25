@@ -15,7 +15,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .common import write_json
+from .common import ordered_rows, write_json
 from .env import excel_dir, require_dir
 from .tables import load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
@@ -57,24 +57,13 @@ TABLES = {
 UI_STRING_SHARD = "StringDB_CN_Data_traingame"
 
 
-def _ordered(payload):
-    """Rows keyed by a numeric id become a list sorted by that id.
-
-    The client stores them in a hash table, so iteration order is arbitrary and
-    would otherwise churn the content digest on every run.
-    """
-    if isinstance(payload, dict) and payload and all(k.lstrip("-").isdigit() for k in payload):
-        return [payload[k] for k in sorted(payload, key=int)]
-    return payload
-
-
 def build(excel: Path, data_out: Path) -> dict[str, int]:
     strings = load_strings(excel)
     print(f"strings: {len(strings)} zh-CN entries")
 
     counts: dict[str, int] = {}
     for table, filename in TABLES.items():
-        payload = resolve_text(_ordered(load_table(excel, table)), strings)
+        payload = resolve_text(ordered_rows(load_table(excel, table)), strings)
         missing = unresolved_ids(payload)
         if missing:
             raise RuntimeError(

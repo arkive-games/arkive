@@ -197,6 +197,12 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
         })
     if len(species) != 14:
         raise RuntimeError(f"{SPECIES_TABLE} has {len(species)} rows, expected the panel's 14")
+    # The calculator scores 等级 as its expected benchmark and tells the player
+    # that benchmark is also the cap. Both hold only while the two curves agree,
+    # so a patch that splits them must stop the build, not quietly grade it below 100%.
+    level = next((s for s in species if s["module"] == "Player_Level"), None)
+    if level is None or level["expected"] != level["max"]:
+        raise RuntimeError("Player_Level's expected and max curves differ; the calculator assumes they match")
 
     known = {g["id"] for g in genus}
     orphans = sorted({s["genusId"] for s in species} - known)

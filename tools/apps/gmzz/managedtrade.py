@@ -25,7 +25,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .common import write_json
+from .common import ordered_rows, write_json
 from .env import excel_dir, require_dir
 from .tables import load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
@@ -53,17 +53,6 @@ TABLES = {
 #: (``CalcStationGoods{Sell,Buy}PriceWithTax``). Shipped verbatim so the page's
 #: calculator can be checked against the game's own expression.
 FORMULAS = ("TradeWar_BuyPrice", "TradeWar_SellPrice")
-
-
-def _ordered(payload):
-    """Rows keyed by a numeric id become a list sorted by that id.
-
-    The client stores them in a hash table, so iteration order is arbitrary and
-    would otherwise churn the content digest on every run.
-    """
-    if isinstance(payload, dict) and payload and all(k.lstrip("-").isdigit() for k in payload):
-        return [payload[k] for k in sorted(payload, key=int)]
-    return payload
 
 
 def formulas(excel: Path) -> dict[str, dict]:
@@ -111,7 +100,7 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
 
     payload: dict[str, object] = {}
     for table, filename in TABLES.items():
-        rows = resolve_text(_ordered(load_table(excel, table)), strings)
+        rows = resolve_text(ordered_rows(load_table(excel, table)), strings)
         missing = unresolved_ids(rows)
         if missing:
             raise RuntimeError(

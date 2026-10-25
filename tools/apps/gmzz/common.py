@@ -45,3 +45,14 @@ def read_json(path: Path):
 
 def is_nonempty_file(path: Path) -> bool:
     return path.is_file() and path.stat().st_size > 0
+
+
+def ordered_rows(payload):
+    """Rows keyed by a numeric id become a list sorted by that id.
+
+    The client stores them in a hash table, so iteration order is arbitrary and
+    would otherwise churn the content digest on every run.
+    """
+    if isinstance(payload, dict) and payload and all(k.lstrip("-").isdigit() for k in payload):
+        return [payload[k] for k in sorted(payload, key=int)]
+    return payload

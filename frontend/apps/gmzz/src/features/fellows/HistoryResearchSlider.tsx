@@ -3,11 +3,10 @@ import { useTranslation } from 'react-i18next'
 
 import { formatResearchAttribute, type HistoryResearchRank } from './data'
 import { TYPE } from '../../lib/typography'
+import { THUMB_PX } from '../../components/RangeField'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const RANGE_CLASS = `h-6 w-full cursor-pointer accent-[color:var(--arkive-nav-accent)] ${FOCUS}`
-/** Width of the browser's range thumb; tick positions follow its centre, as in `RangeField`. */
-const THUMB_PX = 16
 /** Threshold labels take turns across three rows, so 21 fit a phone-width track without touching. */
 const ROW = ['top-0', 'top-4', 'top-8'] as const
 /** The end labels hang inward from their tick, so neither spills past the track. */
@@ -16,7 +15,7 @@ const anchor = (i: number, last: number) => (i === 0 ? '-translate-x-1' : i === 
 /**
  * History research as a slider whose stops are the research ranks.
  *
- * The thresholds sit on the track itself, in two staggered rows so 21 of them
+ * The thresholds sit on the track itself, in three staggered rows so 21 of them
  * stay legible, and the rank under the thumb is spelled out below with its
  * attribute bonuses and what each gained over the rank before it. `allowNone`
  * adds a stop before the first rank for a player who has not reached one.
@@ -54,6 +53,7 @@ export function HistoryResearchSlider({
             className={`absolute whitespace-nowrap text-xs tabular-nums ${ROW[i % ROW.length]} ${anchor(i, last)} ${i === index ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}
             style={{ left: left(i) }}
           >
+            {/* Ungrouped on purpose: `1,440` is a character wider, and 22 stops must fit a phone. */}
             {stop ? stop.score : 0}
           </span>
         ))}

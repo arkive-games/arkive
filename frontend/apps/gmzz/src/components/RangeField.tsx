@@ -16,7 +16,7 @@ const CURRENT_CLASS = 'font-semibold text-foreground'
  * that inner span rather than the full width, or the end ones drift off the
  * marks they name.
  */
-const THUMB_PX = 16
+export const THUMB_PX = 16
 
 /**
  * An integer slider with its two ends labelled.

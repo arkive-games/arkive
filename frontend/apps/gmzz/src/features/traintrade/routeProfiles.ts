@@ -37,7 +37,8 @@ export function parseTrainTradeRouteProfiles(
 
   // A route the dataset does not define yet is left out rather than fatal, so
   // the page keeps working while the data deploy trails the frontend one. A
-  // route that IS defined but has no maps is still an error.
+  // route that IS defined but has no maps is still an error: it names a broken
+  // export, and the caller is meant to fail loudly on it.
   const defined = DIFFICULTY_IDS
     .map((id, index) => ({ id, dataId: index + 1 }))
     .filter(({ dataId }) => difficulties.some((entry) => entry.ID === dataId))

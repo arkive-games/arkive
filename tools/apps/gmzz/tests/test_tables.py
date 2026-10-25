@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from gmzz.tables import resolve_text, unresolved_ids
-from gmzz.traintrade import _ordered
+from gmzz.common import ordered_rows as _ordered
 
 STRINGS = {"1218466115749376": "黑麦啤酒", "681698551412224": "艺术品"}
 
