@@ -185,12 +185,16 @@ export function HomeCarousel({ sites, onOpenSite }: {
           <div className="home-hero-dots">
             {slides.map((site, index) => (
               <button
-                key={index === active ? `${site.id}:${cycle}` : site.id}
+                key={site.id}
                 type="button"
                 aria-label={t('landing.carousel.slide', { n: index + 1, name: t(site.nameKey) })}
                 aria-current={index === active ? 'true' : undefined}
                 onClick={() => to(index)}
-              />
+              >
+                {/* The fill is keyed by `cycle`, not the button: remounting the
+                    button would drop the keyboard focus resting on it. */}
+                <span>{index === active && <i key={cycle} />}</span>
+              </button>
             ))}
           </div>
         </>

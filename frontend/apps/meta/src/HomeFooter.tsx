@@ -126,10 +126,38 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
       port.style.left = `${W / 2}px`
       port.style.top = `${base}px`
       layer.classList.toggle('is-arrived', p > 0.985)
+    }
+
+    // The sea moves every frame; under reduced motion it is still, so only a
+    // scroll, a resize or the page changing height can change the picture.
+    const loop = (ms: number) => {
+      draw(ms)
+      frame = requestAnimationFrame(loop)
+    }
+    const redraw = () => {
+      cancelAnimationFrame(frame)
       frame = requestAnimationFrame(draw)
     }
-    frame = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(frame)
+    const resized = new ResizeObserver(redraw)
+    const listen = (on: boolean) => {
+      const method = on ? 'addEventListener' : 'removeEventListener'
+      window[method]('scroll', redraw, { passive: true })
+      window[method]('resize', redraw)
+      if (on) resized.observe(document.body)
+      else resized.disconnect()
+    }
+    const start = () => {
+      cancelAnimationFrame(frame)
+      listen(still.matches)
+      frame = requestAnimationFrame(still.matches ? draw : loop)
+    }
+    still.addEventListener('change', start)
+    start()
+    return () => {
+      cancelAnimationFrame(frame)
+      still.removeEventListener('change', start)
+      listen(false)
+    }
   }, [])
 
   return (

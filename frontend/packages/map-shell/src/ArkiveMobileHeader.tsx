@@ -16,6 +16,8 @@ export interface ArkiveMobileHeaderProps {
   pageTitle?: ReactNode
   actions?: ReactNode
   accountControl?: ReactNode
+  /** False omits the account control, for a page whose `actions` already carry it. */
+  showAccount?: boolean
   loginLabel: string
   onLogin?: () => void
   className?: string
@@ -34,6 +36,7 @@ export function ArkiveMobileHeader({
   pageTitle,
   actions,
   accountControl,
+  showAccount = true,
   loginLabel,
   onLogin,
   className,
@@ -66,9 +69,9 @@ export function ArkiveMobileHeader({
 
       {actions}
 
-      {accountControl ?? (
+      {showAccount && (accountControl ?? (
         <ArkiveMobileAccountButton label={loginLabel} onClick={onLogin} />
-      )}
+      ))}
     </header>
   )
 }

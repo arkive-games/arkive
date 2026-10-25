@@ -314,37 +314,38 @@
 .home-hero-dots {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  height: 0.5rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
+/* The button is the 1.5rem-tall hit area; the small dot is drawn inside it, so
+   the target clears the 24px floor while the dot stays small. */
 .home-hero-dots button {
+  display: grid;
+  height: 1.5rem;
+  place-items: center;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 99rem;
+  background: none;
+  cursor: pointer;
+}
+
+.home-hero-dots span {
   position: relative;
+  display: block;
   width: 0.5rem;
   height: 0.5rem;
   overflow: hidden;
-  padding: 0;
-  border: 0;
   border-radius: 99rem;
   background: var(--track);
-  cursor: pointer;
   transition: width 0.5s var(--spring), background 0.3s;
 }
 
-/* A larger, invisible hit area around each small dot. */
-.home-hero-dots button::before {
-  content: "";
-  position: absolute;
-  inset: -0.75rem -0.25rem;
-}
-
-.home-hero-dots button[aria-current] {
+.home-hero-dots button[aria-current] span {
   width: 2.125rem;
 }
 
-.home-hero-dots button[aria-current]::after {
-  content: "";
+.home-hero-dots i {
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -353,7 +354,7 @@
   animation: home-dot-fill var(--auto, 5s) linear forwards;
 }
 
-.home-hero.is-paused .home-hero-dots button[aria-current]::after {
+.home-hero.is-paused .home-hero-dots i {
   animation-play-state: paused;
 }
 
@@ -464,7 +465,7 @@
   border-radius: 99rem;
   color: #fff;
   background: #ff4f6a;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 900;
   line-height: 1;
 }
@@ -923,7 +924,7 @@
 .home-voyage {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: var(--arkive-layer-sticky);
   pointer-events: none;
 }
 
@@ -1047,14 +1048,14 @@
 .home-sheet-scrim {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: var(--arkive-layer-sheet-backdrop);
 }
 
 .home-sheet {
   position: absolute;
   top: calc(100% + 0.75rem);
   right: 0;
-  z-index: 31;
+  z-index: var(--arkive-layer-sheet);
   display: grid;
   width: 12.75rem;
   gap: 0.125rem;
@@ -1189,7 +1190,7 @@
   }
 
   .home-hero-dots {
-    margin-top: 0.75rem;
+    margin-top: 0.25rem;
   }
 
   .home-quick {
@@ -1322,8 +1323,14 @@
     animation: none;
   }
 
-  .home-hero-dots button[aria-current]::after {
+  .home-hero-dots i {
     animation: none;
     transform: none;
+  }
+
+  /* A slide moved by hand switches in place rather than flying across. */
+  .home-slide,
+  .home-slide > img {
+    transition: none;
   }
 }

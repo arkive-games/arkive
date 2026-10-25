@@ -381,7 +381,7 @@ export default function App() {
         homeLabel={brandName}
         brandName={brandName}
         loginLabel={t('auth.login')}
-        className={isHome ? 'home-mobile-header gap-2' : undefined}
+        className={isHome ? 'gap-2' : undefined}
         actions={isHome ? (
           <HomeMobileActions
             isSignedIn={isSignedIn}
@@ -393,9 +393,8 @@ export default function App() {
             onLogin={() => setAccountOpen(true)}
           />
         ) : undefined}
-        accountControl={isHome
-          ? <></>
-          : <ArkiveAccountControl language={i18n.language} variant="mobileHeader" homeUrl="" onOpenSettings={() => setSettingsOpen(true)} />}
+        showAccount={!isHome}
+        accountControl={<ArkiveAccountControl language={i18n.language} variant="mobileHeader" homeUrl="" onOpenSettings={() => setSettingsOpen(true)} />}
       />
       <ArkiveMapTopBar
         homeUrl="#top"
