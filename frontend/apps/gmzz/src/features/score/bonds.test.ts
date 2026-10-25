@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { HistoryResearchRank } from '../fellows/data'
 import type { PartnerScoring, SecretPartner } from '../secretpartners/data'
 import {
+  activeAttributes,
   carriedPuppetSkill,
   clampSlots,
   clampStage,
@@ -118,6 +119,24 @@ describe('puppet attribute score', () => {
     const result = evaluatePuppets([{ partnerId: 1, stage: 0, dominated: true }], [partner(1)], SCORING, null)
     expect(result.rows).toHaveLength(0)
     expect(result.dominated).toBe(0)
+  })
+
+  it('sums the active attributes by key, each puppet at its deploy rate', () => {
+    const result = evaluatePuppets(
+      [
+        { partnerId: 1, stage: 10, dominated: true },
+        { partnerId: 2, stage: 20, dominated: false },
+        { partnerId: 3, stage: 0, dominated: false },
+      ],
+      [partner(1), partner(2), partner(3)],
+      SCORING,
+      8,
+    )
+    const totals = activeAttributes(result, SCORING)
+    expect(totals.map((total) => total.key)).toEqual(['Stat0', 'Stat1'])
+    // 0.010 in full plus 0.020 × 0.35; the unowned puppet adds nothing.
+    expect(totals[0].value).toBeCloseTo(0.017, 9)
+    expect(totals[0].sources).toBe(2)
   })
 
   it('rounds the total the way the client does', () => {

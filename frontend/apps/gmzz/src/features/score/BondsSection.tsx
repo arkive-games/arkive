@@ -6,6 +6,7 @@ import { IconTile } from '@/features/equipment/PickerModal'
 import type { HistoryResearchRank } from '@/features/fellows/data'
 import { HistoryResearchSlider } from '@/features/fellows/HistoryResearchSlider'
 import {
+  activeAttributes,
   CALIBRATED_SKILL_LEVEL,
   MAX_SKILL_LEVEL,
   carriedPuppetSkill,
@@ -15,7 +16,10 @@ import {
   hasMarks,
   historyRankById,
   historyRankFor,
+  puppetSkillScore,
+  type ActiveAttribute,
   type BondsDraft,
+  type PuppetsResult,
 } from '@/features/score/bonds'
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
@@ -28,7 +32,6 @@ export const PUPPET_SKILL_MODULE = 'Bonds_PartnerSkill'
 export const HISTORY_MODULE = 'Bonds_FellowGain'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none ${FOCUS}`
 const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
 
@@ -233,6 +236,42 @@ function PuppetCalculator({
           outRate: scoring.nonDominateRate,
         })}
       </p>
+
+      <ActiveAttributes result={result} scoring={scoring} />
+    </div>
+  )
+}
+
+function formatTotal(attribute: ActiveAttribute) {
+  return attribute.format === 'percent'
+    ? `${Number((attribute.value * 100).toFixed(2))}%`
+    : Number(attribute.value.toFixed(2)).toLocaleString()
+}
+
+/** Every attribute the owned puppets grant right now, summed. */
+function ActiveAttributes({ result, scoring }: { result: PuppetsResult; scoring: PartnerScoring }) {
+  const { t } = useTranslation()
+  const totals = useMemo(() => activeAttributes(result, scoring), [result, scoring])
+  return (
+    <div className="border-t border-border pt-2" data-testid="bonds-attributes">
+      <span className={LABEL_CLASS}>{t('bonds.activeAttributes')}</span>
+      {totals.length === 0 ? (
+        <p className={TYPE.body}>{t('bonds.activeAttributesNone')}</p>
+      ) : (
+        <dl className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-4 gap-y-1">
+          {totals.map((attribute) => (
+            <div key={attribute.key} className="flex min-w-0 items-baseline justify-between gap-2" data-testid={`bonds-attribute-${attribute.key}`}>
+              <dt className="truncate text-sm text-muted-foreground" title={t('bonds.activeAttributeSources', { count: attribute.sources })}>
+                {attribute.name}
+              </dt>
+              <dd className="text-sm font-medium tabular-nums text-foreground">+{formatTotal(attribute)}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      <p className="mt-1 text-xs text-muted-foreground">
+        {t('bonds.activeAttributesHint', { inRate: scoring.inDominateRate, outRate: scoring.nonDominateRate })}
+      </p>
     </div>
   )
 }
@@ -253,9 +292,16 @@ function PuppetSkillCalculator({
   const { t } = useTranslation()
   const skillLevel = draft.puppetSkillLevel ?? CALIBRATED_SKILL_LEVEL
   const carried = carriedPuppetSkill(draft.puppets, partners, scoring, draft.skillPartnerId, skillLevel)
-  const owned = partners.filter((partner) =>
-    draft.puppets.some((entry) => entry.partnerId === partner.id && clampStage(entry.stage, scoring) >= 1),
-  )
+  // Owned puppets with their skill score at the current skill level, best first.
+  const owned = useMemo(() => {
+    const levels = new Map(draft.puppets.map((entry) => [entry.partnerId, clampStage(entry.stage, scoring)]))
+    return partners
+      .filter((partner) => (levels.get(partner.id) ?? 0) >= 1)
+      .map((partner) => ({ partner, result: puppetSkillScore(partner, levels.get(partner.id) ?? 0, skillLevel) }))
+      .sort((a, b) => b.result.score - a.result.score || b.partner.quality - a.partner.quality || a.partner.id - b.partner.id)
+  }, [draft.puppets, partners, scoring, skillLevel])
+  const chosen = owned.some((row) => row.partner.id === draft.skillPartnerId) ? draft.skillPartnerId : null
+  const pick = (id: number | null) => setDraft((prev) => ({ ...prev, skillPartnerId: id }))
   const nextTier = carried
     ? carried.partner.upgrades.find((upgrade) => upgrade.tier === carried.result.tier + 1)
     : undefined
@@ -263,19 +309,19 @@ function PuppetSkillCalculator({
   return (
     <div className="space-y-2" data-testid="bonds-puppet-skill">
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,9rem)]">
-        <label className="block">
+        <div className="min-w-0">
           <span className={LABEL_CLASS}>{t('bonds.skillPuppet')}</span>
-          <select
-            value={owned.some((partner) => partner.id === draft.skillPartnerId) ? String(draft.skillPartnerId) : ''}
-            className={SELECT_CLASS}
+          <button
+            type="button"
+            aria-pressed={chosen === null}
             disabled={owned.length === 0}
-            onChange={(event) => setDraft((prev) => ({ ...prev, skillPartnerId: event.target.value === '' ? null : Number(event.target.value) }))}
-            data-testid="bonds-skill-puppet"
+            onClick={() => pick(null)}
+            className={`h-9 rounded-md border px-3 text-sm transition ${FOCUS} ${chosen === null ? 'border-[color:var(--arkive-nav-accent)] text-foreground' : 'border-border text-muted-foreground'} disabled:cursor-not-allowed disabled:opacity-50`}
+            data-testid="bonds-skill-best"
           >
-            <option value="">{t('bonds.skillPuppetBest')}</option>
-            {owned.map((partner) => <option key={partner.id} value={partner.id}>{partner.name} · {partner.skill.name}</option>)}
-          </select>
-        </label>
+            {t('bonds.skillPuppetBest')}
+          </button>
+        </div>
         <label className="block">
           <span className={LABEL_CLASS}>{t('bonds.skillLevel')}</span>
           <Input
@@ -293,6 +339,38 @@ function PuppetSkillCalculator({
           />
         </label>
       </div>
+      {owned.length > 0 ? (
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2" data-testid="bonds-skill-puppets">
+          {owned.map(({ partner, result }) => {
+            const carrying = carried?.partner.id === partner.id
+            return (
+              <li key={partner.id} className="flex min-w-0 flex-col items-center gap-1">
+                <button
+                  type="button"
+                  aria-pressed={chosen === partner.id}
+                  title={`${partner.name} · ${partner.skill.name}`}
+                  aria-label={t('bonds.skillPick', { name: partner.name, skill: partner.skill.name })}
+                  onClick={() => pick(chosen === partner.id ? null : partner.id)}
+                  className={`relative rounded-md p-0.5 transition ${FOCUS} ${carrying ? 'ring-2 ring-[color:var(--arkive-nav-accent)]' : ''}`}
+                  data-testid={`bonds-skill-puppet-${partner.id}`}
+                >
+                  <IconTile quality={partner.quality} src={partner.portrait ? portraitUrl(partner.portrait) : undefined} alt={partner.name} label={partner.name.slice(0, 1)} className="size-12" />
+                  {carrying ? (
+                    <span className="absolute -right-1 -top-1 rounded bg-primary px-1 text-xs font-semibold text-primary-foreground">
+                      {t('bonds.skillCarried')}
+                    </span>
+                  ) : null}
+                </button>
+                <span className="w-full truncate text-center text-xs text-muted-foreground">{partner.skill.name || partner.name}</span>
+                <span className={TYPE.valueMuted}>
+                  {t('bonds.skillTierShort', { tier: result.tier })} · {result.score.toLocaleString()}
+                  {result.estimated ? '*' : ''}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
       {carried ? (
         <p className={TYPE.body}>
           {t('bonds.skillTier', { name: carried.partner.name, tier: carried.result.tier })}

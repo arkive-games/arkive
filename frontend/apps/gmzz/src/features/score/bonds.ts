@@ -1,6 +1,6 @@
 // Relative imports, like `score/data.ts`: the root vitest config has no `@` alias.
 import type { HistoryResearchRank } from '../fellows/data'
-import type { PartnerScoring, SecretPartner } from '../secretpartners/data'
+import type { PartnerAttribute, PartnerScoring, SecretPartner } from '../secretpartners/data'
 
 /**
  * The 非凡人物 group's two derivable items.
@@ -176,6 +176,39 @@ export function evaluatePuppets(
     dominated,
     total: roundHalfUp(rows.reduce((total, row) => total + row.score, 0)),
   }
+}
+
+export type ActiveAttribute = {
+  key: string
+  name: string
+  format: PartnerAttribute['format']
+  /** Summed over every owned puppet, each at its deploy rate. */
+  value: number
+  /** How many puppets contribute to it. */
+  sources: number
+}
+
+/**
+ * Every attribute the owned puppets currently grant, summed by key. A deployed
+ * puppet gives its attributes at `inDominateRate` and the rest at
+ * `nonDominateRate` — the same split the score uses. Ordered by first
+ * appearance in the dataset's attribute order, so the list does not reshuffle
+ * as levels change.
+ */
+export function activeAttributes(result: PuppetsResult, scoring: PartnerScoring): ActiveAttribute[] {
+  const totals = new Map<string, ActiveAttribute>()
+  for (const row of result.rows) {
+    const stage = clampStage(row.entry.stage, scoring)
+    for (const attribute of row.partner.attributes) {
+      const value = attribute.values[Math.min(stage, attribute.values.length) - 1]
+      if (value === undefined) continue
+      const total = totals.get(attribute.key) ?? { key: attribute.key, name: attribute.name, format: attribute.format, value: 0, sources: 0 }
+      total.value += value * row.rate
+      total.sources += 1
+      totals.set(attribute.key, total)
+    }
+  }
+  return [...totals.values()]
 }
 
 /* ------------------------------------------------------------ 秘偶技能 */
