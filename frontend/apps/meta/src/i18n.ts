@@ -473,15 +473,10 @@ const resources = {
       theme: { auto: '跟随系统', light: '浅色模式', dark: '深色模式', menu: '切换主题', short: '主题' },
       auth: { login: '登录' },
       userSystem: userSystemCopy('zh-CN'),
-      hero: { continue: '继续探索' },
       home: {
         title: '游戏攻略与工具，一站查齐',
         recentlyUsed: '最近使用',
-        featuresOf: '{{game}} 的功能',
-        moreFeaturesLabel: '进入{{game}}查看其余 {{count}} 项功能',
-        kind: { game: '游戏', tool: '工具', map: '地图', wiki: '资料' },
       },
-      search: { placeholder: '搜索游戏、任务、角色或地点', action: '开始查找' },
       catalog: {
         eyebrow: '游戏资料馆',
         title: '找到你的下一段冒险',
@@ -551,13 +546,7 @@ const resources = {
         kinds: { feature: '新功能', improvement: '优化', fix: '修复', data: '数据' },
       },
       action: {
-        openGame: '进入 {{game}}',
         favorite: '收藏 {{game}}',
-        browseAll: '浏览全部游戏',
-      },
-      explore: {
-        eyebrow: '你的游戏舱',
-        title: '熟悉的世界，新的进度',
       },
       community: { general: '藏舟社区', comments: '{{n}} 条评论' },
       site: {
@@ -623,15 +612,10 @@ const resources = {
       theme: { auto: '跟隨系統', light: '淺色模式', dark: '深色模式', menu: '切換主題', short: '主題' },
       auth: { login: '登入' },
       userSystem: userSystemCopy('zh-TW'),
-      hero: { continue: '繼續探索' },
       home: {
         title: '遊戲攻略與工具，一站查齊',
         recentlyUsed: '最近使用',
-        featuresOf: '{{game}} 的功能',
-        moreFeaturesLabel: '進入{{game}}查看其餘 {{count}} 項功能',
-        kind: { game: '遊戲', tool: '工具', map: '地圖', wiki: '資料' },
       },
-      search: { placeholder: '搜尋遊戲、任務、角色或地點', action: '開始查找' },
       catalog: {
         eyebrow: '遊戲資料館',
         title: '找到你的下一段冒險',
@@ -701,13 +685,7 @@ const resources = {
         kinds: { feature: '新功能', improvement: '最佳化', fix: '修正', data: '資料' },
       },
       action: {
-        openGame: '進入 {{game}}',
         favorite: '收藏 {{game}}',
-        browseAll: '瀏覽全部遊戲',
-      },
-      explore: {
-        eyebrow: '你的遊戲艙',
-        title: '熟悉的世界，新的進度',
       },
       community: { general: '藏舟社群', comments: '{{n}} 則留言' },
       site: {
@@ -744,19 +722,10 @@ const resources = {
       theme: { auto: 'Follow system', light: 'Light mode', dark: 'Dark mode', menu: 'Switch theme', short: 'Theme' },
       auth: { login: 'Log in' },
       userSystem: userSystemCopy('en-US'),
-      hero: { continue: 'Continue exploring' },
       home: {
         title: 'Game guides and tools, all in one place',
         recentlyUsed: 'Recently used',
-        gameCount_one: '{{count}} game',
-        gameCount_other: '{{count}} games',
-        toolCount_one: '{{count}} tool',
-        toolCount_other: '{{count}} tools',
-        featuresOf: '{{game}} features',
-        moreFeaturesLabel: '{{count}} more features in {{game}}',
-        kind: { game: 'Game', tool: 'Tool', map: 'Map', wiki: 'Reference' },
       },
-      search: { placeholder: 'Search games, quests, characters, or places', action: 'Search' },
       catalog: {
         eyebrow: 'Game archive',
         title: 'Find your next adventure',
@@ -825,11 +794,7 @@ const resources = {
         title: 'Arkive platform updates', back: 'Back to Arkive', affected: 'Affected games', viewCommit: 'View commit',
         kinds: { feature: 'Feature', improvement: 'Improvement', fix: 'Fix', data: 'Data' },
       },
-      action: { openGame: 'Enter {{game}}', favorite: 'Save {{game}}', browseAll: 'Browse all games' },
-      explore: {
-        eyebrow: 'Your game cabin',
-        title: 'Familiar worlds, new progress',
-      },
+      action: { favorite: 'Save {{game}}' },
       community: { general: 'Arkive community', comments: '{{n}} comments' },
       site: {
         aion2: { name: 'AION2', desc: 'Interactive map and game database', feature: 'Start with the map and find every important coordinate.' },
@@ -861,15 +826,10 @@ const resources = {
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
       userSystem: userSystemCopy('ja-JP'),
-      hero: { continue: '探索を続ける' },
       home: {
         title: 'ゲーム攻略とツールをひとつの場所で',
         recentlyUsed: '最近使ったもの',
-        featuresOf: '{{game}}の機能',
-        moreFeaturesLabel: '{{game}}のその他 {{count}} 件の機能',
-        kind: { game: 'ゲーム', tool: 'ツール', map: 'マップ', wiki: '資料' },
       },
-      search: { placeholder: 'ゲーム、クエスト、キャラクター、場所を検索', action: '検索する' },
       catalog: {
         eyebrow: 'ゲーム資料館',
         title: '次の冒険を見つけよう',
@@ -938,8 +898,7 @@ const resources = {
         title: 'Arkiveプラットフォーム更新履歴', back: 'Arkiveに戻る', affected: '対象ゲーム', viewCommit: 'コミットを見る',
         kinds: { feature: '新機能', improvement: '改善', fix: '修正', data: 'データ' },
       },
-      action: { openGame: '{{game}}へ', favorite: '{{game}}を保存', browseAll: 'すべてのゲームを見る' },
-      explore: { eyebrow: 'あなたのゲームキャビン', title: 'おなじみの世界、新しい進捗' },
+      action: { favorite: '{{game}}を保存' },
       community: { general: 'Arkiveコミュニティ', comments: 'コメント {{n}} 件' },
       site: {
         aion2: { name: 'アイオン2', desc: 'インタラクティブマップとゲームデータベース', feature: 'マップから始めて、大切な座標を見つけましょう。' },
@@ -968,15 +927,10 @@ const resources = {
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },
       userSystem: userSystemCopy('ko-KR'),
-      hero: { continue: '계속 탐색하기' },
       home: {
         title: '게임 공략과 도구를 한곳에서',
         recentlyUsed: '최근 사용',
-        featuresOf: '{{game}} 기능',
-        moreFeaturesLabel: '{{game}}의 기능 {{count}}개 더 보기',
-        kind: { game: '게임', tool: '도구', map: '지도', wiki: '자료' },
       },
-      search: { placeholder: '게임, 퀘스트, 캐릭터 또는 장소 검색', action: '검색' },
       catalog: {
         eyebrow: '게임 자료관',
         title: '다음 모험을 찾아보세요',
@@ -1045,8 +999,7 @@ const resources = {
         title: 'Arkive 플랫폼 업데이트', back: 'Arkive로 돌아가기', affected: '적용 게임', viewCommit: '커밋 보기',
         kinds: { feature: '새 기능', improvement: '개선', fix: '수정', data: '데이터' },
       },
-      action: { openGame: '{{game}} 열기', favorite: '{{game}} 저장', browseAll: '전체 게임 보기' },
-      explore: { eyebrow: '나의 게임 선실', title: '익숙한 세계, 새로운 진척' },
+      action: { favorite: '{{game}} 저장' },
       community: { general: 'Arkive 커뮤니티', comments: '댓글 {{n}}개' },
       site: {
         aion2: { name: '아이온2', desc: '인터랙티브 지도와 게임 데이터베이스', feature: '지도에서 시작해 중요한 좌표를 모두 찾아보세요.' },

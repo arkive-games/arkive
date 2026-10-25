@@ -157,7 +157,9 @@ export function HomeCarousel({ sites, onOpenSite }: {
               href={href}
               draggable={false}
               aria-label={name}
-              aria-hidden={d !== 0 && Math.abs(d) !== 1 ? true : undefined}
+              // Only the middle slide opens its game; a tap on a neighbour just
+              // rotates, so assistive tech is pointed at the dots instead.
+              aria-hidden={d !== 0 ? true : undefined}
               tabIndex={d === 0 ? undefined : -1}
               onClick={onClick}
             >

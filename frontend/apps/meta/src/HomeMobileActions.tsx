@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   IconApps,
@@ -43,16 +43,42 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
   const { t } = useTranslation()
   const [open, setOpen] = useState<Panel | null>(null)
   const baseId = useId()
+  const sheet = useRef<HTMLElement | null>(null)
+  const trigger = useRef<HTMLButtonElement | null>(null)
+  const setSheet = (node: HTMLElement | null) => { sheet.current = node }
   const close = () => setOpen(null)
-  const toggle = (panel: Panel) => setOpen((value) => (value === panel ? null : panel))
+  const toggle = (panel: Panel, event: MouseEvent<HTMLButtonElement>) => {
+    trigger.current = event.currentTarget
+    setOpen((value) => (value === panel ? null : panel))
+  }
 
+  // An open sheet takes the focus, keeps Tab inside itself, and hands the
+  // focus back to the button that opened it when it closes.
   useEffect(() => {
-    if (!open) return
+    const root = sheet.current
+    if (!open || !root) return
+    const items = () => Array.from(root.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'))
+    ;(root.querySelector<HTMLElement>('[aria-pressed="true"]') ?? items()[0])?.focus()
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(null)
+      if (event.key === 'Escape') {
+        setOpen(null)
+        return
+      }
+      if (event.key !== 'Tab') return
+      const list = items()
+      const index = list.indexOf(document.activeElement as HTMLElement)
+      const next = event.shiftKey
+        ? (index <= 0 ? list.length - 1 : index - 1)
+        : (index === -1 || index === list.length - 1 ? 0 : index + 1)
+      event.preventDefault()
+      list[next]?.focus()
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      const focus = document.activeElement
+      if (!focus || focus === document.body || root.contains(focus)) trigger.current?.focus({ preventScroll: true })
+    }
   }, [open])
 
   const ThemeIcon = THEME_ICONS[theme]
@@ -64,22 +90,22 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
   return (
     <div className="home-mobile-actions">
       <button type="button" className="home-round" aria-label={t('language')} title={t('language')}
-        aria-expanded={open === 'language'} aria-controls={`${baseId}-language`} onClick={() => toggle('language')}>
+        aria-expanded={open === 'language'} aria-controls={`${baseId}-language`} onClick={(event) => toggle('language', event)}>
         <IconLanguage stroke={1.9} aria-hidden="true" />
       </button>
       <button type="button" className="home-round" aria-label={t('theme.menu')} title={t('theme.menu')}
-        aria-expanded={open === 'theme'} aria-controls={`${baseId}-theme`} onClick={() => toggle('theme')}>
+        aria-expanded={open === 'theme'} aria-controls={`${baseId}-theme`} onClick={(event) => toggle('theme', event)}>
         <ThemeIcon stroke={1.9} aria-hidden="true" />
       </button>
       <button type="button" className="home-round" aria-label={t(open === 'menu' ? 'landing.menu.close' : 'landing.menu.open')}
-        aria-expanded={open === 'menu'} aria-controls={`${baseId}-menu`} onClick={() => toggle('menu')}>
+        aria-expanded={open === 'menu'} aria-controls={`${baseId}-menu`} onClick={(event) => toggle('menu', event)}>
         {open === 'menu' ? <IconX stroke={2} aria-hidden="true" /> : <IconMenu2 stroke={2} aria-hidden="true" />}
       </button>
 
       {open && <div className="home-sheet-scrim" aria-hidden="true" onClick={close} />}
 
       {open === 'language' && (
-        <ul id={`${baseId}-language`} className="home-sheet is-choice" aria-label={t('language')}>
+        <ul ref={setSheet} id={`${baseId}-language`} className="home-sheet is-choice" aria-label={t('language')}>
           {LANGUAGES.map((code) => (
             <li key={code}>
               <button type="button" aria-pressed={code === language} onClick={() => { onLanguageChange(code); close() }}>
@@ -92,7 +118,7 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
       )}
 
       {open === 'theme' && (
-        <ul id={`${baseId}-theme`} className="home-sheet is-choice" aria-label={t('theme.menu')}>
+        <ul ref={setSheet} id={`${baseId}-theme`} className="home-sheet is-choice" aria-label={t('theme.menu')}>
           {THEMES.map((value) => {
             const Icon = THEME_ICONS[value]
             return (
@@ -109,7 +135,7 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
       )}
 
       {open === 'menu' && (
-        <nav id={`${baseId}-menu`} className="home-sheet" aria-label={t('landing.menu.label')}>
+        <nav ref={setSheet} id={`${baseId}-menu`} className="home-sheet" aria-label={t('landing.menu.label')}>
           {isSignedIn ? (
             <>
               <SheetRow href="#account/edit" colors={['#ffb347', '#ff4f9a']} icon={<IconUserCircle stroke={1.9} />} label={t('landing.menu.account')} onClick={close} />

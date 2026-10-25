@@ -87,6 +87,8 @@
   box-shadow: 0 1.625rem 2.75rem -1.875rem var(--shadow);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   -webkit-user-drag: none;
+  /* The box itself animates, not a transform: neighbours are narrower at the
+     same height, and scaling would squash the banner art instead of cropping it. */
   transition:
     left 0.68s var(--soft),
     width 0.68s var(--soft),
