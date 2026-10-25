@@ -97,7 +97,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
                 <span className="home-quick-icon is-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" /></span>
                 {recentUpdateDays(updatedDates[site.id], now) !== undefined && <b>{badge}</b>}
               </span>
-              <span className="home-quick-label">{t(site.nameKey)}</span>
+              <span>{t(site.nameKey)}</span>
             </a>
           ))}
           {entries.map(({ href, label, icon: EntryIcon, colors, fresh }, index) => (
@@ -106,7 +106,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
                 <span className="home-quick-icon"><EntryIcon stroke={1.9} aria-hidden="true" /></span>
                 {fresh && <b>{badge}</b>}
               </span>
-              <span className="home-quick-label">{label}</span>
+              <span>{label}</span>
             </a>
           ))}
         </nav>

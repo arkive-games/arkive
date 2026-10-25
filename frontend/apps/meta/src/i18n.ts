@@ -703,7 +703,7 @@ const resources = {
       footerDialogs: FOOTER_DIALOG_COPY['zh-TW'],
       landing: LANDING_COPY['zh-TW'],
       footer: {
-        aboutArkive: '關於藏舟', contact: '聯絡我們', updateHistory: '更新日誌', language: '語言切換', theme: '主題切換', clearCache: '清理快取',
+        about: '關於', aboutArkive: '關於藏舟', contact: '聯絡我們', updateHistory: '更新日誌', language: '語言切換', theme: '主題切換', clearCache: '清理快取',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
@@ -811,7 +811,7 @@ const resources = {
       footerDialogs: FOOTER_DIALOG_COPY['en-US'],
       landing: LANDING_COPY['en-US'],
       footer: {
-        aboutArkive: 'About Arkive', contact: 'Contact us', updateHistory: 'Update history', language: 'Language', theme: 'Theme', clearCache: 'Clear local data',
+        about: 'About', aboutArkive: 'About Arkive', contact: 'Contact us', updateHistory: 'Update history', language: 'Language', theme: 'Theme', clearCache: 'Clear local data',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
@@ -912,7 +912,7 @@ const resources = {
       footerDialogs: FOOTER_DIALOG_COPY['ja-JP'],
       landing: LANDING_COPY['ja-JP'],
       footer: {
-        aboutArkive: '藏舟について', contact: 'お問い合わせ', updateHistory: '更新履歴', language: '言語切替', theme: 'テーマ切替', clearCache: 'キャッシュを消去',
+        about: '藏舟について', aboutArkive: '藏舟について', contact: 'お問い合わせ', updateHistory: '更新履歴', language: '言語切替', theme: 'テーマ切替', clearCache: 'キャッシュを消去',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
@@ -1013,7 +1013,7 @@ const resources = {
       footerDialogs: FOOTER_DIALOG_COPY['ko-KR'],
       landing: LANDING_COPY['ko-KR'],
       footer: {
-        aboutArkive: 'Arkive 소개', contact: '문의하기', updateHistory: '업데이트 기록', language: '언어 전환', theme: '테마 전환', clearCache: '캐시 지우기',
+        about: '소개', aboutArkive: 'Arkive 소개', contact: '문의하기', updateHistory: '업데이트 기록', language: '언어 전환', theme: '테마 전환', clearCache: '캐시 지우기',
         icp: '渝ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },

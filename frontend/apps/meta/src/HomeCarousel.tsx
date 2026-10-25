@@ -59,6 +59,11 @@ export function HomeCarousel({ sites, onOpenSite }: {
   // Bumped on every move so the active dot's progress fill restarts.
   const [cycle, setCycle] = useState(0)
   const swipe = useRef<{ x: number; moved: boolean } | null>(null)
+  const stage = useRef<HTMLDivElement>(null)
+  // Set when an arrow key moves the carousel from a focused slide, so the
+  // focus follows to the new middle slide instead of staying on one that
+  // has just left the accessibility tree.
+  const followFocus = useRef(false)
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -88,6 +93,12 @@ export function HomeCarousel({ sites, onOpenSite }: {
     return () => window.clearTimeout(timer)
   }, [current, cycle, length, paused])
 
+  useEffect(() => {
+    if (!followFocus.current) return
+    followFocus.current = false
+    stage.current?.querySelector<HTMLElement>('.home-slide[data-d="0"]')?.focus({ preventScroll: true })
+  }, [current])
+
   if (!length) return null
   const active = current % length
   const to = (index: number) => {
@@ -110,6 +121,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
     else if (event.key === 'ArrowRight') go(1)
     else return
     event.preventDefault()
+    followFocus.current = (event.target as HTMLElement).classList.contains('home-slide')
   }
 
   return (
@@ -127,6 +139,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
       onKeyDown={onKeyDown}
     >
       <div
+        ref={stage}
         className="home-hero-stage"
         onPointerDown={(event) => { swipe.current = { x: event.clientX, moved: false } }}
         onPointerUp={onPointerUp}
@@ -144,7 +157,11 @@ export function HomeCarousel({ sites, onOpenSite }: {
             swipe.current = null
             if (moved || d !== 0) {
               event.preventDefault()
-              if (!moved && d !== 0) go(Math.sign(d))
+              if (!moved && d !== 0) {
+                // The tap focused this slide, which is about to be hidden.
+                followFocus.current = true
+                go(Math.sign(d))
+              }
               return
             }
             onOpenSite(site)
