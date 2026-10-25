@@ -577,7 +577,7 @@ const en = {
     "skillLevel": "Skill level",
     "skillTier": "{{name}}: skill tier {{tier}}.",
     "skillNextTier": "The next tier comes at puppet level {{level}}.",
-    "skillEstimated": "Estimated: no in-game reading backs this tier or skill level yet.",
+    "skillEstimated": "Estimated: no in-game reading backs a red puppet past tier 1 yet.",
     "skillNone": "Give a puppet a level above to score its skill.",
     "skillFormula": "Score = tier-1 base floor(k × (skill level + 9)), k = 22 / 27.5 / 34.32 / 42.9 for purple / gold / orange / red, × (1 + 0.215 × (tier − 1)), rounded down. Puppet level only matters where it crosses a tier: 1, 10, 20, 30, 40, 50. Pathway, puppet and connection skill levels are always equal.",
     "unavailable": "The data this item needs has not loaded.",
@@ -605,7 +605,14 @@ const en = {
     "fellowRelationList": "Relations that boost a skill",
     "fellowTier": "Q{{quality}} · tier {{tier}}",
     "fellowPickTitle": "Carry a connection skill",
-    "fellowFormula": "Score = floor(base × S / 40), base = floor(28.6 × (skill level + 9)) for gold and floor(22 × (skill level + 9)) for purple. S depends only on the star and the relation: 40 + 4 × star with no relation (or tier 0), more in a quality-1 or quality-2 relation. A relation's tier is its lowest member's star + 1. Fitted to in-game readings; * marks a cell no reading confirms yet."
+    "fellowFormula": "Score = floor(base × S / 40), base = floor(28.6 × (skill level + 9)) for gold and floor(22 × (skill level + 9)) for purple. S depends only on the star and the relation: 40 + 4 × star with no relation (or tier 0), more in a quality-1 or quality-2 relation. A relation's tier is its lowest member's star + 1. Fitted to in-game readings; * marks a cell no reading confirms yet.",
+    "fellowGold": "Gold",
+    "fellowPurple": "Purple",
+    "researchFromRelations": "From relations",
+    "researchExtra": "Research from other sources",
+    "researchTotal": "Research total",
+    "researchHint": "Every relation pays its research reward for each tier it has reached; tiers follow from the connection stars set under connection skill. Relations alone reach 784 at most, so add points from other sources to match the panel's cumulative figure.",
+    "skillLevelCap": "Skill level (cap {{cap}})"
   },
   league: {
     "title": "League points simulator", "homeDescription": "Enter weekly placements or a total and explore top-four qualification.", "eyebrow": "Strategy server · Four-way league", "description": "Enter each guild's name, weekly placement, group, and optional total. The tool calculates every weekly score and can infer missing placements when the possibilities stay manageable.", "rulesTitle": "Scoring rules", "rulesHint": "Match points and both round-final bonus tables are editable.", "reset": "Reset example", "matchPoints": "Match points", "round1Bonuses": "Round 1 final points", "round2Bonuses": "Round 2 final points", "place": "Place {{rank}}", "rosterTitle": "Guilds and weekly inputs", "rosterHint": "Enter up to eight guilds. Leave a placement blank to infer it; enter a total to filter possible weekly combinations.", "target": "Target guild", "guild": "Guild", "startingPoints": "Starting points", "weekTotal": "R1 / R2 / Total", "weekShort": "Week {{week}}", "targetTotal": "Known total", "group": "Group", "winner": "Winner group", "loser": "Loser group", "remove": "Remove guild", "newGuild": "New guild", "addGuild": "Add guild", "rosterInvalid": "Need eight guilds with four winner and four loser entries in weeks 2 and 4.", "inputHint": "Week 1 and 3 use the overall ranking; weeks 2 and 4 use separate winner/loser groups.", "summaryTitle": "Qualification summary", "completeRoster": "Complete the eight-guild roster before calculating.", "possibleRanks": "Possible final ranks for the target", "scenarioCount": "{{count}} matching combinations", "canQualify": "Qualification is possible", "qualifyCount": "{{count}} matching combinations finish in the top four.", "noMatch": "No weekly combination matches this total.", "pathsTitle": "Possible weekly paths", "noPath": "No path can be shown with these inputs.", "tooMany": "There are more than {{limit}} possible combinations. Add more weekly placements or totals to continue.", "currentTitle": "Calculated scores", "round1Total": "Round 1", "round2Total": "Round 2", "finalTotal": "Final total", "finalRank": "Final rank", "rankValue": "Rank {{rank}}", "points": "points", "weekPath": "Weekly placements"
@@ -1293,7 +1300,7 @@ const zhCN: Strings = {
     "skillLevel": "技能等级",
     "skillTier": "{{name}}：技能 {{tier}} 阶。",
     "skillNextTier": "秘偶升到 {{level}} 级进入下一阶。",
-    "skillEstimated": "估算值：该阶或该技能等级尚无实测数据。",
+    "skillEstimated": "估算：红色秘偶 1 阶以上暂无游戏内实测。",
     "skillNone": "在上方给秘偶填写等级后即可计算技能分。",
     "skillFormula": "分数 = 1 阶基础分 floor(k × (技能等级 + 9))（紫 / 金 / 橙 / 红 k = 22 / 27.5 / 34.32 / 42.9）× (1 + 0.215 × (阶 − 1))，向下取整。秘偶等级只在跨阶时影响分数：1、10、20、30、40、50 级。途径、秘偶、人脉技能等级始终相同。",
     "unavailable": "该项所需的数据暂未加载。",
@@ -1321,7 +1328,14 @@ const zhCN: Strings = {
     "fellowRelationList": "可加成技能的关系",
     "fellowTier": "品质{{quality}} · {{tier}} 阶",
     "fellowPickTitle": "携带人脉技能",
-    "fellowFormula": "分数 = floor(基础分 × S / 40)，基础分金色为 floor(28.6 × (技能等级 + 9))、紫色为 floor(22 × (技能等级 + 9))。S 只取决于星级和关系：无关系（或 0 阶）为 40 + 4 × 星，品质 1、2 的关系更高。关系阶数 = 关系中最低星级 + 1。公式按游戏内实测拟合；* 表示该格尚无实测验证。"
+    "fellowFormula": "分数 = floor(基础分 × S / 40)，基础分金色为 floor(28.6 × (技能等级 + 9))、紫色为 floor(22 × (技能等级 + 9))。S 只取决于星级和关系：无关系（或 0 阶）为 40 + 4 × 星，品质 1、2 的关系更高。关系阶数 = 关系中最低星级 + 1。公式按游戏内实测拟合；* 表示该格尚无实测验证。",
+    "fellowGold": "金色",
+    "fellowPurple": "紫色",
+    "researchFromRelations": "来自关系",
+    "researchExtra": "其他来源的研究值",
+    "researchTotal": "研究值合计",
+    "researchHint": "每个关系按已达到的阶数累计研究值奖励，关系阶数由人脉技能中设置的星级自动算出。全部关系满阶最多 784，请补上其他来源的研究值，使合计与面板上的累计研究值一致。",
+    "skillLevelCap": "技能等级（上限 {{cap}}）"
   },
   league: {
     "title": "诡秘之主战略服积分推演器", "homeDescription": "输入每周排名和积分，推演晋级前四的所有路径。", "eyebrow": "战略服 · 四方联赛",
@@ -2011,7 +2025,7 @@ const zhTW: Strings = {
     "skillLevel": "技能等級",
     "skillTier": "{{name}}：技能 {{tier}} 階。",
     "skillNextTier": "秘偶升到 {{level}} 級進入下一階。",
-    "skillEstimated": "估算值：該階或該技能等級尚無實測資料。",
+    "skillEstimated": "估算：紅色秘偶 1 階以上暫無遊戲內實測。",
     "skillNone": "在上方給秘偶填寫等級後即可計算技能分。",
     "skillFormula": "分數 = 1 階基礎分 floor(k × (技能等級 + 9))（紫 / 金 / 橙 / 紅 k = 22 / 27.5 / 34.32 / 42.9）× (1 + 0.215 × (階 − 1))，向下取整。秘偶等級只在跨階時影響分數：1、10、20、30、40、50 級。途徑、秘偶、人脈技能等級始終相同。",
     "unavailable": "該項所需的資料尚未載入。",
@@ -2039,7 +2053,14 @@ const zhTW: Strings = {
     "fellowRelationList": "可加成技能的關係",
     "fellowTier": "品質{{quality}} · {{tier}} 階",
     "fellowPickTitle": "攜帶人脈技能",
-    "fellowFormula": "分數 = floor(基礎分 × S / 40)，基礎分金色為 floor(28.6 × (技能等級 + 9))、紫色為 floor(22 × (技能等級 + 9))。S 只取決於星級和關係：無關係（或 0 階）為 40 + 4 × 星，品質 1、2 的關係更高。關係階數 = 關係中最低星級 + 1。公式按遊戲內實測擬合；* 表示該格尚無實測驗證。"
+    "fellowFormula": "分數 = floor(基礎分 × S / 40)，基礎分金色為 floor(28.6 × (技能等級 + 9))、紫色為 floor(22 × (技能等級 + 9))。S 只取決於星級和關係：無關係（或 0 階）為 40 + 4 × 星，品質 1、2 的關係更高。關係階數 = 關係中最低星級 + 1。公式按遊戲內實測擬合；* 表示該格尚無實測驗證。",
+    "fellowGold": "金色",
+    "fellowPurple": "紫色",
+    "researchFromRelations": "來自關係",
+    "researchExtra": "其他來源的研究值",
+    "researchTotal": "研究值合計",
+    "researchHint": "每個關係按已達到的階數累計研究值獎勵，關係階數由人脈技能中設定的星級自動算出。全部關係滿階最多 784，請補上其他來源的研究值，使合計與面板上的累計研究值一致。",
+    "skillLevelCap": "技能等級（上限 {{cap}}）"
   },
   league: {
     "title": "詭秘之主戰略服積分推演器", "homeDescription": "輸入每週排名和積分，推演晉級前四的所有路徑。", "eyebrow": "戰略服 · 四方聯賽",

@@ -159,8 +159,10 @@ export function fellowOptions(
   const star = stars.get(fellow.id)
   if (star === undefined) return []
   const boosting = boostingRelations(fellow, relations)
-  if (boosting.length === 0) return [scoreWith(fellow, star, null, stars, skillLevel)]
-  return boosting
+  // A relation at tier 0 is not formed and scores exactly as no relation, so it is not a choice.
+  const formed = boosting.filter((relation) => relationTier(relation, stars) >= 1)
+  if (formed.length === 0) return [scoreWith(fellow, star, null, stars, skillLevel)]
+  return formed
     .map((relation) => scoreWith(fellow, star, relation, stars, skillLevel))
     .sort((a, b) => b.score - a.score || (a.relation?.order ?? 0) - (b.relation?.order ?? 0))
 }
@@ -198,4 +200,41 @@ export function carriedFellowSkill(
 
 export function starMap(entries: FellowEntry[]): Map<number, number> {
   return new Map(entries.map((entry) => [entry.fellowId, clampStar(entry.star)]))
+}
+
+/* ---------------------------------------------------- history research */
+
+/**
+ * The research points the relations have earned: each relation pays
+ * `researchRewards[grade]` for every grade it has reached, and tier t means
+ * grades 0..t-1 (风闻 … 本相). Every relation counts, quality 0 included.
+ *
+ * This is not the whole total. All twelve relations at full pay 784, while the
+ * top rank needs 1440, so research also comes from somewhere the client does not
+ * describe; the page adds those points as a separate input.
+ */
+export function relationResearchPoints(relations: FellowRelation[], stars: Map<number, number>): number {
+  let total = 0
+  for (const relation of relations) {
+    const tier = relationTier(relation, stars)
+    for (const reward of relation.researchRewards ?? []) if (reward.grade < tier) total += reward.value
+  }
+  return total
+}
+
+/* ------------------------------------------------------- skill level cap */
+
+/**
+ * The skill level a point on the 人脉技能 max curve stands for. That curve is a
+ * 5★ connection at a full quality-1 relation (S = 72) at the highest skill level
+ * the season allows, so the level is found by searching for the one whose score
+ * lands on it. Every point of the shipped curve resolves to exactly one level
+ * (3 up to role level 39, 38 at divinity 22-23, 45 at divinity 30). The cap is
+ * shared: 途径, 秘偶 and 人脉 skill levels are always equal. Null when no level fits.
+ */
+export function skillLevelCap(fellowMaxBenchmark: number, maxLevel = 75): number | null {
+  for (let level = 1; level <= maxLevel; level++) {
+    if (fellowSkillScore(GOLD_FELLOW, MAX_FELLOW_STAR, 1, MAX_FELLOW_STAR + 1, level).score === fellowMaxBenchmark) return level
+  }
+  return null
 }

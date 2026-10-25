@@ -7,14 +7,14 @@ import type { Fellow, FellowRelation, HistoryResearchRank } from '@/features/fel
 import { HistoryResearchSlider } from '@/features/fellows/HistoryResearchSlider'
 import {
   activeAttributes,
-  CALIBRATED_SKILL_LEVEL,
   MAX_SKILL_LEVEL,
   carriedPuppetSkill,
   clampSlots,
   clampStage,
   evaluatePuppets,
   hasMarks,
-  historyRankById,
+  clampSkillLevel,
+  extraResearchPoints,
   historyRankFor,
   puppetSkillScore,
   talentMark,
@@ -24,6 +24,7 @@ import {
 } from '@/features/score/bonds'
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
 import FellowSkillCalculator from '@/features/score/FellowSkillSection'
+import { relationResearchPoints, starMap } from '@/features/score/fellowSkill'
 import { GroupSection } from '@/features/score/GroupSection'
 import { portraitUrl, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { TYPE } from '@/lib/typography'
@@ -44,6 +45,8 @@ export type BondsData = {
   ranks: HistoryResearchRank[] | null
   fellows: Fellow[] | null
   relations: FellowRelation[] | null
+  /** The highest skill level the chosen role and divinity level allow; null until the rating loads. */
+  skillCap: number | null
 }
 
 /**
@@ -85,7 +88,7 @@ export default function BondsSection({
             kind: 'derived',
             calculator:
               data.partners && data.scoring ? (
-                <PuppetLineup partners={data.partners} scoring={data.scoring} draft={draft} setDraft={setDraft} />
+                <PuppetLineup partners={data.partners} scoring={data.scoring} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
               ) : (
                 <p className={TYPE.body}>{t('bonds.unavailable')}</p>
               ),
@@ -107,7 +110,7 @@ export default function BondsSection({
             kind: 'derived',
             calculator:
               data.fellows && data.relations ? (
-                <FellowSkillCalculator fellows={data.fellows} relations={data.relations} draft={draft} setDraft={setDraft} />
+                <FellowSkillCalculator fellows={data.fellows} relations={data.relations} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
               ) : (
                 <p className={TYPE.body}>{t('bonds.unavailable')}</p>
               ),
@@ -116,8 +119,8 @@ export default function BondsSection({
         if (item.species.module === HISTORY_MODULE) {
           return {
             kind: 'derived',
-            calculator: data.ranks ? (
-              <HistoryPicker ranks={data.ranks} item={item} draft={draft} setDraft={setDraft} />
+            calculator: data.ranks && data.relations ? (
+              <HistoryPicker ranks={data.ranks} relations={data.relations} item={item} draft={draft} setDraft={setDraft} />
             ) : (
               <p className={TYPE.body}>{t('bonds.unavailable')}</p>
             ),
@@ -147,17 +150,19 @@ type Picking = 'deploy' | 'carry' | null
 function PuppetLineup({
   partners,
   scoring,
+  skillCap,
   draft,
   setDraft,
 }: {
   partners: SecretPartner[]
   scoring: PartnerScoring
+  skillCap: number | null
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
   const { t } = useTranslation()
   const [picking, setPicking] = useState<Picking>(null)
-  const skillLevel = draft.puppetSkillLevel ?? CALIBRATED_SKILL_LEVEL
+  const skillLevel = clampSkillLevel(draft.puppetSkillLevel)
   const result = useMemo(
     () => evaluatePuppets(draft.puppets, partners, scoring, draft.dominateSlots),
     [draft.puppets, draft.dominateSlots, partners, scoring],
@@ -171,18 +176,14 @@ function PuppetLineup({
   const ordered = useMemo(() => [...partners].sort((a, b) => b.quality - a.quality || a.id - b.id), [partners])
 
   // Each owned puppet's two figures: its attributes as if deployed, and its skill.
-  const owned = useMemo(
-    () =>
-      result.rows.map((row) => {
-        const stage = clampStage(row.entry.stage, scoring)
-        return {
-          partner: row.partner,
-          deployScore: hasMarks(row.partner) ? talentMark(row.partner, stage) * scoring.inDominateRate : null,
-          skill: puppetSkillScore(row.partner, stage, skillLevel),
-        }
-      }),
-    [result.rows, scoring, skillLevel],
-  )
+  const owned = result.rows.map((row) => {
+    const stage = clampStage(row.entry.stage, scoring)
+    return {
+      partner: row.partner,
+      deployScore: hasMarks(row.partner) ? talentMark(row.partner, stage) * scoring.inDominateRate : null,
+      skill: puppetSkillScore(row.partner, stage, skillLevel),
+    }
+  })
   const figures = new Map(owned.map((row) => [row.partner.id, row]))
 
   const update = (partnerId: number, patch: Partial<{ stage: number; dominated: boolean }>) =>
@@ -303,7 +304,7 @@ function PuppetLineup({
             />
           </label>
           <label className="block w-24">
-            <span className={LABEL_CLASS}>{t('bonds.skillLevel')}</span>
+            <span className={LABEL_CLASS}>{skillCap === null ? t('bonds.skillLevel') : t('bonds.skillLevelCap', { cap: skillCap })}</span>
             <Input
               type="number"
               inputMode="numeric"
@@ -512,59 +513,64 @@ function PuppetSkillSummary({
 
 function HistoryPicker({
   ranks,
+  relations,
   item,
   draft,
   setDraft,
 }: {
   ranks: HistoryResearchRank[]
+  relations: FellowRelation[]
   item: SpeciesResult
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
   const { t } = useTranslation()
-  // What was typed into the points box. Not stored: the rank it resolves to is,
-  // and the box is a shortcut to picking that rank.
-  const [points, setPoints] = useState('')
-  const current = historyRankById(ranks, draft.historyRankId)
-  const sorted = useMemo(() => [...ranks].sort((a, b) => a.score - b.score), [ranks])
-  const next = current ? sorted[sorted.findIndex((rank) => rank.id === current.id) + 1] : sorted[0]
-
-  const pickRank = (id: number | null) => {
-    setPoints('')
-    setDraft((prev) => ({ ...prev, historyRankId: id }))
-  }
-  const typePoints = (raw: string) => {
-    setPoints(raw)
-    const value = Number(raw)
-    if (raw === '' || !Number.isFinite(value)) return
-    setDraft((prev) => ({ ...prev, historyRankId: historyRankFor(ranks, value)?.id ?? null }))
-  }
+  // The rank is not picked: it follows from the relations' tiers, which follow
+  // from the connection stars set under 人脉技能, plus points from elsewhere.
+  const fromRelations = relationResearchPoints(relations, starMap(draft.fellows ?? []))
+  const extra = extraResearchPoints(draft)
+  const total = fromRelations + extra
+  const current = historyRankFor(ranks, total)
+  const sorted = [...ranks].sort((a, b) => a.score - b.score)
+  const next = sorted.find((rank) => rank.score > total)
 
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,11rem)]" data-testid="bonds-history">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,13rem)]" data-testid="bonds-history">
       <div className="min-w-0">
         <span className={LABEL_CLASS}>{t('bonds.rank')}</span>
-        <HistoryResearchSlider ranks={ranks} value={current?.id ?? null} onChange={pickRank} allowNone testId="bonds-rank" />
+        <HistoryResearchSlider ranks={ranks} value={current?.id ?? null} onChange={() => {}} allowNone readOnly testId="bonds-rank" />
         <span className="mt-1 block text-xs text-muted-foreground">
           {next
             ? t('bonds.rankNext', { name: next.name, points: next.score.toLocaleString(), mark: (next.mark - item.score).toLocaleString() })
             : t('bonds.rankTop')}
         </span>
       </div>
-      <label className="block">
-        <span className={LABEL_CLASS}>{t('bonds.points')}</span>
-        <Input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={points}
-          placeholder={current ? String(current.score) : '0'}
-          onChange={(event) => typePoints(event.target.value)}
-          className={NUMBER_CLASS}
-          data-testid="bonds-points"
-        />
-        <span className="mt-0.5 block text-xs text-muted-foreground">{t('bonds.pointsHint')}</span>
-      </label>
+      <div className="space-y-2">
+        <p className="flex items-baseline justify-between gap-2 text-sm" data-testid="bonds-research-relations">
+          <span className="text-muted-foreground">{t('bonds.researchFromRelations')}</span>
+          <span className="font-medium tabular-nums text-foreground">{fromRelations.toLocaleString()}</span>
+        </p>
+        <label className="block">
+          <span className={LABEL_CLASS}>{t('bonds.researchExtra')}</span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={extra}
+            onChange={(event) => {
+              const value = Math.trunc(Number(event.target.value))
+              setDraft((prev) => ({ ...prev, historyExtraPoints: Number.isFinite(value) && value > 0 ? value : null }))
+            }}
+            className={NUMBER_CLASS}
+            data-testid="bonds-research-extra"
+          />
+        </label>
+        <p className="flex items-baseline justify-between gap-2 text-sm" data-testid="bonds-research-total">
+          <span className="text-muted-foreground">{t('bonds.researchTotal')}</span>
+          <span className="font-semibold tabular-nums text-foreground">{total.toLocaleString()}</span>
+        </p>
+        <span className="block text-xs text-muted-foreground">{t('bonds.researchHint')}</span>
+      </div>
     </div>
   )
 }

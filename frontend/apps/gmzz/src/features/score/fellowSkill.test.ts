@@ -7,7 +7,9 @@ import {
   fellowOptions,
   fellowS,
   fellowSkillScore,
+  relationResearchPoints,
   relationTier,
+  skillLevelCap,
   starMap,
 } from './fellowSkill'
 
@@ -91,5 +93,24 @@ describe('connection relations', () => {
     expect(carriedFellowSkill(entries, all, [q1, q2], 1, 10, 38)?.relation?.id).toBe(10)
     expect(carriedFellowSkill(entries, all, [q1, q2], 1, 999, 38)?.relation?.id).toBe(20)
     expect(carriedFellowSkill([], all, [q1, q2], 1, null, 38)).toBeNull()
+  })
+})
+
+describe('history research from relations', () => {
+  it('pays each relation its rewards for every grade its tier has reached', () => {
+    const rewards = [16, 16, 16, 16, 16, 32].map((value, grade) => ({ grade, gradeName: '', value }))
+    const rel = { ...relation(1, 1, [[1, true], [2, true]]), researchRewards: rewards } as FellowRelation
+    expect(relationResearchPoints([rel], starMap([{ fellowId: 1, star: 5 }]))).toBe(0)
+    expect(relationResearchPoints([rel], starMap([{ fellowId: 1, star: 5 }, { fellowId: 2, star: 2 }]))).toBe(48)
+    expect(relationResearchPoints([rel], starMap([{ fellowId: 1, star: 5 }, { fellowId: 2, star: 5 }]))).toBe(112)
+  })
+})
+
+describe('skill level cap', () => {
+  it('reads the skill level back off the connection max curve', () => {
+    // [curve value, level]: role 1-39, 40-46, 47-52, divinity 0, 22, 30.
+    const points: [number, number][] = [[617, 3], [720, 5], [772, 6], [1440, 19], [2419, 38], [2779, 45]]
+    for (const [value, level] of points) expect(skillLevelCap(value)).toBe(level)
+    expect(skillLevelCap(1)).toBeNull()
   })
 })

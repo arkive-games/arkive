@@ -217,9 +217,9 @@ describe('history research score', () => {
   })
 
   it('scores the rank by its Mark, and nothing before the first rank', () => {
-    expect(historyScore(RANKS, null)).toBe(0)
-    expect(historyScore(RANKS, 2)).toBe(941)
-    expect(historyScore(RANKS, 42)).toBe(0)
+    expect(historyScore(RANKS, 0)).toBe(0)
+    expect(historyScore(RANKS, 30)).toBe(941)
+    expect(historyScore(RANKS, 31)).toBe(941)
   })
 })
 

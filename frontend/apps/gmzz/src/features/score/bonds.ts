@@ -42,8 +42,14 @@ export type BondsDraft = {
   puppets: PuppetEntry[]
   /** Deploy slots the player has unlocked; null until set, when `DEFAULT_DEPLOY_SLOTS` applies. */
   dominateSlots: number | null
-  /** `HistoryResearchRank.id`; null for no rank yet. */
+  /**
+   * `HistoryResearchRank.id` from when the rank was picked by hand. No longer
+   * read — the rank now follows from the research points — but kept so stored
+   * drafts still validate.
+   */
   historyRankId: number | null
+  /** Research points from sources other than relations; absent or null is 0. */
+  historyExtraPoints?: number | null
   /** The puppet whose skill is carried; absent or null picks the best-scoring owned one. */
   skillPartnerId?: number | null
   /**
@@ -104,6 +110,7 @@ export function isBondsDraft(value: unknown): value is BondsDraft {
     isOptionalNumber(value.puppetSkillLevel) &&
     (value.fellows === undefined || (Array.isArray(value.fellows) && value.fellows.every(isFellowEntry))) &&
     isOptionalNumber(value.fellowSkillId) &&
+    isOptionalNumber(value.historyExtraPoints) &&
     isOptionalNumber(value.fellowRelationId)
   )
 }
@@ -349,7 +356,13 @@ export function historyRankById(ranks: HistoryResearchRank[], id: number | null)
   return ranks.find((rank) => rank.id === id) ?? null
 }
 
-/** The 历史研究 score: the rank's Mark, or 0 before the first rank. */
-export function historyScore(ranks: HistoryResearchRank[], id: number | null): number {
-  return historyRankById(ranks, id)?.mark ?? 0
+/** The 历史研究 score: the Mark of the rank the points reach, or 0 before the first rank. */
+export function historyScore(ranks: HistoryResearchRank[], points: number): number {
+  return historyRankFor(ranks, points)?.mark ?? 0
+}
+
+/** Points from other sources, as stored: a non-negative whole number. */
+export function extraResearchPoints(draft: BondsDraft): number {
+  const value = draft.historyExtraPoints
+  return value != null && Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0
 }

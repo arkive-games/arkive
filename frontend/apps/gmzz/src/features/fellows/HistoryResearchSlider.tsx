@@ -25,12 +25,15 @@ export function HistoryResearchSlider({
   value,
   onChange,
   allowNone = false,
+  readOnly = false,
   testId,
 }: {
   ranks: HistoryResearchRank[]
   value: number | null
   onChange: (id: number | null) => void
   allowNone?: boolean
+  /** Shows a rank worked out elsewhere: the thumb cannot be dragged. */
+  readOnly?: boolean
   testId: string
 }) {
   const { t, i18n } = useTranslation()
@@ -64,7 +67,7 @@ export function HistoryResearchSlider({
         max={stops.length - 1}
         step={1}
         value={index}
-        disabled={stops.length < 2}
+        disabled={readOnly || stops.length < 2}
         className={RANGE_CLASS}
         aria-label={t('fellows.researchRank')}
         aria-valuetext={current ? `${current.rank}-${current.subRank} ${current.name}` : t('fellows.researchNone')}

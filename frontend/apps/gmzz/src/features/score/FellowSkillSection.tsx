@@ -8,6 +8,7 @@ import { clampSkillLevel, MAX_SKILL_LEVEL, type BondsDraft } from '@/features/sc
 import {
   carriedFellowSkill,
   fellowOptions,
+  GOLD_FELLOW,
   MAX_FELLOW_STAR,
   relationTier,
   starMap,
@@ -32,11 +33,13 @@ const SELECT_CLASS = `h-7 w-16 rounded-md border border-border bg-background px-
 export default function FellowSkillCalculator({
   fellows,
   relations,
+  skillCap,
   draft,
   setDraft,
 }: {
   fellows: Fellow[]
   relations: FellowRelation[]
+  skillCap: number | null
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
@@ -48,6 +51,15 @@ export default function FellowSkillCalculator({
   const carried = carriedFellowSkill(entries, fellows, relations, draft.fellowSkillId, draft.fellowRelationId, skillLevel)
   const autoCarry = draft.fellowSkillId == null || !stars.has(draft.fellowSkillId)
   const ordered = useMemo(() => [...fellows].sort((a, b) => b.quality - a.quality || a.order - b.order || a.id - b.id), [fellows])
+  // One row per quality, gold first, so the two tiers of connection read apart.
+  const groups = useMemo(
+    () =>
+      [...new Set(ordered.map((fellow) => fellow.quality))].map((quality) => ({
+        quality,
+        fellows: ordered.filter((fellow) => fellow.quality === quality),
+      })),
+    [ordered],
+  )
   const byId = useMemo(() => new Map(fellows.map((fellow) => [fellow.id, fellow])), [fellows])
   const options = new Map(fellows.map((fellow) => [fellow.id, fellowOptions(fellow, relations, stars, skillLevel)]))
   const carriedOptions = carried ? (options.get(carried.fellow.id) ?? []) : []
@@ -138,7 +150,7 @@ export default function FellowSkillCalculator({
         ) : null}
 
         <label className="block w-24">
-          <span className={LABEL_CLASS}>{t('bonds.skillLevel')}</span>
+          <span className={LABEL_CLASS}>{skillCap === null ? t('bonds.skillLevel') : t('bonds.skillLevelCap', { cap: skillCap })}</span>
           <Input
             type="number"
             inputMode="numeric"
@@ -157,54 +169,59 @@ export default function FellowSkillCalculator({
 
       <p className={TYPE.body}>{t('bonds.fellowGridHint')}</p>
 
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
-        {ordered.map((fellow) => {
-          const star = stars.get(fellow.id)
-          const best = options.get(fellow.id)?.[0]
-          const isCarried = carried?.fellow.id === fellow.id
-          return (
-            <li key={fellow.id} className="flex min-w-0 flex-col items-center gap-1" data-testid={`bonds-fellow-${fellow.id}`}>
-              <button
-                type="button"
-                disabled={star === undefined}
-                aria-pressed={isCarried}
-                title={fellow.skill.name}
-                aria-label={t('bonds.fellowCarryToggle', { name: fellow.name })}
-                onClick={() => carry(fellow.id)}
-                className={`relative rounded-md p-0.5 transition ${FOCUS} ${isCarried ? 'ring-2 ring-[color:var(--arkive-nav-accent)]' : ''} ${star === undefined ? 'opacity-40 grayscale' : ''} disabled:cursor-not-allowed`}
-              >
-                {tile(fellow)}
-                {isCarried ? (
-                  <span className="absolute -bottom-1 -left-1 rounded bg-secondary px-1 text-xs font-semibold text-secondary-foreground">
-                    {t('bonds.skillCarried')}
-                  </span>
-                ) : null}
-              </button>
-              <span className="w-full truncate text-center text-xs text-muted-foreground">{fellow.shortName || fellow.name}</span>
-              <select
-                value={star === undefined ? '' : String(star)}
-                aria-label={t('bonds.fellowStarFor', { name: fellow.name })}
-                onChange={(event) => setStar(fellow.id, event.target.value === '' ? null : Number(event.target.value))}
-                className={SELECT_CLASS}
-                data-testid={`bonds-fellow-star-${fellow.id}`}
-              >
-                <option value="">{t('bonds.fellowNotOwned')}</option>
-                {Array.from({ length: MAX_FELLOW_STAR + 1 }, (_, value) => (
-                  <option key={value} value={value}>
-                    {t('bonds.fellowStar', { star: value })}
-                  </option>
-                ))}
-              </select>
-              {best ? (
-                <span className="text-center text-xs tabular-nums text-muted-foreground" data-testid={`bonds-fellow-score-${fellow.id}`}>
-                  {best.score.toLocaleString()}
-                  {best.estimated ? '*' : ''}
-                </span>
-              ) : null}
-            </li>
-          )
-        })}
-      </ul>
+      {groups.map((group) => (
+        <div key={group.quality} data-testid={`bonds-fellow-row-${group.quality}`}>
+          <span className={LABEL_CLASS}>{t(group.quality === GOLD_FELLOW ? 'bonds.fellowGold' : 'bonds.fellowPurple')}</span>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
+            {group.fellows.map((fellow) => {
+              const star = stars.get(fellow.id)
+              const best = options.get(fellow.id)?.[0]
+              const isCarried = carried?.fellow.id === fellow.id
+              return (
+                <li key={fellow.id} className="flex min-w-0 flex-col items-center gap-1" data-testid={`bonds-fellow-${fellow.id}`}>
+                  <button
+                    type="button"
+                    disabled={star === undefined}
+                    aria-pressed={isCarried}
+                    title={fellow.skill.name}
+                    aria-label={t('bonds.fellowCarryToggle', { name: fellow.name })}
+                    onClick={() => carry(fellow.id)}
+                    className={`relative rounded-md p-0.5 transition ${FOCUS} ${isCarried ? 'ring-2 ring-[color:var(--arkive-nav-accent)]' : ''} ${star === undefined ? 'opacity-40 grayscale' : ''} disabled:cursor-not-allowed`}
+                  >
+                    {tile(fellow)}
+                    {isCarried ? (
+                      <span className="absolute -bottom-1 -left-1 rounded bg-secondary px-1 text-xs font-semibold text-secondary-foreground">
+                        {t('bonds.skillCarried')}
+                      </span>
+                    ) : null}
+                  </button>
+                  <span className="w-full truncate text-center text-xs text-muted-foreground">{fellow.shortName || fellow.name}</span>
+                  <select
+                    value={star === undefined ? '' : String(star)}
+                    aria-label={t('bonds.fellowStarFor', { name: fellow.name })}
+                    onChange={(event) => setStar(fellow.id, event.target.value === '' ? null : Number(event.target.value))}
+                    className={SELECT_CLASS}
+                    data-testid={`bonds-fellow-star-${fellow.id}`}
+                  >
+                    <option value="">{t('bonds.fellowNotOwned')}</option>
+                    {Array.from({ length: MAX_FELLOW_STAR + 1 }, (_, value) => (
+                      <option key={value} value={value}>
+                        {t('bonds.fellowStar', { star: value })}
+                      </option>
+                    ))}
+                  </select>
+                  {best ? (
+                    <span className="text-center text-xs tabular-nums text-muted-foreground" data-testid={`bonds-fellow-score-${fellow.id}`}>
+                      {best.score.toLocaleString()}
+                      {best.estimated ? '*' : ''}
+                    </span>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ))}
 
       <div className="border-t border-border pt-2" data-testid="bonds-fellow-relation-list">
         <span className={LABEL_CLASS}>{t('bonds.fellowRelationList')}</span>

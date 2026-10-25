@@ -18,8 +18,8 @@ import {
 import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
-import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
-import { carriedFellowSkill } from '@/features/score/fellowSkill'
+import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, extraResearchPoints, historyScore, isBondsDraft } from '@/features/score/bonds'
+import { carriedFellowSkill, relationResearchPoints, skillLevelCap, starMap } from '@/features/score/fellowSkill'
 import {
   benchmarkAt,
   clamp,
@@ -126,8 +126,31 @@ export default function ScorePage() {
   const [relicTotals, setRelicTotals] = useState<RelicTotals | null>(null)
   const onEquipmentTotals = useCallback((totals: EquipmentTotals) => setEquipmentTotals(totals), [])
   const onRelicTotals = useCallback((totals: RelicTotals) => setRelicTotals(totals), [])
-  const setRoleLevel = (roleLevel: number) => setDraft((prev) => ({ ...prev, roleLevel }))
-  const setDivinityLevel = (divinityLevel: number) => setDraft((prev) => ({ ...prev, divinityLevel }))
+  /**
+   * The skill level the given role and divinity level allow, read back off the
+   * 人脉技能 max curve. Changing either level moves the shared skill level to
+   * this cap, since the cap is where a player's skill level sits as the season
+   * opens it; the box stays editable for anyone below it.
+   */
+  const capAt = (role: number, divinity: number): number | null => {
+    const species = rating?.species.find((entry) => entry.module === FELLOW_SKILL_MODULE)
+    if (!rating || !species) return null
+    return skillLevelCap(
+      benchmarkAt(species.max, clamp(role, 1, rating.maxRoleLevel), clamp(divinity, 0, rating.maxDivinityLevel), rating.maxRoleLevel),
+    )
+  }
+  const followCap = (role: number, divinity: number) => {
+    const cap = capAt(role, divinity)
+    if (cap !== null) setBonds((prev) => ({ ...prev, puppetSkillLevel: cap }))
+  }
+  const setRoleLevel = (roleLevel: number) => {
+    setDraft((prev) => ({ ...prev, roleLevel }))
+    followCap(roleLevel, draft.divinityLevel)
+  }
+  const setDivinityLevel = (divinityLevel: number) => {
+    setDraft((prev) => ({ ...prev, divinityLevel }))
+    followCap(draft.roleLevel, divinityLevel)
+  }
   const setProfessionId = (professionId: number | null) => setDraft((prev) => ({ ...prev, professionId }))
   const setScore = (speciesId: number, value: number) =>
     setDraft((prev) => ({ ...prev, scores: { ...prev.scores, [speciesId]: value } }))
@@ -215,7 +238,8 @@ export default function ScorePage() {
       PUPPET_SKILL_MODULE,
       partners && scoring ? carriedPuppetSkill(bonds.puppets, partners, scoring, bonds.skillPartnerId, bonds.puppetSkillLevel)?.result.score ?? 0 : 0,
     )
-    put(HISTORY_MODULE, ranks ? historyScore(ranks, bonds.historyRankId) : 0)
+    const research = (relations ? relationResearchPoints(relations, starMap(bonds.fellows ?? [])) : 0) + extraResearchPoints(bonds)
+    put(HISTORY_MODULE, ranks ? historyScore(ranks, research) : 0)
     put(
       FELLOW_SKILL_MODULE,
       fellows && relations
@@ -228,7 +252,7 @@ export default function ScorePage() {
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],
   )
-  const bondsData: BondsData = { partners, scoring, ranks, fellows, relations }
+  const bondsData: BondsData = { partners, scoring, ranks, fellows, relations, skillCap: capAt(roleLevel, divinityLevel) }
   const gaps = useMemo(() => (result ? headroom(result).slice(0, 5) : []), [result])
 
   if (loading) {
