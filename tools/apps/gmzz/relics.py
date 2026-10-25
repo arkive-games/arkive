@@ -49,6 +49,12 @@ Three naming traps, each of which cost time:
   merely the quality-5 fallback. The rules ship as-is; this pipeline does not
   evaluate them, because doing so needs the roll a player actually has.
 
+Every stat key ships with its Chinese name (``statNames``, from
+``FightPropModeData``/``FightPropModeSetData``), and the rare words (pool tags 3
+and 4) carry their own name, effect line and skill-level bonus. Those names are
+written ``<愚者>`` in the tables — angle brackets that ``_plain`` would strip as
+markup, which is why every group name used to come out empty.
+
 Two gaps kept rather than papered over:
 
 - The module keys ``Relics_Basic`` / ``Relics_Main`` / ``Relics_Word`` appear in
@@ -88,6 +94,8 @@ MAT_TC_TABLE = "XtraMatTCData"
 MAT_WORD_TABLE = "XtraMatRandomWordData"
 MAT_GROUP_TABLE = "XtraMatRandomGroupData"
 WORTH_TABLE = "XMatPropWorthData"
+PROP_MODE_TABLE = "FightPropModeData"
+PROP_SET_TABLE = "FightPropModeSetData"
 
 #: `GroupId` on an artifact, and the slot header it sits under.
 GROUP_NAMES = {1: "攻击", 2: "防御", 3: "特化"}
@@ -96,6 +104,9 @@ GROUP_NAMES = {1: "攻击", 2: "防御", 3: "特化"}
 SCORE_RULE = "floor(k2 * sum(affixMark))"
 
 _TAG = re.compile(r"<[^>]+>")
+#: A rare affix's name is wrapped in angle brackets (``<愚者>``), which
+#: ``_plain`` would strip as client markup and leave empty.
+_BRACKETED = re.compile(r"^<([^<>/=]+)>$")
 
 
 def _rows(payload) -> list:
@@ -104,6 +115,14 @@ def _rows(payload) -> list:
 
 def _plain(text) -> str:
     return _TAG.sub("", text or "").strip() if isinstance(text, str) else ""
+
+
+def _name(text) -> str:
+    """A rare affix name: ``<愚者>`` -> ``愚者``; anything else as ``_plain``."""
+    if not isinstance(text, str):
+        return ""
+    match = _BRACKETED.match(text.strip())
+    return match.group(1).strip() if match else _plain(text)
 
 
 def artifacts(excel: Path, strings: dict) -> list[dict]:
@@ -298,7 +317,7 @@ def materials(excel: Path, strings: dict) -> dict:
     groups = {
         r["ID"]: {
             "id": r["ID"],
-            "name": _plain(r.get("GroupNmae")),
+            "name": _name(r.get("GroupNmae")),
             "types": list(r.get("GroupType") or []),
             "rarity": r.get("Rarity"),
             "maxRepeat": r.get("MaxRepeatTimes"),
@@ -315,7 +334,9 @@ def materials(excel: Path, strings: dict) -> dict:
             continue
         (stat, amount), = prop.items()
         # `[[0, 490], "k2"]` — the value, and the coefficient it scales by.
+        # The 愚者 rows read `[[0, 0.05]]` with no coefficient: a flat 5%.
         value = None
+        scaled = isinstance(amount, list) and len(amount) > 1 and amount[1] == "k2"
         if isinstance(amount, list) and amount and isinstance(amount[0], list) and len(amount[0]) == 2:
             value = amount[0][1]
         elif isinstance(amount, list) and amount and isinstance(amount[0], (int, float)):
@@ -323,16 +344,27 @@ def materials(excel: Path, strings: dict) -> dict:
         if value is None:
             continue
         tags = row.get("Tag") or []
+        tag = tags[0] if tags else 0
+        entry = {
+            "id": row["ID"],
+            "mark": row["Mark"],
+            "stat": stat,
+            "value": value,
+            "scaled": scaled,
+            "tag": tag,
+            "saturation": row.get("Saturation"),
+        }
+        # Tags 3 and 4 are the rare words: one fixed rung each, with a name of
+        # their own and an effect line whose `%s` is the displayed value.
+        special = _name(row.get("SPEffectName"))
+        if special:
+            entry["name"] = special
+            entry["effect"] = _plain(row.get("SPEffectText"))
+            entry["skillLevelPlus"] = (row.get("equalProp") or {}).get("SkillLvPlus_N", 0)
+            entry["rarest"] = bool(row.get("IsRarest"))
         for group_id in row.get("Groups") or []:
             for pool_set in row.get("Set") or []:
-                pool[str(pool_set)][str(tags[0] if tags else 0)].append({
-                    "id": row["ID"],
-                    "mark": row["Mark"],
-                    "stat": stat,
-                    "value": value,
-                    "groupId": group_id,
-                    "saturation": row.get("Saturation"),
-                })
+                pool[str(pool_set)][str(tag)].append({**entry, "groupId": group_id})
     for sets in pool.values():
         for ladder in sets.values():
             ladder.sort(key=lambda r: (r["stat"], -(r["mark"] or 0)))
@@ -342,6 +374,44 @@ def materials(excel: Path, strings: dict) -> dict:
         "groups": dict(sorted(groups.items())),
         "affixPool": {k: dict(v) for k, v in sorted(pool.items())},
     }
+
+
+def stat_names(excel: Path, strings: dict, keys: set[str]) -> dict:
+    """Stat key -> its Chinese display name and format.
+
+    ``FightPropModeData`` names a single mode (``Con_N`` 体质), and
+    ``FightPropModeSetData`` an aggregate one (``Atk_N`` 攻击 covers the four
+    physical and magic min/max modes). ``ShowType`` 1 is a percentage — it, not
+    the ``_N`` suffix, decides that, which is why 伤害加深 ``SkillMulti_N`` reads
+    5% rather than 0.05. A key named by neither stops the build: an English key
+    on the page is the defect this exists to prevent.
+    """
+    modes = {r["PropMode"]: r for r in _rows(resolve_text(load_table(excel, PROP_MODE_TABLE), strings))
+             if isinstance(r, dict) and "PropMode" in r}
+    sets = {r["Prop"]: r for r in _rows(resolve_text(load_table(excel, PROP_SET_TABLE), strings))
+            if isinstance(r, dict) and "Prop" in r}
+    out = {}
+    for key in sorted(keys):
+        if key in sets:
+            members = [modes[m] for m in sets[key].get("PropNameSet") or [] if m in modes]
+            show = {m.get("ShowType") for m in members}
+            if len(show) != 1:
+                raise RuntimeError(f"{PROP_SET_TABLE} {key}: members disagree on ShowType {sorted(show)}")
+            name, show_type = _plain(sets[key].get("Discription")), show.pop()
+        elif key in modes:
+            name, show_type = _plain(modes[key].get("PropName")), modes[key].get("ShowType")
+        else:
+            raise RuntimeError(f"stat {key} has no display name in {PROP_MODE_TABLE} or {PROP_SET_TABLE}")
+        out[key] = {"name": name, "format": "percent" if show_type == 1 else "number"}
+    return out
+
+
+def _stat_keys(payload: dict) -> set[str]:
+    keys = {a["stat"] for tags in payload["materials"]["affixPool"].values()
+            for ladder in tags.values() for a in ladder}
+    keys |= {stat for season in payload["resonance"].values() for ladder in season.values()
+             for rung in ladder for stat, _ in rung["stats"]}
+    return keys
 
 
 def constants(excel: Path, strings: dict) -> dict:
@@ -373,6 +443,7 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
         # Emitted so the page cannot reimplement the rounding the other way.
         "scoreRule": SCORE_RULE,
     }
+    payload["statNames"] = stat_names(excel, strings, _stat_keys(payload))
     missing = unresolved_ids(payload)
     if missing:
         raise RuntimeError(f"{len(missing)} text id(s) unresolved, e.g. {sorted(missing)[:3]}")

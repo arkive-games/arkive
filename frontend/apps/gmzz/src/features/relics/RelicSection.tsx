@@ -9,11 +9,18 @@ import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/me
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
 import {
-  artifactsInGroup, currentSeason, displayedValue, effectiveAffixCap, effectiveGrade, evaluateRelicSlot,
-  gradeOptions, gradeRung, k1For, k2For, knowledgeLadder, markForStat, materialsForGroup, maxAffixes,
-  newRelicSlot, poolFor, poolRungs, poolStats,
-  type Artifact, type ChosenRelicAffix, type Material, type PoolAffix, type Relics, type RelicServer, type RelicSlotState,
+  affixValue, artifactsInGroup, currentSeason, effectiveAffixCap, effectiveGrade, evaluateRelicSlot, formatStat,
+  gradeOptions, gradeRung, isRareAffix, k1For, k2For, knowledgeLadder, markForStat, maxAffixes,
+  newRelicSlot, poolRungs, poolStats, rareAffixes, rareEffect, slotMaterialType, statName, typePool,
+  type Artifact, type ChosenRelicAffix, type PoolAffix, type Relics, type RelicServer, type RelicSlotState,
 } from '@/features/relics/data'
+
+/**
+ * A slot as stored. Drafts written before the material picker was dropped
+ * carry the material item's id instead of its type; it is read once, to
+ * recover the type of a 特化 slot, and never written again.
+ */
+type StoredRelicSlot = RelicSlotState & { materialId?: number | null }
 
 /**
  * The three slots as stored. `knowledgeLevel` is null until the player moves
@@ -21,7 +28,7 @@ import {
  * scored (see `effectiveGrade`), and is absent in drafts written before it
  * existed, which read as the local server.
  */
-type RelicDraft = { knowledgeLevel: number | null; slots: RelicSlotState[]; server?: RelicServer }
+type RelicDraft = { knowledgeLevel: number | null; slots: StoredRelicSlot[]; server?: RelicServer }
 
 function isRelicAffix(value: unknown): value is ChosenRelicAffix {
   return (
@@ -29,17 +36,19 @@ function isRelicAffix(value: unknown): value is ChosenRelicAffix {
     typeof value.stat === 'string' &&
     isFiniteNumber(value.value) &&
     isFiniteNumber(value.mark) &&
-    (value.affixId === undefined || isFiniteNumber(value.affixId))
+    (value.affixId === undefined || isFiniteNumber(value.affixId)) &&
+    (value.scaled === undefined || typeof value.scaled === 'boolean')
   )
 }
 
-function isRelicSlotState(value: unknown): value is RelicSlotState {
+function isRelicSlotState(value: unknown): value is StoredRelicSlot {
   return (
     isRecord(value) &&
     isFiniteNumber(value.groupId) &&
     isNullableNumber(value.artifactId) &&
     isFiniteNumber(value.grade) &&
-    isNullableNumber(value.materialId) &&
+    (value.materialType === undefined || isFiniteNumber(value.materialType)) &&
+    (value.materialId === undefined || isNullableNumber(value.materialId)) &&
     Array.isArray(value.affixes) &&
     value.affixes.every(isRelicAffix)
   )
@@ -68,13 +77,17 @@ const relicDraft = gmzzMemory.draft('score/relics', {
 
 /**
  * The panel's three slots. 1 攻击 and 2 防御 are fixed — an artifact's `groupId`
- * *is* the slot it goes in, so there is nothing to choose there. 3 特化 is the
- * only slot that takes either material type, so it is the only one that asks.
+ * *is* the slot it goes in, and so is the material type it takes. 3 特化 is the
+ * only slot that takes either, so it is the only one that asks.
  */
 const GROUP_IDS = [1, 2, 3]
 const SPEC_GROUP = 3
-/** The material types 特化 accepts: 1 fills from 攻击, 2 from 防御. */
-const SPEC_TYPES = [1, 2]
+/** The two material types: 1 攻击, 2 防御. There are no others to choose between. */
+const MATERIAL_TYPES = [1, 2]
+
+/** An affix's option value: an ordinary stat by key, a rare word by its pool id. */
+const STAT_PREFIX = 'stat:'
+const RARE_PREFIX = 'rare:'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-sm text-foreground outline-none ${FOCUS}`
@@ -89,18 +102,26 @@ const PROSE_CLASS = `mt-0.5 whitespace-pre-line ${TYPE.body}`
 const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
 
 function affixFrom(rung: PoolAffix): ChosenRelicAffix {
-  return { stat: rung.stat, value: rung.value, mark: rung.mark, affixId: rung.id }
+  return { stat: rung.stat, value: rung.value, mark: rung.mark, affixId: rung.id, scaled: rung.scaled }
 }
 
-/** `''` is the empty selection — a slot with no material yet has no option to show. */
-function ChoiceSelect({ value, options, label, testId, onChange }: {
-  value: string | number; options: { value: string | number; label: string }[]
+type ChoiceOption = { value: string | number; label: string }
+
+/** A native select; `groups` renders labelled option groups instead of a flat list. */
+function ChoiceSelect({ value, options = [], groups, label, testId, onChange }: {
+  value: string | number; options?: ChoiceOption[]; groups?: { label: string; options: ChoiceOption[] }[]
   label: string; testId: string; onChange: (raw: string) => void
 }) {
+  const render = (list: ChoiceOption[]) =>
+    list.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)
   return (
     <select value={value} className={SELECT_CLASS} aria-label={label} data-testid={testId}
       onChange={(event) => onChange(event.target.value)}>
-      {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      {groups
+        ? groups.filter((group) => group.options.length > 0).map((group) => (
+          <optgroup key={group.label} label={group.label}>{render(group.options)}</optgroup>
+        ))
+        : render(options)}
     </select>
   )
 }
@@ -147,36 +168,71 @@ function ArtifactCell({ relics, groupId, artifact, onSelect }: {
   )
 }
 
-function AffixRow({ affix, index, pool, k2, testPrefix, onChange, onRemove }: {
-  affix: ChosenRelicAffix; index: number; pool: PoolAffix[]; k2: number; testPrefix: string
+function AffixRow({ relics, affix, index, pool, k2, testPrefix, onChange, onRemove }: {
+  relics: Relics; affix: ChosenRelicAffix; index: number; pool: PoolAffix[]; k2: number; testPrefix: string
   onChange: (next: ChosenRelicAffix) => void; onRemove: () => void
 }) {
   const { t } = useTranslation()
+  const source = pool.find((entry) => entry.id === affix.affixId)
+  const rare = source && isRareAffix(source) ? source : null
   const rungs = poolRungs(pool, affix.stat)
+  const show = (entry: PoolAffix) => formatStat(relics, entry.stat, affixValue(entry, k2))
 
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(4.5rem,1fr)_minmax(5.5rem,1.3fr)_auto] items-center gap-1">
-      <ChoiceSelect value={affix.stat} label={t('relic.affixStat')} testId={`${testPrefix}-stat-${index}`}
-        options={poolStats(pool).map((stat) => ({ value: stat, label: stat }))}
-        onChange={(raw) => {
-          const next = poolRungs(pool, raw)[0]
-          if (next) onChange(affixFrom(next))
-        }} />
-      {/* Keyed by the pool row's own id: two rungs of one stat can share a value,
-          so the value alone is not a unique handle. */}
-      <ChoiceSelect value={affix.affixId ?? ''} label={t('relic.affixRung')} testId={`${testPrefix}-rung-${index}`}
-        options={rungs.map((rung) => ({
-          value: rung.id,
-          label: t('relic.rungOption', { value: displayedValue(rung.value, k2), mark: rung.mark }),
-        }))}
-        onChange={(raw) => {
-          const next = rungs.find((rung) => rung.id === Number(raw))
-          if (next) onChange(affixFrom(next))
-        }} />
-      <button type="button" onClick={onRemove} className={`${BUTTON_CLASS} size-7`}
-        aria-label={t('relic.removeAffix')} data-testid={`${testPrefix}-remove-${index}`}>
-        ×
-      </button>
+    <div className="min-w-0">
+      {/* A rare word's name is longer and its value fixed, so its picker takes the wider column. */}
+      <div className={`grid min-w-0 items-center gap-1 ${
+        rare ? 'grid-cols-[minmax(7rem,1.6fr)_minmax(5rem,1fr)_auto]' : 'grid-cols-[minmax(5rem,1fr)_minmax(5.5rem,1.2fr)_auto]'
+      }`}>
+        {/* One list for both kinds: an ordinary stat picks its rung next, a rare
+            word is a single fixed rung with an effect of its own. */}
+        <ChoiceSelect value={rare ? `${RARE_PREFIX}${rare.id}` : `${STAT_PREFIX}${affix.stat}`}
+          label={t('relic.affixStat')} testId={`${testPrefix}-stat-${index}`}
+          groups={[
+            {
+              label: t('relic.affixOrdinary'),
+              options: poolStats(pool).map((stat) => ({ value: `${STAT_PREFIX}${stat}`, label: statName(relics, stat) })),
+            },
+            {
+              label: t('relic.affixRare'),
+              options: rareAffixes(pool).map((entry) => ({
+                value: `${RARE_PREFIX}${entry.id}`,
+                label: t('relic.rareOption', { name: entry.name ?? '', stat: statName(relics, entry.stat) }),
+              })),
+            },
+          ]}
+          onChange={(raw) => {
+            const next = raw.startsWith(RARE_PREFIX)
+              ? pool.find((entry) => entry.id === Number(raw.slice(RARE_PREFIX.length)))
+              : poolRungs(pool, raw.slice(STAT_PREFIX.length))[0]
+            if (next) onChange(affixFrom(next))
+          }} />
+        {rare ? (
+          <span className="flex h-9 min-w-0 items-center overflow-hidden whitespace-nowrap rounded-md border border-border bg-muted/40 px-2 text-sm tabular-nums text-foreground"
+            data-testid={`${testPrefix}-rung-${index}`}>
+            {t('relic.rungOption', { value: show(rare), mark: rare.mark })}
+          </span>
+        ) : (
+          // Keyed by the pool row's own id: two rungs of one stat can share a
+          // value, so the value alone is not a unique handle.
+          <ChoiceSelect value={affix.affixId ?? ''} label={t('relic.affixRung')} testId={`${testPrefix}-rung-${index}`}
+            options={rungs.map((rung) => ({ value: rung.id, label: t('relic.rungOption', { value: show(rung), mark: rung.mark }) }))}
+            onChange={(raw) => {
+              const next = rungs.find((rung) => rung.id === Number(raw))
+              if (next) onChange(affixFrom(next))
+            }} />
+        )}
+        <button type="button" onClick={onRemove} className={`${BUTTON_CLASS} size-7`}
+          aria-label={t('relic.removeAffix')} data-testid={`${testPrefix}-remove-${index}`}>
+          ×
+        </button>
+      </div>
+      {rare ? (
+        <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300" data-testid={`${testPrefix}-effect-${index}`}>
+          <span className="font-semibold">{t('relic.rareName', { name: rare.name ?? '' })}</span>
+          {rareEffect(relics, rare, k2)}
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -258,13 +314,10 @@ function RelicCard({ relics, slot, result, k1, k2, season, onChange }: {
 }) {
   const { t } = useTranslation()
   const groupId = slot.groupId
-  const materials = materialsForGroup(relics, groupId)
-  const material: Material | null = materials.find((entry) => entry.id === slot.materialId) ?? null
   // Cards 1 and 2 accept one type only, so their type follows the group and the
-  // choice is not rendered; the derived value still filters the list.
-  const specType = material?.type ?? SPEC_TYPES[0]
-  const offered = groupId === SPEC_GROUP ? materials.filter((entry) => entry.type === specType) : materials
-  const pool = poolFor(relics, material?.poolSet ?? null)
+  // choice is not rendered.
+  const materialType = slotMaterialType(slot)
+  const pool = useMemo(() => typePool(relics, materialType), [relics, materialType])
   // The cap follows the grade the server scores at, not the grade owned.
   const cap = effectiveAffixCap(relics, result.resonanceGrade)
   const max = maxAffixes(relics)
@@ -283,8 +336,8 @@ function RelicCard({ relics, slot, result, k1, k2, season, onChange }: {
   // The two material types are mutually exclusive: they draw from different
   // pools, so affixes chosen under one cannot survive the other.
   const chooseType = (type: number) => {
-    if (type === specType) return
-    onChange({ ...slot, materialId: materials.find((entry) => entry.type === type)?.id ?? null, affixes: [] })
+    if (type === materialType) return
+    onChange({ ...slot, materialType: type, affixes: [] })
   }
 
   return (
@@ -324,15 +377,15 @@ function RelicCard({ relics, slot, result, k1, k2, season, onChange }: {
           <div>
             <span className={LABEL_CLASS}>{t('relic.materialType')}</span>
             <div className="flex gap-1.5">
-              {SPEC_TYPES.map((type) => (
-                <button key={type} type="button" aria-pressed={type === specType} onClick={() => chooseType(type)}
+              {MATERIAL_TYPES.map((type) => (
+                <button key={type} type="button" aria-pressed={type === materialType} onClick={() => chooseType(type)}
                   data-testid={`relic-material-type-${type}`}
                   className={`${BUTTON_CLASS} min-h-8 flex-1 px-2.5 py-1 ${
-                    type === specType
+                    type === materialType
                       ? 'border-[color:var(--arkive-nav-accent)] bg-[color:var(--arkive-filter-active)] text-foreground'
                       : ''
                   }`}>
-                  {relics.groupNames[String(type)] ?? String(type)}
+                  {t('relic.materialTypeOption', { group: relics.groupNames[String(type)] ?? String(type) })}
                 </button>
               ))}
             </div>
@@ -340,18 +393,11 @@ function RelicCard({ relics, slot, result, k1, k2, season, onChange }: {
           </div>
         ) : null}
 
-        <div>
-          <span className={LABEL_CLASS}>{t('relic.material')}</span>
-          {/* Changing the material changes the pool, so the affixes cannot survive it. */}
-          <ChoiceSelect value={material?.id ?? ''} label={t('relic.material')} testId={`relic-material-${groupId}`}
-            options={offered.map((entry) => ({ value: entry.id, label: entry.name }))}
-            onChange={(raw) => onChange({ ...slot, materialId: Number(raw), affixes: [] })} />
-          {material ? <p className={PROSE_CLASS}>{material.description}</p> : null}
-        </div>
-
-        <span className={LABEL_CLASS}>{t('relic.affixes')}</span>
+        <span className={LABEL_CLASS}>
+          {t('relic.affixesOf', { group: relics.groupNames[String(materialType)] ?? '' })}
+        </span>
         {slot.affixes.map((affix, index) => (
-          <AffixRow key={index} affix={affix} index={index} pool={pool} k2={k2} testPrefix={testPrefix}
+          <AffixRow key={index} relics={relics} affix={affix} index={index} pool={pool} k2={k2} testPrefix={testPrefix}
             onChange={(next) => writeAffixes(slot.affixes.map((entry, at) => (at === index ? next : entry)))}
             onRemove={() => writeAffixes(slot.affixes.filter((_, at) => at !== index))} />
         ))}
@@ -376,17 +422,27 @@ function RelicCard({ relics, slot, result, k1, k2, season, onChange }: {
           <Line label={t('relic.slotTotal')} value={result.total} strong />
         </dl>
         {result.resonanceStats.length > 0 ? (
-          <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground" data-testid={`relic-resonance-${groupId}`}>
-            {result.resonanceStats.map(([stat, value]) => (
-              <li key={stat} className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span>{stat}</span>
-                {/* The table value scaled by k1 and floored, which is what the panel prints. */}
-                <span className="tabular-nums">
-                  {t('relic.resonanceStat', { value: Math.floor(value * k1), mark: markForStat(relics, stat, value, season) })}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-1.5" data-testid={`relic-resonance-${groupId}`}>
+            {/* The bonus 非凡共鸣 grants for the words that take effect: it grows
+                with every word, up to the grade's cap. */}
+            <div className="text-xs font-semibold text-foreground">
+              {t('relic.resonanceBonus', { active: result.activeAffixes })}
+            </div>
+            <ul className="mt-0.5 space-y-0.5 text-xs text-muted-foreground">
+              {result.resonanceStats.map(([stat, value]) => (
+                <li key={stat} className="flex flex-wrap items-baseline justify-between gap-x-2">
+                  <span>{statName(relics, stat)}</span>
+                  {/* The table value scaled by k1 and floored, which is what the panel prints. */}
+                  <span className="tabular-nums">
+                    {t('relic.resonanceStat', {
+                      value: formatStat(relics, stat, Math.floor(value * k1)),
+                      mark: markForStat(relics, stat, value, season),
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
       </div>
     </article>
@@ -421,28 +477,34 @@ export default function RelicSection({ relics, onTotals }: {
   }, [draft.knowledgeLevel, relics, season])
   const setKnowledgeLevel = (level: number) => setDraft((prev) => ({ ...prev, knowledgeLevel: level }))
   // One slot per group: the stored one when there is one, checked against the
-  // dataset — a grade or material it no longer knows falls back to the start —
-  // otherwise a fresh slot. Pre-picked so a card shows real effects on first
-  // paint. The scorer ignores `artifactId`, so this changes no number.
+  // dataset — a grade it no longer knows falls back to the start, an affix its
+  // type's pool no longer has is dropped — otherwise a fresh slot. Pre-picked so
+  // a card shows real effects on first paint. The scorer ignores `artifactId`,
+  // so this changes no number.
   const slots = useMemo<RelicSlotState[]>(
     () =>
       GROUP_IDS.map((groupId) => {
         const fresh: RelicSlotState = {
           ...newRelicSlot(groupId, relics.promotion.worstGrade),
           artifactId: artifactsInGroup(relics, groupId)[0]?.id ?? null,
-          materialId: materialsForGroup(relics, groupId)[0]?.id ?? null,
         }
         const stored = draft.slots.find((slot) => slot.groupId === groupId)
         if (!stored) return fresh
-        const materials = materialsForGroup(relics, groupId)
-        const material = materials.find((entry) => entry.id === stored.materialId)
+        // An older draft names a material item; its type is all that is kept.
+        const legacyType = relics.materials.items.find((entry) => entry.id === stored.materialId)?.type ?? undefined
+        const materialType = slotMaterialType({ groupId, materialType: stored.materialType ?? legacyType })
+        const pool = typePool(relics, materialType)
+        const affixes = stored.affixes.flatMap((affix) => {
+          const source = pool.find((entry) => entry.id === affix.affixId)
+            ?? pool.find((entry) => entry.stat === affix.stat && entry.value === affix.value && entry.mark === affix.mark)
+          return source ? [affixFrom(source)] : []
+        })
         return {
           groupId,
           artifactId: artifactsInGroup(relics, groupId).some((a) => a.id === stored.artifactId) ? stored.artifactId : fresh.artifactId,
           grade: gradeRung(relics, stored.grade) ? stored.grade : fresh.grade,
-          materialId: material ? stored.materialId : fresh.materialId,
-          // Affixes belong to the material's pool, so they go with it.
-          affixes: material ? stored.affixes.slice(0, maxAffixes(relics)) : [],
+          materialType,
+          affixes: affixes.slice(0, maxAffixes(relics)),
         }
       }),
     [draft.slots, relics],

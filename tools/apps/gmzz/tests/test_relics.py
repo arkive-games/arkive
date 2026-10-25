@@ -68,6 +68,17 @@ MAT_WORDS = {
     "10003": {"ID": 10003, "Mark": 1167, "Set": [5], "Tag": [2], "Groups": [101], "Saturation": 0.625,
               "FightProp": {"Atk_N": [[0, 445], "k2"]}},
 }
+# A rare word: one fixed rung, a bracketed name, and a flat (unscaled) value.
+RARE_WORD = {"ID": 17, "Mark": 7640, "Set": [5], "Tag": [4], "Groups": [1], "Saturation": 1, "IsRarest": True,
+             "FightProp": {"SkillMulti_N": [[0, 0.05]]}, "SPEffectName": "<愚者>",
+             "SPEffectText": "使封印物负面效果失效，所有技能等级+1，伤害加深提升%s",
+             "equalProp": {"SkillLvPlus_N": 1}}
+PROP_MODES = {
+    "1": {"PropMode": "pAtkMin_N", "PropName": "物理最小攻击", "ShowType": 0},
+    "2": {"PropMode": "mAtkMin_N", "PropName": "魔法最小攻击", "ShowType": 0},
+    "3": {"PropMode": "SkillMulti_N", "PropName": "伤害加深", "ShowType": 1},
+}
+PROP_SETS = {"1": {"Prop": "Atk_N", "Discription": "攻击", "PropNameSet": ["pAtkMin_N", "mAtkMin_N"]}}
 CONSTS = {"XMatMinWordNum": 1, "XMatMaxWordNum": 6, "SealWorstGrade": 3, "SealBestGrade": 1,
           "MainAttributeTipsEntryNumber": [6, 6, 5, 4], "Unwanted": "x"}
 # The 公证书 displays through a different item than its icon names; only the
@@ -85,6 +96,7 @@ def stub(monkeypatch):
         relics.MAT_TABLE: MATS, relics.MAT_TC_TABLE: MAT_TC,
         relics.MAT_WORD_TABLE: MAT_WORDS, relics.MAT_GROUP_TABLE: MAT_GROUPS,
         relics.CONST_TABLE: CONSTS,
+        relics.PROP_MODE_TABLE: PROP_MODES, relics.PROP_SET_TABLE: PROP_SETS,
     }
     monkeypatch.setattr(relics, "load_strings", lambda excel: {})
     monkeypatch.setattr(relics, "resolve_text", lambda payload, strings: payload)
@@ -191,6 +203,34 @@ def test_material_affix_pool_unwraps_the_value_and_orders_richest_first(stub):
     assert ladder[0]["value"] == 490
 
 
+def test_rare_words_keep_their_bracketed_name_and_effect(stub, monkeypatch):
+    monkeypatch.setitem(stub, relics.MAT_WORD_TABLE, {**MAT_WORDS, "17": RARE_WORD})
+    monkeypatch.setitem(stub, relics.MAT_GROUP_TABLE, {
+        **MAT_GROUPS, "1": {"ID": 1, "GroupNmae": "<愚者>", "GroupType": [1], "Rarity": 3, "MaxRepeatTimes": 1,
+                            "EntryDescription": "负面效果失效，所有技能等级+1，伤害加深"},
+    })
+    result = relics.materials(None, {})
+    # `<愚者>` is a name, not markup; stripping it as a tag left it empty.
+    assert result["groups"][1]["name"] == "愚者"
+    (rare,) = result["affixPool"]["5"]["4"]
+    assert rare["name"] == "愚者" and rare["rarest"] and rare["skillLevelPlus"] == 1
+    assert rare["effect"].endswith("伤害加深提升%s")
+    # No coefficient after the value: a flat 5%, not scaled by k2.
+    assert rare["value"] == 0.05 and rare["scaled"] is False
+    normal = result["affixPool"]["5"]["2"][0]
+    assert normal["scaled"] is True and "name" not in normal
+
+
+def test_stat_names_resolve_aggregates_and_percent_formats(stub):
+    names = relics.stat_names(None, {}, {"Atk_N", "SkillMulti_N"})
+    assert names == {
+        "Atk_N": {"name": "攻击", "format": "number"},
+        "SkillMulti_N": {"name": "伤害加深", "format": "percent"},
+    }
+    with pytest.raises(RuntimeError, match="no display name"):
+        relics.stat_names(None, {}, {"Unknown_N"})
+
+
 def test_constants_keeps_only_what_the_page_needs(stub):
     result = relics.constants(None, {})
     assert result["XMatMaxWordNum"] == 6
@@ -207,3 +247,4 @@ def test_build_writes_the_payload_with_the_score_rule(stub, tmp_path):
     # summing then flooring gives 1269 where per-affix flooring gives 1268.
     assert payload["scoreRule"] == relics.SCORE_RULE
     assert payload["groupNames"] == {"1": "攻击", "2": "防御", "3": "特化"}
+    assert payload["statNames"]["Atk_N"] == {"name": "攻击", "format": "number"}

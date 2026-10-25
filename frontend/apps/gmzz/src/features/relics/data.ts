@@ -72,11 +72,28 @@ export type PoolAffix = {
   id: number
   mark: number
   stat: string
-  /** The table value. The game displays `floor(value * k2)`. */
+  /** The table value. The game displays `floor(value * k2)` unless `scaled` is false. */
   value: number
   groupId: number
   saturation: number | null
+  /**
+   * Whether the value takes k2. The 愚者 words read a flat `0.05` with no
+   * coefficient. Absent in datasets published before it was emitted: scaled.
+   */
+  scaled?: boolean
+  /** Rarity tag: 1 and 2 are ordinary words, 3 and 4 rare ones. Also the pool's own key. */
+  tag?: number
+  /** A rare word's own name (愚者, 战争主教…); absent on an ordinary word. */
+  name?: string
+  /** A rare word's effect line; `%s` stands for the displayed value. */
+  effect?: string
+  /** All-skill level bonus a rare word grants. */
+  skillLevelPlus?: number
+  rarest?: boolean
 }
+
+/** A stat key's Chinese display name, and whether it reads as a percentage. */
+export type StatName = { name: string; format: 'percent' | 'number' }
 
 export type Relics = {
   artifacts: Artifact[]
@@ -90,6 +107,8 @@ export type Relics = {
   materials: { items: Material[]; groups: Record<string, unknown>; affixPool: Record<string, Record<string, PoolAffix[]>> }
   constants: Record<string, unknown>
   groupNames: Record<string, string>
+  /** Stat key -> display name. Absent in datasets published before it was emitted. */
+  statNames?: Record<string, StatName>
   scoreRule: string
 }
 
@@ -165,13 +184,24 @@ export function effectiveAffixCap(relics: Relics, grade: number): number {
 
 /* -------------------------------------------------------------------- score */
 
+/** A stat key's display name, falling back to the key for a dataset that lacks it. */
+export function statName(relics: Relics, stat: string): string {
+  return relics.statNames?.[stat]?.name ?? stat
+}
+
+/** A stat amount as the game prints it: `5%` for a percentage stat, the number otherwise. */
+export function formatStat(relics: Relics, stat: string, value: number): string {
+  if (relics.statNames?.[stat]?.format === 'percent') return `${Number((value * 100).toFixed(2))}%`
+  return String(value)
+}
+
 /**
  * One chosen affix on a material: the pool row it came from.
  *
  * `affixId` is carried so a picker can key options by identity — two rungs of
  * one stat can share a `value`, so `{stat, value}` is not a unique handle.
  */
-export type ChosenRelicAffix = { stat: string; value: number; mark: number; affixId?: number }
+export type ChosenRelicAffix = { stat: string; value: number; mark: number; affixId?: number; scaled?: boolean }
 
 /**
  * The displayed value of a relic affix.
@@ -181,6 +211,16 @@ export type ChosenRelicAffix = { stat: string; value: number; mark: number; affi
  */
 export function displayedValue(value: number, k2: number): number {
   return Math.floor(value * k2)
+}
+
+/** What an affix reads in game: scaled by k2 and floored, or as written when it takes no coefficient. */
+export function affixValue(affix: { value: number; scaled?: boolean }, k2: number): number {
+  return affix.scaled === false ? affix.value : displayedValue(affix.value, k2)
+}
+
+/** A rare word's effect line with its value filled in, as the tooltip in game reads. */
+export function rareEffect(relics: Relics, affix: PoolAffix, k2: number): string {
+  return (affix.effect ?? '').replace('%s', formatStat(relics, affix.stat, affixValue(affix, k2)))
 }
 
 /**
@@ -206,13 +246,20 @@ export type RelicSlotState = {
   artifactId: number | null
   grade: number
   /**
-   * The socketed material. It selects the affix pool, so the slot is not
-   * self-describing without it — the scorer ignores it, but the UI needs it on
-   * the same state object rather than in a parallel one.
+   * The material type socketed: 1 攻击, 2 防御. It selects the affix pool. Only
+   * 特化 takes either, so the other two slots ignore it (see `slotMaterialType`).
+   * The individual material items do not matter to the score: every item of
+   * one type draws the same ordinary rungs and the same rare words.
    */
-  materialId: number | null
+  materialType?: number
   /** Affixes across the material(s) socketed into this artifact. */
   affixes: ChosenRelicAffix[]
+}
+
+/** The material type a slot draws from: its own group, except 特化, which takes either. */
+export function slotMaterialType(slot: Pick<RelicSlotState, 'groupId' | 'materialType'>): number {
+  if (slot.groupId === 1 || slot.groupId === 2) return slot.groupId
+  return slot.materialType === 2 ? 2 : 1
 }
 
 export type RelicSlotResult = {
@@ -228,6 +275,8 @@ export type RelicSlotResult = {
   resonanceGrade: number
   /** 封印物词条 — floor(k2 * sum(mark)). */
   affixScore: number
+  /** Affixes that take effect: those within the grade's cap. */
+  activeAffixes: number
   /** Affixes beyond the grade's cap, which pay nothing. */
   cappedOut: number
   total: number
@@ -312,13 +361,14 @@ export function evaluateRelicSlot(
     resonanceStats,
     resonanceGrade,
     affixScore,
+    activeAffixes: effective.length,
     cappedOut,
     total: assemblyScore + resonanceScore + affixScore,
   }
 }
 
 export function newRelicSlot(groupId: number, worstGrade: number): RelicSlotState {
-  return { groupId, artifactId: null, grade: worstGrade, materialId: null, affixes: [] }
+  return { groupId, artifactId: null, grade: worstGrade, affixes: [] }
 }
 
 /**
@@ -338,28 +388,54 @@ export function currentSeason(relics: Relics): number | undefined {
   return keys.length > 0 ? Math.max(...keys) : undefined
 }
 
-/** The affix pool a material draws from, flattened across rarity tags. */
-export function poolFor(relics: Relics, poolSet: number | null): PoolAffix[] {
-  if (poolSet == null) return []
-  const tags = relics.materials.affixPool[String(poolSet)]
-  if (!tags) return []
-  return Object.values(tags).flat()
+/** Rarity tags 3 and 4 are the rare words, which carry a name of their own. */
+export function isRareAffix(affix: PoolAffix): boolean {
+  return affix.name !== undefined || (affix.tag ?? 0) >= 3
 }
 
-/** Distinct stats in a pool, in first-seen order. */
+/**
+ * Every affix a material type can carry: the union of the pools of all its
+ * material items, one entry per distinct rung.
+ *
+ * The items differ in how many words they roll, not in which: every pool of
+ * one type offers the same nine rungs per ordinary stat and the same nine rare
+ * words, so the page asks for the type alone. A rung repeated across pools
+ * collapses to its lowest id, which keeps `affixId` stable between builds.
+ */
+export function typePool(relics: Relics, type: number): PoolAffix[] {
+  const sets = new Set(
+    relics.materials.items.filter((m) => m.type === type && m.poolSet != null).map((m) => String(m.poolSet)),
+  )
+  const seen = new Map<string, PoolAffix>()
+  for (const set of sets) {
+    for (const [tag, ladder] of Object.entries(relics.materials.affixPool[set] ?? {})) {
+      for (const affix of ladder) {
+        // The pool's key is the tag; a dataset older than the field has only that.
+        const entry: PoolAffix = { ...affix, tag: affix.tag ?? Number(tag) }
+        const key = isRareAffix(entry)
+          ? `rare|${entry.name ?? entry.groupId}|${entry.stat}`
+          : `${entry.tag}|${entry.stat}|${entry.value}|${entry.mark}`
+        const prior = seen.get(key)
+        if (!prior || entry.id < prior.id) seen.set(key, entry)
+      }
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.id - b.id)
+}
+
+/** Distinct ordinary stats in a pool: the main stats (tag 2) first, then the secondary ones (tag 1). */
 export function poolStats(pool: PoolAffix[]): string[] {
-  return [...new Set(pool.map((affix) => affix.stat))]
+  const ordinary = pool.filter((affix) => !isRareAffix(affix))
+  ordinary.sort((a, b) => (b.tag ?? 0) - (a.tag ?? 0) || a.id - b.id)
+  return [...new Set(ordinary.map((affix) => affix.stat))]
 }
 
-/** The rungs a stat offers in a pool, richest first. */
+/** The rare words in a pool: the rarest (愚者) first, then by id. */
+export function rareAffixes(pool: PoolAffix[]): PoolAffix[] {
+  return pool.filter(isRareAffix).sort((a, b) => Number(b.rarest ?? false) - Number(a.rarest ?? false) || a.id - b.id)
+}
+
+/** The ordinary rungs a stat offers in a pool, richest first. */
 export function poolRungs(pool: PoolAffix[], stat: string): PoolAffix[] {
-  return pool.filter((affix) => affix.stat === stat).sort((a, b) => b.mark - a.mark)
-}
-
-export function materialsForGroup(relics: Relics, groupId: number): Material[] {
-  // 特化 (3) takes both material types; 攻击 (1) takes type 1, 防御 (2) type 2.
-  return relics.materials.items
-    .filter((m) => (groupId === 3 ? true : m.type === groupId))
-    // Stable order, so the default pick is not "whichever row came first".
-    .sort((a, b) => (b.quality ?? 0) - (a.quality ?? 0) || a.id - b.id)
+  return pool.filter((affix) => affix.stat === stat && !isRareAffix(affix)).sort((a, b) => b.mark - a.mark)
 }

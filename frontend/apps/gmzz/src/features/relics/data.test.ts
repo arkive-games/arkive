@@ -1,17 +1,24 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  affixValue,
   displayedValue,
   effectiveAffixCap,
   effectiveGrade,
   evaluateRelicSlot,
+  formatStat,
   k1For,
   k2For,
   markForStat,
   materialScore,
-  materialsForGroup,
   poolRungs,
+  poolStats,
+  rareAffixes,
+  rareEffect,
   resonanceKey,
+  slotMaterialType,
+  statName,
+  typePool,
   type Relics,
 } from './data'
 
@@ -208,14 +215,73 @@ describe('k1For', () => {
   })
 })
 
-describe('materialsForGroup', () => {
-  it('routes type 1 to 攻击 and type 2 to 防御', () => {
-    expect(materialsForGroup(RELICS, 1).map((m) => m.id)).toEqual([2085103])
-    expect(materialsForGroup(RELICS, 2).map((m) => m.id)).toEqual([2085203])
+describe('slotMaterialType', () => {
+  it('fixes 攻击 and 防御 to their own type and lets 特化 choose', () => {
+    expect(slotMaterialType({ groupId: 1, materialType: 2 })).toBe(1)
+    expect(slotMaterialType({ groupId: 2 })).toBe(2)
+    expect(slotMaterialType({ groupId: 3 })).toBe(1)
+    expect(slotMaterialType({ groupId: 3, materialType: 2 })).toBe(2)
+  })
+})
+
+describe('typePool', () => {
+  // Two attack items over different pools that repeat one rung, plus a rare word.
+  const MIXED: Relics = {
+    ...RELICS,
+    materials: {
+      ...RELICS.materials,
+      items: [
+        ...RELICS.materials.items,
+        { id: 2085401, name: '攻击物质', type: 1, tc: 31, quality: 5, icon: null, description: '', affixCountWeights: [100, 0, 0, 0, 0, 0], poolSet: 31 },
+        { id: 2085101, name: '攻击物质', type: 1, tc: 1, quality: 5, icon: null, description: '', affixCountWeights: [100, 0, 0, 0, 0, 0], poolSet: 1 },
+      ],
+      affixPool: {
+        ...RELICS.materials.affixPool,
+        '1': {
+          '1': [{ id: 20001, mark: 467, stat: 'AllControlAcc_N', value: 13, groupId: 109, saturation: 0.5 }],
+          '2': [{ id: 9004, mark: 1284, stat: 'Atk_N', value: 490, groupId: 101, saturation: 0.6875 }],
+        },
+        '31': {
+          '4': [{
+            id: 101, mark: 7640, stat: 'SkillMulti_N', value: 0.05, groupId: 1, saturation: 1, scaled: false, tag: 4,
+            name: '愚者', effect: '使封印物负面效果失效，所有技能等级+1，伤害加深提升%s', skillLevelPlus: 1, rarest: true,
+          }],
+        },
+      },
+    },
+    statNames: {
+      Atk_N: { name: '攻击', format: 'number' },
+      SkillMulti_N: { name: '伤害加深', format: 'percent' },
+    },
+  }
+
+  it('merges every item of a type, one entry per rung, and keeps the lowest id', () => {
+    const pool = typePool(MIXED, 1)
+    // The 490 / 1284 攻击 rung sits in both pools; the lower id wins.
+    expect(pool.filter((a) => a.stat === 'Atk_N' && a.value === 490).map((a) => a.id)).toEqual([9004])
+    expect(typePool(MIXED, 2)).toHaveLength(4)
+    expect(typePool(MIXED, 2).every((a) => a.tag === 2)).toBe(true)
   })
 
-  it('lets 特化 take both, which is what the item text says', () => {
-    expect(materialsForGroup(RELICS, 3)).toHaveLength(2)
+  it('orders main stats before secondary ones and splits out the rare words', () => {
+    const pool = typePool(MIXED, 1)
+    expect(poolStats(pool)).toEqual(['Atk_N', 'DefReduce_N', 'Crit_N', 'AllControlAcc_N'])
+    expect(rareAffixes(pool).map((a) => a.name)).toEqual(['愚者'])
+    expect(poolRungs(pool, 'SkillMulti_N')).toEqual([])
+  })
+
+  it('shows a flat rare word unscaled, as a percentage, inside its effect line', () => {
+    const fool = rareAffixes(typePool(MIXED, 1))[0]
+    expect(affixValue(fool, 0.32)).toBe(0.05)
+    expect(rareEffect(MIXED, fool, 0.32)).toBe('使封印物负面效果失效，所有技能等级+1，伤害加深提升5%')
+    // An ordinary word still takes k2.
+    expect(affixValue({ value: 490 }, 0.32)).toBe(156)
+  })
+
+  it('names stats in Chinese and falls back to the key', () => {
+    expect(statName(MIXED, 'Atk_N')).toBe('攻击')
+    expect(statName(MIXED, 'Pierce_N')).toBe('Pierce_N')
+    expect(formatStat(MIXED, 'Atk_N', 156)).toBe('156')
   })
 })
 
@@ -227,7 +293,7 @@ describe('poolRungs', () => {
 })
 
 describe('evaluateRelicSlot', () => {
-  const base = { groupId: 1, artifactId: 2085029, grade: 3, materialId: 2085103, affixes: [] }
+  const base = { groupId: 1, artifactId: 2085029, grade: 3, affixes: [] }
 
   it('adds the three parts', () => {
     const affixes = [
