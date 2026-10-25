@@ -20,24 +20,36 @@ import type { PartnerScoring, SecretPartner } from '../secretpartners/data'
  *   points), but the species' own benchmark curves land exactly on the Marks of
  *   ranks 8 and 17, which they would not do for any other quantity.
  *
- * 秘偶技能 and 人脉技能 are server values with no client formula — `SkillScoreData`
- * ships as bare ids — so they stay typed in from the in-game panel.
+ * 秘偶技能 has no client formula either (`SkillScoreData` ships its per-level
+ * columns stripped), but its shape was fitted from in-game panel readings — see
+ * `puppetSkillScore`. 人脉技能 is still typed in from the panel.
  */
 
 export type PuppetEntry = {
   partnerId: number
-  /** 1..`PartnerScoring.maxStar`, the game's 阶. */
+  /**
+   * The puppet's level, 0..`PartnerScoring.maxStar`; 0 means not owned. Named
+   * `stage` because that is what stored drafts already call it.
+   */
   stage: number
+  /** Deployed (上阵, the client's 支配). */
   dominated: boolean
 }
 
 export type BondsDraft = {
   puppets: PuppetEntry[]
-  /** Dominate slots the player has unlocked; null until set, when the initial count applies. */
+  /** Deploy slots the player has unlocked; null until set, when `DEFAULT_DEPLOY_SLOTS` applies. */
   dominateSlots: number | null
   /** `HistoryResearchRank.id`; null for no rank yet. */
   historyRankId: number | null
+  /** The puppet whose skill is carried; absent or null picks the best-scoring owned one. */
+  skillPartnerId?: number | null
+  /** 秘偶技能等级 (shared by every puppet skill); absent or null means `CALIBRATED_SKILL_LEVEL`. */
+  puppetSkillLevel?: number | null
 }
+
+/** Deploy slots the current season opens, per the panel; the table's maximum is a later season's. */
+export const DEFAULT_DEPLOY_SLOTS = 3
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -62,7 +74,9 @@ export function isBondsDraft(value: unknown): value is BondsDraft {
     Array.isArray(value.puppets) &&
     value.puppets.every(isPuppetEntry) &&
     (value.dominateSlots === null || isFiniteNumber(value.dominateSlots)) &&
-    (value.historyRankId === null || isFiniteNumber(value.historyRankId))
+    (value.historyRankId === null || isFiniteNumber(value.historyRankId)) &&
+    (value.skillPartnerId === undefined || value.skillPartnerId === null || isFiniteNumber(value.skillPartnerId)) &&
+    (value.puppetSkillLevel === undefined || value.puppetSkillLevel === null || isFiniteNumber(value.puppetSkillLevel))
   )
 }
 
@@ -75,13 +89,14 @@ export function roundHalfUp(value: number): number {
   return Math.floor(value + 0.5)
 }
 
+/** A puppet level, 0 (not owned) to the table's maximum. */
 export function clampStage(stage: number, scoring: PartnerScoring): number {
-  if (!Number.isFinite(stage)) return 1
-  return Math.min(scoring.maxStar, Math.max(1, Math.trunc(stage)))
+  if (!Number.isFinite(stage)) return 0
+  return Math.min(scoring.maxStar, Math.max(0, Math.trunc(stage)))
 }
 
 export function clampSlots(slots: number | null, scoring: PartnerScoring): number {
-  if (slots === null || !Number.isFinite(slots)) return scoring.initialDominateSlots
+  if (slots === null || !Number.isFinite(slots)) return Math.min(DEFAULT_DEPLOY_SLOTS, scoring.maxDominateSlots)
   return Math.min(scoring.maxDominateSlots, Math.max(0, Math.trunc(slots)))
 }
 
@@ -123,10 +138,11 @@ export type PuppetsResult = {
 /**
  * Every owned puppet scored, and the total the panel would show.
  *
- * Dominate is honoured in list order up to the slot count: a draft stored with
- * more dominated puppets than slots (the player lowered the count afterwards)
+ * Deploy is honoured in list order up to the slot count: a draft stored with
+ * more deployed puppets than slots (the player lowered the count afterwards)
  * downgrades the later ones rather than crediting a slot that does not exist.
- * Entries whose puppet is no longer in the dataset are dropped.
+ * Entries at level 0 (not owned) and entries whose puppet is no longer in the
+ * dataset are dropped.
  */
 export function evaluatePuppets(
   entries: PuppetEntry[],
@@ -142,6 +158,7 @@ export function evaluatePuppets(
     const partner = byId.get(entry.partnerId)
     if (!partner) continue
     const stage = clampStage(entry.stage, scoring)
+    if (stage < 1) continue
     const holdsSlot = entry.dominated && dominated < slots
     if (holdsSlot) dominated += 1
     const rate = holdsSlot ? scoring.inDominateRate : scoring.nonDominateRate
@@ -155,6 +172,84 @@ export function evaluatePuppets(
     total: roundHalfUp(rows.reduce((total, row) => total + row.score, 0)),
   }
 }
+
+/* ------------------------------------------------------------ 秘偶技能 */
+
+/** The skill level the panel readings were taken at. */
+export const CALIBRATED_SKILL_LEVEL = 38
+
+/**
+ * 秘偶技能 at tier 1 and skill level 38, by puppet quality (4 purple … 7 red).
+ * Read off the in-game panel; the qualities are roughly ×0.8 apart but not
+ * exactly, so they are per-quality figures rather than one base and a ratio.
+ */
+export const PUPPET_SKILL_BASE: Record<number, number> = { 4: 1034, 5: 1292, 6: 1613, 7: 2016 }
+
+/** Each skill tier past the first adds this fraction of the tier-1 score, in thousandths. */
+const TIER_STEP_PER_MILLE = 215
+
+/**
+ * The puppet's skill tier at a level: the highest `upgrades` row whose
+ * `requiredStage` the level meets (1/10/20/30/40/50 → tiers 1..6 for every
+ * shipped puppet). 0 when the puppet is not owned. Only a tier change moves the
+ * score; levels in between do not.
+ */
+export function skillTier(partner: SecretPartner, level: number): number {
+  let tier = 0
+  for (const upgrade of partner.upgrades) if (level >= upgrade.requiredStage) tier = Math.max(tier, upgrade.tier)
+  return tier
+}
+
+export type PuppetSkillScore = {
+  score: number
+  tier: number
+  /**
+   * True where no reading backs the figure: a skill level other than 38 (the
+   * score is scaled in proportion, which is a guess at that dimension), tier 6,
+   * or a quality without a base.
+   */
+  estimated: boolean
+}
+
+/**
+ * 秘偶技能 = floor(base[quality] × (1 + 0.215 × (tier − 1))) at skill level 38.
+ *
+ * Fitted to every reading taken (orange tiers 1-5, gold 2-5, purple 4-5, red 1)
+ * with no residual; the multiplier is shared by all four qualities. Integer
+ * arithmetic, because `1613 × 1.86` in floating point is not reliably 3000.18.
+ */
+export function puppetSkillScore(partner: SecretPartner, level: number, skillLevel: number = CALIBRATED_SKILL_LEVEL): PuppetSkillScore {
+  const tier = skillTier(partner, level)
+  const base = PUPPET_SKILL_BASE[partner.quality]
+  if (tier < 1 || base === undefined) return { score: 0, tier, estimated: tier >= 1 }
+  const skill = Math.max(1, Math.trunc(skillLevel))
+  const score = Math.floor((base * skill * (1000 + TIER_STEP_PER_MILLE * (tier - 1))) / (CALIBRATED_SKILL_LEVEL * 1000))
+  return { score, tier, estimated: skill !== CALIBRATED_SKILL_LEVEL || tier > 5 }
+}
+
+/**
+ * The carried puppet skill: the chosen puppet if it is owned, otherwise the
+ * best-scoring owned one. Only one puppet skill can be equipped.
+ */
+export function carriedPuppetSkill(
+  entries: PuppetEntry[],
+  partners: SecretPartner[],
+  scoring: PartnerScoring,
+  chosenId: number | null | undefined,
+  skillLevel: number | null | undefined,
+): { partner: SecretPartner; result: PuppetSkillScore } | null {
+  const level = skillLevel ?? CALIBRATED_SKILL_LEVEL
+  const byId = new Map(partners.map((partner) => [partner.id, partner]))
+  const owned = entries
+    .map((entry) => ({ partner: byId.get(entry.partnerId), stage: clampStage(entry.stage, scoring) }))
+    .filter((row): row is { partner: SecretPartner; stage: number } => row.partner !== undefined && row.stage >= 1)
+    .map((row) => ({ partner: row.partner, result: puppetSkillScore(row.partner, row.stage, level) }))
+  if (owned.length === 0) return null
+  const chosen = owned.find((row) => row.partner.id === chosenId)
+  return chosen ?? owned.reduce((best, row) => (row.result.score > best.result.score ? row : best))
+}
+
+/* ------------------------------------------------------------ 历史研究 */
 
 /**
  * The rank a research-point total has reached: the highest whose threshold the

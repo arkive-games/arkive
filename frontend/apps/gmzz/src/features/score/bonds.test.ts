@@ -3,9 +3,13 @@ import { describe, expect, it } from 'vitest'
 import type { HistoryResearchRank } from '../fellows/data'
 import type { PartnerScoring, SecretPartner } from '../secretpartners/data'
 import {
+  carriedPuppetSkill,
   clampSlots,
   clampStage,
+  DEFAULT_DEPLOY_SLOTS,
   evaluatePuppets,
+  puppetSkillScore,
+  skillTier,
   hasMarks,
   historyRankFor,
   historyScore,
@@ -107,16 +111,61 @@ describe('puppet attribute score', () => {
     )
     expect(result.rows).toHaveLength(1)
     expect(result.rows[0].mark).toBe(talentMark(partner(1), 50))
-    expect(result.slots).toBe(SCORING.initialDominateSlots)
+    expect(result.slots).toBe(DEFAULT_DEPLOY_SLOTS)
+  })
+
+  it('leaves out a puppet at level 0, which is not owned', () => {
+    const result = evaluatePuppets([{ partnerId: 1, stage: 0, dominated: true }], [partner(1)], SCORING, null)
+    expect(result.rows).toHaveLength(0)
+    expect(result.dominated).toBe(0)
   })
 
   it('rounds the total the way the client does', () => {
     expect(roundHalfUp(12.5)).toBe(13)
     expect(roundHalfUp(12.49)).toBe(12)
-    expect(clampStage(0, SCORING)).toBe(1)
-    expect(clampStage(Number.NaN, SCORING)).toBe(1)
+    expect(clampStage(-3, SCORING)).toBe(0)
+    expect(clampStage(Number.NaN, SCORING)).toBe(0)
     expect(clampSlots(99, SCORING)).toBe(8)
-    expect(clampSlots(null, SCORING)).toBe(1)
+    expect(clampSlots(null, SCORING)).toBe(3)
+  })
+})
+
+describe('puppet skill score', () => {
+  const TIERS = [1, 10, 20, 30, 40, 50].map((requiredStage, index) => ({ tier: index + 1, requiredStage, description: '' }))
+  const withQuality = (quality: number): SecretPartner => ({ ...partner(1), quality, upgrades: TIERS })
+
+  it('maps a puppet level to its skill tier, which alone moves the score', () => {
+    expect(skillTier(withQuality(6), 0)).toBe(0)
+    expect(skillTier(withQuality(6), 9)).toBe(1)
+    expect(skillTier(withQuality(6), 10)).toBe(2)
+    expect(skillTier(withQuality(6), 50)).toBe(6)
+    expect(puppetSkillScore(withQuality(6), 11).score).toBe(puppetSkillScore(withQuality(6), 19).score)
+  })
+
+  it('reproduces every in-game reading at skill level 38', () => {
+    const at = (quality: number, tier: number) => puppetSkillScore(withQuality(quality), TIERS[tier - 1].requiredStage).score
+    expect([1, 2, 3, 4, 5].map((tier) => at(6, tier))).toEqual([1613, 1959, 2306, 2653, 3000])
+    expect([2, 3, 4, 5].map((tier) => at(5, tier))).toEqual([1569, 1847, 2125, 2403])
+    expect([4, 5].map((tier) => at(4, tier))).toEqual([1700, 1923])
+    expect(at(7, 1)).toBe(2016)
+  })
+
+  it('marks tier 6 and other skill levels as estimates', () => {
+    expect(puppetSkillScore(withQuality(6), 40).estimated).toBe(false)
+    expect(puppetSkillScore(withQuality(6), 50).estimated).toBe(true)
+    expect(puppetSkillScore(withQuality(6), 40, 39).estimated).toBe(true)
+  })
+
+  it('carries the chosen owned puppet, or else the best-scoring one', () => {
+    const red = { ...withQuality(7), id: 7 }
+    const orange = { ...withQuality(6), id: 6 }
+    const entries = [
+      { partnerId: 6, stage: 40, dominated: false },
+      { partnerId: 7, stage: 1, dominated: false },
+    ]
+    expect(carriedPuppetSkill(entries, [red, orange], SCORING, null, null)?.partner.id).toBe(6)
+    expect(carriedPuppetSkill(entries, [red, orange], SCORING, 7, null)?.partner.id).toBe(7)
+    expect(carriedPuppetSkill([], [red], SCORING, null, null)).toBeNull()
   })
 })
 

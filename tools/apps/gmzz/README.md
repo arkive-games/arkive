@@ -496,9 +496,19 @@ expected curve at the chosen role and divinity level, so it always grades at
 100%. This is an observation from the panel, not something the client spells
 out.
 
-Three of the fourteen items remain typed in from the panel with no client
-formula: 途径技能 (`SkillScoreData` is bare ids) and the two bonds skills
-above.
+**秘偶技能** has no client formula either: `SkillScoreData` keeps only its
+row ids, and the per-level `DeltaLv1..75` columns named in its
+`skillScoreRowNameByLvl` map are stripped from every build checked. The
+calculator uses a shape fitted to in-game panel readings instead. At skill level
+38 it is `floor(base[quality] × (1 + 0.215 × (tier − 1)))`, with bases 1034 /
+1292 / 1613 / 2016 for purple, gold, orange and red. The tier is the puppet's
+skill tier from `SecretPartnerSkillStarUpData` (levels 1/10/20/30/40/50 → tiers
+1–6), and the multiplier is shared by all qualities. It fits every reading
+taken (orange 1–5, gold 2–5, purple 4–5, red 1) exactly. Tier 6 and other skill
+levels are scaled in proportion and are marked as estimates on the page.
+
+Two of the fourteen items remain typed in from the panel with no client
+formula: 途径技能 (`SkillScoreData` is bare ids) and 人脉技能.
 
 ### 封印物: what the client's own `calcSealedEnhanceMark` does
 

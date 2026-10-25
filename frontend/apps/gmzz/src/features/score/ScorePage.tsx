@@ -10,8 +10,8 @@ import { loadEquipment, playableProfessions, type Equipment, type Grace } from '
 import { loadHistoryResearch, type HistoryResearchRank } from '@/features/fellows/data'
 import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import { loadRelics, type Relics } from '@/features/relics/data'
-import BondsSection, { HISTORY_MODULE, PUPPET_GAIN_MODULE, type BondsData } from '@/features/score/BondsSection'
-import { emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
+import BondsSection, { HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
+import { carriedPuppetSkill, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
 import {
   benchmarkAt,
   clamp,
@@ -199,6 +199,10 @@ export default function ScorePage() {
       put(module, relicTotals?.[part as keyof RelicTotals] ?? 0)
     }
     put(PUPPET_GAIN_MODULE, partners && scoring ? evaluatePuppets(bonds.puppets, partners, scoring, bonds.dominateSlots).total : 0)
+    put(
+      PUPPET_SKILL_MODULE,
+      partners && scoring ? carriedPuppetSkill(bonds.puppets, partners, scoring, bonds.skillPartnerId, bonds.puppetSkillLevel)?.result.score ?? 0 : 0,
+    )
     put(HISTORY_MODULE, ranks ? historyScore(ranks, bonds.historyRankId) : 0)
     return merged
   }, [draft.scores, rating, roleLevel, divinityLevel, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, bonds])
