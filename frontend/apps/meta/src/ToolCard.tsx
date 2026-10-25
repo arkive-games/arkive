@@ -1,26 +1,9 @@
-import {
-  IconArrowUpRight,
-  IconChartBar,
-  IconDna2,
-  IconGauge,
-  IconRoute,
-  IconTool,
-  IconTrophy,
-  type Icon,
-} from '@tabler/icons-react'
+import { IconArrowUpRight, IconTool } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
 import { featureHref, localize, type GameFeature } from './featureCatalog'
 import type { SiteCard } from './sites'
-
-/** Keyed by feature id; a tool without an entry gets the generic wrench. */
-const TOOL_ICONS: Record<string, Icon> = {
-  'palworld-breeding': IconDna2,
-  'palworld-stat-simulator': IconChartBar,
-  'gmzz-score': IconGauge,
-  'gmzz-league-points': IconTrophy,
-  'gmzz-traintrade-station': IconRoute,
-}
+import { TOOL_ICONS } from './toolIcons'
 
 /**
  * One tool, as both the homepage shelf and the tools page list it: the game's

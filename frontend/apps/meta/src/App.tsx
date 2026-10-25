@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AccountDialog,
@@ -20,12 +20,12 @@ import {
 } from '@gamemap/map-shell'
 import { SiteFooter } from '@gamemap/ui'
 import {
-  IconArrowRight,
   IconHammer,
   IconMessageCircle,
 } from '@tabler/icons-react'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS } from './i18n'
 import {
+  GAME_LOGOS,
   IS_TOY,
   VISIBLE_SITES,
   loadSiteClickCounts,
@@ -37,6 +37,7 @@ import {
 import { AllGamesPage } from './AllGamesPage'
 import { ToolsPage } from './ToolsPage'
 import { HomeDirectory } from './HomeDirectory'
+import { HomeMobileActions } from './HomeMobileActions'
 import { FEATURES, featureHref, recentFeatures, type GameFeature } from './featureCatalog'
 import { AuthenticatedControls } from './AuthenticatedControls'
 import { ForumPage } from './ForumPage'
@@ -272,6 +273,9 @@ export default function App() {
   const authStrings = authStringsFor(i18n.language)
   const isSignedIn = auth.status === 'authenticated'
   const footerKind = resolveMetaFooterKind(activeRoute.view, isSignedIn)
+  // Every view that renders the homepage, including a protected route a
+  // signed-out visitor falls back from.
+  const isHome = footerKind === 'home'
   const [recentDestinations, setRecentDestinations] = useMemoryState(recentDestinationsRecord)
   const [memoryNow] = useState(Date.now)
   const remember = (destination: RecentDestination) => {
@@ -322,7 +326,7 @@ export default function App() {
     void result(listForumPosts({
       client: api.client,
       throwOnError: true,
-      query: { page: 1, pageSize: 3 },
+      query: { page: 1, pageSize: 4 },
     })).then((page) => {
       if (!active) return
       setCommunityPosts((page.results ?? []).map((post) => ({
@@ -369,13 +373,29 @@ export default function App() {
   }
 
   return (
-    <div id="top" className={`min-h-dvh overflow-x-hidden text-foreground ${isForumComposer ? 'pb-0' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}>
+    <div id="top" className={`min-h-dvh overflow-x-hidden text-foreground ${isForumComposer || isHome ? 'pb-0' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0'}`}>
+      {/* The homepage has no bottom tab bar on a phone: its header carries
+          language, theme and a site menu instead. */}
       <ArkiveMobileHeader
         homeUrl="#top"
         homeLabel={brandName}
         brandName={brandName}
         loginLabel={t('auth.login')}
-        accountControl={<ArkiveAccountControl language={i18n.language} variant="mobileHeader" homeUrl="" onOpenSettings={() => setSettingsOpen(true)} />}
+        className={isHome ? 'home-mobile-header gap-2' : undefined}
+        actions={isHome ? (
+          <HomeMobileActions
+            isSignedIn={isSignedIn}
+            hasTools={HAS_TOOLS}
+            language={lng}
+            theme={theme}
+            onLanguageChange={(code) => void changeLanguagePreference(code)}
+            onThemeChange={setTheme}
+            onLogin={() => setAccountOpen(true)}
+          />
+        ) : undefined}
+        accountControl={isHome
+          ? <></>
+          : <ArkiveAccountControl language={i18n.language} variant="mobileHeader" homeUrl="" onOpenSettings={() => setSettingsOpen(true)} />}
       />
       <ArkiveMapTopBar
         homeUrl="#top"
@@ -494,7 +514,6 @@ export default function App() {
         <main className="arkive-home-view">
           <HomeDirectory
             sites={displayedSites}
-            continueSiteId={continueSite?.id}
             updatedDates={__GAME_UPDATED__}
             recentlyUsed={recentlyUsed}
             onOpenSite={rememberSite}
@@ -532,7 +551,7 @@ export default function App() {
         </div>
       )}
 
-      {!isForumComposer && activeRoute.view !== 'forum' && (
+      {!isForumComposer && !isHome && activeRoute.view !== 'forum' && (
         <MetaMobileNav
           activeView={activeRoute.view}
           noticeId={noticeId}
@@ -581,38 +600,37 @@ function HomeCommunity({ posts }: { posts: HomeCommunityPost[] }) {
   }
 
   return (
-    <section className="community-section" aria-labelledby="community-heading">
-      <div className="home-shell">
-        <div className="section-heading community-heading">
-          <div>
-            <span>{t('community.eyebrow')}</span>
-            <h2 id="community-heading">{t('community.title')}</h2>
-          </div>
-          <a href="#forum" className="text-action">
-            {t('community.action')}
-            <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
+    <section className="home-shell home-community" aria-labelledby="community-heading">
+      <header className="home-section-head">
+        <h2 id="community-heading">{t('landing.community.title')}</h2>
+        <a href="#forum" className="home-more">{t('landing.community.action')} →</a>
+      </header>
+      <div className="home-posts">
+        {posts.map(({ post, site }, index) => (
+          <a key={post.postNo} href="#forum" className="home-post" style={{ '--i': index } as CSSProperties}>
+            <span className="home-post-who">
+              <i aria-hidden="true">
+                {post.author.avatarUrl
+                  ? <img src={post.author.avatarUrl} alt="" />
+                  : <span>{post.author.name.slice(0, 1)}</span>}
+              </i>
+              <span>{post.author.name} · {formatPostTime(post.createdAt)}</span>
+            </span>
+            <h3>{post.title}</h3>
+            <span className="home-post-foot">
+              <span className="home-post-game">
+                {site && <img src={site.icon ?? GAME_LOGOS[site.id]} alt="" />}
+                {site ? t(site.nameKey) : t('community.general')}
+              </span>
+              {/* Labelled as one node: the icon is decorative and the bare
+                  number on its own would be read out without its unit. */}
+              <i role="img" aria-label={t('community.comments', { n: post.commentCount })}>
+                <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
+                {post.commentCount}
+              </i>
+            </span>
           </a>
-        </div>
-        <div className="community-grid">
-          {posts.map(({ post, site }) => (
-            <a key={post.postNo} href="#forum" className="community-card">
-              <span className="community-visual">
-                <img src={site?.bg ?? post.author.avatarUrl} alt="" />
-              </span>
-              <span className="community-copy">
-                <small>{site ? t(site.nameKey) : t('community.general')}</small>
-                <strong>{post.title}</strong>
-                <span>{post.author.name} · {formatPostTime(post.createdAt)}</span>
-                {/* Labelled as one node: the icon is decorative and the bare
-                    number on its own would be read out without its unit. */}
-                <i role="img" aria-label={t('community.comments', { n: post.commentCount })}>
-                  <IconMessageCircle className="size-4" stroke={1.8} aria-hidden="true" />
-                  {post.commentCount}
-                </i>
-              </span>
-            </a>
-          ))}
-        </div>
+        ))}
       </div>
     </section>
   )

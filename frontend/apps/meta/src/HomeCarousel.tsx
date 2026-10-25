@@ -1,73 +1,200 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IconChevronLeft, IconChevronRight, IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react'
-import { featureHref, localize, type GameFeature } from './featureCatalog'
-import { siteHref, type SiteCard } from './sites'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
+import { GAME_LOGOS, siteHref, type SiteCard } from './sites'
 
-export function HomeCarousel({ tools, sites, onOpen }: {
-  tools: readonly GameFeature[]
+const AUTO_MS = 5000
+const SWIPE_PX = 40
+/** Matches the phone breakpoint in home-landing.css. */
+const PHONE_MAX = 760
+
+/**
+ * Sizes for the current window. Desktop keeps a 3:1 banner that shrinks on
+ * short screens so the shortcut row stays on the first screen; the middle
+ * banner is 73.4% of the stage and each neighbour 67.7% of the middle one.
+ * A phone shows a 2:1 banner with ~44px of each neighbour peeking out.
+ */
+function carouselSize(): CSSProperties {
+  const W = window.innerWidth
+  const H = window.innerHeight
+  const phone = W <= PHONE_MAX
+  const w = phone ? W - 88 : Math.max(560, Math.min(920, Math.round(W * 0.53), Math.round((H - 400) * 3)))
+  const h = Math.round(w / (phone ? 2 : 3))
+  const cw = phone ? W : Math.min(W - 32, Math.round(w / 0.734))
+  return {
+    '--w': `${w}px`,
+    '--h': `${h}px`,
+    '--cw': `${cw}px`,
+    '--sw': `${Math.round(w * 0.6766)}px`,
+    '--auto': `${AUTO_MS}ms`,
+  } as CSSProperties
+}
+
+/** The slot (-3 … 3) a slide takes relative to the current one, wrapping round the loop. */
+function slotOf(index: number, current: number, length: number) {
+  let d = ((index - current) % length + length) % length
+  if (d > length / 2) d -= length
+  return Math.max(-3, Math.min(3, d))
+}
+
+/**
+ * A coverflow of the open games' banners: the middle one flat and linked, its
+ * neighbours turned away either side. A tap on a neighbour brings it to the
+ * middle rather than opening it. Advances every five seconds unless hovered,
+ * focused, hidden, or the visitor prefers reduced motion.
+ */
+export function HomeCarousel({ sites, onOpenSite }: {
   sites: readonly SiteCard[]
-  onOpen: (feature: GameFeature, site: SiteCard) => void
+  onOpenSite: (site: SiteCard) => void
 }) {
-  const { t, i18n } = useTranslation()
-  const language = i18n.resolvedLanguage ?? i18n.language
-  const slides = tools.flatMap((feature) => {
-    const site = sites.find((item) => item.id === feature.gameId)
-    return site && siteHref(site) ? [{ feature, site }] : []
-  })
-  const [index, setIndex] = useState(0)
+  const { t } = useTranslation()
+  const slides = sites.filter((site) => site.banner && siteHref(site))
+  // `from` is the slide shown before the last move, to tell which slides wrapped.
+  const [{ current, from }, setPosition] = useState({ current: 0, from: 0 })
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
-  const [paused, setPaused] = useState(false)
   const [hidden, setHidden] = useState(false)
   const [reduced, setReduced] = useState(false)
+  const [size, setSize] = useState(carouselSize)
+  // Bumped on every move so the active dot's progress fill restarts.
+  const [cycle, setCycle] = useState(0)
+  const swipe = useRef<{ x: number; moved: boolean } | null>(null)
+
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
     const updateMotion = () => setReduced(media.matches)
     const updateVisibility = () => setHidden(document.hidden)
+    const updateSize = () => setSize(carouselSize())
     updateMotion()
     updateVisibility()
     media.addEventListener('change', updateMotion)
     document.addEventListener('visibilitychange', updateVisibility)
+    window.addEventListener('resize', updateSize)
     return () => {
       media.removeEventListener('change', updateMotion)
       document.removeEventListener('visibilitychange', updateVisibility)
+      window.removeEventListener('resize', updateSize)
     }
   }, [])
+
+  const length = slides.length
+  const paused = hovered || focused || hidden || reduced
   useEffect(() => {
-    if (slides.length < 2 || hovered || focused || paused || hidden || reduced) return
-    const timer = window.setTimeout(() => setIndex((current) => (current + 1) % slides.length), 5000)
+    if (length < 2 || paused) return
+    const timer = window.setTimeout(() => {
+      setPosition(({ current: value }) => ({ current: (value + 1) % length, from: value }))
+      setCycle((value) => value + 1)
+    }, AUTO_MS)
     return () => window.clearTimeout(timer)
-  }, [index, slides.length, hovered, focused, paused, hidden, reduced])
-  if (!slides.length) return null
-  const activeIndex = index % slides.length
-  const { feature, site } = slides[activeIndex]
-  const name = localize(feature.name, language)
-  const open = () => onOpen(feature, site)
+  }, [current, cycle, length, paused])
+
+  if (!length) return null
+  const active = current % length
+  const to = (index: number) => {
+    setPosition({ current: index, from: active })
+    setCycle((value) => value + 1)
+  }
+  const go = (step: number) => to((active + step + length) % length)
+
+  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const start = swipe.current
+    if (!start) return
+    const dx = event.clientX - start.x
+    if (Math.abs(dx) > SWIPE_PX) {
+      start.moved = true
+      go(dx < 0 ? 1 : -1)
+    }
+  }
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'ArrowLeft') go(-1)
+    else if (event.key === 'ArrowRight') go(1)
+    else return
+    event.preventDefault()
+  }
+
   return (
-    <section className="home-carousel" aria-label={t('home.carousel.label')}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => {
+    <section
+      className={`home-hero${paused ? ' is-paused' : ''}`}
+      style={{ ...size, '--glow': slides[active].color ?? 'var(--primary)' } as CSSProperties}
+      aria-roledescription="carousel"
+      aria-label={t('landing.carousel.label')}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
-      }}>
-      <div className="home-carousel-art">
-        <a href={featureHref(feature, site)} onClick={open} aria-label={name}>
-          <img src={site.bg} alt="" style={{ objectPosition: site.bgPosition }} />
-        </a>
-        {slides.length > 1 && <div className="home-carousel-controls">
-          <div className="home-carousel-dots">{slides.map((slide, position) => (
-            <button key={slide.feature.id} type="button" aria-label={t('home.carousel.slide', { name: localize(slide.feature.name, language) })}
-              aria-current={position === activeIndex ? 'true' : undefined} onClick={() => setIndex(position)}><span /></button>
-          ))}</div>
-          <div className="home-carousel-arrows">
-            <button type="button" aria-label={t(paused ? 'home.carousel.play' : 'home.carousel.pause')} aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? <IconPlayerPlay /> : <IconPlayerPause />}</button>
-            <button type="button" aria-label={t('home.carousel.previous')} onClick={() => setIndex((activeIndex + slides.length - 1) % slides.length)}><IconChevronLeft /></button>
-            <button type="button" aria-label={t('home.carousel.next')} onClick={() => setIndex((activeIndex + 1) % slides.length)}><IconChevronRight /></button>
-          </div>
-        </div>}
+      }}
+      onKeyDown={onKeyDown}
+    >
+      <div
+        className="home-hero-stage"
+        onPointerDown={(event) => { swipe.current = { x: event.clientX, moved: false } }}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => { swipe.current = null }}
+      >
+        {slides.map((site, index) => {
+          const d = slotOf(index, active, length)
+          // A slide jumping more than one slot is wrapping round the loop: it
+          // fades in at its new place instead of flying across the stage.
+          const wrapped = Math.abs(d - slotOf(index, from % length, length)) > 1
+          const name = t(site.nameKey)
+          const href = siteHref(site)
+          const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
+            const moved = swipe.current?.moved
+            swipe.current = null
+            if (moved || d !== 0) {
+              event.preventDefault()
+              if (!moved && d !== 0) go(Math.sign(d))
+              return
+            }
+            onOpenSite(site)
+          }
+          return (
+            <a
+              key={site.id}
+              className={`home-slide${wrapped ? ' is-wrapping' : ''}`}
+              data-d={d}
+              href={href}
+              draggable={false}
+              aria-label={name}
+              aria-hidden={d !== 0 && Math.abs(d) !== 1 ? true : undefined}
+              tabIndex={d === 0 ? undefined : -1}
+              onClick={onClick}
+            >
+              <img src={site.banner} alt="" draggable={false} style={{ objectPosition: site.bannerPosition }} />
+              <span className="home-slide-caption">
+                <img className="home-slide-icon" src={site.icon ?? GAME_LOGOS[site.id]} alt="" />
+                <span className="home-slide-text">
+                  <b>{name}</b>
+                  <em>{t(site.descKey)}</em>
+                </span>
+                <span className="home-slide-go" aria-hidden="true">{t('landing.carousel.enter')} →</span>
+              </span>
+            </a>
+          )
+        })}
       </div>
-      <h3><a href={featureHref(feature, site)} onClick={open}>{name}</a></h3>
-      {feature.description && <p>{localize(feature.description, language)}</p>}
+      {length > 1 && (
+        <>
+          <button type="button" className="home-hero-arrow is-prev" aria-label={t('landing.carousel.previous')} onClick={() => go(-1)}>
+            <IconChevronLeft stroke={2.2} aria-hidden="true" />
+          </button>
+          <button type="button" className="home-hero-arrow is-next" aria-label={t('landing.carousel.next')} onClick={() => go(1)}>
+            <IconChevronRight stroke={2.2} aria-hidden="true" />
+          </button>
+          <div className="home-hero-dots">
+            {slides.map((site, index) => (
+              <button
+                key={index === active ? `${site.id}:${cycle}` : site.id}
+                type="button"
+                aria-label={t('landing.carousel.slide', { n: index + 1, name: t(site.nameKey) })}
+                aria-current={index === active ? 'true' : undefined}
+                onClick={() => to(index)}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   )
 }

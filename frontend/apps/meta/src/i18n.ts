@@ -405,6 +405,53 @@ const FOOTER_DIALOG_COPY = {
   },
 } as const
 
+/**
+ * The homepage's own sections: the game carousel, the shortcut row, the tool
+ * dock, the community row, the phone menu and the footer's arrival line.
+ */
+const LANDING_COPY = {
+  'zh-CN': {
+    carousel: { label: '游戏封面轮播', enter: '进入', slide: '第 {{n}} 个：{{name}}', previous: '上一个游戏', next: '下一个游戏' },
+    quick: { label: '快速入口', allGames: '全部游戏', tools: '工具库', forum: '论坛', updates: '更新日志', badge: '新' },
+    dock: { title: '工具码头', subtitle: '不用翻资料，直接算出结果', all: '全部工具' },
+    community: { title: '社区在聊', action: '去论坛' },
+    menu: { open: '打开菜单', close: '关闭菜单', label: '站点菜单', login: '登录', account: '个人中心', notifications: '消息通知', allGames: '全部游戏', tools: '工具库', forum: '论坛', favorites: '收藏', top: '回到顶部' },
+    arrived: '已抵达港口',
+  },
+  'zh-TW': {
+    carousel: { label: '遊戲封面輪播', enter: '進入', slide: '第 {{n}} 個：{{name}}', previous: '上一個遊戲', next: '下一個遊戲' },
+    quick: { label: '快速入口', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', updates: '更新日誌', badge: '新' },
+    dock: { title: '工具碼頭', subtitle: '不用翻資料，直接算出結果', all: '全部工具' },
+    community: { title: '社群在聊', action: '去論壇' },
+    menu: { open: '開啟選單', close: '關閉選單', label: '網站選單', login: '登入', account: '個人中心', notifications: '訊息通知', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', favorites: '收藏', top: '回到頂部' },
+    arrived: '已抵達港口',
+  },
+  'en-US': {
+    carousel: { label: 'Game carousel', enter: 'Enter', slide: 'Slide {{n}}: {{name}}', previous: 'Previous game', next: 'Next game' },
+    quick: { label: 'Shortcuts', allGames: 'All games', tools: 'Tools', forum: 'Forum', updates: 'Updates', badge: 'NEW' },
+    dock: { title: 'Tool dock', subtitle: 'Skip the spreadsheets and get the answer', all: 'All tools' },
+    community: { title: 'Community talk', action: 'Visit the forum' },
+    menu: { open: 'Open menu', close: 'Close menu', label: 'Site menu', login: 'Sign in', account: 'My profile', notifications: 'Notifications', allGames: 'All games', tools: 'Tools', forum: 'Forum', favorites: 'Favorites', top: 'Back to top' },
+    arrived: 'Arrived in port',
+  },
+  'ja-JP': {
+    carousel: { label: 'ゲームカルーセル', enter: '入る', slide: '{{n}} 枚目：{{name}}', previous: '前のゲーム', next: '次のゲーム' },
+    quick: { label: 'ショートカット', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム', updates: '更新履歴', badge: '新着' },
+    dock: { title: 'ツールドック', subtitle: '資料を探さず、すぐに結果を', all: 'すべてのツール' },
+    community: { title: 'コミュニティの話題', action: 'フォーラムへ' },
+    menu: { open: 'メニューを開く', close: 'メニューを閉じる', label: 'サイトメニュー', login: 'ログイン', account: 'マイページ', notifications: '通知', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム', favorites: 'お気に入り', top: 'トップへ戻る' },
+    arrived: '港に到着しました',
+  },
+  'ko-KR': {
+    carousel: { label: '게임 캐러셀', enter: '입장', slide: '{{n}}번째: {{name}}', previous: '이전 게임', next: '다음 게임' },
+    quick: { label: '바로가기', allGames: '전체 게임', tools: '도구', forum: '포럼', updates: '업데이트', badge: '신규' },
+    dock: { title: '도구 부두', subtitle: '자료를 뒤질 필요 없이 바로 계산', all: '전체 도구' },
+    community: { title: '커뮤니티 이야기', action: '포럼으로' },
+    menu: { open: '메뉴 열기', close: '메뉴 닫기', label: '사이트 메뉴', login: '로그인', account: '내 프로필', notifications: '알림', allGames: '전체 게임', tools: '도구', forum: '포럼', favorites: '즐겨찾기', top: '맨 위로' },
+    arrived: '항구에 도착했습니다',
+  },
+}
+
 const resources = {
   'zh-CN': {
     translation: {
@@ -444,7 +491,6 @@ const resources = {
         featuresOf: '{{game}} 的功能',
         moreFeaturesLabel: '进入{{game}}查看其余 {{count}} 项功能',
         kind: { game: '游戏', tool: '工具', map: '地图', wiki: '资料' },
-        carousel: { label: '精选工具', previous: '上一项推荐', next: '下一项推荐', pause: '暂停轮播', play: '继续轮播', slide: '选择推荐：{{name}}' },
       },
       search: { placeholder: '搜索游戏、任务、角色或地点', action: '开始查找' },
       catalog: {
@@ -558,6 +604,7 @@ const resources = {
         badge: '即将上线',
       },
       footerDialogs: FOOTER_DIALOG_COPY['zh-CN'],
+      landing: LANDING_COPY['zh-CN'],
       footer: {
         browse: '浏览',
         about: '关于',
@@ -610,7 +657,6 @@ const resources = {
         featuresOf: '{{game}} 的功能',
         moreFeaturesLabel: '進入{{game}}查看其餘 {{count}} 項功能',
         kind: { game: '遊戲', tool: '工具', map: '地圖', wiki: '資料' },
-        carousel: { label: '精選工具', previous: '上一項推薦', next: '下一項推薦', pause: '暫停輪播', play: '繼續輪播', slide: '選擇推薦：{{name}}' },
       },
       search: { placeholder: '搜尋遊戲、任務、角色或地點', action: '開始查找' },
       catalog: {
@@ -704,6 +750,7 @@ const resources = {
         badge: '即將上線',
       },
       footerDialogs: FOOTER_DIALOG_COPY['zh-TW'],
+      landing: LANDING_COPY['zh-TW'],
       footer: {
         browse: '瀏覽', about: '關於', help: '幫助', allGames: '全部遊戲', community: '藏舟社群', toolLibrary: '工具庫',
         aboutArkive: '關於藏舟', contact: '聯絡我們', updateHistory: '更新日誌', language: '語言切換', theme: '主題切換', clearCache: '清理快取',
@@ -745,7 +792,6 @@ const resources = {
         featuresOf: '{{game}} features',
         moreFeaturesLabel: '{{count}} more features in {{game}}',
         kind: { game: 'Game', tool: 'Tool', map: 'Map', wiki: 'Reference' },
-        carousel: { label: 'Featured tools', previous: 'Previous recommendation', next: 'Next recommendation', pause: 'Pause slideshow', play: 'Resume slideshow', slide: 'Select recommendation: {{name}}' },
       },
       search: { placeholder: 'Search games, quests, characters, or places', action: 'Search' },
       catalog: {
@@ -835,6 +881,7 @@ const resources = {
         badge: 'Coming soon',
       },
       footerDialogs: FOOTER_DIALOG_COPY['en-US'],
+      landing: LANDING_COPY['en-US'],
       footer: {
         browse: 'Browse', about: 'About', help: 'Help', allGames: 'All games', community: 'Arkive community', toolLibrary: 'Tool library',
         aboutArkive: 'About Arkive', contact: 'Contact us', updateHistory: 'Update history', language: 'Language', theme: 'Theme', clearCache: 'Clear local data',
@@ -870,7 +917,6 @@ const resources = {
         featuresOf: '{{game}}の機能',
         moreFeaturesLabel: '{{game}}のその他 {{count}} 件の機能',
         kind: { game: 'ゲーム', tool: 'ツール', map: 'マップ', wiki: '資料' },
-        carousel: { label: 'おすすめツール', previous: '前のおすすめ', next: '次のおすすめ', pause: 'スライドショーを一時停止', play: 'スライドショーを再開', slide: 'おすすめを選択：{{name}}' },
       },
       search: { placeholder: 'ゲーム、クエスト、キャラクター、場所を検索', action: '検索する' },
       catalog: {
@@ -954,6 +1000,7 @@ const resources = {
       },
       comingSoon: { title: 'さらに多くのゲームを制作中', badge: '近日公開' },
       footerDialogs: FOOTER_DIALOG_COPY['ja-JP'],
+      landing: LANDING_COPY['ja-JP'],
       footer: {
         browse: '見る', about: '藏舟について', help: 'ヘルプ', allGames: 'すべてのゲーム', community: '藏舟コミュニティ', toolLibrary: 'ツールライブラリ',
         aboutArkive: '藏舟について', contact: 'お問い合わせ', updateHistory: '更新履歴', language: '言語切替', theme: 'テーマ切替', clearCache: 'キャッシュを消去',
@@ -989,7 +1036,6 @@ const resources = {
         featuresOf: '{{game}} 기능',
         moreFeaturesLabel: '{{game}}의 기능 {{count}}개 더 보기',
         kind: { game: '게임', tool: '도구', map: '지도', wiki: '자료' },
-        carousel: { label: '추천 도구', previous: '이전 추천', next: '다음 추천', pause: '슬라이드쇼 일시 정지', play: '슬라이드쇼 재개', slide: '추천 선택: {{name}}' },
       },
       search: { placeholder: '게임, 퀘스트, 캐릭터 또는 장소 검색', action: '검색' },
       catalog: {
@@ -1073,6 +1119,7 @@ const resources = {
       },
       comingSoon: { title: '더 많은 게임을 제작하고 있어요', badge: '출시 예정' },
       footerDialogs: FOOTER_DIALOG_COPY['ko-KR'],
+      landing: LANDING_COPY['ko-KR'],
       footer: {
         browse: '둘러보기', about: '소개', help: '도움말', allGames: '전체 게임', community: 'Arkive 커뮤니티', toolLibrary: '도구 모음',
         aboutArkive: 'Arkive 소개', contact: '문의하기', updateHistory: '업데이트 기록', language: '언어 전환', theme: '테마 전환', clearCache: '캐시 지우기',

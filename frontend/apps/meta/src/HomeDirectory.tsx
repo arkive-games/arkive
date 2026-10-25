@@ -1,32 +1,29 @@
-import { useId, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  IconArrowRight,
+  IconAnchor,
+  IconApps,
   IconBook2,
-  IconCompass,
+  IconChevronRight,
   IconHistory,
   IconMap2,
-  IconSearch,
+  IconMessageCircle,
+  IconSparkles,
   IconTool,
 } from '@tabler/icons-react'
 
-import { LANGUAGES } from './i18n'
 import {
   FEATURES,
   featureHref,
   localize,
-  searchCatalog,
   type FeatureKind,
   type GameFeature,
   type RecentFeature,
-  type SearchHit,
 } from './featureCatalog'
-import { recentUpdateDays, siteHref, type SiteCard } from './sites'
-import { ToolCard } from './ToolCard'
-
+import { GAME_LOGOS, IS_TOY, recentUpdateDays, siteHref, type SiteCard } from './sites'
+import { TOOL_ICONS } from './toolIcons'
 import { HomeCarousel } from './HomeCarousel'
-import allGamesArt from './assets/all-games.svg'
-const SEARCH_RESULT_LIMIT = 8
+import platformChangelog from './platform-changelog.json'
 
 const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
   tool: IconTool,
@@ -34,19 +31,31 @@ const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
   wiki: IconBook2,
 }
 
+/** Icon-square gradients per tool; a tool without one gets the default pair. */
+const TOOL_COLORS: Record<string, readonly [string, string]> = {
+  'palworld-breeding': ['#ff9a8b', '#ff4f8f'],
+  'palworld-stat-simulator': ['#7ad7ff', '#4f7bff'],
+  'gmzz-score': ['#ffd36a', '#ff8a3d'],
+  'gmzz-traintrade-station': ['#a99bff', '#6a5cff'],
+  'gmzz-league-points': ['#7eeac0', '#1fb39a'],
+}
+const DEFAULT_TOOL_COLORS = ['#ffa8d9', '#c46bff'] as const
+
+function gradient([from, to]: readonly [string, string], index: number): CSSProperties {
+  return { '--c1': from, '--c2': to, '--i': index } as CSSProperties
+}
+
 /**
- * The homepage's first screen: every open game and every tool, with a search
- * box over both.
+ * The homepage: a carousel of the open games, a row of round shortcuts to each
+ * game and the site's own sections, then every tool in one dock.
  *
- * The portal is a directory before it is anything else, so this shows what the
- * site has rather than recommending one game from it. Both shelves are plain
- * wrapping grids -- a new game or tool adds a card, not a redesign.
+ * The portal is a directory before it is anything else, so a new game adds a
+ * slide and a shortcut, and a new tool a dock entry -- never a redesign.
  */
 export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, onOpenFeature }: {
   /** In display order; the caller decides whether a recent game leads. */
   sites: readonly SiteCard[]
-  continueSiteId?: string
-  /** Newest changelog date per game id; a recent one earns its card a badge. */
+  /** Newest changelog date per game id; a recent one earns its shortcut a badge. */
   updatedDates: Readonly<Record<string, string>>
   /** Newest first; the row is omitted while this is empty. */
   recentlyUsed: readonly RecentFeature[]
@@ -56,233 +65,109 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const [now] = useState(() => new Date())
+  const games = sites.filter((site) => siteHref(site))
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
-    && sites.some((site) => site.id === feature.gameId && siteHref(site)))
+    && games.some((site) => site.id === feature.gameId))
+  const badge = t('landing.quick.badge')
+
+  const entries: { href: string; label: string; icon: typeof IconTool; colors: readonly [string, string]; fresh?: boolean }[] = [
+    { href: '#games', label: t('landing.quick.allGames'), icon: IconApps, colors: ['#ff8a4c', '#ff3d5a'] },
+    ...(tools.length ? [{ href: '#tools', label: t('landing.quick.tools'), icon: IconTool, colors: ['#a47bff', '#6a3dff'] as const }] : []),
+    // The Toy build has no backend, so it has no forum to link to.
+    ...(IS_TOY ? [] : [{ href: '#forum', label: t('landing.quick.forum'), icon: IconMessageCircle, colors: ['#5fa2ff', '#3d5bff'] as const }]),
+    {
+      href: '#updates',
+      label: t('landing.quick.updates'),
+      icon: IconSparkles,
+      colors: ['#ffcb52', '#ff8a1f'],
+      fresh: recentUpdateDays(platformChangelog.entries[0]?.date, now) !== undefined,
+    },
+  ]
 
   return (
-    <section className="home-shell home-directory" aria-labelledby="home-heading">
-      <header className="directory-intro">
-        <div>
-          <h1 id="home-heading">{t('home.title')}</h1>
-          <p>{t('home.description')}</p>
-        </div>
-        <HomeSearch sites={sites} onOpenSite={onOpenSite} onOpenFeature={onOpenFeature} />
-      </header>
+    <section className="home-directory" aria-labelledby="home-heading">
+      <h1 id="home-heading" className="sr-only">{t('home.title')}</h1>
+      <HomeCarousel sites={games} onOpenSite={onOpenSite} />
 
-      {recentlyUsed.length > 0 && (
-        <nav className="directory-recent" aria-label={t('home.recentlyUsed')}>
-          <span className="directory-recent-label">
-            <IconHistory className="size-4" stroke={1.8} aria-hidden="true" />
-            {t('home.recentlyUsed')}
-          </span>
-          <ul>
-            {recentlyUsed.map(({ feature, site }) => {
-              const KindIcon = KIND_ICONS[feature.kind]
-              return (
-                <li key={feature.id}>
-                  <a href={featureHref(feature, site)} onClick={() => onOpenFeature(feature, site)}>
-                    <KindIcon className="size-4 shrink-0" stroke={1.8} aria-hidden="true" />
-                    <strong>{localize(feature.name, language)}</strong>
-                    <small>{t(site.nameKey)}</small>
-                  </a>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-      )}
-
-      <section className={`directory-showcase${tools.length ? '' : ' without-carousel'}`} aria-label={t('home.games')}>
-        {tools.length > 0 && <HomeCarousel tools={tools} sites={sites} onOpen={onOpenFeature} />}
-        <div className="directory-games">
-          {sites.slice(0, 5).map((site) => (
-            <DirectoryGameCard key={site.id} site={site}
-              updatedDaysAgo={recentUpdateDays(updatedDates[site.id], now)}
-              onOpen={() => onOpenSite(site)} />
-          ))}
-          <article className="directory-game">
-            <a href="#games" className="directory-game-cover" aria-label={t('action.browseAll')}><img src={allGamesArt} alt="" /></a>
-            <h3 className="directory-game-name"><a href="#games">{t('action.browseAll')}</a></h3>
-            <p className="directory-game-description">{t('home.gameCount', { count: sites.length })}</p>
-          </article>
-        </div>
-      </section>
-
-      {tools.length > 0 && (
-        <section className="directory-section" aria-labelledby="home-tools-heading">
-          <div className="directory-heading">
-            <h2 id="home-tools-heading">
-              {t('home.tools')}
-              <span>{t('home.toolCount', { count: tools.length })}</span>
-            </h2>
-            <a href="#tools" className="text-action">
-              {t('home.allTools')}
-              <IconArrowRight className="size-4" stroke={1.8} aria-hidden="true" />
+      <div className="home-shell">
+        <nav className="home-quick" aria-label={t('landing.quick.label')}>
+          {games.map((site, index) => (
+            <a key={site.id} href={siteHref(site)} style={{ '--i': index, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
+              <span className="home-quick-tile">
+                <span className="home-quick-icon is-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" /></span>
+                {recentUpdateDays(updatedDates[site.id], now) !== undefined && <b>{badge}</b>}
+              </span>
+              <span className="home-quick-label">{t(site.nameKey)}</span>
             </a>
-          </div>
-          <div className="directory-tools">
-            {tools.map((tool) => {
-              const site = sites.find((item) => item.id === tool.gameId)
-              return (
-                <ToolCard
-                  key={tool.id}
-                  tool={tool}
-                  site={site}
-                  onOpen={site ? () => onOpenFeature(tool, site) : undefined}
-                />
-              )
-            })}
-          </div>
-        </section>
-      )}
-    </section>
-  )
-}
+          ))}
+          {entries.map(({ href, label, icon: EntryIcon, colors, fresh }, index) => (
+            <a key={href} href={href} style={gradient(colors, games.length + index)}>
+              <span className="home-quick-tile">
+                <span className="home-quick-icon"><EntryIcon stroke={1.9} aria-hidden="true" /></span>
+                {fresh && <b>{badge}</b>}
+              </span>
+              <span className="home-quick-label">{label}</span>
+            </a>
+          ))}
+        </nav>
 
-function DirectoryGameCard({ site, updatedDaysAgo, onOpen }: {
-  site: SiteCard
-  /** Set only for a recent update; see `recentUpdateDays`. */
-  updatedDaysAgo?: number
-  onOpen: () => void
-}) {
-  const { t, i18n } = useTranslation()
-  const language = i18n.resolvedLanguage ?? i18n.language
-  const name = t(site.nameKey)
-  const href = siteHref(site)
-
-  return (
-    <article className="directory-game">
-      <a href={href} className="directory-game-cover group" onClick={onOpen}>
-        <img src={site.bg} alt={name} style={{ objectPosition: site.bgPosition }} />
-        {updatedDaysAgo !== undefined && (
-          <span className="directory-game-tags">
-            <span className="directory-game-updated">
-              {t('home.updated', {
-                when: new Intl.RelativeTimeFormat(language, { numeric: 'auto' }).format(-updatedDaysAgo, 'day'),
-              })}
+        {recentlyUsed.length > 0 && (
+          <nav className="directory-recent" aria-label={t('home.recentlyUsed')}>
+            <span className="directory-recent-label">
+              <IconHistory className="size-4" stroke={1.8} aria-hidden="true" />
+              {t('home.recentlyUsed')}
             </span>
-          </span>
+            <ul>
+              {recentlyUsed.map(({ feature, site }) => {
+                const KindIcon = KIND_ICONS[feature.kind]
+                return (
+                  <li key={feature.id}>
+                    <a href={featureHref(feature, site)} onClick={() => onOpenFeature(feature, site)}>
+                      <KindIcon className="size-4 shrink-0" stroke={1.8} aria-hidden="true" />
+                      <strong>{localize(feature.name, language)}</strong>
+                      <small>{t(site.nameKey)}</small>
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
         )}
-      </a>
-      <h3 className="directory-game-name"><a href={href} onClick={onOpen}>{name}</a></h3>
-      <p className="directory-game-description">{t(site.descKey)}</p>
-    </article>
-  )
-}
 
-function hitHref(hit: SearchHit): string | undefined {
-  return hit.type === 'game' ? siteHref(hit.site) : featureHref(hit.feature, hit.site)
-}
-
-/**
- * A combobox over games and their pages. Enter opens the highlighted result
- * (the first by default), so typing "配种" and pressing Enter lands on the
- * breeding calculator without touching the mouse.
- */
-function HomeSearch({ sites, onOpenSite, onOpenFeature }: {
-  sites: readonly SiteCard[]
-  onOpenSite: (site: SiteCard) => void
-  onOpenFeature: (feature: GameFeature, site: SiteCard) => void
-}) {
-  const { t, i18n } = useTranslation()
-  const language = i18n.resolvedLanguage ?? i18n.language
-  const listId = useId()
-  const [query, setQuery] = useState('')
-  const [expanded, setExpanded] = useState(false)
-  const [active, setActive] = useState(0)
-
-  // Game names live in i18n, so gather every locale's: a visitor on the
-  // English UI who types 帕鲁 should still find Palworld.
-  const hits = useMemo(() => searchCatalog(
-    query,
-    sites,
-    (site) => LANGUAGES.map((lng) => i18n.getFixedT(lng)(site.nameKey)),
-  ).slice(0, SEARCH_RESULT_LIMIT), [i18n, query, sites])
-
-  const showList = expanded && query.trim().length > 0
-  const activeIndex = Math.min(active, Math.max(hits.length - 1, 0))
-
-  const open = (hit: SearchHit | undefined) => {
-    const href = hit && hitHref(hit)
-    if (!hit || !href) return
-    if (hit.type === 'feature') onOpenFeature(hit.feature, hit.site)
-    else onOpenSite(hit.site)
-    window.location.assign(href)
-  }
-
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    open(hits[activeIndex])
-  }
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape') {
-      setExpanded(false)
-      return
-    }
-    if (!hits.length || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return
-    event.preventDefault()
-    setExpanded(true)
-    const step = event.key === 'ArrowDown' ? 1 : -1
-    setActive((activeIndex + step + hits.length) % hits.length)
-  }
-
-  return (
-    <form className="directory-search" role="search" onSubmit={submit}>
-      <div className="directory-search-field">
-        <IconSearch className="size-5 shrink-0" stroke={1.8} aria-hidden="true" />
-        <input
-          type="search"
-          role="combobox"
-          aria-label={t('home.searchLabel')}
-          aria-expanded={showList}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={showList && hits.length ? `${listId}-${activeIndex}` : undefined}
-          placeholder={t('home.searchPlaceholder')}
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value)
-            setActive(0)
-            setExpanded(true)
-          }}
-          onFocus={() => setExpanded(true)}
-          onBlur={() => setExpanded(false)}
-          onKeyDown={onKeyDown}
-        />
-        <button type="submit">{t('search.action')}</button>
+        {tools.length > 0 && (
+          <section className="home-dock" aria-labelledby="home-dock-heading">
+            <header className="home-dock-head">
+              <span className="home-dock-mark" aria-hidden="true"><IconAnchor stroke={2} /></span>
+              <h2 id="home-dock-heading">{t('landing.dock.title')}</h2>
+              <p>{t('landing.dock.subtitle')}</p>
+              <a href="#tools" className="home-more">{t('landing.dock.all')} →</a>
+            </header>
+            <div className="home-dock-tools">
+              {tools.map((tool, index) => {
+                const site = games.find((item) => item.id === tool.gameId)
+                const href = featureHref(tool, site)
+                if (!site || !href) return null
+                const ToolIcon = TOOL_ICONS[tool.id] ?? IconTool
+                return (
+                  <a key={tool.id} className="home-tool" href={href}
+                    style={gradient(TOOL_COLORS[tool.id] ?? DEFAULT_TOOL_COLORS, index)}
+                    onClick={() => onOpenFeature(tool, site)}>
+                    <span className="home-tool-icon" aria-hidden="true">
+                      <ToolIcon stroke={1.9} />
+                      <img src={site.icon ?? GAME_LOGOS[site.id]} alt="" />
+                    </span>
+                    <span className="home-tool-copy">
+                      <strong>{localize(tool.name, language)}</strong>
+                      <small>{tool.description ? localize(tool.description, language) : t(site.nameKey)}</small>
+                    </span>
+                    <IconChevronRight className="home-tool-arrow" stroke={2} aria-hidden="true" />
+                  </a>
+                )
+              })}
+            </div>
+          </section>
+        )}
       </div>
-      {showList && (
-        <ul id={listId} role="listbox" className="directory-search-results" aria-label={t('home.searchResults')}>
-          {hits.length === 0 ? (
-            <li className="directory-search-empty" role="presentation">{t('home.searchEmpty', { query: query.trim() })}</li>
-          ) : hits.map((hit, index) => {
-            const KindIcon = hit.type === 'game' ? IconCompass : KIND_ICONS[hit.feature.kind]
-            const label = hit.type === 'game' ? t(hit.site.nameKey) : localize(hit.feature.name, language)
-            const detail = hit.type === 'game'
-              ? t('home.kind.game')
-              : `${t(hit.site.nameKey)} · ${t(`home.kind.${hit.feature.kind}`)}`
-            return (
-              <li
-                key={hit.type === 'game' ? `game:${hit.site.id}` : hit.feature.id}
-                id={`${listId}-${index}`}
-                role="option"
-                aria-selected={index === activeIndex}
-                className={index === activeIndex ? 'is-active' : undefined}
-                // Keep focus in the input: a blur would close the list before
-                // the click lands.
-                onMouseDown={(event) => event.preventDefault()}
-                onMouseEnter={() => setActive(index)}
-                onClick={() => open(hit)}
-              >
-                <KindIcon className="size-4 shrink-0" stroke={1.8} aria-hidden="true" />
-                <strong>{label}</strong>
-                <small>{detail}</small>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </form>
+    </section>
   )
 }

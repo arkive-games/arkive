@@ -1,0 +1,1329 @@
+/* The homepage: a game coverflow, a row of round shortcuts, the tool dock and
+   the latest forum posts, ending in a sea-wave footer.
+
+   Section rhythm: header to carousel 1.5rem, carousel to dots 1rem, then
+   2.5rem between every block and 3.5rem before the footer. Phones use
+   1rem / 0.75rem / 1.75rem / 2.5rem. */
+
+/* Only the glyphs of "Arkive", until the drawn logo replaces the wordmark.
+   License: ./assets/fredoka-arkive.LICENSE.txt */
+@font-face {
+  font-family: "Arkive Wordmark";
+  src: url("./assets/fredoka-arkive.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+@property --glow {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ff9a5a;
+}
+
+.arkive-home-view {
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --well: color-mix(in srgb, var(--foreground) 5%, transparent);
+  --btnh: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --shadow: rgba(40, 30, 10, 0.28);
+  --gold: #e6a417;
+  --track: rgba(20, 20, 30, 0.16);
+  --glow-alpha: 26%;
+}
+
+.dark .arkive-home-view {
+  --btnh: color-mix(in srgb, var(--foreground) 12%, transparent);
+  --shadow: rgba(0, 0, 0, 0.8);
+  --gold: #ffcf5a;
+  --track: rgba(255, 255, 255, 0.14);
+  --glow-alpha: 34%;
+}
+
+.home-directory {
+  display: block;
+}
+
+/* ---------- 1. the cover carousel ---------- */
+
+.home-hero {
+  position: relative;
+  padding-top: 1.5rem;
+  overflow-x: clip;
+  transition: --glow 1.2s var(--soft);
+}
+
+.home-hero::before {
+  content: "";
+  position: absolute;
+  top: -7.5rem;
+  left: 50%;
+  width: min(106rem, 130vw);
+  height: calc(var(--h) + 16rem);
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) var(--glow-alpha), transparent), transparent);
+}
+
+/* The neighbours sit behind the middle banner and peek out as slanted strips. */
+.home-hero-stage {
+  position: relative;
+  width: var(--cw);
+  max-width: 100%;
+  height: var(--h);
+  margin: 0 auto;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.home-slide {
+  position: absolute;
+  top: 0;
+  left: calc(50% - var(--w) / 2);
+  width: var(--w);
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.625rem;
+  background: var(--well);
+  box-shadow: 0 1.625rem 2.75rem -1.875rem var(--shadow);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  -webkit-user-drag: none;
+  transition:
+    left 0.68s var(--soft),
+    width 0.68s var(--soft),
+    top 0.68s var(--soft),
+    height 0.68s var(--soft),
+    clip-path 0.68s var(--soft),
+    transform 0.68s var(--soft),
+    opacity 0.5s;
+}
+
+/* A slide wrapping round the loop jumps to its new slot unseen. */
+.home-slide.is-wrapping {
+  transition: none;
+}
+
+.home-slide > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: transform 0.9s var(--soft);
+}
+
+/* A soft shade under the title, on the middle banner only. */
+.home-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.55) 100%);
+  transition: opacity 0.6s;
+}
+
+.home-slide[data-d="0"] {
+  z-index: 3;
+}
+
+.home-slide[data-d="0"]::after {
+  opacity: 1;
+}
+
+.home-slide[data-d="0"]:hover > img {
+  transform: scale(1.03);
+}
+
+.home-slide[data-d="-1"],
+.home-slide[data-d="1"] {
+  top: 4.33%;
+  z-index: 2;
+  width: var(--sw);
+  height: 91.34%;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.home-slide[data-d="-1"] {
+  left: 0;
+  clip-path: polygon(0 0, 100% 8.66%, 100% 91.34%, 0 100%);
+}
+
+.home-slide[data-d="1"] {
+  left: calc(100% - var(--sw));
+  clip-path: polygon(0 8.66%, 100% 0, 100% 100%, 0 91.34%);
+}
+
+/* A strip shows the banner's outer edge; the inline focal point is for the middle. */
+.home-slide[data-d="-1"] > img {
+  object-position: left center !important;
+}
+
+.home-slide[data-d="1"] > img {
+  object-position: right center !important;
+}
+
+/* The rest wait, hidden, behind the middle banner. */
+.home-slide[data-d="-3"],
+.home-slide[data-d="-2"],
+.home-slide[data-d="2"],
+.home-slide[data-d="3"] {
+  z-index: 1;
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
+}
+
+/* The middle banner's shadow falling on the strips either side. */
+.home-hero-stage::before,
+.home-hero-stage::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: min(var(--w) * 0.0875, (var(--cw) - var(--w)) / 2);
+  height: 87%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, #00000059 0%, #000000a6 4%, #000000e6 8%, #000 14%, #000 86%, #000000e6 92%, #000000a6 96%, #00000059 100%);
+}
+
+.home-hero-stage::before {
+  right: calc(50% + var(--w) / 2);
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.5));
+}
+
+.home-hero-stage::after {
+  left: calc(50% + var(--w) / 2);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.5), transparent);
+}
+
+.home-slide-caption {
+  position: absolute;
+  right: 1.375rem;
+  bottom: 1.25rem;
+  left: 1.375rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: #fff;
+  transition: opacity 0.4s, transform 0.6s var(--spring);
+}
+
+.home-slide:not([data-d="0"]) .home-slide-caption {
+  opacity: 0;
+  transform: translateY(0.625rem);
+}
+
+.home-slide-icon {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.875rem;
+  object-fit: cover;
+  box-shadow: 0 0.375rem 1rem -0.375rem rgba(0, 0, 0, 0.6);
+}
+
+.home-slide-text {
+  display: grid;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.home-slide-text b {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  text-shadow: 0 0.125rem 0.625rem rgba(0, 0, 0, 0.4);
+}
+
+.home-slide-text em {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-slide-go {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 2.5rem;
+  margin-left: auto;
+  padding: 0 1.125rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(0.625rem);
+  font-size: 0.875rem;
+  font-weight: 900;
+  white-space: nowrap;
+  transition: transform 0.45s var(--spring), background 0.2s, color 0.2s;
+}
+
+.home-slide[data-d="0"]:hover .home-slide-go {
+  color: #15161a;
+  background: #fff;
+  transform: scale(1.06);
+}
+
+.home-hero-arrow {
+  position: absolute;
+  top: calc(1.5rem + var(--h) / 2);
+  z-index: 5;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999rem;
+  color: #15161a;
+  background: #fff;
+  box-shadow: 0 0.625rem 1.5rem -0.625rem rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: transform 0.4s var(--spring);
+}
+
+.home-hero-arrow svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.home-hero-arrow:hover {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.home-hero-arrow:active {
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+.home-hero-arrow.is-prev {
+  left: calc(50% - var(--cw) / 2 + 2rem);
+}
+
+.home-hero-arrow.is-next {
+  left: calc(50% + var(--cw) / 2 - 2rem);
+}
+
+.home-hero-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 0.5rem;
+  margin-top: 1rem;
+}
+
+.home-hero-dots button {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 99rem;
+  background: var(--track);
+  cursor: pointer;
+  transition: width 0.5s var(--spring), background 0.3s;
+}
+
+/* A larger, invisible hit area around each small dot. */
+.home-hero-dots button::before {
+  content: "";
+  position: absolute;
+  inset: -0.75rem -0.25rem;
+}
+
+.home-hero-dots button[aria-current] {
+  width: 2.125rem;
+}
+
+.home-hero-dots button[aria-current]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--foreground);
+  transform-origin: left;
+  animation: home-dot-fill var(--auto, 5s) linear forwards;
+}
+
+.home-hero.is-paused .home-hero-dots button[aria-current]::after {
+  animation-play-state: paused;
+}
+
+@keyframes home-dot-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* ---------- 2. the round shortcut row ---------- */
+
+/* The row scrolls sideways, which clips anything above its box, so the top
+   padding leaves room for the hover lift and the badges. */
+.home-quick {
+  display: grid;
+  grid-auto-columns: minmax(6rem, 1fr);
+  grid-auto-flow: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1.5rem 0.25rem 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.home-quick::-webkit-scrollbar {
+  display: none;
+}
+
+.home-quick > a {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 0.625rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  animation: home-rise 0.7s var(--spring) backwards;
+  animation-delay: calc(var(--i) * 45ms + 200ms);
+  transition: color 0.2s;
+}
+
+@keyframes home-rise {
+  from { opacity: 0; transform: translateY(1.125rem) scale(0.9); }
+}
+
+/* The tile carries the motion and the badge; the icon clips the picture so
+   every tile is the same rounded square. */
+.home-quick-tile {
+  position: relative;
+  display: block;
+  transition: transform 0.5s var(--spring);
+}
+
+.home-quick-icon {
+  position: relative;
+  display: grid;
+  width: 4.75rem;
+  height: 4.75rem;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  color: #fff;
+  background: linear-gradient(140deg, var(--c1, #333), var(--c2, #222));
+  box-shadow: 0 0.625rem 1.25rem -0.875rem var(--shadow);
+  transition: box-shadow 0.35s;
+}
+
+.home-quick-icon img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-quick-icon svg {
+  width: 2.125rem;
+  height: 2.125rem;
+  stroke-width: 2.2;
+}
+
+.home-quick > a:hover {
+  color: var(--foreground);
+}
+
+.home-quick > a:hover .home-quick-tile {
+  transform: translateY(-0.375rem) scale(1.05);
+}
+
+.home-quick > a:hover .home-quick-icon {
+  box-shadow: 0 1.125rem 1.625rem -0.75rem color-mix(in srgb, var(--qc, var(--c2, #000)) 80%, transparent);
+}
+
+.home-quick > a:active .home-quick-tile {
+  transform: scale(0.94);
+}
+
+.home-quick-tile b {
+  position: absolute;
+  top: -0.375rem;
+  right: -0.5rem;
+  display: grid;
+  height: 1.25rem;
+  place-items: center;
+  padding: 0 0.4375rem;
+  border: 2px solid var(--background);
+  border-radius: 99rem;
+  color: #fff;
+  background: #ff4f6a;
+  font-size: 0.6875rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.home-directory .directory-recent {
+  margin-top: 1.5rem;
+}
+
+/* ---------- 3. the tool dock ---------- */
+
+.home-dock-head,
+.home-section-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.home-dock-head h2,
+.home-section-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.home-dock-head p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.home-more:hover {
+  color: var(--foreground);
+}
+
+.home-dock {
+  margin-top: 2.25rem;
+  padding: 0.875rem 1rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1.75rem;
+  background: var(--card);
+  box-shadow: 0 1rem 2.5rem -1.875rem var(--shadow);
+}
+
+.home-dock .home-dock-head {
+  margin: 0 0.25rem 0.625rem;
+}
+
+.home-dock-mark {
+  display: grid;
+  flex: none;
+  width: 1.625rem;
+  height: 1.625rem;
+  place-items: center;
+  border-radius: 0.5625rem;
+  color: #15161a;
+  background: linear-gradient(135deg, #ffd36a, #ff8a5c);
+}
+
+.home-dock-mark svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* The mark sits beside the heading, closer than the head's own gap. */
+.home-dock-head .home-dock-mark {
+  margin-right: -0.4375rem;
+}
+
+.home-dock-tools {
+  display: grid;
+  grid-auto-columns: minmax(10.5rem, 1fr);
+  grid-auto-flow: column;
+  gap: 0.625rem;
+  margin: -0.375rem -0.25rem 0;
+  padding: 0.375rem 0.25rem 0.125rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.home-dock-tools::-webkit-scrollbar {
+  display: none;
+}
+
+.home-tool {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem 0.625rem 0.625rem;
+  border-radius: 1.25rem;
+  color: var(--foreground);
+  background: var(--well);
+  text-decoration: none;
+  transition: background 0.2s, transform 0.4s var(--spring);
+}
+
+.home-tool:hover {
+  background: var(--btnh);
+  transform: translateY(-0.1875rem);
+}
+
+.home-tool-icon {
+  position: relative;
+  display: grid;
+  flex: none;
+  width: 2.875rem;
+  height: 2.875rem;
+  place-items: center;
+  border-radius: 0.9375rem;
+  color: #fff;
+  background: linear-gradient(140deg, var(--c1), var(--c2));
+  box-shadow: 0 0.5rem 1rem -0.625rem var(--c2);
+  transition: transform 0.5s var(--spring);
+}
+
+.home-tool-icon svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.home-tool:hover .home-tool-icon {
+  transform: scale(1.08);
+}
+
+.home-tool-icon img {
+  position: absolute;
+  right: -0.3125rem;
+  bottom: -0.3125rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 2px solid var(--card);
+  border-radius: 99rem;
+  object-fit: cover;
+}
+
+.home-tool-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+/* A long English name takes a second line rather than losing its end. */
+.home-tool-copy strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 900;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.home-tool-copy small {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-tool-arrow {
+  display: none;
+}
+
+/* ---------- 4. the community row ---------- */
+
+.home-community {
+  margin-top: 2.5rem;
+}
+
+.home-community .home-section-head {
+  margin-bottom: 0.875rem;
+}
+
+.home-posts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+.home-post {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1.375rem;
+  color: var(--foreground);
+  background: var(--card);
+  text-decoration: none;
+  transition: transform 0.45s var(--spring), border-color 0.2s;
+}
+
+.home-post:hover {
+  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+  transform: translateY(-0.25rem);
+}
+
+.home-post-who {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5625rem;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.home-post-who > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-post-who i {
+  flex: none;
+  width: 1.875rem;
+  height: 1.875rem;
+  padding: 2px;
+  border-radius: 99rem;
+  background: conic-gradient(from 200deg, #ffcf5a, #ff7a59, #ff4f9a, #8a7bff, #4fb3ff, #ffcf5a);
+}
+
+.home-post-who i img,
+.home-post-who i span {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: 99rem;
+  object-fit: cover;
+  color: var(--foreground);
+  background: var(--card);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.home-post h3 {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.home-post-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.home-post-game {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.625rem;
+  padding: 0 0.625rem 0 0.1875rem;
+  border-radius: 999rem;
+  background: var(--well);
+  white-space: nowrap;
+}
+
+.home-post-game img {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 99rem;
+  object-fit: cover;
+}
+
+.home-post-foot > i {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  font-style: normal;
+}
+
+.home-post-foot svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+@media (max-width: 1100px) {
+  .home-posts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- 5. the sea footer ---------- */
+
+/* The sea follows the theme: a bright daytime sea in light mode, the deep
+   night sea in dark mode. */
+.home-footer {
+  --f1: #45b8e6;
+  --f2: #2585c4;
+  --f3: #154f8c;
+  --fsub: rgba(240, 250, 255, 0.86);
+  --ffaint: rgba(232, 246, 255, 0.7);
+  --fdone: #fff3c4;
+  --gold: #e6a417;
+  --track: rgba(20, 20, 30, 0.16);
+  position: relative;
+  margin-top: 3.5rem;
+}
+
+.dark .home-footer {
+  --f1: #1d4670;
+  --f2: #183c60;
+  --f3: #0c1d33;
+  --fsub: rgba(225, 235, 245, 0.78);
+  --ffaint: rgba(225, 235, 245, 0.5);
+  --fdone: #ffcf5a;
+  --gold: #ffcf5a;
+  --track: rgba(255, 255, 255, 0.14);
+}
+
+.home-footer-edge {
+  display: block;
+  width: 100%;
+  height: 5.625rem;
+}
+
+.home-footer-edge stop {
+  transition: stop-color 0.5s;
+}
+
+.home-footer-sea {
+  margin-top: -1px;
+  padding: 0.375rem 0 1.375rem;
+  color: #fff;
+  background: linear-gradient(180deg, var(--f2), var(--f3));
+  transition: background 0.5s;
+}
+
+.home-footer-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.home-footer-brand {
+  flex: none;
+  color: #fff;
+  font-family: "Arkive Wordmark", ui-rounded, "Nunito", sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.home-footer-links {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.625rem;
+  color: var(--fsub);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* Dialog triggers read as the sibling links but stay buttons. */
+.home-footer-links a,
+.home-footer-links button {
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.home-footer-links a:hover,
+.home-footer-links button:hover {
+  color: #fff;
+}
+
+.home-footer-legal {
+  display: grid;
+  gap: 0.1875rem;
+  margin: 0;
+  color: var(--ffaint);
+  font-size: 0.8125rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.home-footer-legal a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-footer-legal a:hover {
+  color: #fff;
+}
+
+.home-footer .home-footer-track {
+  fill: none;
+  stroke-width: 1.3;
+}
+
+.home-footer .home-footer-done {
+  fill: none;
+  stroke-width: 1.6;
+}
+
+.home-footer-edge .home-footer-track {
+  stroke: rgba(255, 255, 255, 0.14);
+}
+
+.home-footer-edge .home-footer-done {
+  stroke: var(--fdone);
+  stroke-opacity: 0.9;
+}
+
+/* The voyage: a route along the foot of the window that the page's scroll
+   fills with gold, carrying a small boat to the footer. */
+.home-voyage {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.home-route {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1.5rem;
+}
+
+.home-route .home-footer-track {
+  stroke: var(--track);
+}
+
+.home-route .home-footer-done {
+  stroke: var(--gold);
+  stroke-opacity: 0.85;
+}
+
+.home-boat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.375rem;
+  height: 1.5rem;
+  margin: -1.375rem 0 0 -0.6875rem;
+  color: var(--gold);
+  transition: opacity 0.5s;
+}
+
+.home-boat svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 90%;
+  animation: home-bob 2.4s ease-in-out infinite;
+}
+
+.home-boat.is-moored {
+  width: 1.75rem;
+  height: 1.875rem;
+  margin: -1.75rem 0 0 -0.875rem;
+  opacity: 0;
+}
+
+.home-voyage.is-arrived .home-boat.is-sailing {
+  opacity: 0;
+}
+
+.home-voyage.is-arrived .home-boat.is-moored {
+  opacity: 1;
+}
+
+.home-port {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, -4.75rem);
+  transition: opacity 0.6s 0.15s, transform 0.6s 0.15s;
+}
+
+.home-voyage.is-arrived .home-port {
+  opacity: 1;
+  transform: translate(-50%, -5.125rem);
+}
+
+@keyframes home-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-2px) rotate(3deg); }
+}
+
+/* ---------- the phone header's round buttons and their sheets ---------- */
+
+.home-mobile-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.home-round {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999rem;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.4s var(--spring, ease);
+}
+
+.home-round svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.home-round[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+}
+
+.home-round[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.home-round:active {
+  transform: scale(0.92);
+}
+
+.home-sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.home-sheet {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  z-index: 31;
+  display: grid;
+  width: 12.75rem;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0.5rem;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 1.375rem;
+  background: var(--popover);
+  box-shadow: 0 1.25rem 2.75rem -1rem rgba(0, 0, 0, 0.45);
+  transform-origin: top right;
+  animation: home-sheet-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes home-sheet-in {
+  from { opacity: 0; transform: translateY(-0.5rem) scale(0.9); }
+}
+
+.home-sheet a,
+.home-sheet button {
+  display: flex;
+  width: 100%;
+  min-height: 2.875rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 0.875rem;
+  color: var(--popover-foreground);
+  background: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.home-sheet a:active,
+.home-sheet button:active,
+.home-sheet button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.home-sheet.is-choice svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+}
+
+.home-sheet.is-choice button > svg:last-child:not(:first-child) {
+  margin-left: auto;
+  color: #ff7a59;
+}
+
+.home-sheet-icon {
+  display: grid;
+  width: 1.875rem;
+  height: 1.875rem;
+  flex: none;
+  place-items: center;
+  border-radius: 0.625rem;
+  color: #fff;
+  background: linear-gradient(140deg, var(--c1), var(--c2));
+}
+
+.home-sheet-icon svg {
+  width: 1.0625rem;
+  height: 1.0625rem;
+}
+
+.home-sheet hr {
+  height: 1px;
+  margin: 0.25rem 0.375rem;
+  border: 0;
+  background: var(--border);
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 760px) {
+  .home-hero {
+    padding-top: 1rem;
+  }
+
+  .home-hero-arrow {
+    display: none;
+  }
+
+  .home-slide {
+    border-radius: 1.25rem;
+  }
+
+  .home-slide[data-d="0"] {
+    box-shadow: 0 1.125rem 1.875rem -1.375rem var(--shadow);
+  }
+
+  .home-slide::after {
+    background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
+  }
+
+  .home-slide[data-d="0"]:hover > img {
+    transform: none;
+  }
+
+  /* One caption line on the banner's foot. */
+  .home-slide-caption {
+    right: 0.875rem;
+    bottom: 0.625rem;
+    left: 0.875rem;
+  }
+
+  .home-slide-icon,
+  .home-slide-go {
+    display: none;
+  }
+
+  .home-slide-text {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .home-slide-text b {
+    flex: none;
+    font-size: 1rem;
+  }
+
+  .home-slide-text em {
+    min-width: 0;
+    font-size: 0.75rem;
+  }
+
+  .home-hero-dots {
+    margin-top: 0.75rem;
+  }
+
+  .home-quick {
+    grid-auto-columns: 4.875rem;
+    gap: 0.375rem;
+    margin: 0.375rem calc(-1 * var(--arkive-page-gutter)) 0;
+    padding: 1.375rem var(--arkive-page-gutter) 0.25rem;
+  }
+
+  .home-quick > a {
+    gap: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .home-quick-icon {
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 1.25rem;
+  }
+
+  .home-quick-icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .home-directory .directory-recent {
+    margin-top: 1.25rem;
+  }
+
+  .home-dock {
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+    border-radius: 1.5rem;
+  }
+
+  .home-dock-head p {
+    display: none;
+  }
+
+  /* One full-width row per tool: icon, name and line, then an arrow. */
+  .home-dock-tools {
+    grid-auto-columns: auto;
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .home-tool {
+    padding: 0.625rem 0.75rem 0.625rem 0.625rem;
+    border-radius: 1.125rem;
+  }
+
+  .home-tool:hover {
+    transform: none;
+  }
+
+  .home-tool-copy {
+    flex: 1;
+  }
+
+  .home-tool-copy strong {
+    font-size: 0.9375rem;
+  }
+
+  .home-tool-arrow {
+    display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: none;
+    color: var(--muted-foreground);
+  }
+
+  .home-community {
+    margin-top: 1.75rem;
+  }
+
+  .home-posts {
+    grid-template-columns: 1fr;
+  }
+
+  .home-post:nth-child(n + 4) {
+    display: none;
+  }
+
+  /* One centred column: brand, a wrapped link row, then the legal lines. */
+  .home-footer {
+    margin-top: 2.5rem;
+  }
+
+  .home-footer-edge {
+    height: 4.375rem;
+  }
+
+  .home-footer-sea {
+    padding: 0.25rem 0 calc(1.875rem + env(safe-area-inset-bottom));
+  }
+
+  .home-footer-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.125rem;
+    text-align: center;
+  }
+
+  .home-footer-links {
+    flex: none;
+    width: 100%;
+    gap: 0.625rem 1.375rem;
+    padding: 0.875rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .home-footer-legal {
+    font-size: 0.75rem;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .home-route,
+  .home-boat.is-sailing {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-quick > a,
+  .home-boat svg,
+  .home-sheet {
+    animation: none;
+  }
+
+  .home-hero-dots button[aria-current]::after {
+    animation: none;
+    transform: none;
+  }
+}

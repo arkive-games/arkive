@@ -9,6 +9,16 @@ import aion2Logo from './assets/aion2-logo.webp'
 import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
+import aion2Banner from './assets/aion2-banner.webp'
+import gmzzBanner from './assets/gmzz-banner.webp'
+import palworldBanner from './assets/palworld-banner.webp'
+import vrisingBanner from './assets/vrising-banner.webp'
+import ro3Banner from './assets/ro3-banner.webp'
+import aion2Icon from './assets/aion2-icon.webp'
+import gmzzIcon from './assets/gmzz-icon.webp'
+import palworldIcon from './assets/palworld-icon.webp'
+import vrisingIcon from './assets/vrising-icon.webp'
+import ro3Icon from './assets/ro3-icon.webp'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
 const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1604030/library_600x900_2x.jpg'
@@ -53,6 +63,14 @@ export interface SiteCard {
    * a group shot that turns to noise at 4rem. Falls back to `bg`.
    */
   thumb?: string
+  /** Wide 12:5 key art for the homepage carousel. A game without one is left out of it. */
+  banner?: string
+  /** CSS `object-position` for `banner`, chosen so the faces survive the narrower mobile crop. */
+  bannerPosition?: string
+  /** Square app-style icon for the homepage quick row and tool badges. Falls back to `GAME_LOGOS`. */
+  icon?: string
+  /** Dominant colour of `banner`, used for the carousel glow. */
+  color?: string
   nameKey: string
   descKey: string
   featureKey: string
@@ -76,6 +94,10 @@ export const SITES: SiteCard[] = [
     ),
     toySlug: 'arkive-aion2',
     bg: aion2Bg,
+    banner: aion2Banner,
+    bannerPosition: '22% 50%',
+    icon: aion2Icon,
+    color: '#5a7fb8',
     nameKey: 'site.aion2.name',
     descKey: 'site.aion2.desc',
     featureKey: 'site.aion2.feature',
@@ -91,6 +113,10 @@ export const SITES: SiteCard[] = [
     // The lead character stands right of centre.
     bgPosition: '65% center',
     thumb: gmzzThumb,
+    banner: gmzzBanner,
+    bannerPosition: '58% 22%',
+    icon: gmzzIcon,
+    color: '#8a6a3a',
     nameKey: 'site.gmzz.name',
     descKey: 'site.gmzz.desc',
     featureKey: 'site.gmzz.feature',
@@ -104,6 +130,9 @@ export const SITES: SiteCard[] = [
     ),
     toySlug: 'arkive-palworld',
     bg: palworldBg,
+    banner: palworldBanner,
+    icon: palworldIcon,
+    color: '#4a9ad0',
     nameKey: 'site.palworld.name',
     descKey: 'site.palworld.desc',
     featureKey: 'site.palworld.feature',
@@ -119,6 +148,10 @@ export const SITES: SiteCard[] = [
     // A portrait poster whose two faces sit in its top third; a centred
     // landscape crop cuts through their chests instead.
     bgPosition: 'center 15%',
+    banner: vrisingBanner,
+    bannerPosition: '50% 25%',
+    icon: vrisingIcon,
+    color: '#9a2a3a',
     nameKey: 'site.vrising.name',
     descKey: 'site.vrising.desc',
     featureKey: 'site.vrising.feature',
@@ -139,6 +172,10 @@ export const SITES: SiteCard[] = [
       'https://ro3.tc-imba.com',
     ),
     bg: ro3Bg,
+    banner: ro3Banner,
+    bannerPosition: '28% 18%',
+    icon: ro3Icon,
+    color: '#6aa8d8',
     nameKey: 'site.ro3.name',
     descKey: 'site.ro3.desc',
     featureKey: 'site.ro3.feature',
