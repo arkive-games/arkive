@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.20.0",
+      "date": "2026-10-25",
+      "commit": "d952f28524dea106da384b1cd66a22b8cb4f3fc0",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Rating calculator: pick the carried puppet skill straight from your puppets' icons, each showing its tier and score, and see every attribute your puppets currently grant summed at the bottom of the puppet attributes section.",
+            "zh-CN": "非凡评分计算器：秘偶技能可直接点击下方秘偶图标选择携带，图标下显示技能阶数和分数；秘偶属性底部新增当前激活的属性总和。",
+            "zh-TW": "非凡評分計算器：秘偶技能可直接點擊下方秘偶圖示選擇攜帶，圖示下顯示技能階數和分數；秘偶屬性底部新增目前啟用的屬性總和。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.19.1",
       "date": "2026-10-25",
       "commit": "7c535b314fc8777914140445fd1b634d7716d7ea",
