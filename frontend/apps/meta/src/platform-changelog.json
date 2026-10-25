@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-10-26",
+      "commit": "4dce7eaa384344ea916b391f62c4bb0ef15fc80d",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "New top navigation: the Arkive wordmark with the current game beside it, rounded tabs with a sliding highlight, and a floating bar on the homepage. On phones the bottom tab bar is replaced by a menu button in the top-right corner that opens every page, language, theme and settings.",
+            "zh-CN": "全新顶部导航：Arkive 字标旁显示当前游戏，圆角标签带滑动高亮，首页导航栏改为悬浮样式。手机端去掉底部标签栏，改为右上角菜单按钮，所有页面、语言、主题和设置都在菜单里。",
+            "zh-TW": "全新頂部導覽：Arkive 字標旁顯示目前遊戲，圓角標籤帶滑動高亮，首頁導覽列改為懸浮樣式。手機端移除底部標籤列，改為右上角選單按鈕，所有頁面、語言、主題和設定都在選單裡。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-26",
       "commit": "2c2917447577843344814e7882347f97e546de3a",
       "targets": [
         "aion2",
