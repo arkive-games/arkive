@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.19.1",
+      "date": "2026-10-25",
+      "commit": "7c535b314fc8777914140445fd1b634d7716d7ea",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Rating calculator: the puppet skill level is capped at 75, the carried-puppet picker no longer goes blank when that puppet is removed, and a puppet left deployed after lowering the slot count can be undeployed.",
+            "zh-CN": "非凡评分计算器：秘偶技能等级上限为 75；移除所携带的秘偶后选择框不再显示空白；减少上阵位后仍标记上阵的秘偶可以取消上阵。",
+            "zh-TW": "非凡評分計算器：秘偶技能等級上限為 75；移除所攜帶的秘偶後選擇框不再顯示空白；減少上陣位後仍標記上陣的秘偶可以取消上陣。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.19.0",
       "date": "2026-10-25",
       "commit": "c6318ae344ec7ac461943dc4b8e1457239383ed2",
