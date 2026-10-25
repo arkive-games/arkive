@@ -3,7 +3,7 @@ import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
-import type { HistoryResearchRank } from '@/features/fellows/data'
+import type { Fellow, FellowRelation, HistoryResearchRank } from '@/features/fellows/data'
 import { HistoryResearchSlider } from '@/features/fellows/HistoryResearchSlider'
 import {
   activeAttributes,
@@ -23,6 +23,7 @@ import {
   type PuppetsResult,
 } from '@/features/score/bonds'
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
+import FellowSkillCalculator from '@/features/score/FellowSkillSection'
 import { GroupSection } from '@/features/score/GroupSection'
 import { portraitUrl, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { TYPE } from '@/lib/typography'
@@ -31,6 +32,7 @@ import { TYPE } from '@/lib/typography'
 export const PUPPET_GAIN_MODULE = 'Bonds_PartnerGain'
 export const PUPPET_SKILL_MODULE = 'Bonds_PartnerSkill'
 export const HISTORY_MODULE = 'Bonds_FellowGain'
+export const FELLOW_SKILL_MODULE = 'Bonds_FellowSkill'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
@@ -40,14 +42,17 @@ export type BondsData = {
   partners: SecretPartner[] | null
   scoring: PartnerScoring | null
   ranks: HistoryResearchRank[] | null
+  fellows: Fellow[] | null
+  relations: FellowRelation[] | null
 }
 
 /**
- * The 非凡人物 group: four items, three of them derived.
+ * The 非凡人物 group: all four items derived.
  *
- * 秘偶属性, 秘偶技能 and 历史研究 come with a calculator under their row and show
- * the figure it produced — the first two share one lineup, drawn under 秘偶属性; 人脉技能 is a server value with no client formula, so
- * it keeps the typed box the other groups use. The derived scores
+ * Each comes with a calculator under its row and shows the figure it produced.
+ * 秘偶属性 and 秘偶技能 share one lineup, drawn under 秘偶属性; 人脉技能 has its own
+ * roster of connections and stars. The two skill items follow formulas fitted
+ * to in-game readings rather than client code. The derived scores
  * are computed by the page (they feed the same `evaluate` as everything else)
  * and arrive here already inside `group`.
  */
@@ -92,6 +97,17 @@ export default function BondsSection({
             calculator:
               data.partners && data.scoring ? (
                 <PuppetSkillSummary partners={data.partners} scoring={data.scoring} draft={draft} />
+              ) : (
+                <p className={TYPE.body}>{t('bonds.unavailable')}</p>
+              ),
+          }
+        }
+        if (item.species.module === FELLOW_SKILL_MODULE) {
+          return {
+            kind: 'derived',
+            calculator:
+              data.fellows && data.relations ? (
+                <FellowSkillCalculator fellows={data.fellows} relations={data.relations} draft={draft} setDraft={setDraft} />
               ) : (
                 <p className={TYPE.body}>{t('bonds.unavailable')}</p>
               ),

@@ -1,5 +1,6 @@
 // Relative imports, like `score/data.ts`: the root vitest config has no `@` alias.
 import type { HistoryResearchRank } from '../fellows/data'
+import { clampStar, type FellowEntry } from './fellowSkill'
 import type { PartnerAttribute, PartnerScoring, SecretPartner } from '../secretpartners/data'
 
 /**
@@ -20,9 +21,10 @@ import type { PartnerAttribute, PartnerScoring, SecretPartner } from '../secretp
  *   points), but the species' own benchmark curves land exactly on the Marks of
  *   ranks 8 and 17, which they would not do for any other quantity.
  *
- * 秘偶技能 has no client formula either (`SkillScoreData` ships its per-level
- * columns stripped), but its shape was fitted from in-game panel readings — see
- * `puppetSkillScore`. 人脉技能 is still typed in from the panel.
+ * 秘偶技能 and 人脉技能 have no client formula either (`SkillScoreData` ships its
+ * per-level columns stripped), but both shapes were fitted from in-game panel
+ * readings — see `puppetSkillScore` and `fellowSkill.ts`, and
+ * `docs/gmzz-skill-scores.md` for every reading.
  */
 
 export type PuppetEntry = {
@@ -44,8 +46,18 @@ export type BondsDraft = {
   historyRankId: number | null
   /** The puppet whose skill is carried; absent or null picks the best-scoring owned one. */
   skillPartnerId?: number | null
-  /** 秘偶技能等级 (shared by every puppet skill); absent or null means `CALIBRATED_SKILL_LEVEL`. */
+  /**
+   * The skill level, absent or null meaning `CALIBRATED_SKILL_LEVEL`. Named for
+   * the puppet skill it was introduced with, but 途径, 秘偶 and 人脉 skill levels
+   * are always equal, so the connection skill reads it too.
+   */
   puppetSkillLevel?: number | null
+  /** Owned connections and their stars; absent means none owned. */
+  fellows?: FellowEntry[]
+  /** The connection whose skill is carried; absent or null picks the best-scoring owned one. */
+  fellowSkillId?: number | null
+  /** The relation the carried skill is scored with; absent, null or stale picks its best. */
+  fellowRelationId?: number | null
 }
 
 /**
@@ -73,6 +85,14 @@ function isPuppetEntry(value: unknown): value is PuppetEntry {
   )
 }
 
+function isOptionalNumber(value: unknown): boolean {
+  return value === undefined || value === null || isFiniteNumber(value)
+}
+
+function isFellowEntry(value: unknown): value is FellowEntry {
+  return isRecord(value) && isFiniteNumber(value.fellowId) && isFiniteNumber(value.star) && clampStar(value.star) === value.star
+}
+
 export function isBondsDraft(value: unknown): value is BondsDraft {
   return (
     isRecord(value) &&
@@ -81,7 +101,10 @@ export function isBondsDraft(value: unknown): value is BondsDraft {
     (value.dominateSlots === null || isFiniteNumber(value.dominateSlots)) &&
     (value.historyRankId === null || isFiniteNumber(value.historyRankId)) &&
     (value.skillPartnerId === undefined || value.skillPartnerId === null || isFiniteNumber(value.skillPartnerId)) &&
-    (value.puppetSkillLevel === undefined || value.puppetSkillLevel === null || isFiniteNumber(value.puppetSkillLevel))
+    isOptionalNumber(value.puppetSkillLevel) &&
+    (value.fellows === undefined || (Array.isArray(value.fellows) && value.fellows.every(isFellowEntry))) &&
+    isOptionalNumber(value.fellowSkillId) &&
+    isOptionalNumber(value.fellowRelationId)
   )
 }
 
@@ -213,18 +236,31 @@ export function activeAttributes(result: PuppetsResult, scoring: PartnerScoring)
 
 /* ------------------------------------------------------------ 秘偶技能 */
 
-/** The skill level the panel readings were taken at. */
+/** The default skill level: the one most panel readings were taken at. */
 export const CALIBRATED_SKILL_LEVEL = 38
 
 /** `SkillScoreData.skillScoreRowNameByLvl` names `DeltaLv1..75`: no skill level scores past 75. */
 export const MAX_SKILL_LEVEL = 75
 
 /**
- * 秘偶技能 at tier 1 and skill level 38, by puppet quality (4 purple … 7 red).
- * Read off the in-game panel; the qualities are roughly ×0.8 apart but not
- * exactly, so they are per-quality figures rather than one base and a ratio.
+ * 秘偶技能 at tier 1 is `floor(k × (L + 9))` for skill level L, k by puppet
+ * quality (4 purple … 7 red), here in hundredths. At L38 that is 1034 / 1292 /
+ * 1613 / 2016, the figures the panel shows. Orange is what the client's own max
+ * curve is made of: an orange puppet at the highest tier the season allows,
+ * which the formula reproduces at all 27 points the curve can be placed at.
  */
-export const PUPPET_SKILL_BASE: Record<number, number> = { 4: 1034, 5: 1292, 6: 1613, 7: 2016 }
+const PUPPET_SKILL_K: Record<number, number> = { 4: 2200, 5: 2750, 6: 3432, 7: 4290 }
+
+export function puppetSkillBase(quality: number, skillLevel: number): number | undefined {
+  const k = PUPPET_SKILL_K[quality]
+  return k === undefined ? undefined : Math.floor((k * (skillLevel + 9)) / 100)
+}
+
+/** A stored or typed skill level, 1..`MAX_SKILL_LEVEL`; anything unreadable is the calibrated level. */
+export function clampSkillLevel(skillLevel: number | null | undefined): number {
+  const value = skillLevel != null && Number.isFinite(skillLevel) ? Math.trunc(skillLevel) : CALIBRATED_SKILL_LEVEL
+  return Math.min(MAX_SKILL_LEVEL, Math.max(1, value))
+}
 
 /** Each skill tier past the first adds this fraction of the tier-1 score, in thousandths. */
 const TIER_STEP_PER_MILLE = 215
@@ -245,27 +281,29 @@ export type PuppetSkillScore = {
   score: number
   tier: number
   /**
-   * True where no reading backs the figure: a skill level other than 38 (the
-   * score is scaled in proportion, which is a guess at that dimension), tier 6,
+   * True where no reading backs the figure: red past tier 1 (only its tier-1
+   * score has been read; the multiplier is the one every other quality shares),
    * or a quality without a base.
    */
   estimated: boolean
 }
 
 /**
- * 秘偶技能 = floor(base[quality] × (1 + 0.215 × (tier − 1))) at skill level 38.
+ * 秘偶技能 = floor(base(quality, L) × (1 + 0.215 × (tier − 1))).
  *
- * Fitted to every reading taken (orange tiers 1-5, gold 2-5, purple 4-5, red 1)
- * with no residual; the multiplier is shared by all four qualities. Integer
- * arithmetic, because `1613 × 1.86` in floating point is not reliably 3000.18.
+ * The base is floored before the tier multiplier — taking it the other way
+ * round misses gold tier 3 (1847) by one. Fitted to every reading taken (orange
+ * tiers 1-5, gold 2-5, purple 4-5, red 1 at L38; orange tier 2 at L16) with no
+ * residual; the multiplier is shared by all four qualities, and tier 6 is
+ * confirmed by the max curve. Integer arithmetic, because `1613 × 1.86` in
+ * floating point is not reliably 3000.18.
  */
 export function puppetSkillScore(partner: SecretPartner, level: number, skillLevel: number = CALIBRATED_SKILL_LEVEL): PuppetSkillScore {
   const tier = skillTier(partner, level)
-  const base = PUPPET_SKILL_BASE[partner.quality]
+  const base = puppetSkillBase(partner.quality, clampSkillLevel(skillLevel))
   if (tier < 1 || base === undefined) return { score: 0, tier, estimated: tier >= 1 }
-  const skill = Math.min(MAX_SKILL_LEVEL, Math.max(1, Math.trunc(Number.isFinite(skillLevel) ? skillLevel : CALIBRATED_SKILL_LEVEL)))
-  const score = Math.floor((base * skill * (1000 + TIER_STEP_PER_MILLE * (tier - 1))) / (CALIBRATED_SKILL_LEVEL * 1000))
-  return { score, tier, estimated: skill !== CALIBRATED_SKILL_LEVEL || tier > 5 }
+  const score = Math.floor((base * (1000 + TIER_STEP_PER_MILLE * (tier - 1))) / 1000)
+  return { score, tier, estimated: partner.quality === 7 && tier > 1 }
 }
 
 /**

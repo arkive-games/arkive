@@ -7,11 +7,19 @@ import { useTranslation } from 'react-i18next'
 import { ContentPage } from '@/components/ContentPage'
 import EquipmentSection, { type EquipmentTotals } from '@/features/equipment/EquipmentSection'
 import { loadEquipment, playableProfessions, type Equipment, type Grace } from '@/features/equipment/data'
-import { loadHistoryResearch, type HistoryResearchRank } from '@/features/fellows/data'
+import {
+  loadFellowRelations,
+  loadFellows,
+  loadHistoryResearch,
+  type Fellow,
+  type FellowRelation,
+  type HistoryResearchRank,
+} from '@/features/fellows/data'
 import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import { loadRelics, type Relics } from '@/features/relics/data'
-import BondsSection, { HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
-import { carriedPuppetSkill, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
+import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
+import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
+import { carriedFellowSkill } from '@/features/score/fellowSkill'
 import {
   benchmarkAt,
   clamp,
@@ -109,6 +117,8 @@ export default function ScorePage() {
   const [partners, setPartners] = useState<SecretPartner[] | null>(null)
   const [scoring, setScoring] = useState<PartnerScoring | null>(null)
   const [ranks, setRanks] = useState<HistoryResearchRank[] | null>(null)
+  const [fellows, setFellows] = useState<Fellow[] | null>(null)
+  const [relations, setRelations] = useState<FellowRelation[] | null>(null)
   // What the two self-contained calculators last reported. They own their own
   // drafts, so their figures arrive by callback rather than being recomputed
   // here; a null is "not loaded yet", which scores as nothing.
@@ -153,6 +163,8 @@ export default function ScorePage() {
     load(loadSecretPartners, setPartners)
     load(loadPartnerScoring, setScoring)
     load(loadHistoryResearch, setRanks)
+    load(loadFellows, setFellows)
+    load(loadFellowRelations, setRelations)
     loadRating()
       .then((data) => {
         if (live) setRating(data)
@@ -204,13 +216,19 @@ export default function ScorePage() {
       partners && scoring ? carriedPuppetSkill(bonds.puppets, partners, scoring, bonds.skillPartnerId, bonds.puppetSkillLevel)?.result.score ?? 0 : 0,
     )
     put(HISTORY_MODULE, ranks ? historyScore(ranks, bonds.historyRankId) : 0)
+    put(
+      FELLOW_SKILL_MODULE,
+      fellows && relations
+        ? carriedFellowSkill(bonds.fellows ?? [], fellows, relations, bonds.fellowSkillId, bonds.fellowRelationId, clampSkillLevel(bonds.puppetSkillLevel))?.score ?? 0
+        : 0,
+    )
     return merged
-  }, [draft.scores, rating, roleLevel, divinityLevel, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, bonds])
+  }, [draft.scores, rating, roleLevel, divinityLevel, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, fellows, relations, bonds])
   const result = useMemo(
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],
   )
-  const bondsData: BondsData = { partners, scoring, ranks }
+  const bondsData: BondsData = { partners, scoring, ranks, fellows, relations }
   const gaps = useMemo(() => (result ? headroom(result).slice(0, 5) : []), [result])
 
   if (loading) {

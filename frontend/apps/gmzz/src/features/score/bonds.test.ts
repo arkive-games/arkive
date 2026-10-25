@@ -174,10 +174,24 @@ describe('puppet skill score', () => {
     expect(puppetSkillScore(withQuality(6), 40, Number.NaN).score).toBe(3000)
   })
 
-  it('marks tier 6 and other skill levels as estimates', () => {
-    expect(puppetSkillScore(withQuality(6), 40).estimated).toBe(false)
-    expect(puppetSkillScore(withQuality(6), 50).estimated).toBe(true)
-    expect(puppetSkillScore(withQuality(6), 40, 39).estimated).toBe(true)
+  it('follows the skill level as floor(k × (L + 9)), floored before the tier multiplier', () => {
+    // Orange tier 2 read at skill level 16.
+    expect(puppetSkillScore(withQuality(6), 10, 16).score).toBe(1042)
+    // Gold tier 3 at L38 is 1847 only when the base (1292.5) is floored first.
+    expect(puppetSkillScore(withQuality(5), 20, 38).score).toBe(1847)
+  })
+
+  it('reproduces the max curve: orange at the tier the season allows', () => {
+    // Skill level → (tier the curve assumes, the curve's value), from rating.json.
+    const curve: [number, number, number][] = [[6, 2, 624], [11, 2, 833], [12, 3, 1029], [22, 3, 1520], [23, 4, 1806], [35, 4, 2483], [37, 5, 2935], [41, 5, 3191], [43, 6, 3701], [45, 6, 3844]]
+    for (const [level, tier, value] of curve) expect(puppetSkillScore(withQuality(6), TIERS[tier - 1].requiredStage, level).score).toBe(value)
+  })
+
+  it('marks only red past tier 1 as an estimate', () => {
+    expect(puppetSkillScore(withQuality(6), 50).estimated).toBe(false)
+    expect(puppetSkillScore(withQuality(6), 40, 20).estimated).toBe(false)
+    expect(puppetSkillScore(withQuality(7), 1).estimated).toBe(false)
+    expect(puppetSkillScore(withQuality(7), 10).estimated).toBe(true)
   })
 
   it('carries the chosen owned puppet, or else the best-scoring one', () => {
