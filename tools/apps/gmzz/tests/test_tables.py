@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from gmzz.tables import resolve_text, unresolved_ids
-from gmzz.common import ordered_rows as _ordered
+from gmzz.common import ordered_rows
 
 STRINGS = {"1218466115749376": "黑麦啤酒", "681698551412224": "艺术品"}
 
@@ -44,17 +44,17 @@ def test_no_unresolved_ids_after_a_full_resolve():
 def test_numeric_keyed_rows_become_a_sorted_list():
     # The client stores rows in a hash table, so unordered output would churn
     # the content digest on every run even when nothing changed.
-    assert _ordered({"30102": {"ID": 30102}, "30101": {"ID": 30101}}) == [
+    assert ordered_rows({"30102": {"ID": 30102}, "30101": {"ID": 30101}}) == [
         {"ID": 30101},
         {"ID": 30102},
     ]
 
 
 def test_sorts_numerically_not_lexically():
-    ids = [row["ID"] for row in _ordered({"9": {"ID": 9}, "10": {"ID": 10}})]
+    ids = [row["ID"] for row in ordered_rows({"9": {"ID": 9}, "10": {"ID": 10}})]
     assert ids == [9, 10]
 
 
 def test_name_keyed_tables_are_left_as_a_mapping():
     types = {"WINE": {"GoodsTypeID": "WINE"}}
-    assert _ordered(types) is types
+    assert ordered_rows(types) is types

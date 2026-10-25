@@ -150,6 +150,11 @@ describe('puppet skill score', () => {
     expect(at(7, 1)).toBe(2016)
   })
 
+  it('caps the skill level at the client\'s 75 DeltaLv columns', () => {
+    expect(puppetSkillScore(withQuality(6), 40, 99999).score).toBe(puppetSkillScore(withQuality(6), 40, 75).score)
+    expect(puppetSkillScore(withQuality(6), 40, Number.NaN).score).toBe(3000)
+  })
+
   it('marks tier 6 and other skill levels as estimates', () => {
     expect(puppetSkillScore(withQuality(6), 40).estimated).toBe(false)
     expect(puppetSkillScore(withQuality(6), 50).estimated).toBe(true)

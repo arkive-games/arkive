@@ -7,6 +7,7 @@ import type { HistoryResearchRank } from '@/features/fellows/data'
 import { HistoryResearchSlider } from '@/features/fellows/HistoryResearchSlider'
 import {
   CALIBRATED_SKILL_LEVEL,
+  MAX_SKILL_LEVEL,
   carriedPuppetSkill,
   clampSlots,
   clampStage,
@@ -176,22 +177,26 @@ function PuppetCalculator({
           const row = rows.get(partner.id)
           const level = clampStage(entry?.stage ?? 0, scoring)
           const deployed = row?.dominated ?? false
-          const canDeploy = level >= 1 && (deployed || !slotsFull)
+          // The stored flag, not the effective one: a puppet still marked
+          // deployed after the slot count dropped must stay clickable so the
+          // mark can be cleared, rather than lurking until a slot frees up.
+          const stored = entry?.dominated ?? false
+          const canDeploy = level >= 1 && (stored || !slotsFull)
           return (
             <li key={partner.id} className="flex min-w-0 flex-col items-center gap-1" data-testid={`bonds-puppet-${partner.id}`}>
               <button
                 type="button"
-                aria-pressed={deployed}
+                aria-pressed={stored}
                 disabled={!canDeploy}
                 title={partner.name}
                 aria-label={t('bonds.deployToggle', { name: partner.name })}
-                onClick={() => update(partner.id, { dominated: !deployed })}
-                className={`relative rounded-md p-0.5 transition ${FOCUS} ${deployed ? 'ring-2 ring-[color:var(--arkive-nav-accent)]' : ''} ${level < 1 ? 'opacity-40 grayscale' : ''} disabled:cursor-not-allowed`}
+                onClick={() => update(partner.id, { dominated: !stored })}
+                className={`relative rounded-md p-0.5 transition ${FOCUS} ${deployed ? 'ring-2 ring-[color:var(--arkive-nav-accent)]' : stored ? 'ring-2 ring-border' : ''} ${level < 1 ? 'opacity-40 grayscale' : ''} disabled:cursor-not-allowed`}
                 data-testid={`bonds-dominate-${partner.id}`}
               >
                 <IconTile quality={partner.quality} src={partner.portrait ? portraitUrl(partner.portrait) : undefined} alt={partner.name} label={partner.name.slice(0, 1)} className="size-12" />
                 {deployed ? (
-                  <span className="absolute -right-1 -top-1 rounded bg-[color:var(--arkive-nav-accent)] px-1 text-xs font-semibold text-white">
+                  <span className="absolute -right-1 -top-1 rounded bg-primary px-1 text-xs font-semibold text-primary-foreground">
                     {t('bonds.dominate')}
                   </span>
                 ) : null}
@@ -206,7 +211,10 @@ function PuppetCalculator({
                 aria-label={t('bonds.levelFor', { name: partner.name })}
                 onChange={(event) => {
                   const next = clampStage(Number(event.target.value), scoring)
-                  update(partner.id, next < 1 ? { stage: 0, dominated: false } : { stage: next })
+                  if (next < 1) {
+                    update(partner.id, { stage: 0, dominated: false })
+                    setDraft((prev) => (prev.skillPartnerId === partner.id ? { ...prev, skillPartnerId: null } : prev))
+                  } else update(partner.id, { stage: next })
                 }}
                 className="h-7 w-16 border-border bg-background px-1 text-center text-xs tabular-nums shadow-none"
                 data-testid={`bonds-stage-${partner.id}`}
@@ -258,7 +266,7 @@ function PuppetSkillCalculator({
         <label className="block">
           <span className={LABEL_CLASS}>{t('bonds.skillPuppet')}</span>
           <select
-            value={draft.skillPartnerId ?? ''}
+            value={owned.some((partner) => partner.id === draft.skillPartnerId) ? String(draft.skillPartnerId) : ''}
             className={SELECT_CLASS}
             disabled={owned.length === 0}
             onChange={(event) => setDraft((prev) => ({ ...prev, skillPartnerId: event.target.value === '' ? null : Number(event.target.value) }))}
@@ -274,6 +282,7 @@ function PuppetSkillCalculator({
             type="number"
             inputMode="numeric"
             min={1}
+            max={MAX_SKILL_LEVEL}
             value={skillLevel}
             onChange={(event) => {
               const value = Math.trunc(Number(event.target.value))

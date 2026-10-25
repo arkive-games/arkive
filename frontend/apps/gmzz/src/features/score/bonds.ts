@@ -48,7 +48,12 @@ export type BondsDraft = {
   puppetSkillLevel?: number | null
 }
 
-/** Deploy slots the current season opens, per the panel; the table's maximum is a later season's. */
+/**
+ * Deploy slots the current season opens, read off the in-game panel. Only a
+ * default: the slot input still goes up to `maxDominateSlots`. The client's
+ * `initialDominateSlots` (1) is the first season's, and which season opens which
+ * slot lives in `SecretPartnerDominateData`, keyed by a season the page cannot know.
+ */
 export const DEFAULT_DEPLOY_SLOTS = 3
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -178,6 +183,9 @@ export function evaluatePuppets(
 /** The skill level the panel readings were taken at. */
 export const CALIBRATED_SKILL_LEVEL = 38
 
+/** `SkillScoreData.skillScoreRowNameByLvl` names `DeltaLv1..75`: no skill level scores past 75. */
+export const MAX_SKILL_LEVEL = 75
+
 /**
  * 秘偶技能 at tier 1 and skill level 38, by puppet quality (4 purple … 7 red).
  * Read off the in-game panel; the qualities are roughly ×0.8 apart but not
@@ -222,7 +230,7 @@ export function puppetSkillScore(partner: SecretPartner, level: number, skillLev
   const tier = skillTier(partner, level)
   const base = PUPPET_SKILL_BASE[partner.quality]
   if (tier < 1 || base === undefined) return { score: 0, tier, estimated: tier >= 1 }
-  const skill = Math.max(1, Math.trunc(skillLevel))
+  const skill = Math.min(MAX_SKILL_LEVEL, Math.max(1, Math.trunc(Number.isFinite(skillLevel) ? skillLevel : CALIBRATED_SKILL_LEVEL)))
   const score = Math.floor((base * skill * (1000 + TIER_STEP_PER_MILLE * (tier - 1))) / (CALIBRATED_SKILL_LEVEL * 1000))
   return { score, tier, estimated: skill !== CALIBRATED_SKILL_LEVEL || tier > 5 }
 }

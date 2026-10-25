@@ -201,7 +201,11 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
     # that benchmark is also the cap. Both hold only while the two curves agree,
     # so a patch that splits them must stop the build, not quietly grade it below 100%.
     level = next((s for s in species if s["module"] == "Player_Level"), None)
-    if level is None or level["expected"] != level["max"]:
+    def _same(a, b):
+        # Two formula rows compiled separately; compare values, not float bits.
+        return all(len(a[k]) == len(b[k]) and all(abs(x - y) < 1e-6 for x, y in zip(a[k], b[k])) for k in ("byLevel", "byDivinity"))
+
+    if level is None or not _same(level["expected"], level["max"]):
         raise RuntimeError("Player_Level's expected and max curves differ; the calculator assumes they match")
 
     known = {g["id"] for g in genus}
