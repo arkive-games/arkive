@@ -380,6 +380,11 @@ function ResonanceNow({ relics, material, k1, testId }: {
 }) {
   const { t } = useTranslation()
   if (material.activeCount === 0) return null
+  if (!material.resonates) {
+    return material.applies ? (
+      <p className="text-xs text-muted-foreground" data-testid={testId}>{t('relic.resonanceOther')}</p>
+    ) : null
+  }
   return (
     <div className="rounded-md bg-[color:var(--arkive-filter-active)] px-2 py-1.5 text-xs" data-testid={testId}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-2 font-semibold text-foreground">
@@ -433,7 +438,10 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           {/* Named as the game names it, from the words the material carries. */}
-          <div className={`${TYPE.name}`} data-testid={`relic-material-name-${groupId}-${material.index}`}>{name}</div>
+          <div className="flex items-baseline gap-1.5">
+            <span className={TYPE.label}>{t('relic.materialName')}</span>
+            <span className={`${TYPE.name} text-amber-700 dark:text-amber-300`} data-testid={`relic-material-name-${groupId}-${material.index}`}>{name}</span>
+          </div>
           <span className={`text-xs font-semibold ${material.applies ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}
             data-testid={`relic-material-state-${groupId}-${material.index}`}>
             {material.applies ? t('relic.materialActive') : t('relic.materialInactive')}

@@ -314,13 +314,22 @@ export function activeMaterialIndexes(slot: Pick<RelicSlotState, 'groupId' | 'ma
 
 /**
  * Which affixes are switched off when a material carries more than the grade
- * allows: the lowest-Mark ones, as the game does (it marks them with a
- * prohibition sign). Ties keep the earlier affix.
+ * allows, as the game does (it marks them with a prohibition sign): from the
+ * last affix backwards, skipping rare words, which are never switched off.
  */
-export function inactiveAffixes(affixes: ChosenRelicAffix[], cap: number): boolean[] {
-  const order = affixes.map((_, index) => index).sort((a, b) => affixes[b].mark - affixes[a].mark || a - b)
-  const off = new Set(order.slice(Math.max(0, cap)))
-  return affixes.map((_, index) => off.has(index))
+export function inactiveAffixes(
+  affixes: ChosenRelicAffix[],
+  cap: number,
+  isRare: (affix: ChosenRelicAffix) => boolean = () => false,
+): boolean[] {
+  const off = affixes.map(() => false)
+  let over = affixes.length - Math.max(0, cap)
+  for (let index = affixes.length - 1; index >= 0 && over > 0; index--) {
+    if (isRare(affixes[index])) continue
+    off[index] = true
+    over--
+  }
+  return off
 }
 
 export type MaterialResult = {
@@ -339,6 +348,12 @@ export type MaterialResult = {
    * shows: k2 × Σ mark over every affix the material carries.
    */
   fullAffixScore: number
+  /**
+   * Whether this material's word count is the one 非凡共鸣 reads. A relic has
+   * one resonance: with two materials in effect it follows the one with more
+   * active affixes (the earlier on a tie) — an ASSUMPTION, unverified in game.
+   */
+  resonates: boolean
   /** 非凡共鸣 at the active count: floor(mark × k1). */
   resonanceScore: number
   /** The resonance rung's table stats; the game shows `floor(value × k1)`. */
@@ -427,13 +442,18 @@ export function evaluateRelicSlot(
 
   const materials = Array.from({ length: MATERIAL_SLOTS }, (_, index): MaterialResult => {
     const affixes = state.materials[index] ?? []
-    const inactive = inactiveAffixes(affixes, cap)
+    const type = materialTypeAt(state.groupId, index)
+    const pool = typePool(relics, type)
+    const inactive = inactiveAffixes(affixes, cap, (affix) => {
+      const source = pool.find((entry) => entry.id === affix.affixId)
+      return source !== undefined && isRareAffix(source)
+    })
     const effective = affixes.filter((_, at) => !inactive[at])
     const applies = active.includes(index)
     const rung = ladder.find((r) => r.affixCount === effective.length)
     return {
       index,
-      type: materialTypeAt(state.groupId, index),
+      type,
       affixes,
       inactive,
       activeCount: effective.length,
@@ -445,12 +465,21 @@ export function evaluateRelicSlot(
       // modelled; the floor is the client's. Each material is read against
       // its own word count — UNVERIFIED for two materials on the strategic
       // server, where no client code was found that says how they combine.
+      resonates: false,
       resonanceScore: applies && rung ? (rung.mark ?? 0) * k1 : 0,
       resonanceStats: rung?.stats ?? [],
     }
   })
+  // One resonance per relic, read off the material in effect with the most active affixes.
+  const source = materials
+    .filter((m) => m.applies)
+    .reduce<MaterialResult | null>((best, m) => (best === null || m.activeCount > best.activeCount ? m : best), null)
+  for (const m of materials) {
+    m.resonates = m === source
+    if (!m.resonates) m.resonanceScore = 0
+  }
   const affixScore = materials.reduce((sum, m) => sum + m.affixScore, 0)
-  const resonanceScore = materials.reduce((sum, m) => sum + m.resonanceScore, 0)
+  const resonanceScore = source?.resonanceScore ?? 0
 
   return {
     state,

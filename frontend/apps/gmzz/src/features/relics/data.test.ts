@@ -245,11 +245,17 @@ describe('gradeOptions', () => {
 })
 
 describe('inactiveAffixes', () => {
-  it('switches off the lowest-Mark affixes past the cap, keeping the earlier of a tie', () => {
+  it('switches off from the last affix backwards, past the cap', () => {
     const affixes = [1284, 934, 1867, 1284, 1400].map((mark) => ({ stat: 'Atk_N', value: 0, mark }))
-    expect(inactiveAffixes(affixes, 4)).toEqual([false, true, false, false, false])
-    expect(inactiveAffixes(affixes, 3)).toEqual([false, true, false, true, false])
+    expect(inactiveAffixes(affixes, 4)).toEqual([false, false, false, false, true])
+    expect(inactiveAffixes(affixes, 3)).toEqual([false, false, false, true, true])
     expect(inactiveAffixes(affixes, 6)).toEqual([false, false, false, false, false])
+  })
+
+  it('never switches off a rare word, taking the next ordinary one instead', () => {
+    const affixes = [1, 2, 3, 4, 5].map((affixId) => ({ stat: 'Atk_N', value: 0, mark: 0, affixId }))
+    const rare = (affix: { affixId?: number }) => affix.affixId === 5
+    expect(inactiveAffixes(affixes, 4, rare)).toEqual([false, false, false, true, false])
   })
 })
 
@@ -348,14 +354,26 @@ describe('evaluateRelicSlot', () => {
     expect(Math.floor(result.affixScore)).toBe(1269)
   })
 
-  it('switches off the lowest-scoring affix past the cap, not the last one added', () => {
-    // Grade 3 caps at 4: the 934 affix pays nothing wherever it sits.
+  it('switches off the last affix past the cap', () => {
+    // Grade 3 caps at 4: the fifth affix pays nothing, whatever its Mark.
     const five = [at(1284), at(934), at(1284), at(1284), at(1867)]
     const result = evaluateRelicSlot(RELICS, { ...base, materials: [five, []] }, 11, 103)
-    expect(result.materials[0].inactive).toEqual([false, true, false, false, false])
+    expect(result.materials[0].inactive).toEqual([false, false, false, false, true])
     expect(result.materials[0].activeCount).toBe(4)
-    expect(result.affixScore).toBeCloseTo(0.32 * (1284 * 3 + 1867))
+    expect(result.affixScore).toBeCloseTo(0.32 * (1284 * 3 + 934))
     expect(result.resonanceScore).toBeCloseTo(7662 * 0.32)
+  })
+
+  it('reads one resonance per relic, off the material in effect with more active affixes', () => {
+    const slot = { ...base, materials: [[at(1284)], [at(1284), at(1284), at(1284)]] }
+    const cross = evaluateRelicSlot(RELICS, slot, 11, 103, 'cross')
+    expect(cross.materials.map((m) => m.resonates)).toEqual([false, true])
+    expect(cross.resonanceScore).toBeCloseTo(4732 * 0.32)
+    // Affix scores still add up across both materials.
+    expect(cross.affixScore).toBeCloseTo(0.32 * 1284 * 4)
+    const local = evaluateRelicSlot(RELICS, slot, 11, 103, 'local')
+    expect(local.materials.map((m) => m.resonates)).toEqual([true, false])
+    expect(local.resonanceScore).toBeCloseTo(1352 * 0.32)
   })
 
   it('scores grade 1 as grade 2 off the strategic server, assembly included', () => {
