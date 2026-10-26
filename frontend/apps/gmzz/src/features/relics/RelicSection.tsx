@@ -9,7 +9,7 @@ import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/P
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
 import { FormulaHint } from '@/features/score/FormulaHint'
-import { relicDraft, useRelicServer, type StoredRelicSlot } from '@/features/relics/memory'
+import { relicDraft, storedAffixes, toStoredMaterials, useRelicServer, type StoredRelicSlot } from '@/features/relics/memory'
 import {
   MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason,
   evaluateRelicSlot, formatStat, gradeOptions, gradeQuality, gradeRung, isRareAffix, k1For, k2For,
@@ -635,10 +635,9 @@ function Line({ label, value, strong = false }: { label: string; value: number; 
 
 /**
  * A stored slot read against the dataset: the grade clamped to the ones a
- * player can hold, each affix re-resolved against its position's pool, and a
- * group or a second rare word repeated within a material dropped — those
- * cannot exist in game. Older single-list drafts put their affixes on the
- * position they were scored on.
+ * player can hold, each affix resolved by id against its position's pool, and
+ * a group or a second rare word repeated within a material dropped — those
+ * cannot exist in game. An id the pool no longer has is dropped too.
  */
 function restoreSlot(relics: Relics, groupId: number, stored: StoredRelicSlot | undefined, fresh: RelicSlotState): RelicSlotState {
   if (!stored) return fresh
@@ -655,23 +654,18 @@ function restoreSlot(relics: Relics, groupId: number, stored: StoredRelicSlot | 
     perArtifact[String(artifactId)] = clamp(stored.grade)
   }
   const grade = artifactId != null ? perArtifact[String(artifactId)] ?? fresh.grade : clamp(stored.grade)
-  const legacyType = relics.materials.items.find((entry) => entry.id === stored.materialId)?.type
-  const materialType = groupId === SPEC_GROUP ? (stored.materialType ?? legacyType ?? 1) : undefined
-  const lists: ChosenRelicAffix[][] = stored.materials
-    ? stored.materials
-    : Array.from({ length: MATERIAL_SLOTS }, (_, at) =>
-      at === (groupId === SPEC_GROUP ? specIndex({ materialType }) : 0) ? stored.affixes ?? [] : [])
+  const materialType = groupId === SPEC_GROUP ? (stored.materialType ?? 1) : undefined
   const materials = Array.from({ length: MATERIAL_SLOTS }, (_, at) => {
     const pool = typePool(relics, materialTypeAt(groupId, at))
     const kept: ChosenRelicAffix[] = []
-    for (const affix of lists[at] ?? []) {
-      const source = pool.find((entry) => entry.id === affix.affixId)
-        ?? pool.find((entry) => entry.stat === affix.stat && entry.value === affix.value && entry.mark === affix.mark)
-      if (!source) {
-        // An empty row the player added but has not filled yet stays.
-        if (affix.stat === '') kept.push(EMPTY_RELIC_AFFIX)
+    for (const affix of storedAffixes(stored.materials?.[at])) {
+      // An empty row the player added but has not filled yet stays.
+      if (affix.affixId === null) {
+        kept.push(EMPTY_RELIC_AFFIX)
         continue
       }
+      const source = pool.find((entry) => entry.id === affix.affixId)
+      if (!source) continue
       const taken = usedGroups(pool, kept)
       if (taken.groups.has(source.groupId) || (taken.rare && isRareAffix(source))) continue
       kept.push(affixFrom(source))
@@ -717,8 +711,12 @@ export default function RelicSection({ relics, onTotals }: {
       }),
     [draft.slots, relics],
   )
+  // Stored as ids only; the derived stat, value and Mark are re-read from the dataset.
   const setSlots = (update: (prev: RelicSlotState[]) => RelicSlotState[]) =>
-    setDraft((prev) => ({ ...prev, slots: update(slots) }))
+    setDraft((prev) => ({
+      ...prev,
+      slots: update(slots).map((slot) => ({ ...slot, materials: toStoredMaterials(slot.materials) })),
+    }))
 
   /** The material being moved; the next compatible tab clicked receives it. */
   const [swapFrom, setSwapFrom] = useState<Position | null>(null)

@@ -39,14 +39,12 @@ import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type Secre
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
 
-/** The character as typed into the page: levels, pathway, and the per-item scores. */
+/** The character's progression: levels and pathway. */
 type CharacterDraft = {
   roleLevel: number
   divinityLevel: number
   /** `null` until a pathway is picked; the page then seeds the first playable one. */
   professionId: number | null
-  /** Species id → the score the player typed. Keys are strings once stored, as JSON has no other kind. */
-  scores: Record<string, number>
 }
 
 function isCharacterDraft(value: unknown): value is CharacterDraft {
@@ -54,9 +52,7 @@ function isCharacterDraft(value: unknown): value is CharacterDraft {
     isRecord(value) &&
     isFiniteNumber(value.roleLevel) &&
     isFiniteNumber(value.divinityLevel) &&
-    isNullableNumber(value.professionId) &&
-    isRecord(value.scores) &&
-    Object.values(value.scores).every(isFiniteNumber)
+    isNullableNumber(value.professionId)
   )
 }
 
@@ -66,7 +62,7 @@ function isCharacterDraft(value: unknown): value is CharacterDraft {
  * thirty-day life rather than living for ever.
  */
 const characterDraft = gmzzMemory.draft('score/character', {
-  default: (): CharacterDraft => ({ roleLevel: 70, divinityLevel: 0, professionId: null, scores: {} }),
+  default: (): CharacterDraft => ({ roleLevel: 70, divinityLevel: 0, professionId: null }),
   validate: isCharacterDraft,
 })
 
@@ -157,8 +153,6 @@ export default function ScorePage() {
     setDraft((prev) => ({ ...prev, divinityLevel }))
     followCap(draft.roleLevel, divinityLevel)
   }
-  const setScore = (speciesId: number, value: number) =>
-    setDraft((prev) => ({ ...prev, scores: { ...prev.scores, [speciesId]: value } }))
   /**
    * The character's pathway. Global, not per-section: it gates which weapons
    * exist for this character and which talent trees. Read against the dataset
@@ -222,11 +216,11 @@ export default function ScorePage() {
   // a higher cap cannot push a benchmark past the curve it is read from.
   const roleLevel = rating ? clamp(draft.roleLevel, 1, rating.maxRoleLevel) : draft.roleLevel
   const divinityLevel = rating ? clamp(draft.divinityLevel, 0, rating.maxDivinityLevel) : draft.divinityLevel
-  // Every derived item is written over whatever the typed map holds for it,
-  // so one `evaluate` grades all fourteen the same way and no group total
-  // needs a special case.
+  // Every item is derived from the inputs and graded by one `evaluate`, so
+  // no group total needs a special case. An item the page cannot derive is
+  // absent here and scores nothing.
   const scores = useMemo(() => {
-    const merged: Record<string, number> = { ...draft.scores }
+    const merged: Record<string, number> = {}
     if (!rating) return merged
     const put = (module: string, value: number) => {
       const species = rating.species.find((entry) => entry.module === module)
@@ -274,7 +268,7 @@ export default function ScorePage() {
         : 0,
     )
     return merged
-  }, [draft.scores, rating, roleLevel, divinityLevel, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, fellows, relations, bonds])
+  }, [rating, roleLevel, divinityLevel, talents, professionId, talentState, equipmentTotals, relicTotals, partners, scoring, ranks, fellows, relations, bonds])
   const result = useMemo(
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],
@@ -383,7 +377,6 @@ export default function ScorePage() {
             professionId={professionId}
             draft={talentState}
             setDraft={setTalentState}
-            onScore={setScore}
             skillLevel={Math.min(clampSkillLevel(bonds.puppetSkillLevel), skillCap ?? Infinity)}
             skillCap={skillCap}
             relicSkillBonus={relicSkillBonus}
@@ -393,7 +386,7 @@ export default function ScorePage() {
         ))}
 
         {section(EQUIPMENT_GENUS, (group) => (
-          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.equipmentHint')} onScore={setScore} present={() => ({ kind: 'derived' })}>
+          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.equipmentHint')} present={() => ({ kind: 'derived' })}>
             {equipment ? (
               <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals} />
             ) : (
@@ -403,7 +396,7 @@ export default function ScorePage() {
         ))}
 
         {section(RELICS_GENUS, (group) => (
-          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.relicsHint')} onScore={setScore} present={() => ({ kind: 'derived' })}>
+          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.relicsHint')} present={() => ({ kind: 'derived' })}>
             {relics ? <RelicSection relics={relics} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
           </GroupSection>
         ))}
@@ -416,7 +409,6 @@ export default function ScorePage() {
             data={bondsData}
             draft={bonds}
             setDraft={setBonds}
-            onScore={setScore}
           />
         ))}
 

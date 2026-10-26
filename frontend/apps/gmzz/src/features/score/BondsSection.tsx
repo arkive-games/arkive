@@ -66,14 +66,12 @@ export default function BondsSection({
   data,
   draft,
   setDraft,
-  onScore,
 }: {
   group: GenusResult
   rating: Rating
   data: BondsData
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
-  onScore: (speciesId: number, value: number) => void
 }) {
   const { t } = useTranslation()
 
@@ -82,7 +80,6 @@ export default function BondsSection({
       group={group}
       rating={rating}
       hint={t('bonds.hint')}
-      onScore={onScore}
       present={(item) => {
         // The puppet items come from one lineup and the connection items from
         // one roster, so each pair is one card with one detail.
@@ -116,7 +113,7 @@ export default function BondsSection({
               ),
           }
         }
-        return { kind: 'typed' }
+        return { kind: 'unsupported' }
       }}
     />
   )

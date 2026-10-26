@@ -31,11 +31,11 @@ const TAB_CLASS = `inline-flex min-h-9 items-center gap-1.5 px-3 ${TYPE.control}
 const BUTTON_CLASS = `inline-flex h-8 items-center justify-center rounded-md border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 
 /**
- * The 途径 group: 等级 and 非凡天赋 derived, 途径技能 typed from the panel.
+ * The 途径 group: 等级, 途径技能 and 非凡天赋, all derived.
  *
  * 等级 has no Mark anywhere in the package, but the panel always shows it equal
  * to its expected benchmark, so the page scores it as that benchmark at the
- * chosen levels. 途径技能 stays typed: `SkillScoreData` ships as bare ids.
+ * chosen levels. 途径技能 follows the shared skill level; see `pathwaySkillScore`.
  * 非凡天赋 follows the tree's Marks; see `talents.ts`.
  */
 export default function PathwaySection({
@@ -45,7 +45,6 @@ export default function PathwaySection({
   professionId,
   draft,
   setDraft,
-  onScore,
   skillLevel,
   skillCap,
   relicSkillBonus,
@@ -65,7 +64,6 @@ export default function PathwaySection({
   professionId: number | null
   draft: TalentDraft
   setDraft: (update: (prev: TalentDraft) => TalentDraft) => void
-  onScore: (speciesId: number, value: number) => void
 }) {
   const { t } = useTranslation()
 
@@ -74,7 +72,6 @@ export default function PathwaySection({
       group={group}
       rating={rating}
       hint={t('pathway.hint')}
-      onScore={onScore}
       present={(item) => {
         if (item.species.module === TALENT_MODULE) {
           return {

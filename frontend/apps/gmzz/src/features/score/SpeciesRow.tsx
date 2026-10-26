@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { DetailsBody, DetailsToggle, useDetailsOpen } from '@/features/score/Details'
@@ -38,20 +37,20 @@ export function bandStyle(palette: string[], index: number): string {
  * One of the panel's items: name and materials, the score, its bar against the
  * benchmarks, and the band.
  *
- * With `onScore` the score is a box the player types the panel's figure into;
- * without it the score is shown as a figure the page derived, and `children`
- * is the calculator that derived it, drawn under the row inside the same card
- * so the number and what produced it cannot be read as two things.
+ * The score is always a figure the page derived; the calculator that derived
+ * it is drawn under the row inside the same card, so the number and what
+ * produced it cannot be read as two things. An `unsupported` item — one the
+ * page does not know how to derive yet — says so and scores nothing.
  */
 export function ItemRow({
   item,
   rating,
-  onScore,
+  unsupported = false,
   toggle,
 }: {
   item: SpeciesResult
   rating: Rating
-  onScore?: (value: number) => void
+  unsupported?: boolean
   /** The card's fold control, drawn in this line's last column. */
   toggle?: ReactNode
 }) {
@@ -76,21 +75,10 @@ export function ItemRow({
           ) : null}
         </div>
 
-        {onScore ? (
-          <label className="block">
-            <span className="mb-0.5 block text-xs text-muted-foreground md:sr-only">{t('score.yourScore')}</span>
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              value={item.score === 0 ? '' : item.score}
-              placeholder="0"
-              onChange={(event) => onScore(Math.max(0, Number(event.target.value) || 0))}
-              className="h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
-              data-testid={`score-input-${item.species.id}`}
-              aria-label={t('score.yourScoreFor', { name: item.species.name })}
-            />
-          </label>
+        {unsupported ? (
+          <div className="text-xs text-muted-foreground" data-testid={`score-unsupported-${item.species.id}`}>
+            {t('score.unsupported')}
+          </div>
         ) : (
           <div className="flex items-baseline gap-2 md:block">
             <span className="block text-xs text-muted-foreground">{t('score.derivedScore')}</span>
@@ -144,12 +132,12 @@ export function ItemRow({
  * A card holds one item or several that share a calculator, in the same
  * frame either way, so there is no second kind of details box.
  */
-export function ItemCard({ id, items, rating, onScore, details }: {
+export function ItemCard({ id, items, rating, unsupported, details }: {
   id: string
   items: SpeciesResult[]
   rating: Rating
-  /** For typed items: where the player's own figure goes. */
-  onScore?: (item: SpeciesResult) => ((value: number) => void) | undefined
+  /** Whether an item is one the page cannot derive yet. */
+  unsupported?: (item: SpeciesResult) => boolean
   details?: ReactNode
 }) {
   const [open, toggle] = useDetailsOpen(id)
@@ -157,7 +145,7 @@ export function ItemCard({ id, items, rating, onScore, details }: {
   return (
     <article className="space-y-2 rounded-md border border-border bg-card p-2.5" data-testid={`score-card-${id}`}>
       {items.map((item, index) => (
-        <ItemRow key={item.species.id} item={item} rating={rating} onScore={onScore?.(item)}
+        <ItemRow key={item.species.id} item={item} rating={rating} unsupported={unsupported?.(item) ?? false}
           toggle={details && index === 0
             ? <DetailsToggle open={open} onToggle={toggle} controls={bodyId} testId={`score-details-toggle-${id}`} />
             : null} />

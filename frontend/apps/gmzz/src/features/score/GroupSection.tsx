@@ -10,10 +10,11 @@ import { TYPE } from '@/lib/typography'
  * How one of a group's items is shown.
  *
  * `derived` items show the figure the page computed and, optionally, the
- * calculator that produced it under the row; `typed` items are the box the
- * player copies the panel's number into, with a line saying why nothing
- * derives it. Keyed by the client's module name (`Player_Talent`), which is
- * the dataset's stable handle for a species.
+ * calculator that produced it under the row. Every item the dataset carries
+ * today is derived; `unsupported` is an item the page does not know yet —
+ * shown, scored as nothing, and never an input box, because a score is never
+ * something the player types. Keyed by the client's module name
+ * (`Player_Talent`), the dataset's stable handle for a species.
  */
 export type ItemPresentation =
   | {
@@ -25,7 +26,7 @@ export type ItemPresentation =
        */
       shared?: string
     }
-  | { kind: 'typed' }
+  | { kind: 'unsupported' }
 
 type Card = { id: string; items: SpeciesResult[]; details?: ReactNode }
 
@@ -51,22 +52,19 @@ function cards(items: SpeciesResult[], present: (item: SpeciesResult) => ItemPre
 /**
  * One of the panel's four groups: its heading with the group total, its
  * hint, and one row per item in the panel's order. Every group on the page
- * goes through this, so a derived item and a typed one read the same way
- * wherever they sit.
+ * goes through this, so every item reads the same way wherever it sits.
  */
 export function GroupSection({
   group,
   rating,
   hint,
   present,
-  onScore,
   children,
 }: {
   group: GenusResult
   rating: Rating
   hint: string
   present: (item: SpeciesResult) => ItemPresentation
-  onScore: (speciesId: number, value: number) => void
   /** A calculator behind every item of the group: the whole group becomes one card. */
   children?: ReactNode
 }) {
@@ -91,7 +89,7 @@ export function GroupSection({
         {cards(group.items, children ? () => ({ kind: 'derived', shared: 'all' }) : present).map((card) => (
           <ItemCard key={card.id} id={children ? `genus-${group.genus.id}` : card.id} items={card.items} rating={rating}
             details={children ?? card.details}
-            onScore={(item) => (present(item).kind === 'typed' ? (value) => onScore(item.species.id, value) : undefined)} />
+            unsupported={(item) => !children && present(item).kind === 'unsupported'} />
         ))}
       </div>
     </section>

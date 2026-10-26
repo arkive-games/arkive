@@ -42,12 +42,6 @@ export type BondsDraft = {
   puppets: PuppetEntry[]
   /** Deploy slots the player has unlocked; null until set, when `DEFAULT_DEPLOY_SLOTS` applies. */
   dominateSlots: number | null
-  /**
-   * `HistoryResearchRank.id` from when the rank was picked by hand. No longer
-   * read — the rank now follows from the research points — but kept so stored
-   * drafts still validate.
-   */
-  historyRankId: number | null
   /** Research points from sources other than relations; absent or null is 0. */
   historyExtraPoints?: number | null
   /** The puppet whose skill is carried; absent or null picks the best-scoring owned one. */
@@ -105,7 +99,6 @@ export function isBondsDraft(value: unknown): value is BondsDraft {
     Array.isArray(value.puppets) &&
     value.puppets.every(isPuppetEntry) &&
     (value.dominateSlots === null || isFiniteNumber(value.dominateSlots)) &&
-    (value.historyRankId === null || isFiniteNumber(value.historyRankId)) &&
     (value.skillPartnerId === undefined || value.skillPartnerId === null || isFiniteNumber(value.skillPartnerId)) &&
     isOptionalNumber(value.puppetSkillLevel) &&
     (value.fellows === undefined || (Array.isArray(value.fellows) && value.fellows.every(isFellowEntry))) &&
@@ -116,7 +109,7 @@ export function isBondsDraft(value: unknown): value is BondsDraft {
 }
 
 export function emptyBondsDraft(): BondsDraft {
-  return { puppets: [], dominateSlots: null, historyRankId: null }
+  return { puppets: [], dominateSlots: null }
 }
 
 /** The client's `math.floor(x + 0.5)`, which is not `Math.round` for negative halves — not that a Mark sum is ever negative. */
