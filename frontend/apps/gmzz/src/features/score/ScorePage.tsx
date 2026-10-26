@@ -19,7 +19,8 @@ import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
-import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
+import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft, scoringOnDay } from '@/features/score/bonds'
+import { serverDay } from '@/lib/server'
 import { carriedFellowSkill, relationResearchPoints, pathwaySkillScore, skillLevelCap, starMap } from '@/features/score/fellowSkill'
 import {
   benchmarkAt,
@@ -116,7 +117,11 @@ export default function ScorePage() {
   const [relics, setRelics] = useState<Relics | null>(null)
   const [talents, setTalents] = useState<Talents | null>(null)
   const [partners, setPartners] = useState<SecretPartner[] | null>(null)
-  const [scoring, setScoring] = useState<PartnerScoring | null>(null)
+  const [rawScoring, setScoring] = useState<PartnerScoring | null>(null)
+  // The day of the server, read once per visit: puppet levels open on a schedule
+  // counted from launch, so the scoring the page uses is the one capped for today.
+  const day = useMemo(() => serverDay(), [])
+  const scoring = useMemo(() => (rawScoring ? scoringOnDay(rawScoring, Math.max(0, day - 1)) : null), [rawScoring, day])
   const [ranks, setRanks] = useState<HistoryResearchRank[] | null>(null)
   const [fellows, setFellows] = useState<Fellow[] | null>(null)
   const [relations, setRelations] = useState<FellowRelation[] | null>(null)
@@ -366,7 +371,7 @@ export default function ScorePage() {
               <span className="mt-0.5 block text-xs text-muted-foreground">{t('score.pathwayHint')}</span>
             </label>
           ) : null}
-          <Summary result={result} />
+          <Summary result={result} day={day} />
         </section>
 
         {section(PATHWAY_GENUS, (group) => (
@@ -451,7 +456,7 @@ export default function ScorePage() {
   )
 }
 
-function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> }) {
+function Summary({ result, day }: { result: NonNullable<ReturnType<typeof evaluate>>; day: number }) {
   const { t } = useTranslation()
   const percent = Math.round(result.percent * 100)
   return (
@@ -480,6 +485,14 @@ function Summary({ result }: { result: NonNullable<ReturnType<typeof evaluate>> 
           <div className={TYPE.label}>{t('score.overall')}</div>
           <div className="text-lg font-semibold tabular-nums text-foreground">{percent}%</div>
         </div>
+        {day >= 1 ? (
+          <div className="ml-auto text-right">
+            <div className={TYPE.label}>{t('score.serverDayLabel')}</div>
+            <div className="text-lg font-semibold tabular-nums text-foreground" data-testid="score-server-day">
+              {t('score.serverDay', { day })}
+            </div>
+          </div>
+        ) : null}
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{t('score.totalHint')}</p>
     </div>

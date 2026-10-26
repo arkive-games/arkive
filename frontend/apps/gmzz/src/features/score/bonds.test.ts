@@ -15,6 +15,8 @@ import {
   historyRankFor,
   historyScore,
   isBondsDraft,
+  panelFloor,
+  puppetLevelCap,
   roundHalfUp,
   talentMark,
 } from './bonds'
@@ -97,7 +99,8 @@ describe('puppet attribute score', () => {
       1,
     )
     expect(result.rows.map((row) => row.dominated)).toEqual([true, false])
-    expect(result.total).toBe(roundHalfUp(36 + 36 * 0.35))
+    // 36 + 12.6 = 48.6: the panel truncates to 48 where the lineup preview would show 49.
+    expect(result.total).toBe(48)
   })
 
   it('drops entries whose puppet left the dataset and clamps a stored stage', () => {
@@ -229,5 +232,29 @@ describe('bonds draft validation', () => {
     expect(isBondsDraft({ puppets: [{ partnerId: 1, stage: '3', dominated: true }], dominateSlots: null, historyRankId: 4 })).toBe(false)
     expect(isBondsDraft({ puppets: [], dominateSlots: 'all', historyRankId: null })).toBe(false)
     expect(isBondsDraft(null)).toBe(false)
+  })
+})
+
+describe('puppetLevelCap', () => {
+  const days = [0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87]
+  const scoring = { ...SCORING, levelUnlockDays: days }
+
+  it('opens the levels whose day has come', () => {
+    expect(puppetLevelCap(scoring, 0)).toBe(2)
+    expect(puppetLevelCap(scoring, 67)).toBe(43)
+    expect(puppetLevelCap(scoring, 69)).toBe(44)
+    expect(puppetLevelCap(scoring, 500)).toBe(50)
+  })
+
+  it('falls back to the table maximum without a schedule', () => {
+    expect(puppetLevelCap(SCORING, 0)).toBe(50)
+  })
+})
+
+describe('panelFloor', () => {
+  it('truncates as the rating panel does, and survives float drift', () => {
+    expect(panelFloor(9902.6)).toBe(9902)
+    expect(panelFloor(0.1 * 3 * 10)).toBe(3)
+    expect(panelFloor(4.9999999999)).toBe(5)
   })
 })

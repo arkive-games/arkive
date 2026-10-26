@@ -121,6 +121,11 @@ export function relationTier(relation: FellowRelation, stars: Map<number, number
   return lowest + 1
 }
 
+/** The name of the grade a relation stands at — 风闻 … 本相 — or '' below tier 1 or where the data names none. */
+export function relationTierName(relation: FellowRelation, tier: number): string {
+  return (relation.researchRewards ?? []).find((reward) => reward.grade === tier - 1)?.gradeName ?? ''
+}
+
 /** The relations that can boost a connection's skill: quality 1 or 2, with an effect for that member. */
 export function boostingRelations(fellow: Fellow, relations: FellowRelation[]): FellowRelation[] {
   return relations.filter(
@@ -137,13 +142,16 @@ export type FellowSkillResult = {
   relation: FellowRelation | null
   tier: number
   score: number
+  /** What the same connection scores with no relation: `score − base` is the relation's share. */
+  base: number
   estimated: boolean
 }
 
 function scoreWith(fellow: Fellow, star: number, relation: FellowRelation | null, stars: Map<number, number>, skillLevel: number): FellowSkillResult {
   const tier = relation ? relationTier(relation, stars) : 0
   const { score, estimated } = fellowSkillScore(fellow.quality, star, relation?.quality ?? 0, tier, skillLevel)
-  return { fellow, star, relation, tier, score, estimated }
+  const base = fellowSkillScore(fellow.quality, star, 0, 0, skillLevel).score
+  return { fellow, star, relation, tier, score, base, estimated }
 }
 
 /**

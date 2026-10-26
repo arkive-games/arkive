@@ -11,7 +11,7 @@ import {
   fellowOptions,
   GOLD_FELLOW,
   MAX_FELLOW_STAR,
-  relationTier,
+  relationTierName,
   starMap,
   type FellowSkillResult,
 } from '@/features/score/fellowSkill'
@@ -19,6 +19,8 @@ import { TYPE } from '@/lib/typography'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
+/** What a relation adds on top of the base, in the green the equipment split uses. */
+const GAIN_CLASS = 'text-emerald-700 dark:text-emerald-300'
 
 /**
  * The 人脉技能 calculator: every connection with a star picker, the relation
@@ -61,13 +63,9 @@ export default function FellowSkillCalculator({
       })),
     [ordered],
   )
-  const byId = useMemo(() => new Map(fellows.map((fellow) => [fellow.id, fellow])), [fellows])
   const options = new Map(fellows.map((fellow) => [fellow.id, fellowOptions(fellow, relations, stars, skillLevel)]))
-  const carriedOptions = carried ? (options.get(carried.fellow.id) ?? []) : []
-  const boostRelations = useMemo(
-    () => relations.filter((relation) => relation.quality === 1 || relation.quality === 2).sort((a, b) => a.order - b.order),
-    [relations],
-  )
+  // The relations the carried skill can be scored with; a relation-less option is not one.
+  const carriedOptions = carried ? (options.get(carried.fellow.id) ?? []).filter((option) => option.relation !== null) : []
 
   const setStar = (fellowId: number, star: number | null) =>
     setDraft((prev) => {
@@ -79,7 +77,7 @@ export default function FellowSkillCalculator({
     })
   const carry = (fellowId: number | null) => setDraft((prev) => ({ ...prev, fellowSkillId: fellowId, fellowRelationId: null }))
 
-  /** Every connection in the list set to one star, or all marked not owned. */
+  /** Every connection in a quality row set to one star, or all marked not owned. */
   const setAll = (list: Fellow[], star: number | null) =>
     setDraft((prev) => {
       const ids = new Set(list.map((fellow) => fellow.id))
@@ -92,6 +90,10 @@ export default function FellowSkillCalculator({
   const tile = (fellow: Fellow, className = 'size-12') => (
     <IconTile quality={fellow.quality} src={fellow.portrait ? fellowPortraitUrl(fellow.portrait) : undefined} alt={fellow.name} label={fellow.name.slice(0, 1)} className={className} />
   )
+  const tierLabel = (relation: FellowRelation | null, tier: number) => {
+    const name = relation ? relationTierName(relation, tier) : ''
+    return name ? t('bonds.relationTierNamed', { tier, name }) : t('bonds.relationTier', { tier })
+  }
   const describe = (result: FellowSkillResult) =>
     result.relation
       ? t('bonds.fellowWithRelation', { star: result.star, relation: result.relation.name, tier: result.tier, score: result.score.toLocaleString() })
@@ -112,6 +114,8 @@ export default function FellowSkillCalculator({
 
   return (
     <div className="space-y-3" data-testid="bonds-fellows">
+      <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="bonds-fellow-skill-level"
+        onChange={(level) => setDraft((prev) => ({ ...prev, puppetSkillLevel: level }))} />
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3 rounded-md border border-border p-2">
         <div className="min-w-0">
           <span className={LABEL_CLASS}>{t('bonds.fellowCarried')}</span>
@@ -119,24 +123,37 @@ export default function FellowSkillCalculator({
             type="button"
             disabled={carryOptions.length === 0}
             onClick={() => setPicking(true)}
-            className={`flex h-12 items-center gap-2 rounded border border-border pr-3 text-left transition hover:border-[color:var(--arkive-nav-accent)] disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`}
+            title={carried && autoCarry ? t('bonds.skillPuppetBest') : undefined}
+            // A fixed width, so switching the carried skill never moves what sits beside it.
+            className={`flex h-12 w-72 items-center gap-2 rounded border border-border pr-3 text-left transition hover:border-[color:var(--arkive-nav-accent)] disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`}
             data-testid="bonds-fellow-carry"
           >
-            {carried ? tile(carried.fellow) : <span className="size-12" />}
-            <span className="min-w-0">
+            {carried ? tile(carried.fellow) : <span className="size-12 shrink-0" />}
+            <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-foreground">
                 {carried ? carried.fellow.skill.name || carried.fellow.name : t('bonds.fellowNone')}
               </span>
-              <span className="block text-xs text-muted-foreground">
-                {carried ? `${autoCarry ? `${t('bonds.skillPuppetBest')} · ` : ''}${describe(carried)}${carried.estimated ? '*' : ''}` : ''}
-              </span>
+              {carried ? (
+                <span className="block truncate text-xs tabular-nums text-foreground" data-testid="bonds-fellow-carry-score">
+                  {t('bonds.fellowStar', { star: carried.star })} · {carried.score.toLocaleString()}{carried.estimated ? '*' : ''}
+                  <span className="ml-1 text-muted-foreground">
+                    ({carried.base.toLocaleString()}
+                    <span className={GAIN_CLASS}>{t('equip.pieceAdded', { added: (carried.score - carried.base).toLocaleString() })}</span>)
+                  </span>
+                </span>
+              ) : null}
             </span>
           </button>
         </div>
 
-        {carriedOptions.length > 1 ? (
+        {carried ? (
           <div className="min-w-0" data-testid="bonds-fellow-relations">
             <span className={LABEL_CLASS}>{t('bonds.fellowRelation')}</span>
+            {carriedOptions.length === 0 ? (
+              <p className="flex h-12 items-center text-sm text-muted-foreground" data-testid="bonds-fellow-relation-none">
+                {t('bonds.fellowRelationNone')}
+              </p>
+            ) : (
             <div className="flex flex-wrap gap-2">
               {carriedOptions.map((option) => {
                 const active = option.relation?.id === carried?.relation?.id
@@ -146,28 +163,25 @@ export default function FellowSkillCalculator({
                     type="button"
                     aria-pressed={active}
                     onClick={() => setDraft((prev) => ({ ...prev, fellowSkillId: option.fellow.id, fellowRelationId: option.relation?.id ?? null }))}
-                    className={`rounded-md border px-2 py-1 text-left text-xs transition ${FOCUS} ${active ? 'border-[color:var(--arkive-nav-accent)] text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                    className={`h-12 w-40 rounded-md border px-2 py-1 text-left text-xs transition ${FOCUS} ${active ? 'border-[color:var(--arkive-nav-accent)] text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
                     data-testid={`bonds-fellow-relation-${option.relation?.id ?? 0}`}
                   >
-                    <span className="block font-semibold">{option.relation?.name}</span>
-                    <span className="block tabular-nums">
-                      {t('bonds.fellowRelationOption', { quality: option.relation?.quality ?? 0, tier: option.tier, score: option.score.toLocaleString() })}
+                    <span className="block truncate font-semibold">{option.relation?.name}</span>
+                    <span className="flex justify-between gap-2 tabular-nums">
+                      <span className="truncate">{tierLabel(option.relation, option.tier)}</span>
+                      <span className={GAIN_CLASS}>+{(option.score - option.base).toLocaleString()}</span>
                     </span>
                   </button>
                 )
               })}
             </div>
+            )}
           </div>
         ) : null}
 
-        <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="bonds-fellow-skill-level"
-          onChange={(level) => setDraft((prev) => ({ ...prev, puppetSkillLevel: level }))} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p className={TYPE.body}>{t('bonds.fellowGridHint')}</p>
-        <StarPresets testId="bonds-fellow-all" label={t('bonds.fellowSetAll')} onPick={(star) => setAll(ordered, star)} />
-      </div>
+      <p className={TYPE.body}>{t('bonds.fellowGridHint')}</p>
 
       {groups.map((group) => (
         <div key={group.quality} data-testid={`bonds-fellow-row-${group.quality}`}>
@@ -178,7 +192,6 @@ export default function FellowSkillCalculator({
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2">
             {group.fellows.map((fellow) => {
               const star = stars.get(fellow.id)
-              const best = options.get(fellow.id)?.[0]
               const isCarried = carried?.fellow.id === fellow.id
               return (
                 <li key={fellow.id} className="flex min-w-0 flex-col items-center gap-1" data-testid={`bonds-fellow-${fellow.id}`}>
@@ -200,46 +213,12 @@ export default function FellowSkillCalculator({
                   </button>
                   <span className="w-full truncate text-center text-xs text-muted-foreground">{fellow.shortName || fellow.name}</span>
                   <StarPicker star={star} name={fellow.name} testId={`bonds-fellow-star-${fellow.id}`} onChange={(next) => setStar(fellow.id, next)} />
-                  {best ? (
-                    <span className="text-center text-xs tabular-nums text-muted-foreground" data-testid={`bonds-fellow-score-${fellow.id}`}>
-                      {best.score.toLocaleString()}
-                      {best.estimated ? '*' : ''}
-                    </span>
-                  ) : null}
                 </li>
               )
             })}
           </ul>
         </div>
       ))}
-
-      <div className="border-t border-border pt-2" data-testid="bonds-fellow-relation-list">
-        <span className={LABEL_CLASS}>{t('bonds.fellowRelationList')}</span>
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-4 gap-y-1">
-          {boostRelations.map((relation) => {
-            const tier = relationTier(relation, stars)
-            return (
-              <li key={relation.id} className="flex min-w-0 items-baseline justify-between gap-2 text-sm" data-testid={`bonds-relation-${relation.id}`}>
-                <span className="min-w-0 truncate text-muted-foreground" title={relation.members.map((m) => byId.get(m.fellowId)?.name ?? m.fellowId).join(' · ')}>
-                  {relation.name}
-                  <span className="ml-1 text-xs">
-                    {relation.members
-                      .map((member) => {
-                        const fellow = byId.get(member.fellowId)
-                        const value = stars.get(member.fellowId)
-                        return `${fellow?.shortName || fellow?.name || member.fellowId} ${value === undefined ? '—' : `${value}★`}`
-                      })
-                      .join(' / ')}
-                  </span>
-                </span>
-                <span className="shrink-0 font-medium tabular-nums text-foreground">
-                  {t('bonds.fellowTier', { quality: relation.quality ?? 0, tier })}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-      </div>
 
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         {t('bonds.formulaLabel')}
@@ -275,30 +254,30 @@ export default function FellowSkillCalculator({
 
 
 /**
- * A connection's stars, set with one click: the stars themselves (clicking the
- * lit top star again steps it down to 0★), and a cross for not owned. A
- * not-owned connection shows hollow stars.
+ * A connection's stars, set with one click. Clicking the lit top star steps it
+ * down one; the first star cycles 1★ → 0★ → not owned → 1★, so not owned is
+ * reachable without a control of its own. A not-owned connection shows faint
+ * hollow stars, 0★ plain hollow ones.
  */
 function StarPicker({ star, name, testId, onChange }: {
   star: number | undefined; name: string; testId: string; onChange: (star: number | null) => void
 }) {
   const { t } = useTranslation()
   const owned = star !== undefined
+  const next = (value: number): number | null => {
+    if (value === 1) return !owned ? 1 : star === 1 ? 0 : star === 0 ? null : 1
+    return owned && star === value ? value - 1 : value
+  }
   return (
     <div className="flex items-center gap-0.5" role="group" aria-label={t('bonds.fellowStarFor', { name })} data-testid={testId}
       data-star={owned ? star : 'none'}>
-      <button type="button" onClick={() => onChange(null)} aria-pressed={!owned} aria-label={t('bonds.fellowNotOwned')}
-        className={`inline-flex size-5 items-center justify-center rounded text-xs ${owned ? 'text-muted-foreground hover:text-foreground' : 'bg-muted font-semibold text-foreground'} ${FOCUS}`}
-        data-testid={`${testId}-none`}>
-        ×
-      </button>
       {Array.from({ length: MAX_FELLOW_STAR }, (_, index) => {
         const value = index + 1
         const lit = owned && value <= star
         return (
           <button key={value} type="button" aria-label={t('bonds.fellowStar', { star: value })} aria-pressed={owned && star === value}
-            onClick={() => onChange(owned && star === value ? 0 : value)}
-            className={`inline-flex size-4 items-center justify-center text-sm leading-none ${lit ? 'text-amber-500' : 'text-muted-foreground/50 hover:text-amber-400'} ${FOCUS}`}
+            onClick={() => onChange(next(value))}
+            className={`inline-flex size-4 items-center justify-center text-sm leading-none ${lit ? 'text-amber-500' : owned ? 'text-muted-foreground/60 hover:text-amber-400' : 'text-muted-foreground/25 hover:text-amber-400'} ${FOCUS}`}
             data-testid={`${testId}-${value}`}>
             {lit ? '★' : '☆'}
           </button>

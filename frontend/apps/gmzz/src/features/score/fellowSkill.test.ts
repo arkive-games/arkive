@@ -82,6 +82,9 @@ describe('connection relations', () => {
     const stars = starMap([{ fellowId: 1, star: 4 }, { fellowId: 2, star: 4 }, { fellowId: 3, star: 4 }, { fellowId: 9, star: 3 }])
     const options = fellowOptions(gold[0], [q0, q1, q2], stars, 38)
     expect(options.map((o) => [o.relation?.id, o.tier, o.score])).toEqual([[20, 5, 2520], [10, 4, 2157]])
+    // One base per connection, whatever the relation; the relation's share is the rest.
+    expect(new Set(options.map((o) => o.base)).size).toBe(1)
+    expect(options.every((o) => o.score > o.base)).toBe(true)
     expect(fellowOptions(purple, [q1], stars, 38).map((o) => o.relation)).toEqual([null])
   })
 

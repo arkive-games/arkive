@@ -520,7 +520,8 @@ describe('evaluatePiece', () => {
       slot: 1,
       itemId: 3020623,
       enhanceStage: 3,
-      refinePercent: 100,
+      // 37% is refinement level 30, three whole stages: the 240 the game shows.
+      refinePercent: 37,
       affixes: [
         { family: '攻击', value: 382 },
         { family: '攻击', value: 382 },
@@ -551,7 +552,7 @@ describe('evaluatePiece', () => {
 
   it('reproduces 攻击 +308 +233 +332 reading 3485, and the card\'s three tabs summing to 6155', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
-      slot: 1, itemId: 3020623, enhanceStage: 3, refinePercent: 100,
+      slot: 1, itemId: 3020623, enhanceStage: 3, refinePercent: 37,
       affixes: [{ family: '攻击', value: 308 }, { family: '攻击', value: 233 }, { family: '攻击', value: 332 }],
     }, 101)
     expect(result.affixMark).toBe(805 + 610 + 870)
@@ -582,20 +583,27 @@ describe('evaluatePiece', () => {
 
   it('scores an empty slot with no base', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
-      slot: 1, itemId: null, enhanceStage: 3, refinePercent: 100, affixes: [],
+      slot: 1, itemId: null, enhanceStage: 3, refinePercent: 37, affixes: [],
     }, 101)
     expect(result.baseScore).toBe(0)
     expect(result.total).toBe(240)
   })
 
-  it('scores every stage reached, whatever the refinement, which it reports apart', () => {
+  it('scores the enhancement by refinement level, a tenth of a stage each', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
       slot: 1, itemId: null, enhanceStage: 3, refinePercent: 50, affixes: [],
     }, 101)
-    expect(result.enhanceScore).toBe(240)
-    expect(result.total).toBe(240)
     expect(result.refineLevel).toBe(40)
     expect(result.progressPercent).toBe(50)
+    expect(result.enhanceScore).toBe(40 * 8)
+    expect(result.total).toBe(320)
+  })
+
+  it('reproduces +7 at 80% reading 512 in game, not 560', () => {
+    const result = evaluatePiece(EQUIPMENT, GRACES, {
+      slot: 1, itemId: null, enhanceStage: 7, refinePercent: 80, affixes: [],
+    }, 101)
+    expect(result.enhanceScore).toBe(512)
   })
 
   it('averages the refinement from the levels behind the shown percentages', () => {

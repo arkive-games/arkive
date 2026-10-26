@@ -21,9 +21,9 @@ import {
 } from '@/features/score/bonds'
 import { FormulaHint } from '@/features/score/FormulaHint'
 import { SkillLevelField } from '@/features/score/SkillLevelField'
-import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
+import type { GenusResult, Rating } from '@/features/score/data'
 import FellowSkillCalculator from '@/features/score/FellowSkillSection'
-import { relationResearchPoints, relationTier, starMap } from '@/features/score/fellowSkill'
+import { relationResearchPoints, relationTier, relationTierName, starMap } from '@/features/score/fellowSkill'
 import { GroupSection } from '@/features/score/GroupSection'
 import { portraitUrl, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { TYPE } from '@/lib/typography'
@@ -76,8 +76,6 @@ export default function BondsSection({
   onScore: (speciesId: number, value: number) => void
 }) {
   const { t } = useTranslation()
-  // The history picker reads its own item's benchmark, whichever row opens the shared card.
-  const historyItem = group.items.find((entry) => entry.species.module === HISTORY_MODULE)
 
   return (
     <GroupSection
@@ -111,7 +109,7 @@ export default function BondsSection({
               data.fellows && data.relations && data.ranks ? (
                 <div className="space-y-3">
                   <FellowSkillCalculator fellows={data.fellows} relations={data.relations} skillCap={data.skillCap} relicSkillBonus={data.relicSkillBonus} draft={draft} setDraft={setDraft} />
-                  <HistoryPicker ranks={data.ranks} relations={data.relations} item={historyItem ?? item} draft={draft} setDraft={setDraft} />
+                  <HistoryPicker ranks={data.ranks} relations={data.relations} draft={draft} setDraft={setDraft} />
                 </div>
               ) : (
                 <p className={TYPE.body}>{t('bonds.unavailable')}</p>
@@ -170,7 +168,7 @@ function PuppetLineup({
   const ordered = useMemo(() => [...partners].sort((a, b) => b.quality - a.quality || a.id - b.id), [partners])
   const qualities = useMemo(() => [...new Set(ordered.map((partner) => partner.quality))], [ordered])
 
-  // Each owned puppet's two figures: its attributes as if deployed, and its skill.
+  // Each owned puppet's attributes as if deployed, and its skill for the carry picker.
   const owned = result.rows.map((row) => {
     const stage = clampStage(row.entry.stage, scoring)
     return {
@@ -179,7 +177,6 @@ function PuppetLineup({
       skill: puppetSkillScore(row.partner, stage, skillLevel),
     }
   })
-  const figures = new Map(owned.map((row) => [row.partner.id, row]))
 
   const update = (partnerId: number, patch: Partial<{ stage: number; dominated: boolean }>) =>
     setDraft((prev) => {
@@ -215,17 +212,44 @@ function PuppetLineup({
       keywords: row.partner.skill.name,
     }))
 
+  // One click fills the slots with the owned puppets worth most deployed, and stands the rest down.
+  const deployBest = () => {
+    const best = new Set(
+      owned
+        .filter((row) => row.deployScore !== null)
+        .sort((a, b) => (b.deployScore ?? 0) - (a.deployScore ?? 0) || b.partner.quality - a.partner.quality)
+        .slice(0, result.slots)
+        .map((row) => row.partner.id),
+    )
+    setDraft((prev) => ({ ...prev, puppets: prev.puppets.map((entry) => ({ ...entry, dominated: best.has(entry.partnerId) })) }))
+  }
+
   const deployed = result.rows.filter((row) => row.dominated)
   const emptySlots = Math.max(0, result.slots - deployed.length)
 
   return (
     <div className="space-y-3" data-testid="bonds-puppets">
+      {/* The shared skill level on a line of its own, above the lineup it scores. */}
+      <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="bonds-skill-level"
+        onChange={(level) => setDraft((prev) => ({ ...prev, puppetSkillLevel: level }))} />
+
       {/* The lineup bar. */}
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3 rounded-md border border-border p-2" data-testid="bonds-lineup">
         <div className="min-w-0">
-          <span className={LABEL_CLASS} data-testid="bonds-dominated">
-            {t('bonds.dominated', { used: result.dominated, slots: result.slots })}
-          </span>
+          <div className="mb-0.5 flex items-center gap-2">
+            <span className={TYPE.label} data-testid="bonds-dominated">
+              {t('bonds.dominated', { used: result.dominated, slots: result.slots })}
+            </span>
+            <button
+              type="button"
+              disabled={owned.length === 0 || result.slots === 0}
+              onClick={deployBest}
+              className={`inline-flex h-6 items-center rounded border border-border px-1.5 text-xs text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`}
+              data-testid="bonds-deploy-best"
+            >
+              {t('bonds.deployBest')}
+            </button>
+          </div>
           <ul className="flex flex-wrap gap-2">
             {deployed.map((row) => (
               <li key={row.partner.id} className="relative" data-testid={`bonds-slot-${row.partner.id}`}>
@@ -298,15 +322,13 @@ function PuppetLineup({
               data-testid="bonds-slots"
             />
           </label>
-          <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="bonds-skill-level"
-            onChange={(level) => setDraft((prev) => ({ ...prev, puppetSkillLevel: level }))} />
         </div>
       </div>
 
       <p className={TYPE.body}>{t('bonds.gridHint', { max: scoring.maxStar })}</p>
 
       {/* The roster, one row per quality (red, orange, gold, purple): every
-          puppet, its level, and both of its figures. */}
+          puppet, its level, and its attribute score. */}
       {qualities.map((quality) => (
       <div key={quality} data-testid={`bonds-puppet-row-${quality}`}>
       <span className={LABEL_CLASS}>{t(`bonds.quality${quality}`, { defaultValue: String(quality) })}</span>
@@ -314,7 +336,6 @@ function PuppetLineup({
         {ordered.filter((partner) => partner.quality === quality).map((partner) => {
           const entry = entries.get(partner.id)
           const row = rows.get(partner.id)
-          const figure = figures.get(partner.id)
           const level = clampStage(entry?.stage ?? 0, scoring)
           const isDeployed = row?.dominated ?? false
           const isCarried = carried?.partner.id === partner.id
@@ -365,13 +386,9 @@ function PuppetLineup({
                 className="h-7 w-16 border-border bg-background px-1 text-center text-xs tabular-nums shadow-none"
                 data-testid={`bonds-stage-${partner.id}`}
               />
-              {row && figure ? (
+              {row ? (
                 <span className="text-center text-xs leading-4 tabular-nums text-muted-foreground" data-testid={`bonds-score-${partner.id}`}>
-                  <span className="block">{t('bonds.attrShort', { score: hasMarks(partner) ? Math.round(row.score).toLocaleString() : '—' })}</span>
-                  <span className="block">
-                    {t('bonds.skillShort', { score: figure.skill.score.toLocaleString() })}
-                    {figure.skill.estimated ? '*' : ''}
-                  </span>
+                  {hasMarks(partner) ? Math.round(row.score).toLocaleString() : '—'}
                 </span>
               ) : null}
             </li>
@@ -502,12 +519,10 @@ function PuppetSkillSummary({
 function HistoryPicker({
   ranks,
   relations,
-  item,
   draft,
 }: {
   ranks: HistoryResearchRank[]
   relations: FellowRelation[]
-  item: SpeciesResult
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
@@ -526,7 +541,7 @@ function HistoryPicker({
       return {
         relation,
         tier,
-        tierName: rewards.find((reward) => reward.grade === tier - 1)?.gradeName ?? '',
+        tierName: relationTierName(relation, tier),
         points: rewards.filter((reward) => reward.grade < tier).reduce((sum, reward) => sum + reward.value, 0),
       }
     })
@@ -539,11 +554,15 @@ function HistoryPicker({
         <span className={TYPE.label}>{t('bonds.rank')}</span>
         <span className="font-semibold text-foreground">{current ? current.name : t('bonds.rankNone')}</span>
         <span className="tabular-nums text-muted-foreground">{t('bonds.researchNow', { points: total.toLocaleString() })}</span>
-        <span className="text-xs text-muted-foreground">
-          {next
-            ? t('bonds.rankNext', { name: next.name, points: next.score.toLocaleString(), mark: (next.mark - item.score).toLocaleString() })
-            : t('bonds.rankTop')}
-        </span>
+        {next ? (
+          <>
+            <span className={TYPE.label}>{t('bonds.rankNextLabel')}</span>
+            <span className="font-semibold text-foreground">{next.name}</span>
+            <span className="tabular-nums text-muted-foreground">{t('bonds.rankNextPoints', { points: next.score.toLocaleString() })}</span>
+          </>
+        ) : (
+          <span className="text-xs text-muted-foreground">{t('bonds.rankTop')}</span>
+        )}
       </p>
       {formed.length > 0 ? (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-1.5" data-testid="bonds-history-relations">
@@ -552,7 +571,7 @@ function HistoryPicker({
               data-testid={`bonds-history-relation-${entry.relation.id}`}>
               <div className="truncate text-sm font-semibold text-foreground">{entry.relation.name}</div>
               <div className="flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
-                <span>{entry.tierName || t('bonds.relationTier', { tier: entry.tier })}</span>
+                <span>{entry.tierName ? t('bonds.relationTierNamed', { tier: entry.tier, name: entry.tierName }) : t('bonds.relationTier', { tier: entry.tier })}</span>
                 <span className="tabular-nums">+{entry.points.toLocaleString()}</span>
               </div>
             </li>

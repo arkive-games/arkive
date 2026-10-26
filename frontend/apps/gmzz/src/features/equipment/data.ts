@@ -468,7 +468,7 @@ export type PieceResult = {
   brand: Brand | null
   /** The item's own 装备基础, 0 for an empty slot. */
   baseScore: number
-  /** The marks of every stage reached. Proven against the game at +3 = 240. */
+  /** The enhancement score, by refinement level — see `refineScoreOf`. */
   enhanceScore: number
   /** Per-stat totals the enhancement grants. */
   enhanceStats: [string, number][]
@@ -596,12 +596,29 @@ export function enhanceOf(body: EnhanceBody | null, stage: number): { score: num
 }
 
 /**
+ * The enhancement score at a refinement level: each level is a tenth of its
+ * stage's Mark, so a full stage is worth its 80 and a part-way one its share.
+ * Scored by refinement rather than by the stage reached — a +7 piece at 80%
+ * reads 512 in game (64 levels × 8), not the 560 seven whole stages give.
+ */
+export function refineScoreOf(body: EnhanceBody | null, level: number): number {
+  if (!body) return 0
+  const marks = [...body.stages].sort((a, b) => a.stage - b.stage).map((rung) => rung.mark)
+  const done = Math.min(Math.max(0, Math.trunc(level)), marks.length * REFINE_PER_STAGE)
+  let score = 0
+  for (let at = 0; at < done; at += 1) score += marks[Math.floor(at / REFINE_PER_STAGE)] / REFINE_PER_STAGE
+  return Math.round(score)
+}
+
+/**
  * Refinement runs in levels, not percent: each of the eight enhancement stages
  * splits into ten, so 80 levels of 1.25% each. The game shows the percentage
  * rounded down — level 62 is 77.5% and reads 77%, level 55 is 68.75% and
  * reads 68% — so averaging the shown figures drifts from the game's average.
  */
 export const REFINE_LEVELS = 80
+/** Refinement levels per enhancement stage. */
+export const REFINE_PER_STAGE = 10
 
 /** The whole percentage the game shows for a refinement level. */
 export function refinePercentOf(level: number): number {
@@ -639,7 +656,7 @@ export function evaluatePiece(
   const item = equipment.items.find((i) => i.id === state.itemId) ?? null
   const brand = item?.brandId != null ? equipment.brands.find((b) => b.id === item.brandId) ?? null : null
   const body = bodyFor(equipment, state.slot, season)
-  const { score: enhanceScore, stats: enhanceStats } = enhanceOf(body, state.enhanceStage)
+  const { stats: enhanceStats } = enhanceOf(body, state.enhanceStage)
 
   const affixes = state.affixes.map((affix) => classifyAffix(equipment, state.slot, affix))
   const affixMark = affixes.reduce((sum, affix) => sum + affix.mark, 0)
@@ -648,6 +665,7 @@ export function evaluatePiece(
   const reforgeScore = affixMark + bonus
   const baseScore = item?.baseScore ?? 0
   const refineLevel = refineLevelOf(state.refinePercent)
+  const enhanceScore = refineScoreOf(body, refineLevel)
 
   return {
     state,

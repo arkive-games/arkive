@@ -124,10 +124,37 @@ export function roundHalfUp(value: number): number {
   return Math.floor(value + 0.5)
 }
 
+/**
+ * The rating panel's rounding of the 秘偶属性 sum: truncated, not rounded. The
+ * lineup screen's own preview uses `math.floor(x + 0.5)`, but the panel is the
+ * server's figure and drops the fraction — a lineup summing to 9902.6 reads
+ * 9902 there. The epsilon keeps float drift (4.9999…) from costing a point.
+ */
+export function panelFloor(value: number): number {
+  return Math.floor(value + 1e-6)
+}
+
 /** A puppet level, 0 (not owned) to the table's maximum. */
 export function clampStage(stage: number, scoring: PartnerScoring): number {
   if (!Number.isFinite(stage)) return 0
   return Math.min(scoring.maxStar, Math.max(0, Math.trunc(stage)))
+}
+
+/**
+ * The highest puppet level open on a given day after launch: the last level
+ * whose unlock day has come. Day 67 is level 43 (opened day 66; 44 waits for
+ * day 69), which is what live accounts stop at.
+ */
+export function puppetLevelCap(scoring: PartnerScoring, daysSinceLaunch: number): number {
+  const days = scoring.levelUnlockDays
+  if (!days || days.length === 0) return scoring.maxStar
+  const open = days.filter((day) => day <= daysSinceLaunch).length
+  return Math.min(scoring.maxStar, open)
+}
+
+/** The scoring with `maxStar` narrowed to the day's cap, so every level clamp honours it. */
+export function scoringOnDay(scoring: PartnerScoring, daysSinceLaunch: number): PartnerScoring {
+  return { ...scoring, maxStar: puppetLevelCap(scoring, daysSinceLaunch) }
 }
 
 export function clampSlots(slots: number | null, scoring: PartnerScoring): number {
@@ -204,7 +231,7 @@ export function evaluatePuppets(
     rows,
     slots,
     dominated,
-    total: roundHalfUp(rows.reduce((total, row) => total + row.score, 0)),
+    total: panelFloor(rows.reduce((total, row) => total + row.score, 0)),
   }
 }
 
