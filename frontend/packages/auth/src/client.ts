@@ -29,7 +29,7 @@ import {
 } from "./types"
 
 export interface CoreClientOptions {
-  /** Origin plus module prefix, e.g. `https://api.tc-imba.com/api/v1/core`. */
+  /** Origin plus module prefix, e.g. `https://api.arkive.games/api/v1/core`. */
   baseUrl: string
   transport: AuthTransport
   /** Required when transport is `bearer`; ignored otherwise. */

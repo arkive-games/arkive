@@ -65,7 +65,7 @@ export function ArkiveAccountControl({
   variant = "topbar",
   fallback = null,
   settings,
-  homeUrl = 'https://tc-imba.com',
+  homeUrl = 'https://arkive.games',
   onOpenSettings,
 }: ArkiveAccountControlProps) {
   const auth = useAuth()

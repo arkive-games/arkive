@@ -90,7 +90,7 @@ export const SITES: SiteCard[] = [
     url: resolveSiteUrl(
       import.meta.env.VITE_AION2_URL,
       'http://localhost:15173',
-      'https://aion2.tc-imba.com',
+      'https://aion2.arkive.games',
     ),
     toySlug: 'arkive-aion2',
     bg: aion2Bg,
@@ -107,7 +107,7 @@ export const SITES: SiteCard[] = [
     url: resolveSiteUrl(
       import.meta.env.VITE_GMZZ_URL,
       'http://localhost:15179',
-      'https://gmzz.tc-imba.com',
+      'https://gmzz.arkive.games',
     ),
     bg: gmzzBg,
     // The lead character stands right of centre.
@@ -126,7 +126,7 @@ export const SITES: SiteCard[] = [
     url: resolveSiteUrl(
       import.meta.env.VITE_PAL_URL,
       'http://localhost:15174',
-      'https://palworld.tc-imba.com',
+      'https://palworld.arkive.games',
     ),
     toySlug: 'arkive-palworld',
     bg: palworldBg,
@@ -142,7 +142,7 @@ export const SITES: SiteCard[] = [
     url: resolveSiteUrl(
       import.meta.env.VITE_VRISING_URL,
       'http://localhost:15176',
-      'https://vrising.tc-imba.com',
+      'https://vrising.arkive.games',
     ),
     bg: VRISING_BG,
     // A portrait poster whose two faces sit in its top third; a centred
@@ -169,7 +169,7 @@ export const SITES: SiteCard[] = [
     url: resolveSiteUrl(
       import.meta.env.VITE_RO3_URL,
       'http://localhost:15178',
-      'https://ro3.tc-imba.com',
+      'https://ro3.arkive.games',
     ),
     bg: ro3Bg,
     banner: ro3Banner,

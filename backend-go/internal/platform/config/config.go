@@ -264,7 +264,7 @@ func Load() (Config, error) {
 			SMTPPassword: envString("SMTP_PASSWORD", ""),
 			SMTPFromName: envString("SMTP_FROM_NAME", "Arkive"),
 
-			ResetURLTemplate: envString("RESET_URL_TEMPLATE", "https://tc-imba.com/user?reset=%s"),
+			ResetURLTemplate: envString("RESET_URL_TEMPLATE", "https://arkive.games/user?reset=%s"),
 
 			SESSecretID:            envString("SES_SECRET_ID", ""),
 			SESSecretKey:           envString("SES_SECRET_KEY", ""),

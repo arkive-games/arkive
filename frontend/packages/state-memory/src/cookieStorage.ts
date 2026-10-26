@@ -2,7 +2,7 @@
  * A StorageLike backed by cookies, so a record can be shared across ORIGINS.
  *
  * Web Storage is per-origin, and the Arkive games are separate origins
- * (aion2.tc-imba.com, palworld.tc-imba.com, ...). A cookie set on the registrable
+ * (aion2.arkive.games, palworld.arkive.games, ...). A cookie set on the registrable
  * domain is the only client-side transport all of them can read, which is why the
  * theme already used one. This generalises that so any `site`-scoped record gets
  * the same reach.

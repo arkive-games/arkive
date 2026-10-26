@@ -63,14 +63,14 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export interface AuthProviderProps {
   /**
-   * Origin plus module prefix, e.g. `https://api.tc-imba.com/api/v1/core`.
+   * Origin plus module prefix, e.g. `https://api.arkive.games/api/v1/core`.
    * Passed in rather than read from import.meta.env so this package stays
    * environment-agnostic and testable, matching how the other shared packages
    * take injected adapters.
    */
   baseUrl: string
   /**
-   * `cookie` on the *.tc-imba.com sites, where an httpOnly cookie gives SSO
+   * `cookie` on the *.arkive.games sites, where an httpOnly cookie gives SSO
    * across every game and cannot be read by script. `bearer` inside a Bilibili
    * Toy, where that cookie is third-party and blocked.
    */

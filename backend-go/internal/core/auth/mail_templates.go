@@ -75,7 +75,7 @@ var passwordResetCopy = map[MailLocale]mailCopy{
 		Expiry:    "链接 1 小时后失效，且仅能使用一次。",
 		Ignore:    "如果不是你本人操作，请忽略这封邮件——你的密码不会有任何改变。",
 		Fallback:  "按钮无法点击？把下面的链接复制到浏览器打开：",
-		Footer:    "藏舟 Arkive · tc-imba.com",
+		Footer:    "藏舟 Arkive · arkive.games",
 		Automated: "这封邮件由系统自动发送，请勿回复。",
 	},
 	LocaleZhTW: {
@@ -86,7 +86,7 @@ var passwordResetCopy = map[MailLocale]mailCopy{
 		Expiry:    "連結 1 小時後失效，且僅能使用一次。",
 		Ignore:    "如果不是你本人操作，請忽略這封郵件——你的密碼不會有任何改變。",
 		Fallback:  "按鈕無法點選？把下面的連結複製到瀏覽器開啟：",
-		Footer:    "藏舟 Arkive · tc-imba.com",
+		Footer:    "藏舟 Arkive · arkive.games",
 		Automated: "這封郵件由系統自動發送，請勿回覆。",
 	},
 	LocaleEnUS: {
@@ -97,7 +97,7 @@ var passwordResetCopy = map[MailLocale]mailCopy{
 		Expiry:    "This link expires in 1 hour and can only be used once.",
 		Ignore:    "If this wasn't you, ignore this email — your password will not change.",
 		Fallback:  "Button not working? Copy this link into your browser:",
-		Footer:    "Arkive · tc-imba.com",
+		Footer:    "Arkive · arkive.games",
 		Automated: "This message was sent automatically. Please do not reply.",
 	},
 }

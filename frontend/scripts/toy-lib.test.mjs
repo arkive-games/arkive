@@ -33,8 +33,8 @@ const SITE_ONLY_CONFIG = {
 
 // aion2: site only, artifacts fetched from the same CDN the website uses.
 const URL_ONLY = {
-  dataUrl: 'https://data-aion2.tc-imba.com',
-  resourceUrl: 'https://resource-aion2.tc-imba.com',
+  dataUrl: 'https://data-aion2.arkive.games',
+  resourceUrl: 'https://resource-aion2.arkive.games',
 }
 const URL_CONFIG = {
   slug: 'arkive-aion2',

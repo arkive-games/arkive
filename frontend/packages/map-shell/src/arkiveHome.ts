@@ -1,5 +1,5 @@
 export const ARKIVE_DEV_HOME_URL = "http://localhost:15172"
-export const ARKIVE_PRODUCTION_HOME_URL = "https://tc-imba.com"
+export const ARKIVE_PRODUCTION_HOME_URL = "https://arkive.games"
 export const ARKIVE_TOY_HOME_URL = "/toy/arkive/index.html"
 
 export interface ResolveArkiveHomeUrlOptions {

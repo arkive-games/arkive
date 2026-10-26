@@ -7,7 +7,7 @@
 # services share a server but never a schema.
 #
 # The API binds to loopback only. nginx terminates TLS for
-# api-arkive.tc-imba.com and proxies to it; publishing the port on 0.0.0.0 would
+# api.arkive.games and proxies to it; publishing the port on 0.0.0.0 would
 # expose an untrusted plaintext endpoint alongside it.
 #
 # Usage:
@@ -45,7 +45,7 @@ services:
 
       # Scoped to the parent domain so one sign-in covers the homepage and every
       # game subdomain.
-      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-.tc-imba.com}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-.arkive.games}
       AUTH_COOKIE_SECURE: "true"
       AUTH_COOKIE_SAMESITE: lax
 
@@ -97,7 +97,7 @@ services:
       S3_USE_PATH_STYLE: ${S3_USE_PATH_STYLE:-false}
       # Where browsers fetch avatars, which need not be the endpoint writes go
       # to. Avatars are user-supplied images, so prefer a host outside
-      # tc-imba.com: the session cookie above is scoped to the parent domain,
+      # arkive.games: the session cookie above is scoped to the parent domain,
       # and content served from any subdomain of it sits inside that scope.
       S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-}
 

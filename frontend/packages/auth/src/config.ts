@@ -2,14 +2,14 @@ import type { AuthTransport } from "./types"
 
 export interface ResolveAuthConfigInput {
   /**
-   * The API origin, e.g. `https://api.tc-imba.com`, from the host's own
+   * The API origin, e.g. `https://api.arkive.games`, from the host's own
    * environment. The module prefix is appended here rather than baked into the
    * variable, so the backend's routing layout stays a code concern.
    */
   apiBaseUrl?: string | null
   /**
    * True in a Bilibili Toy build. Toy pages run as a third-party iframe on
-   * bilibili.com, where an httpOnly `.tc-imba.com` cookie is blocked by Safari
+   * bilibili.com, where an httpOnly `.arkive.games` cookie is blocked by Safari
    * and Firefox and is being removed from Chrome — so the session has to be a
    * bearer token there instead.
    */
@@ -42,7 +42,7 @@ export const CORE_API_PREFIX = "/api/v1/core"
  * VITE_API_BASE_URL still overrides it, which is what local development and any
  * future staging environment use.
  */
-export const ARKIVE_PRODUCTION_API_URL = "https://api-arkive.tc-imba.com"
+export const ARKIVE_PRODUCTION_API_URL = "https://api.arkive.games"
 
 /**
  * Decides where the API is and how the session travels.

@@ -27,7 +27,7 @@ export const ARKIVE_FONT_VERSION: string = (() => {
 })()
 
 export const ARKIVE_FONT_PATH = `/fonts/noto-sans/${ARKIVE_FONT_VERSION}/index.css`
-export const ARKIVE_FONT_URL = `https://tc-imba.com${ARKIVE_FONT_PATH}`
+export const ARKIVE_FONT_URL = `https://arkive.games${ARKIVE_FONT_PATH}`
 
 const MIME: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
@@ -59,7 +59,7 @@ export interface ArkiveFontAssetsOptions {
    *
    * It exists because `context.server` is undefined for every build, not just a
    * game's, so the portal's own production build was pointing at
-   * https://tc-imba.com/fonts/... -- fetching its own fonts cross-origin from
+   * https://arkive.games/fonts/... -- fetching its own fonts cross-origin from
    * itself. That also meant any non-production host of the portal (an EdgeOne
    * preview, `vite preview`) pulled fonts from live production, so a font change
    * could not be verified before deploying it.
@@ -83,8 +83,8 @@ export function arkiveFontAssets(options: ArkiveFontAssetsOptions = {}): Plugin 
               : ARKIVE_FONT_URL)
 
         const tags = []
-        // Only the games load the stylesheet from another hostname. tc-imba.com and
-        // palworld.tc-imba.com are the same SITE (so they share one cache partition,
+        // Only the games load the stylesheet from another hostname. arkive.games and
+        // palworld.arkive.games are the same SITE (so they share one cache partition,
         // which is the whole reason a single font host is worth having) but different
         // ORIGINS, so without this the first paint waits on a fresh DNS + TLS
         // handshake. crossorigin is required: a font request is CORS-mode, and a
@@ -92,7 +92,7 @@ export function arkiveFontAssets(options: ArkiveFontAssetsOptions = {}): Plugin 
         if (href === ARKIVE_FONT_URL) {
           tags.push({
             tag: 'link',
-            attrs: { rel: 'preconnect', href: 'https://tc-imba.com', crossorigin: '' },
+            attrs: { rel: 'preconnect', href: 'https://arkive.games', crossorigin: '' },
             injectTo: 'head-prepend' as const,
           })
         }

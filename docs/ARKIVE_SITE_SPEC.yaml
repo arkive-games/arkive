@@ -44,9 +44,9 @@ brand_identity:
     ja-JP: "蔵舟ゲーム攻略サイト"
     ko-KR: "창저우 게임 공략 사이트"
   domain:
-    display: "www.Arkive.games"
-    canonical_url: "https://www.arkive.games"
-    current_temporary_url: "https://tc-imba.com"
+    display: "Arkive.games"
+    canonical_url: "https://arkive.games"
+    retired_url: "https://tc-imba.com (every former *.tc-imba.com site host now answers 301 to its arkive.games twin; data-* and resource-* hosts still serve)"
     rule: "Display the Arkive.games domain as the long-term brand domain; keep temporary deployment URLs in environment configuration."
   slogan:
     zh-CN: "万千攻略，藏于一舟"

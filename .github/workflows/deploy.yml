@@ -44,9 +44,11 @@ jobs:
           # name is free — a typo would silently publish to a new empty project
           # instead of failing.
           #
-          # `domain` arms the post-deploy check. Leave it out while an app still
-          # points at its old Git-connected project, or the check would verify the
-          # site this workflow did not deploy.
+          # `domain` arms the post-deploy check: the host whose live build must
+          # match the one just made. Every app now has one, because every
+          # `<app>.arkive.games` host is bound to the project this workflow deploys
+          # (scripts/edgeone_domains.py, docs/edgeone-custom-domains.md). The old
+          # `*.tc-imba.com` hosts are bound to static redirect projects instead.
           #
           # `data_base_url` / `resource_base_url` are the ONLY build-time values
           # these apps still need. Everything else resolves from an in-code
@@ -56,49 +58,43 @@ jobs:
           # apps/meta/src/sites.ts.
           - app: meta
             project: arkive-meta
+            domain: arkive.games
             smoke_path: /
           - app: aion2
             project: arkive-aion2
+            domain: aion2.arkive.games
             smoke_path: /wiki
-            data_base_url: https://data-aion2.tc-imba.com
-            resource_base_url: https://resource-aion2.tc-imba.com
+            data_base_url: https://data-aion2.arkive.games
+            resource_base_url: https://resource-aion2.arkive.games
           - app: palworld
             project: arkive-palworld
+            domain: palworld.arkive.games
             smoke_path: /breeding
-            data_base_url: https://data-palworld.tc-imba.com
-            resource_base_url: https://resource-palworld.tc-imba.com
+            data_base_url: https://data-palworld.arkive.games
+            resource_base_url: https://resource-palworld.arkive.games
           - app: vrising
             project: arkive-vrising
+            domain: vrising.arkive.games
             smoke_path: /changelog
-            data_base_url: https://data-vrising.tc-imba.com
-            resource_base_url: https://resource-vrising.tc-imba.com
+            data_base_url: https://data-vrising.arkive.games
+            resource_base_url: https://resource-vrising.arkive.games
           # /changelog is the app's only non-root route, which makes it the only
           # path that can prove edgeone.json travelled with the upload.
           - app: ro3
             project: arkive-ro3
-            domain: ro3.tc-imba.com
+            domain: ro3.arkive.games
             smoke_path: /changelog
-            data_base_url: https://data-ro3.tc-imba.com
-            resource_base_url: https://resource-ro3.tc-imba.com
-          # The project exists; the DOMAIN is not attached to it yet, which is why
-          # `domain` is absent. Measured rather than assumed: gmzz.tc-imba.com
-          # answers and serves the app, but presents the shared
-          # `CN=*.cdn.myqcloud.com` Tencent CDN certificate where
-          # palworld.tc-imba.com presents `CN=palworld.tc-imba.com`. So that host
-          # is not this project's, arming the check would verify a site this
-          # workflow does not publish, and a browser following the hub's link
-          # gets a certificate warning today. Fill `domain` in with the CNAME —
-          # until then the upload lands in the project while the live host keeps
-          # serving whatever it served before.
-          #
+            data_base_url: https://data-ro3.arkive.games
+            resource_base_url: https://resource-ro3.arkive.games
           # Every gmzz route is a real page rather than a redirect, so any of
           # them proves edgeone.json travelled; /changelog is used for the same
           # reason as vrising's and ro3's, being the route least likely to move.
           - app: gmzz
             project: arkive-gmzz
+            domain: gmzz.arkive.games
             smoke_path: /changelog
-            data_base_url: https://data-gmzz.tc-imba.com
-            resource_base_url: https://resource-gmzz.tc-imba.com
+            data_base_url: https://data-gmzz.arkive.games
+            resource_base_url: https://resource-gmzz.arkive.games
 
     # Two pushes in quick succession must not race the same project. Queue rather
     # than cancel: an interrupted upload is a half-published site.

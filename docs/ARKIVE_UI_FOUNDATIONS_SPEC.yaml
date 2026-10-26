@@ -89,7 +89,7 @@ typography:
       - "Consolas"
       - "monospace"
   delivery:
-    canonical_stylesheet: "https://tc-imba.com/fonts/noto-sans/v1/index.css"
+    canonical_stylesheet: "https://arkive.games/fonts/noto-sans/v1/index.css"
     asset_owner: "The Meta application owns and deploys the shared font files."
     cache_policy: "Versioned font assets use public, max-age=31536000, immutable and Access-Control-Allow-Origin: *."
     rules:

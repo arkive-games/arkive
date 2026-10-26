@@ -49,7 +49,7 @@ export const ARKIVE_ICP_RECORD = "沪ICP备2025152827号-1"
 export const ARKIVE_FEEDBACK_QQ_GROUP = "1091411026"
 
 function SiteFooter({
-  homeUrl = "https://tc-imba.com",
+  homeUrl = "https://arkive.games",
   homeLinkProps,
   githubUrl = "https://github.com/arkive-games",
   icpBeian = ARKIVE_ICP_RECORD,

@@ -29,8 +29,8 @@ from .version import content_version
 
 DATA_ORIGIN = "arkive-games/data-palworld"
 RESOURCE_ORIGIN = "arkive-games/resource-palworld"
-DATA_URL = "https://data-palworld.tc-imba.com"
-RESOURCE_URL = "https://resource-palworld.tc-imba.com"
+DATA_URL = "https://data-palworld.arkive.games"
+RESOURCE_URL = "https://resource-palworld.arkive.games"
 
 REFERENCE_FILES = (
     "maps.json",

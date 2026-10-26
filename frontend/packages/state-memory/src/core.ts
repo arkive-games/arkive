@@ -11,7 +11,7 @@ export type MemoryStateClass =
 
 /**
  * `site` is the only scope that crosses ORIGINS. The Arkive games are separate
- * origins (aion2.tc-imba.com, palworld.tc-imba.com, ...), and Web Storage is
+ * origins (aion2.arkive.games, palworld.arkive.games, ...), and Web Storage is
  * per-origin, so a record that must look the same on every site cannot live in
  * `device` -- it needs the cookie transport. Before this existed, `namespace:
  * "site"` named that intent without delivering it: the interface language was
