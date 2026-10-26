@@ -351,6 +351,9 @@ export default function App() {
       ? VISIBLE_SITES.map((site) => ({
           key: `game:${site.id}`,
           label: t(site.nameKey),
+          group: t(site.kind === 'online' ? 'nav.groupOnline' : 'nav.groupOffline'),
+          iconSrc: site.icon ?? GAME_LOGOS[site.id],
+          tint: site.menuTint ?? site.color,
         }))
       : undefined,
   }))

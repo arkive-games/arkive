@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Check, Eraser, FileX, History, RotateCcw } from 'lucide-react'
+import { useState, type ComponentProps } from 'react'
+import { Check } from 'lucide-react'
 import { browserMemory, type MemoryClient } from '@gamemap/state-memory'
 import {
   AlertDialog,
@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
   Button,
   clearArkiveThemePreference,
+  cn,
   Dialog,
   DialogClose,
   DialogContent,
@@ -29,6 +30,10 @@ export interface LocalDataStrings {
   clearDrafts: string
   resetPreferences: string
   clearAll: string
+  /** The action word on the clearing rows. */
+  clear: string
+  /** The action word on the preferences row. */
+  reset: string
   confirmTitle: string
   confirmDescription: string
   cancel: string
@@ -42,8 +47,10 @@ const ENGLISH: LocalDataStrings = {
   clearRecent: 'Clear recent activity on this device',
   clearDrafts: 'Clear drafts on this device',
   resetPreferences: 'Reset interface preferences on this device',
-  clearAll: 'Clear all Arkive data on this device',
-  confirmTitle: 'Clear all Arkive data on this device?',
+  clearAll: 'Clear all data on this device',
+  clear: 'Clear',
+  reset: 'Reset',
+  confirmTitle: 'Clear all data on this device?',
   confirmDescription: 'This removes this site\'s remembered activity, drafts, preferences, and local progress from this browser. This cannot be undone.',
   cancel: 'Cancel',
   confirm: 'Clear data',
@@ -57,8 +64,10 @@ const LOCALIZED: Record<string, LocalDataStrings> = {
     clearRecent: '清除此设备上的近期记录',
     clearDrafts: '清除此设备上的草稿',
     resetPreferences: '重置此设备上的界面偏好',
-    clearAll: '清除此设备上的全部 Arkive 数据',
-    confirmTitle: '清除此设备上的全部 Arkive 数据？',
+    clearAll: '清除此设备上的全部数据',
+    clear: '清除',
+    reset: '重置',
+    confirmTitle: '清除此设备上的全部数据？',
     confirmDescription: '这会从当前浏览器移除此网站保存的近期记录、草稿、偏好和本地进度，且无法撤销。',
     cancel: '取消',
     confirm: '清除数据',
@@ -70,8 +79,10 @@ const LOCALIZED: Record<string, LocalDataStrings> = {
     clearRecent: '清除此裝置上的近期記錄',
     clearDrafts: '清除此裝置上的草稿',
     resetPreferences: '重設此裝置上的介面偏好',
-    clearAll: '清除此裝置上的全部 Arkive 資料',
-    confirmTitle: '清除此裝置上的全部 Arkive 資料？',
+    clearAll: '清除此裝置上的全部資料',
+    clear: '清除',
+    reset: '重設',
+    confirmTitle: '清除此裝置上的全部資料？',
     confirmDescription: '這會從目前瀏覽器移除此網站儲存的近期記錄、草稿、偏好和本機進度，且無法復原。',
     cancel: '取消',
     confirm: '清除資料',
@@ -102,29 +113,16 @@ export function LocalDataControls({ strings, memory = browserMemory }: {
   }
 
   return (
-    <div className="flex flex-col gap-2" data-testid="local-data-controls">
-      <p>{strings.description}</p>
-      <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.clearRecent, () => memory.clearStateClass('recent_activity'))}>
-        <History className="size-4 shrink-0" aria-hidden="true" />
-        {strings.clearRecent}
-      </Button>
-      <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.clearDrafts, () => memory.clearStateClass('task_draft'))}>
-        <FileX className="size-4 shrink-0" aria-hidden="true" />
-        {strings.clearDrafts}
-      </Button>
-      <Button type="button" variant="outline" className="h-auto justify-start whitespace-normal text-left" onClick={() => run(strings.resetPreferences, () => {
+    <div className="flex flex-col gap-1" data-testid="local-data-controls">
+      <DataRow label={strings.clearRecent} action={strings.clear} testId="local-data-clear-recent" onClick={() => run(strings.clearRecent, () => memory.clearStateClass('recent_activity'))} />
+      <DataRow label={strings.clearDrafts} action={strings.clear} testId="local-data-clear-drafts" onClick={() => run(strings.clearDrafts, () => memory.clearStateClass('task_draft'))} />
+      <DataRow label={strings.resetPreferences} action={strings.reset} testId="local-data-reset-preferences" onClick={() => run(strings.resetPreferences, () => {
         memory.clearStateClass('user_preference')
         clearArkiveThemePreference()
-      })}>
-        <RotateCcw className="size-4 shrink-0" aria-hidden="true" />
-        {strings.resetPreferences}
-      </Button>
+      })} />
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button type="button" variant="destructive" className="h-auto justify-start whitespace-normal text-left">
-            <Eraser className="size-4 shrink-0" aria-hidden="true" />
-            {strings.clearAll}
-          </Button>
+          <DataRow label={strings.clearAll} action={strings.clear} testId="local-data-clear-all" danger />
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -144,15 +142,52 @@ export function LocalDataControls({ strings, memory = browserMemory }: {
       </AlertDialog>
       {/* Visible, not sr-only: this is the only feedback that a destructive action
           happened, so a sighted user otherwise clicks "Clear drafts" and sees
-          nothing change anywhere in the dialog. */}
+          nothing change anywhere in the dialog. Collapsed while empty so the
+          closed list carries no blank line. */}
       <span
-        className="min-h-5 text-xs text-muted-foreground"
+        className="flex items-center gap-1 px-3 text-xs text-muted-foreground empty:hidden [&_svg]:size-3.5"
         role="status"
         aria-live="polite"
       >
         {status ? <><Check aria-hidden="true" />{status}</> : null}
       </span>
     </div>
+  )
+}
+
+/**
+ * One row: what it clears on the left, the action word on the right.
+ *
+ * A whole-row button rather than a label beside a small one, so the target is
+ * the full width on a phone. Forwards props so it can be an AlertDialog trigger.
+ */
+function DataRow({
+  label,
+  action,
+  testId,
+  danger = false,
+  ...props
+}: ComponentProps<'button'> & {
+  label: string
+  action: string
+  testId: string
+  danger?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      // The label already says what happens; the action word only repeats it.
+      aria-label={label}
+      className={cn(
+        'arkive-local-data-row flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors outline-none hover:bg-background/60 focus-visible:ring-2 focus-visible:ring-ring',
+        danger ? 'text-destructive' : 'text-foreground/85',
+      )}
+      {...props}
+    >
+      <span className="min-w-0 flex-1">{label}</span>
+      <span className={cn('shrink-0 text-xs', danger ? 'font-medium' : 'text-muted-foreground')}>{action}</span>
+    </button>
   )
 }
 

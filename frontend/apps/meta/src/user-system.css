@@ -17,29 +17,29 @@
   content: '';
 }
 
+/* A round icon button, like the theme and language triggers beside it. */
 .notification-trigger {
   position: relative;
-  display: inline-flex;
-  height: 2.25rem;
-  align-items: center;
-  gap: 0.5rem;
-  padding-inline: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--arkive-radius-standard);
+  display: inline-grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 999px;
   color: var(--foreground);
-  background: var(--card);
-  font-size: 0.875rem;
-  font-weight: 600;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
   text-decoration: none;
-  transition: border-color var(--arkive-motion-standard) var(--arkive-motion-easing), background var(--arkive-motion-standard) var(--arkive-motion-easing), color var(--arkive-motion-standard) var(--arkive-motion-easing);
+  transition: background var(--arkive-motion-standard) var(--arkive-motion-easing), color var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
 .notification-unread-dot {
-  width: 0.42rem;
-  height: 0.42rem;
+  position: absolute;
+  top: 0.45rem;
+  right: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 50%;
   background: var(--primary);
-  box-shadow: 0 0 0 0.12rem var(--card);
+  box-shadow: 0 0 0 0.125rem var(--background);
 }
 
 .notification-trigger:hover,

@@ -25,15 +25,17 @@ export interface AuthStrings {
   namePlaceholder: string
 
   loginTitle: string
+  loginSubtitle: string
   loginSubmit: string
   registerTitle: string
+  registerSubtitle: string
   registerSubmit: string
   switchToRegister: string
   switchToLogin: string
 
   forgotPassword: string
   forgotTitle: string
-  forgotDescription: string
+  forgotSubtitle: string
   forgotSubmit: string
   forgotSent: string
 
@@ -86,17 +88,19 @@ export const DEFAULT_AUTH_STRINGS: AuthStrings = {
   nameLabel: "Display name",
   namePlaceholder: "How others will see you",
 
-  loginTitle: "Sign in to Arkive",
+  loginTitle: "Welcome aboard Arkive~",
+  loginSubtitle: "A new ship loaded with guides, ready to set sail with you.",
   loginSubmit: "Sign in",
-  registerTitle: "Create an Arkive account",
-  registerSubmit: "Create account",
-  switchToRegister: "No account yet? Create one",
-  switchToLogin: "Already have an account? Sign in",
+  registerTitle: "So glad to meet you here",
+  registerSubtitle: "Create an account and discover more of every game together.",
+  registerSubmit: "Sign up",
+  switchToRegister: "Create an account",
+  switchToLogin: "Back to sign in",
 
   forgotPassword: "Forgot your password?",
-  forgotTitle: "Reset your password",
-  forgotDescription: "Enter your address and we will send a reset link.",
-  forgotSubmit: "Send reset link",
+  forgotTitle: "No rush, we'll help you back in",
+  forgotSubtitle: "Enter your email. You are one step away from setting off again.",
+  forgotSubmit: "Send reset email",
   forgotSent: "If that address is registered, a reset link is on its way.",
 
   resetTitle: "Choose a new password",

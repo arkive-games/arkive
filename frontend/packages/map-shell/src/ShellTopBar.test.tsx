@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { act, cleanup, fireEvent, render } from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { ShellTopBar, type ShellNavItem } from "./ShellTopBar"
 
 afterEach(cleanup)
@@ -145,6 +145,7 @@ describe("ShellTopBar nav", () => {
   })
 
   it("keeps one highlighted item while crossing the nav and restores the route on exit", () => {
+    vi.useFakeTimers()
     const items: ShellNavItem[] = [
       { key: "map", label: "Map", active: true },
       { key: "database", label: "Database" },
@@ -174,11 +175,42 @@ describe("ShellTopBar nav", () => {
     expect(mapLink.className).toContain("text-foreground/70")
     expect(databaseLink.className).toContain("text-primary")
 
+    // A brief exit is forgiven, so grazing the edge does not send the pill home.
     fireEvent.pointerLeave(getByRole("navigation"))
+    expect(databaseLabel.className).toContain("is-highlighted")
+    fireEvent.pointerEnter(getByRole("navigation"))
+    act(() => vi.advanceTimersByTime(200))
+    expect(databaseLabel.className).toContain("is-highlighted")
+
+    fireEvent.pointerLeave(getByRole("navigation"))
+    act(() => vi.advanceTimersByTime(200))
     expect(mapLabel.className).toContain("is-highlighted")
     expect(databaseLabel.className).not.toContain("is-highlighted")
     expect(mapLink.className).toContain("text-primary")
     expect(databaseLink.className).toContain("text-foreground/70")
+    vi.useRealTimers()
+  })
+
+  it("lays grouped dropdown children out as labelled columns with icons", () => {
+    const items: ShellNavItem[] = [
+      {
+        key: "games",
+        label: "Games",
+        children: [
+          { key: "a", label: "Alpha", group: "Online", iconSrc: "/a.webp", tint: "#123456" },
+          { key: "b", label: "Beta", group: "Offline" },
+          { key: "c", label: "Gamma", group: "Online" },
+        ],
+      },
+    ]
+    const { getAllByRole, getByTestId } = render(<ShellTopBar nav={{ items, renderItem }} />)
+
+    fireEvent.click(getByTestId("nav-dropdown-games"))
+    const columns = getAllByRole("group")
+    expect(columns.map((column) => column.getAttribute("aria-label"))).toEqual(["Online", "Offline"])
+    expect(columns[0].querySelectorAll("[role=menuitem]")).toHaveLength(2)
+    expect(columns[0].querySelector("img")?.getAttribute("src")).toBe("/a.webp")
+    expect((getByTestId("link-a").parentElement as HTMLElement).style.getPropertyValue("--nav-tint")).toBe("#123456")
   })
 
   it("uses one geometry and type treatment for nav and utility menu items", () => {

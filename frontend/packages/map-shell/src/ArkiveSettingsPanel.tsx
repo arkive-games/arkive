@@ -1,12 +1,11 @@
-import type { ReactNode } from "react"
-import { IconLanguage, IconMoonStars } from "@tabler/icons-react"
+import { useState, type ReactNode } from "react"
+import { IconCheck, IconChevronDown, IconX } from "@tabler/icons-react"
 import {
   Button,
   cn,
   Dialog,
   DialogClose,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@gamemap/ui"
@@ -18,18 +17,23 @@ import { useOptionalTheme, type Theme } from "./theme/ThemeProvider"
 
 export interface ArkiveSettingsStrings {
   title: string
-  general: string
-  generalDescription: string
   /** Carries `{game}`. */
   siteSection: string
-  siteDescription: string
   theme: string
   language: string
+  /** Carries `{game}`. */
+  siteTheme: string
+  /** Carries `{game}`. */
+  siteLanguage: string
   followGeneral: string
   overriding: string
   /** Carries `{value}`. */
   followingGeneral: string
   otherSitesNote: string
+  /** The local-data card's label. */
+  localData: string
+  /** The local-data card's value pill. */
+  manage: string
   close: string
 }
 
@@ -74,148 +78,121 @@ function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (match, key: string) => values[key] ?? match)
 }
 
-const GROUP_TITLE =
-  "text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+/** Language lists longer than this lay out in two columns, as in the top bar. */
+const LANGUAGE_GRID_THRESHOLD = 8
 
-const ROW = "flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1.5"
-
-/** Matches the segmented control in ShellBottomNav, so both surfaces read alike. */
-function pillClass(selected: boolean) {
-  return cn(
-    "flex min-h-9 min-w-0 items-center justify-center whitespace-normal px-2.5 py-1 text-center text-xs font-semibold leading-tight transition-colors",
-    selected ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
+/**
+ * One collapsible card: the label, the current value as a pill, and a chevron.
+ *
+ * A `details` element whose `open` the panel owns, so opening one card closes
+ * the others and choosing an option can close its card. The summary's default
+ * toggle is cancelled for the same reason -- the DOM must not drift from state.
+ */
+function SettingsCard({
+  label,
+  value,
+  open,
+  onToggle,
+  testId,
+  children,
+}: {
+  label: string
+  value?: string
+  open: boolean
+  onToggle: () => void
+  testId: string
+  children: ReactNode
+}) {
+  return (
+    <details className="arkive-settings-card" open={open} data-testid={testId}>
+      <summary
+        className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={(event) => {
+          event.preventDefault()
+          onToggle()
+        }}
+      >
+        <span className="min-w-0 truncate text-sm font-medium">{label}</span>
+        <span
+          className={cn(
+            "max-w-40 truncate rounded-full px-2.5 py-0.5 text-xs text-muted-foreground",
+            value && "bg-background",
+          )}
+        >
+          {value}
+        </span>
+        <IconChevronDown
+          data-slot="settings-chevron"
+          className="size-3 text-muted-foreground"
+          stroke={2.4}
+          aria-hidden="true"
+        />
+      </summary>
+      <div className="flex flex-col gap-2 pb-4">{children}</div>
+    </details>
   )
 }
 
-function Segmented({
+function Options({
   label,
   options,
   current,
   onChange,
   testId,
+  columns = 1,
 }: {
   label: string
   options: { value: string; label: string }[]
   current: string
   onChange: (value: string) => void
   testId: string
+  columns?: 1 | 2
 }) {
   return (
-    <div
-      role="group"
-      aria-label={label}
-      className="flex max-w-full overflow-hidden rounded-md border border-border"
-    >
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          data-testid={`${testId}-${option.value || "follow"}`}
-          aria-pressed={current === option.value}
-          onClick={() => onChange(option.value)}
-          className={pillClass(current === option.value)}
-        >
-          {option.label}
-        </button>
-      ))}
+    <div role="group" aria-label={label} className={cn("grid gap-2", columns === 2 && "grid-cols-2")}>
+      {options.map((option) => {
+        const selected = current === option.value
+        return (
+          <button
+            key={option.value}
+            type="button"
+            data-testid={`${testId}-${option.value || "follow"}`}
+            aria-pressed={selected}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              selected
+                ? "bg-background font-medium text-foreground"
+                : "text-foreground/80 hover:bg-background/60 hover:text-foreground",
+            )}
+          >
+            <span className="min-w-0 flex-1">{option.label}</span>
+            {selected && (
+              <IconCheck className="size-4 shrink-0 text-[color:var(--ring)]" stroke={2.2} aria-hidden="true" />
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }
 
-/**
- * A native select, deliberately, rather than the UI kit's Select.
- *
- * This panel renders inside the phone navigation sheet as well as in a dialog,
- * and a portalled listbox opened from inside a sheet has its pointer events
- * swallowed by the sheet overlay -- it goes dead rather than merely looking
- * wrong. A native control has no portal, and hands a 17-locale list to the
- * platform picker on a phone instead of to a scrolling div.
- */
-function LanguageSelect({
-  label,
-  options,
-  current,
-  onChange,
-  testId,
-}: {
-  label: string
-  options: { code: string; label: string }[]
-  current: string
-  onChange: (code: string) => void
-  testId: string
-}) {
-  return (
-    <select
-      aria-label={label}
-      data-testid={testId}
-      value={current}
-      onChange={(event) => onChange(event.target.value)}
-      className="min-h-9 max-w-[60%] truncate rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {options.map((option) => (
-        <option key={option.code} value={option.code}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  )
+function Hint({ children }: { children: ReactNode }) {
+  return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
-function Row({
-  icon,
-  label,
-  hint,
-  children,
-}: {
-  icon: ReactNode
-  label: string
-  hint?: string
-  children: ReactNode
-}) {
-  return (
-    <div className={ROW}>
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="flex min-w-0 items-center gap-2 text-sm">
-          <span className="shrink-0 text-muted-foreground">{icon}</span>
-          {label}
-        </span>
-        {hint && <span className="pl-7 text-xs text-muted-foreground">{hint}</span>}
-      </span>
-      {children}
-    </div>
-  )
-}
-
-function Group({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description?: string
-  children: ReactNode
-}) {
-  return (
-    <section className="flex flex-col gap-2">
-      <div className="flex flex-col gap-1 border-b border-border pb-1.5">
-        <h3 className={GROUP_TITLE}>{title}</h3>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-/** The value the site-level segmented control uses to mean "follow General". */
+/** The value the site-level options use to mean "follow General". */
 const FOLLOW = ""
 
+type CardId = "theme" | "language" | "site-theme" | "site-language" | "local-data"
+
 /**
- * Every preference this site can express, in one scroll.
+ * Every preference this site can express, as a list of cards.
  *
- * One scroll rather than a category rail: there are about eight rows, and more
- * importantly both layers have to be visible together. "This game is overriding
- * general" is the single thing a two-layer model must communicate without being
- * clicked, and a rail hides one layer behind the other.
+ * Both layers stay legible without a click: each card's pill names its value,
+ * so a game overriding the shared theme reads as such in the closed list. Only
+ * one card opens at a time, which keeps the 17-locale language list from
+ * pushing everything else out of a phone sheet.
  *
  * Purely presentational. Values, callbacks and strings all arrive from the host,
  * because this package is grep-gated against storage, network and i18n.
@@ -228,10 +205,19 @@ export function ArkiveSettingsPanel({
   language,
   siteExtras,
 }: ArkiveSettingsPanelProps) {
+  const [openCard, setOpenCard] = useState<CardId | null>(null)
+  const toggle = (id: CardId) => setOpenCard((current) => (current === id ? null : id))
+  const choose = (apply: () => void) => {
+    apply()
+    setOpenCard(null)
+  }
+
   const themeLabel = (value: Theme) =>
     theme?.options.find((option) => option.value === value)?.label ?? value
   const languageLabel = (code: string) =>
     language?.options.find((option) => option.code === code)?.label ?? code
+  const languageOptions = language?.options.map(({ code, label }) => ({ value: code, label })) ?? []
+  const languageColumns = languageOptions.length > LANGUAGE_GRID_THRESHOLD ? 2 : 1
 
   const overrideHint = (overriding: boolean, generalLabel: string) =>
     overriding
@@ -239,88 +225,102 @@ export function ArkiveSettingsPanel({
       : fill(strings.followingGeneral, { value: generalLabel })
 
   return (
-    <div className="flex flex-col gap-5" data-testid="arkive-settings-panel">
-      <Group title={strings.general} description={strings.generalDescription}>
-        {theme && (
-          <Row icon={<IconMoonStars className="size-4" stroke={1.8} />} label={strings.theme}>
-            <Segmented
-              label={strings.theme}
-              testId="settings-general-theme"
-              options={theme.options}
-              current={theme.generalValue}
-              onChange={(value) => theme.onSetGeneral(value as Theme)}
-            />
-          </Row>
-        )}
-        {language && (
-          <Row icon={<IconLanguage className="size-4" stroke={1.8} />} label={strings.language}>
-            <LanguageSelect
-              label={strings.language}
-              testId="settings-general-language"
-              options={language.options}
-              current={language.generalValue}
-              onChange={language.onSetGeneral}
-            />
-          </Row>
-        )}
-        {site && <p className="text-xs text-muted-foreground">{strings.otherSitesNote}</p>}
-      </Group>
-
-      {site && (theme || language || siteExtras) && (
-        <Group
-          title={fill(strings.siteSection, { game: site.name })}
-          description={strings.siteDescription}
+    <div className="arkive-settings-list flex flex-col gap-2.5" data-testid="arkive-settings-panel">
+      {theme && (
+        <SettingsCard
+          label={strings.theme}
+          value={themeLabel(theme.generalValue)}
+          open={openCard === "theme"}
+          onToggle={() => toggle("theme")}
+          testId="settings-card-theme"
         >
-          {theme && (
-            <Row
-              icon={<IconMoonStars className="size-4" stroke={1.8} />}
-              label={strings.theme}
-              hint={overrideHint(theme.override !== null, themeLabel(theme.generalValue))}
-            >
-              <Segmented
-                label={fill(strings.siteSection, { game: site.name })}
-                testId="settings-site-theme"
-                options={[
-                  { value: FOLLOW, label: strings.followGeneral },
-                  ...theme.options.map((option) => ({ ...option, value: option.value as string })),
-                ]}
-                current={theme.override ?? FOLLOW}
-                onChange={(value) =>
-                  value === FOLLOW ? theme.onFollowGeneral() : theme.onSetOverride(value as Theme)
-                }
-              />
-            </Row>
-          )}
-          {language && (
-            <Row
-              icon={<IconLanguage className="size-4" stroke={1.8} />}
-              label={strings.language}
-              hint={overrideHint(
-                language.override !== null,
-                languageLabel(language.generalValue),
-              )}
-            >
-              <LanguageSelect
-                label={fill(strings.siteSection, { game: site.name })}
-                testId="settings-site-language"
-                options={[
-                  { code: FOLLOW, label: strings.followGeneral },
-                  ...language.options,
-                ]}
-                current={language.override ?? FOLLOW}
-                onChange={(code) =>
-                  code === FOLLOW ? language.onFollowGeneral() : language.onSetOverride(code)
-                }
-              />
-            </Row>
-          )}
-          {siteExtras}
-        </Group>
+          <Options
+            label={strings.theme}
+            testId="settings-general-theme"
+            options={theme.options}
+            current={theme.generalValue}
+            onChange={(value) => choose(() => theme.onSetGeneral(value as Theme))}
+          />
+          {site && <Hint>{strings.otherSitesNote}</Hint>}
+        </SettingsCard>
+      )}
+      {language && (
+        <SettingsCard
+          label={strings.language}
+          value={languageLabel(language.generalValue)}
+          open={openCard === "language"}
+          onToggle={() => toggle("language")}
+          testId="settings-card-language"
+        >
+          <Options
+            label={strings.language}
+            testId="settings-general-language"
+            options={languageOptions}
+            current={language.generalValue}
+            columns={languageColumns}
+            onChange={(code) => choose(() => language.onSetGeneral(code))}
+          />
+          {site && <Hint>{strings.otherSitesNote}</Hint>}
+        </SettingsCard>
       )}
 
-      <Group title={localData.title}>
+      {site && theme && (
+        <SettingsCard
+          label={fill(strings.siteTheme, { game: site.name })}
+          value={theme.override === null ? strings.followGeneral : themeLabel(theme.override)}
+          open={openCard === "site-theme"}
+          onToggle={() => toggle("site-theme")}
+          testId="settings-card-site-theme"
+        >
+          <Hint>{overrideHint(theme.override !== null, themeLabel(theme.generalValue))}</Hint>
+          <Options
+            label={fill(strings.siteSection, { game: site.name })}
+            testId="settings-site-theme"
+            options={[
+              { value: FOLLOW, label: strings.followGeneral },
+              ...theme.options.map((option) => ({ ...option, value: option.value as string })),
+            ]}
+            current={theme.override ?? FOLLOW}
+            onChange={(value) => choose(() =>
+              value === FOLLOW ? theme.onFollowGeneral() : theme.onSetOverride(value as Theme)
+            )}
+          />
+        </SettingsCard>
+      )}
+      {site && language && (
+        <SettingsCard
+          label={fill(strings.siteLanguage, { game: site.name })}
+          value={language.override === null ? strings.followGeneral : languageLabel(language.override)}
+          open={openCard === "site-language"}
+          onToggle={() => toggle("site-language")}
+          testId="settings-card-site-language"
+        >
+          <Hint>
+            {overrideHint(language.override !== null, languageLabel(language.generalValue))}
+          </Hint>
+          <Options
+            label={fill(strings.siteSection, { game: site.name })}
+            testId="settings-site-language"
+            options={[{ value: FOLLOW, label: strings.followGeneral }, ...languageOptions]}
+            current={language.override ?? FOLLOW}
+            columns={languageColumns}
+            onChange={(code) => choose(() =>
+              code === FOLLOW ? language.onFollowGeneral() : language.onSetOverride(code)
+            )}
+          />
+        </SettingsCard>
+      )}
+      {site && siteExtras}
+
+      <SettingsCard
+        label={strings.localData}
+        value={strings.manage}
+        open={openCard === "local-data"}
+        onToggle={() => toggle("local-data")}
+        testId="settings-card-local-data"
+      >
         <LocalDataControls strings={localData} />
-      </Group>
+      </SettingsCard>
     </div>
   )
 }
@@ -345,21 +345,30 @@ export function ArkiveSettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         data-testid="settings-dialog"
-        className="max-h-[min(85dvh,44rem)] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-lg"
+        showCloseButton={false}
+        showTideLine={false}
+        className="arkive-settings-dialog max-h-[min(85dvh,44rem)] grid-rows-[auto_minmax(0,1fr)] gap-5 rounded-[1.5rem] border-0 p-6 sm:max-w-[430px]"
       >
-        <DialogHeader>
-          <DialogTitle>{panel.strings.title}</DialogTitle>
-        </DialogHeader>
-        <div className="min-h-0 overflow-y-auto pr-1">
-          <ArkiveSettingsPanel {...panel} />
-        </div>
-        <DialogFooter>
+        <DialogHeader className="flex-row items-center justify-between gap-3 text-left">
+          <DialogTitle className="arkive-dialog-title text-[1.375rem] font-bold sm:text-2xl">
+            {panel.strings.title}
+          </DialogTitle>
           <DialogClose asChild>
-            <Button type="button" variant="outline">
-              {panel.strings.close}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0 rounded-full bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+              aria-label={panel.strings.close}
+              title={panel.strings.close}
+            >
+              <IconX className="size-4" stroke={1.8} />
             </Button>
           </DialogClose>
-        </DialogFooter>
+        </DialogHeader>
+        <div className="-mx-1 min-h-0 overflow-y-auto px-1">
+          <ArkiveSettingsPanel {...panel} />
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -1,21 +1,12 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  IconApps,
-  IconArrowUp,
-  IconBell,
-  IconBookmark,
   IconCheck,
   IconLanguage,
-  IconLogin2,
   IconMenu2,
-  IconMessageCircle,
   IconMoon,
-  IconSettings,
   IconSun,
   IconSunMoon,
-  IconTool,
-  IconUserCircle,
   IconX,
 } from '@tabler/icons-react'
 import { settingsStringsFor, type ArkiveMapTheme } from '@gamemap/map-shell'
@@ -30,7 +21,7 @@ const THEME_ICONS = { auto: IconSunMoon, light: IconSun, dark: IconMoon } as con
 /**
  * The portal's phone header controls on every view: language, theme and a site
  * menu, as three round buttons. The phone site has no bottom tab bar, so the
- * menu sheet carries the sections, the account, settings and a way back up.
+ * menu sheet carries the sections, then the account and settings once signed in.
  */
 export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLanguageChange, onThemeChange, onLogin, onOpenSettings }: {
   isSignedIn: boolean
@@ -138,66 +129,30 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
 
       {open === 'menu' && (
         <nav ref={setSheet} id={`${baseId}-menu`} className="home-sheet" aria-label={t('landing.menu.label')}>
+          <a href="#explore" onClick={close}>{t('landing.menu.discover')}</a>
+          <a href="#games" onClick={close}>{t('landing.menu.allGames')}</a>
+          {hasTools && <a href="#tools" onClick={close}>{t('landing.menu.tools')}</a>}
+          <a href="#forum" onClick={close}>{t('landing.menu.forum')}</a>
+          <hr />
           {isSignedIn ? (
             <>
-              <SheetRow href="#account/edit" colors={['#ffb347', '#ff4f9a']} icon={<IconUserCircle stroke={1.9} />} label={t('landing.menu.account')} onClick={close} />
-              <SheetRow href="#notifications/settings" colors={['#5fa2ff', '#3d5bff']} icon={<IconBell stroke={1.9} />} label={t('landing.menu.notifications')} onClick={close} />
+              <a href="#account/edit" onClick={close}>{t('landing.menu.account')}</a>
+              <a href="#notifications/settings" onClick={close}>{t('landing.menu.notifications')}</a>
+              <button
+                type="button"
+                onClick={() => {
+                  close()
+                  onOpenSettings()
+                }}
+              >
+                {settingsStringsFor(language).title}
+              </button>
             </>
           ) : (
-            <SheetRow colors={['#ffb347', '#ff4f9a']} icon={<IconLogin2 stroke={1.9} />} label={t('landing.menu.login')} onClick={login} />
+            <button type="button" className="home-sheet-login" onClick={login}>{t('landing.menu.login')}</button>
           )}
-          <hr />
-          <SheetRow href="#games" colors={['#ff8a4c', '#ff3d5a']} icon={<IconApps stroke={1.9} />} label={t('landing.menu.allGames')} onClick={close} />
-          {hasTools && <SheetRow href="#tools" colors={['#a47bff', '#6a3dff']} icon={<IconTool stroke={1.9} />} label={t('landing.menu.tools')} onClick={close} />}
-          <SheetRow href="#forum" colors={['#5fa2ff', '#3d5bff']} icon={<IconMessageCircle stroke={1.9} />} label={t('landing.menu.forum')} onClick={close} />
-          <SheetRow
-            href={isSignedIn ? '#account/favorites' : undefined}
-            colors={['#ffcb52', '#ff8a1f']}
-            icon={<IconBookmark stroke={1.9} />}
-            label={t('landing.menu.favorites')}
-            onClick={isSignedIn ? close : login}
-          />
-          <hr />
-          <SheetRow
-            colors={['#9aa4b8', '#5c6880']}
-            icon={<IconSettings stroke={1.9} />}
-            label={settingsStringsFor(language).title}
-            onClick={() => {
-              close()
-              onOpenSettings()
-            }}
-          />
-          <SheetRow
-            colors={['#7eeac0', '#1fb39a']}
-            icon={<IconArrowUp stroke={1.9} />}
-            label={t('landing.menu.top')}
-            onClick={() => {
-              close()
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
-          />
         </nav>
       )}
     </div>
   )
-}
-
-function SheetRow({ href, colors, icon, label, onClick }: {
-  /** A link when set, otherwise a button. */
-  href?: string
-  colors: readonly [string, string]
-  icon: ReactNode
-  label: string
-  onClick: () => void
-}) {
-  const style = { '--c1': colors[0], '--c2': colors[1] } as CSSProperties
-  const content = (
-    <>
-      <span className="home-sheet-icon" aria-hidden="true">{icon}</span>
-      <span>{label}</span>
-    </>
-  )
-  return href
-    ? <a href={href} style={style} onClick={onClick}>{content}</a>
-    : <button type="button" style={style} onClick={onClick}>{content}</button>
 }

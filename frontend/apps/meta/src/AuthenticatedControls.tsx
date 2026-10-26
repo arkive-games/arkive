@@ -75,7 +75,6 @@ export function AuthenticatedControls({ onOpenSettings }: { onOpenSettings: () =
           }}
         >
           <IconBell className="size-5" stroke={1.8} aria-hidden="true" />
-          <span>{t('userSystem.notifications.label')}</span>
           {hasUnread && <span className="notification-unread-dot" aria-hidden="true" />}
         </a>
         {notificationsOpen && (

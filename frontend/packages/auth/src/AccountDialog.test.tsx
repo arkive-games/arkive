@@ -41,29 +41,27 @@ describe("AccountDialog", () => {
 
     const dialog = getByRole("dialog")
     expect(dialog.getAttribute("data-size")).toBe("sm")
-    expect(dialog.className).toContain("rounded-lg")
+    expect(dialog.className).toContain("arkive-account-dialog")
     expect(dialog.className).toContain("shadow-lg")
-    expect(dialog.className).not.toContain("rounded-2xl")
-    expect(dialog.querySelector('[data-slot="dialog-tide-line"]')).toBeTruthy()
-    expect(getByRole("button", { name: "Close" }).className).toContain("size-11")
-    expect(getByRole("button", { name: "Close" }).className).toContain("md:size-9")
-    expect(getByRole("button", { name: "Close" }).className).toContain("rounded-md")
+    expect(dialog.querySelector('[data-slot="dialog-tide-line"]')).toBeNull()
+    expect(getByRole("button", { name: "Close" }).className).toContain("rounded-full")
 
-    expect(getByRole("heading", { name: "Sign in to Arkive" })).toBeTruthy()
+    expect(getByRole("heading", { name: "Welcome aboard Arkive~" })).toBeTruthy()
+    expect(getByRole("button", { name: "Sign in" }).className).toContain("arkive-dialog-submit")
     expect(getByLabelText("Email").getAttribute("type")).toBe("email")
     expect(getByLabelText("Password").getAttribute("type")).toBe("password")
 
     fireEvent.click(getByRole("button", { name: "Show password" }))
     expect(getByLabelText("Password").getAttribute("type")).toBe("text")
 
-    fireEvent.click(getByRole("button", { name: "No account yet? Create one" }))
-    expect(getByRole("heading", { name: "Create an Arkive account" })).toBeTruthy()
+    fireEvent.click(getByRole("button", { name: "Create an account" }))
+    expect(getByRole("heading", { name: "So glad to meet you here" })).toBeTruthy()
     expect(getByLabelText("Display name")).toBeTruthy()
 
-    fireEvent.click(getByRole("button", { name: "Already have an account? Sign in" }))
+    fireEvent.click(getByRole("button", { name: "Back to sign in" }))
     fireEvent.click(getByRole("button", { name: "Forgot your password?" }))
-    expect(getByRole("heading", { name: "Reset your password" })).toBeTruthy()
-    expect(getByRole("button", { name: "Send reset link" })).toBeTruthy()
+    expect(getByRole("heading", { name: "No rush, we'll help you back in" })).toBeTruthy()
+    expect(getByRole("button", { name: "Send reset email" })).toBeTruthy()
   })
 
   it("renders the reset-code form in the same dialog shell", () => {

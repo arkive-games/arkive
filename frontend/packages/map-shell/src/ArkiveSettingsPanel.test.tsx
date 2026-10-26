@@ -20,9 +20,13 @@ const LANGUAGE_OPTIONS = [
   { code: 'ja-JP', label: '日本語' },
 ]
 
-/** React sets a select's value as a DOM property, so the attribute is absent. */
-function selectValue(testId: string): string {
-  return (screen.getByTestId(testId) as HTMLSelectElement).value
+function pressed(testId: string): boolean {
+  return screen.getByTestId(testId).getAttribute('aria-pressed') === 'true'
+}
+
+/** The summary row: label, value pill, chevron. */
+function cardText(testId: string): string {
+  return screen.getByTestId(testId).querySelector('summary')?.textContent ?? ''
 }
 
 function panel(overrides: Partial<ArkiveSettingsPanelProps> = {}) {
@@ -65,21 +69,38 @@ describe('ArkiveSettingsPanel', () => {
       },
     })
 
-    expect(screen.getByText('General')).toBeTruthy()
-    expect(screen.getByText('Palworld only')).toBeTruthy()
-    // General still reads zh-CN while this site reads ja-JP.
-    expect(selectValue('settings-general-language')).toBe('zh-CN')
-    expect(selectValue('settings-site-language')).toBe('ja-JP')
+    // General still reads zh-CN while this site reads ja-JP, both on closed cards.
+    expect(cardText('settings-card-language')).toContain(LANGUAGE_OPTIONS[1].label)
+    expect(cardText('settings-card-site-language')).toContain('Palworld language')
+    expect(cardText('settings-card-site-language')).toContain(LANGUAGE_OPTIONS[2].label)
+    expect(cardText('settings-card-site-theme')).toContain('Follow general')
+    expect(pressed('settings-general-language-zh-CN')).toBe(true)
+    expect(pressed('settings-site-language-ja-JP')).toBe(true)
     expect(screen.getByText('Overriding general')).toBeTruthy()
   })
 
   it('names the value a following site inherits, rather than only saying it follows', () => {
     panel()
     expect(screen.getByText('Following general (Auto)')).toBeTruthy()
-    expect(screen.getByText('Following general (简体中文)')).toBeTruthy()
+    expect(screen.getByText(`Following general (${LANGUAGE_OPTIONS[1].label})`)).toBeTruthy()
   })
 
-  it('writes the shared theme from General and the override from the site group', () => {
+  it('opens one card at a time and closes it once a value is chosen', () => {
+    panel()
+    const theme = screen.getByTestId('settings-card-theme') as HTMLDetailsElement
+    const language = screen.getByTestId('settings-card-language') as HTMLDetailsElement
+
+    fireEvent.click(theme.querySelector('summary')!)
+    expect(theme.open).toBe(true)
+    fireEvent.click(language.querySelector('summary')!)
+    expect(theme.open).toBe(false)
+    expect(language.open).toBe(true)
+
+    fireEvent.click(screen.getByTestId('settings-general-language-en-US'))
+    expect(language.open).toBe(false)
+  })
+
+  it('writes the shared theme from General and the override from the site card', () => {
     const props = panel()
 
     fireEvent.click(screen.getByTestId('settings-general-theme-dark'))
@@ -90,7 +111,7 @@ describe('ArkiveSettingsPanel', () => {
     expect(props.theme?.onSetOverride).toHaveBeenCalledWith('light')
   })
 
-  it('treats the site group\'s first segment as "stop overriding"', () => {
+  it('treats the site card\'s first option as "stop overriding"', () => {
     const props = panel({
       theme: {
         options: THEME_OPTIONS,
@@ -109,29 +130,30 @@ describe('ArkiveSettingsPanel', () => {
 
   it('clears a language override through the same follow option', () => {
     const props = panel()
-    fireEvent.change(screen.getByTestId('settings-site-language'), { target: { value: '' } })
+    fireEvent.click(screen.getByTestId('settings-site-language-follow'))
     expect(props.language?.onFollowGeneral).toHaveBeenCalled()
   })
 
-  it('drops the override group on the portal, which has no site to override', () => {
+  it('drops the override cards on the portal, which has no site to override', () => {
     panel({ site: undefined })
 
-    expect(screen.getByText('General')).toBeTruthy()
-    expect(screen.queryByTestId('settings-site-theme-follow')).toBeNull()
-    expect(screen.queryByTestId('settings-site-language')).toBeNull()
+    expect(screen.getByTestId('settings-card-theme')).toBeTruthy()
+    expect(screen.queryByTestId('settings-card-site-theme')).toBeNull()
+    expect(screen.queryByTestId('settings-card-site-language')).toBeNull()
     // The note about other games only makes sense where an override layer exists.
     expect(screen.queryByText(/Other games keep/)).toBeNull()
   })
 
-  it('renders without a language section for a host that has no localization', () => {
+  it('renders without a language card for a host that has no localization', () => {
     panel({ language: undefined })
 
-    expect(screen.queryByTestId('settings-general-language')).toBeNull()
+    expect(screen.queryByTestId('settings-card-language')).toBeNull()
     expect(screen.getByTestId('settings-general-theme-auto')).toBeTruthy()
   })
 
   it('always carries the local-data controls, which is what it exists to house', () => {
     panel()
+    expect(cardText('settings-card-local-data')).toContain('Local data')
     expect(screen.getByTestId('local-data-controls')).toBeTruthy()
   })
 })

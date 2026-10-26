@@ -415,7 +415,7 @@ const LANDING_COPY = {
     quick: { label: '快速入口', allGames: '全部游戏', tools: '工具库', forum: '论坛', updates: '更新日志', badge: '新' },
     dock: { title: '工具码头', subtitle: '不用翻资料，直接算出结果', all: '全部工具' },
     community: { title: '社区在聊', action: '去论坛' },
-    menu: { open: '打开菜单', close: '关闭菜单', label: '站点菜单', login: '登录', account: '个人中心', notifications: '消息通知', allGames: '全部游戏', tools: '工具库', forum: '论坛', favorites: '收藏', top: '回到顶部' },
+    menu: { open: '打开菜单', close: '关闭菜单', label: '站点菜单', discover: '发现游戏', login: '登录／注册', account: '个人中心', notifications: '消息通知', allGames: '全部游戏', tools: '工具库', forum: '论坛' },
     arrived: '已抵达港口',
   },
   'zh-TW': {
@@ -423,7 +423,7 @@ const LANDING_COPY = {
     quick: { label: '快速入口', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', updates: '更新日誌', badge: '新' },
     dock: { title: '工具碼頭', subtitle: '不用翻資料，直接算出結果', all: '全部工具' },
     community: { title: '社群在聊', action: '去論壇' },
-    menu: { open: '開啟選單', close: '關閉選單', label: '網站選單', login: '登入', account: '個人中心', notifications: '訊息通知', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', favorites: '收藏', top: '回到頂部' },
+    menu: { open: '開啟選單', close: '關閉選單', label: '網站選單', discover: '探索遊戲', login: '登入／註冊', account: '個人中心', notifications: '訊息通知', allGames: '全部遊戲', tools: '工具庫', forum: '論壇' },
     arrived: '已抵達港口',
   },
   'en-US': {
@@ -431,7 +431,7 @@ const LANDING_COPY = {
     quick: { label: 'Shortcuts', allGames: 'All games', tools: 'Tools', forum: 'Forum', updates: 'Updates', badge: 'NEW' },
     dock: { title: 'Tool dock', subtitle: 'Skip the spreadsheets and get the answer', all: 'All tools' },
     community: { title: 'Community talk', action: 'Visit the forum' },
-    menu: { open: 'Open menu', close: 'Close menu', label: 'Site menu', login: 'Sign in', account: 'My profile', notifications: 'Notifications', allGames: 'All games', tools: 'Tools', forum: 'Forum', favorites: 'Favorites', top: 'Back to top' },
+    menu: { open: 'Open menu', close: 'Close menu', label: 'Site menu', discover: 'Discover games', login: 'Sign in / Sign up', account: 'My profile', notifications: 'Notifications', allGames: 'All games', tools: 'Tools', forum: 'Forum' },
     arrived: 'Arrived in port',
   },
   'ja-JP': {
@@ -439,7 +439,7 @@ const LANDING_COPY = {
     quick: { label: 'ショートカット', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム', updates: '更新履歴', badge: '新着' },
     dock: { title: 'ツールドック', subtitle: '資料を探さず、すぐに結果を', all: 'すべてのツール' },
     community: { title: 'コミュニティの話題', action: 'フォーラムへ' },
-    menu: { open: 'メニューを開く', close: 'メニューを閉じる', label: 'サイトメニュー', login: 'ログイン', account: 'マイページ', notifications: '通知', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム', favorites: 'お気に入り', top: 'トップへ戻る' },
+    menu: { open: 'メニューを開く', close: 'メニューを閉じる', label: 'サイトメニュー', discover: 'ゲームを探す', login: 'ログイン／登録', account: 'マイページ', notifications: '通知', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム' },
     arrived: '港に到着しました',
   },
   'ko-KR': {
@@ -447,7 +447,7 @@ const LANDING_COPY = {
     quick: { label: '바로가기', allGames: '전체 게임', tools: '도구', forum: '포럼', updates: '업데이트', badge: '신규' },
     dock: { title: '도구 부두', subtitle: '자료를 뒤질 필요 없이 바로 계산', all: '전체 도구' },
     community: { title: '커뮤니티 이야기', action: '포럼으로' },
-    menu: { open: '메뉴 열기', close: '메뉴 닫기', label: '사이트 메뉴', login: '로그인', account: '내 프로필', notifications: '알림', allGames: '전체 게임', tools: '도구', forum: '포럼', favorites: '즐겨찾기', top: '맨 위로' },
+    menu: { open: '메뉴 열기', close: '메뉴 닫기', label: '사이트 메뉴', discover: '게임 찾기', login: '로그인／가입', account: '내 프로필', notifications: '알림', allGames: '전체 게임', tools: '도구', forum: '포럼' },
     arrived: '항구에 도착했습니다',
   },
 }
@@ -468,6 +468,8 @@ const resources = {
         favorites: '我的收藏',
         more: '更多',
         back: '返回',
+        groupOnline: '网游',
+        groupOffline: '单机／联机',
       },
       language: '语言',
       theme: { auto: '跟随系统', light: '浅色模式', dark: '深色模式', menu: '切换主题', short: '主题' },
@@ -611,7 +613,7 @@ const resources = {
         slogan: '萬千攻略，藏於一舟',
         blurb: '我們整理遊戲裡的知識、地圖和發現，陪你慢慢走完每一個喜歡的世界。',
       },
-      nav: { discoverGames: '探索遊戲', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', favorites: '我的收藏', more: '更多', back: '返回' },
+      nav: { discoverGames: '探索遊戲', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', favorites: '我的收藏', more: '更多', back: '返回', groupOnline: '網遊', groupOffline: '單機／連線' },
       language: '語言',
       theme: { auto: '跟隨系統', light: '淺色模式', dark: '深色模式', menu: '切換主題', short: '主題' },
       auth: { login: '登入' },
@@ -724,7 +726,7 @@ const resources = {
         slogan: 'Sail Games With Us.',
         blurb: 'We gather game knowledge, maps, and discoveries so you can enjoy every world at your own pace.',
       },
-      nav: { discoverGames: 'Discover games', allGames: 'All games', tools: 'Tool library', forum: 'Forum', favorites: 'Favorites', more: 'More', back: 'Back' },
+      nav: { discoverGames: 'Discover games', allGames: 'All games', tools: 'Tool library', forum: 'Forum', favorites: 'Favorites', more: 'More', back: 'Back', groupOnline: 'Online', groupOffline: 'Single & co-op' },
       language: 'Language',
       theme: { auto: 'Follow system', light: 'Light mode', dark: 'Dark mode', menu: 'Switch theme', short: 'Theme' },
       auth: { login: 'Log in' },
@@ -831,7 +833,7 @@ const resources = {
   'ja-JP': {
     translation: {
       brand: { name: '蔵舟ゲーム攻略サイト', slogan: '万千の攻略を、一艘の舟に。', blurb: 'ゲームの知識、マップ、発見を整理し、好きな世界を自分のペースで旅できる資料館です。' },
-      nav: { discoverGames: 'ゲームを探す', allGames: 'すべてのゲーム', tools: 'ツールライブラリ', forum: 'フォーラム', favorites: 'お気に入り', more: 'その他', back: '戻る' },
+      nav: { discoverGames: 'ゲームを探す', allGames: 'すべてのゲーム', tools: 'ツールライブラリ', forum: 'フォーラム', favorites: 'お気に入り', more: 'その他', back: '戻る', groupOnline: 'オンライン', groupOffline: 'オフライン／協力' },
       language: '言語',
       theme: { auto: 'システムに従う', light: 'ライトモード', dark: 'ダークモード', menu: 'テーマを切り替える', short: 'テーマ' },
       auth: { login: 'ログイン' },
@@ -935,7 +937,7 @@ const resources = {
   'ko-KR': {
     translation: {
       brand: { name: '창저우 게임 공략 사이트', slogan: '수많은 공략을 한 척의 배에.', blurb: '게임 속 지식과 지도, 발견을 모아 좋아하는 세계를 천천히 여행할 수 있도록 돕습니다.' },
-      nav: { discoverGames: '게임 찾기', allGames: '전체 게임', tools: '도구 모음', forum: '포럼', favorites: '내 즐겨찾기', more: '더보기', back: '뒤로' },
+      nav: { discoverGames: '게임 찾기', allGames: '전체 게임', tools: '도구 모음', forum: '포럼', favorites: '내 즐겨찾기', more: '더보기', back: '뒤로', groupOnline: '온라인', groupOffline: '싱글／협동' },
       language: '언어',
       theme: { auto: '시스템 설정 따르기', light: '라이트 모드', dark: '다크 모드', menu: '테마 전환', short: '테마' },
       auth: { login: '로그인' },

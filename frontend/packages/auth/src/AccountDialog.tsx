@@ -20,9 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
-  POPUP_CLOSE_CONTROL_CLASS,
 } from "@gamemap/ui"
-import { ArkiveMark } from "@gamemap/map-shell"
 
 import { AltchaAbortError, solveAltcha } from "./altcha"
 import { useAuth } from "./AuthProvider"
@@ -202,6 +200,15 @@ export function AccountDialog({
           ? strings.forgotTitle
           : strings.resetTitle
 
+  const subtitle =
+    mode === "login"
+      ? strings.loginSubtitle
+      : mode === "register"
+        ? strings.registerSubtitle
+        : mode === "forgot"
+          ? strings.forgotSubtitle
+          : null
+
   const submitLabel =
     mode === "login"
       ? strings.loginSubmit
@@ -217,39 +224,38 @@ export function AccountDialog({
         size="sm"
         showCloseButton={false}
         overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
-        className="z-[var(--arkive-layer-sheet)] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0"
+        showTideLine={false}
+        className="arkive-account-dialog z-[var(--arkive-layer-sheet)] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-[1.5rem] border-0 p-0 sm:max-w-[420px]"
         data-testid="account-dialog"
       >
-        <div className="relative border-b border-border bg-background px-6 py-5">
+        <div className="flex items-center justify-between px-6 pt-5">
+          <span className="arkive-wordmark text-[1.375rem] opacity-60" aria-hidden="true">Arkive</span>
           <DialogClose asChild>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className={`absolute right-3 top-3 ${POPUP_CLOSE_CONTROL_CLASS}`}
+              className="size-8 rounded-full bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               aria-label={strings.close}
               title={strings.close}
             >
               <IconX className="size-4" stroke={1.8} />
             </Button>
           </DialogClose>
-
-          <DialogHeader className="items-start pr-10 text-left">
-            <div className="flex items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary [--arkive-mark-cutout:var(--background)]">
-                <ArkiveMark />
-              </span>
-              <DialogTitle>{title}</DialogTitle>
-            </div>
-            {mode === "forgot" && (
-              <DialogDescription className="max-w-sm leading-relaxed">
-                {strings.forgotDescription}
-              </DialogDescription>
-            )}
-          </DialogHeader>
         </div>
 
-        <form onSubmit={submit} className="space-y-5 px-6 py-6">
+        <DialogHeader className="items-start gap-1 px-6 pt-5 text-left">
+          <DialogTitle className="arkive-dialog-title text-[1.5rem] leading-normal font-bold sm:text-[1.625rem]">
+            {title}
+          </DialogTitle>
+          {subtitle && (
+            <DialogDescription className="text-sm text-muted-foreground">
+              {subtitle}
+            </DialogDescription>
+          )}
+        </DialogHeader>
+
+        <form onSubmit={submit} className="space-y-5 px-6 pt-6 pb-6">
           {mode === "register" && (
             <Field
               label={strings.nameLabel}
@@ -263,7 +269,7 @@ export function AccountDialog({
                 required
                 value={name}
                 placeholder={strings.namePlaceholder}
-                className="h-11 rounded-lg bg-background pl-10"
+                className="h-11 rounded-xl border-transparent bg-muted pl-10"
                 onChange={(event) => setName(event.target.value)}
               />
             </Field>
@@ -283,7 +289,7 @@ export function AccountDialog({
                 required
                 value={email}
                 placeholder={strings.emailPlaceholder}
-                className="h-11 rounded-lg bg-background pl-10"
+                className="h-11 rounded-xl border-transparent bg-muted pl-10"
                 onChange={(event) => setEmail(event.target.value)}
               />
             </Field>
@@ -300,7 +306,7 @@ export function AccountDialog({
                 name="token"
                 required
                 value={token}
-                className="h-11 rounded-lg bg-background pl-10"
+                className="h-11 rounded-xl border-transparent bg-muted pl-10"
                 onChange={(event) => setToken(event.target.value)}
               />
             </Field>
@@ -323,7 +329,7 @@ export function AccountDialog({
                 minLength={mode === "login" ? undefined : 8}
                 value={password}
                 placeholder={strings.passwordPlaceholder}
-                className="h-11 rounded-lg bg-background pl-10 pr-11"
+                className="h-11 rounded-xl border-transparent bg-muted pl-10 pr-11"
                 onChange={(event) => setPassword(event.target.value)}
               />
               <Button
@@ -364,7 +370,7 @@ export function AccountDialog({
                 minLength={8}
                 value={passwordConfirm}
                 placeholder={strings.confirmPasswordPlaceholder}
-                className="h-11 rounded-lg bg-background pl-10 pr-11"
+                className="h-11 rounded-xl border-transparent bg-muted pl-10 pr-11"
                 onChange={(event) => setPasswordConfirm(event.target.value)}
                 aria-invalid={mismatch ? true : undefined}
                 // Without this the input announces itself invalid and gives no
@@ -426,34 +432,19 @@ export function AccountDialog({
           <Button
             type="submit"
             disabled={busy}
-            className="h-11 w-full rounded-lg bg-[color:var(--arkive-nav-active)] font-semibold text-white hover:brightness-95"
+            className="arkive-dialog-submit h-auto w-full text-base"
           >
             {busy ? strings.working : submitLabel}
           </Button>
 
-          {mode === "login" && (
-            <div className="space-y-3 border-t border-border pt-5 text-center">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 w-full rounded-lg bg-background font-semibold"
-                onClick={() => switchMode("register")}
-              >
-                {strings.switchToRegister}
-              </Button>
+          {mode === "login" ? (
+            <div className="-mt-2 flex items-center justify-between">
+              <LinkButton onClick={() => switchMode("register")}>{strings.switchToRegister}</LinkButton>
               <LinkButton onClick={() => switchMode("forgot")}>{strings.forgotPassword}</LinkButton>
             </div>
-          )}
-          {mode !== "login" && (
-            <div className="border-t border-border pt-5 text-center">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 w-full rounded-lg bg-background font-semibold"
-                onClick={() => switchMode("login")}
-              >
-                {strings.switchToLogin}
-              </Button>
+          ) : (
+            <div className="-mt-2 flex items-center justify-center">
+              <LinkButton onClick={() => switchMode("login")}>{strings.switchToLogin}</LinkButton>
             </div>
           )}
         </form>
@@ -507,7 +498,7 @@ function LinkButton({ onClick, children }: { onClick: () => void; children: Reac
     <button
       type="button"
       onClick={onClick}
-      className="rounded-md px-2 py-1 text-sm text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="min-h-6 rounded-md px-1 py-1 text-sm font-medium text-[color:var(--ring)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {children}
     </button>

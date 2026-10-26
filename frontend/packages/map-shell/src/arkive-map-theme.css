@@ -230,6 +230,103 @@ textarea {
   font-display: swap;
 }
 
+/* Only the glyphs of the account and settings dialog titles (plus ASCII).
+   Regenerate the subset when one of those titles changes.
+   License: ./assets/resource-han-rounded-titles.LICENSE.txt */
+@font-face {
+  font-family: "Arkive Rounded";
+  src: url("./assets/resource-han-rounded-titles.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* The friendly heading of the account and settings dialogs. */
+.arkive-dialog-title {
+  font-family: "Arkive Rounded", system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+/* The primary action of the account dialog: a warm gradient pill. */
+.arkive-dialog-submit {
+  min-height: 2.875rem;
+  border-radius: 9999px;
+  background: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
+  color: #40251c;
+  font-weight: 600;
+  box-shadow: 0 6px 16px -10px #c35932;
+  transition:
+    transform var(--arkive-motion-standard) var(--arkive-motion-easing),
+    filter var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.arkive-dialog-submit:hover:not(:disabled) {
+  background: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.arkive-account-dialog {
+  background: linear-gradient(155deg, color-mix(in srgb, #ffd8a0 13%, var(--background)), var(--background) 44%);
+}
+
+.arkive-settings-dialog {
+  background: linear-gradient(145deg, color-mix(in srgb, #ffc98a 14%, var(--background)), var(--background) 48%);
+}
+
+/* One collapsible row of the settings dialog. */
+.arkive-settings-card {
+  border-radius: 18px;
+  padding: 0 1rem;
+  background: color-mix(in srgb, var(--muted) 65%, var(--background));
+  transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.arkive-settings-card[open] {
+  background: var(--muted);
+}
+
+.arkive-settings-card > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 12px;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 58px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.arkive-settings-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.arkive-settings-card > summary > [data-slot="settings-chevron"] {
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.arkive-settings-card[open] > summary > [data-slot="settings-chevron"] {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 360px) {
+  .arkive-settings-dialog {
+    padding: 1rem;
+  }
+
+  .arkive-settings-card {
+    padding: 0 0.5rem;
+  }
+
+  .arkive-settings-list {
+    gap: 0.5rem;
+  }
+
+  .arkive-local-data-row {
+    padding: 10px 8px;
+  }
+}
+
 /* The brand in every top bar and phone header: the word "Arkive" alone. */
 .arkive-wordmark {
   display: inline-block;
@@ -284,9 +381,11 @@ a:focus-visible > .arkive-wordmark {
 }
 
 .arkive-nav-indicator[data-animate="true"] {
+  /* A softer spring than the buttons': overshoot scales with distance, so the
+     full-width trip from the last tab back to the first used to fly past it. */
   transition:
-    left 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    width 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    left 450ms cubic-bezier(0.3, 1.18, 0.55, 1),
+    width 450ms cubic-bezier(0.3, 1.18, 0.55, 1),
     opacity var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
@@ -339,6 +438,9 @@ a:focus-visible > .arkive-wordmark {
   .arkive-wordmark,
   .arkive-round-button svg,
   .arkive-login-pill,
+  .arkive-dialog-submit,
+  .arkive-settings-card,
+  .arkive-settings-card > summary > [data-slot="settings-chevron"],
   .arkive-nav-indicator,
   .arkive-nav-indicator[data-animate="true"] {
     transition: none;

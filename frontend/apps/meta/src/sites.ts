@@ -71,6 +71,13 @@ export interface SiteCard {
   icon?: string
   /** Dominant colour of `banner`, used for the carousel glow. */
   color?: string
+  /**
+   * Which column of the top bar's game menu lists it: a live-service online
+   * game, or one played alone or with friends.
+   */
+  kind: 'online' | 'offline'
+  /** Softer hover tint for the game's row in that menu. */
+  menuTint?: string
   nameKey: string
   descKey: string
   featureKey: string
@@ -87,6 +94,8 @@ function resolveSiteUrl(envUrl: string | undefined, devUrl: string, productionUr
 export const SITES: SiteCard[] = [
   {
     id: 'aion2',
+    kind: 'online',
+    menuTint: '#638bc8',
     url: resolveSiteUrl(
       import.meta.env.VITE_AION2_URL,
       'http://localhost:15173',
@@ -104,6 +113,8 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'gmzz',
+    kind: 'online',
+    menuTint: '#ac8455',
     url: resolveSiteUrl(
       import.meta.env.VITE_GMZZ_URL,
       'http://localhost:15179',
@@ -123,6 +134,8 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'palworld',
+    kind: 'offline',
+    menuTint: '#58ab9b',
     url: resolveSiteUrl(
       import.meta.env.VITE_PAL_URL,
       'http://localhost:15174',
@@ -139,6 +152,8 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'vrising',
+    kind: 'offline',
+    menuTint: '#b45f6b',
     url: resolveSiteUrl(
       import.meta.env.VITE_VRISING_URL,
       'http://localhost:15176',
@@ -158,6 +173,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'sts2',
+    kind: 'offline',
     comingSoon: true,
     bg: STS2_BG,
     nameKey: 'site.sts2.name',
@@ -166,6 +182,8 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'ro3',
+    kind: 'online',
+    menuTint: '#6d9d59',
     url: resolveSiteUrl(
       import.meta.env.VITE_RO3_URL,
       'http://localhost:15178',

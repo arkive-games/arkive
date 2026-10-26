@@ -1,9 +1,11 @@
 import {
   cloneElement,
   isValidElement,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type FocusEvent,
   type ReactElement,
   type ReactNode,
@@ -40,6 +42,15 @@ export interface ShellNavItem {
   active?: boolean
   /** Optional leaf links shown in a hover menu. */
   children?: ShellNavItem[]
+  /**
+   * Column heading for a leaf in a dropdown. When any child carries one, the
+   * menu lays its children out as one column per group, in first-seen order.
+   */
+  group?: string
+  /** Square icon shown before a grouped leaf's label. */
+  iconSrc?: string
+  /** Hover tint for a grouped leaf, usually the game's own colour. */
+  tint?: string
 }
 
 export interface ShellTopBarNav {
@@ -113,6 +124,8 @@ export function ShellTopBar({
   const [hoveredNavKey, setHoveredNavKey] = useState<string | null>(null)
   const [openUtilityMenu, setOpenUtilityMenu] = useState<"language" | "theme" | null>(null)
   const navRef = useRef<HTMLElement>(null)
+  const leaveTimer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(leaveTimer.current), [])
   const [indicator, setIndicator] = useState<NavIndicator | null>(null)
   const indicatorClass = nav?.classNames?.indicator
   const highlightedNavKey = hoveredNavKey
@@ -157,7 +170,13 @@ export function ShellTopBar({
             <nav
               ref={navRef}
               className={cn("flex min-w-0 items-center gap-6", indicatorClass && "relative", classNames?.nav)}
-              onPointerLeave={() => setHoveredNavKey(null)}
+              // Delayed so a pointer grazing the bar's edge between two tabs does
+              // not send the pill home and straight back.
+              onPointerEnter={() => window.clearTimeout(leaveTimer.current)}
+              onPointerLeave={() => {
+                window.clearTimeout(leaveTimer.current)
+                leaveTimer.current = window.setTimeout(() => setHoveredNavKey(null), 120)
+              }}
               onBlur={(event) => {
                 if (!event.currentTarget.contains(event.relatedTarget)) {
                   setHoveredNavKey(null)
@@ -402,6 +421,17 @@ function navItemLabelClass(highlighted: boolean | undefined, nav: ShellTopBarNav
   return cn(nav.classNames?.label, highlighted && nav.classNames?.labelActive)
 }
 
+/** Children by `group`, in first-seen order, or `null` when none carries one. */
+function groupLeaves(children: ShellNavItem[]): [string, ShellNavItem[]][] | null {
+  if (!children.some((child) => child.group)) return null
+  const groups = new Map<string, ShellNavItem[]>()
+  for (const child of children) {
+    const heading = child.group ?? ""
+    groups.set(heading, [...(groups.get(heading) ?? []), child])
+  }
+  return Array.from(groups)
+}
+
 function NavDropdown({
   item,
   nav,
@@ -414,6 +444,7 @@ function NavDropdown({
   onHighlight: (key: string | null) => void
 }) {
   const children = item.children ?? []
+  const groups = groupLeaves(children)
   const [open, setOpen] = useState(false)
   const closeWhenFocusLeaves = (event: FocusEvent<HTMLDivElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -481,10 +512,64 @@ function NavDropdown({
             "absolute left-0",
             TOP_BAR_MENU_CLASS,
             TOP_BAR_MENU_VIEWPORT_CLASS,
-            TOP_BAR_MENU_WIDTH_CLASS,
+            groups ? "w-[24rem] max-w-[calc(100vw-2rem)] px-4 py-3" : TOP_BAR_MENU_WIDTH_CLASS,
           )}
         >
-          {children.map((child) => {
+          {groups ? (
+            <div
+              className="grid"
+              style={{ gridTemplateColumns: `repeat(${groups.length}, minmax(0, 1fr))` }}
+            >
+              {groups.map(([heading, leaves], index) => (
+                <div
+                  key={heading}
+                  role="group"
+                  aria-label={heading}
+                  className={cn(
+                    "flex min-w-0 flex-col",
+                    index > 0 && "border-l border-border/70 pl-3.5",
+                    index < groups.length - 1 && "pr-3.5",
+                  )}
+                >
+                  <span aria-hidden="true" className="px-2 pb-1.5 text-xs text-muted-foreground">
+                    {heading}
+                  </span>
+                  {leaves.map((child) => {
+                    const rendered = nav.renderItem(
+                      {
+                        ...child,
+                        label: (
+                          <span className="flex min-w-0 items-center gap-2">
+                            {child.iconSrc && (
+                              <img src={child.iconSrc} alt="" className="size-6 shrink-0 rounded-md" />
+                            )}
+                            <span className="truncate">{child.label}</span>
+                          </span>
+                        ),
+                      },
+                      cn(
+                        "flex min-h-[38px] w-full items-center rounded-lg px-2 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none",
+                        "hover:bg-[color-mix(in_srgb,var(--nav-tint)_13%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--nav-tint)_13%,transparent)]",
+                        child.active ? "text-primary" : "text-foreground",
+                      ),
+                    )
+                    const menuItem = isValidElement(rendered)
+                      ? cloneElement(rendered as ReactElement<{ role?: string }>, { role: "menuitem" })
+                      : rendered
+                    return (
+                      <div
+                        key={child.key}
+                        role="none"
+                        style={{ "--nav-tint": child.tint ?? "var(--foreground)" } as CSSProperties}
+                      >
+                        {menuItem}
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          ) : children.map((child) => {
             const rendered = nav.renderItem(
                 child,
                 cn(
