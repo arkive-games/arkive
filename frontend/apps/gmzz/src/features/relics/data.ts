@@ -164,9 +164,18 @@ export function gradeRung(relics: Relics, grade: number): GradeRung | undefined 
   return relics.promotion.ladder.find((rung) => rung.grade === grade)
 }
 
-/** Grades offered by the ladder, best (lowest) first. */
+/**
+ * Grades a player can hold, worst (3) first — the order the slider runs.
+ *
+ * The promote table has rows down to grade 0, but `SealBestGrade` is 1 and no
+ * relic can be promoted past it, so grade 0 is not offered.
+ */
 export function gradeOptions(relics: Relics): number[] {
-  return relics.promotion.ladder.map((rung) => rung.grade).sort((a, b) => a - b)
+  const best = relics.constants['SealBestGrade']
+  return relics.promotion.ladder
+    .map((rung) => rung.grade)
+    .filter((grade) => typeof best !== 'number' || grade >= best)
+    .sort((a, b) => b - a)
 }
 
 /**
@@ -245,51 +254,98 @@ export type RelicSlotState = {
   groupId: number
   artifactId: number | null
   grade: number
+  /** 特化 only: which of its two materials is equipped, 1 攻击 or 2 防御. */
+  materialType?: number
   /**
-   * The material type socketed: 1 攻击, 2 防御. It selects the affix pool. Only
-   * 特化 takes either, so the other two slots ignore it (see `slotMaterialType`).
+   * The slot's two materials, each a list of affixes. 攻击 and 防御 hold 填充一
+   * and 填充二, and the second takes effect only on the strategic server
+   * (`SealedExtraSlotData` gives the extra slot to groups 1 and 2 only). 特化
+   * holds an attack material and a defence material; `materialType` picks the
+   * one equipped, and both are kept so switching loses nothing.
+   *
    * The individual material items do not matter to the score: every item of
    * one type draws the same ordinary rungs and the same rare words.
    */
-  materialType?: number
-  /** Affixes across the material(s) socketed into this artifact. */
-  affixes: ChosenRelicAffix[]
+  materials: ChosenRelicAffix[][]
 }
 
-/** The material type a slot draws from: its own group, except 特化, which takes either. */
-export function slotMaterialType(slot: Pick<RelicSlotState, 'groupId' | 'materialType'>): number {
-  if (slot.groupId === 1 || slot.groupId === 2) return slot.groupId
-  return slot.materialType === 2 ? 2 : 1
+/** Material positions per slot: two everywhere. */
+export const MATERIAL_SLOTS = 2
+
+/** The material type a slot's position draws from: the slot's own group, except 特化, whose second position is 防御. */
+export function materialTypeAt(groupId: number, index: number): number {
+  if (groupId === 1 || groupId === 2) return groupId
+  return index === 1 ? 2 : 1
+}
+
+/** The position of 特化's equipped material. */
+export function specIndex(slot: Pick<RelicSlotState, 'materialType'>): number {
+  return slot.materialType === 2 ? 1 : 0
+}
+
+/**
+ * The material positions that take effect. 特化 has one equipped material;
+ * 攻击 and 防御 have 填充一 everywhere and 填充二 on the strategic server only.
+ */
+export function activeMaterialIndexes(slot: Pick<RelicSlotState, 'groupId' | 'materialType'>, server: RelicServer): number[] {
+  if (slot.groupId !== 1 && slot.groupId !== 2) return [specIndex(slot)]
+  return server === 'cross' ? [0, 1] : [0]
+}
+
+/**
+ * Which affixes are switched off when a material carries more than the grade
+ * allows: the lowest-Mark ones, as the game does (it marks them with a
+ * prohibition sign). Ties keep the earlier affix.
+ */
+export function inactiveAffixes(affixes: ChosenRelicAffix[], cap: number): boolean[] {
+  const order = affixes.map((_, index) => index).sort((a, b) => affixes[b].mark - affixes[a].mark || a - b)
+  const off = new Set(order.slice(Math.max(0, cap)))
+  return affixes.map((_, index) => off.has(index))
+}
+
+export type MaterialResult = {
+  index: number
+  type: number
+  affixes: ChosenRelicAffix[]
+  /** Per affix: switched off for being past the cap. */
+  inactive: boolean[]
+  activeCount: number
+  /** Whether this position counts on the chosen server at all. */
+  applies: boolean
+  /** floor(k2 × Σ mark of the active affixes); 0 when the position does not apply. */
+  affixScore: number
+  /** 非凡共鸣 at the active count: floor(mark × k1). */
+  resonanceScore: number
+  /** The resonance rung's table stats; the game shows `floor(value × k1)`. */
+  resonanceStats: [string, number][]
 }
 
 export type RelicSlotResult = {
   state: RelicSlotState
   artifact: Artifact | null
-  /** 封印物装配 — the grade ladder's mark. */
+  /** 封印物装配 — the scored grade's mark. */
   assemblyScore: number
-  /** 非凡共鸣 — `floor(mark × k1)` at the effective affix count, as `calcSealedEnhanceMark` does. */
+  /** 非凡共鸣, summed over the materials that apply. */
   resonanceScore: number
-  /** The ladder's table stats; the game shows `floor(value × k1)`. */
-  resonanceStats: [string, number][]
-  /** The grade the resonance was read at, after the server cap. */
+  /** The grade the relic is scored at, after the server cap. */
   resonanceGrade: number
-  /** 封印物词条 — floor(k2 * sum(mark)). */
+  /** How many affixes take effect per material at that grade. */
+  cap: number
+  /** 封印物词条, summed over the materials that apply. */
   affixScore: number
-  /** Affixes that take effect: those within the grade's cap. */
-  activeAffixes: number
-  /** Affixes beyond the grade's cap, which pay nothing. */
-  cappedOut: number
+  materials: MaterialResult[]
   total: number
 }
 
 /**
- * Where a relic's effect is scored.
+ * Where a relic is scored: the local server or the strategic server (战略服).
  *
- * The client caps the grade whose 非凡共鸣 applies by server: on a local
- * server a grade-0 or grade-1 relic resonates as grade 2
- * (`SealEffectBestGradeAtLocalServer`), on a cross-server one as grade 1
- * (`SealEffectBestGradeAtCrossServer`); `getSealedMainPropConfig` takes
- * `max(grade, cap)`. Assembly and affixes are not capped.
+ * The client caps the grade a relic counts as by server: on a local server a
+ * grade-1 relic counts as grade 2 (`SealEffectBestGradeAtLocalServer`), on the
+ * strategic server as itself (`SealEffectBestGradeAtCrossServer`). The game
+ * says so in its own words: "1级" relics only take effect on the strategic
+ * server, the local server applies the "2级" effect — assembly, resonance and
+ * the affix cap alike. The stored value keeps its old name, `cross`.
  */
 export type RelicServer = 'local' | 'cross'
 
@@ -330,45 +386,79 @@ export function evaluateRelicSlot(
   const k2 = k2For(relics, knowledgeLevel, season)
   const k1 = k1For(relics, knowledgeLevel, season)
 
-  // The promote tab previews the grade's Mark as `+%d`, unscaled, so assembly
-  // takes no knowledge coefficient.
-  const assemblyScore = gradeRung(relics, state.grade)?.mark ?? 0
-
-  // Resonance is read at the server-capped grade, and so is the affix cap: the
-  // ladder plateaus at that grade's word count, so both must agree or a
-  // grade-0 relic on a local server would count six affixes against a
-  // five-word ladder.
+  // Everything reads the server-capped grade: off the strategic server a
+  // grade-1 relic is a grade-2 relic in every respect, its assembly Mark
+  // included. The promote tab previews that Mark as `+%d`, unscaled, so
+  // assembly takes no knowledge coefficient.
   const resonanceGrade = effectiveGrade(relics, state.grade, server)
+  const assemblyScore = gradeRung(relics, resonanceGrade)?.mark ?? 0
   const cap = effectiveAffixCap(relics, resonanceGrade)
-  const effective = state.affixes.slice(0, cap)
-  const cappedOut = Math.max(0, state.affixes.length - cap)
+  const ladder = resonanceLadder(relics, state.groupId, resonanceGrade, season)
+  const active = activeMaterialIndexes(state, server)
 
-  const ladder = forSeason(relics.resonance, season)?.[resonanceKey(relics, state.groupId, resonanceGrade)] ?? []
-  const rung = ladder.find((r) => r.affixCount === effective.length)
-  // `calcSealedEnhanceMark`: floor(Mark × professionCoefficient × k1). The
-  // profession coefficients are 1 for every row shipped, so they are not
-  // modelled; the floor is the client's.
-  const resonanceScore = rung ? Math.floor((rung.mark ?? 0) * k1) : 0
-  const resonanceStats = rung?.stats ?? []
-
-  const affixScore = materialScore(effective, k2)
+  const materials = Array.from({ length: MATERIAL_SLOTS }, (_, index): MaterialResult => {
+    const affixes = state.materials[index] ?? []
+    const inactive = inactiveAffixes(affixes, cap)
+    const effective = affixes.filter((_, at) => !inactive[at])
+    const applies = active.includes(index)
+    const rung = ladder.find((r) => r.affixCount === effective.length)
+    return {
+      index,
+      type: materialTypeAt(state.groupId, index),
+      affixes,
+      inactive,
+      activeCount: effective.length,
+      applies,
+      affixScore: applies ? materialScore(effective, k2) : 0,
+      // `calcSealedEnhanceMark`: floor(Mark × professionCoefficient × k1). The
+      // profession coefficients are 1 for every row shipped, so they are not
+      // modelled; the floor is the client's. Each material is read against
+      // its own word count — UNVERIFIED for two materials on the strategic
+      // server, where no client code was found that says how they combine.
+      resonanceScore: applies && rung ? Math.floor((rung.mark ?? 0) * k1) : 0,
+      resonanceStats: rung?.stats ?? [],
+    }
+  })
+  const affixScore = materials.reduce((sum, m) => sum + m.affixScore, 0)
+  const resonanceScore = materials.reduce((sum, m) => sum + m.resonanceScore, 0)
 
   return {
     state,
     artifact,
     assemblyScore,
     resonanceScore,
-    resonanceStats,
     resonanceGrade,
+    cap,
     affixScore,
-    activeAffixes: effective.length,
-    cappedOut,
+    materials,
     total: assemblyScore + resonanceScore + affixScore,
   }
 }
 
+/** The 非凡共鸣 ladder a relic reads at a grade, by affix count. */
+export function resonanceLadder(relics: Relics, groupId: number, grade: number, season?: number): ResonanceRung[] {
+  return forSeason(relics.resonance, season)?.[resonanceKey(relics, groupId, grade)] ?? []
+}
+
 export function newRelicSlot(groupId: number, worstGrade: number): RelicSlotState {
-  return { groupId, artifactId: null, grade: worstGrade, affixes: [] }
+  return { groupId, artifactId: null, grade: worstGrade, materials: [[], []] }
+}
+
+/**
+ * The groups a material's affixes already use. Each ordinary stat is its own
+ * group and each rare word too, and a group appears at most once per material
+ * (`MaxRepeatTimes` 1); on top of that a material carries at most one rare word.
+ */
+export function usedGroups(pool: PoolAffix[], affixes: ChosenRelicAffix[]): { groups: Set<number>; rare: boolean } {
+  const groups = new Set<number>()
+  let rare = false
+  for (const affix of affixes) {
+    const source = pool.find((entry) => entry.id === affix.affixId)
+    if (!source) continue
+    groups.add(source.groupId)
+    if (isRareAffix(source)) rare = true
+  }
+  return { groups, rare }
 }
 
 /**

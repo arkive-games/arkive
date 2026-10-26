@@ -16,6 +16,7 @@ import {
   type HistoryResearchRank,
 } from '@/features/fellows/data'
 import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
+import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
 import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, extraResearchPoints, historyScore, isBondsDraft } from '@/features/score/bonds'
@@ -336,6 +337,12 @@ export default function ScorePage() {
             </label>
           ) : null}
           <Summary result={result} />
+          {/* Mirrors the switch in the relic section; both write the same stored value. */}
+          {relics ? (
+            <div className="sm:col-span-2 lg:col-span-4">
+              <RelicServerToggle testId="score-relic-server" />
+            </div>
+          ) : null}
         </section>
 
         {section(PATHWAY_GENUS, (group) => (

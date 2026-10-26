@@ -16,7 +16,11 @@ import {
   rareAffixes,
   rareEffect,
   resonanceKey,
-  slotMaterialType,
+  activeMaterialIndexes,
+  gradeOptions,
+  inactiveAffixes,
+  materialTypeAt,
+  usedGroups,
   statName,
   typePool,
   type Relics,
@@ -92,6 +96,7 @@ const RELICS: Relics = {
   },
   constants: {
     MainAttributeTipsEntryNumber: [6, 6, 5, 4],
+    SealBestGrade: 1,
     XMatMaxWordNum: 6,
     SealEffectBestGradeAtLocalServer: 2,
     SealEffectBestGradeAtCrossServer: 1,
@@ -215,12 +220,42 @@ describe('k1For', () => {
   })
 })
 
-describe('slotMaterialType', () => {
-  it('fixes 攻击 and 防御 to their own type and lets 特化 choose', () => {
-    expect(slotMaterialType({ groupId: 1, materialType: 2 })).toBe(1)
-    expect(slotMaterialType({ groupId: 2 })).toBe(2)
-    expect(slotMaterialType({ groupId: 3 })).toBe(1)
-    expect(slotMaterialType({ groupId: 3, materialType: 2 })).toBe(2)
+describe('material positions', () => {
+  it('fixes 攻击 and 防御 to their own type and gives 特化 one of each', () => {
+    expect([materialTypeAt(1, 0), materialTypeAt(1, 1)]).toEqual([1, 1])
+    expect([materialTypeAt(2, 0), materialTypeAt(2, 1)]).toEqual([2, 2])
+    expect([materialTypeAt(3, 0), materialTypeAt(3, 1)]).toEqual([1, 2])
+  })
+
+  it('counts 填充二 only on the strategic server, and only the equipped 特化 material', () => {
+    expect(activeMaterialIndexes({ groupId: 1 }, 'local')).toEqual([0])
+    expect(activeMaterialIndexes({ groupId: 2 }, 'cross')).toEqual([0, 1])
+    expect(activeMaterialIndexes({ groupId: 3, materialType: 2 }, 'cross')).toEqual([1])
+    expect(activeMaterialIndexes({ groupId: 3 }, 'local')).toEqual([0])
+  })
+})
+
+describe('gradeOptions', () => {
+  it('offers 3, 2, 1 worst first and never grade 0', () => {
+    expect(gradeOptions(RELICS)).toEqual([3, 2, 1])
+  })
+})
+
+describe('inactiveAffixes', () => {
+  it('switches off the lowest-Mark affixes past the cap, keeping the earlier of a tie', () => {
+    const affixes = [1284, 934, 1867, 1284, 1400].map((mark) => ({ stat: 'Atk_N', value: 0, mark }))
+    expect(inactiveAffixes(affixes, 4)).toEqual([false, true, false, false, false])
+    expect(inactiveAffixes(affixes, 3)).toEqual([false, true, false, true, false])
+    expect(inactiveAffixes(affixes, 6)).toEqual([false, false, false, false, false])
+  })
+})
+
+describe('usedGroups', () => {
+  it('reports the groups taken and whether a rare word is present', () => {
+    const pool = RELICS.materials.affixPool['5']['2']
+    const taken = usedGroups(pool, [{ stat: 'Atk_N', value: 490, mark: 1284, affixId: 10004 }])
+    expect([...taken.groups]).toEqual([101])
+    expect(taken.rare).toBe(false)
   })
 })
 
@@ -293,15 +328,16 @@ describe('poolRungs', () => {
 })
 
 describe('evaluateRelicSlot', () => {
-  const base = { groupId: 1, artifactId: 2085029, grade: 3, affixes: [] }
+  const base = { groupId: 1, artifactId: 2085029, grade: 3 }
+  const at = (mark: number) => ({ stat: 'Atk_N', value: 490, mark })
+  const three = [
+    { stat: 'Atk_N', value: 490, mark: 1284 },
+    { stat: 'DefReduce_N', value: 309, mark: 1284 },
+    { stat: 'Crit_N', value: 365, mark: 1400 },
+  ]
 
   it('adds the three parts', () => {
-    const affixes = [
-      { stat: 'Atk_N', value: 490, mark: 1284 },
-      { stat: 'DefReduce_N', value: 309, mark: 1284 },
-      { stat: 'Crit_N', value: 365, mark: 1400 },
-    ]
-    const result = evaluateRelicSlot(RELICS, { ...base, affixes }, 11, 103)
+    const result = evaluateRelicSlot(RELICS, { ...base, materials: [three, []] }, 11, 103)
     expect(result.assemblyScore).toBe(500)
     // calcSealedEnhanceMark: floor(4732 × k1 0.32) = floor(1514.24)
     expect(result.resonanceScore).toBe(1514)
@@ -310,52 +346,58 @@ describe('evaluateRelicSlot', () => {
   })
 
   it('scales resonance by k1 and floors once, as the client does', () => {
-    const one = [{ stat: 'Atk_N', value: 490, mark: 1284 }]
-    expect(evaluateRelicSlot(RELICS, { ...base, affixes: one }, 0, 103).resonanceScore).toBe(Math.floor(1352 * 0.1))
-    expect(evaluateRelicSlot(RELICS, { ...base, affixes: one }, 11, 103).resonanceScore).toBe(Math.floor(1352 * 0.32))
+    const one = { ...base, materials: [[at(1284)], []] }
+    expect(evaluateRelicSlot(RELICS, one, 0, 103).resonanceScore).toBe(Math.floor(1352 * 0.1))
+    expect(evaluateRelicSlot(RELICS, one, 11, 103).resonanceScore).toBe(Math.floor(1352 * 0.32))
   })
 
-  it('reads a best-grade relic at the server cap: grade 2 locally, grade 1 cross-server', () => {
-    const six = Array.from({ length: 6 }, () => ({ stat: 'Atk_N', value: 490, mark: 1284 }))
-    const local = evaluateRelicSlot(RELICS, { ...base, grade: 0, affixes: six }, 11, 103, 'local')
-    // Capped to grade 2: five words count, tier x02 at five pays 11268.
-    expect(local.resonanceGrade).toBe(2)
-    expect(local.cappedOut).toBe(1)
-    expect(local.resonanceScore).toBe(Math.floor(11268 * 0.32))
-    const cross = evaluateRelicSlot(RELICS, { ...base, grade: 0, affixes: six }, 11, 103, 'cross')
-    // Capped to grade 1: all six count, tier x03 at six pays 15776.
-    expect(cross.resonanceGrade).toBe(1)
-    expect(cross.cappedOut).toBe(0)
-    expect(cross.resonanceScore).toBe(Math.floor(15776 * 0.32))
-    // Assembly is the real grade's Mark either way.
-    expect(local.assemblyScore).toBe(6500)
-    expect(cross.assemblyScore).toBe(6500)
-  })
-
-  it('stops paying past the grade cap and says how many were dropped', () => {
-    // Grade 3 caps at 4; a fifth affix must add nothing.
-    const five = Array.from({ length: 5 }, () => ({ stat: 'Atk_N', value: 490, mark: 1284 }))
-    const result = evaluateRelicSlot(RELICS, { ...base, affixes: five }, 11, 103)
-    expect(result.cappedOut).toBe(1)
-    expect(result.affixScore).toBe(Math.floor(0.32 * 1284 * 4))
+  it('switches off the lowest-scoring affix past the cap, not the last one added', () => {
+    // Grade 3 caps at 4: the 934 affix pays nothing wherever it sits.
+    const five = [at(1284), at(934), at(1284), at(1284), at(1867)]
+    const result = evaluateRelicSlot(RELICS, { ...base, materials: [five, []] }, 11, 103)
+    expect(result.materials[0].inactive).toEqual([false, true, false, false, false])
+    expect(result.materials[0].activeCount).toBe(4)
+    expect(result.affixScore).toBe(Math.floor(0.32 * (1284 * 3 + 1867)))
     expect(result.resonanceScore).toBe(Math.floor(7662 * 0.32))
   })
 
-  it('a better grade pays more assembly and lifts the cap', () => {
-    const five = Array.from({ length: 5 }, () => ({ stat: 'Atk_N', value: 490, mark: 1284 }))
-    const worst = evaluateRelicSlot(RELICS, { ...base, grade: 3, affixes: five }, 11, 103)
-    const better = evaluateRelicSlot(RELICS, { ...base, grade: 2, affixes: five }, 11, 103)
-    expect(better.assemblyScore).toBeGreaterThan(worst.assemblyScore)
-    expect(better.cappedOut).toBe(0)
-    expect(better.affixScore).toBeGreaterThan(worst.affixScore)
+  it('scores grade 1 as grade 2 off the strategic server, assembly included', () => {
+    const six = Array.from({ length: 6 }, () => at(1284))
+    const local = evaluateRelicSlot(RELICS, { ...base, grade: 1, materials: [six, []] }, 11, 103, 'local')
+    // Five words count, tier x02 at five pays 11268, and assembly is grade 2's.
+    expect(local.resonanceGrade).toBe(2)
+    expect(local.materials[0].activeCount).toBe(5)
+    expect(local.resonanceScore).toBe(Math.floor(11268 * 0.32))
+    expect(local.assemblyScore).toBe(2500)
+    const cross = evaluateRelicSlot(RELICS, { ...base, grade: 1, materials: [six, []] }, 11, 103, 'cross')
+    expect(cross.resonanceGrade).toBe(1)
+    expect(cross.materials[0].activeCount).toBe(6)
+    expect(cross.resonanceScore).toBe(Math.floor(15776 * 0.32))
+    expect(cross.assemblyScore).toBe(4500)
   })
 
-  it('is all zeroes with nothing chosen', () => {
-    const result = evaluateRelicSlot(RELICS, { ...base, artifactId: null }, 11, 103)
+  it('counts 填充二 on the strategic server only', () => {
+    const slot = { ...base, materials: [three, three] }
+    const local = evaluateRelicSlot(RELICS, slot, 11, 103, 'local')
+    expect(local.materials[1].applies).toBe(false)
+    expect(local.affixScore).toBe(1269)
+    const cross = evaluateRelicSlot(RELICS, slot, 11, 103, 'cross')
+    expect(cross.affixScore).toBe(1269 * 2)
+    expect(cross.resonanceScore).toBe(1514 * 2)
+  })
+
+  it('scores only the equipped 特化 material', () => {
+    const slot = { groupId: 3, artifactId: null, grade: 3, materialType: 2, materials: [three, [at(1284)]] }
+    const result = evaluateRelicSlot(RELICS, slot, 11, 103, 'cross')
+    expect(result.materials.map((m) => m.applies)).toEqual([false, true])
+    expect(result.affixScore).toBe(Math.floor(0.32 * 1284))
+  })
+
+  it('pays assembly alone with nothing socketed', () => {
+    const result = evaluateRelicSlot(RELICS, { ...base, artifactId: null, materials: [[], []] }, 11, 103)
     expect(result.artifact).toBeNull()
     expect(result.affixScore).toBe(0)
     expect(result.resonanceScore).toBe(0)
-    // Assembly still pays: an equipped artifact at grade 3 is worth 500.
     expect(result.assemblyScore).toBe(500)
   })
 })
