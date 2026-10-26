@@ -79,7 +79,7 @@ export function GroupSection({
           <span className={TYPE.sectionTitle}>{group.genus.name}</span>
           <FormulaHint testId={`score-genus-hint-${group.genus.id}`}>{hint}</FormulaHint>
         </span>
-        <span className="text-xs font-normal tabular-nums text-muted-foreground" data-testid={`score-genus-total-${group.genus.id}`}>
+        <span className="text-lg font-semibold tabular-nums text-muted-foreground" data-testid={`score-genus-total-${group.genus.id}`}>
           {t('score.groupTotal', {
             score: group.score.toLocaleString(),
             expected: group.expected.toLocaleString(),
