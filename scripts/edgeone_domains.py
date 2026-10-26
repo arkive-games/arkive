@@ -29,6 +29,7 @@ import socket
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 
 from tencentcloud.common import credential
@@ -45,6 +46,10 @@ SITES: dict[str, list[str]] = {
     "arkive-vrising": ["vrising"],
     "arkive-ro3": ["ro3"],
     "arkive-gmzz": ["gmzz"],
+    # The Git-connected data/resource repos, one pair per game.
+    **{f"{kind}-{game}": [f"{kind}-{game}"]
+       for game in ("aion2", "palworld", "vrising", "ro3", "gmzz")
+       for kind in ("data", "resource")},
 }
 
 ALIYUN_REGION = "cn-hangzhou"  # alidns is global; the CLI just needs some region.
@@ -104,7 +109,10 @@ def https_check(host: str) -> str:
         ctx = ssl.create_default_context()
         with socket.create_connection((host, 443), timeout=10) as sock, ctx.wrap_socket(sock, server_hostname=host) as tls:
             subject = dict(item[0] for item in tls.getpeercert()["subject"])
-        status = urllib.request.urlopen(f"https://{host}/", timeout=15).status
+        try:
+            status = urllib.request.urlopen(f"https://{host}/", timeout=15).status
+        except urllib.error.HTTPError as err:  # data/resource hosts have no index page
+            status = err.code
         return f"HTTP {status}, cert CN={subject.get('commonName')}"
     except Exception as exc:  # noqa: BLE001 - reported, not handled
         return f"FAIL {type(exc).__name__}: {exc}"
@@ -119,7 +127,8 @@ def main() -> None:
     zone = args.zone_domain
 
     cli = teo_client()
-    projects = {p["Name"]: p for p in pages(cli, "DescribePagesProjects", {}, pages_zone_id(cli))["Projects"]}
+    zone_id = pages_zone_id(cli)
+    projects = {p["Name"]: p for p in pages(cli, "DescribePagesProjects", {}, zone_id)["Projects"]}
     wanted = {name: labels for name, labels in SITES.items() if not args.only or name in args.only}
     missing = [name for name in wanted if name not in projects]
     if missing:
@@ -179,7 +188,22 @@ def main() -> None:
             aliyun("AddDomainRecord", "--DomainName", zone, "--RR", label, "--Type", "CNAME", "--Value", target, "--TTL", str(TTL))
             print(f"DNS ADD   {fqdn} CNAME {target}")
 
-    # 4. Certificates are issued once the CNAME resolves; poll until every host serves HTTPS.
+    # 4. Request the free certificate. The console does this as part of adding a
+    # domain; the gateway call does not, leaving the host on ApplyType "none" and
+    # the edge presenting its default *.cdn.myqcloud.com certificate forever.
+    # One host per call: a batch is refused when the hosts' current states differ.
+    settings = cli.call_json("DescribeHostsSetting", {
+        "ZoneId": zone_id, "Limit": 1000,
+        "Filters": [{"Name": "host", "Values": sorted(targets)}],
+    })["Response"]["DetailHosts"]
+    for host in settings:
+        if host["Https"]["ApplyType"] == "none":
+            cli.call_json("ModifyHostsCertificate", {"ZoneId": zone_id, "Hosts": [host["Host"]], "Mode": "eofreecert"})
+            print(f"CERT      {host['Host']}: requested EdgeOne free certificate")
+        else:
+            print(f"cert ok   {host['Host']}")
+
+    # 5. Wait for every host to go online, then prove each one serves HTTPS.
     for _ in range(40):
         statuses = {fqdn: d["Status"] for name in wanted for d in project_domains(cli, projects[name]) if d["Domain"] in targets for fqdn in [d["Domain"]]}
         if all(s == "online" for s in statuses.values()):

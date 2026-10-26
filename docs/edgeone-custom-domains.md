@@ -61,8 +61,10 @@ The script needs Tencent Cloud credentials from `~/.tccli/default.credential`
 `aliyun` CLI. If the CLI login has expired (`failed to refresh token`),
 re-run `aliyun configure --profile <name> --mode OAuth` first.
 
-The project-to-host mapping is the `SITES` table at the top of the script,
-mirroring the matrix in `.github/workflows/deploy.yml`. Projects are resolved
+The project-to-host mapping is the `SITES` table at the top of the script. It
+covers the six app projects in the matrix of `.github/workflows/deploy.yml`
+plus the ten Git-connected `data-<game>`/`resource-<game>` projects, so every
+site keeps the same label under each domain. Projects are resolved
 **by name**, and the script stops on a name it cannot find rather than guess.
 Every step is idempotent, so re-running it is how you check the state:
 
@@ -73,8 +75,11 @@ Every step is idempotent, so re-running it is how you check the state:
    host and cannot be predicted. Any `OwnershipVerification` demand is printed.
 3. **DNS:** add or update the Aliyun `CNAME` for each host (TTL 600). A host
    that already has an `A`/`AAAA` record is reported and left alone.
-4. **Verify:** wait for every host to be `online`, then fetch each one over
-   HTTPS and print the certificate's CN.
+4. **Certificate:** request EdgeOne's free certificate for every host still on
+   `ApplyType: "none"` (see below; skipping this leaves HTTPS broken).
+5. **Verify:** wait for every host to be `online`, then fetch each one over
+   HTTPS and print the status and the certificate's CN. Data and resource
+   hosts have no index page, so `HTTP 404` with a matching CN is a pass there.
 
 ## Ownership verification (the one manual step)
 
@@ -103,30 +108,49 @@ domain:
 
 Leave the `edgeonereclaim` TXT records in place; EdgeOne may re-check them.
 
-## Certificates take a while
+## Certificates must be requested
 
-`online` does not mean servable. Until EdgeOne has seen the CNAME, which you
-can tell because `CurrentCname` is still empty, the edge answers the host
-with Tencent's default `CN=*.cdn.myqcloud.com` certificate. The free
-certificate is issued only after detection, which can lag DNS propagation by
-some minutes. Plain `http://` already serves the right project in the
-meantime, which is a quick way to tell that the binding is fine and only the
-certificate is outstanding.
+**A domain bound through the gateway gets no certificate.** The console
+requests one as part of adding a domain; `CreatePagesZoneCustomDomain` does
+not. The host goes `online`, plain `http://` serves the right project, and
+`https://` presents Tencent's default `CN=*.cdn.myqcloud.com` certificate
+indefinitely. It does not resolve itself: these hosts waited 35 minutes.
+
+`DescribeHostsSetting` on the Pages zone shows the cause as
+`Https.ApplyType: "none"`, where a console-added host shows `"apply"`.
+
+The fix is the public action that switches a host to EdgeOne's free
+certificate. It was issued within about a minute:
+
+```sh
+tccli teo ModifyHostsCertificate --ZoneId <pages-zone> --Hosts '["www.arkive.games"]' --Mode eofreecert
+```
+
+Send **one host per call**. A batch is refused with
+`HostsCertificateInconsistency` as soon as the hosts' current certificate
+states differ.
+
+Avoid `ApplyFreeCertificate`; both of its verification methods went nowhere:
+
+- `http_challenge` fails because nothing serves its
+  `/.well-known/pki-validation/` file.
+- `dns_challenge` asks for a `_dnsauth.<host>` CNAME to `<host>.eoacme0.com`,
+  then kept reporting that record as undetected long after it resolved.
 
 Locally, Windows also caches the NXDOMAIN answers from any lookup made before
 the records existed. Check against a public resolver
 (`nslookup <host> 8.8.8.8`) or run `ipconfig /flushdns` before trusting a
 `getaddrinfo failed`.
 
-Re-run the script until every row shows `HTTP 200` and a certificate for the
-host itself.
-
 ## What a second domain does not change
 
 Both domains serve the **same build**, so the URLs Vite inlined at build time
 still point at `tc-imba.com`:
 
-- data and resource hosts (`VITE_DATA_BASE_URL`, `VITE_RESOURCE_BASE_URL`);
+- data and resource hosts (`VITE_DATA_BASE_URL`, `VITE_RESOURCE_BASE_URL`).
+  The `arkive.games` copies are live and byte-identical, with
+  `Access-Control-Allow-Origin: *`, but a page only uses them once the build
+  is pointed at them;
 - the hub's game links (`frontend/apps/meta/src/sites.ts`) and the
   `homeUrl` defaults;
 - the API origin (`api-arkive.tc-imba.com`), whose session cookie is scoped
