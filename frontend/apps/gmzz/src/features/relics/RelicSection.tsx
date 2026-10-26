@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMemory } from '@gamemap/state-memory'
-import { Input } from '@gamemap/ui'
+import { Hint, Input, TooltipProvider } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import RangeField from '@/components/RangeField'
@@ -147,18 +147,29 @@ function ArtifactCell({ relics, groupId, artifact, gradeOf, onSelect }: {
 }
 
 /** The game's prohibition sign, on an affix switched off for being past the cap. */
-function BanIcon({ label }: { label: string }) {
+function BanIcon({ label, detail }: { label: string; detail: string }) {
   return (
-    <svg viewBox="0 0 16 16" role="img" aria-label={label} className="size-4 shrink-0 text-red-600 dark:text-red-400">
-      <title>{label}</title>
+    <Hint content={detail} title={label} contentClassName="max-w-xs">
+      <span className="inline-flex cursor-help" tabIndex={0} aria-label={label}>
+        <BanGlyph />
+      </span>
+    </Hint>
+  )
+}
+
+function BanGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden className="size-4 shrink-0 text-red-600 dark:text-red-400">
       <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.75" />
       <path d="M3.6 3.6 12.4 12.4" stroke="currentColor" strokeWidth="1.75" />
     </svg>
   )
 }
 
-function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix, onChange, onRemove }: {
+function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testPrefix, onChange, onRemove }: {
   relics: Relics; affix: ChosenRelicAffix; others: ChosenRelicAffix[]; index: number; inactive: boolean
+  /** How many affixes the grade lets take effect, for the switched-off tooltip. */
+  cap: number
   pool: PoolAffix[]; k2: number; testPrefix: string
   onChange: (next: ChosenRelicAffix) => void; onRemove: () => void
 }) {
@@ -176,7 +187,7 @@ function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix
       {/* One column template for every row, so the stat pickers line up and so do the values. */}
       <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-center gap-1">
         <span className="flex w-4 justify-center" data-testid={`${testPrefix}-state-${index}`}>
-          {inactive ? <BanIcon label={t('relic.affixInactive')} /> : null}
+          {inactive ? <BanIcon label={t('relic.affixInactive')} detail={t('relic.cappedOut', { cap })} /> : null}
         </span>
         <ChoiceSelect value={rare ? `${RARE_PREFIX}${rare.id}` : `${STAT_PREFIX}${affix.stat}`}
           label={t('relic.affixStat')} testId={`${testPrefix}-stat-${index}`}
@@ -278,15 +289,15 @@ function RareEffects({ relics, pool, affixes, k2, testId }: {
  * grade numbers because the best grade is the lowest number; every stop is
  * labelled with the game's risk wording.
  */
-function GradeSlider({ relics, grade, scoredGrade, groupId, onChange }: {
-  relics: Relics; grade: number; scoredGrade: number; groupId: number; onChange: (grade: number) => void
+function GradeSlider({ relics, grade, scoredGrade, k2, groupId, onChange }: {
+  relics: Relics; grade: number; scoredGrade: number; k2: number; groupId: number; onChange: (grade: number) => void
 }) {
   const { t } = useTranslation()
   const label = useGradeLabel()
   const grades = gradeOptions(relics)
   const position = Math.max(0, grades.indexOf(grade))
   const rung = gradeRung(relics, grade)
-  const valueText = t('relic.gradeValue', { risk: label(grade), mark: rung?.mark ?? 0 })
+  const valueText = t('relic.gradeValue', { risk: label(grade), mark: decimal((rung?.mark ?? 0) * k2) })
 
   return (
     <div>
@@ -455,7 +466,7 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
         {t('relic.affixesOf', { group: relics.groupNames[String(material.type)] ?? '' })}
       </span>
       {affixes.map((affix, index) => (
-        <AffixRow key={index} relics={relics} affix={affix} index={index} inactive={material.inactive[index] ?? false}
+        <AffixRow key={index} relics={relics} affix={affix} index={index} inactive={material.inactive[index] ?? false} cap={result.cap}
           others={affixes.filter((_, at) => at !== index)} pool={pool} k2={k2} testPrefix={testPrefix}
           onChange={(next) => onAffixes(affixes.map((entry, at) => (at === index ? next : entry)))}
           onRemove={() => onAffixes(affixes.filter((_, at) => at !== index))} />
@@ -465,11 +476,6 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
         {/* `used` rather than `count`, which i18next reads as a plural selector. */}
         {t('relic.addAffix', { used: affixes.length, max })}
       </button>
-      {over > 0 ? (
-        <p className="text-xs font-semibold text-amber-700 dark:text-amber-300" data-testid={`${testPrefix}-capped`}>
-          {t('relic.cappedOut', { over, cap: result.cap })}
-        </p>
-      ) : null}
     </div>
 
     <div className={ROW_CLASS}>
@@ -530,7 +536,7 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
           <p className={PROSE_CLASS}>{result.artifact ? result.artifact.description : t('relic.artifactPlaceholder')}</p>
       </div>
       <div className="min-w-0 px-2.5 pb-2.5">
-        <GradeSlider relics={relics} grade={slot.grade} scoredGrade={result.resonanceGrade} groupId={groupId}
+        <GradeSlider relics={relics} grade={slot.grade} scoredGrade={result.resonanceGrade} k2={k2} groupId={groupId}
           onChange={(grade) => patch({
             grade,
             grades: slot.artifactId == null ? slot.grades : { ...slot.grades, [String(slot.artifactId)]: grade },
@@ -722,6 +728,7 @@ export default function RelicSection({ relics, onTotals }: {
   }, [onTotals, totals])
 
   return (
+    <TooltipProvider delayDuration={200}>
     <section className="space-y-3" data-testid="relic-section" aria-label={t('relic.title')}>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
         <div className="min-w-0">
@@ -747,15 +754,7 @@ export default function RelicSection({ relics, onTotals }: {
         ))}
       </div>
 
-      <div className="rounded-md border border-border bg-card p-3" data-testid="relic-totals">
-        <div className="text-xs font-semibold text-muted-foreground">{t('relic.grandTotal')}</div>
-        <div className={`${TYPE.total} text-3xl`}>{totals.total.toLocaleString()}</div>
-        <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs tabular-nums text-muted-foreground">
-          <span>{t('relic.subtotalAssembly', { value: totals.assembly.toLocaleString() })}</span>
-          <span>{t('relic.subtotalResonance', { value: totals.resonance.toLocaleString() })}</span>
-          <span>{t('relic.subtotalAffix', { value: totals.affix.toLocaleString() })}</span>
-        </div>
-      </div>
     </section>
+    </TooltipProvider>
   )
 }
