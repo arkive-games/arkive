@@ -54,3 +54,14 @@ def test_unknown_type_fails():
 def test_invalid_mask_fails(tmp_path):
     with pytest.raises(ValueError, match='64 bytes'):
         KsbcReader(tmp_path / 'missing', b'')
+
+
+@pytest.mark.parametrize(('kind', 'raw', 'value'), [
+    # Measured on the live client: a contaminated affix's Mark (-200) and 攻击 (-76),
+    # a 12v12 LoseScore (-30) and a MinValue constant (-99999).
+    (2, b'\xe2', -30),
+    (4, b'\x38\xff', -200),
+    (6, struct.pack('<i', -99999), -99999),
+])
+def test_signed_widths(kind, raw, value):
+    assert fixture(kind, raw).node(100) == {'name': value}

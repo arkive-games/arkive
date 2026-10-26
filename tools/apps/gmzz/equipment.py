@@ -111,6 +111,13 @@ TIER_BY_TAIL = [(1, 12, "normal"), (21, 32, "extraordinary"), (41, 52, "contamin
 UNWRITTEN_EFFECTS = ("描述文本", "该效果已被隐秘")
 
 _TAG = re.compile(r"<[^>]+>")
+#: `{1,N,text}` is text the client shows only while state N holds — 烙印 effects
+#: open with `{1,2,（烙印已失效）}` and carry `{1,4,（已经激活）}` — and
+#: `{2,…,Key}` is a live value such as the wearer's current 污染值. A page with no
+#: character state can show neither, so conditionals go and a live-value line goes
+#: whole, label and all.
+_CONDITIONAL = re.compile(r"\{1,\d+,[^}]*\}")
+_LIVE_VALUE = re.compile(r"\{2,[^}]*\}")
 
 
 def _rows(payload) -> list:
@@ -119,7 +126,8 @@ def _rows(payload) -> list:
 
 def _plain(text: str) -> str:
     """Client markup stripped — `<Mark>250</>` reads as 250."""
-    return _TAG.sub("", text or "").strip()
+    text = _CONDITIONAL.sub("", _TAG.sub("", text or ""))
+    return "\n".join(line for line in text.split("\n") if not _LIVE_VALUE.search(line)).strip()
 
 
 def tier_of(group_id: int) -> str:
@@ -415,17 +423,6 @@ def suit_level_scores(excel: Path) -> dict:
     return out
 
 
-#: A contaminated rung lowers its stat by a small amount and costs Mark. The
-#: decoded table ships rows like 攻击 +19185 at Mark 1010827104 for this tier —
-#: bytes that did not decode, not rungs — so a row is kept only when its value
-#: is negative and its Mark is within the range real rungs use.
-MAX_RUNG_MARK = 100_000
-
-
-def _plausible_contaminated(mark, value) -> bool:
-    return isinstance(value, (int, float)) and value < 0 and isinstance(mark, (int, float)) and abs(mark) <= MAX_RUNG_MARK
-
-
 def affixes(excel: Path, strings: dict) -> dict:
     """The reforge affix pool, per slot, per tier, as a Mark ladder.
 
@@ -449,7 +446,6 @@ def affixes(excel: Path, strings: dict) -> dict:
     # slot -> tier -> family -> {mark: value}
     pool: dict = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
     stat_keys: dict[str, str] = {}
-    dropped = 0
     for word in words:
         if CURRENT_SET not in (word.get("Set") or []):
             continue
@@ -468,13 +464,12 @@ def affixes(excel: Path, strings: dict) -> dict:
             for slot, gids in per_slot.items():
                 if gid in gids:
                     tier = tier_of(gid)
-                    if tier == "contaminated" and not _plausible_contaminated(word["Mark"], amount[0]):
-                        dropped += 1
-                        continue
+                    # A contaminated rung lowers its stat and costs Mark. Both read
+                    # as positive garbage when the packed reader takes a signed code
+                    # for an unsigned one, so a sign slip fails the build here.
+                    if tier == "contaminated" and not (word["Mark"] < 0 and amount[0] < 0):
+                        raise RuntimeError(f"{WORD_TABLE} {word['ID']}: contaminated rung is not negative")
                     pool[slot][tier][family][word["Mark"]] = amount[0]
-
-    if dropped:
-        print(f"{WORD_TABLE}: dropped {dropped} contaminated rung(s) that did not decode to a negative value")
 
     # Each ladder is a LIST of [mark, value], richest first — not a mark-keyed
     # object. `write_json` sorts keys, and sorted stringified numbers put "1000"

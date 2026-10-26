@@ -14,7 +14,10 @@ from pathlib import Path
 
 
 class KsbcReader:
-    FORMATS = {1: 'B', 2: 'h', 3: 'H', 4: 'i', 5: 'I', 6: 'd', 9: 'B', 10: 'd'}
+    # Integers come in unsigned/signed pairs by width: 1/2 8-bit, 3/4 16-bit, 5/6 32-bit.
+    # Signed codes are rare (contaminated affixes, penalties, MinValue) and read as
+    # garbage under any other width, so the pairing is pinned by test.
+    FORMATS = {1: 'B', 2: 'b', 3: 'H', 4: 'h', 5: 'I', 6: 'i', 9: 'B', 10: 'd'}
     WIDTHS = {1: 1, 3: 2, 5: 4}
 
     def __init__(self, path: Path, mask: bytes):

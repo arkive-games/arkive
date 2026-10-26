@@ -164,6 +164,14 @@ def test_brands_links_by_product_and_drops_the_unwritten(stub):
     assert rows[10035]["effect"] == "怪物专攻提高150。", "client markup stripped"
 
 
+def test_brand_state_markup_is_not_shown_as_text():
+    effect = equipment._plain(
+        "{1,3,（烙印已失效）}攻击提高<Mark>170</>。\n达到30污染值时暴击提高15。{1,4,（已经激活）}\n"
+        "当前污染值：{2,1,*d,F1690001,Corruption}\n仅在装备者血契约时生效。"
+    )
+    assert effect == "攻击提高170。\n达到30污染值时暴击提高15。\n仅在装备者血契约时生效。"
+
+
 def test_professions_inverts_class_limit_and_keeps_the_disabled_one(stub):
     stub({equipment.TYPE_TABLE: TYPES, equipment.PROFESSION_TABLE: PROFESSIONS})
     type_rows = equipment.types(None, {})
@@ -297,10 +305,3 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
     }
     assert {i["id"]: i["baseScore"] for i in payload["items"]} == {3001059: 2685, 3020623: 2430}
 
-
-def test_contaminated_rungs_must_decode_to_a_small_negative_value():
-    # What the decoded table actually holds for this tier: positive values and absurd Marks.
-    assert not equipment._plausible_contaminated(1010827104, 19139)
-    assert not equipment._plausible_contaminated(-1437139144, -1302)
-    assert not equipment._plausible_contaminated(-400, 19185)
-    assert equipment._plausible_contaminated(-400, -32)
