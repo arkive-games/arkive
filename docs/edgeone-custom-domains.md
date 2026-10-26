@@ -1,0 +1,137 @@
+# Custom domains on EdgeOne Pages, automated
+
+How a second domain (here `arkive.games`, alongside `tc-imba.com`) was bound to
+every EdgeOne Pages project and pointed at by DNS, without clicking through the
+console once per site. The whole procedure is `scripts/edgeone_domains.py`;
+this page records why it works and what it cannot do.
+
+## Why not the CLI
+
+Neither official tool can attach a custom domain to a Pages project:
+
+- `edgeone makers` (checked on v1.6.46) offers `init`, `dev`, `env`, `link`,
+  `deploy`, `claim` and `create`, nothing for domains, and its bundle contains
+  no domain API call.
+- `tccli teo` has no Pages actions at all.
+
+## What the console actually calls
+
+The console's domain page posts to its `cgi/capi` proxy with the TEO action
+**`CreatePagesResources`** (version `2022-09-01`). It is a generic gateway: the
+real operation travels in its parameters.
+
+```json
+{
+  "Interface": "pages:CreatePagesZoneCustomDomain",
+  "Payload": "{\"ProjectId\":\"makers-…\",\"Domain\":\"www.arkive.games\",\"Env\":\"Production\"}",
+  "ZoneId": "zone-…"
+}
+```
+
+`Payload` is a JSON **string**, and so is the `Result` that comes back.
+
+The action is absent from the public API reference and from tccli, but it
+accepts an ordinary TC3 API-key signature. So any Tencent Cloud SDK's generic
+client can call it with the same credentials tccli uses, and the browser
+session cookies are never needed. Interfaces confirmed to work:
+
+| `Interface` | `Payload` | Returns |
+|---|---|---|
+| `pages:DescribePagesProjects` | `{}` | every project: `ProjectId`, `Name`, `ZoneId`, `CustomDomains` |
+| `pages:DescribePagesZoneCustomDomains` | `{"ProjectId"}` | `PagesDomains[]`: `Domain`, `Status` (`process` → `online`), `Cname` (the target to point DNS at), `CurrentCname` (what EdgeOne currently sees in DNS, empty until it detects the record), `OwnershipVerification` |
+| `pages:CreatePagesZoneCustomDomain` | `{"ProjectId","Domain","Env":"Production"}` | `{"Domain","Id"}` |
+
+The guessed names `DescribePagesCustomDomains` and `DescribePagesDomains`
+return `InternalError`, which is what an unknown interface looks like.
+
+**`ZoneId` is mandatory on every call**, including the account-wide project
+list. It is the id of the account's hidden Pages zone, which the public
+`DescribeZones` lists as `ZoneName: default-pages-zone`, `Type: pages`. The
+script finds it there instead of hardcoding it.
+
+## The procedure
+
+```sh
+uv run scripts/edgeone_domains.py --zone-domain arkive.games          # plan: what would be bound
+uv run scripts/edgeone_domains.py --zone-domain arkive.games --apply  # do it
+```
+
+The script needs Tencent Cloud credentials from `~/.tccli/default.credential`
+(or `TENCENTCLOUD_SECRET_ID`/`TENCENTCLOUD_SECRET_KEY`) and a logged-in
+`aliyun` CLI. If the CLI login has expired (`failed to refresh token`),
+re-run `aliyun configure --profile <name> --mode OAuth` first.
+
+The project-to-host mapping is the `SITES` table at the top of the script,
+mirroring the matrix in `.github/workflows/deploy.yml`. Projects are resolved
+**by name**, and the script stops on a name it cannot find rather than guess.
+Every step is idempotent, so re-running it is how you check the state:
+
+1. **Bind:** call `CreatePagesZoneCustomDomain` for each host not yet bound to
+   its project.
+2. **Wait for targets:** poll `DescribePagesZoneCustomDomains` until each host
+   has a `Cname`. This takes seconds; the target's `dnsoeN` shard differs per
+   host and cannot be predicted. Any `OwnershipVerification` demand is printed.
+3. **DNS:** add or update the Aliyun `CNAME` for each host (TTL 600). A host
+   that already has an `A`/`AAAA` record is reported and left alone.
+4. **Verify:** wait for every host to be `online`, then fetch each one over
+   HTTPS and print the certificate's CN.
+
+## Ownership verification (the one manual step)
+
+Binding the first host under `arkive.games` asked for a TXT record named
+`edgeonereclaim.<host>` with a `reclaim-…` value, rather than going straight
+to a CNAME as new `tc-imba.com` hosts do. A registrable domain new to the
+account has to prove ownership once; `tc-imba.com` did so long ago and still
+carries the `_dnsauth` TXT record from it.
+
+Completing the apex verification also created a `partial` EdgeOne site for
+`arkive.games` (`DescribeZones`, status `pending`), so it did not exist when
+the first prompt appeared and is not what triggered it.
+
+Verifying the **apex** once (TXT `edgeonereclaim` at `@`, through the console
+dialog) covered every later subdomain. The four hosts the script bound
+afterwards came back with `OwnershipVerification: null` and went straight to a
+CNAME.
+
+The API has no call to trigger that verification, so for a new registrable
+domain:
+
+1. Add the apex in the console and choose DNS verification.
+2. Create the TXT record it shows:
+   `aliyun alidns AddDomainRecord --DomainName <zone> --RR edgeonereclaim --Type TXT --Value reclaim-…`
+3. Click verify, then run the script for everything else.
+
+Leave the `edgeonereclaim` TXT records in place; EdgeOne may re-check them.
+
+## Certificates take a while
+
+`online` does not mean servable. Until EdgeOne has seen the CNAME, which you
+can tell because `CurrentCname` is still empty, the edge answers the host
+with Tencent's default `CN=*.cdn.myqcloud.com` certificate. The free
+certificate is issued only after detection, which can lag DNS propagation by
+some minutes. Plain `http://` already serves the right project in the
+meantime, which is a quick way to tell that the binding is fine and only the
+certificate is outstanding.
+
+Locally, Windows also caches the NXDOMAIN answers from any lookup made before
+the records existed. Check against a public resolver
+(`nslookup <host> 8.8.8.8`) or run `ipconfig /flushdns` before trusting a
+`getaddrinfo failed`.
+
+Re-run the script until every row shows `HTTP 200` and a certificate for the
+host itself.
+
+## What a second domain does not change
+
+Both domains serve the **same build**, so the URLs Vite inlined at build time
+still point at `tc-imba.com`:
+
+- data and resource hosts (`VITE_DATA_BASE_URL`, `VITE_RESOURCE_BASE_URL`);
+- the hub's game links (`frontend/apps/meta/src/sites.ts`) and the
+  `homeUrl` defaults;
+- the API origin (`api-arkive.tc-imba.com`), whose session cookie is scoped
+  to `.tc-imba.com`.
+
+Signing in from an `arkive.games` page is therefore a cross-site request. A
+fully independent second domain needs host-relative URLs in the frontend, a
+backend CORS entry, and an API host under the same registrable domain.
