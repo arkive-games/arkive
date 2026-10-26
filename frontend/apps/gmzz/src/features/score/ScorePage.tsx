@@ -287,10 +287,13 @@ export default function ScorePage() {
   return (
     <ContentPage active="/score" title={t('score.title')} wide>
       <div data-testid="score-page" className="space-y-4">
-        <header className="border-b border-border pb-4">
+        {/* A slim bar that stays in view: the title and the one switch every
+            relic number depends on. It sits under the site's own sticky bar —
+            the phone header (3.5rem) below md, the floating top bar above. */}
+        <header className="sticky top-14 z-20 -mx-1 flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border bg-background/95 px-1 py-1.5 backdrop-blur md:top-[5.25rem]"
+          data-testid="score-header">
           <h1 className={TYPE.pageTitle}>{t('score.title')}</h1>
-          <p className="mt-1 max-w-4xl text-sm leading-6 text-muted-foreground">{t('score.description')}</p>
-          <p className="mt-1 max-w-4xl text-xs leading-5 text-muted-foreground">{t('score.sourceNote')}</p>
+          {relics ? <RelicServerToggle testId="score-relic-server" compact /> : null}
         </header>
 
         {/* Progression drives every benchmark on the page, so it sits above the
@@ -337,12 +340,6 @@ export default function ScorePage() {
             </label>
           ) : null}
           <Summary result={result} />
-          {/* Mirrors the switch in the relic section; both write the same stored value. */}
-          {relics ? (
-            <div className="sm:col-span-2 lg:col-span-4">
-              <RelicServerToggle testId="score-relic-server" />
-            </div>
-          ) : null}
         </section>
 
         {section(PATHWAY_GENUS, (group) => (

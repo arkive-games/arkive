@@ -7,7 +7,6 @@ import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
-import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { relicDraft, useRelicServer, type StoredRelicSlot } from '@/features/relics/memory'
 import {
   MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason,
@@ -72,15 +71,6 @@ function affixFrom(rung: PoolAffix): ChosenRelicAffix {
 function useGradeLabel() {
   const { t } = useTranslation()
   return (grade: number) => t(`relic.gradeRisk${grade}`, { defaultValue: t('relic.gradeBare', { grade }) })
-}
-
-/** A position's name: 填充一/填充二 on 攻击 and 防御, the material type on 特化. */
-function usePositionLabel(relics: Relics) {
-  const { t } = useTranslation()
-  return (groupId: number, index: number) =>
-    groupId === SPEC_GROUP
-      ? t('relic.materialTypeOption', { group: relics.groupNames[String(materialTypeAt(groupId, index))] ?? '' })
-      : t(index === 0 ? 'relic.materialSlot1' : 'relic.materialSlot2')
 }
 
 type ChoiceOption = { value: string | number; label: string; disabled?: boolean }
@@ -506,7 +496,6 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
   onSwapStart: (from: Position) => void; onSwapTo: (to: Position) => void
 }) {
   const { t } = useTranslation()
-  const positionLabel = usePositionLabel(relics)
   const groupId = slot.groupId
   const spec = groupId === SPEC_GROUP
   // 特化 views the material it has equipped; the other two view whichever
@@ -521,6 +510,12 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
   /** An artifact's own grade: stored per artifact, starting at the worst. */
   const gradeOf = (id: number) => slot.grades?.[String(id)] ?? relics.promotion.worstGrade
   const choose = (at: number) => (spec ? patch({ materialType: materialTypeAt(groupId, at) }) : setViewed(at))
+  /** A position's material, named as the game names it from the words it carries. */
+  const nameAt = (at: number) => {
+    const type = materialTypeAt(groupId, at)
+    return materialName(relics, type, typePool(relics, type), slot.materials[at] ?? [])
+      ?? t('relic.materialTypeOption', { group: relics.groupNames[String(type)] ?? '' })
+  }
 
   return (
     <article className={`flex min-w-0 flex-col rounded-md border border-border bg-card lg:grid lg:grid-rows-subgrid lg:gap-0 ${CARD_ROWS}`}
@@ -572,9 +567,8 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
                   target ? 'border-dashed border-[color:var(--arkive-nav-accent)] text-[color:var(--arkive-nav-accent)]' : at === index ? TAB_ACTIVE : ''
                 }`}>
                 {target ? <span aria-hidden>⇄</span> : null}
-                {positionLabel(groupId, at)}
-                {!spec && !active.includes(at) ? <span className="text-amber-700 dark:text-amber-300">{t('relic.strategicOnly')}</span> : null}
-                {(slot.materials[at]?.length ?? 0) > 0 ? <span className="tabular-nums opacity-70">·{slot.materials[at].length}</span> : null}
+                <span className="truncate">{t('relic.materialTab', { name: nameAt(at), count: slot.materials[at]?.length ?? 0 })}</span>
+                {!spec && !active.includes(at) ? <span className="shrink-0 text-amber-700 dark:text-amber-300">{t('relic.strategicOnly')}</span> : null}
               </button>
             )
           })}
@@ -738,15 +732,6 @@ export default function RelicSection({ relics, onTotals }: {
   return (
     <TooltipProvider delayDuration={200}>
     <section className="space-y-3" data-testid="relic-section" aria-label={t('relic.title')}>
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
-        <div className="min-w-0">
-          {/* A sub-heading: the page draws the group's own heading and rows above this. */}
-          <h3 className="text-base font-semibold text-foreground">{t('relic.title')}</h3>
-          <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">{t('relic.hint')}</p>
-        </div>
-        <RelicServerToggle testId="relic-server" />
-      </div>
-
       <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} onChange={setKnowledgeLevel} />
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">

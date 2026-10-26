@@ -1,3 +1,4 @@
+import { Hint, TooltipProvider } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { TYPE } from '@/lib/typography'
@@ -7,16 +8,25 @@ import type { RelicServer } from '@/features/relics/data'
 const SERVERS: RelicServer[] = ['local', 'cross']
 
 /**
- * The 本服 / 战略服 switch. Rendered twice — at the top of the page and in the
- * relic section — and bound to one stored value, so the two never disagree.
+ * The 本服 / 战略服 switch, bound to the stored relic draft. `compact` lays it
+ * out on one line for the page's sticky title bar, with the explanation in a
+ * tooltip on the label instead of a paragraph underneath.
  */
-export default function RelicServerToggle({ testId, hint = true }: { testId: string; hint?: boolean }) {
+export default function RelicServerToggle({ testId, hint = true, compact = false }: { testId: string; hint?: boolean; compact?: boolean }) {
   const { t } = useTranslation()
   const [server, setServer] = useRelicServer()
 
   return (
-    <div className="min-w-0">
-      <span className={`mb-0.5 block ${TYPE.label}`}>{t('relic.server')}</span>
+    <div className={compact ? 'flex min-w-0 items-center gap-2' : 'min-w-0'}>
+      {compact ? (
+        <TooltipProvider delayDuration={200}>
+          <Hint content={t('relic.serverHint')} title={t('relic.server')} contentClassName="max-w-xs">
+            <span className={`cursor-help underline decoration-dotted underline-offset-4 ${TYPE.label}`} tabIndex={0}>{t('relic.server')}</span>
+          </Hint>
+        </TooltipProvider>
+      ) : (
+        <span className={`mb-0.5 block ${TYPE.label}`}>{t('relic.server')}</span>
+      )}
       <div className="inline-flex overflow-hidden rounded-md border border-border" role="group" aria-label={t('relic.server')}>
         {SERVERS.map((entry, index) => (
           <button
@@ -35,7 +45,7 @@ export default function RelicServerToggle({ testId, hint = true }: { testId: str
           </button>
         ))}
       </div>
-      {hint ? <p className="mt-0.5 max-w-sm text-xs leading-5 text-muted-foreground">{t('relic.serverHint')}</p> : null}
+      {hint && !compact ? <p className="mt-0.5 max-w-sm text-xs leading-5 text-muted-foreground">{t('relic.serverHint')}</p> : null}
     </div>
   )
 }
