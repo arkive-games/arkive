@@ -3,7 +3,7 @@
     {
       "version": "0.24.0",
       "date": "2026-10-27",
-      "commit": "3a37dd5414fd7a63c20ad30fb9696666e2abe469",
+      "commit": "e49c7d14f9f5d97423d0d478270b31e1471d3949",
       "changes": [
         {
           "kind": "feature",
@@ -18,7 +18,7 @@
     {
       "version": "0.23.0",
       "date": "2026-10-27",
-      "commit": "7c3f65804930f912d9d1ba0c787a589d68bfca08",
+      "commit": "351c5b5f7d39c3d55677a108207b8190404e8597",
       "changes": [
         {
           "kind": "feature",
