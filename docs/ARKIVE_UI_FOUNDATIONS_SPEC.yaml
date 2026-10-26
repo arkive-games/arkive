@@ -143,7 +143,7 @@ shared_component_contracts:
   desktop_top_bar:
     owner: "frontend/packages/map-shell/src/ArkiveMapTopBar.tsx"
     docked: "Full-width 3.5rem bar on game, map, and content pages"
-    floating: "A 4rem capsule with pill_radius, floating above the portal home"
+    floating: "A 4rem capsule with pill_radius on portal discovery, All Games, Tools, and Forum views"
     navigation: "Pill tabs inside one rounded track, with a sliding indicator under the active or hovered tab"
     utilities: "Round 2.5rem icon buttons for language and theme, a gradient login pill, and a ringed 2.5rem avatar"
   popup_surfaces:
@@ -159,10 +159,11 @@ shared_component_contracts:
   compact_site_footer:
     owner: "frontend/packages/ui/src/site-footer.tsx"
     use: "Scrollable portal and game pages that are not the true portal home view."
-    geometry: "One compact, wrapping metadata row separated from page content by a single top border."
+    geometry: "Quiet neutral surface with the Arkive wordmark, optional host-owned navigation, and wrapping legal/version metadata. No extra top border. A desktop-only gold voyage line and boat follow the actual scroll container and dock at the footer; neither appears on mobile."
+    homepage_exception: "Keep the discovery homepage's sea footer unchanged."
     exclusions:
       - "Full-screen map workspaces"
-      - "Portal-home brand and navigation composition"
+      - "Portal-home sea background and arrival animation"
       - "Mobile version identifiers"
 
 spacing:

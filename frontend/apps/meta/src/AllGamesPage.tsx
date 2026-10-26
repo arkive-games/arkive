@@ -1,4 +1,4 @@
-import { useMemo, useRef, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, type CSSProperties, type FormEvent, type MouseEvent } from 'react'
 import { scrollToResults } from './scrollToResults'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
@@ -6,7 +6,7 @@ import { defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemorySt
 import {
   IconArrowLeft,
   IconArrowRight,
-  IconArrowUpRight,
+  IconX,
   IconBookmark,
   IconSearch,
 } from '@tabler/icons-react'
@@ -67,11 +67,24 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
       site,
       id: site.id,
       categories: getGameCategories(site.id),
-      searchText: `${t(site.nameKey)} ${t(site.descKey)}`,
+      searchText: `${t(site.nameKey)} ${t(site.descKey)} ${site.id} ${t(`catalog.alias.${site.id}`, { defaultValue: '' })}`,
     })),
     [sites, t],
   )
-  const categoryCounts = useMemo(() => countCatalogCategories(entries), [entries])
+  const allCounts = useMemo(() => countCatalogCategories(entries), [entries])
+  const categoryCounts = useMemo(() => countCatalogCategories(filterCatalogEntries(entries, 'all', query)), [entries, query])
+  const inputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => {
+      const target = event.target
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
+      if (target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return
+      event.preventDefault()
+      inputRef.current?.focus()
+    }
+    document.addEventListener('keydown', focusSearch)
+    return () => document.removeEventListener('keydown', focusSearch)
+  }, [])
   const filteredEntries = useMemo(
     () => filterCatalogEntries(entries, category, query),
     [category, entries, query],
@@ -96,35 +109,33 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
   return (
     <main className="catalog-main">
       <section className="home-shell catalog-hero" aria-labelledby="catalog-heading">
-        <div className="catalog-hero-copy">
-          <p className="catalog-eyebrow">
-            <span aria-hidden="true" />
-            {t('catalog.eyebrow')}
-          </p>
-          <h1 id="catalog-heading">{t('catalog.title')}</h1>
-          <p className="catalog-intro">{t('catalog.description')}</p>
-        </div>
+        <h1 id="catalog-heading" className="sr-only">{t('nav.allGames')}</h1>
 
         <div className="catalog-controls">
           <form className="catalog-search" role="search" onSubmit={submitSearch}>
             <IconSearch className="size-5 shrink-0" stroke={1.8} aria-hidden="true" />
             <input
+              ref={inputRef}
               type="search"
+              onKeyDown={(event) => {
+                if (event.key !== 'Escape') return
+                if (query) { setQuery(''); setPage(1) } else inputRef.current?.blur()
+              }}
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value)
                 setPage(1)
               }}
-              aria-label={t('catalog.searchPlaceholder')}
+              aria-label={t('catalog.searchLabel')}
               placeholder={t('catalog.searchPlaceholder')}
             />
+            {query && <button type="button" className="catalog-search-clear" aria-label={t('catalog.clearSearch')} onClick={() => { setQuery(''); setPage(1); inputRef.current?.focus() }}><IconX className="size-4" /></button>}
             <button type="submit">{t('catalog.searchAction')}</button>
           </form>
 
           <div className="catalog-categories" aria-label={t('catalog.categoryLabel')}>
-            <span>{t('catalog.categoryLabel')}</span>
             <div>
-              {GAME_CATEGORIES.map((option) => (
+              {GAME_CATEGORIES.filter((option) => allCounts[option] > 0).map((option) => (
                 <button
                   key={option}
                   type="button"
@@ -145,10 +156,8 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
       </section>
 
       <section className="home-shell catalog-results" aria-labelledby="catalog-results-heading" ref={resultsRef}>
-        <div className="catalog-results-heading">
-          <h2 id="catalog-results-heading">{t('catalog.resultsTitle')}</h2>
-          <p aria-live="polite">{t('catalog.resultCount', { count: filteredEntries.length })}</p>
-        </div>
+        <h2 id="catalog-results-heading" className="sr-only">{t('catalog.resultsTitle')}</h2>
+        <span className="sr-only" role="status">{t('catalog.resultCount', { count: filteredEntries.length })}</span>
 
         {visibleEntries.length > 0 ? (
           <div className="catalog-grid">
@@ -173,16 +182,6 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
             <IconSearch className="size-8" stroke={1.5} aria-hidden="true" />
             <strong>{t('catalog.emptyTitle')}</strong>
             <p>{t('catalog.emptyDescription')}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setQuery('')
-                setCategory('all')
-                setPage(1)
-              }}
-            >
-              {t('catalog.clearAction')}
-            </button>
           </div>
         )}
 
@@ -234,31 +233,19 @@ function CatalogGameCard({
   const body = (
     <>
       <span className="catalog-game-cover">
-        <img src={game.site.bg} alt={name} style={{ objectPosition: game.site.bgPosition }} />
-        <span className="catalog-game-shade" aria-hidden="true" />
-        {href && (
-          <span className="catalog-game-open" aria-hidden="true">
-            <IconArrowUpRight className="size-5" stroke={1.8} />
-          </span>
-        )}
+        <img src={game.site.banner} alt="" style={{ objectPosition: game.site.bannerPosition }} />
+        <span className="catalog-game-glass" aria-hidden="true" />
       </span>
       <span className="catalog-game-copy">
-        <strong>{name}</strong>
+        <span className="catalog-game-name"><img src={game.site.icon} alt="" /><strong>{name}</strong></span>
         {game.site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
-        {game.categories.length > 0 && (
-          <span className="catalog-game-genres">
-            {game.categories.map((item) => (
-              <span key={item}>{t(`catalog.genre.${item}`)}</span>
-            ))}
-          </span>
-        )}
-        <small>{t(game.site.descKey)}</small>
+        <small>{t(`catalog.summary.${game.site.id}`, { defaultValue: t(game.site.descKey) })}</small>
       </span>
     </>
   )
 
   return (
-    <article className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}>
+    <article style={{ '--game-color': game.site.color } as CSSProperties} className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}>
       {href ? (
         <a href={href} className="catalog-game-link" onClick={onOpen}>{body}</a>
       ) : (

@@ -209,7 +209,7 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
   )
 }
 
-function AboutDialog({ open, brandName, onOpenChange }: {
+export function AboutDialog({ open, brandName, onOpenChange }: {
   open: boolean
   brandName: string
   onOpenChange: (open: boolean) => void
@@ -249,7 +249,7 @@ function AboutDialog({ open, brandName, onOpenChange }: {
   )
 }
 
-function ContactDialog({ open, onOpenChange }: {
+export function ContactDialog({ open, onOpenChange }: {
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {

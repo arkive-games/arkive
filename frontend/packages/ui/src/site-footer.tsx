@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Heart } from "lucide-react"
+import { FooterVoyage } from "./footer-voyage"
 
 import { GitHubIcon } from "./github-icon"
 import { cn } from "./utils"
@@ -30,6 +30,8 @@ export interface SiteFooterProps extends React.ComponentProps<"footer"> {
    * than an href so each app supplies its own router link (client-side nav).
    */
   versionLink?: React.ReactNode
+  /** Localized, host-owned navigation and dialog actions. */
+  navigation?: React.ReactNode
 }
 
 /**
@@ -54,35 +56,37 @@ function SiteFooter({
   githubUrl = "https://github.com/arkive-games",
   icpBeian = ARKIVE_ICP_RECORD,
   versionLink,
+  navigation,
   className,
   ...props
 }: SiteFooterProps) {
+  const footerRef = React.useRef<HTMLElement>(null)
   return (
     <footer
+      ref={footerRef}
       data-slot="site-footer"
       className={cn(
-        "border-t border-border px-4 py-4 text-xs text-muted-foreground",
+        "mt-auto bg-card px-4 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-xs text-muted-foreground md:px-8 md:py-10",
         className
       )}
       {...props}
     >
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
-        <span className="inline-flex items-center gap-1">
-          Made with
-          <Heart aria-label="love" className="size-3 fill-red-500 text-red-500" />
-          by
+      <FooterVoyage footerRef={footerRef} />
+      <div className="mx-auto flex max-w-[85rem] flex-wrap items-center gap-x-6 gap-y-4">
+        <span className="mr-auto inline-flex items-center">
           <a
             href={homeUrl}
             target="_blank"
             rel="noopener noreferrer"
             data-testid="site-footer-home"
-            className="font-medium underline-offset-4 hover:text-foreground hover:underline"
+            className="arkive-wordmark text-2xl font-semibold text-foreground"
             {...homeLinkProps}
           >
-            Arkive Games (藏舟攻略网)
+            Arkive
           </a>
         </span>
-        <span>© 2025-2026</span>
+        {navigation && <div className="flex w-full flex-wrap gap-4 text-sm md:w-auto">{navigation}</div>}
+        <span>© 2025-2026 Arkive.games</span>
         {versionLink ? (
           <span
             data-testid="site-footer-version"

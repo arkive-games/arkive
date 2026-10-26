@@ -33,11 +33,12 @@ export function filterCatalogEntries<T extends CatalogEntry>(
   category: GameCategory,
   query: string,
 ): T[] {
-  const normalizedQuery = query.trim().toLocaleLowerCase()
+  const normalize = (value: string) => value.toLocaleLowerCase().replace(/\s+/g, '')
+  const normalizedQuery = normalize(query)
 
   return entries.filter((entry) => {
     const matchesCategory = category === 'all' || entry.categories.includes(category)
-    const matchesQuery = !normalizedQuery || entry.searchText.toLocaleLowerCase().includes(normalizedQuery)
+    const matchesQuery = !normalizedQuery || normalize(entry.searchText).includes(normalizedQuery)
     return matchesCategory && matchesQuery
   })
 }

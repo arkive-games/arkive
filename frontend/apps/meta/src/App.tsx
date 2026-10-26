@@ -18,7 +18,7 @@ import {
   useTheme,
   type ShellNavItem,
 } from '@gamemap/map-shell'
-import { SiteFooter } from '@gamemap/ui'
+import { StandardFooter } from './StandardFooter'
 import {
   IconHammer,
   IconMessageCircle,
@@ -371,7 +371,7 @@ export default function App() {
   }
 
   return (
-    <div id="top" className="min-h-dvh overflow-x-hidden text-foreground">
+    <div id="top" className="flex min-h-dvh flex-col overflow-x-clip text-foreground">
       {/* No bottom tab bar on a phone: every view's header carries language,
           theme and a site menu instead. */}
       <ArkiveMobileHeader
@@ -398,7 +398,7 @@ export default function App() {
         homeUrl="#top"
         homeLabel={brandName}
         brandName={brandName}
-        variant={isHome ? 'floating' : 'docked'}
+        variant={isHome || ['allGames', 'tools', 'forum'].includes(activeRoute.view) ? 'floating' : 'docked'}
         nav={{
           items: navItems,
           onDropdownTriggerClick: (item) => {
@@ -523,20 +523,14 @@ export default function App() {
         </main>
       )}
 
-      {activeRoute.view !== 'forum' && (footerKind === 'home' ? (
+      {footerKind === 'home' ? (
         <HomeFooter
           brandName={brandName}
           onOpenSettings={() => setSettingsOpen(true)}
         />
       ) : (
-        <SiteFooter
-          homeUrl="#top"
-          homeLinkProps={{ target: undefined, rel: undefined }}
-          githubUrl={IS_TOY ? null : (import.meta.env.VITE_GITHUB_URL ?? 'https://github.com/arkive-games')}
-          icpBeian={IS_TOY ? null : (import.meta.env.VITE_ICP_BEIAN ?? t('footer.icp'))}
-          data-testid="compact-site-footer"
-        />
-      ))}
+        <StandardFooter brandName={brandName} onOpenSettings={() => setSettingsOpen(true)} />
+      )}
 
       {noticeId > 0 && (
         <div key={noticeId} className="coming-soon-toast" role="status" aria-live="polite">

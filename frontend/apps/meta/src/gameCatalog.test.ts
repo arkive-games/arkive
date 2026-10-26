@@ -33,6 +33,17 @@ const entries: CatalogEntry[] = [
 ]
 
 describe('game catalog helpers', () => {
+  it('ignores case and whitespace in names and aliases', () => {
+    expect(filterCatalogEntries(entries, 'all', 'vRiSiNg')).toEqual([entries[1]])
+    expect(filterCatalogEntries(entries, 'all', ' AION 2 ')).toEqual([entries[0]])
+  })
+
+  it('counts only games matched by the active search', () => {
+    const counts = countCatalogCategories(filterCatalogEntries(entries, 'all', 'rising'))
+    expect(counts.all).toBe(1)
+    expect(counts.mmorpg).toBe(0)
+    expect(counts.survivalAdventure).toBe(1)
+  })
   it('filters by localized name and category together', () => {
     expect(filterCatalogEntries(entries, 'singlePlayer', '夜族')).toEqual([entries[1]])
     expect(filterCatalogEntries(entries, 'mmorpg', 'spire')).toEqual([])
