@@ -18,7 +18,15 @@ import {
 } from '@/features/relics/data'
 
 /** The three 封印物 items as the page's rating grades them. */
-export type RelicTotals = { assembly: number; resonance: number; affix: number; total: number }
+export type RelicTotals = {
+  assembly: number; resonance: number; affix: number; total: number
+  /**
+   * All-skill levels the rare words in effect grant (战争主教, 愚者…). They
+   * raise the 途径/秘偶/人脉 skill levels in game but never score, so the page
+   * shows them next to those levels and adds them to nothing.
+   */
+  skillLevelBonus: number
+}
 
 /**
  * The panel's three slots. 1 攻击 and 2 防御 are fixed — an artifact's `groupId`
@@ -724,7 +732,21 @@ export default function RelicSection({ relics, onTotals }: {
     () => slots.map((slot) => evaluateRelicSlot(relics, slot, knowledgeLevel, season, server)),
     [relics, slots, knowledgeLevel, season, server],
   )
-  const totals = useMemo(() => relicTotals(results), [results])
+  const totals = useMemo<RelicTotals>(() => {
+    // Summed across every material in effect. ASSUMPTION: the bonus of rare
+    // words on different relics stacks; nothing in the client says otherwise.
+    let skillLevelBonus = 0
+    for (const result of results) {
+      for (const material of result.materials) {
+        if (!material.applies) continue
+        const pool = typePool(relics, material.type)
+        for (const affix of material.affixes) {
+          skillLevelBonus += pool.find((entry) => entry.id === affix.affixId)?.skillLevelPlus ?? 0
+        }
+      }
+    }
+    return { ...relicTotals(results), skillLevelBonus }
+  }, [results, relics])
   useEffect(() => {
     onTotals?.(totals)
   }, [onTotals, totals])

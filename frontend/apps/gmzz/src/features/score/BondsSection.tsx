@@ -7,7 +7,6 @@ import type { Fellow, FellowRelation, HistoryResearchRank } from '@/features/fel
 import { HistoryResearchSlider } from '@/features/fellows/HistoryResearchSlider'
 import {
   activeAttributes,
-  MAX_SKILL_LEVEL,
   carriedPuppetSkill,
   clampSlots,
   clampStage,
@@ -22,6 +21,7 @@ import {
   type BondsDraft,
   type PuppetsResult,
 } from '@/features/score/bonds'
+import { SkillLevelField } from '@/features/score/SkillLevelField'
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
 import FellowSkillCalculator from '@/features/score/FellowSkillSection'
 import { relationResearchPoints, starMap } from '@/features/score/fellowSkill'
@@ -47,6 +47,8 @@ export type BondsData = {
   relations: FellowRelation[] | null
   /** The highest skill level the chosen role and divinity level allow; null until the rating loads. */
   skillCap: number | null
+  /** Skill levels relics add on top of the shared level; shown, never scored. */
+  relicSkillBonus: number
 }
 
 /**
@@ -94,7 +96,7 @@ export default function BondsSection({
             calculator:
               data.partners && data.scoring ? (
                 <div className="space-y-3">
-                  <PuppetLineup partners={data.partners} scoring={data.scoring} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
+                  <PuppetLineup partners={data.partners} scoring={data.scoring} skillCap={data.skillCap} relicSkillBonus={data.relicSkillBonus} draft={draft} setDraft={setDraft} />
                   <PuppetSkillSummary partners={data.partners} scoring={data.scoring} draft={draft} />
                 </div>
               ) : (
@@ -109,7 +111,7 @@ export default function BondsSection({
             calculator:
               data.fellows && data.relations && data.ranks ? (
                 <div className="space-y-3">
-                  <FellowSkillCalculator fellows={data.fellows} relations={data.relations} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
+                  <FellowSkillCalculator fellows={data.fellows} relations={data.relations} skillCap={data.skillCap} relicSkillBonus={data.relicSkillBonus} draft={draft} setDraft={setDraft} />
                   <HistoryPicker ranks={data.ranks} relations={data.relations} item={historyItem ?? item} draft={draft} setDraft={setDraft} />
                 </div>
               ) : (
@@ -142,12 +144,14 @@ function PuppetLineup({
   partners,
   scoring,
   skillCap,
+  relicSkillBonus,
   draft,
   setDraft,
 }: {
   partners: SecretPartner[]
   scoring: PartnerScoring
   skillCap: number | null
+  relicSkillBonus: number
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
@@ -294,22 +298,8 @@ function PuppetLineup({
               data-testid="bonds-slots"
             />
           </label>
-          <label className="block w-24">
-            <span className={LABEL_CLASS}>{skillCap === null ? t('bonds.skillLevel') : t('bonds.skillLevelCap', { cap: skillCap })}</span>
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={MAX_SKILL_LEVEL}
-              value={skillLevel}
-              onChange={(event) => {
-                const value = Math.trunc(Number(event.target.value))
-                setDraft((prev) => ({ ...prev, puppetSkillLevel: Number.isFinite(value) && value >= 1 ? value : null }))
-              }}
-              className={NUMBER_CLASS}
-              data-testid="bonds-skill-level"
-            />
-          </label>
+          <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="bonds-skill-level"
+            onChange={(level) => setDraft((prev) => ({ ...prev, puppetSkillLevel: level }))} />
         </div>
       </div>
 

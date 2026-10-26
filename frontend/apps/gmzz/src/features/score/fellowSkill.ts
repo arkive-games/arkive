@@ -233,7 +233,7 @@ export function relationResearchPoints(relations: FellowRelation[], stars: Map<n
  * shared: 途径, 秘偶 and 人脉 skill levels are always equal. Null when no level fits.
  */
 /**
- * The pathway skill score per skill level, and its constant: 82 x L + 738.
+ * The pathway skill score per skill level, and its constant: 82 x L + 741.
  *
  * Fitted, not shipped: `SkillScoreData` is bare ids. The pathway-skill curve
  * (expected and max are the same curve) equals 82 x L + 738 at every point from
@@ -244,7 +244,10 @@ export function relationResearchPoints(relations: FellowRelation[], stars: Map<n
  * much each one weighs is not in the client.
  */
 export const PATHWAY_SKILL_PER_LEVEL = 82
-export const PATHWAY_SKILL_BASE = 738
+/** What the game actually shows: 3857 at L38, 4021 at L40 — the curve's 738 plus 3. */
+export const PATHWAY_SKILL_BASE = 741
+/** The benchmark curve's own constant, used only to tell where the formula applies. */
+export const PATHWAY_CURVE_BASE = 738
 
 /**
  * The pathway skill score at a skill level. Where the curve at the current
@@ -254,9 +257,8 @@ export const PATHWAY_SKILL_BASE = 738
  * game shows there with every unlocked skill at its cap.
  */
 export function pathwaySkillScore(skillLevel: number, benchmark: number, capLevel: number | null): number {
-  const formula = (level: number) => PATHWAY_SKILL_PER_LEVEL * level + PATHWAY_SKILL_BASE
-  if (capLevel === null || formula(capLevel) !== benchmark) return benchmark
-  return formula(Math.min(skillLevel, capLevel))
+  if (capLevel === null || PATHWAY_SKILL_PER_LEVEL * capLevel + PATHWAY_CURVE_BASE !== benchmark) return benchmark
+  return PATHWAY_SKILL_PER_LEVEL * Math.min(skillLevel, capLevel) + PATHWAY_SKILL_BASE
 }
 
 export function skillLevelCap(fellowMaxBenchmark: number, maxLevel = 75): number | null {

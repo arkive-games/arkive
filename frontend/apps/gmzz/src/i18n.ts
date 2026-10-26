@@ -543,6 +543,7 @@ const en = {
     "sectionUnavailable": "The data this group needs has not loaded."
   },
   pathway: {
+    "skillFormula": "Score = {{per}} × skill level + {{base}}, from the shared skill level (relic levels excluded). Below role level 47 some skills are still locked and the game's own curve is used.",
     "hint": "Level equals its expected benchmark and extraordinary talent is derived from the active talent tree. Pathway skill is a server value with no client formula, so copy it from the panel.",
     "unavailable": "The talent trees have not loaded.",
     "noTrees": "This pathway has no talent tree in the data yet.",
@@ -616,6 +617,8 @@ const en = {
     "researchExtra": "Research from other sources",
     "researchTotal": "Research total",
     "researchHint": "Every relation pays its research reward for each tier it has reached; tiers follow from the connection stars set under connection skill. Relations alone reach 784 at most, so add points from other sources to match the panel's cumulative figure.",
+    "skillLevelRelic": "Relic rare affixes add +{{bonus}} (in game {{total}}); this does not score",
+    "skillLevelRelicNote": "Relic rare affixes raise the pathway, puppet and connection skill levels, but those extra levels never count toward the score.",
     "skillLevelCap": "Skill level (cap {{cap}})"
   },
   league: {
@@ -1296,6 +1299,7 @@ const zhCN: Strings = {
     "sectionUnavailable": "该分组所需的数据暂未加载。"
   },
   pathway: {
+    "skillFormula": "分数 = {{per}} × 技能等级 + {{base}}，技能等级与秘偶、人脉共用（不含封印物加的等级）。扮演等级 47 级前部分技能未解锁，按游戏曲线计。",
     "hint": "等级分数等于其期望值；非凡天赋按当前生效的天赋树推算；途径技能由服务器计算、客户端没有公式，请抄面板数值。",
     "unavailable": "天赋树数据暂未加载。",
     "noTrees": "数据中暂无该途径的天赋树。",
@@ -1369,6 +1373,8 @@ const zhCN: Strings = {
     "researchExtra": "其他来源的研究值",
     "researchTotal": "研究值合计",
     "researchHint": "每个关系按已达到的阶数累计研究值奖励，关系阶数由人脉技能中设置的星级自动算出。全部关系满阶最多 784，请补上其他来源的研究值，使合计与面板上的累计研究值一致。",
+    "skillLevelRelic": "封印物稀有词条 +{{bonus}}（游戏内 {{total}} 级），不计分",
+    "skillLevelRelicNote": "封印物稀有词条会提升途径、秘偶、人脉技能等级，但这部分等级不计入评分。",
     "skillLevelCap": "技能等级（上限 {{cap}}）"
   },
   league: {
@@ -2051,6 +2057,7 @@ const zhTW: Strings = {
     "sectionUnavailable": "該分組所需的資料尚未載入。"
   },
   pathway: {
+    "skillFormula": "分數 = {{per}} × 技能等級 + {{base}}，技能等級與秘偶、人脈共用（不含封印物加的等級）。扮演等級 47 級前部分技能未解鎖，按遊戲曲線計。",
     "hint": "等級分數等於其期望值；非凡天賦按目前生效的天賦樹推算；途徑技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
     "unavailable": "天賦樹資料尚未載入。",
     "noTrees": "資料中尚無該途徑的天賦樹。",
@@ -2124,6 +2131,8 @@ const zhTW: Strings = {
     "researchExtra": "其他來源的研究值",
     "researchTotal": "研究值合計",
     "researchHint": "每個關係按已達到的階數累計研究值獎勵，關係階數由人脈技能中設定的星級自動算出。全部關係滿階最多 784，請補上其他來源的研究值，使合計與面板上的累計研究值一致。",
+    "skillLevelRelic": "封印物稀有詞條 +{{bonus}}（遊戲內 {{total}} 級），不計分",
+    "skillLevelRelicNote": "封印物稀有詞條會提升途徑、秘偶、人脈技能等級，但這部分等級不計入評分。",
     "skillLevelCap": "技能等級（上限 {{cap}}）"
   },
   league: {

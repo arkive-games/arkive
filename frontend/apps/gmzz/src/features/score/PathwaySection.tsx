@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import RangeField from '@/components/RangeField'
 import type { GenusResult, Rating } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
+import { SkillLevelField } from '@/features/score/SkillLevelField'
+import { PATHWAY_SKILL_BASE, PATHWAY_SKILL_PER_LEVEL } from '@/features/score/fellowSkill'
 import {
   clampLevel,
   evaluateTalents,
@@ -43,7 +45,16 @@ export default function PathwaySection({
   draft,
   setDraft,
   onScore,
+  skillLevel,
+  skillCap,
+  relicSkillBonus,
+  onSkillLevel,
 }: {
+  /** The shared skill level, its cap, and what relics add on top (not scored). */
+  skillLevel: number
+  skillCap: number | null
+  relicSkillBonus: number
+  onSkillLevel: (level: number) => void
   group: GenusResult
   rating: Rating
   talents: Talents | null
@@ -71,8 +82,18 @@ export default function PathwaySection({
             ),
           }
         }
-        // The level follows the level inputs and the pathway skill the shared
-        // skill level: neither has anything to show beyond its row.
+        if (item.species.module === SKILL_MODULE) {
+          return {
+            kind: 'derived',
+            calculator: (
+              <div className="space-y-2" data-testid="pathway-skill">
+                <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="pathway-skill-level" onChange={onSkillLevel} />
+                <p className={TYPE.body}>{t('pathway.skillFormula', { per: PATHWAY_SKILL_PER_LEVEL, base: PATHWAY_SKILL_BASE })}</p>
+              </div>
+            ),
+          }
+        }
+        // The level follows the level inputs: nothing to show beyond its row.
         return { kind: 'derived' }
       }}
     />

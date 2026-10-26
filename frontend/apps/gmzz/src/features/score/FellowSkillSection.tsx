@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { fellowPortraitUrl, fellowSkillIconUrl, type Fellow, type FellowRelation } from '@/features/fellows/data'
-import { clampSkillLevel, MAX_SKILL_LEVEL, type BondsDraft } from '@/features/score/bonds'
+import { clampSkillLevel, type BondsDraft } from '@/features/score/bonds'
+import { SkillLevelField } from '@/features/score/SkillLevelField'
 import {
   carriedFellowSkill,
   fellowOptions,
@@ -17,7 +17,6 @@ import {
 import { TYPE } from '@/lib/typography'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
 const SELECT_CLASS = `h-7 w-16 rounded-md border border-border bg-background px-1 text-center text-xs tabular-nums ${FOCUS}`
 
@@ -34,12 +33,14 @@ export default function FellowSkillCalculator({
   fellows,
   relations,
   skillCap,
+  relicSkillBonus,
   draft,
   setDraft,
 }: {
   fellows: Fellow[]
   relations: FellowRelation[]
   skillCap: number | null
+  relicSkillBonus: number
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
@@ -149,22 +150,8 @@ export default function FellowSkillCalculator({
           </div>
         ) : null}
 
-        <label className="block w-24">
-          <span className={LABEL_CLASS}>{skillCap === null ? t('bonds.skillLevel') : t('bonds.skillLevelCap', { cap: skillCap })}</span>
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={MAX_SKILL_LEVEL}
-            value={skillLevel}
-            onChange={(event) => {
-              const value = Math.trunc(Number(event.target.value))
-              setDraft((prev) => ({ ...prev, puppetSkillLevel: Number.isFinite(value) && value >= 1 ? value : null }))
-            }}
-            className={NUMBER_CLASS}
-            data-testid="bonds-fellow-skill-level"
-          />
-        </label>
+        <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="bonds-fellow-skill-level"
+          onChange={(level) => setDraft((prev) => ({ ...prev, puppetSkillLevel: level }))} />
       </div>
 
       <p className={TYPE.body}>{t('bonds.fellowGridHint')}</p>

@@ -115,13 +115,14 @@ describe('skill level cap', () => {
 })
 
 describe('pathwaySkillScore', () => {
-  it('is 82 x level + 738 once every skill is unlocked', () => {
-    // Divinity 23 sits at L38 on a 3854 curve, divinity 24 at L40 on 4018.
-    expect(pathwaySkillScore(38, 3854, 38)).toBe(3854)
-    expect(pathwaySkillScore(40, 4018, 40)).toBe(4018)
-    expect(pathwaySkillScore(35, 4018, 40)).toBe(82 * 35 + 738)
+  it('is 82 x level + 741 once every skill is unlocked, as the game shows', () => {
+    // Divinity 23 sits at L38 on a 3854 curve, divinity 24 at L40 on 4018;
+    // the panel reads 3857 and 4021, three above the curve.
+    expect(pathwaySkillScore(38, 3854, 38)).toBe(3857)
+    expect(pathwaySkillScore(40, 4018, 40)).toBe(4021)
+    expect(pathwaySkillScore(35, 4018, 40)).toBe(82 * 35 + 741)
     // Never past the cap the progression allows.
-    expect(pathwaySkillScore(60, 4018, 40)).toBe(4018)
+    expect(pathwaySkillScore(60, 4018, 40)).toBe(4021)
   })
 
   it('takes the curve as it is where some skills are still locked', () => {

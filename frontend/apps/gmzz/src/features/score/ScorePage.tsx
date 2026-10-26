@@ -92,7 +92,7 @@ const EQUIPMENT_MODULES: Record<keyof Omit<EquipmentTotals, 'total'>, string> = 
   enhance: 'Equip_Grow',
   suit: 'Equip_Suit',
 }
-const RELIC_MODULES: Record<keyof Omit<RelicTotals, 'total'>, string> = {
+const RELIC_MODULES: Record<keyof Omit<RelicTotals, 'total' | 'skillLevelBonus'>, string> = {
   assembly: 'Relics_Basic',
   resonance: 'Relics_Main',
   affix: 'Relics_Word',
@@ -264,7 +264,9 @@ export default function ScorePage() {
     () => (rating ? evaluate(rating, roleLevel, divinityLevel, scores) : null),
     [rating, roleLevel, divinityLevel, scores],
   )
-  const bondsData: BondsData = { partners, scoring, ranks, fellows, relations, skillCap: capAt(roleLevel, divinityLevel) }
+  const skillCap = capAt(roleLevel, divinityLevel)
+  const relicSkillBonus = relicTotals?.skillLevelBonus ?? 0
+  const bondsData: BondsData = { partners, scoring, ranks, fellows, relations, skillCap, relicSkillBonus }
   const gaps = useMemo(() => (result ? headroom(result).slice(0, 5) : []), [result])
 
   if (loading) {
@@ -365,6 +367,10 @@ export default function ScorePage() {
             draft={talentState}
             setDraft={setTalentState}
             onScore={setScore}
+            skillLevel={Math.min(clampSkillLevel(bonds.puppetSkillLevel), skillCap ?? Infinity)}
+            skillCap={skillCap}
+            relicSkillBonus={relicSkillBonus}
+            onSkillLevel={(level) => setBonds((prev) => ({ ...prev, puppetSkillLevel: level }))}
           />
         ))}
 
