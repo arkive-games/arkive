@@ -591,7 +591,7 @@ const resources = {
         language: '语言切换',
         theme: '主题切换',
         clearCache: '清理缓存',
-        icp: '渝ICP备2025152827号-1',
+        icp: '沪ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
       notice: {
@@ -704,7 +704,7 @@ const resources = {
       landing: LANDING_COPY['zh-TW'],
       footer: {
         about: '關於', aboutArkive: '關於藏舟', contact: '聯絡我們', updateHistory: '更新日誌', language: '語言切換', theme: '主題切換', clearCache: '清理快取',
-        icp: '渝ICP备2025152827号-1',
+        icp: '沪ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
       notice: { title: '正在製作中', description: '這片區域還在整理，很快會與你見面。' },
@@ -812,7 +812,7 @@ const resources = {
       landing: LANDING_COPY['en-US'],
       footer: {
         about: 'About', aboutArkive: 'About Arkive', contact: 'Contact us', updateHistory: 'Update history', language: 'Language', theme: 'Theme', clearCache: 'Clear local data',
-        icp: '渝ICP备2025152827号-1',
+        icp: '沪ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
       notice: { title: 'Work in progress', description: 'This part of the archive is still being prepared. See you there soon.' },
@@ -913,7 +913,7 @@ const resources = {
       landing: LANDING_COPY['ja-JP'],
       footer: {
         about: '藏舟について', aboutArkive: '藏舟について', contact: 'お問い合わせ', updateHistory: '更新履歴', language: '言語切替', theme: 'テーマ切替', clearCache: 'キャッシュを消去',
-        icp: '渝ICP备2025152827号-1',
+        icp: '沪ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
       notice: { title: '制作中です', description: 'このエリアは現在準備中です。もうしばらくお待ちください。' },
@@ -1014,7 +1014,7 @@ const resources = {
       landing: LANDING_COPY['ko-KR'],
       footer: {
         about: '소개', aboutArkive: 'Arkive 소개', contact: '문의하기', updateHistory: '업데이트 기록', language: '언어 전환', theme: '테마 전환', clearCache: '캐시 지우기',
-        icp: '渝ICP备2025152827号-1',
+        icp: '沪ICP备2025152827号-1',
         copyright: '© 2026 Arkive.games',
       },
       notice: { title: '제작 중입니다', description: '이 공간은 아직 정리 중입니다. 곧 만나보실 수 있어요.' },
