@@ -8,7 +8,7 @@ import {
   SECTION_KEYS,
   upgrade,
   withSection,
-} from '@/features/characters/envelope'
+} from './envelope'
 
 describe('the character document', () => {
   it('holds every section and nothing derived', () => {

@@ -1,5 +1,5 @@
-import type { ChosenAffix, PieceState } from '@/features/equipment/data'
-import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+import type { ChosenAffix, PieceState } from './data'
+import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '../../lib/memory'
 
 export type BatchState = { stage: number; badge: number }
 

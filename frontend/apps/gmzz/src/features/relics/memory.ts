@@ -1,5 +1,5 @@
-import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
-import type { ChosenRelicAffix, RelicServer } from '@/features/relics/data'
+import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '../../lib/memory'
+import type { ChosenRelicAffix, RelicServer } from './data'
 
 /**
  * An affix as stored: the pool entry it picks, and nothing derived from it.

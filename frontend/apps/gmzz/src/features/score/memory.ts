@@ -1,6 +1,6 @@
-import { emptyBondsDraft, isBondsDraft } from '@/features/score/bonds'
-import { emptyTalentDraft, isTalentDraft } from '@/features/score/talents'
-import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+import { emptyBondsDraft, isBondsDraft } from './bonds'
+import { emptyTalentDraft, isTalentDraft } from './talents'
+import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '../../lib/memory'
 
 /** The character's progression: levels and pathway. */
 export type CharacterDraft = {

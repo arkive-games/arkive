@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { relicDraft, storedAffixes, toStoredMaterials } from '@/features/relics/memory'
+import { relicDraft, storedAffixes, toStoredMaterials } from './memory'
 
 describe('stored relic affixes', () => {
   it('keeps ids and unfilled rows, and discards the retired stat-and-value shape', () => {

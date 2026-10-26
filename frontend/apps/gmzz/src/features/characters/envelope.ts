@@ -1,9 +1,9 @@
-import { equipmentDraft, isEquipmentDraft, type EquipmentDraft } from '@/features/equipment/memory'
-import { relicDraft, storedAffixes, type RelicDraft } from '@/features/relics/memory'
-import { emptyBondsDraft, isBondsDraft, type BondsDraft } from '@/features/score/bonds'
-import { characterDraft, isCharacterDraft, type CharacterDraft, bondsDraft, talentDraft } from '@/features/score/memory'
-import { emptyTalentDraft, isTalentDraft, type TalentDraft } from '@/features/score/talents'
-import { isFiniteNumber, isRecord } from '@/lib/memory'
+import { equipmentDraft, isEquipmentDraft, type EquipmentDraft } from '../equipment/memory'
+import { relicDraft, storedAffixes, type RelicDraft } from '../relics/memory'
+import { emptyBondsDraft, isBondsDraft, type BondsDraft } from '../score/bonds'
+import { characterDraft, isCharacterDraft, type CharacterDraft, bondsDraft, talentDraft } from '../score/memory'
+import { emptyTalentDraft, isTalentDraft, type TalentDraft } from '../score/talents'
+import { isFiniteNumber, isRecord } from '../../lib/memory'
 
 /**
  * The score page's inputs as one saved document.

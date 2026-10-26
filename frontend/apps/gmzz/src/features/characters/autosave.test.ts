@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { AutoSaver, type Timers } from '@/features/characters/autosave'
+import { AutoSaver, type Timers } from './autosave'
 
 /** Hand-cranked time: `advance` fires every timer that falls due, in order. */
 function fakeTimers() {
