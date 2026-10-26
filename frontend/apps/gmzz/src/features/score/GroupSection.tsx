@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
+import { FormulaHint } from '@/features/score/FormulaHint'
 import { ItemCard } from '@/features/score/SpeciesRow'
 import { TYPE } from '@/lib/typography'
 
@@ -74,7 +75,10 @@ export function GroupSection({
   return (
     <section aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
       <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1.5">
-        <span className={TYPE.sectionTitle}>{group.genus.name}</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className={TYPE.sectionTitle}>{group.genus.name}</span>
+          <FormulaHint testId={`score-genus-hint-${group.genus.id}`}>{hint}</FormulaHint>
+        </span>
         <span className="text-xs font-normal tabular-nums text-muted-foreground" data-testid={`score-genus-total-${group.genus.id}`}>
           {t('score.groupTotal', {
             score: group.score.toLocaleString(),
@@ -83,7 +87,6 @@ export function GroupSection({
           })}
         </span>
       </h2>
-      <p className={`mt-1 ${TYPE.body}`}>{hint}</p>
       <div className="mt-2 space-y-2">
         {cards(group.items, children ? () => ({ kind: 'derived', shared: 'all' }) : present).map((card) => (
           <ItemCard key={card.id} id={children ? `genus-${group.genus.id}` : card.id} items={card.items} rating={rating}

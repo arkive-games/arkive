@@ -7,6 +7,7 @@ import RangeField from '@/components/RangeField'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
+import { FormulaHint } from '@/features/score/FormulaHint'
 import { relicDraft, useRelicServer, type StoredRelicSlot } from '@/features/relics/memory'
 import {
   MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason,
@@ -359,11 +360,10 @@ function KnowledgeBar({ relics, level, k1, k2, season, onChange }: {
             <dt className="text-muted-foreground">{t('relic.affixEfficiency')}</dt>
             <dd className="font-semibold tabular-nums text-foreground" data-testid="relic-k2">{percent(k2)}</dd>
           </div>
+          <FormulaHint testId="relic-knowledge-formula">{t('relic.knowledgeHint', { min, max, k1, k2 })}</FormulaHint>
         </dl>
       </div>
-      <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-        {t('relic.knowledgeHint', { min, max, k1, k2 })}
-      </p>
+
     </div>
   )
 }

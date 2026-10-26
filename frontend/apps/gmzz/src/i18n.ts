@@ -502,6 +502,7 @@ const en = {
     "dataNote": "One name can cover several affix splits. A few slots still share a placeholder three-affix name, and some healing-form texts do not match their own stat values — both are as the client ships them."
   },
   score: {
+    "formula": "How this is calculated",
     "detailsShow": "Show details",
     "detailsHide": "Hide details",
     "sharedDetails": "Details",
@@ -545,7 +546,7 @@ const en = {
   pathway: {
     "limits": "Open talents {{nodes}} · up to Lv{{level}} each",
     "skillFormula": "Score = {{per}} × level + {{base}} (the game curve before role level 47).",
-    "hint": "Level equals its expected benchmark and extraordinary talent is derived from the active talent tree. Pathway skill is a server value with no client formula, so copy it from the panel.",
+    "hint": "Level equals its expected benchmark, extraordinary talent is derived from the active talent tree, and pathway skill = 82 × skill level + 741, on the level shared with puppets and connections.",
     "unavailable": "The talent trees have not loaded.",
     "noTrees": "This pathway has no talent tree in the data yet.",
     "levelNote": "The level score always equals its expected benchmark (which is also its cap), so it follows the role and divinity level set above.",
@@ -560,6 +561,11 @@ const en = {
     "formula": "Each level of a talent node is worth {{normal}} points and each activated core talent {{special}}; only the active tree counts, which is exactly the shape of the game's own benchmark for this item."
   },
   bonds: {
+    "formulaLabel": "Calculation",
+    "quality7": "Red",
+    "quality6": "Orange",
+    "quality5": "Gold",
+    "quality4": "Purple",
     "hint": "Every item here is computed. Puppet attributes and history research use the client's own arithmetic; puppet and connection skill follow formulas fitted to in-game readings.",
     "gridHint": "Type each puppet's level (0 = not owned, up to {{max}}); click an icon to deploy it.",
     "deployToggle": "Deploy {{name}}",
@@ -618,8 +624,8 @@ const en = {
     "researchExtra": "Research from other sources",
     "researchTotal": "Research total",
     "researchHint": "Every relation pays its research reward for each tier it has reached; tiers follow from the connection stars set under connection skill. Relations alone reach 784 at most, so add points from other sources to match the panel's cumulative figure.",
-    "skillLevelRelic": "Relic rare affixes add +{{bonus}} (in game {{total}}); this does not score",
-    "skillLevelRelicNote": "Levels added by relic rare affixes never score.",
+    "skillLevelRelic": "Relic rare affixes add +{{bonus}} (Lv{{total}} in game), which does not score.",
+    "skillLevelRelicNote": "Relic rare affixes can raise this level; those levels do not score.",
     "skillLevelCapShort": "Cap Lv{{cap}}",
   },
   league: {
@@ -1259,6 +1265,7 @@ const zhCN: Strings = {
     "dataNote": "同一个名称可能对应多种词条分配。部分部位的 3 非凡词条恩赐仍共用一个占位名称，少数治疗形态描述也与自身属性值不符——两者均与客户端一致。"
   },
   score: {
+    "formula": "计算方式",
     "detailsShow": "展开详情",
     "detailsHide": "收起详情",
     "sharedDetails": "详情",
@@ -1302,7 +1309,7 @@ const zhCN: Strings = {
   pathway: {
     "limits": "开放 {{nodes}} 个天赋 · 每个上限 {{level}} 级",
     "skillFormula": "分数 = {{per}} × 技能等级 + {{base}}（扮演 47 级前按游戏曲线）。",
-    "hint": "等级分数等于其期望值；非凡天赋按当前生效的天赋树推算；途径技能由服务器计算、客户端没有公式，请抄面板数值。",
+    "hint": "等级分数等于其期望值；非凡天赋按当前生效的天赋树推算；途径技能 = 82 × 技能等级 + 741，技能等级与秘偶、人脉共用。",
     "unavailable": "天赋树数据暂未加载。",
     "noTrees": "数据中暂无该途径的天赋树。",
     "levelNote": "等级分数始终等于期望值（也是上限），随上方的角色等级与神性等级自动计算。",
@@ -1317,6 +1324,11 @@ const zhCN: Strings = {
     "formula": "天赋节点每级 {{normal}} 分，每个激活的核心天赋 {{special}} 分，只计当前生效的天赋树——这正是游戏为该项设定的基准值的构成方式。"
   },
   bonds: {
+    "formulaLabel": "计算方式",
+    "quality7": "红色",
+    "quality6": "橙色",
+    "quality5": "金色",
+    "quality4": "紫色",
     "hint": "本组各项均自动计算：秘偶属性与历史研究按客户端自己的算法，秘偶技能与人脉技能按游戏内实测拟合的公式。",
     "gridHint": "在每只秘偶下方填写等级（0 表示未拥有，最高 {{max}}），点击头像即可上阵。",
     "deployToggle": "上阵 {{name}}",
@@ -1375,8 +1387,8 @@ const zhCN: Strings = {
     "researchExtra": "其他来源的研究值",
     "researchTotal": "研究值合计",
     "researchHint": "每个关系按已达到的阶数累计研究值奖励，关系阶数由人脉技能中设置的星级自动算出。全部关系满阶最多 784，请补上其他来源的研究值，使合计与面板上的累计研究值一致。",
-    "skillLevelRelic": "封印物稀有词条 +{{bonus}}（游戏内 {{total}} 级），不计分",
-    "skillLevelRelicNote": "封印物稀有词条提升的技能等级不计分。",
+    "skillLevelRelic": "封印物稀有词条 +{{bonus}}（游戏内 {{total}} 级），这部分不计分。",
+    "skillLevelRelicNote": "封印物稀有词条可额外提升技能等级，但不计分。",
     "skillLevelCapShort": "上限 {{cap}} 级",
   },
   league: {
@@ -2018,6 +2030,7 @@ const zhTW: Strings = {
     "dataNote": "同一個名稱可能對應多種詞條分配。部分部位的 3 非凡詞條恩賜仍共用一個佔位名稱，少數治療形態描述也與自身屬性值不符——兩者皆與客戶端一致。"
   },
   score: {
+    "formula": "計算方式",
     "detailsShow": "展開詳情",
     "detailsHide": "收起詳情",
     "sharedDetails": "詳情",
@@ -2061,7 +2074,7 @@ const zhTW: Strings = {
   pathway: {
     "limits": "開放 {{nodes}} 個天賦 · 每個上限 {{level}} 級",
     "skillFormula": "分數 = {{per}} × 技能等級 + {{base}}（扮演 47 級前按遊戲曲線）。",
-    "hint": "等級分數等於其期望值；非凡天賦按目前生效的天賦樹推算；途徑技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
+    "hint": "等級分數等於其期望值；非凡天賦按當前生效的天賦樹推算；途徑技能 = 82 × 技能等級 + 741，技能等級與秘偶、人脈共用。",
     "unavailable": "天賦樹資料尚未載入。",
     "noTrees": "資料中尚無該途徑的天賦樹。",
     "levelNote": "等級分數始終等於期望值（也是上限），隨上方的角色等級與神性等級自動計算。",
@@ -2076,6 +2089,11 @@ const zhTW: Strings = {
     "formula": "天賦節點每級 {{normal}} 分，每個啟用的核心天賦 {{special}} 分，只計目前生效的天賦樹——這正是遊戲為該項設定的基準值的構成方式。"
   },
   bonds: {
+    "formulaLabel": "計算方式",
+    "quality7": "紅色",
+    "quality6": "橙色",
+    "quality5": "金色",
+    "quality4": "紫色",
     "hint": "本組各項均自動計算：秘偶屬性與歷史研究按客戶端自己的演算法，秘偶技能與人脈技能按遊戲內實測擬合的公式。",
     "gridHint": "在每隻秘偶下方填寫等級（0 表示未擁有，最高 {{max}}），點擊頭像即可上陣。",
     "deployToggle": "上陣 {{name}}",
@@ -2134,8 +2152,8 @@ const zhTW: Strings = {
     "researchExtra": "其他來源的研究值",
     "researchTotal": "研究值合計",
     "researchHint": "每個關係按已達到的階數累計研究值獎勵，關係階數由人脈技能中設定的星級自動算出。全部關係滿階最多 784，請補上其他來源的研究值，使合計與面板上的累計研究值一致。",
-    "skillLevelRelic": "封印物稀有詞條 +{{bonus}}（遊戲內 {{total}} 級），不計分",
-    "skillLevelRelicNote": "封印物稀有詞條提升的技能等級不計分。",
+    "skillLevelRelic": "封印物稀有詞條 +{{bonus}}（遊戲內 {{total}} 級），這部分不計分。",
+    "skillLevelRelicNote": "封印物稀有詞條可額外提升技能等級，但不計分。",
     "skillLevelCapShort": "上限 {{cap}} 級",
   },
   league: {

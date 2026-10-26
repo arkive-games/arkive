@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import RangeField from '@/components/RangeField'
 import type { GenusResult, Rating } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
+import { FormulaHint } from '@/features/score/FormulaHint'
 import { SkillLevelField } from '@/features/score/SkillLevelField'
 import { PATHWAY_SKILL_BASE, PATHWAY_SKILL_PER_LEVEL } from '@/features/score/fellowSkill'
 import {
@@ -91,7 +92,7 @@ export default function PathwaySection({
             calculator: (
               <div data-testid="pathway-skill">
                 <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="pathway-skill-level" onChange={onSkillLevel}
-                  note={t('pathway.skillFormula', { per: PATHWAY_SKILL_PER_LEVEL, base: PATHWAY_SKILL_BASE })} />
+                  note={<FormulaHint testId="pathway-skill-formula">{t('pathway.skillFormula', { per: PATHWAY_SKILL_PER_LEVEL, base: PATHWAY_SKILL_BASE })}</FormulaHint>} />
               </div>
             ),
           }
@@ -210,7 +211,10 @@ function TalentCalculator({
         ))}
       </ul>
 
-      <p className={TYPE.body}>{t('pathway.formula', { normal: normal[0]?.node.mark ?? 180, special: special.find((entry) => entry !== null)?.node.mark ?? 1000 })}</p>
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        {t('bonds.formulaLabel')}
+        <FormulaHint testId="talent-formula">{t('pathway.formula', { normal: normal[0]?.node.mark ?? 180, special: special.find((entry) => entry !== null)?.node.mark ?? 1000 })}</FormulaHint>
+      </div>
     </div>
   )
 }

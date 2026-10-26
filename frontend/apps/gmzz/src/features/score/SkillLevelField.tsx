@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -22,8 +23,8 @@ export function SkillLevelField({ value, cap, relicBonus, testId, note, onChange
   cap: number | null
   relicBonus: number
   testId: string
-  /** A line of its own about how this skill scores, after the shared notes. */
-  note?: string
+  /** Drawn last on the line: a formula hint for how this skill scores. */
+  note?: ReactNode
   onChange: (level: number) => void
 }) {
   const { t } = useTranslation()
@@ -53,11 +54,11 @@ export function SkillLevelField({ value, cap, relicBonus, testId, note, onChange
         <span className="text-xs text-amber-700 dark:text-amber-300" data-testid={`${testId}-relic`}>
           {t('bonds.skillLevelRelic', { bonus: relicBonus, total: Math.min(value, max) + relicBonus })}
         </span>
-      ) : null}
-      <span className="min-w-0 text-xs leading-5 text-muted-foreground">
-        {t('bonds.skillLevelRelicNote')}
-        {note ? ` ${note}` : ''}
-      </span>
+      ) : (
+        // One sentence about relic levels: the bonus when there is one, the rule otherwise.
+        <span className="text-xs text-muted-foreground">{t('bonds.skillLevelRelicNote')}</span>
+      )}
+      {note}
     </div>
   )
 }

@@ -21,6 +21,7 @@ import {
   type BondsDraft,
   type PuppetsResult,
 } from '@/features/score/bonds'
+import { FormulaHint } from '@/features/score/FormulaHint'
 import { SkillLevelField } from '@/features/score/SkillLevelField'
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
 import FellowSkillCalculator from '@/features/score/FellowSkillSection'
@@ -169,6 +170,7 @@ function PuppetLineup({
   const autoCarry = !result.rows.some((row) => row.partner.id === draft.skillPartnerId)
   // Best first, so the puppets a player is likely to own lead the grid.
   const ordered = useMemo(() => [...partners].sort((a, b) => b.quality - a.quality || a.id - b.id), [partners])
+  const qualities = useMemo(() => [...new Set(ordered.map((partner) => partner.quality))], [ordered])
 
   // Each owned puppet's two figures: its attributes as if deployed, and its skill.
   const owned = result.rows.map((row) => {
@@ -305,9 +307,13 @@ function PuppetLineup({
 
       <p className={TYPE.body}>{t('bonds.gridHint', { max: scoring.maxStar })}</p>
 
-      {/* The roster: every puppet, its level, and both of its figures. */}
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
-        {ordered.map((partner) => {
+      {/* The roster, one row per quality (red, orange, gold, purple): every
+          puppet, its level, and both of its figures. */}
+      {qualities.map((quality) => (
+      <div key={quality} data-testid={`bonds-puppet-row-${quality}`}>
+      <span className={LABEL_CLASS}>{t(`bonds.quality${quality}`, { defaultValue: String(quality) })}</span>
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2">
+        {ordered.filter((partner) => partner.quality === quality).map((partner) => {
           const entry = entries.get(partner.id)
           const row = rows.get(partner.id)
           const figure = figures.get(partner.id)
@@ -331,7 +337,7 @@ function PuppetLineup({
                 className={`relative rounded-md p-0.5 transition ${FOCUS} ${isDeployed ? 'ring-2 ring-[color:var(--arkive-nav-accent)]' : stored ? 'ring-2 ring-border' : ''} ${level < 1 ? 'opacity-40 grayscale' : ''} disabled:cursor-not-allowed`}
                 data-testid={`bonds-dominate-${partner.id}`}
               >
-                {tile(partner)}
+                {tile(partner, 'size-16')}
                 {isDeployed ? (
                   <span className="absolute -right-1 -top-1 rounded bg-primary px-1 text-xs font-semibold text-primary-foreground">
                     {t('bonds.dominate')}
@@ -374,13 +380,13 @@ function PuppetLineup({
           )
         })}
       </ul>
+      </div>
+      ))}
 
-      <p className={TYPE.body}>
-        {t('bonds.formula', {
-          inRate: scoring.inDominateRate,
-          outRate: scoring.nonDominateRate,
-        })}
-      </p>
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        {t('bonds.formulaLabel')}
+        <FormulaHint testId="bonds-formula">{t('bonds.formula', { inRate: scoring.inDominateRate, outRate: scoring.nonDominateRate })}</FormulaHint>
+      </div>
 
       <ActiveAttributes result={result} scoring={scoring} />
 
@@ -485,7 +491,10 @@ function PuppetSkillSummary({
       ) : (
         <p className={TYPE.body}>{t('bonds.skillNone')}</p>
       )}
-      <p className={TYPE.body}>{t('bonds.skillFromLineup')} {t('bonds.skillFormula')}</p>
+      <div className="flex items-center gap-1">
+        <p className={TYPE.body}>{t('bonds.skillFromLineup')}</p>
+        <FormulaHint testId="bonds-skill-formula">{t('bonds.skillFormula')}</FormulaHint>
+      </div>
     </div>
   )
 }

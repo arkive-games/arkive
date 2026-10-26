@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { fellowPortraitUrl, fellowSkillIconUrl, type Fellow, type FellowRelation } from '@/features/fellows/data'
 import { clampSkillLevel, type BondsDraft } from '@/features/score/bonds'
+import { FormulaHint } from '@/features/score/FormulaHint'
 import { SkillLevelField } from '@/features/score/SkillLevelField'
 import {
   carriedFellowSkill,
@@ -238,7 +239,10 @@ export default function FellowSkillCalculator({
         </ul>
       </div>
 
-      <p className={TYPE.body}>{t('bonds.fellowFormula')}</p>
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        {t('bonds.formulaLabel')}
+        <FormulaHint testId="bonds-fellow-formula">{t('bonds.fellowFormula')}</FormulaHint>
+      </div>
 
       <PickerModal
         open={picking}
