@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.23.0",
+      "date": "2026-10-27",
+      "commit": "c9e28eea39a60967fa9e890fe0bde230b27a2852",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rating calculator: relics take two material slots with named materials and tier marks; equipment affixes are picked as fixed rungs with arrows to step them, refinement is entered by level and scores the enhancement as in game, and contaminated affixes read their real values; puppet levels are capped by the server day shown beside the total, with one-click deploy; connections show their base and relation bonus side by side.",
+            "zh-CN": "非凡评分计算器：封印物改为两个物质槽，物质有名称、词条标出档位；装备词条按固定档位选择，可用箭头逐档调整；精炼度按等级输入，强化分与游戏一致；污染词条显示真实数值；秘偶等级按开服天数封顶（总分旁显示开服第几天），并可一键上阵；人脉技能并列显示基础分与关系加分。",
+            "zh-TW": "非凡評分計算器：封印物改為兩個物質槽，物質有名稱、詞條標出檔位；裝備詞條按固定檔位選擇，可用箭頭逐檔調整；精煉度按等級輸入，強化分與遊戲一致；污染詞條顯示真實數值；秘偶等級按開服天數封頂（總分旁顯示開服第幾天），並可一鍵上陣；人脈技能並列顯示基礎分與關係加分。"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Brand effects no longer show raw state markup such as {1,2,(brand expired)}, and the puppet attribute total matches the rating panel.",
+            "zh-CN": "烙印效果不再显示 {1,2,（烙印已失效）} 之类的原始标记；秘偶属性总分与评分面板一致。",
+            "zh-TW": "烙印效果不再顯示 {1,2,（烙印已失效）} 之類的原始標記；秘偶屬性總分與評分面板一致。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.22.0",
       "date": "2026-10-26",
       "commit": "a4ba4858e04cdbf2c676fbda67d542a5a147dd6b",
