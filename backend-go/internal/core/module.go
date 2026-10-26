@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -247,5 +248,18 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 // altchaChallengeTTL bounds how long a registration challenge stays solvable,
 // and therefore how long a solved one must be remembered to block replays.
 const altchaChallengeTTL = 10 * time.Minute
+
+// Identity builds the middleware that attaches the caller to each request.
+//
+// Exported for game modules: a saved character belongs to an account, so a
+// module that stores one has to know who is asking, and it must reach the same
+// answer core does — the same token settings, the same revocation on a password
+// change. It reads core.users through core's own queries and nothing else, so a
+// game module gains identity without gaining access to account data.
+func Identity(d module.Deps) func(http.Handler) http.Handler {
+	tokens := auth.NewTokens(d.Config.Auth)
+	store := users.NewPrincipalStore(coredb.New(d.Pool), tokens)
+	return auth.NewResolver(tokens, store, d.Config.Auth.CookieName).Middleware
+}
 
 var _ module.Module = (*Module)(nil)

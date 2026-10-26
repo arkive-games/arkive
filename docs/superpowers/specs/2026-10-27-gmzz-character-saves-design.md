@@ -60,9 +60,9 @@ These exist in today's drafts and are dropped by the local-draft → v1 conversi
 | relic slot `affixes`, `materialId` | Pre-`materials` legacy shapes, already read-once. |
 | `bonds.historyRankId` | Documented as no longer read. |
 
-A legacy relic affix without `affixId` is matched once against the dataset pool by
-`stat` + `value` + `mark` (the existing fallback in `RelicSection.tsx`), then stored by id.
-An affix that cannot be matched is dropped, as a stale one is today.
+Legacy relic affixes are discarded rather than migrated: an affix without `affixId` is dropped,
+along with the `affixes`/`materialId` slot shapes, and the fallback that matched them by
+`stat` + `value` + `mark` is removed.
 
 ### Compatibility rules
 
@@ -95,7 +95,7 @@ migration stream and sqlc package, its own OpenAPI document, mounted at `/gmzz`,
 |---|---|---|
 | `id` | `uuid` PK | Internal only, never exposed. |
 | `public_id` | `text` UNIQUE NOT NULL | 10-char base62, crypto-random; the only external id. |
-| `owner_id` | `uuid` NOT NULL | FK `core.users(id) ON DELETE CASCADE`. |
+| `owner_id` | `uuid` NOT NULL | Names a `core.users` row; no foreign key (modules hold no cross-schema references). |
 | `name` | `text` NOT NULL | 1–32 chars after trimming. |
 | `server` | `text` NULL | ≤32, free text for now (frontend suggests known servers). |
 | `uid` | `text` NULL | ≤32, display only, never a key. |
@@ -107,8 +107,9 @@ migration stream and sqlc package, its own OpenAPI document, mounted at `/gmzz`,
 | `revision` | `bigint` NOT NULL DEFAULT 1 | Incremented on every write; optimistic lock. |
 | `created_at`, `updated_at` | `timestamptz` | `updated_at` via trigger. |
 
-Indexes: `(owner_id, sort_order)`. The foreign key into `core.users` is the module's one
-cross-schema reference: account deletion must take the characters with it.
+Indexes: `(owner_id, sort_order)`. `backend-go/README.md` forbids cross-schema foreign keys,
+so `owner_id` is a plain column; core never hard-deletes an account, so nothing is orphaned
+today. A future account-deletion flow must remove the owner's characters explicitly.
 
 **Limit:** ten characters per owner, enforced in the inserting transaction (lock the owner's
 rows, count, insert). Exceeding it is a 409 with a stable error code the page can explain.
@@ -116,9 +117,9 @@ rows, count, insert). Exceeding it is a 409 with a stable error code the page ca
 ### Identity
 
 The module needs the caller. It reuses `core/auth.Resolver` (bearer token or cookie) with a
-principal lookup against `core.users`; that read-only identity lookup is the only other place
-the module touches the core schema. How the resolver is shared between modules is settled in
-the implementation plan.
+principal lookup against `core.users`: `core.Identity(deps)` builds the same middleware core
+uses from `users.PrincipalStore`, so a game module identifies callers exactly as core does and
+reads nothing else of the account.
 
 ### API (prefix `/gmzz`)
 
@@ -190,7 +191,7 @@ show-uid toggle, sharing toggle (private ↔ link), copy link, copy, delete, reo
 - **Go**, against a real Postgres as the existing integration tests do: the ten limit
   (including concurrent creates), revision conflict, private → 404 for non-owners and anonymous,
   uid omission, copy of own / of another's visible / of another's private (404), order,
-  cascade on account deletion, 64 KB and `schemaVersion` validation.
+  64 KB and `schemaVersion` validation.
 - **Frontend unit:** local-draft → v1 conversion (including legacy relic shapes), migration chain
   on frozen fixtures, unknown-field preservation, newer-version read-only detection, autosave
   debounce/max-interval/flush timing, conflict handling.

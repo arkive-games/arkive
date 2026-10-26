@@ -1,0 +1,951 @@
+{
+  "components": {
+    "schemas": {
+      "Character": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": {},
+            "description": "The score page's inputs, as the frontend wrote them",
+            "type": "object"
+          },
+          "editable": {
+            "description": "True when the caller owns the character",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "The character's public id: its link and its API path",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "Pass back on update; a stale value is refused with 409",
+            "format": "int64",
+            "type": "integer"
+          },
+          "schemaVersion": {
+            "description": "The document's schemaVersion, copied out of it",
+            "format": "int32",
+            "type": "integer"
+          },
+          "server": {
+            "description": "Display only",
+            "type": "string"
+          },
+          "showUid": {
+            "description": "Whether readers other than the owner see uid",
+            "type": "boolean"
+          },
+          "uid": {
+            "description": "Display only, never a key. Omitted for readers other than the owner unless showUid is set",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "private",
+              "link"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "editable",
+          "data",
+          "id",
+          "name",
+          "showUid",
+          "visibility",
+          "schemaVersion",
+          "revision",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "CopyCharacterBody": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CreateCharacterBody": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "additionalProperties": {},
+            "description": "The score page's inputs; must carry an integer schemaVersion",
+            "type": "object"
+          },
+          "name": {
+            "description": "1 to 32 characters after trimming",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "server": {
+            "maxLength": 64,
+            "type": "string"
+          },
+          "showUid": {
+            "type": "boolean"
+          },
+          "uid": {
+            "maxLength": 64,
+            "type": "string"
+          },
+          "visibility": {
+            "description": "Defaults to link",
+            "enum": [
+              "private",
+              "link"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "data"
+        ],
+        "type": "object"
+      },
+      "Empty": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "EnvelopeCharacter": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Character",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeEmpty": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Empty",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeListSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "description": "The payload",
+            "items": {
+              "$ref": "#/components/schemas/Summary"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "Error": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "description": "Always null on an error response"
+          },
+          "errorCode": {
+            "description": "Stable machine-readable error code",
+            "examples": [
+              "UserNotFoundError"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Human-readable detail; may be empty",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this error",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "OrderBody": {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "type": "object"
+      },
+      "Summary": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "description": "The character's public id: its link and its API path",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "Pass back on update; a stale value is refused with 409",
+            "format": "int64",
+            "type": "integer"
+          },
+          "schemaVersion": {
+            "description": "The document's schemaVersion, copied out of it",
+            "format": "int32",
+            "type": "integer"
+          },
+          "server": {
+            "description": "Display only",
+            "type": "string"
+          },
+          "showUid": {
+            "description": "Whether readers other than the owner see uid",
+            "type": "boolean"
+          },
+          "uid": {
+            "description": "Display only, never a key. Omitted for readers other than the owner unless showUid is set",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "private",
+              "link"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "showUid",
+          "visibility",
+          "schemaVersion",
+          "revision",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "UpdateCharacterBody": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "name": {
+            "maxLength": 64,
+            "type": "string"
+          },
+          "revision": {
+            "description": "The revision last read; a stale one is refused with 409",
+            "format": "int64",
+            "type": "integer"
+          },
+          "server": {
+            "maxLength": 64,
+            "type": "string"
+          },
+          "showUid": {
+            "type": "boolean"
+          },
+          "uid": {
+            "maxLength": 64,
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "private",
+              "link"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Saved score-page characters for the Lord of Mysteries site.",
+    "title": "Arkive Lord of Mysteries API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/characters": {
+      "get": {
+        "description": "Metadata only, in your chosen order. Read one character for its data.",
+        "operationId": "listOwnCharacters",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListSummary"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List your characters",
+        "tags": [
+          "characters"
+        ]
+      },
+      "post": {
+        "description": "Appended to the end of your list. An account holds at most ten.",
+        "operationId": "createCharacter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCharacterBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCharacter"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Save a new character",
+        "tags": [
+          "characters"
+        ]
+      }
+    },
+    "/characters/order": {
+      "put": {
+        "description": "`ids` must list each of your characters exactly once.",
+        "operationId": "orderCharacters",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Reorder your characters",
+        "tags": [
+          "characters"
+        ]
+      }
+    },
+    "/characters/{id}": {
+      "delete": {
+        "operationId": "deleteCharacter",
+        "parameters": [
+          {
+            "description": "The character's public id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The character's public id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Delete one of your characters",
+        "tags": [
+          "characters"
+        ]
+      },
+      "get": {
+        "description": "Open to anyone holding the link unless the character is private. `editable` tells the owner apart. A private character is not found for everyone else, and the uid is withheld from them unless its owner chose to show it.",
+        "operationId": "getCharacter",
+        "parameters": [
+          {
+            "description": "The character's public id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The character's public id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCharacter"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Read a character",
+        "tags": [
+          "characters"
+        ]
+      },
+      "patch": {
+        "description": "Partial. `revision` must be the one last read; a newer write on another device makes this one fail with 409 rather than overwrite it.",
+        "operationId": "updateCharacter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCharacterBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCharacter"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Change one of your characters",
+        "tags": [
+          "characters"
+        ]
+      }
+    },
+    "/characters/{id}/copy": {
+      "post": {
+        "description": "Your own, or anyone's you can read. A copy of someone else's keeps the inputs and server but not their uid. Counts toward the limit of ten.",
+        "operationId": "copyCharacter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyCharacterBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeCharacter"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Copy a character into your list",
+        "tags": [
+          "characters"
+        ]
+      }
+    }
+  }
+}

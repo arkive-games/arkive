@@ -70,21 +70,7 @@ func (s *Service) avatarResolver() func(string) string {
 // Principal implements auth.PrincipalStore so the identity middleware can
 // resolve a token's subject without importing this package's concrete types.
 func (s *Service) Principal(ctx context.Context, id uuid.UUID) (auth.Principal, error) {
-	u, err := s.q.GetUserByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return auth.Principal{}, apierr.New(apierr.UserNotFound, "")
-		}
-		return auth.Principal{}, fmt.Errorf("load user: %w", err)
-	}
-	return auth.Principal{
-		ID:                 u.ID,
-		Name:               u.Name,
-		IsActive:           u.IsActive,
-		IsSuperuser:        u.IsSuperuser,
-		IsVerified:         u.IsVerified,
-		SessionFingerprint: s.tokens.SessionFingerprint(u.HashedPassword),
-	}, nil
+	return NewPrincipalStore(s.q, s.tokens).Principal(ctx, id)
 }
 
 // Register creates an account.

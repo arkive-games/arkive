@@ -21,6 +21,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core"
+	"github.com/arkive-games/arkive/backend-go/internal/gmzz"
 	"github.com/arkive-games/arkive/backend-go/internal/module"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/config"
@@ -38,6 +39,7 @@ func main() {
 func registry() (*module.Registry, error) {
 	return module.NewRegistry(
 		core.New(),
+		gmzz.New(),
 	)
 }
 

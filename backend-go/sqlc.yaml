@@ -44,3 +44,26 @@ sql:
           post_id: PostID
           parent_id: ParentID
           author_id: AuthorID
+  # The gmzz module's own stream: its own schema, queries and package, so nothing it
+  # generates can reach into core's tables.
+  - engine: postgresql
+    schema: internal/gmzz/migrations
+    queries: db/queries/gmzz
+    gen:
+      go:
+        package: gmzzdb
+        out: internal/gmzz/gmzzdb
+        sql_package: pgx/v5
+        emit_empty_slices: true
+        emit_pointers_for_null_types: true
+        emit_json_tags: false
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID
+          - db_type: timestamptz
+            go_type: time.Time
+        rename:
+          uid: UID
+          public_id: PublicID
+          owner_id: OwnerID
+          show_uid: ShowUID

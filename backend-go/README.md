@@ -6,7 +6,8 @@ the `tools` pipeline and shipped as the static `data/` artifacts.
 
 Design: `docs/superpowers/specs/2026-08-08-go-backend-architecture-design.md`.
 
-Status: the `core` module (accounts + authentication) is implemented. Comments, progress,
+Status: the `core` module (accounts + authentication) is implemented, and so is the
+`gmzz` module (saved Lord of Mysteries score-page characters) — the first game module. Comments, progress,
 feedback and the aion2 abyss-artifact module are not yet. Avatars are, on S3-compatible
 object storage: MinIO locally via docker-compose, Tencent COS in production.
 
@@ -22,7 +23,8 @@ internal/core/         accounts and authentication
   httpapi/             huma handlers — the only package that knows about HTTP
   coredb/              sqlc-generated queries (checked in, do not edit)
   migrations/          this module's own goose stream
-db/queries/core/       sqlc sources
+internal/gmzz/          Lord of Mysteries: saved characters (its own schema and stream)
+db/queries/<module>/   sqlc sources
 openapi/               generated OpenAPI documents (checked in)
 ```
 

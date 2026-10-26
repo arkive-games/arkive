@@ -366,8 +366,12 @@ jobs:
         working-directory: backend-go
         run: |
           go tool sqlc generate
-          if ! git diff --quiet -- internal/core/coredb/; then
-            echo "internal/core/coredb/ is stale. Run: go tool sqlc generate"
-            git diff -- internal/core/coredb/
+          # Every module's generated package, untracked files included: a new query
+          # file generates a new Go file, which `git diff` alone would not report.
+          generated="internal/core/coredb/ internal/gmzz/gmzzdb/"
+          if [ -n "$(git status --porcelain -- $generated)" ]; then
+            echo "sqlc output is stale. Run: go tool sqlc generate"
+            git status --short -- $generated
+            git diff -- $generated
             exit 1
           fi
