@@ -578,9 +578,9 @@ export function maxStageFor(equipment: Equipment, slot: number, season?: number)
  * Enhancement score and stats at a stage.
  *
  * Every stage up to and including the current one counts whole: "+3" is worth
- * exactly three stages (240, verified in game). Refinement (精炼度) is a
- * separate 0–100 figure with no bearing on the stage; it feeds only the
- * whole-loadout refinement set (see `averageProgress`).
+ * exactly three stages (240, verified in game). Only the stats are used:
+ * the rating scores enhancement by refinement level instead (`refineScoreOf`),
+ * which reaches the same figure at a whole stage and splits a part-way one.
  */
 export function enhanceOf(body: EnhanceBody | null, stage: number): { score: number; stats: [string, number][] } {
   if (!body) return { score: 0, stats: [] }
@@ -615,6 +615,11 @@ export function refineScoreOf(body: EnhanceBody | null, level: number): number {
  * splits into ten, so 80 levels of 1.25% each. The game shows the percentage
  * rounded down — level 62 is 77.5% and reads 77%, level 55 is 68.75% and
  * reads 68% — so averaging the shown figures drifts from the game's average.
+ *
+ * ASSUMPTION: the percentage is over 80 levels for every slot, as the game's
+ * 1.25% steps show on the eight-stage ladders checked in game. A slot whose
+ * ladder is shorter still scores only its own stages: `refineScoreOf` stops
+ * at the end of the ladder it is given.
  */
 export const REFINE_LEVELS = 80
 /** Refinement levels per enhancement stage. */

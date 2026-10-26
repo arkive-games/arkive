@@ -18,6 +18,9 @@ import { isFiniteNumber, isRecord } from '../../lib/memory'
  * 1. A new input is an optional field with a default. No version bump: an
  *    older page ignores it, and — because writes merge into the stored object
  *    instead of rebuilding it (`withSection`) — does not erase it either.
+ *    That holds for top-level sections and for fields of a section; it does
+ *    not hold inside a relic affix, which the relic section rebuilds from its
+ *    `affixId` on every write. A new per-affix input needs a version bump.
  * 2. A change an older page would misread bumps `SCHEMA_VERSION` and adds a
  *    step to `MIGRATIONS`. A page that meets a newer version than it knows
  *    opens the character read-only rather than writing it back.
@@ -69,7 +72,9 @@ export const SECTIONS: { [K in SectionKey]: SectionSpec<K> } = {
     default: emptyBondsDraft,
     validate: isBondsDraft,
     // `historyRankId`: the hand-picked research rank, now derived from points.
-    normalize: (value) => without(value, ['historyRankId']),
+    // `historyExtraPoints`: research from other sources, typed by hand; the
+    // rank now follows from the connections alone and nothing read it.
+    normalize: (value) => without(value, ['historyRankId', 'historyExtraPoints']),
   },
   equipment: { default: () => equipmentDraft.record.defaultValue(), validate: isEquipmentDraft },
   relics: {

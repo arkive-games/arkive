@@ -65,6 +65,11 @@ export function isUnauthorized(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401
 }
 
+/** A disabled account: as unable to write as a signed-out one. */
+export function isInactive(error: unknown): boolean {
+  return error instanceof ApiError && error.code === 'UserInactiveError'
+}
+
 export function isLimitReached(error: unknown): boolean {
   return error instanceof ApiError && error.code === LIMIT_REACHED
 }

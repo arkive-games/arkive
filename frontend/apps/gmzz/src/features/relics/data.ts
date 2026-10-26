@@ -495,7 +495,6 @@ export function evaluateRelicSlot(
   }
 }
 
-/** The 非凡共鸣 ladder a relic reads at a grade, by affix count. */
 /**
  * The three 封印物 rating items over all relics. Each is the unfloored sum
  * across the relics, floored once — one relic alone matches the game either
@@ -593,7 +592,6 @@ export function poolStats(pool: PoolAffix[]): string[] {
   return [...new Set(ordinary.map((affix) => affix.stat))]
 }
 
-/** The rare words in a pool: the rarest (愚者) first, then by id. */
 /** An affix's word type, 1 凡 · 2 珍 · 3 稀 · 4 异, read off its pool row. */
 export function affixTier(pool: PoolAffix[], affix: ChosenRelicAffix): number {
   return pool.find((entry) => entry.id === affix.affixId)?.tag ?? 0

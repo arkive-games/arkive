@@ -5,6 +5,7 @@ import { useMemory } from '@gamemap/state-memory'
 import {
   characterApi,
   isConflict,
+  isInactive,
   isNotFound,
   isUnauthorized,
   type CharacterApi,
@@ -178,8 +179,9 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
         setStatus('conflict')
         return
       }
-      if (isUnauthorized(error) || isNotFound(error)) {
-        // Signed out, or no longer this account's: keep the copy, stop sending.
+      if (isUnauthorized(error) || isInactive(error) || isNotFound(error)) {
+        // Signed out, disabled, or no longer this account's: keep the copy, stop
+        // sending. Retrying any of these would only fail the same way forever.
         blocked.current = true
         setStatus(isNotFound(error) ? 'missing' : 'signed-out')
         return
