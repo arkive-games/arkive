@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-10-27",
+      "commit": "c478070ad3d509cb3e5de5a3851c5e09542ceafb",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned the sign-in and site settings dialogs: rounded titles, softer inputs, and settings as collapsible cards showing each current value.",
+            "zh-CN": "重新设计登录与网站设置弹窗：圆润标题、更柔和的输入框，设置项改为可展开卡片并直接显示当前值。",
+            "zh-TW": "重新設計登入與網站設定視窗：圓潤標題、更柔和的輸入框，設定項改為可展開卡片並直接顯示目前值。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-27",
       "commit": "bbc496fd7107d50672024c5b04aadf1a9359910c",
       "targets": [
         "aion2",
