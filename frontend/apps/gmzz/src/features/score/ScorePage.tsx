@@ -288,9 +288,10 @@ export default function ScorePage() {
     <ContentPage active="/score" title={t('score.title')} wide>
       <div data-testid="score-page" className="space-y-4">
         {/* A slim bar that stays in view: the title and the one switch every
-            relic number depends on. It sits under the site's own sticky bar —
-            the phone header (3.5rem) below md, the floating top bar above. */}
-        <header className="sticky top-14 z-20 -mx-1 flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border bg-background/95 px-1 py-1.5 backdrop-blur md:top-[5.25rem]"
+            relic number depends on. It sticks to the top of the page's own
+            scroller (the shell scrolls a column, not the window), and pulls up
+            over the page's top padding so nothing shows above it once stuck. */}
+        <header className="sticky top-0 z-20 -mx-1 -mt-[var(--arkive-content-page-top-space)] flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border bg-background px-1 py-1.5"
           data-testid="score-header">
           <h1 className={TYPE.pageTitle}>{t('score.title')}</h1>
           {relics ? <RelicServerToggle testId="score-relic-server" compact /> : null}

@@ -567,7 +567,7 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
                   target ? 'border-dashed border-[color:var(--arkive-nav-accent)] text-[color:var(--arkive-nav-accent)]' : at === index ? TAB_ACTIVE : ''
                 }`}>
                 {target ? <span aria-hidden>⇄</span> : null}
-                <span className="truncate">{t('relic.materialTab', { name: nameAt(at), count: slot.materials[at]?.length ?? 0 })}</span>
+                <span className="truncate">{(slot.materials[at]?.length ?? 0) === 0 ? t('relic.materialEmpty') : t('relic.materialTab', { name: nameAt(at), count: slot.materials[at].length })}</span>
                 {!spec && !active.includes(at) ? <span className="shrink-0 text-amber-700 dark:text-amber-300">{t('relic.strategicOnly')}</span> : null}
               </button>
             )

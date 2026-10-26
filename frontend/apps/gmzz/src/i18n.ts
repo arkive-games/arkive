@@ -502,6 +502,10 @@ const en = {
     "dataNote": "One name can cover several affix splits. A few slots still share a placeholder three-affix name, and some healing-form texts do not match their own stat values — both are as the client ships them."
   },
   score: {
+    "detailsShow": "Show details",
+    "detailsHide": "Hide details",
+    "sharedDetails": "Details",
+    "sharedDetailsFor": "Computes {{items}}",
     "title": "Beyonder Rating Calculator",
     "comingSoon": "Coming soon",
     "homeDescription": "Enter your level and the 14 sub-scores the in-game rating panel shows, and see how each one grades.",
@@ -714,6 +718,7 @@ const en = {
     "materialFullScore": "Theoretical {{score}} (all affixes)",
     "materialName": "Material",
     "materialTab": "{{name}} · {{count}} slots",
+    "materialEmpty": "Not equipped",
     "resonanceOther": "Resonance follows the other material, which has more active affixes.",
     "affixesOf": "Affixes ({{group}} material)",
     "affixStat": "Affix stat",
@@ -1250,6 +1255,10 @@ const zhCN: Strings = {
     "dataNote": "同一个名称可能对应多种词条分配。部分部位的 3 非凡词条恩赐仍共用一个占位名称，少数治疗形态描述也与自身属性值不符——两者均与客户端一致。"
   },
   score: {
+    "detailsShow": "展开详情",
+    "detailsHide": "收起详情",
+    "sharedDetails": "详情",
+    "sharedDetailsFor": "计算 {{items}}",
     "title": "非凡评分计算器",
     "comingSoon": "敬请期待",
     "homeDescription": "填入等级与游戏内非凡评分面板的 14 项分数，逐项对照养成进度。",
@@ -1463,6 +1472,7 @@ const zhCN: Strings = {
     "materialFullScore": "理论 {{score}} 分（全部词条生效）",
     "materialName": "物质",
     "materialTab": "{{name}}·{{count}}孔",
+    "materialEmpty": "未装备",
     "resonanceOther": "非凡共鸣按另一个生效词条更多的物质计算。",
     "affixesOf": "词条（{{group}}物质）",
     "affixStat": "词条属性",
@@ -2000,6 +2010,10 @@ const zhTW: Strings = {
     "dataNote": "同一個名稱可能對應多種詞條分配。部分部位的 3 非凡詞條恩賜仍共用一個佔位名稱，少數治療形態描述也與自身屬性值不符——兩者皆與客戶端一致。"
   },
   score: {
+    "detailsShow": "展開詳情",
+    "detailsHide": "收起詳情",
+    "sharedDetails": "詳情",
+    "sharedDetailsFor": "計算 {{items}}",
     "title": "非凡評分計算器",
     "comingSoon": "敬請期待",
     "homeDescription": "填入等級與遊戲內非凡評分面板的 14 項分數，逐項對照養成進度。",
@@ -2213,6 +2227,7 @@ const zhTW: Strings = {
     "materialFullScore": "理論 {{score}} 分（全部詞條生效）",
     "materialName": "物質",
     "materialTab": "{{name}}·{{count}}孔",
+    "materialEmpty": "未裝備",
     "resonanceOther": "非凡共鳴按另一個生效詞條更多的物質計算。",
     "affixesOf": "詞條（{{group}}物質）",
     "affixStat": "詞條屬性",

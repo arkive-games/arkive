@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
+import { SharedDetails } from '@/features/score/Details'
 import { ItemRow } from '@/features/score/SpeciesRow'
 import { TYPE } from '@/lib/typography'
 
@@ -72,7 +73,11 @@ export function GroupSection({
           )
         })}
       </div>
-      {children ? <div className="mt-3">{children}</div> : null}
+      {children ? (
+        <div className="mt-2">
+          <SharedDetails id={`genus-${group.genus.id}`} items={group.items.map((item) => item.species.name)}>{children}</SharedDetails>
+        </div>
+      ) : null}
     </section>
   )
 }

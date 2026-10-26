@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
+import { DetailsBody, DetailsToggle, useDetailsOpen } from '@/features/score/Details'
 import { clamp, materialsFor, type Rating, type SpeciesResult } from '@/features/score/data'
 import { TYPE } from '@/lib/typography'
 
@@ -62,10 +63,12 @@ export function ItemRow({
   // with no other symptom.
   const percent = Number.isFinite(item.percent) ? Math.round(clamp(item.percent, 0, 1) * 100) : 0
   const materials = materialsFor(rating, item.species)
+  const [open, toggle] = useDetailsOpen(`item-${item.species.id}`)
+  const bodyId = `score-item-details-${item.species.id}`
 
   return (
     <article className="rounded-md border border-border bg-card p-2.5" data-testid={`score-item-${item.species.id}`}>
-      <div className="grid gap-2 md:grid-cols-[minmax(9rem,13rem)_minmax(7rem,9rem)_minmax(0,1fr)_minmax(8rem,11rem)] md:items-center">
+      <div className="grid gap-2 md:grid-cols-[minmax(9rem,13rem)_minmax(7rem,9rem)_minmax(0,1fr)_minmax(8rem,11rem)_6.5rem] md:items-center">
         <div className="min-w-0">
           <div className={TYPE.name}>{item.species.name}</div>
           {materials.length > 0 ? (
@@ -127,9 +130,14 @@ export function ItemRow({
           <span className={`text-lg font-bold tabular-nums ${bandStyle(BAND_CLASS, bandIndex)}`}>{percent}%</span>
           <span className={`text-xs font-semibold ${bandStyle(BAND_CLASS, bandIndex)}`}>{item.band?.label}</span>
         </div>
+
+        {/* The fold control's own column, kept on rows without a detail too so every row's columns line up. */}
+        <div className="flex md:justify-end">
+          {children ? <DetailsToggle open={open} onToggle={toggle} controls={bodyId} testId={`score-item-toggle-${item.species.id}`} /> : null}
+        </div>
       </div>
 
-      {children ? <div className="mt-2.5 border-t border-border/70 pt-2.5">{children}</div> : null}
+      {children ? <DetailsBody id={bodyId} open={open}>{children}</DetailsBody> : null}
     </article>
   )
 }
