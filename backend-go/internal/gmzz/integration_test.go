@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core"
@@ -48,6 +50,7 @@ func newHarness(t *testing.T) *harness {
 	if dsn == "" {
 		t.Skipf("%s is not set; skipping database-backed tests", dsnEnv)
 	}
+	dsn = ownDatabase(t, dsn)
 	cfg := config.Config{
 		Debug:    true,
 		Server:   config.Server{APIPrefix: "/api/v1"},
@@ -82,12 +85,6 @@ func newHarness(t *testing.T) *harness {
 		}
 	}
 
-	// Dropped again afterwards: core's suite shares the database and asserts that
-	// nothing but core holds a goose version table, which ours would be.
-	t.Cleanup(func() {
-		_, _ = pool.Exec(context.Background(), "DROP SCHEMA IF EXISTS gmzz CASCADE")
-	})
-
 	coreMod, gmzzMod := core.New(), gmzz.New()
 	for _, m := range []module.Module{coreMod, gmzzMod} {
 		if err := db.Migrate(ctx, pool, m.Schema(), m.Migrations()); err != nil {
@@ -104,6 +101,39 @@ func newHarness(t *testing.T) *harness {
 		t.Fatalf("mount: %v", mountErr)
 	}
 	return &harness{t: t, router: router, pool: pool, tokens: auth.NewTokens(cfg.Auth)}
+}
+
+// ownDatabase returns a DSN for a database of this package's own, created on
+// first use beside the one the variable names.
+//
+// `go test ./...` runs packages in parallel, and core's suite drops and
+// recreates the core schema on every test. Sharing its database, the two
+// suites dropped each other's schemas mid-migration.
+func ownDatabase(t *testing.T, dsn string) string {
+	t.Helper()
+	u, err := url.Parse(dsn)
+	if err != nil {
+		t.Fatalf("parse %s: %v", dsnEnv, err)
+	}
+	name := strings.TrimPrefix(u.Path, "/") + "_gmzz"
+	ctx := context.Background()
+	admin, err := pgx.Connect(ctx, dsn)
+	if err != nil {
+		t.Fatalf("connect: %v", err)
+	}
+	defer admin.Close(ctx)
+	var exists bool
+	if err := admin.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = $1)`, name).Scan(&exists); err != nil {
+		t.Fatalf("look up test database: %v", err)
+	}
+	if !exists {
+		// Identifiers cannot be bound; the name comes from the operator's own DSN.
+		if _, err := admin.Exec(ctx, "CREATE DATABASE "+pgx.Identifier{name}.Sanitize()); err != nil && !strings.Contains(err.Error(), "already exists") {
+			t.Fatalf("create test database %s: %v", name, err)
+		}
+	}
+	u.Path = "/" + name
+	return u.String()
 }
 
 // user creates an account directly and returns a bearer token for it. The
