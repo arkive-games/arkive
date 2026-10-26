@@ -232,6 +232,33 @@ export function relationResearchPoints(relations: FellowRelation[], stars: Map<n
  * (3 up to role level 39, 38 at divinity 22-23, 45 at divinity 30). The cap is
  * shared: 途径, 秘偶 and 人脉 skill levels are always equal. Null when no level fits.
  */
+/**
+ * The pathway skill score per skill level, and its constant: 82 x L + 738.
+ *
+ * Fitted, not shipped: `SkillScoreData` is bare ids. The pathway-skill curve
+ * (expected and max are the same curve) equals 82 x L + 738 at every point from
+ * role level 47 up, L being the skill level `skillLevelCap` reads off the
+ * connection curve at the same point (divinity 23: L 38, 3854; divinity 24:
+ * L 40, 4018). Below role level 47 it does not fit, because a pathway's scored
+ * skills unlock at role levels 40, 42 and 47 (`RoleSkillUnlockData`), and how
+ * much each one weighs is not in the client.
+ */
+export const PATHWAY_SKILL_PER_LEVEL = 82
+export const PATHWAY_SKILL_BASE = 738
+
+/**
+ * The pathway skill score at a skill level. Where the curve at the current
+ * progression is the formula at its own cap, every skill is unlocked and the
+ * formula applies at the player's level; otherwise (early role levels, some
+ * skills still locked) the curve's own value is the score, which is what the
+ * game shows there with every unlocked skill at its cap.
+ */
+export function pathwaySkillScore(skillLevel: number, benchmark: number, capLevel: number | null): number {
+  const formula = (level: number) => PATHWAY_SKILL_PER_LEVEL * level + PATHWAY_SKILL_BASE
+  if (capLevel === null || formula(capLevel) !== benchmark) return benchmark
+  return formula(Math.min(skillLevel, capLevel))
+}
+
 export function skillLevelCap(fellowMaxBenchmark: number, maxLevel = 75): number | null {
   for (let level = 1; level <= maxLevel; level++) {
     if (fellowSkillScore(GOLD_FELLOW, MAX_FELLOW_STAR, 1, MAX_FELLOW_STAR + 1, level).score === fellowMaxBenchmark) return level

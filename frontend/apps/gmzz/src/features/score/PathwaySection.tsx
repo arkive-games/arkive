@@ -71,10 +71,9 @@ export default function PathwaySection({
             ),
           }
         }
-        if (item.species.module === LEVEL_MODULE) {
-          return { kind: 'derived', calculator: <p className={TYPE.body}>{t('pathway.levelNote')}</p> }
-        }
-        return { kind: 'typed', note: t('pathway.skillNote') }
+        // The level follows the level inputs and the pathway skill the shared
+        // skill level: neither has anything to show beyond its row.
+        return { kind: 'derived' }
       }}
     />
   )

@@ -4,7 +4,6 @@ import { IconChevronDown } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
 import { gmzzMemory, isRecord } from '@/lib/memory'
-import { TYPE } from '@/lib/typography'
 
 /** Which details the player has folded away, by id; anything absent is open. */
 type Folded = Record<string, boolean>
@@ -49,28 +48,5 @@ export function DetailsBody({ id, open, children }: { id: string; open: boolean;
     <div id={id} hidden={!open} className="mt-2.5 border-t border-border/70 pt-2.5">
       {children}
     </div>
-  )
-}
-
-/**
- * The second shape: one calculator behind several items (封印物's three rows
- * all come from the relics). Its own card with a header naming the items it
- * computes, and the same fold control as a single item's detail.
- */
-export function SharedDetails({ id, items, children }: { id: string; items: string[]; children: ReactNode }) {
-  const { t } = useTranslation()
-  const [open, toggle] = useDetailsOpen(id)
-  const bodyId = `details-${id}`
-  return (
-    <section className="rounded-md border border-border bg-card p-2.5" data-testid={`score-details-${id}`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className={TYPE.name}>{t('score.sharedDetails')}</div>
-          <div className="truncate text-xs text-muted-foreground">{t('score.sharedDetailsFor', { items: items.join(' · ') })}</div>
-        </div>
-        <DetailsToggle open={open} onToggle={toggle} controls={bodyId} testId={`score-details-toggle-${id}`} />
-      </div>
-      <DetailsBody id={bodyId} open={open}>{children}</DetailsBody>
-    </section>
   )
 }

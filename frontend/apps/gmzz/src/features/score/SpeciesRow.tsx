@@ -47,12 +47,13 @@ export function ItemRow({
   item,
   rating,
   onScore,
-  children,
+  toggle,
 }: {
   item: SpeciesResult
   rating: Rating
   onScore?: (value: number) => void
-  children?: ReactNode
+  /** The card's fold control, drawn in this line's last column. */
+  toggle?: ReactNode
 }) {
   const { t } = useTranslation()
   // Resolved here rather than passed in: the only valid producer is this one
@@ -63,12 +64,9 @@ export function ItemRow({
   // with no other symptom.
   const percent = Number.isFinite(item.percent) ? Math.round(clamp(item.percent, 0, 1) * 100) : 0
   const materials = materialsFor(rating, item.species)
-  const [open, toggle] = useDetailsOpen(`item-${item.species.id}`)
-  const bodyId = `score-item-details-${item.species.id}`
 
   return (
-    <article className="rounded-md border border-border bg-card p-2.5" data-testid={`score-item-${item.species.id}`}>
-      <div className="grid gap-2 md:grid-cols-[minmax(9rem,13rem)_minmax(7rem,9rem)_minmax(0,1fr)_minmax(8rem,11rem)_6.5rem] md:items-center">
+      <div data-testid={`score-item-${item.species.id}`} className="grid gap-2 md:grid-cols-[minmax(9rem,13rem)_minmax(7rem,9rem)_minmax(0,1fr)_minmax(8rem,11rem)_6.5rem] md:items-center">
         <div className="min-w-0">
           <div className={TYPE.name}>{item.species.name}</div>
           {materials.length > 0 ? (
@@ -133,11 +131,37 @@ export function ItemRow({
 
         {/* The fold control's own column, kept on rows without a detail too so every row's columns line up. */}
         <div className="flex md:justify-end">
-          {children ? <DetailsToggle open={open} onToggle={toggle} controls={bodyId} testId={`score-item-toggle-${item.species.id}`} /> : null}
+          {toggle}
         </div>
       </div>
+  )
+}
 
-      {children ? <DetailsBody id={bodyId} open={open}>{children}</DetailsBody> : null}
+/**
+ * One card on the score page: the line of every item it holds and, when it
+ * has one, the single detail that computes them, behind one fold control.
+ * A card holds one item or several that share a calculator, in the same
+ * frame either way, so there is no second kind of details box.
+ */
+export function ItemCard({ id, items, rating, onScore, details }: {
+  id: string
+  items: SpeciesResult[]
+  rating: Rating
+  /** For typed items: where the player's own figure goes. */
+  onScore?: (item: SpeciesResult) => ((value: number) => void) | undefined
+  details?: ReactNode
+}) {
+  const [open, toggle] = useDetailsOpen(id)
+  const bodyId = `score-details-${id}`
+  return (
+    <article className="space-y-2 rounded-md border border-border bg-card p-2.5" data-testid={`score-card-${id}`}>
+      {items.map((item, index) => (
+        <ItemRow key={item.species.id} item={item} rating={rating} onScore={onScore?.(item)}
+          toggle={details && index === 0
+            ? <DetailsToggle open={open} onToggle={toggle} controls={bodyId} testId={`score-details-toggle-${id}`} />
+            : null} />
+      ))}
+      {details ? <DetailsBody id={bodyId} open={open}>{details}</DetailsBody> : null}
     </article>
   )
 }

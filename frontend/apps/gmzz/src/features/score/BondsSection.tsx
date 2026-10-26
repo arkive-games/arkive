@@ -75,6 +75,8 @@ export default function BondsSection({
   onScore: (speciesId: number, value: number) => void
 }) {
   const { t } = useTranslation()
+  // The history picker reads its own item's benchmark, whichever row opens the shared card.
+  const historyItem = group.items.find((entry) => entry.species.module === HISTORY_MODULE)
 
   return (
     <GroupSection
@@ -83,50 +85,39 @@ export default function BondsSection({
       hint={t('bonds.hint')}
       onScore={onScore}
       present={(item) => {
-        if (item.species.module === PUPPET_GAIN_MODULE) {
+        // The puppet items come from one lineup and the connection items from
+        // one roster, so each pair is one card with one detail.
+        if (item.species.module === PUPPET_GAIN_MODULE || item.species.module === PUPPET_SKILL_MODULE) {
           return {
             kind: 'derived',
+            shared: 'puppets',
             calculator:
               data.partners && data.scoring ? (
-                <PuppetLineup partners={data.partners} scoring={data.scoring} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
+                <div className="space-y-3">
+                  <PuppetLineup partners={data.partners} scoring={data.scoring} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
+                  <PuppetSkillSummary partners={data.partners} scoring={data.scoring} draft={draft} />
+                </div>
               ) : (
                 <p className={TYPE.body}>{t('bonds.unavailable')}</p>
               ),
           }
         }
-        if (item.species.module === PUPPET_SKILL_MODULE) {
+        if (item.species.module === FELLOW_SKILL_MODULE || item.species.module === HISTORY_MODULE) {
           return {
             kind: 'derived',
+            shared: 'fellows',
             calculator:
-              data.partners && data.scoring ? (
-                <PuppetSkillSummary partners={data.partners} scoring={data.scoring} draft={draft} />
+              data.fellows && data.relations && data.ranks ? (
+                <div className="space-y-3">
+                  <FellowSkillCalculator fellows={data.fellows} relations={data.relations} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
+                  <HistoryPicker ranks={data.ranks} relations={data.relations} item={historyItem ?? item} draft={draft} setDraft={setDraft} />
+                </div>
               ) : (
                 <p className={TYPE.body}>{t('bonds.unavailable')}</p>
               ),
           }
         }
-        if (item.species.module === FELLOW_SKILL_MODULE) {
-          return {
-            kind: 'derived',
-            calculator:
-              data.fellows && data.relations ? (
-                <FellowSkillCalculator fellows={data.fellows} relations={data.relations} skillCap={data.skillCap} draft={draft} setDraft={setDraft} />
-              ) : (
-                <p className={TYPE.body}>{t('bonds.unavailable')}</p>
-              ),
-          }
-        }
-        if (item.species.module === HISTORY_MODULE) {
-          return {
-            kind: 'derived',
-            calculator: data.ranks && data.relations ? (
-              <HistoryPicker ranks={data.ranks} relations={data.relations} item={item} draft={draft} setDraft={setDraft} />
-            ) : (
-              <p className={TYPE.body}>{t('bonds.unavailable')}</p>
-            ),
-          }
-        }
-        return { kind: 'typed', note: t('bonds.typedHint') }
+        return { kind: 'typed' }
       }}
     />
   )

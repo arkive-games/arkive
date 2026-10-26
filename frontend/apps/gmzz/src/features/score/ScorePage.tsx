@@ -20,7 +20,7 @@ import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
 import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, extraResearchPoints, historyScore, isBondsDraft } from '@/features/score/bonds'
-import { carriedFellowSkill, relationResearchPoints, skillLevelCap, starMap } from '@/features/score/fellowSkill'
+import { carriedFellowSkill, relationResearchPoints, pathwaySkillScore, skillLevelCap, starMap } from '@/features/score/fellowSkill'
 import {
   benchmarkAt,
   clamp,
@@ -32,7 +32,7 @@ import {
   type Rating,
 } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
-import PathwaySection, { LEVEL_MODULE, TALENT_MODULE } from '@/features/score/PathwaySection'
+import PathwaySection, { LEVEL_MODULE, SKILL_MODULE, TALENT_MODULE } from '@/features/score/PathwaySection'
 import { emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, treeFor, type Talents } from '@/features/score/talents'
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
@@ -227,6 +227,17 @@ export default function ScorePage() {
     // the item always grades at 100%.
     const level = rating.species.find((entry) => entry.module === LEVEL_MODULE)
     if (level) put(LEVEL_MODULE, benchmarkAt(level.expected, roleLevel, divinityLevel, rating.maxRoleLevel))
+    // The pathway skill follows the same shared skill level as the puppet and
+    // connection skills; see `pathwaySkillScore` for what is fitted.
+    const pathwaySkill = rating.species.find((entry) => entry.module === SKILL_MODULE)
+    const fellowCurve = rating.species.find((entry) => entry.module === FELLOW_SKILL_MODULE)
+    if (pathwaySkill) {
+      put(SKILL_MODULE, pathwaySkillScore(
+        clampSkillLevel(bonds.puppetSkillLevel),
+        benchmarkAt(pathwaySkill.max, roleLevel, divinityLevel, rating.maxRoleLevel),
+        fellowCurve ? skillLevelCap(benchmarkAt(fellowCurve.max, roleLevel, divinityLevel, rating.maxRoleLevel)) : null,
+      ))
+    }
     put(TALENT_MODULE, talents ? evaluateTalents(treeFor(talents, professionId, talentState.treeId), talentState.levels).total : 0)
     for (const [part, module] of Object.entries(EQUIPMENT_MODULES)) {
       put(module, equipmentTotals?.[part as keyof EquipmentTotals] ?? 0)
@@ -290,8 +301,9 @@ export default function ScorePage() {
         {/* A slim bar that stays in view: the title and the one switch every
             relic number depends on. It sticks to the top of the page's own
             scroller (the shell scrolls a column, not the window), and pulls up
-            over the page's top padding so nothing shows above it once stuck. */}
-        <header className="sticky top-0 z-20 -mx-1 -mt-[var(--arkive-content-page-top-space)] flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border bg-background px-1 py-1.5"
+            over the page's top padding and restores it as its own, so it spaces
+            like every other page's title and nothing shows above it once stuck. */}
+        <header className="sticky top-0 z-20 -mx-1 -mt-[var(--arkive-content-page-top-space)] !mb-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-background px-1 pt-[var(--arkive-content-page-top-space)] pb-4"
           data-testid="score-header">
           <h1 className={TYPE.pageTitle}>{t('score.title')}</h1>
           {relics ? <RelicServerToggle testId="score-relic-server" compact /> : null}

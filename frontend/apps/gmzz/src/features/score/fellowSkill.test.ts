@@ -10,8 +10,7 @@ import {
   relationResearchPoints,
   relationTier,
   skillLevelCap,
-  starMap,
-} from './fellowSkill'
+  starMap, pathwaySkillScore } from './fellowSkill'
 
 /**
  * Every in-game reading, as [skill level, star, relation quality, relation tier, score].
@@ -112,5 +111,23 @@ describe('skill level cap', () => {
     const points: [number, number][] = [[617, 3], [720, 5], [772, 6], [1440, 19], [2419, 38], [2779, 45]]
     for (const [value, level] of points) expect(skillLevelCap(value)).toBe(level)
     expect(skillLevelCap(1)).toBeNull()
+  })
+})
+
+describe('pathwaySkillScore', () => {
+  it('is 82 x level + 738 once every skill is unlocked', () => {
+    // Divinity 23 sits at L38 on a 3854 curve, divinity 24 at L40 on 4018.
+    expect(pathwaySkillScore(38, 3854, 38)).toBe(3854)
+    expect(pathwaySkillScore(40, 4018, 40)).toBe(4018)
+    expect(pathwaySkillScore(35, 4018, 40)).toBe(82 * 35 + 738)
+    // Never past the cap the progression allows.
+    expect(pathwaySkillScore(60, 4018, 40)).toBe(4018)
+  })
+
+  it('takes the curve as it is where some skills are still locked', () => {
+    // Role level 1-39 (L3) and 40-46 (L5) do not fit the formula.
+    expect(pathwaySkillScore(3, 624, 3)).toBe(624)
+    expect(pathwaySkillScore(5, 1008, 5)).toBe(1008)
+    expect(pathwaySkillScore(5, 1008, null)).toBe(1008)
   })
 })

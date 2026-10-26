@@ -2,8 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
-import { SharedDetails } from '@/features/score/Details'
-import { ItemRow } from '@/features/score/SpeciesRow'
+import { ItemCard } from '@/features/score/SpeciesRow'
 import { TYPE } from '@/lib/typography'
 
 /**
@@ -16,8 +15,37 @@ import { TYPE } from '@/lib/typography'
  * the dataset's stable handle for a species.
  */
 export type ItemPresentation =
-  | { kind: 'derived'; calculator?: ReactNode }
-  | { kind: 'typed'; note?: string }
+  | {
+      kind: 'derived'
+      calculator?: ReactNode
+      /**
+       * Items naming the same `shared` key are one card with one detail: the
+       * calculator of the first of them, which computes them all.
+       */
+      shared?: string
+    }
+  | { kind: 'typed' }
+
+type Card = { id: string; items: SpeciesResult[]; details?: ReactNode }
+
+/** Items in panel order, those sharing a calculator gathered into the first one's card. */
+function cards(items: SpeciesResult[], present: (item: SpeciesResult) => ItemPresentation): Card[] {
+  const out: Card[] = []
+  const byKey = new Map<string, Card>()
+  for (const item of items) {
+    const how = present(item)
+    const key = how.kind === 'derived' ? how.shared : undefined
+    const existing = key === undefined ? undefined : byKey.get(key)
+    if (existing) {
+      existing.items.push(item)
+      continue
+    }
+    const card: Card = { id: `item-${item.species.id}`, items: [item], details: how.kind === 'derived' ? how.calculator : undefined }
+    if (key !== undefined) byKey.set(key, card)
+    out.push(card)
+  }
+  return out
+}
 
 /**
  * One of the panel's four groups: its heading with the group total, its
@@ -38,7 +66,7 @@ export function GroupSection({
   hint: string
   present: (item: SpeciesResult) => ItemPresentation
   onScore: (speciesId: number, value: number) => void
-  /** Drawn after the rows: a calculator that spans the whole group. */
+  /** A calculator behind every item of the group: the whole group becomes one card. */
   children?: ReactNode
 }) {
   const { t } = useTranslation()
@@ -57,27 +85,12 @@ export function GroupSection({
       </h2>
       <p className={`mt-1 ${TYPE.body}`}>{hint}</p>
       <div className="mt-2 space-y-2">
-        {group.items.map((item) => {
-          const how = present(item)
-          if (how.kind === 'derived') {
-            return (
-              <ItemRow key={item.species.id} item={item} rating={rating}>
-                {how.calculator}
-              </ItemRow>
-            )
-          }
-          return (
-            <ItemRow key={item.species.id} item={item} rating={rating} onScore={(value) => onScore(item.species.id, value)}>
-              {how.note ? <p className={TYPE.body}>{how.note}</p> : null}
-            </ItemRow>
-          )
-        })}
+        {cards(group.items, children ? () => ({ kind: 'derived', shared: 'all' }) : present).map((card) => (
+          <ItemCard key={card.id} id={children ? `genus-${group.genus.id}` : card.id} items={card.items} rating={rating}
+            details={children ?? card.details}
+            onScore={(item) => (present(item).kind === 'typed' ? (value) => onScore(item.species.id, value) : undefined)} />
+        ))}
       </div>
-      {children ? (
-        <div className="mt-2">
-          <SharedDetails id={`genus-${group.genus.id}`} items={group.items.map((item) => item.species.name)}>{children}</SharedDetails>
-        </div>
-      ) : null}
     </section>
   )
 }
