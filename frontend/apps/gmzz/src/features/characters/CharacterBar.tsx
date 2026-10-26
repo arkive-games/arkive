@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import { isLimitReached, MAX_CHARACTERS, type SavedCharacter } from '@/features/characters/api'
 import { useCharacter, type SyncStatus } from '@/features/characters/CharacterProvider'
+import { serverName, useServers, type GameServer } from '@/features/characters/servers'
 import { TYPE } from '@/lib/typography'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
@@ -51,6 +52,8 @@ export function CharacterBar() {
   const navigate = useNavigate()
   const ctx = useCharacter()
   const { id, status, character, characters, signedIn, api } = ctx
+  const servers = useServers()
+  const label = (name: string, serverId?: number) => withServer(name, serverName(servers, serverId, t('characters.unknownServer')))
   const [dialog, setDialog] = useState<'save' | 'manage' | null>(null)
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -104,16 +107,16 @@ export function CharacterBar() {
             {characters && characters.length > 0 ? (
               <optgroup label={t('characters.mine', { count: characters.length, max: MAX_CHARACTERS })}>
                 {characters.map((entry) => (
-                  <option key={entry.id} value={entry.id}>{label(entry.name, entry.server)}</option>
+                  <option key={entry.id} value={entry.id}>{label(entry.name, entry.serverId)}</option>
                 ))}
               </optgroup>
             ) : null}
-            {foreign ? <option value={foreign.id}>{label(foreign.name, foreign.server)}</option> : null}
+            {foreign ? <option value={foreign.id}>{label(foreign.name, foreign.serverId)}</option> : null}
           </select>
         </label>
       ) : null}
 
-      {foreign ? <ForeignIdentity character={foreign} /> : null}
+      {foreign ? <ForeignIdentity character={foreign} servers={servers} /> : null}
 
       <span className={`text-xs ${STATUS_TONE[status] ?? 'text-muted-foreground'}`} data-testid="character-status" role="status">
         {t(STATUS_KEY[status])}
@@ -165,21 +168,22 @@ export function CharacterBar() {
       <ConflictDialog />
       <SaveDraftDialog open={dialog === 'save'} onClose={() => setDialog(null)} onSaved={(created) => open(created)} />
       {character && owned ? (
-        <ManageDialog open={dialog === 'manage'} character={character} onClose={() => setDialog(null)} onOpen={open} />
+        <ManageDialog open={dialog === 'manage'} character={character} servers={servers} label={label} onClose={() => setDialog(null)} onOpen={open} />
       ) : null}
     </section>
   )
 }
 
-function label(name: string, server?: string): string {
+function withServer(name: string, server?: string): string {
   return server ? `${name} · ${server}` : name
 }
 
-function ForeignIdentity({ character }: { character: SavedCharacter }) {
+function ForeignIdentity({ character, servers }: { character: SavedCharacter; servers: GameServer[] }) {
   const { t } = useTranslation()
+  const server = serverName(servers, character.serverId, t('characters.unknownServer'))
   return (
     <span className="text-xs text-muted-foreground" data-testid="character-identity">
-      {[character.server && `${t('characters.server')} ${character.server}`, character.uid && `${t('characters.uid')} ${character.uid}`]
+      {[server && `${t('characters.server')} ${server}`, character.uid && `${t('characters.uid')} ${character.uid}`]
         .filter(Boolean).join(' · ')}
     </span>
   )
@@ -255,13 +259,15 @@ function SaveDraftDialog({ open, onClose, onSaved }: { open: boolean; onClose: (
   )
 }
 
-function ManageDialog({ open, character, onClose, onOpen }: {
-  open: boolean; character: SavedCharacter; onClose: () => void; onOpen: (id: string | null) => void
+function ManageDialog({ open, character, servers, label, onClose, onOpen }: {
+  open: boolean; character: SavedCharacter; servers: GameServer[]
+  label: (name: string, serverId?: number) => string
+  onClose: () => void; onOpen: (id: string | null) => void
 }) {
   const { t } = useTranslation()
   const ctx = useCharacter()
   const [name, setName] = useState(character.name)
-  const [server, setServer] = useState(character.server ?? '')
+  const [serverId, setServerId] = useState(character.serverId ?? 0)
   const [uid, setUid] = useState(character.uid ?? '')
   const [showUid, setShowUid] = useState(character.showUid)
   const [shared, setShared] = useState(character.visibility === 'link')
@@ -272,7 +278,7 @@ function ManageDialog({ open, character, onClose, onOpen }: {
   // Re-seeded on every open, so a cancelled edit does not linger.
   const reset = () => {
     setName(character.name)
-    setServer(character.server ?? '')
+    setServerId(character.serverId ?? 0)
     setUid(character.uid ?? '')
     setShowUid(character.showUid)
     setShared(character.visibility === 'link')
@@ -296,7 +302,7 @@ function ManageDialog({ open, character, onClose, onOpen }: {
   const save = () => run(async () => {
     await ctx.updateMeta({
       name: name.trim() || character.name,
-      server: server.trim(),
+      serverId,
       uid: uid.trim(),
       showUid,
       visibility: shared ? 'link' : 'private',
@@ -325,7 +331,17 @@ function ManageDialog({ open, character, onClose, onOpen }: {
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={t('characters.server')}>
-              <Input value={server} maxLength={32} placeholder={t('characters.serverPlaceholder')} onChange={(event) => setServer(event.target.value)} data-testid="character-server" />
+              {/* Only the game's own player servers: the list comes from the client's
+                  ServerData, and the character keeps the id, never the name. A stored
+                  id the list no longer has stays selectable as itself until changed. */}
+              <select className={`${SELECT_CLASS} w-full`} value={serverId} onChange={(event) => setServerId(Number(event.target.value))}
+                data-testid="character-server">
+                <option value={0}>{t('characters.serverNone')}</option>
+                {servers.map((server) => <option key={server.id} value={server.id}>{server.name}</option>)}
+                {serverId !== 0 && !servers.some((server) => server.id === serverId)
+                  ? <option value={serverId}>{t('characters.unknownServer')}</option>
+                  : null}
+              </select>
             </Field>
             <Field label={t('characters.uid')} hint={t('characters.uidHint')}>
               <Input value={uid} maxLength={32} placeholder={t('characters.serverPlaceholder')} onChange={(event) => setUid(event.target.value)} data-testid="character-uid" />
@@ -346,7 +362,7 @@ function ManageDialog({ open, character, onClose, onOpen }: {
             <ol className="space-y-1" data-testid="character-order">
               {list.map((entry, index) => (
                 <li key={entry.id} className="flex items-center gap-2 text-sm">
-                  <span className={`min-w-0 flex-1 truncate ${entry.id === character.id ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>{label(entry.name, entry.server)}</span>
+                  <span className={`min-w-0 flex-1 truncate ${entry.id === character.id ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>{label(entry.name, entry.serverId)}</span>
                   <Button type="button" size="icon" variant="outline" className="size-8" disabled={busy || index === 0}
                     aria-label={t('characters.moveUp', { name: entry.name })} onClick={() => move(index, -1)}>
                     <IconArrowUp className="size-4" stroke={1.8} aria-hidden />

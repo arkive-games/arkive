@@ -17,7 +17,7 @@ whenever the dataset changes.
 ## Non-goals (designed for, not built)
 
 - A public, browsable or searchable character list, or per-server leaderboards. The schema
-  keeps `visibility` open for a `'public'` value and keeps `server` a plain indexable column,
+  keeps `visibility` open for a `'public'` value and keeps `server_id` a plain indexable column,
   but no list endpoint ships. Because no score is stored, a leaderboard will need a separate,
   recomputable derived index; it is never the source of truth.
 - Rotating a character's link. The link is the character's identity; to revoke, make the
@@ -97,7 +97,7 @@ migration stream and sqlc package, its own OpenAPI document, mounted at `/gmzz`,
 | `public_id` | `text` UNIQUE NOT NULL | 10-char base62, crypto-random; the only external id. |
 | `owner_id` | `uuid` NOT NULL | Names a `core.users` row; no foreign key (modules hold no cross-schema references). |
 | `name` | `text` NOT NULL | 1–32 chars after trimming. |
-| `server` | `text` NULL | ≤32, free text for now (frontend suggests known servers). |
+| `server_id` | `integer` NULL | A player server id from `data-gmzz/servers/servers.json` (emitted from the client's `ServerData` by `gmzz.servers`), never a name. Positive or NULL; the list itself is game data, so the frontend offers only listed ids and the backend checks only the shape. No free-text entry. |
 | `uid` | `text` NULL | ≤32, display only, never a key. |
 | `show_uid` | `boolean` NOT NULL DEFAULT false | Whether non-owners see `uid`. |
 | `visibility` | `text` NOT NULL DEFAULT `'link'` | CHECK `IN ('private','link')`; `'public'` later. |

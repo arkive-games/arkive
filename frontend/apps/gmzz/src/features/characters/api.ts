@@ -21,7 +21,8 @@ export type Visibility = 'private' | 'link'
 export type CharacterSummary = {
   id: string
   name: string
-  server?: string
+  /** A player server's id from `servers/servers.json`. */
+  serverId?: number
   uid?: string
   showUid: boolean
   visibility: Visibility
@@ -39,8 +40,8 @@ export type SavedCharacter = CharacterSummary & {
 
 export type CharacterMeta = {
   name?: string
-  /** An empty string clears it. */
-  server?: string
+  /** 0 clears it. */
+  serverId?: number
   uid?: string
   showUid?: boolean
   visibility?: Visibility
