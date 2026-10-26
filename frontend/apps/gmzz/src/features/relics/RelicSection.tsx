@@ -72,6 +72,9 @@ const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagAr
 /** A material position across the three slots, for swapping. */
 type Position = { groupId: number; index: number }
 
+/** A freshly added affix row: no stat picked, so it scores and counts as nothing. */
+const EMPTY_RELIC_AFFIX: ChosenRelicAffix = { stat: '', value: 0, mark: 0 }
+
 function affixFrom(rung: PoolAffix): ChosenRelicAffix {
   return { stat: rung.stat, value: rung.value, mark: rung.mark, affixId: rung.id, scaled: rung.scaled }
 }
@@ -85,15 +88,19 @@ function useGradeLabel() {
 type ChoiceOption = { value: string | number; label: string; disabled?: boolean }
 
 /** A native select; `groups` renders labelled option groups instead of a flat list. */
-function ChoiceSelect({ value, options = [], groups, label, testId, onChange }: {
+function ChoiceSelect({ value, options = [], groups, label, testId, placeholder, onChange }: {
   value: string | number; options?: ChoiceOption[]; groups?: { label: string; options: ChoiceOption[] }[]
-  label: string; testId: string; onChange: (raw: string) => void
+  label: string; testId: string
+  /** Shown, unselectable, while nothing is picked. */
+  placeholder?: string
+  onChange: (raw: string) => void
 }) {
   const render = (list: ChoiceOption[]) =>
     list.map((option) => <option key={option.value} value={option.value} disabled={option.disabled}>{option.label}</option>)
   return (
     <select value={value} className={SELECT_CLASS} aria-label={label} data-testid={testId}
       onChange={(event) => onChange(event.target.value)}>
+      {placeholder ? <option value="" disabled>{placeholder}</option> : null}
       {groups
         ? groups.filter((group) => group.options.length > 0).map((group) => (
           <optgroup key={group.label} label={group.label}>{render(group.options)}</optgroup>
@@ -188,8 +195,9 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
         <span className="flex w-4 justify-center" data-testid={`${testPrefix}-state-${index}`}>
           {inactive ? <BanIcon label={t('relic.affixInactive')} detail={t('relic.cappedOut', { cap })} /> : null}
         </span>
-        <ChoiceSelect value={rare ? `${RARE_PREFIX}${rare.id}` : `${STAT_PREFIX}${affix.stat}`}
+        <ChoiceSelect value={rare ? `${RARE_PREFIX}${rare.id}` : affix.stat === '' ? '' : `${STAT_PREFIX}${affix.stat}`}
           label={t('relic.affixStat')} testId={`${testPrefix}-stat-${index}`}
+          placeholder={affix.stat === '' ? t('relic.affixPick') : undefined}
           groups={[
             {
               label: t('relic.affixOrdinary'),
@@ -422,13 +430,9 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
     ?? t('relic.materialTypeOption', { group: relics.groupNames[String(material.type)] ?? '' })
 
   // The first ordinary stat this material does not hold yet.
-  const addAffix = () => {
-    const taken = usedGroups(pool, affixes)
-    const stat = poolStats(pool).find((entry) => !taken.groups.has(poolRungs(pool, entry)[0]?.groupId ?? -1))
-    const next = stat === undefined ? undefined : poolRungs(pool, stat)[0]
-    if (next) onAffixes([...affixes, affixFrom(next)])
-  }
-  const canAdd = affixes.length < max && poolStats(pool).some((stat) => !usedGroups(pool, affixes).groups.has(poolRungs(pool, stat)[0]?.groupId ?? -1))
+  // A new row is empty: nothing is picked for the player.
+  const addAffix = () => onAffixes([...affixes, EMPTY_RELIC_AFFIX])
+  const canAdd = affixes.length < max
 
   return (
     <>
@@ -651,7 +655,11 @@ function restoreSlot(relics: Relics, groupId: number, stored: StoredRelicSlot | 
     for (const affix of lists[at] ?? []) {
       const source = pool.find((entry) => entry.id === affix.affixId)
         ?? pool.find((entry) => entry.stat === affix.stat && entry.value === affix.value && entry.mark === affix.mark)
-      if (!source) continue
+      if (!source) {
+        // An empty row the player added but has not filled yet stays.
+        if (affix.stat === '') kept.push(EMPTY_RELIC_AFFIX)
+        continue
+      }
       const taken = usedGroups(pool, kept)
       if (taken.groups.has(source.groupId) || (taken.rare && isRareAffix(source))) continue
       kept.push(affixFrom(source))

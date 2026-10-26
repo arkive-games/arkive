@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   autoAllocate,
+  carryTalents,
   clampLevel,
   talentLimits,
   evaluateTalents,
@@ -150,5 +151,17 @@ describe('progression limits', () => {
     expect(evaluateTalents(t, levels, limits).total).toBe(11920)
     const early = autoAllocate(t, talentLimits(t, 10200))
     expect([10100, 10101, 10102, 10103, 10104].map((k) => early[k])).toEqual([10, 10, 10, 10, 0])
+  })
+})
+
+describe('carryTalents', () => {
+  it('moves the levels to the same tree position and node positions of the new pathway', () => {
+    const draft = { treeId: 101, levels: { 10100: 5, 10101: 3 } }
+    const carried = carryTalents(TALENTS, draft, 1200001, 1200002)
+    expect(carried.treeId).toBe(201)
+    expect(carried.levels[20100]).toBe(5)
+    expect(carried.levels[20101]).toBe(3)
+    // The old keys stay, so switching back restores them.
+    expect(carryTalents(TALENTS, carried, 1200002, 1200001).levels[10100]).toBe(5)
   })
 })

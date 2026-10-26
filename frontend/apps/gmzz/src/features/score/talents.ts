@@ -243,3 +243,27 @@ export function autoAllocate(tree: TalentTree, limits: TalentLimits | null): Rec
   }
   return out
 }
+
+/**
+ * A talent draft carried to another pathway. Trees differ per pathway but are
+ * built alike, so the draft moves to the tree in the same position among the
+ * new pathway's trees, and each node's level to the node in the same position
+ * of that tree. Nothing the player entered is dropped for having been keyed
+ * to the old pathway's nodes.
+ */
+export function carryTalents(talents: Talents, draft: TalentDraft, from: number | null, to: number | null): TalentDraft {
+  const fromTree = treeFor(talents, from, draft.treeId)
+  if (!fromTree) return draft
+  const index = treesFor(talents, from).findIndex((tree) => tree.id === fromTree.id)
+  const toTrees = treesFor(talents, to)
+  const toTree = toTrees[index] ?? toTrees[0]
+  if (!toTree) return draft
+  const fromNodes = normalNodes(fromTree)
+  const toNodes = normalNodes(toTree)
+  const levels: Record<string, number> = { ...draft.levels }
+  fromNodes.forEach((node, at) => {
+    const target = toNodes[at]
+    if (target) levels[String(target.key)] = draft.levels[String(node.key)] ?? 0
+  })
+  return { treeId: toTree.id, levels }
+}

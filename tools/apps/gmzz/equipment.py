@@ -415,6 +415,17 @@ def suit_level_scores(excel: Path) -> dict:
     return out
 
 
+#: A contaminated rung lowers its stat by a small amount and costs Mark. The
+#: decoded table ships rows like 攻击 +19185 at Mark 1010827104 for this tier —
+#: bytes that did not decode, not rungs — so a row is kept only when its value
+#: is negative and its Mark is within the range real rungs use.
+MAX_RUNG_MARK = 100_000
+
+
+def _plausible_contaminated(mark, value) -> bool:
+    return isinstance(value, (int, float)) and value < 0 and isinstance(mark, (int, float)) and abs(mark) <= MAX_RUNG_MARK
+
+
 def affixes(excel: Path, strings: dict) -> dict:
     """The reforge affix pool, per slot, per tier, as a Mark ladder.
 
@@ -438,6 +449,7 @@ def affixes(excel: Path, strings: dict) -> dict:
     # slot -> tier -> family -> {mark: value}
     pool: dict = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
     stat_keys: dict[str, str] = {}
+    dropped = 0
     for word in words:
         if CURRENT_SET not in (word.get("Set") or []):
             continue
@@ -455,7 +467,14 @@ def affixes(excel: Path, strings: dict) -> dict:
             stat_keys[family] = stat
             for slot, gids in per_slot.items():
                 if gid in gids:
-                    pool[slot][tier_of(gid)][family][word["Mark"]] = amount[0]
+                    tier = tier_of(gid)
+                    if tier == "contaminated" and not _plausible_contaminated(word["Mark"], amount[0]):
+                        dropped += 1
+                        continue
+                    pool[slot][tier][family][word["Mark"]] = amount[0]
+
+    if dropped:
+        print(f"{WORD_TABLE}: dropped {dropped} contaminated rung(s) that did not decode to a negative value")
 
     # Each ladder is a LIST of [mark, value], richest first — not a mark-keyed
     # object. `write_json` sorts keys, and sorted stringified numbers put "1000"

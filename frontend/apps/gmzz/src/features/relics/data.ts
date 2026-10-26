@@ -316,6 +316,7 @@ export function activeMaterialIndexes(slot: Pick<RelicSlotState, 'groupId' | 'ma
  * Which affixes are switched off when a material carries more than the grade
  * allows, as the game does (it marks them with a prohibition sign): from the
  * last affix backwards, skipping rare words, which are never switched off.
+ * A row with no stat picked yet is neither counted nor switched off.
  */
 export function inactiveAffixes(
   affixes: ChosenRelicAffix[],
@@ -323,9 +324,9 @@ export function inactiveAffixes(
   isRare: (affix: ChosenRelicAffix) => boolean = () => false,
 ): boolean[] {
   const off = affixes.map(() => false)
-  let over = affixes.length - Math.max(0, cap)
+  let over = affixes.filter((affix) => affix.stat !== '').length - Math.max(0, cap)
   for (let index = affixes.length - 1; index >= 0 && over > 0; index--) {
-    if (isRare(affixes[index])) continue
+    if (affixes[index].stat === '' || isRare(affixes[index])) continue
     off[index] = true
     over--
   }
@@ -448,7 +449,7 @@ export function evaluateRelicSlot(
       const source = pool.find((entry) => entry.id === affix.affixId)
       return source !== undefined && isRareAffix(source)
     })
-    const effective = affixes.filter((_, at) => !inactive[at])
+    const effective = affixes.filter((affix, at) => !inactive[at] && affix.stat !== '')
     const applies = active.includes(index)
     const rung = ladder.find((r) => r.affixCount === effective.length)
     return {

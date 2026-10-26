@@ -11,7 +11,6 @@ import { useTranslation } from 'react-i18next'
 import {
   activeSuits,
   equipmentIconUrl,
-  affixBounds,
   averageProgress,
   clampAffixValue,
   counterpartFor,
@@ -21,8 +20,9 @@ import {
   maxAffixesFor,
   maxStageFor,
   newPiece,
-  progressBounds,
-  refineFromProgress,
+  clampRefine,
+  familiesByGrace,
+  rungsFor,
   scoredSlots,
   statLabel,
   statLines,
@@ -38,6 +38,7 @@ import {
   type Grace,
   type PieceResult,
   type PieceState,
+  type Rung,
   type ScoredAffix,
   type StatRange,
   type SuitTier,
@@ -170,10 +171,11 @@ function sanitizePiece(equipment: Equipment, piece: PieceState, professionId: nu
     slot: piece.slot,
     itemId: worn?.id ?? null,
     enhanceStage,
-    refinePercent: enhanceStage === 0 ? 0 : Math.min(Math.max(Math.trunc(piece.refinePercent), 0), 100),
+    refinePercent: clampRefine(piece.refinePercent),
     affixes: piece.affixes
-      .filter((affix) => families.includes(affix.family))
-      .slice(0, maxAffixesFor(equipment, piece.slot))
+      // An empty family is a freshly added row with nothing picked yet.
+      .filter((affix) => affix.family === '' || families.includes(affix.family))
+      .slice(0, maxAffixesFor(equipment, piece.slot, worn))
       .map((affix) => ({ family: affix.family, value: clampAffixValue(equipment, piece.slot, affix.family, readInt(affix.value, -SCORE_CAP, SCORE_CAP)) })),
   }
 }
@@ -186,14 +188,8 @@ function readInt(raw: string | number, min: number, max: number): number {
   return Math.min(Math.max(whole, min), max)
 }
 
-/** A fresh affix of the slot's first family, at the top of its ladder or 0 if it has none. */
-function affixFor(equipment: Equipment, slot: number, family?: string): ChosenAffix {
-  const families = familiesFor(equipment, slot)
-  const chosen = family !== undefined && families.includes(family) ? family : families[0] ?? ''
-  const ladder = equipment.affixes.bySlot[String(slot)]
-  const top = ladder?.extraordinary?.[chosen]?.[0]?.[1] ?? ladder?.normal?.[chosen]?.[0]?.[1] ?? 0
-  return { family: chosen, value: top }
-}
+/** A freshly added affix: nothing picked yet, so it scores nothing until a stat is chosen. */
+const EMPTY_AFFIX: ChosenAffix = { family: '', value: 0 }
 
 /** The PVE/PVP marker for an item's suit; empty for an unaffiliated item. */
 function suitKind(t: TFunction, suit: Suit | null): string {
@@ -300,45 +296,36 @@ function Picker({
 }
 
 /**
- * Stage and badge-percentage sliders, the pair the game's own panel shows,
- * stacked, with the score they come to above them.
- *
- * The stage track has every step marked and labelled "+N" above it, the
- * current one picked out; the badge-percentage track below runs over the
- * stage's window of the whole-ladder percentage (25..37 at +3 of 8), which is
- * what is printed under the badge, with its two ends and the current value
- * labelled underneath. So the two tracks sit together in the middle with their
- * scales outermost, and the scales are also the readings — there is no
- * separate reading to keep in step with them. The in-stage refinement that is
- * stored is derived from the badge value. At +0 the window is empty and the
- * second slider is disabled, since there is no stage being refined.
+ * The enhancement stage and the refinement (精炼度), each its own control.
+ * They are unrelated in game: the stage runs +0..+N with every step labelled,
+ * and the refinement runs 0..100 whatever the stage, with a box beside the
+ * slider for an exact value.
  */
 function EnhanceSliders({
   stage,
-  badge,
+  refine,
   maxStage,
   testIdPrefix,
   score,
   onStage,
-  onBadge,
+  onRefine,
 }: {
   stage: number
-  badge: number
+  refine: number
   maxStage: number
   testIdPrefix: string
   /** Omitted for the batch sliders, which drive every piece and have no score of their own. */
   score?: number
   onStage: (stage: number) => void
-  onBadge: (badge: number) => void
+  onRefine: (refine: number) => void
 }) {
   const { t } = useTranslation()
-  const bounds = progressBounds(maxStage, stage)
   const stageText = (value: number) => t('equip.stageOption', { stage: value })
   const percentText = (value: number) => t('equip.percentValue', { value })
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 space-y-1.5">
       {score !== undefined ? (
-        <div className={`mb-1.5 ${TYPE.value}`} data-testid={`${testIdPrefix}-enhance-score`}>
+        <div className={TYPE.value} data-testid={`${testIdPrefix}-enhance-score`}>
           {t('equip.enhanceDerived', { score: score.toLocaleString() })}
         </div>
       ) : null}
@@ -355,18 +342,28 @@ function EnhanceSliders({
         testId={`${testIdPrefix}-stage`}
         onChange={onStage}
       />
-      <RangeField
-        label={t('equip.refinePercent')}
-        min={bounds.min}
-        max={bounds.max}
-        value={badge}
-        valueText={percentText(badge)}
-        minLabel={percentText(bounds.min)}
-        maxLabel={percentText(bounds.max)}
-        showValue
-        testId={`${testIdPrefix}-refine`}
-        onChange={onBadge}
-      />
+      <div className="grid grid-cols-[minmax(0,1fr)_3.75rem] items-center gap-2">
+        <RangeField
+          label={t('equip.refinePercent')}
+          min={0}
+          max={100}
+          value={refine}
+          valueText={percentText(refine)}
+          minLabel={percentText(0)}
+          maxLabel={percentText(100)}
+          showValue
+          testId={`${testIdPrefix}-refine`}
+          onChange={onRefine}
+        />
+        <NumberField
+          value={refine}
+          min={0}
+          max={100}
+          label={t('equip.refinePercent')}
+          testId={`${testIdPrefix}-refine-value`}
+          onValue={onRefine}
+        />
+      </div>
     </div>
   )
 }
@@ -381,12 +378,6 @@ function BonusTier({ equipment, tier, title }: { equipment: Equipment; tier: Sui
       </div>
     </div>
   )
-}
-
-/** The badge percentage as the game prints it, kept inside the stage's window. */
-function badgeOf(progressPercent: number, maxStage: number, stage: number): number {
-  const bounds = progressBounds(maxStage, stage)
-  return Math.min(bounds.max, Math.max(bounds.min, Math.floor(progressPercent)))
 }
 
 function IconPlaceholder({ item }: { item: EquipItem | null }) {
@@ -495,34 +486,26 @@ function BrandNote({ result }: { result: PieceResult }) {
 
 type PieceProps = {
   equipment: Equipment
+  graces: Grace[]
   slotName: string
   kind: string
   result: PieceResult
   onPatch: (patch: Partial<PieceState>) => void
   onOpenPicker: () => void
 }
-type PieceControlProps = Pick<PieceProps, 'equipment' | 'result' | 'onPatch'>
-
-/** The refinement a freshly chosen stage starts at: complete, or none at +0. */
-function refineForStage(stage: number): number {
-  return stage > 0 ? 100 : 0
-}
+type PieceControlProps = Pick<PieceProps, 'equipment' | 'graces' | 'result' | 'onPatch'>
 
 function EnhanceControls({ equipment, result, onPatch }: PieceControlProps) {
-  const { slot, enhanceStage } = result.state
-  const maxStage = maxStageFor(equipment, slot)
-
+  const { slot, enhanceStage, refinePercent } = result.state
   return (
     <EnhanceSliders
       stage={enhanceStage}
-      badge={badgeOf(result.progressPercent, maxStage, enhanceStage)}
-      maxStage={maxStage}
+      refine={clampRefine(refinePercent)}
+      maxStage={maxStageFor(equipment, slot)}
       testIdPrefix={`equip-${slot}`}
       score={result.enhanceScore}
-      // A stage is picked at its top — "+3" reads 37%, the figure a player
-      // quotes — and the refinement slider then walks it down if need be.
-      onStage={(stage) => onPatch({ enhanceStage: stage, refinePercent: refineForStage(stage) })}
-      onBadge={(badge) => onPatch({ refinePercent: refineFromProgress(maxStage, enhanceStage, badge) })}
+      onStage={(stage) => onPatch({ enhanceStage: stage })}
+      onRefine={(refine) => onPatch({ refinePercent: clampRefine(refine) })}
     />
   )
 }
@@ -589,6 +572,7 @@ function AffixField({
   slot,
   index,
   affix,
+  families,
   onChange,
   onRemove,
 }: {
@@ -596,44 +580,56 @@ function AffixField({
   slot: number
   index: number
   affix: ScoredAffix
+  /** The slot's families, those a grace can be made of first. */
+  families: string[]
   onChange: (next: ChosenAffix) => void
   onRemove: () => void
 }) {
   const { t } = useTranslation()
-  const bounds = affixBounds(equipment, slot, affix.family)
-  // The span the field will settle into, as its placeholder and its title: the
-  // player sees what the stat can roll before typing, and after, if the number
-  // moved on blur, why.
-  const spanText = [bounds.negative, bounds.positive]
-    .flatMap((span) => (span ? [`${span.min}~${span.max}`] : []))
-    .join(' / ')
+  const rungs = affix.family === '' ? [] : rungsFor(equipment, slot, affix.family)
+  // The rung this value stands on: the one the classifier matched.
+  const current = rungs.find(({ tier, rung }) => tier === affix.tier && rung[0] === affix.mark)
+  const rungKey = (tier: AffixTier, rung: Rung) => `${tier}:${rung[1]}`
   return (
     <div className={AFFIX_ROW_CLASS} data-testid={`equip-affix-${slot}-${index}`}>
-      <TierPip tier={affix.tier} />
+      {affix.family === '' ? <span className="w-3" aria-hidden /> : <TierPip tier={affix.tier} />}
       <Picker
         value={affix.family}
         label={t('equip.affixFamily')}
         testId={`equip-affix-family-${slot}-${index}`}
         className={COMPACT_SELECT_CLASS}
-        // The value follows into the new family's bounds, so a 攻击 308 does not linger as an impossible 技能增强 308.
-        onValue={(raw) => onChange({ family: raw, value: clampAffixValue(equipment, slot, raw, affix.value) })}
+        // A new stat starts on its best rung, the one a player is usually reaching for.
+        onValue={(raw) => onChange({ family: raw, value: raw === '' ? 0 : rungsFor(equipment, slot, raw)[0]?.rung[1] ?? 0 })}
       >
-        {familiesFor(equipment, slot).map((family) => (
+        <option value="">{t('equip.affixPick')}</option>
+        {families.map((family) => (
           <option key={family} value={family}>{family}</option>
         ))}
       </Picker>
-      <span title={spanText} className="min-w-0">
-        <NumberField
-          value={affix.value}
-          min={bounds.negative?.min ?? bounds.positive?.min ?? -SCORE_CAP}
-          max={bounds.positive?.max ?? bounds.negative?.max ?? SCORE_CAP}
-          placeholder={bounds.positive ? `${bounds.positive.min}~${bounds.positive.max}` : '0'}
-          label={t('equip.affixValue')}
-          testId={`equip-affix-value-${slot}-${index}`}
-          onValue={(value) => onChange({ family: affix.family, value })}
-          commit={(value) => clampAffixValue(equipment, slot, affix.family, value)}
-        />
-      </span>
+      <Picker
+        value={current ? rungKey(current.tier, current.rung) : ''}
+        label={t('equip.affixValue')}
+        testId={`equip-affix-value-${slot}-${index}`}
+        className={COMPACT_SELECT_CLASS}
+        onValue={(raw) => {
+          const next = rungs.find(({ tier, rung }) => rungKey(tier, rung) === raw)
+          if (next) onChange({ family: affix.family, value: next.rung[1] })
+        }}
+      >
+        {current ? null : <option value="">—</option>}
+        {(['extraordinary', 'normal', 'contaminated'] as AffixTier[]).map((tier) => {
+          const list = rungs.filter((entry) => entry.tier === tier)
+          return list.length === 0 ? null : (
+            <optgroup key={tier} label={t(TIER_PIP[tier].labelKey)}>
+              {list.map(({ rung }) => (
+                <option key={rungKey(tier, rung)} value={rungKey(tier, rung)}>
+                  {t('equip.rungOption', { value: rung[1] > 0 ? `+${rung[1]}` : String(rung[1]), mark: rung[0] })}
+                </option>
+              ))}
+            </optgroup>
+          )
+        })}
+      </Picker>
       <span className={`whitespace-nowrap text-right ${TYPE.valueMuted}`} data-testid={`equip-affix-mark-${slot}-${index}`}>
         {t('equip.affixMark', { mark: affix.mark })}
       </span>
@@ -657,11 +653,12 @@ function AffixField({
  * normal ladder is an extraordinary one, and the pip shows which the number
  * came to.
  */
-function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
+function AffixEditor({ equipment, graces, result, onPatch }: PieceControlProps) {
   const { t } = useTranslation()
   const { slot } = result.state
   const affixes = result.affixes
-  const maxAffixes = maxAffixesFor(equipment, slot)
+  const maxAffixes = maxAffixesFor(equipment, slot, result.item)
+  const families = familiesByGrace(equipment, graces, slot)
   const write = (next: ChosenAffix[]) => onPatch({ affixes: next })
   const plain = (list: ScoredAffix[]): ChosenAffix[] => list.map(({ family, value }) => ({ family, value }))
 
@@ -679,6 +676,7 @@ function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
               slot={slot}
               index={index}
               affix={affix}
+              families={families}
               onChange={(next) => write(plain(affixes).map((entry, at) => (at === index ? next : entry)))}
               onRemove={() => write(plain(affixes).filter((_, at) => at !== index))}
             />
@@ -686,7 +684,7 @@ function AffixEditor({ equipment, result, onPatch }: PieceControlProps) {
           <button
             type="button"
             disabled={affixes.length >= maxAffixes}
-            onClick={() => write([...plain(affixes), affixFor(equipment, slot)])}
+            onClick={() => write([...plain(affixes), EMPTY_AFFIX])}
             className={`${BUTTON_CLASS} h-7 justify-self-start px-2`}
             data-testid={`equip-affix-add-${slot}`}
           >
@@ -718,9 +716,9 @@ function RowHeader() {
   )
 }
 
-function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: PieceProps) {
+function PieceRow({ equipment, graces, slotName, kind, result, onPatch, onOpenPicker }: PieceProps) {
   const { t } = useTranslation()
-  const controls: PieceControlProps = { equipment, result, onPatch }
+  const controls: PieceControlProps = { equipment, graces, result, onPatch }
   const typeName = equipment.types.find((type) => type.id === result.item?.typeId)?.name ?? slotName
   return (
     <article
@@ -754,9 +752,9 @@ function PieceRow({ equipment, slotName, kind, result, onPatch, onOpenPicker }: 
   )
 }
 
-function PieceCard({ equipment, slotName, kind, result, onPatch, onOpenPicker }: PieceProps) {
+function PieceCard({ equipment, graces, slotName, kind, result, onPatch, onOpenPicker }: PieceProps) {
   const { t } = useTranslation()
-  const controls: PieceControlProps = { equipment, result, onPatch }
+  const controls: PieceControlProps = { equipment, graces, result, onPatch }
   const typeName = equipment.types.find((type) => type.id === result.item?.typeId)?.name ?? slotName
 
   return (
@@ -900,17 +898,16 @@ export default function EquipmentSection({
   const patchPiece = (index: number, patch: Partial<PieceState>) =>
     writePieces(pieces.map((piece, at) => (at === index ? { ...piece, ...patch } : piece)))
   const globalMaxStage = equipment.enhancement.maxStage
-  // Every piece is converted against its own ladder, so a slot with a shorter
-  // one is capped at its end rather than set past it.
-  const applyBatch = (stage: number, badge: number) => {
+  // A slot with a shorter ladder is capped at its own end rather than set past it.
+  const applyBatch = (stage: number, refine: number) => {
     setDraft((prev) => ({
       ...prev,
-      batch: { stage, badge },
-      pieces: pieces.map((piece) => {
-        const maxStage = maxStageFor(equipment, piece.slot)
-        const enhanceStage = Math.min(stage, maxStage)
-        return { ...piece, enhanceStage, refinePercent: refineFromProgress(maxStage, enhanceStage, badge) }
-      }),
+      batch: { stage, badge: refine },
+      pieces: pieces.map((piece) => ({
+        ...piece,
+        enhanceStage: Math.min(stage, maxStageFor(equipment, piece.slot)),
+        refinePercent: clampRefine(refine),
+      })),
     }))
   }
 
@@ -946,12 +943,11 @@ export default function EquipmentSection({
         <Cell label={t('equip.batchEnhance')}>
           <EnhanceSliders
             stage={batch.stage}
-            badge={batch.badge}
+            refine={clampRefine(batch.badge)}
             maxStage={globalMaxStage}
             testIdPrefix="equip-batch"
-            // Picked at its top, like a single piece's stage.
-            onStage={(stage) => applyBatch(stage, progressBounds(globalMaxStage, stage).max)}
-            onBadge={(badge) => applyBatch(batch.stage, badge)}
+            onStage={(stage) => applyBatch(stage, batch.badge)}
+            onRefine={(refine) => applyBatch(batch.stage, refine)}
           />
         </Cell>
 
@@ -1048,7 +1044,7 @@ export default function EquipmentSection({
           const slotName = slotNames.get(result.state.slot) ?? ''
           const onPatch = (patch: Partial<PieceState>) => patchPiece(index, patch)
           const props: PieceProps = {
-            equipment, slotName, result, onPatch,
+            equipment, graces, slotName, result, onPatch,
             kind: kindOf(result.item),
             onOpenPicker: () => setPickerSlot(result.state.slot),
           }

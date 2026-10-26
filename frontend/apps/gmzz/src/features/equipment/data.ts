@@ -203,6 +203,47 @@ export function familiesFor(equipment: Equipment, slot: number): string[] {
   return families
 }
 
+/**
+ * The slot's families with those a grace can be made of first, so the stats
+ * that lead somewhere are at the top of the picker.
+ */
+export function familiesByGrace(equipment: Equipment, graces: Grace[], slot: number): string[] {
+  const useful = new Set(graces.filter((grace) => grace.slot === slot)
+    .flatMap((grace) => grace.conditions.filter((condition) => condition.count > 0).map((condition) => condition.stat)))
+  const families = familiesFor(equipment, slot)
+  return [...families.filter((family) => useful.has(family)), ...families.filter((family) => !useful.has(family))]
+}
+
+/**
+ * Every rung a family can roll in a slot, as the picker lists them: the
+ * extraordinary rungs, then the normal, then the contaminated, richest first
+ * in each. An affix is always exactly one of these.
+ */
+export function rungsFor(equipment: Equipment, slot: number, family: string): { tier: AffixTier; rung: Rung }[] {
+  // A ladder can repeat a value at two Marks; the card only shows the value, and
+  // `classifyAffix` settles such a tie on the richer Mark, so that is the one listed.
+  return (['extraordinary', 'normal', 'contaminated'] as AffixTier[]).flatMap((tier) => {
+    const byValue = new Map<number, Rung>()
+    for (const rung of tierLadder(equipment, slot, tier, family)) {
+      const prior = byValue.get(rung[1])
+      if (!prior || rung[0] > prior[0]) byValue.set(rung[1], rung)
+    }
+    return [...byValue.values()].sort((a, b) => b[1] - a[1]).map((rung) => ({ tier, rung }))
+  })
+}
+
+/**
+ * A tier's ladder as the picker offers it. The contaminated ladder does not
+ * survive decoding (see `tools/apps/gmzz/equipment.py`), so where a slot has
+ * none it mirrors the normal rungs below zero, Mark negated — the reading
+ * `classifyAffix` already gives a negative value.
+ */
+function tierLadder(equipment: Equipment, slot: number, tier: AffixTier, family: string): Rung[] {
+  const ladder = ladderFor(equipment, slot, tier, family)
+  if (tier !== 'contaminated' || ladder.length > 0) return ladder
+  return ladderFor(equipment, slot, 'normal', family).map(([mark, value]): Rung => [-mark, -value])
+}
+
 export function ladderFor(
   equipment: Equipment,
   slot: number,
@@ -262,6 +303,7 @@ export function nearestRung(ladder: Rung[], value: number): Rung | null {
  */
 export function classifyAffix(equipment: Equipment, slot: number, affix: ChosenAffix): ScoredAffix {
   const { family, value } = affix
+  if (family === '') return { ...affix, tier: 'normal', mark: 0 }
   if (value < 0) {
     const ladder = ladderFor(equipment, slot, 'contaminated', family)
     if (ladder.length > 0) {
@@ -360,17 +402,25 @@ export function counterpartFor(equipment: Equipment, item: EquipItem, profession
 }
 
 /**
- * How many affixes a piece in this slot can carry: five on a weapon, four
- * anywhere else. The client's constants put the fifth word behind the mythic
+ * The weapon series that carries a fifth affix. Not every mythic weapon does:
+ * 夜幕之颂 is quality 7 like 隐秘之拥 but rolls four, so the series is named
+ * rather than inferred from the quality.
+ */
+export const FIVE_AFFIX_SERIES = ['隐秘之拥']
+
+/**
+ * How many affixes a piece in this slot can carry: five on a 隐秘之拥 weapon
+ * (`FIVE_AFFIX_SERIES`), four anywhere else. The client's constants put the fifth word behind the mythic
  * weapon (`RANDOM_WORD_LIMIT_WHEN_NOTWARE_MYTHWEAPON` is 4, and only
  * `RANDOM_WORD_POSITION_5` reaches five), so the weapon is the only slot that
  * gets it. The weapon slot is read off the pathways rather than assumed to be
  * slot 1: it is whichever slot the class-locked weapon subtypes belong to.
  */
-export function maxAffixesFor(equipment: Equipment, slot: number): number {
+export function maxAffixesFor(equipment: Equipment, slot: number, item?: EquipItem | null): number {
   const weaponTypes = new Set(equipment.professions.flatMap((profession) => profession.weaponTypeIds))
   const isWeaponSlot = equipment.types.some((type) => type.slot === slot && weaponTypes.has(type.id))
-  return isWeaponSlot ? 5 : 4
+  const series = item != null && FIVE_AFFIX_SERIES.some((name) => item.name.startsWith(name))
+  return isWeaponSlot && series ? 5 : 4
 }
 
 /* ------------------------------------------------------------------- grace */
@@ -418,9 +468,9 @@ export function graceFor(graces: Grace[], slot: number, affixes: Pick<ScoredAffi
 export type PieceState = {
   slot: number
   itemId: number | null
-  /** 0..maxStage — the stage being refined; stages below it are complete. */
+  /** 0..maxStage — the enhancement stage; every stage up to it is complete. */
   enhanceStage: number
-  /** 0..100, how far `enhanceStage` itself has come. Meaningless at +0, where nothing is being refined. */
+  /** 0..100 — the piece's refinement (精炼度), independent of the stage. */
   refinePercent: number
   affixes: ChosenAffix[]
 }
@@ -431,9 +481,9 @@ export type PieceResult = {
   brand: Brand | null
   /** The item's own 装备基础, 0 for an empty slot. */
   baseScore: number
-  /** The complete stages' mark plus the refined share of the current one. Proven against the game at "+3 37%" = 240. */
+  /** The marks of every stage reached. Proven against the game at +3 = 240. */
   enhanceScore: number
-  /** Per-stat totals the enhancement grants, the current stage counted by its refinement. */
+  /** Per-stat totals the enhancement grants. */
   enhanceStats: [string, number][]
   /** The chosen affixes, each with the tier and Mark its value works out to. */
   affixes: ScoredAffix[]
@@ -448,7 +498,7 @@ export type PieceResult = {
   grace: Grace | null
   /** baseScore + enhanceScore + reforgeScore. */
   total: number
-  /** Overall enhancement progress, the figure the game shows under the badge. */
+  /** The piece's refinement, 0..100: what the refinement set averages. */
   progressPercent: number
 }
 
@@ -535,88 +585,30 @@ export function maxStageFor(equipment: Equipment, slot: number, season?: number)
   return bodyFor(equipment, slot, season)?.stages.length ?? equipment.enhancement.maxStage
 }
 
-/** How far along the ladder a piece is, in stages: the complete ones plus the refined share of the current one. */
-function stagesDone(totalStages: number, stage: number, refinePercent: number): number {
-  const current = Math.min(stage, totalStages)
-  if (current <= 0) return 0
-  return current - 1 + Math.min(100, Math.max(0, refinePercent)) / 100
-}
-
 /**
- * Enhancement score and stats at a stage with its refinement.
+ * Enhancement score and stats at a stage.
  *
- * "+3" is a piece whose stages 1 and 2 are complete and whose stage 3 is the one
- * being refined, so stage 3's mark accrues with the refinement: fully refined it
- * is worth exactly three stages (240, verified in game), freshly reached it is
- * worth little more than "+2". At +0 nothing is being refined and nothing scores.
+ * Every stage up to and including the current one counts whole: "+3" is worth
+ * exactly three stages (240, verified in game). Refinement (精炼度) is a
+ * separate 0–100 figure with no bearing on the stage; it feeds only the
+ * whole-loadout refinement set (see `averageProgress`).
  */
-export function enhanceOf(
-  body: EnhanceBody | null,
-  stage: number,
-  refinePercent = 100,
-): { score: number; stats: [string, number][] } {
+export function enhanceOf(body: EnhanceBody | null, stage: number): { score: number; stats: [string, number][] } {
   if (!body) return { score: 0, stats: [] }
-  const done = stagesDone(body.stages.length, stage, refinePercent)
+  const done = Math.min(Math.max(0, stage), body.stages.length)
   let score = 0
   const totals = new Map<string, number>()
   for (const rung of body.stages) {
-    // A complete stage counts whole, the current one by its refinement, the rest not at all.
-    const share = Math.min(1, Math.max(0, done - (rung.stage - 1)))
-    if (share <= 0) continue
-    score += rung.mark * share
-    for (const [key, amount] of rung.stats) totals.set(key, (totals.get(key) ?? 0) + amount * share)
+    if (rung.stage > done) continue
+    score += rung.mark
+    for (const [key, amount] of rung.stats) totals.set(key, (totals.get(key) ?? 0) + amount)
   }
-  return { score: Math.round(score), stats: [...totals] }
+  return { score, stats: [...totals] }
 }
 
-/**
- * Overall enhancement progress, the percentage the game prints under the badge.
- *
- * It is progress across the whole ladder: the stages complete plus the current
- * stage's own refinement, over the ladder's length. So "+3" of 8 runs from 25%
- * (stage 3 just reached) up to 37.5% (stage 3 fully refined), which the game
- * floors to the "37%" it shows beside a fully refined +3.
- */
-export function progressOf(body: EnhanceBody | null, stage: number, refinePercent: number): number {
-  const total = body?.stages.length ?? 0
-  if (total === 0) return 0
-  return (stagesDone(total, stage, refinePercent) / total) * 100
-}
-
-/**
- * The badge percentages a stage can show, as the game prints them (floored).
- *
- * Each stage owns a window of the whole-ladder percentage: +3 of 8 runs
- * 25%..37%, and 37% is the most a +3 can read — one more point of refinement
- * and the badge says +4. So a slider for the refinement is bounded by the stage
- * rather than running 0..100 on its own. At +0 there is no refinement to show.
- */
-export function progressBounds(totalStages: number, stage: number): { min: number; max: number } {
-  const current = Math.min(stage, totalStages)
-  if (totalStages <= 0 || current <= 0) return { min: 0, max: 0 }
-  return {
-    min: Math.floor(((current - 1) / totalStages) * 100),
-    max: Math.floor((current / totalStages) * 100),
-  }
-}
-
-/**
- * The in-stage refinement that puts the badge at `progress`% — the inverse of
- * `progressOf` after the game's flooring.
- *
- * A floored badge covers a range of refinements, and the highest one is taken:
- * the window's top value is what a fully refined stage reads, so it has to map
- * back to 100 for "+3 37%" to score its three whole stages. The result is
- * clamped into 1..100, so a badge outside the stage's window lands on the
- * nearest end rather than moving the stage; +0 has no refinement and gives 0.
- */
-export function refineFromProgress(totalStages: number, stage: number, progress: number): number {
-  const current = Math.min(stage, totalStages)
-  if (totalStages <= 0 || current <= 0) return 0
-  const span = 100 / totalStages
-  // The smallest refinement that would already floor to the next badge, less one.
-  const next = Math.ceil(((progress + 1) / span - (current - 1)) * 100 - 1e-9)
-  return Math.min(100, Math.max(1, next - 1))
+/** A refinement as stored: a whole percentage, 0..100. */
+export function clampRefine(refinePercent: number): number {
+  return Number.isFinite(refinePercent) ? Math.min(100, Math.max(0, Math.trunc(refinePercent))) : 0
 }
 
 export function evaluatePiece(
@@ -628,11 +620,7 @@ export function evaluatePiece(
   const item = equipment.items.find((i) => i.id === state.itemId) ?? null
   const brand = item?.brandId != null ? equipment.brands.find((b) => b.id === item.brandId) ?? null : null
   const body = bodyFor(equipment, state.slot, season)
-  const { score: enhanceScore, stats: enhanceStats } = enhanceOf(
-    body,
-    state.enhanceStage,
-    state.refinePercent,
-  )
+  const { score: enhanceScore, stats: enhanceStats } = enhanceOf(body, state.enhanceStage)
 
   const affixes = state.affixes.map((affix) => classifyAffix(equipment, state.slot, affix))
   const affixMark = affixes.reduce((sum, affix) => sum + affix.mark, 0)
@@ -655,7 +643,7 @@ export function evaluatePiece(
     reforgeScore,
     grace: graceFor(graces, state.slot, affixes),
     total: baseScore + enhanceScore + reforgeScore,
-    progressPercent: progressOf(body, state.enhanceStage, state.refinePercent),
+    progressPercent: clampRefine(state.refinePercent),
   }
 }
 
@@ -766,10 +754,17 @@ export function activeSuits(equipment: Equipment, items: (EquipItem | null)[]): 
     .sort((a, b) => b.count - a.count || a.suit.id - b.suit.id)
 }
 
-/** The slots the rating panel actually scores, in its own order. */
+/** The equipment screen's own slot order; a slot not named here follows, by its `order`. */
+export const SLOT_ORDER = ['武器', '胸针', '指环', '护符', '护甲', '鞋靴', '帽子', '披风']
+
+/** The slots the rating panel actually scores, in the order the game's equipment screen shows them. */
 export function scoredSlots(equipment: Equipment, graces: Grace[]): EquipSlot[] {
   const withGraces = new Set(graces.map((g) => g.slot))
-  return equipment.slots.filter((s) => withGraces.has(s.id)).sort((a, b) => a.order - b.order)
+  const rank = (slot: EquipSlot) => {
+    const at = SLOT_ORDER.indexOf(slot.name)
+    return at < 0 ? SLOT_ORDER.length + slot.order : at
+  }
+  return equipment.slots.filter((s) => withGraces.has(s.id)).sort((a, b) => rank(a) - rank(b))
 }
 
 /** URL of an item's icon in the resource repo. */

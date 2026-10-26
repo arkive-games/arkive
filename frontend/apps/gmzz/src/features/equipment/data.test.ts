@@ -19,9 +19,8 @@ import {
   clampAffixValue,
   counterpartFor,
   maxStageFor,
-  progressBounds,
-  progressOf,
-  refineFromProgress,
+  familiesByGrace,
+  rungsFor,
   scoredSlots,
   statLines,
   suitOf,
@@ -187,114 +186,19 @@ describe('maxStageFor', () => {
 
 describe('enhanceOf', () => {
   it('reproduces the +3 weapon in game: 240 score, 攻击 +60, 最大生命 +258', () => {
-    const body = bodyFor(EQUIPMENT, 1, 101)
-    const { score, stats } = enhanceOf(body, 3, 100)
+    const { score, stats } = enhanceOf(bodyFor(EQUIPMENT, 1, 101), 3)
     expect(score).toBe(240)
     expect(Object.fromEntries(stats)).toEqual({ AtkMin_N: 60, AtkMax_N: 60, MaxHp_N: 258 })
   })
 
-  it('counts the current stage by its refinement', () => {
-    const body = bodyFor(EQUIPMENT, 1, 101)
-    // Stage 3 just reached is worth two stages; half refined, two and a half.
-    expect(enhanceOf(body, 3, 0).score).toBe(160)
-    expect(enhanceOf(body, 3, 50).score).toBe(200)
-    expect(Object.fromEntries(enhanceOf(body, 3, 50).stats)).toEqual({
-      AtkMin_N: 50,
-      AtkMax_N: 50,
-      MaxHp_N: 215,
-    })
-  })
-
-  it('is 0 at stage 0 whatever the refinement says', () => {
-    expect(enhanceOf(bodyFor(EQUIPMENT, 1, 101), 0, 100)).toEqual({ score: 0, stats: [] })
-  })
-
-  it('is 0 with no body', () => {
+  it('is 0 at stage 0, and 0 with no body', () => {
+    expect(enhanceOf(bodyFor(EQUIPMENT, 1, 101), 0)).toEqual({ score: 0, stats: [] })
     expect(enhanceOf(null, 5)).toEqual({ score: 0, stats: [] })
   })
 })
 
-describe('progressOf', () => {
-  it('is stages-done over stages-total — a fully refined +3 of 8 is the 37% the game shows', () => {
-    const body = bodyFor(EQUIPMENT, 1, 101)
-    expect(progressOf(body, 3, 100)).toBeCloseTo(37.5, 5)
-  })
 
-  it('counts the current stage by its refinement', () => {
-    const body = bodyFor(EQUIPMENT, 1, 101)
-    expect(progressOf(body, 3, 0)).toBeCloseTo(25, 5)
-    expect(progressOf(body, 3, 50)).toBeCloseTo(31.25, 5)
-  })
 
-  it('is 0 at +0 and 100 at the top of the ladder', () => {
-    const body = bodyFor(EQUIPMENT, 1, 101)
-    expect(progressOf(body, 0, 100)).toBe(0)
-    expect(progressOf(body, 8, 100)).toBe(100)
-  })
-
-  it('clamps a nonsense refinement rather than exceeding the stage', () => {
-    const body = bodyFor(EQUIPMENT, 1, 101)
-    expect(progressOf(body, 8, 500)).toBeCloseTo(100, 5)
-    expect(progressOf(body, 3, -20)).toBeCloseTo(25, 5)
-  })
-})
-
-describe('progressBounds', () => {
-  it('gives each stage its window of the badge percentage, floored like the game', () => {
-    expect(progressBounds(8, 1)).toEqual({ min: 0, max: 12 })
-    // +3 reads 25% just reached and 37% fully refined; 38% would already be +4.
-    expect(progressBounds(8, 3)).toEqual({ min: 25, max: 37 })
-    expect(progressBounds(8, 4)).toEqual({ min: 37, max: 50 })
-    expect(progressBounds(8, 8)).toEqual({ min: 87, max: 100 })
-  })
-
-  it('has no refinement at +0', () => {
-    expect(progressBounds(8, 0)).toEqual({ min: 0, max: 0 })
-  })
-
-  it('does not run past the ladder', () => {
-    expect(progressBounds(8, 12)).toEqual({ min: 87, max: 100 })
-  })
-
-  it('is empty without a ladder', () => {
-    expect(progressBounds(0, 3)).toEqual({ min: 0, max: 0 })
-  })
-})
-
-describe('refineFromProgress', () => {
-  it('inverts progressOf inside every stage window', () => {
-    const body = bodyFor(EQUIPMENT, 1, 101)
-    for (let stage = 1; stage <= 8; stage += 1) {
-      const { min, max } = progressBounds(8, stage)
-      for (let badge = min; badge <= max; badge += 1) {
-        const refine = refineFromProgress(8, stage, badge)
-        expect(refine).toBeGreaterThanOrEqual(1)
-        expect(Math.floor(progressOf(body, stage, refine))).toBe(badge)
-      }
-    }
-  })
-
-  it('reads the top of the window as a fully refined stage, so "+3 37%" scores 240', () => {
-    expect(refineFromProgress(8, 3, 37)).toBe(100)
-    expect(refineFromProgress(8, 1, 12)).toBe(100)
-    expect(refineFromProgress(8, 8, 100)).toBe(100)
-  })
-
-  it('takes the highest refinement a floored badge can stand for', () => {
-    expect(refineFromProgress(8, 3, 25)).toBe(7)
-    expect(refineFromProgress(8, 3, 30)).toBe(47)
-  })
-
-  it('lands on the stage boundary, not on the neighbouring stage', () => {
-    expect(refineFromProgress(8, 3, 10)).toBe(1)
-    expect(refineFromProgress(8, 3, 90)).toBe(100)
-  })
-
-  it('is 0 at +0 or without a ladder', () => {
-    expect(refineFromProgress(8, 0, 0)).toBe(0)
-    expect(refineFromProgress(0, 3, 50)).toBe(0)
-  })
-})
 
 describe('nearestRung', () => {
   const ladder = ladderFor(EQUIPMENT, 1, 'extraordinary', '攻击')
@@ -414,11 +318,34 @@ describe('counterpartFor', () => {
 })
 
 describe('maxAffixesFor', () => {
-  it('allows five affixes on the weapon slot and four elsewhere', () => {
-    // Slot 1 is where the pathways' weapon subtype (302) lives.
-    expect(maxAffixesFor(EQUIPMENT, 1)).toBe(5)
-    expect(maxAffixesFor(EQUIPMENT, 12)).toBe(4)
-    expect(maxAffixesFor(EQUIPMENT, 99)).toBe(4)
+  it('allows five affixes only on a 隐秘之拥 weapon, four on any other piece', () => {
+    const weapon = EQUIPMENT.items.find((item) => item.slot === 1)!
+    expect(maxAffixesFor(EQUIPMENT, 1, { ...weapon, name: '隐秘之拥' })).toBe(5)
+    expect(maxAffixesFor(EQUIPMENT, 1, { ...weapon, name: '夜幕之颂' })).toBe(4)
+    expect(maxAffixesFor(EQUIPMENT, 1)).toBe(4)
+    expect(maxAffixesFor(EQUIPMENT, 12, { ...weapon, slot: 12, name: '隐秘之拥' })).toBe(4)
+  })
+})
+
+describe('affix picker', () => {
+  it('lists a family\'s rungs extraordinary first, richest first in each tier', () => {
+    const rungs = rungsFor(EQUIPMENT, 1, '攻击')
+    const tiers = rungs.map((entry) => entry.tier)
+    expect(tiers.indexOf('normal')).toBeGreaterThan(tiers.lastIndexOf('extraordinary'))
+    const extra = rungs.filter((entry) => entry.tier === 'extraordinary').map((entry) => entry.rung[1])
+    expect(extra).toEqual([...extra].sort((a, b) => b - a))
+  })
+
+  it('puts the families a grace can be made of first', () => {
+    const ordered = familiesByGrace(EQUIPMENT, GRACES, 1)
+    const useful = new Set(GRACES.filter((g) => g.slot === 1).flatMap((g) => g.conditions.filter((c) => c.count > 0).map((c) => c.stat)))
+    const firstOther = ordered.findIndex((family) => !useful.has(family))
+    expect(ordered.slice(0, firstOther < 0 ? ordered.length : firstOther).every((family) => useful.has(family))).toBe(true)
+    expect([...ordered].sort()).toEqual([...familiesFor(EQUIPMENT, 1)].sort())
+  })
+
+  it('scores an empty affix as nothing', () => {
+    expect(classifyAffix(EQUIPMENT, 1, { family: '', value: 0 })).toEqual({ family: '', value: 0, tier: 'normal', mark: 0 })
   })
 })
 
@@ -436,7 +363,7 @@ describe('statLines', () => {
   const item = EQUIPMENT.items[0]
 
   it('keeps the item\'s value and the enhancement\'s gain apart, the attack pair folded into one 攻击 range', () => {
-    const lines = statLines(EQUIPMENT, item.baseStats, enhanceOf(bodyFor(EQUIPMENT, 1, 101), 3, 100).stats)
+    const lines = statLines(EQUIPMENT, item.baseStats, enhanceOf(bodyFor(EQUIPMENT, 1, 101), 3).stats)
     expect(lines).toEqual([
       { key: 'Atk_N', label: '攻击', base: { min: 327, max: 607 }, gain: { min: 60, max: 60 } },
       { key: 'MaxHp_N', label: '最大生命', base: { min: 1960, max: 1960 }, gain: { min: 258, max: 258 } },
@@ -656,13 +583,13 @@ describe('evaluatePiece', () => {
     expect(result.total).toBe(240)
   })
 
-  it('scores the refinement of the current stage', () => {
+  it('scores every stage reached, whatever the refinement, which it reports apart', () => {
     const result = evaluatePiece(EQUIPMENT, GRACES, {
       slot: 1, itemId: null, enhanceStage: 3, refinePercent: 50, affixes: [],
     }, 101)
-    expect(result.enhanceScore).toBe(200)
-    expect(result.total).toBe(200)
-    expect(result.progressPercent).toBeCloseTo(31.25, 5)
+    expect(result.enhanceScore).toBe(240)
+    expect(result.total).toBe(240)
+    expect(result.progressPercent).toBe(50)
   })
 
   it('subtracts a contaminated affix rather than adding it', () => {

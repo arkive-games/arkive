@@ -296,3 +296,11 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
         "2": {"perLevel": 323.0, "origin": 49},
     }
     assert {i["id"]: i["baseScore"] for i in payload["items"]} == {3001059: 2685, 3020623: 2430}
+
+
+def test_contaminated_rungs_must_decode_to_a_small_negative_value():
+    # What the decoded table actually holds for this tier: positive values and absurd Marks.
+    assert not equipment._plausible_contaminated(1010827104, 19139)
+    assert not equipment._plausible_contaminated(-1437139144, -1302)
+    assert not equipment._plausible_contaminated(-400, 19185)
+    assert equipment._plausible_contaminated(-400, -32)

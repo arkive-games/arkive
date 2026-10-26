@@ -33,7 +33,7 @@ import {
 } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
 import PathwaySection, { LEVEL_MODULE, SKILL_MODULE, TALENT_MODULE } from '@/features/score/PathwaySection'
-import { emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, talentLimits, treeFor, type Talents } from '@/features/score/talents'
+import { carryTalents, emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, talentLimits, treeFor, type Talents } from '@/features/score/talents'
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
@@ -152,7 +152,6 @@ export default function ScorePage() {
     setDraft((prev) => ({ ...prev, divinityLevel }))
     followCap(draft.roleLevel, divinityLevel)
   }
-  const setProfessionId = (professionId: number | null) => setDraft((prev) => ({ ...prev, professionId }))
   const setScore = (speciesId: number, value: number) =>
     setDraft((prev) => ({ ...prev, scores: { ...prev.scores, [speciesId]: value } }))
   /**
@@ -169,6 +168,13 @@ export default function ScorePage() {
       ? draft.professionId
       : playable[0]?.id ?? null
   }, [draft.professionId, equipment])
+  // The pathway change carries every pathway-keyed entry across: the weapon
+  // swaps to its counterpart in the equipment section, and the talent points
+  // move to the same positions of the new pathway's tree.
+  const setProfessionId = (next: number | null) => {
+    if (talents) setTalentState((prev) => carryTalents(talents, prev, professionId, next))
+    setDraft((prev) => ({ ...prev, professionId: next }))
+  }
 
   useEffect(() => {
     let live = true
