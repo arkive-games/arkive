@@ -109,6 +109,26 @@ def build_scoring(constants: dict) -> dict:
     return scoring
 
 
+def build_level_unlock_days(rows: dict | list, max_star: int) -> list[int]:
+    """The day after launch each puppet level opens, level 1 first.
+
+    ``SecretPartnerStarUpData`` is one row per level, ``ID`` the level, and
+    ``SecretPartner_LevelUnlockTime`` the days since the server opened before
+    a puppet may reach it (0 for levels 1-2, 87 for 50). That is the level cap:
+    on day 67 every puppet stops at 43, which is what live accounts show. A
+    gap or a schedule that runs backwards fails rather than capping wrongly.
+    """
+    # The packed reader hands back a list where the ids run 1..N, a dict otherwise.
+    listed = rows.values() if isinstance(rows, dict) else rows
+    by_level = {int(row['ID']): row.get('SecretPartner_LevelUnlockTime') for row in listed}
+    if sorted(by_level) != list(range(1, int(max_star) + 1)):
+        raise ValueError('Puppet level unlock schedule does not cover every level')
+    days = [by_level[level] for level in range(1, int(max_star) + 1)]
+    if any(not isinstance(day, int) or day < 0 for day in days) or days != sorted(days):
+        raise ValueError('Puppet level unlock days are not a rising schedule')
+    return days
+
+
 def build_records(config: dict, skills: dict, upgrades: dict, tags: dict, attributes: dict) -> list[dict]:
     records = []
     known = {int(row['ID']) for row in config.values()}
@@ -181,6 +201,7 @@ def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) 
                                   table('FightPropModeSetData'),
                                   int(constants['SECRET_PARTNER_MAX_STAR']))
     scoring = build_scoring(constants)
+    scoring['levelUnlockDays'] = build_level_unlock_days(table('SecretPartnerStarUpData'), scoring['maxStar'])
     records = build_records(config, skills, table('SecretPartnerSkillStarUpData'), tags, attributes)
     sources = {int(row['ID']): row for row in config.values()}
     output = res_out / 'secretpartners'

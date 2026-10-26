@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from gmzz.secretpartners import build_attributes, build_records, build_scoring, portrait_path
+from gmzz.secretpartners import build_attributes, build_level_unlock_days, build_records, build_scoring, portrait_path
 from gmzz import secretpartners
 
 
@@ -76,6 +76,7 @@ def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch
         'FightPropModeData': {'1': {'PropMode': 'MaxHp_P', 'ShowType': 1}},
         'FightPropModeSetData': {},
         'SecretPartnerConstData': {**scoring_sample(), 'SECRET_PARTNER_MAX_STAR': 1},
+        'SecretPartnerStarUpData': {'1': {'ID': 1, 'SeasonID': 100, 'SecretPartner_LevelUnlockTime': 0}},
     }
     monkeypatch.setattr(secretpartners, 'load_strings', lambda _: {})
     monkeypatch.setattr(secretpartners, 'load_table', lambda _, name: tables[name])
@@ -96,7 +97,7 @@ def test_reused_puppet_art_is_required_and_unchanged(tmp_path: Path, monkeypatch
     assert portrait.read_bytes() == b'existing-art'
     scoring = json.loads((output / 'secretpartners/scoring.json').read_text(encoding='utf-8'))
     assert scoring == {'inDominateRate': 1, 'nonDominateRate': 0.35, 'initialDominateSlots': 1,
-                       'maxDominateSlots': 8, 'maxStar': 1}
+                       'maxDominateSlots': 8, 'maxStar': 1, 'levelUnlockDays': [0]}
 
 
 def test_stale_export_is_rejected_before_loading_tables(tmp_path: Path, monkeypatch):
@@ -186,3 +187,14 @@ def test_invalid_scoring_constants_fail(problem):
         constants['SECRET_PARTNER_INIT_DOMINATE_NUM'] = 9
     with pytest.raises(ValueError):
         build_scoring(constants)
+
+
+def test_level_unlock_days_are_a_complete_rising_schedule():
+    rows = {str(n): {'ID': n, 'SecretPartner_LevelUnlockTime': day} for n, day in ((1, 0), (2, 0), (3, 2))}
+    assert build_level_unlock_days(rows, 3) == [0, 0, 2]
+    assert build_level_unlock_days(list(rows.values()), 3) == [0, 0, 2], 'the packed reader returns a list'
+    with pytest.raises(ValueError, match='every level'):
+        build_level_unlock_days(rows, 4)
+    rows['3']['SecretPartner_LevelUnlockTime'] = -1
+    with pytest.raises(ValueError, match='rising'):
+        build_level_unlock_days(rows, 3)
