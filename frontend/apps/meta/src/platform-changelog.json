@@ -1,6 +1,27 @@
 {
   "entries": [
     {
+      "date": "2026-10-27",
+      "commit": "71e291402fed434ebac914c049f6d029e7ab8523",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Arkive has moved to arkive.games. Every site, its data and images, and sign-in now live there, and the old tc-imba.com addresses redirect to the new ones. You will need to sign in once more.",
+            "zh-CN": "藏舟已迁移至 arkive.games。所有站点、数据、图片和登录现均在新域名下，旧的 tc-imba.com 地址会自动跳转。迁移后需要重新登录一次。",
+            "zh-TW": "藏舟已遷移至 arkive.games。所有站點、資料、圖片和登入現均在新網域下，舊的 tc-imba.com 位址會自動跳轉。遷移後需要重新登入一次。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-26",
       "commit": "4dce7eaa384344ea916b391f62c4bb0ef15fc80d",
       "targets": [
