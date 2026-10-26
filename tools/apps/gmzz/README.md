@@ -421,6 +421,19 @@ pak's `C7/Content/` and the export lands as `.png`.
 pathway is worse than one that stays silent, so the split is left out and the
 page groups by tag. If the mapping turns up, it is a small addition here.
 
+## Player servers (区服)
+
+```bash
+uv run python -m gmzz.servers
+```
+
+Writes `data-gmzz/servers/servers.json`: the player servers as `{id, name}`, which a saved
+character on the rating page picks from. `ServerData` also lists test, mirror,
+cross-server and 战略服 rows; the player servers are the ones whose
+`SchemeRecommendGroup` is below 100. The list is the client's, so a server opened
+after this build appears only after the next export. Characters store the id, never
+the name.
+
 ## Beyonder rating (非凡评分)
 
 ```bash
