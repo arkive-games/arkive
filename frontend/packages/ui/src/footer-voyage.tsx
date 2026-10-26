@@ -25,7 +25,7 @@ export function FooterVoyage({ footerRef }: { footerRef: React.RefObject<HTMLEle
       const max = scroller ? scroller.scrollHeight - scroller.clientHeight : document.documentElement.scrollHeight - innerHeight
       const progress = max > 1 ? Math.max(0, Math.min(1, (scroller?.scrollTop ?? window.scrollY) / max)) : 1
       const base = Math.min(bottom - 8, footer.getBoundingClientRect().top)
-      layer.style.cssText = `position:fixed;pointer-events:none;z-index:20;left:${left}px;top:${base - 26}px;width:${width}px;height:34px;color:var(--arkive-nav-accent, #eab12b)`
+      layer.style.cssText = `position:fixed;pointer-events:none;z-index:var(--arkive-layer-sticky);left:${left}px;top:${base - 26}px;width:${width}px;height:34px;color:var(--arkive-nav-accent)`
       const svg = layer.querySelector('svg')!
       svg.setAttribute('viewBox', `0 0 ${width} 34`)
       const y = (x: number) => 26 + 1.8 * Math.sin(x / 40 * 2 * Math.PI)

@@ -529,7 +529,7 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
         />
       ) : (
-        <StandardFooter brandName={brandName} onOpenSettings={() => setSettingsOpen(true)} />
+        <StandardFooter brandName={brandName} onOpenSettings={() => setSettingsOpen(true)} hasMobileBottomNav={activeRoute.view === 'forum'} />
       )}
 
       {noticeId > 0 && (

@@ -18,7 +18,7 @@ import {
   paginateCatalogEntries,
   type GameCategory,
 } from './gameCatalog'
-import { siteHref, type SiteCard } from './sites'
+import { GAME_LOGOS, siteHref, type SiteCard } from './sites'
 import { useUserSystem } from './UserSystemState'
 import './all-games.css'
 
@@ -78,7 +78,7 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
     const focusSearch = (event: KeyboardEvent) => {
       const target = event.target
       if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
-      if (target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return
+      if (target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="alertdialog"]')) return
       event.preventDefault()
       inputRef.current?.focus()
     }
@@ -233,11 +233,11 @@ function CatalogGameCard({
   const body = (
     <>
       <span className="catalog-game-cover">
-        <img src={game.site.banner} alt="" style={{ objectPosition: game.site.bannerPosition }} />
+        <img src={game.site.banner ?? game.site.bg} alt="" style={{ objectPosition: game.site.bannerPosition ?? game.site.bgPosition }} />
         <span className="catalog-game-glass" aria-hidden="true" />
       </span>
       <span className="catalog-game-copy">
-        <span className="catalog-game-name"><img src={game.site.icon} alt="" /><strong>{name}</strong></span>
+        <span className="catalog-game-name"><img src={game.site.icon ?? GAME_LOGOS[game.site.id]} alt="" /><strong>{name}</strong></span>
         {game.site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
         <small>{t(`catalog.summary.${game.site.id}`, { defaultValue: t(game.site.descKey) })}</small>
       </span>
@@ -245,7 +245,7 @@ function CatalogGameCard({
   )
 
   return (
-    <article style={{ '--game-color': game.site.color } as CSSProperties} className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}>
+    <article style={{ '--game-color': game.site.color ?? 'var(--muted)' } as CSSProperties} className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}>
       {href ? (
         <a href={href} className="catalog-game-link" onClick={onOpen}>{body}</a>
       ) : (

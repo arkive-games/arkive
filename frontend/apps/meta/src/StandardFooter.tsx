@@ -5,11 +5,12 @@ import { settingsStringsFor } from '@gamemap/map-shell'
 import { AboutDialog, ContactDialog } from './HomeFooter'
 import { IS_TOY } from './sites'
 
-export function StandardFooter({ brandName, onOpenSettings }: { brandName: string; onOpenSettings: () => void }) {
+export function StandardFooter({ brandName, onOpenSettings, hasMobileBottomNav = false }: { brandName: string; onOpenSettings: () => void; hasMobileBottomNav?: boolean }) {
   const { t, i18n } = useTranslation()
   const [dialog, setDialog] = useState<'about' | 'contact' | null>(null)
   return <>
     <SiteFooter
+      className={hasMobileBottomNav ? 'max-md:pb-[calc(5.25rem+env(safe-area-inset-bottom))]' : undefined}
       homeUrl="#top"
       homeLinkProps={{ target: undefined, rel: undefined }}
       githubUrl={null}

@@ -712,7 +712,7 @@ test('the shared footer is present', async ({ page }) => {
   await ready(page)
   const footer = page.locator('footer')
   await expect(footer).toBeVisible()
-  await expect(footer).toContainText('Arkive Games')
+  await expect(footer.getByTestId('site-footer-home')).toHaveText('Arkive')
 })
 
 test('the gear selectors show the game\'s own item names, not bare ids', async ({ page }) => {
