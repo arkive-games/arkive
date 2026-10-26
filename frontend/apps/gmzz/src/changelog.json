@@ -1,9 +1,24 @@
 {
   "entries": [
     {
+      "version": "0.24.0",
+      "date": "2026-10-27",
+      "commit": "3a37dd5414fd7a63c20ad30fb9696666e2abe469",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Save up to 10 characters to your account on the rating calculator, with server and UID, and share each one by link; others can view it read-only or copy it as their own. Edits save automatically and are kept on your device until they upload.",
+            "zh-CN": "非凡评分计算器可以把最多 10 个角色保存到账号，并设置服务器和 UID；每个角色都能通过链接分享，别人可以只读查看或复制为自己的角色。修改会自动保存，上传前一直保留在本机。",
+            "zh-TW": "非凡評分計算器可以把最多 10 個角色儲存到帳號，並設定伺服器和 UID；每個角色都能透過連結分享，別人可以唯讀查看或複製為自己的角色。修改會自動儲存，上傳前一直保留在本機。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.0",
       "date": "2026-10-27",
-      "commit": "c9e28eea39a60967fa9e890fe0bde230b27a2852",
+      "commit": "7c3f65804930f912d9d1ba0c787a589d68bfca08",
       "changes": [
         {
           "kind": "feature",
