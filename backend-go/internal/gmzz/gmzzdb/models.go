@@ -15,7 +15,7 @@ type GmzzCharacter struct {
 	PublicID      string
 	OwnerID       uuid.UUID
 	Name          string
-	Server        *string
+	ServerID      *int32
 	UID           *string
 	ShowUID       bool
 	Visibility    string

@@ -204,7 +204,7 @@ func sampleData() map[string]any {
 func (h *harness) create(token, name string) map[string]any {
 	h.t.Helper()
 	r := h.do(http.MethodPost, "/characters", token, map[string]any{
-		"name": name, "server": "S1", "uid": "123456", "data": sampleData(),
+		"name": name, "serverId": 1101, "uid": "123456", "data": sampleData(),
 	})
 	if r.status != http.StatusCreated {
 		h.t.Fatalf("create %s: %d %v", name, r.status, r.body)
@@ -387,7 +387,7 @@ func TestCopyAndDelete(t *testing.T) {
 
 	theirs := h.do(http.MethodPost, "/characters/"+id+"/copy", bob, nil)
 	d := theirs.data()
-	if theirs.status != http.StatusCreated || d["editable"] != true || d["name"] != "Klein" || d["server"] != "S1" {
+	if theirs.status != http.StatusCreated || d["editable"] != true || d["name"] != "Klein" || d["serverId"] != float64(1101) {
 		t.Fatalf("copy of another's: %d %v", theirs.status, theirs.body)
 	}
 	if _, present := d["uid"]; present {
@@ -444,7 +444,8 @@ func TestValidation(t *testing.T) {
 		"zero schemaVersion":       {"name": "x", "data": map[string]any{"schemaVersion": 0}},
 		"blank name":               {"name": "   ", "data": sampleData()},
 		"long name":                {"name": strings.Repeat("名", 33), "data": sampleData()},
-		"long server":              {"name": "x", "server": strings.Repeat("s", 33), "data": sampleData()},
+		"negative server":          {"name": "x", "serverId": -1, "data": sampleData()},
+		"text server":              {"name": "x", "serverId": "S1", "data": sampleData()},
 		"bad visibility":           {"name": "x", "visibility": "public", "data": sampleData()},
 	}
 	for label, body := range cases {
@@ -464,9 +465,23 @@ func TestValidation(t *testing.T) {
 	}
 
 	// A 32-character CJK name is within the limit even though it is 96 bytes.
-	if r := h.do(http.MethodPost, "/characters", alice, map[string]any{"name": strings.Repeat("名", 32), "server": "", "data": sampleData()}); r.status != http.StatusCreated {
+	if r := h.do(http.MethodPost, "/characters", alice, map[string]any{"name": strings.Repeat("名", 32), "serverId": 0, "data": sampleData()}); r.status != http.StatusCreated {
 		t.Errorf("32 CJK characters: %d %v", r.status, r.body)
-	} else if _, present := r.data()["server"]; present {
-		t.Errorf("blank server should be stored as absent: %v", r.data())
+	} else if _, present := r.data()["serverId"]; present {
+		t.Errorf("server 0 should be stored as absent: %v", r.data())
+	}
+
+	// A patch sets a server and 0 clears it again; an absent field leaves it alone.
+	id := h.create(alice, "S")["id"].(string)
+	if r := h.do(http.MethodPatch, "/characters/"+id, alice, map[string]any{"revision": 1, "serverId": 1202}); r.data()["serverId"] != float64(1202) {
+		t.Errorf("set server: %v", r.body)
+	}
+	if r := h.do(http.MethodPatch, "/characters/"+id, alice, map[string]any{"revision": 2, "name": "T"}); r.data()["serverId"] != float64(1202) {
+		t.Errorf("an absent serverId changed the server: %v", r.body)
+	}
+	if r := h.do(http.MethodPatch, "/characters/"+id, alice, map[string]any{"revision": 3, "serverId": 0}); r.status != http.StatusOK {
+		t.Errorf("clear server: %d %v", r.status, r.body)
+	} else if _, present := r.data()["serverId"]; present {
+		t.Errorf("server 0 should clear it: %v", r.data())
 	}
 }

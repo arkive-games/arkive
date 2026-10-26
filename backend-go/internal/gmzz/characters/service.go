@@ -63,7 +63,7 @@ func (v Visibility) valid() bool { return v == Private || v == Link }
 type Summary struct {
 	ID            string     `json:"id" doc:"The character's public id: its link and its API path"`
 	Name          string     `json:"name"`
-	Server        *string    `json:"server,omitempty" doc:"Display only"`
+	ServerID      *int32     `json:"serverId,omitempty" doc:"A player server's id from the game's server list; display only"`
 	UID           *string    `json:"uid,omitempty" doc:"Display only, never a key. Omitted for readers other than the owner unless showUid is set"`
 	ShowUID       bool       `json:"showUid" doc:"Whether readers other than the owner see uid"`
 	Visibility    Visibility `json:"visibility" enum:"private,link"`
@@ -83,19 +83,19 @@ type Character struct {
 // Input creates a character.
 type Input struct {
 	Name       string
-	Server     *string
+	ServerID   *int32
 	UID        *string
 	ShowUID    bool
 	Visibility *Visibility
 	Data       map[string]any
 }
 
-// Patch changes a character. A nil field is left alone; an empty Server or UID
-// clears it.
+// Patch changes a character. A nil field is left alone; a ServerID of 0 or an
+// empty UID clears it.
 type Patch struct {
 	Revision   int64
 	Name       *string
-	Server     *string
+	ServerID   *int32
 	UID        *string
 	ShowUID    *bool
 	Visibility *Visibility
@@ -122,7 +122,7 @@ func (s *Service) List(ctx context.Context, owner uuid.UUID) ([]Summary, error) 
 	out := make([]Summary, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, Summary{
-			ID: r.PublicID, Name: r.Name, Server: r.Server, UID: r.UID, ShowUID: r.ShowUID,
+			ID: r.PublicID, Name: r.Name, ServerID: r.ServerID, UID: r.UID, ShowUID: r.ShowUID,
 			Visibility: Visibility(r.Visibility), SchemaVersion: r.SchemaVersion, Revision: r.Revision,
 			CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 		})
@@ -136,7 +136,7 @@ func (s *Service) Create(ctx context.Context, owner uuid.UUID, in Input) (Charac
 	if err != nil {
 		return Character{}, err
 	}
-	server, err := cleanOptional(in.Server, "server")
+	server, err := cleanServer(in.ServerID)
 	if err != nil {
 		return Character{}, err
 	}
@@ -157,7 +157,7 @@ func (s *Service) Create(ctx context.Context, owner uuid.UUID, in Input) (Charac
 	}
 
 	row, err := s.insert(ctx, owner, gmzzdb.InsertCharacterParams{
-		OwnerID: owner, Name: name, Server: server, UID: uid, ShowUID: in.ShowUID,
+		OwnerID: owner, Name: name, ServerID: server, UID: uid, ShowUID: in.ShowUID,
 		Visibility: string(visibility), SchemaVersion: version, Data: data,
 	})
 	if err != nil {
@@ -189,7 +189,7 @@ func (s *Service) Update(ctx context.Context, owner uuid.UUID, publicID string, 
 	}
 
 	params := gmzzdb.UpdateCharacterParams{
-		Name: row.Name, Server: row.Server, UID: row.UID, ShowUID: row.ShowUID, Visibility: row.Visibility,
+		Name: row.Name, ServerID: row.ServerID, UID: row.UID, ShowUID: row.ShowUID, Visibility: row.Visibility,
 		SchemaVersion: row.SchemaVersion, Data: row.Data,
 		PublicID: publicID, OwnerID: owner, Revision: p.Revision,
 	}
@@ -198,8 +198,8 @@ func (s *Service) Update(ctx context.Context, owner uuid.UUID, publicID string, 
 			return Character{}, err
 		}
 	}
-	if p.Server != nil {
-		if params.Server, err = cleanOptional(p.Server, "server"); err != nil {
+	if p.ServerID != nil {
+		if params.ServerID, err = cleanServer(p.ServerID); err != nil {
 			return Character{}, err
 		}
 	}
@@ -261,7 +261,7 @@ func (s *Service) Copy(ctx context.Context, caller uuid.UUID, publicID string, n
 		return Character{}, err
 	}
 	params := gmzzdb.InsertCharacterParams{
-		OwnerID: caller, Name: src.Name, Server: src.Server, Visibility: string(Link),
+		OwnerID: caller, Name: src.Name, ServerID: src.ServerID, Visibility: string(Link),
 		SchemaVersion: src.SchemaVersion, Data: src.Data,
 	}
 	if src.OwnerID == caller {
@@ -412,7 +412,7 @@ func view(row gmzzdb.GmzzCharacter, viewer *uuid.UUID) (Character, error) {
 	}
 	return Character{
 		Summary: Summary{
-			ID: row.PublicID, Name: row.Name, Server: row.Server, UID: uid, ShowUID: row.ShowUID,
+			ID: row.PublicID, Name: row.Name, ServerID: row.ServerID, UID: uid, ShowUID: row.ShowUID,
 			Visibility: Visibility(row.Visibility), SchemaVersion: row.SchemaVersion, Revision: row.Revision,
 			CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt,
 		},
@@ -446,6 +446,19 @@ func cleanName(name string) (string, error) {
 		return "", apierr.New(apierr.Validation, fmt.Sprintf("name must be 1 to %d characters", maxTextRunes))
 	}
 	return name, nil
+}
+
+// cleanServer checks a server id's shape; 0 means none. Which ids exist is game
+// data, kept in the data artifacts rather than here, so it is the page that
+// offers only real ones.
+func cleanServer(id *int32) (*int32, error) {
+	if id == nil || *id == 0 {
+		return nil, nil
+	}
+	if *id < 0 {
+		return nil, apierr.New(apierr.Validation, "serverId must be a positive server id")
+	}
+	return id, nil
 }
 
 // cleanOptional trims a display field; blank means absent.

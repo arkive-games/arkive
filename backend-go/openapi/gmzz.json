@@ -34,9 +34,10 @@
             "format": "int32",
             "type": "integer"
           },
-          "server": {
-            "description": "Display only",
-            "type": "string"
+          "serverId": {
+            "description": "A player server's id from the game's server list; display only",
+            "format": "int32",
+            "type": "integer"
           },
           "showUid": {
             "description": "Whether readers other than the owner see uid",
@@ -96,9 +97,11 @@
             "minLength": 1,
             "type": "string"
           },
-          "server": {
-            "maxLength": 64,
-            "type": "string"
+          "serverId": {
+            "description": "A player server's id from the game's server list",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
           },
           "showUid": {
             "type": "boolean"
@@ -302,9 +305,10 @@
             "format": "int32",
             "type": "integer"
           },
-          "server": {
-            "description": "Display only",
-            "type": "string"
+          "serverId": {
+            "description": "A player server's id from the game's server list; display only",
+            "format": "int32",
+            "type": "integer"
           },
           "showUid": {
             "description": "Whether readers other than the owner see uid",
@@ -354,9 +358,11 @@
             "format": "int64",
             "type": "integer"
           },
-          "server": {
-            "maxLength": 64,
-            "type": "string"
+          "serverId": {
+            "description": "0 clears it",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
           },
           "showUid": {
             "type": "boolean"

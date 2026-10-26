@@ -8,7 +8,7 @@ SELECT pg_advisory_xact_lock(sqlc.arg('key')::bigint);
 SELECT count(*) FROM gmzz.characters WHERE owner_id = $1;
 
 -- name: ListOwnedCharacters :many
-SELECT id, public_id, owner_id, name, server, uid, show_uid, visibility, sort_order,
+SELECT id, public_id, owner_id, name, server_id, uid, show_uid, visibility, sort_order,
        schema_version, revision, created_at, updated_at
 FROM gmzz.characters
 WHERE owner_id = $1
@@ -22,9 +22,9 @@ SELECT * FROM gmzz.characters WHERE public_id = $1;
 -- instead of failing, so the caller can draw another id without aborting its
 -- transaction.
 INSERT INTO gmzz.characters (
-    public_id, owner_id, name, server, uid, show_uid, visibility, sort_order, schema_version, data
+    public_id, owner_id, name, server_id, uid, show_uid, visibility, sort_order, schema_version, data
 ) VALUES (
-    sqlc.arg('public_id'), sqlc.arg('owner_id'), sqlc.arg('name'), sqlc.narg('server'), sqlc.narg('uid'),
+    sqlc.arg('public_id'), sqlc.arg('owner_id'), sqlc.arg('name'), sqlc.narg('server_id'), sqlc.narg('uid'),
     sqlc.arg('show_uid'), sqlc.arg('visibility'),
     (SELECT COALESCE(max(sort_order), -1) + 1 FROM gmzz.characters WHERE owner_id = sqlc.arg('owner_id')),
     sqlc.arg('schema_version'), sqlc.arg('data')
@@ -38,7 +38,7 @@ RETURNING *;
 -- tells those apart with a second read.
 UPDATE gmzz.characters SET
     name           = sqlc.arg('name'),
-    server         = sqlc.narg('server'),
+    server_id      = sqlc.narg('server_id'),
     uid            = sqlc.narg('uid'),
     show_uid       = sqlc.arg('show_uid'),
     visibility     = sqlc.arg('visibility'),

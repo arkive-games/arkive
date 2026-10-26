@@ -27,7 +27,7 @@ type handlers struct {
 // CreateCharacterBody is a new character.
 type CreateCharacterBody struct {
 	Name       string                 `json:"name" minLength:"1" maxLength:"64" doc:"1 to 32 characters after trimming"`
-	Server     *string                `json:"server,omitempty" maxLength:"64"`
+	ServerID   *int32                 `json:"serverId,omitempty" minimum:"0" doc:"A player server's id from the game's server list"`
 	UID        *string                `json:"uid,omitempty" maxLength:"64"`
 	ShowUID    bool                   `json:"showUid,omitempty"`
 	Visibility *characters.Visibility `json:"visibility,omitempty" enum:"private,link" doc:"Defaults to link"`
@@ -35,11 +35,11 @@ type CreateCharacterBody struct {
 }
 
 // UpdateCharacterBody is a partial change. An absent field is left alone; an
-// empty server or uid clears it.
+// serverId of 0 or an empty uid clears it.
 type UpdateCharacterBody struct {
 	Revision   int64                  `json:"revision" doc:"The revision last read; a stale one is refused with 409"`
 	Name       *string                `json:"name,omitempty" maxLength:"64"`
-	Server     *string                `json:"server,omitempty" maxLength:"64"`
+	ServerID   *int32                 `json:"serverId,omitempty" minimum:"0" doc:"0 clears it"`
 	UID        *string                `json:"uid,omitempty" maxLength:"64"`
 	ShowUID    *bool                  `json:"showUid,omitempty"`
 	Visibility *characters.Visibility `json:"visibility,omitempty" enum:"private,link"`
@@ -130,7 +130,7 @@ func (h *handlers) register(a huma.API) {
 			return nil, err
 		}
 		c, err := h.characters.Create(ctx, principal.ID, characters.Input{
-			Name: in.Body.Name, Server: in.Body.Server, UID: in.Body.UID, ShowUID: in.Body.ShowUID,
+			Name: in.Body.Name, ServerID: in.Body.ServerID, UID: in.Body.UID, ShowUID: in.Body.ShowUID,
 			Visibility: in.Body.Visibility, Data: in.Body.Data,
 		})
 		if err != nil {
@@ -203,7 +203,7 @@ func (h *handlers) register(a huma.API) {
 			return nil, err
 		}
 		c, err := h.characters.Update(ctx, principal.ID, in.ID, characters.Patch{
-			Revision: in.Body.Revision, Name: in.Body.Name, Server: in.Body.Server, UID: in.Body.UID,
+			Revision: in.Body.Revision, Name: in.Body.Name, ServerID: in.Body.ServerID, UID: in.Body.UID,
 			ShowUID: in.Body.ShowUID, Visibility: in.Body.Visibility, Data: in.Body.Data,
 		})
 		if err != nil {

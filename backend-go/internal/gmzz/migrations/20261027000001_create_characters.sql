@@ -26,9 +26,12 @@ CREATE TABLE gmzz.characters (
     owner_id uuid NOT NULL,
 
     name text NOT NULL,
-    -- Display metadata. Free text for now; `server` is a column of its own rather than
-    -- part of `data` so a later public listing can filter and index on it.
-    server text,
+    -- Display metadata. `server_id` is a `ServerData` id from the game's own server
+    -- list (data-gmzz/servers/servers.json), never a name: a rename or a merge only
+    -- changes what is displayed. The list is game data, so it is the frontend's to
+    -- offer and this table checks only the shape. A column of its own rather than part
+    -- of `data` so a later public listing can filter and index on it.
+    server_id integer,
     uid text,
     show_uid boolean NOT NULL DEFAULT false,
 
@@ -49,7 +52,7 @@ CREATE TABLE gmzz.characters (
 
     CONSTRAINT characters_visibility CHECK (visibility IN ('private', 'link')),
     CONSTRAINT characters_name_length CHECK (char_length(name) BETWEEN 1 AND 32),
-    CONSTRAINT characters_server_length CHECK (server IS NULL OR char_length(server) BETWEEN 1 AND 32),
+    CONSTRAINT characters_server_id CHECK (server_id IS NULL OR server_id > 0),
     CONSTRAINT characters_uid_length CHECK (uid IS NULL OR char_length(uid) BETWEEN 1 AND 32),
     CONSTRAINT characters_schema_version CHECK (schema_version >= 1),
     CONSTRAINT characters_data_object CHECK (jsonb_typeof(data) = 'object')

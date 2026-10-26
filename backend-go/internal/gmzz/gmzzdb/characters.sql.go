@@ -41,7 +41,7 @@ func (q *Queries) DeleteCharacter(ctx context.Context, arg DeleteCharacterParams
 }
 
 const getCharacterByPublicID = `-- name: GetCharacterByPublicID :one
-SELECT id, public_id, owner_id, name, server, uid, show_uid, visibility, sort_order, schema_version, data, revision, created_at, updated_at FROM gmzz.characters WHERE public_id = $1
+SELECT id, public_id, owner_id, name, server_id, uid, show_uid, visibility, sort_order, schema_version, data, revision, created_at, updated_at FROM gmzz.characters WHERE public_id = $1
 `
 
 func (q *Queries) GetCharacterByPublicID(ctx context.Context, publicID string) (GmzzCharacter, error) {
@@ -52,7 +52,7 @@ func (q *Queries) GetCharacterByPublicID(ctx context.Context, publicID string) (
 		&i.PublicID,
 		&i.OwnerID,
 		&i.Name,
-		&i.Server,
+		&i.ServerID,
 		&i.UID,
 		&i.ShowUID,
 		&i.Visibility,
@@ -68,7 +68,7 @@ func (q *Queries) GetCharacterByPublicID(ctx context.Context, publicID string) (
 
 const insertCharacter = `-- name: InsertCharacter :one
 INSERT INTO gmzz.characters (
-    public_id, owner_id, name, server, uid, show_uid, visibility, sort_order, schema_version, data
+    public_id, owner_id, name, server_id, uid, show_uid, visibility, sort_order, schema_version, data
 ) VALUES (
     $1, $2, $3, $4, $5,
     $6, $7,
@@ -76,14 +76,14 @@ INSERT INTO gmzz.characters (
     $8, $9
 )
 ON CONFLICT (public_id) DO NOTHING
-RETURNING id, public_id, owner_id, name, server, uid, show_uid, visibility, sort_order, schema_version, data, revision, created_at, updated_at
+RETURNING id, public_id, owner_id, name, server_id, uid, show_uid, visibility, sort_order, schema_version, data, revision, created_at, updated_at
 `
 
 type InsertCharacterParams struct {
 	PublicID      string
 	OwnerID       uuid.UUID
 	Name          string
-	Server        *string
+	ServerID      *int32
 	UID           *string
 	ShowUID       bool
 	Visibility    string
@@ -99,7 +99,7 @@ func (q *Queries) InsertCharacter(ctx context.Context, arg InsertCharacterParams
 		arg.PublicID,
 		arg.OwnerID,
 		arg.Name,
-		arg.Server,
+		arg.ServerID,
 		arg.UID,
 		arg.ShowUID,
 		arg.Visibility,
@@ -112,7 +112,7 @@ func (q *Queries) InsertCharacter(ctx context.Context, arg InsertCharacterParams
 		&i.PublicID,
 		&i.OwnerID,
 		&i.Name,
-		&i.Server,
+		&i.ServerID,
 		&i.UID,
 		&i.ShowUID,
 		&i.Visibility,
@@ -127,7 +127,7 @@ func (q *Queries) InsertCharacter(ctx context.Context, arg InsertCharacterParams
 }
 
 const listOwnedCharacters = `-- name: ListOwnedCharacters :many
-SELECT id, public_id, owner_id, name, server, uid, show_uid, visibility, sort_order,
+SELECT id, public_id, owner_id, name, server_id, uid, show_uid, visibility, sort_order,
        schema_version, revision, created_at, updated_at
 FROM gmzz.characters
 WHERE owner_id = $1
@@ -139,7 +139,7 @@ type ListOwnedCharactersRow struct {
 	PublicID      string
 	OwnerID       uuid.UUID
 	Name          string
-	Server        *string
+	ServerID      *int32
 	UID           *string
 	ShowUID       bool
 	Visibility    string
@@ -164,7 +164,7 @@ func (q *Queries) ListOwnedCharacters(ctx context.Context, ownerID uuid.UUID) ([
 			&i.PublicID,
 			&i.OwnerID,
 			&i.Name,
-			&i.Server,
+			&i.ServerID,
 			&i.UID,
 			&i.ShowUID,
 			&i.Visibility,
@@ -215,7 +215,7 @@ func (q *Queries) SetCharacterOrder(ctx context.Context, arg SetCharacterOrderPa
 const updateCharacter = `-- name: UpdateCharacter :one
 UPDATE gmzz.characters SET
     name           = $1,
-    server         = $2,
+    server_id      = $2,
     uid            = $3,
     show_uid       = $4,
     visibility     = $5,
@@ -226,12 +226,12 @@ UPDATE gmzz.characters SET
 WHERE public_id = $8
   AND owner_id  = $9
   AND revision  = $10
-RETURNING id, public_id, owner_id, name, server, uid, show_uid, visibility, sort_order, schema_version, data, revision, created_at, updated_at
+RETURNING id, public_id, owner_id, name, server_id, uid, show_uid, visibility, sort_order, schema_version, data, revision, created_at, updated_at
 `
 
 type UpdateCharacterParams struct {
 	Name          string
-	Server        *string
+	ServerID      *int32
 	UID           *string
 	ShowUID       bool
 	Visibility    string
@@ -248,7 +248,7 @@ type UpdateCharacterParams struct {
 func (q *Queries) UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) (GmzzCharacter, error) {
 	row := q.db.QueryRow(ctx, updateCharacter,
 		arg.Name,
-		arg.Server,
+		arg.ServerID,
 		arg.UID,
 		arg.ShowUID,
 		arg.Visibility,
@@ -264,7 +264,7 @@ func (q *Queries) UpdateCharacter(ctx context.Context, arg UpdateCharacterParams
 		&i.PublicID,
 		&i.OwnerID,
 		&i.Name,
-		&i.Server,
+		&i.ServerID,
 		&i.UID,
 		&i.ShowUID,
 		&i.Visibility,
