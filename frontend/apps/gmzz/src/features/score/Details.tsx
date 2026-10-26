@@ -3,6 +3,7 @@ import { useMemory } from '@gamemap/state-memory'
 import { IconChevronDown, IconChevronLeft } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
+import { useCharacterReadOnly } from '@/features/characters/CharacterProvider'
 import { gmzzMemory, isRecord } from '@/lib/memory'
 
 /** Which details the player has folded away, by id; anything absent is open. */
@@ -13,9 +14,15 @@ const foldedDraft = gmzzMemory.draft('score/folded', {
   validate: (value: unknown): value is Folded => isRecord(value) && Object.values(value).every((v) => typeof v === 'boolean'),
 })
 
-/** One detail's open state, remembered across reloads. */
+/**
+ * One detail's open state, remembered across reloads. A read-only character
+ * shows every detail, since a visitor came to see the whole build and every
+ * control that would fold one is disabled with the rest.
+ */
 export function useDetailsOpen(id: string): readonly [boolean, () => void] {
   const [folded, setFolded] = useMemory(foldedDraft)
+  const readOnly = useCharacterReadOnly()
+  if (readOnly) return [true, () => {}] as const
   const open = !folded[id]
   return [open, () => setFolded((prev) => ({ ...prev, [id]: open }))] as const
 }

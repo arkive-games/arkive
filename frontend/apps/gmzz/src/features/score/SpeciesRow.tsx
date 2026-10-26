@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useCharacterReadOnly } from '@/features/characters/CharacterProvider'
 import { DetailsBody, DetailsToggle, useDetailsOpen } from '@/features/score/Details'
 import { clamp, materialsFor, type Rating, type SpeciesResult } from '@/features/score/data'
 import { TYPE } from '@/lib/typography'
@@ -141,12 +142,13 @@ export function ItemCard({ id, items, rating, unsupported, details }: {
   details?: ReactNode
 }) {
   const [open, toggle] = useDetailsOpen(id)
+  const readOnly = useCharacterReadOnly()
   const bodyId = `score-details-${id}`
   return (
     <article className="space-y-2 rounded-md border border-border bg-card p-2.5" data-testid={`score-card-${id}`}>
       {items.map((item, index) => (
         <ItemRow key={item.species.id} item={item} rating={rating} unsupported={unsupported?.(item) ?? false}
-          toggle={details && index === 0
+          toggle={details && index === 0 && !readOnly
             ? <DetailsToggle open={open} onToggle={toggle} controls={bodyId} testId={`score-details-toggle-${id}`} />
             : null} />
       ))}

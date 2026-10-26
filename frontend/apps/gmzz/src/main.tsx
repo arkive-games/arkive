@@ -12,7 +12,7 @@ import TrainTradeGoodsPage from './features/traintrade/TrainTradeGoodsPage'
 import TrainTradeStationToolPage from './features/traintrade/TrainTradeStationToolPage'
 import UtopiaPage from './features/utopia/UtopiaPage'
 import ReforgePage from './features/reforge/ReforgePage'
-import ScorePage from './features/score/ScorePage'
+import ScorePage, { SavedScorePage } from './features/score/ScorePage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import LeaguePointsPage from './features/league/LeaguePointsPage'
 import AutoChessRulesPage from './features/autochess/AutoChessRulesPage'
@@ -45,7 +45,16 @@ const trainTradeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/t
 const stationToolRoute = createRoute({ getParentRoute: () => rootRoute, path: '/tools/traintrade-station', component: TrainTradeStationToolPage })
 const utopiaRoute = createRoute({ getParentRoute: () => rootRoute, path: '/utopia', component: UtopiaPage })
 const reforgeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/reforge', component: ReforgePage })
-const scoreRoute = createRoute({ getParentRoute: () => rootRoute, path: '/score', component: ScorePage })
+// `?draft` opens the local draft even for a player with saved characters.
+const scoreRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/score',
+  validateSearch: (search: Record<string, unknown>): { draft?: boolean } =>
+    search.draft === true || search.draft === 'true' ? { draft: true } : {},
+  component: ScorePage,
+})
+// A saved character, by the public id it is shared with.
+const savedScoreRoute = createRoute({ getParentRoute: () => rootRoute, path: '/score/c/$id', component: SavedScorePage })
 const changelogRoute = createRoute({ getParentRoute: () => rootRoute, path: '/changelog', component: ChangelogPage })
 const leaguePointsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/tools/league-points', component: LeaguePointsPage })
 
@@ -68,7 +77,7 @@ const fellowRelationsRoute = createRoute({ getParentRoute: () => rootRoute, path
 const managedTradeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/managedtrade', validateSearch: managedTradeSearch, component: ManagedTradePage })
 
 const routeTree = rootRoute.addChildren([
-  homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, changelogRoute, leaguePointsRoute,
+  homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, savedScoreRoute, changelogRoute, leaguePointsRoute,
   autoChessRoute, autoChessPiecesRoute, autoChessBondsRoute, autoChessItemsRoute, autoChessTalentsRoute,
   fellowsRoute, fellowRelationsRoute, managedTradeRoute,
   createRoute({ getParentRoute: () => rootRoute, path: '/secretpartners', component: SecretPartnersPage }),

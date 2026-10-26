@@ -43,6 +43,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/score/*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/tools/traintrade-station",
       "destination": "/index.html"
     },

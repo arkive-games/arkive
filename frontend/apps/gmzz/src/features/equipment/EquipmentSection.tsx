@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import RangeField from '@/components/RangeField'
 import StepSelect from '@/components/StepSelect'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
-import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+import { useSection } from '@/features/characters/CharacterProvider'
+import { gmzzMemory } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
 import { Input } from '@gamemap/ui'
 import { useMemory } from '@gamemap/state-memory'
@@ -104,50 +105,6 @@ const ROW_GRID =
   'xl:grid-cols-[minmax(10rem,12rem)_minmax(10rem,11rem)_minmax(16rem,19rem)_minmax(0,2fr)_minmax(9rem,12rem)] xl:gap-5'
 
 /* ------------------------------------------------------------- persistence */
-
-type BatchState = { stage: number; badge: number }
-
-/** The loadout as stored: what was picked, before it is checked against the dataset. */
-type EquipmentDraft = { pieces: PieceState[]; batch: BatchState; suitChoice: number | null }
-
-function isChosenAffix(value: unknown): value is ChosenAffix {
-  return isRecord(value) && typeof value.family === 'string' && isFiniteNumber(value.value)
-}
-
-function isPieceState(value: unknown): value is PieceState {
-  return (
-    isRecord(value) &&
-    isFiniteNumber(value.slot) &&
-    isNullableNumber(value.itemId) &&
-    isFiniteNumber(value.enhanceStage) &&
-    isFiniteNumber(value.refinePercent) &&
-    Array.isArray(value.affixes) &&
-    value.affixes.every(isChosenAffix)
-  )
-}
-
-function isEquipmentDraft(value: unknown): value is EquipmentDraft {
-  return (
-    isRecord(value) &&
-    Array.isArray(value.pieces) &&
-    value.pieces.every(isPieceState) &&
-    isRecord(value.batch) &&
-    isFiniteNumber(value.batch.stage) &&
-    isFiniteNumber(value.batch.badge) &&
-    isNullableNumber(value.suitChoice)
-  )
-}
-
-/**
- * The loadout survives a reload. A calculator's inputs are a draft in the
- * state-memory sense — costly to retype, not a record of progress — so it takes
- * that class's thirty-day life. Only the fields listed in `isEquipmentDraft`
- * are ever read back.
- */
-const equipmentDraft = gmzzMemory.draft('score/equipment', {
-  default: (): EquipmentDraft => ({ pieces: [], batch: { stage: 0, badge: 0 }, suitChoice: null }),
-  validate: isEquipmentDraft,
-})
 
 const equipmentLayout = gmzzMemory.preference('score/equipment-layout', {
   default: 'rows' as LayoutMode,
@@ -834,7 +791,7 @@ export default function EquipmentSection({
   const { t } = useTranslation()
   const slots = useMemo(() => scoredSlots(equipment, graces), [equipment, graces])
   const [layout, setLayout] = useMemory(equipmentLayout)
-  const [draft, setDraft] = useMemory(equipmentDraft)
+  const [draft, setDraft] = useSection('equipment')
   // Which slot's picker is open. One modal for all eight pieces: they never open
   // together, and a modal per piece would mount eight dialogs' worth of portals.
   const [pickerSlot, setPickerSlot] = useState<number | null>(null)

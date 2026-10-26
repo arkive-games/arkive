@@ -1,5 +1,3 @@
-import { useMemory } from '@gamemap/state-memory'
-
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import type { ChosenRelicAffix, RelicServer } from '@/features/relics/data'
 
@@ -88,13 +86,3 @@ export const relicDraft = gmzzMemory.draft('score/relics', {
   default: (): RelicDraft => ({ knowledgeLevel: null, slots: [] }),
   validate: isRelicDraft,
 })
-
-/**
- * Where the relics are scored, shared through the draft record so every toggle
- * bound to it — the one at the top of the page and the one in the relic
- * section — reads and writes the same value.
- */
-export function useRelicServer(): readonly [RelicServer, (next: RelicServer) => void] {
-  const [draft, setDraft] = useMemory(relicDraft)
-  return [draft.server ?? 'local', (next) => setDraft((prev) => ({ ...prev, server: next }))] as const
-}

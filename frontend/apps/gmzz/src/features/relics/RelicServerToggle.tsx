@@ -2,7 +2,7 @@ import { Hint, TooltipProvider } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { TYPE } from '@/lib/typography'
-import { useRelicServer } from '@/features/relics/memory'
+import { useRelicServer } from '@/features/relics/useRelicServer'
 import type { RelicServer } from '@/features/relics/data'
 
 const SERVERS: RelicServer[] = ['local', 'cross']

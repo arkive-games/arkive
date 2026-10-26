@@ -146,8 +146,8 @@ per section, backed by one of three sources:
 
 - **Local draft** — not signed in, or signed in with no character selected. The existing
   `gmzzMemory` drafts, unchanged keys.
-- **Cloud character** — a local working copy under a per-character key
-  (`score/character/<publicId>`), plus autosave to the server.
+- **Cloud character** — a local working copy in the never-expiring `progress` record
+  `score/saved-character`, partitioned by public id, plus autosave to the server.
 - **Read-only** — another player's character; setters are no-ops and every input is disabled.
 
 ### Never lose local data
@@ -161,15 +161,17 @@ per section, backed by one of three sources:
 ### Autosave
 
 Upload after 10 s without edits, and at most every 60 s during continuous editing. Flush
-immediately on switching character, on `visibilitychange` to hidden, and on `pagehide`
-(`fetch` with `keepalive`). Each PATCH carries the last known `revision`. On 409 the page shows
+immediately on switching character, on `visibilitychange` to hidden, and on `pagehide`. The
+flush is best-effort: an upload the browser cuts off loses nothing, because the edit is
+already in the working copy and is sent the next time the character opens. Each PATCH carries the last known `revision`. On 409 the page shows
 a dialog: keep mine (re-send against the server's revision) or load the server's version. A
 save-state indicator shows saved / saving / offline-pending / conflict.
 
 ### Routes
 
 - `/score` — not signed in: the local draft, as today. Signed in: redirects to the last edited
-  character if one exists, else shows the local draft with the save prompt.
+  character if it still exists, else shows the local draft with the save prompt.
+  `/score?draft=true` always opens the local draft; the switcher links there.
 - `/score/c/$publicId` — the owner edits; anyone else reads, with "copy as my character"
   (sign-in prompt when anonymous) and a note that scores are computed from the current dataset.
 - `edgeone.json` gains `"/score/c/*"` in the same commit as the route.

@@ -192,6 +192,9 @@ importers:
 
   apps/gmzz:
     dependencies:
+      '@gamemap/api-core':
+        specifier: workspace:*
+        version: link:../../packages/api-core
       '@gamemap/auth':
         specifier: workspace:*
         version: link:../../packages/auth

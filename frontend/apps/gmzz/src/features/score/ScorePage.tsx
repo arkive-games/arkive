@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { IconDatabase, IconInfoCircle } from '@tabler/icons-react'
-import { useMemory } from '@gamemap/state-memory'
 import { Input, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -19,7 +19,7 @@ import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
-import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft, scoringOnDay } from '@/features/score/bonds'
+import { carriedPuppetSkill, clampSkillLevel, evaluatePuppets, historyScore, scoringOnDay } from '@/features/score/bonds'
 import { serverDay } from '@/lib/server'
 import { carriedFellowSkill, relationResearchPoints, pathwaySkillScore, skillLevelCap, starMap } from '@/features/score/fellowSkill'
 import {
@@ -34,49 +34,13 @@ import {
 } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
 import PathwaySection, { LEVEL_MODULE, SKILL_MODULE, TALENT_MODULE } from '@/features/score/PathwaySection'
-import { carryTalents, emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, talentLimits, treeFor, type Talents } from '@/features/score/talents'
+import { carryTalents, evaluateTalents, loadTalents, talentLimits, treeFor, type Talents } from '@/features/score/talents'
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
-import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
+import { CharacterBar } from '@/features/characters/CharacterBar'
+import { CharacterProvider, useCharacter, useSection } from '@/features/characters/CharacterProvider'
+import { lastCharacter } from '@/features/characters/memory'
+import { useMemory } from '@gamemap/state-memory'
 import { TYPE } from '@/lib/typography'
-
-/** The character's progression: levels and pathway. */
-type CharacterDraft = {
-  roleLevel: number
-  divinityLevel: number
-  /** `null` until a pathway is picked; the page then seeds the first playable one. */
-  professionId: number | null
-}
-
-function isCharacterDraft(value: unknown): value is CharacterDraft {
-  return (
-    isRecord(value) &&
-    isFiniteNumber(value.roleLevel) &&
-    isFiniteNumber(value.divinityLevel) &&
-    isNullableNumber(value.professionId)
-  )
-}
-
-/**
- * The inputs survive a reload. They are a draft in the state-memory sense — a
- * calculator's configuration, costly to retype — so they take that class's
- * thirty-day life rather than living for ever.
- */
-const characterDraft = gmzzMemory.draft('score/character', {
-  default: (): CharacterDraft => ({ roleLevel: 70, divinityLevel: 0, professionId: null }),
-  validate: isCharacterDraft,
-})
-
-/** The 非凡人物 inputs: owned puppets with their stage and slot, and the research rank. Same draft class and life. */
-const bondsDraft = gmzzMemory.draft('score/bonds', {
-  default: emptyBondsDraft,
-  validate: isBondsDraft,
-})
-
-/** The 途径 inputs: the active talent tree and every node's level. */
-const talentDraft = gmzzMemory.draft('score/talents', {
-  default: emptyTalentDraft,
-  validate: isTalentDraft,
-})
 
 /**
  * The client's module keys for the items whose score a section derives and
@@ -101,14 +65,51 @@ const EQUIPMENT_GENUS = 2
 const RELICS_GENUS = 3
 const BONDS_GENUS = 4
 
+/**
+ * The score page on the local draft. A signed-in player who last edited a saved
+ * character is taken back to it, unless they asked for the draft (`?draft`).
+ */
 export default function ScorePage() {
+  const search = useSearch({ strict: false }) as { draft?: boolean }
+  return (
+    <CharacterProvider id={null}>
+      <ReturnToLastCharacter skip={Boolean(search.draft)} />
+      <ScoreView />
+    </CharacterProvider>
+  )
+}
+
+/** The score page on a saved character: the owner edits it, anyone else reads it. */
+export function SavedScorePage() {
+  const { id } = useParams({ strict: false }) as { id: string }
+  // Keyed so a switch to another character starts from a clean provider.
+  return (
+    <CharacterProvider key={id} id={id}>
+      <ScoreView />
+    </CharacterProvider>
+  )
+}
+
+function ReturnToLastCharacter({ skip }: { skip: boolean }) {
+  const { characters } = useCharacter()
+  const [last] = useMemory(lastCharacter)
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (skip || !last || !characters?.some((entry) => entry.id === last)) return
+    void navigate({ to: '/score/c/$id', params: { id: last }, replace: true })
+  }, [skip, last, characters, navigate])
+  return null
+}
+
+function ScoreView() {
+  const character = useCharacter()
   const { t } = useTranslation()
   const [rating, setRating] = useState<Rating | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [draft, setDraft] = useMemory(characterDraft)
-  const [bonds, setBonds] = useMemory(bondsDraft)
-  const [talentState, setTalentState] = useMemory(talentDraft)
+  const [draft, setDraft] = useSection('character')
+  const [bonds, setBonds] = useSection('bonds')
+  const [talentState, setTalentState] = useSection('talents')
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
   const [talents, setTalents] = useState<Talents | null>(null)
@@ -280,7 +281,21 @@ export default function ScorePage() {
   const bondsData: BondsData = { partners, scoring, ranks, fellows, relations, skillCap, relicSkillBonus }
   const gaps = useMemo(() => (result ? headroom(result).slice(0, 5) : []), [result])
 
-  if (loading) {
+  if (character.id && (character.status === 'missing' || (character.status === 'error' && !character.character))) {
+    return (
+      <ContentPage active="/score" title={t('score.title')} wide>
+        <div className="space-y-2" data-testid="character-missing">
+          <h1 className={TYPE.pageTitle}>{t(character.status === 'missing' ? 'characters.missingTitle' : 'characters.loadErrorTitle')}</h1>
+          {character.status === 'missing' ? <p className={TYPE.body}>{t('characters.missingBody')}</p> : null}
+          <Link to="/score" search={{ draft: true }} className="text-sm font-medium text-[color:var(--arkive-nav-accent)] underline-offset-2 hover:underline">
+            {t('characters.backToDraft')}
+          </Link>
+        </div>
+      </ContentPage>
+    )
+  }
+
+  if (loading || character.status === 'loading') {
     return (
       <ContentPage active="/score" title={t('score.title')} wide>
         <div className="space-y-5" role="status" aria-label={t('common.loading')} data-testid="score-loading">
@@ -321,6 +336,12 @@ export default function ScorePage() {
           <h1 className={TYPE.pageTitle}>{t('score.title')}</h1>
           {relics ? <RelicServerToggle testId="score-relic-server" compact /> : null}
         </header>
+
+        <CharacterBar />
+
+        {/* Read-only for someone else's character: every control below is
+            disabled at once, and the setters ignore writes besides. */}
+        <fieldset disabled={character.readOnly} className="m-0 min-w-0 space-y-4 border-0 p-0" data-testid="score-inputs">
 
         {/* Progression drives every benchmark on the page, so it sits above the
             items rather than beside them. */}
@@ -432,6 +453,8 @@ export default function ScorePage() {
             </ol>
           </section>
         ) : null}
+
+        </fieldset>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <p className="flex items-center gap-2">

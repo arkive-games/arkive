@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useMemory } from '@gamemap/state-memory'
 import { Hint, Input, TooltipProvider } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -9,7 +8,9 @@ import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/P
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
 import { FormulaHint } from '@/features/score/FormulaHint'
-import { relicDraft, storedAffixes, toStoredMaterials, useRelicServer, type StoredRelicSlot } from '@/features/relics/memory'
+import { useSection } from '@/features/characters/CharacterProvider'
+import { storedAffixes, toStoredMaterials, type StoredRelicSlot } from '@/features/relics/memory'
+import { useRelicServer } from '@/features/relics/useRelicServer'
 import {
   MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason,
   evaluateRelicSlot, formatStat, gradeOptions, gradeQuality, gradeRung, isRareAffix, k1For, k2For,
@@ -689,7 +690,7 @@ export default function RelicSection({ relics, onTotals }: {
 }) {
   const { t } = useTranslation()
   const season = useMemo(() => currentSeason(relics), [relics])
-  const [draft, setDraft] = useMemory(relicDraft)
+  const [draft, setDraft] = useSection('relics')
   const [server] = useRelicServer()
   const knowledgeLevel = useMemo(() => {
     const ladder = knowledgeLadder(relics, season)
