@@ -89,9 +89,9 @@ export default function PathwaySection({
           return {
             kind: 'derived',
             calculator: (
-              <div className="space-y-2" data-testid="pathway-skill">
-                <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="pathway-skill-level" onChange={onSkillLevel} />
-                <p className={TYPE.body}>{t('pathway.skillFormula', { per: PATHWAY_SKILL_PER_LEVEL, base: PATHWAY_SKILL_BASE })}</p>
+              <div data-testid="pathway-skill">
+                <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="pathway-skill-level" onChange={onSkillLevel}
+                  note={t('pathway.skillFormula', { per: PATHWAY_SKILL_PER_LEVEL, base: PATHWAY_SKILL_BASE })} />
               </div>
             ),
           }

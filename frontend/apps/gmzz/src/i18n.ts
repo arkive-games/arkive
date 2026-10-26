@@ -544,7 +544,7 @@ const en = {
   },
   pathway: {
     "limits": "Open talents {{nodes}} · up to Lv{{level}} each",
-    "skillFormula": "Score = {{per}} × skill level + {{base}}, from the shared skill level (relic levels excluded). Below role level 47 some skills are still locked and the game's own curve is used.",
+    "skillFormula": "Score = {{per}} × level + {{base}} (the game curve before role level 47).",
     "hint": "Level equals its expected benchmark and extraordinary talent is derived from the active talent tree. Pathway skill is a server value with no client formula, so copy it from the panel.",
     "unavailable": "The talent trees have not loaded.",
     "noTrees": "This pathway has no talent tree in the data yet.",
@@ -619,8 +619,8 @@ const en = {
     "researchTotal": "Research total",
     "researchHint": "Every relation pays its research reward for each tier it has reached; tiers follow from the connection stars set under connection skill. Relations alone reach 784 at most, so add points from other sources to match the panel's cumulative figure.",
     "skillLevelRelic": "Relic rare affixes add +{{bonus}} (in game {{total}}); this does not score",
-    "skillLevelRelicNote": "Relic rare affixes raise the pathway, puppet and connection skill levels, but those extra levels never count toward the score.",
-    "skillLevelCap": "Skill level (cap {{cap}})"
+    "skillLevelRelicNote": "Levels added by relic rare affixes never score.",
+    "skillLevelCapShort": "Cap Lv{{cap}}",
   },
   league: {
     "title": "League points simulator", "homeDescription": "Enter weekly placements or a total and explore top-four qualification.", "eyebrow": "Strategy server · Four-way league", "description": "Enter each guild's name, weekly placement, group, and optional total. The tool calculates every weekly score and can infer missing placements when the possibilities stay manageable.", "rulesTitle": "Scoring rules", "rulesHint": "Match points and both round-final bonus tables are editable.", "reset": "Reset example", "matchPoints": "Match points", "round1Bonuses": "Round 1 final points", "round2Bonuses": "Round 2 final points", "place": "Place {{rank}}", "rosterTitle": "Guilds and weekly inputs", "rosterHint": "Enter up to eight guilds. Leave a placement blank to infer it; enter a total to filter possible weekly combinations.", "target": "Target guild", "guild": "Guild", "startingPoints": "Starting points", "weekTotal": "R1 / R2 / Total", "weekShort": "Week {{week}}", "targetTotal": "Known total", "group": "Group", "winner": "Winner group", "loser": "Loser group", "remove": "Remove guild", "newGuild": "New guild", "addGuild": "Add guild", "rosterInvalid": "Need eight guilds with four winner and four loser entries in weeks 2 and 4.", "inputHint": "Week 1 and 3 use the overall ranking; weeks 2 and 4 use separate winner/loser groups.", "summaryTitle": "Qualification summary", "completeRoster": "Complete the eight-guild roster before calculating.", "possibleRanks": "Possible final ranks for the target", "scenarioCount": "{{count}} matching combinations", "canQualify": "Qualification is possible", "qualifyCount": "{{count}} matching combinations finish in the top four.", "noMatch": "No weekly combination matches this total.", "pathsTitle": "Possible weekly paths", "noPath": "No path can be shown with these inputs.", "tooMany": "There are more than {{limit}} possible combinations. Add more weekly placements or totals to continue.", "currentTitle": "Calculated scores", "round1Total": "Round 1", "round2Total": "Round 2", "finalTotal": "Final total", "finalRank": "Final rank", "rankValue": "Rank {{rank}}", "points": "points", "weekPath": "Weekly placements"
@@ -1301,7 +1301,7 @@ const zhCN: Strings = {
   },
   pathway: {
     "limits": "开放 {{nodes}} 个天赋 · 每个上限 {{level}} 级",
-    "skillFormula": "分数 = {{per}} × 技能等级 + {{base}}，技能等级与秘偶、人脉共用（不含封印物加的等级）。扮演等级 47 级前部分技能未解锁，按游戏曲线计。",
+    "skillFormula": "分数 = {{per}} × 技能等级 + {{base}}（扮演 47 级前按游戏曲线）。",
     "hint": "等级分数等于其期望值；非凡天赋按当前生效的天赋树推算；途径技能由服务器计算、客户端没有公式，请抄面板数值。",
     "unavailable": "天赋树数据暂未加载。",
     "noTrees": "数据中暂无该途径的天赋树。",
@@ -1376,8 +1376,8 @@ const zhCN: Strings = {
     "researchTotal": "研究值合计",
     "researchHint": "每个关系按已达到的阶数累计研究值奖励，关系阶数由人脉技能中设置的星级自动算出。全部关系满阶最多 784，请补上其他来源的研究值，使合计与面板上的累计研究值一致。",
     "skillLevelRelic": "封印物稀有词条 +{{bonus}}（游戏内 {{total}} 级），不计分",
-    "skillLevelRelicNote": "封印物稀有词条会提升途径、秘偶、人脉技能等级，但这部分等级不计入评分。",
-    "skillLevelCap": "技能等级（上限 {{cap}}）"
+    "skillLevelRelicNote": "封印物稀有词条提升的技能等级不计分。",
+    "skillLevelCapShort": "上限 {{cap}} 级",
   },
   league: {
     "title": "诡秘之主战略服积分推演器", "homeDescription": "输入每周排名和积分，推演晋级前四的所有路径。", "eyebrow": "战略服 · 四方联赛",
@@ -2060,7 +2060,7 @@ const zhTW: Strings = {
   },
   pathway: {
     "limits": "開放 {{nodes}} 個天賦 · 每個上限 {{level}} 級",
-    "skillFormula": "分數 = {{per}} × 技能等級 + {{base}}，技能等級與秘偶、人脈共用（不含封印物加的等級）。扮演等級 47 級前部分技能未解鎖，按遊戲曲線計。",
+    "skillFormula": "分數 = {{per}} × 技能等級 + {{base}}（扮演 47 級前按遊戲曲線）。",
     "hint": "等級分數等於其期望值；非凡天賦按目前生效的天賦樹推算；途徑技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
     "unavailable": "天賦樹資料尚未載入。",
     "noTrees": "資料中尚無該途徑的天賦樹。",
@@ -2135,8 +2135,8 @@ const zhTW: Strings = {
     "researchTotal": "研究值合計",
     "researchHint": "每個關係按已達到的階數累計研究值獎勵，關係階數由人脈技能中設定的星級自動算出。全部關係滿階最多 784，請補上其他來源的研究值，使合計與面板上的累計研究值一致。",
     "skillLevelRelic": "封印物稀有詞條 +{{bonus}}（遊戲內 {{total}} 級），不計分",
-    "skillLevelRelicNote": "封印物稀有詞條會提升途徑、秘偶、人脈技能等級，但這部分等級不計入評分。",
-    "skillLevelCap": "技能等級（上限 {{cap}}）"
+    "skillLevelRelicNote": "封印物稀有詞條提升的技能等級不計分。",
+    "skillLevelCapShort": "上限 {{cap}} 級",
   },
   league: {
     "title": "詭秘之主戰略服積分推演器", "homeDescription": "輸入每週排名和積分，推演晉級前四的所有路徑。", "eyebrow": "戰略服 · 四方聯賽",
