@@ -19,7 +19,10 @@ import {
   activeMaterialIndexes,
   gradeOptions,
   inactiveAffixes,
+  materialName,
   materialTypeAt,
+  gradeQuality,
+  relicTotals,
   usedGroups,
   statName,
   typePool,
@@ -336,19 +339,13 @@ describe('evaluateRelicSlot', () => {
     { stat: 'Crit_N', value: 365, mark: 1400 },
   ]
 
-  it('adds the three parts', () => {
+  it('keeps every part unfloored, assembly scaled by k2', () => {
     const result = evaluateRelicSlot(RELICS, { ...base, materials: [three, []] }, 11, 103)
-    expect(result.assemblyScore).toBe(500)
-    // calcSealedEnhanceMark: floor(4732 × k1 0.32) = floor(1514.24)
-    expect(result.resonanceScore).toBe(1514)
-    expect(result.affixScore).toBe(1269)
-    expect(result.total).toBe(500 + 1514 + 1269)
-  })
-
-  it('scales resonance by k1 and floors once, as the client does', () => {
-    const one = { ...base, materials: [[at(1284)], []] }
-    expect(evaluateRelicSlot(RELICS, one, 0, 103).resonanceScore).toBe(Math.floor(1352 * 0.1))
-    expect(evaluateRelicSlot(RELICS, one, 11, 103).resonanceScore).toBe(Math.floor(1352 * 0.32))
+    expect(result.assemblyScore).toBeCloseTo(500 * 0.32)
+    expect(result.resonanceScore).toBeCloseTo(4732 * 0.32)
+    expect(result.affixScore).toBeCloseTo(3968 * 0.32)
+    // One relic alone still floors to the screenshot's 1269.
+    expect(Math.floor(result.affixScore)).toBe(1269)
   })
 
   it('switches off the lowest-scoring affix past the cap, not the last one added', () => {
@@ -357,47 +354,94 @@ describe('evaluateRelicSlot', () => {
     const result = evaluateRelicSlot(RELICS, { ...base, materials: [five, []] }, 11, 103)
     expect(result.materials[0].inactive).toEqual([false, true, false, false, false])
     expect(result.materials[0].activeCount).toBe(4)
-    expect(result.affixScore).toBe(Math.floor(0.32 * (1284 * 3 + 1867)))
-    expect(result.resonanceScore).toBe(Math.floor(7662 * 0.32))
+    expect(result.affixScore).toBeCloseTo(0.32 * (1284 * 3 + 1867))
+    expect(result.resonanceScore).toBeCloseTo(7662 * 0.32)
   })
 
   it('scores grade 1 as grade 2 off the strategic server, assembly included', () => {
     const six = Array.from({ length: 6 }, () => at(1284))
     const local = evaluateRelicSlot(RELICS, { ...base, grade: 1, materials: [six, []] }, 11, 103, 'local')
-    // Five words count, tier x02 at five pays 11268, and assembly is grade 2's.
     expect(local.resonanceGrade).toBe(2)
     expect(local.materials[0].activeCount).toBe(5)
-    expect(local.resonanceScore).toBe(Math.floor(11268 * 0.32))
-    expect(local.assemblyScore).toBe(2500)
+    expect(local.resonanceScore).toBeCloseTo(11268 * 0.32)
+    expect(local.assemblyScore).toBeCloseTo(2500 * 0.32)
     const cross = evaluateRelicSlot(RELICS, { ...base, grade: 1, materials: [six, []] }, 11, 103, 'cross')
-    expect(cross.resonanceGrade).toBe(1)
     expect(cross.materials[0].activeCount).toBe(6)
-    expect(cross.resonanceScore).toBe(Math.floor(15776 * 0.32))
-    expect(cross.assemblyScore).toBe(4500)
+    expect(cross.resonanceScore).toBeCloseTo(15776 * 0.32)
+    expect(cross.assemblyScore).toBeCloseTo(4500 * 0.32)
+  })
+
+  it('matches the game at knowledge 39: grade 3 assembles 440, grade 2 2200', () => {
+    const k = (grade: number) => evaluateRelicSlot(RELICS, { ...base, grade, materials: [[], []] }, 39, 103).assemblyScore
+    const withLevel: Relics = { ...RELICS, knowledge: { '103': [...RELICS.knowledge['103'], { level: 39, k1: 0.88, k2: 0.88, roleLevelRequired: 1 }] } }
+    const at39 = (grade: number) => evaluateRelicSlot(withLevel, { ...base, grade, materials: [[], []] }, 39, 103).assemblyScore
+    expect(Math.floor(at39(3) + 1e-9)).toBe(440)
+    expect(Math.floor(at39(2) + 1e-9)).toBe(2200)
+    expect(k(3)).toBeCloseTo(50)
   })
 
   it('counts 填充二 on the strategic server only', () => {
     const slot = { ...base, materials: [three, three] }
     const local = evaluateRelicSlot(RELICS, slot, 11, 103, 'local')
     expect(local.materials[1].applies).toBe(false)
-    expect(local.affixScore).toBe(1269)
+    expect(local.affixScore).toBeCloseTo(3968 * 0.32)
     const cross = evaluateRelicSlot(RELICS, slot, 11, 103, 'cross')
-    expect(cross.affixScore).toBe(1269 * 2)
-    expect(cross.resonanceScore).toBe(1514 * 2)
+    expect(cross.affixScore).toBeCloseTo(3968 * 0.32 * 2)
   })
 
   it('scores only the equipped 特化 material', () => {
     const slot = { groupId: 3, artifactId: null, grade: 3, materialType: 2, materials: [three, [at(1284)]] }
     const result = evaluateRelicSlot(RELICS, slot, 11, 103, 'cross')
     expect(result.materials.map((m) => m.applies)).toEqual([false, true])
-    expect(result.affixScore).toBe(Math.floor(0.32 * 1284))
+    expect(result.affixScore).toBeCloseTo(0.32 * 1284)
+  })
+})
+
+describe('relicTotals', () => {
+  it('adds the relics up first and floors each item once', () => {
+    const slot = (groupId: number) => ({ groupId, artifactId: null, grade: 3, materials: [[at3()], []] })
+    const at3 = () => ({ stat: 'Atk_N', value: 490, mark: 1284 })
+    const results = [1, 2, 3].map((g) => evaluateRelicSlot(RELICS, slot(g), 11, 103))
+    // 1284 × 0.32 = 410.88 each: three floored apart give 1230, together 1232.
+    expect(results.reduce((sum, r) => sum + Math.floor(r.affixScore), 0)).toBe(1230)
+    const totals = relicTotals(results)
+    expect(totals.affix).toBe(1232)
+    expect(totals.total).toBe(totals.assembly + totals.resonance + totals.affix)
+  })
+})
+
+describe('materialName', () => {
+  const rules = [
+    { id: 1, type: 1, name: '异变物质', rule: 'HasWordType', args: [4, 1], expect: true },
+    { id: 2, type: 1, name: '异变物质', rule: 'HasWordType', args: [3, 1], expect: true },
+    { id: 3, type: 1, name: '劲攻物质', rule: 'SameWordTypeCount', args: [2, 4], expect: true },
+    { id: 4, type: 1, name: '攻击物质', rule: 'Quality', args: [5], expect: true },
+    { id: 5, type: 1, name: '基础物质', rule: 'LowQuality', args: [], expect: true },
+  ]
+  const named: Relics = { ...RELICS, materials: { ...RELICS.materials, nameRules: rules } }
+  const pool = [
+    { id: 1, mark: 1, stat: 'Atk_N', value: 1, groupId: 101, saturation: 1, tag: 2 },
+    { id: 2, mark: 1, stat: 'Crit_N', value: 1, groupId: 106, saturation: 1, tag: 2 },
+    { id: 3, mark: 1, stat: 'Pierce_N', value: 1, groupId: 103, saturation: 1, tag: 2 },
+    { id: 4, mark: 1, stat: 'Dex_N', value: 1, groupId: 108, saturation: 1, tag: 2 },
+    { id: 5, mark: 1, stat: 'AllControlAcc_N', value: 1, groupId: 109, saturation: 1, tag: 1 },
+    { id: 6, mark: 1, stat: 'Atk_N', value: 1, groupId: 2, saturation: 1, tag: 3, name: '战争主教' },
+  ]
+  const pick = (...ids: number[]) => ids.map((id) => ({ stat: 'x', value: 0, mark: 0, affixId: id }))
+
+  it('takes the first rule that holds, in the client\'s order', () => {
+    expect(materialName(named, 1, pool, pick(1, 5))).toBe('攻击物质')
+    expect(materialName(named, 1, pool, pick(1, 2, 3, 4))).toBe('劲攻物质')
+    expect(materialName(named, 1, pool, pick(1, 2, 3, 4, 6))).toBe('异变物质')
   })
 
-  it('pays assembly alone with nothing socketed', () => {
-    const result = evaluateRelicSlot(RELICS, { ...base, artifactId: null, materials: [[], []] }, 11, 103)
-    expect(result.artifact).toBeNull()
-    expect(result.affixScore).toBe(0)
-    expect(result.resonanceScore).toBe(0)
-    expect(result.assemblyScore).toBe(500)
+  it('is null for a dataset without rules', () => {
+    expect(materialName(RELICS, 1, pool, pick(1))).toBeNull()
+  })
+})
+
+describe('gradeQuality', () => {
+  it('is purple, gold and orange for grades 3, 2 and 1', () => {
+    expect([3, 2, 1].map(gradeQuality)).toEqual([4, 5, 6])
   })
 })

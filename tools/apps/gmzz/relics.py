@@ -93,6 +93,7 @@ MAT_TABLE = "XtraMatInfoData"
 MAT_TC_TABLE = "XtraMatTCData"
 MAT_WORD_TABLE = "XtraMatRandomWordData"
 MAT_GROUP_TABLE = "XtraMatRandomGroupData"
+MAT_NAME_TABLE = "XtraMatNameRuleData"
 WORTH_TABLE = "XMatPropWorthData"
 PROP_MODE_TABLE = "FightPropModeData"
 PROP_SET_TABLE = "FightPropModeSetData"
@@ -107,6 +108,8 @@ _TAG = re.compile(r"<[^>]+>")
 #: A rare affix's name is wrapped in angle brackets (``<愚者>``), which
 #: ``_plain`` would strip as client markup and leave empty.
 _BRACKETED = re.compile(r"^<([^<>/=]+)>$")
+#: ``HasWordType(4, 1)=true`` -> ("HasWordType", [4, 1], True).
+_NAME_RULE = re.compile(r"^\s*(\w+)\(([^)]*)\)\s*=\s*(true|false)\s*$")
 
 
 def _rows(payload) -> list:
@@ -372,8 +375,32 @@ def materials(excel: Path, strings: dict) -> dict:
     return {
         "items": items,
         "groups": dict(sorted(groups.items())),
+        "nameRules": name_rules(excel, strings),
         "affixPool": {k: dict(v) for k, v in sorted(pool.items())},
     }
+
+
+def name_rules(excel: Path, strings: dict) -> list[dict]:
+    """How a material's name follows from its roll, in the order the client tries them.
+
+    ``XtraMatNameRuleData`` is an ordered list per material type; the first
+    rule that holds names the material. ``HasWordType(t, n)`` and
+    ``SameWordTypeCount(t, n)`` count words of ``Type`` t (1 凡, 2 珍, 3 稀,
+    4 异), ``Quality(q)`` and ``LowQuality()`` read the item's own quality. The
+    rules ship parsed rather than evaluated: the roll is the player's.
+    """
+    out = []
+    for row in _rows(resolve_text(load_table(excel, MAT_NAME_TABLE), strings)):
+        match = _NAME_RULE.match(row.get("AppearRule") or "")
+        if not match:
+            raise RuntimeError(f"{MAT_NAME_TABLE} {row.get('ID')}: unparsed rule {row.get('AppearRule')!r}")
+        fn, raw, expect = match.groups()
+        args = [int(a) for a in raw.split(",") if a.strip()]
+        out.append({
+            "id": row["ID"], "type": row.get("Type"), "name": _plain(row.get("Name")),
+            "rule": fn, "args": args, "expect": expect == "true",
+        })
+    return sorted(out, key=lambda r: r["id"])
 
 
 def stat_names(excel: Path, strings: dict, keys: set[str]) -> dict:

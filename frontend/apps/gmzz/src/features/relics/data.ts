@@ -92,6 +92,9 @@ export type PoolAffix = {
   rarest?: boolean
 }
 
+/** One `XtraMatNameRuleData` row: `HasWordType(4, 1)=true` names a type-1 material 异变物质. */
+export type MaterialNameRule = { id: number; type: number; name: string; rule: string; args: number[]; expect: boolean }
+
 /** A stat key's Chinese display name, and whether it reads as a percentage. */
 export type StatName = { name: string; format: 'percent' | 'number' }
 
@@ -104,7 +107,13 @@ export type Relics = {
   knowledge: Record<string, KnowledgeRung[]>
   /** season -> stat key -> Mark per point. */
   worths: Record<string, Record<string, number>>
-  materials: { items: Material[]; groups: Record<string, unknown>; affixPool: Record<string, Record<string, PoolAffix[]>> }
+  materials: {
+    items: Material[]
+    groups: Record<string, unknown>
+    affixPool: Record<string, Record<string, PoolAffix[]>>
+    /** Ordered naming rules; absent in datasets published before they were emitted. */
+    nameRules?: MaterialNameRule[]
+  }
   constants: Record<string, unknown>
   groupNames: Record<string, string>
   /** Stat key -> display name. Absent in datasets published before it was emitted. */
@@ -162,6 +171,14 @@ export function artifactsInGroup(relics: Relics, groupId: number): Artifact[] {
 
 export function gradeRung(relics: Relics, grade: number): GradeRung | undefined {
   return relics.promotion.ladder.find((rung) => rung.grade === grade)
+}
+
+/**
+ * The rarity plate behind a relic's icon at a grade: 3级 purple (quality 4),
+ * 2级 gold (5), 1级 orange (6) — the game's own plates, one step per grade.
+ */
+export function gradeQuality(grade: number): number {
+  return 7 - Math.min(3, Math.max(1, grade))
 }
 
 /**
@@ -253,7 +270,10 @@ export type RelicSlotState = {
   /** 1 攻击, 2 防御, 3 特化. */
   groupId: number
   artifactId: number | null
+  /** The selected artifact's grade. */
   grade: number
+  /** Every artifact's own grade, by artifact id, so switching artifacts keeps each one's. */
+  grades?: Record<string, number>
   /** 特化 only: which of its two materials is equipped, 1 攻击 or 2 防御. */
   materialType?: number
   /**
@@ -388,10 +408,14 @@ export function evaluateRelicSlot(
 
   // Everything reads the server-capped grade: off the strategic server a
   // grade-1 relic is a grade-2 relic in every respect, its assembly Mark
-  // included. The promote tab previews that Mark as `+%d`, unscaled, so
-  // assembly takes no knowledge coefficient.
+  // included. Assembly scales by k2 like the affixes — every promote row names
+  // `KnowledgeCoef: "k2"`, and at knowledge 39 (k2 0.88) the game shows 440
+  // for grade 3's 500 and 2200 for grade 2's 2500.
   const resonanceGrade = effectiveGrade(relics, state.grade, server)
-  const assemblyScore = gradeRung(relics, resonanceGrade)?.mark ?? 0
+  // Every part is kept unfloored: the game adds the three relics' parts up
+  // first and floors each rating item once (see `relicTotals`). Floored per
+  // relic, three relics drift a point or two below the panel.
+  const assemblyScore = (gradeRung(relics, resonanceGrade)?.mark ?? 0) * k2
   const cap = effectiveAffixCap(relics, resonanceGrade)
   const ladder = resonanceLadder(relics, state.groupId, resonanceGrade, season)
   const active = activeMaterialIndexes(state, server)
@@ -409,13 +433,13 @@ export function evaluateRelicSlot(
       inactive,
       activeCount: effective.length,
       applies,
-      affixScore: applies ? materialScore(effective, k2) : 0,
+      affixScore: applies ? k2 * effective.reduce((sum, affix) => sum + affix.mark, 0) : 0,
       // `calcSealedEnhanceMark`: floor(Mark × professionCoefficient × k1). The
       // profession coefficients are 1 for every row shipped, so they are not
       // modelled; the floor is the client's. Each material is read against
       // its own word count — UNVERIFIED for two materials on the strategic
       // server, where no client code was found that says how they combine.
-      resonanceScore: applies && rung ? Math.floor((rung.mark ?? 0) * k1) : 0,
+      resonanceScore: applies && rung ? (rung.mark ?? 0) * k1 : 0,
       resonanceStats: rung?.stats ?? [],
     }
   })
@@ -436,6 +460,19 @@ export function evaluateRelicSlot(
 }
 
 /** The 非凡共鸣 ladder a relic reads at a grade, by affix count. */
+/**
+ * The three 封印物 rating items over all relics. Each is the unfloored sum
+ * across the relics, floored once — one relic alone matches the game either
+ * way, but three only match when the floor comes last.
+ */
+export function relicTotals(results: RelicSlotResult[]): { assembly: number; resonance: number; affix: number; total: number } {
+  const sum = (pick: (r: RelicSlotResult) => number) => Math.floor(results.reduce((acc, r) => acc + pick(r), 0) + 1e-9)
+  const assembly = sum((r) => r.assemblyScore)
+  const resonance = sum((r) => r.resonanceScore)
+  const affix = sum((r) => r.affixScore)
+  return { assembly, resonance, affix, total: assembly + resonance + affix }
+}
+
 export function resonanceLadder(relics: Relics, groupId: number, grade: number, season?: number): ResonanceRung[] {
   return forSeason(relics.resonance, season)?.[resonanceKey(relics, groupId, grade)] ?? []
 }
@@ -521,6 +558,33 @@ export function poolStats(pool: PoolAffix[]): string[] {
 }
 
 /** The rare words in a pool: the rarest (愚者) first, then by id. */
+/** An affix's word type, 1 凡 · 2 珍 · 3 稀 · 4 异, read off its pool row. */
+export function affixTier(pool: PoolAffix[], affix: ChosenRelicAffix): number {
+  return pool.find((entry) => entry.id === affix.affixId)?.tag ?? 0
+}
+
+/**
+ * A material's name, as the client computes it: the first rule of its type
+ * that holds. Word counts run over every affix the material carries, switched
+ * off or not — the name belongs to the roll. Every material here is the
+ * quality-5 kind the page models, so `Quality(5)` holds and `LowQuality()`
+ * (基础物质) does not. Falls back to the slot's own wording when the dataset
+ * has no rules.
+ */
+export function materialName(relics: Relics, type: number, pool: PoolAffix[], affixes: ChosenRelicAffix[]): string | null {
+  const count = (tier: number) => affixes.filter((affix) => affixTier(pool, affix) === tier).length
+  for (const rule of relics.materials.nameRules ?? []) {
+    if (rule.type !== type) continue
+    const [a = 0, b = 0] = rule.args
+    let holds: boolean | null = null
+    if (rule.rule === 'HasWordType' || rule.rule === 'SameWordTypeCount') holds = count(a) >= b
+    else if (rule.rule === 'Quality') holds = a === 5
+    else if (rule.rule === 'LowQuality') holds = false
+    if (holds !== null && holds === rule.expect) return rule.name
+  }
+  return null
+}
+
 export function rareAffixes(pool: PoolAffix[]): PoolAffix[] {
   return pool.filter(isRareAffix).sort((a, b) => Number(b.rarest ?? false) - Number(a.rarest ?? false) || a.id - b.id)
 }

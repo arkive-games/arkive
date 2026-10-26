@@ -13,6 +13,8 @@ export type StoredRelicSlot = {
   groupId: number
   artifactId: number | null
   grade: number
+  /** Each artifact's own grade, by artifact id; `grade` is the selected one's. */
+  grades?: Record<string, number>
   materialType?: number
   materials?: ChosenRelicAffix[][]
   affixes?: ChosenRelicAffix[]
@@ -46,6 +48,7 @@ function isStoredRelicSlot(value: unknown): value is StoredRelicSlot {
     isFiniteNumber(value.groupId) &&
     isNullableNumber(value.artifactId) &&
     isFiniteNumber(value.grade) &&
+    (value.grades === undefined || (isRecord(value.grades) && Object.values(value.grades).every(isFiniteNumber))) &&
     (value.materialType === undefined || isFiniteNumber(value.materialType)) &&
     (value.materialId === undefined || isNullableNumber(value.materialId)) &&
     (value.materials === undefined || (Array.isArray(value.materials) && value.materials.every(isAffixList))) &&

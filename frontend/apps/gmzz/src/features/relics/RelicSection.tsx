@@ -10,10 +10,10 @@ import { iconUrl } from '@/lib/urls'
 import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { relicDraft, useRelicServer, type StoredRelicSlot } from '@/features/relics/memory'
 import {
-  MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason, effectiveAffixCap,
-  effectiveGrade, evaluateRelicSlot, formatStat, gradeOptions, gradeRung, isRareAffix, k1For, k2For,
-  knowledgeLadder, markForStat, materialTypeAt, maxAffixes, newRelicSlot, poolRungs, poolStats, rareAffixes,
-  rareEffect, resonanceLadder, specIndex, statName, typePool, usedGroups,
+  MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason,
+  evaluateRelicSlot, formatStat, gradeOptions, gradeQuality, gradeRung, isRareAffix, k1For, k2For,
+  knowledgeLadder, materialTypeAt, maxAffixes, newRelicSlot, poolRungs, poolStats, rareAffixes,
+  materialName, rareEffect, relicTotals, specIndex, statName, typePool, usedGroups,
   type Artifact, type ChosenRelicAffix, type MaterialResult, type PoolAffix, type Relics, type RelicServer,
   type RelicSlotResult, type RelicSlotState,
 } from '@/features/relics/data'
@@ -42,6 +42,12 @@ const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shado
 const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
 const SECTION_CLASS = 'border-t border-border/70 p-2.5'
 const PROSE_CLASS = `mt-0.5 whitespace-pre-line ${TYPE.body}`
+
+/**
+ * A relic part before the final floor, to two decimals. The game floors only
+ * once the three relics are added up, so the cards show what is being added.
+ */
+const decimal = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 })
 
 /** `Artifact.tag` is a usage bucket: 1 副本, 2 竞技, 3 通用. */
 const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
@@ -89,8 +95,8 @@ function ChoiceSelect({ value, options = [], groups, label, testId, onChange }: 
   )
 }
 
-function ArtifactCell({ relics, groupId, artifact, onSelect }: {
-  relics: Relics; groupId: number; artifact: Artifact | null; onSelect: (id: number) => void
+function ArtifactCell({ relics, groupId, artifact, gradeOf, onSelect }: {
+  relics: Relics; groupId: number; artifact: Artifact | null; gradeOf: (id: number) => number; onSelect: (id: number) => void
 }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -102,7 +108,7 @@ function ArtifactCell({ relics, groupId, artifact, onSelect }: {
     })
   const options: PickerOption[] = artifactsInGroup(relics, groupId).map((entry) => ({
     id: entry.id, name: entry.name, detail: detailOf(entry),
-    quality: entry.quality, iconUrl: entry.icon ? iconUrl(entry.icon) : undefined,
+    quality: gradeQuality(gradeOf(entry.id)), iconUrl: entry.icon ? iconUrl(entry.icon) : undefined,
     keywords: entry.description,
   }))
 
@@ -111,7 +117,7 @@ function ArtifactCell({ relics, groupId, artifact, onSelect }: {
       <button type="button" aria-haspopup="dialog" onClick={() => setOpen(true)} className={CELL_CLASS}
         data-testid={`relic-artifact-open-${groupId}`}>
         <IconTile
-          quality={artifact?.quality ?? null}
+          quality={artifact ? gradeQuality(gradeOf(artifact.id)) : null}
           src={artifact?.icon ? iconUrl(artifact.icon) : undefined}
           alt={artifact?.name ?? ''}
           label={artifact?.name.slice(0, 1)}
@@ -158,10 +164,8 @@ function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix
 
   return (
     <div className={`min-w-0 ${inactive ? 'opacity-60' : ''}`} data-inactive={inactive || undefined}>
-      {/* A rare word's name is longer and its value fixed, so its picker takes the wider column. */}
-      <div className={`grid min-w-0 items-center gap-1 ${
-        rare ? 'grid-cols-[auto_minmax(7rem,1.6fr)_minmax(5rem,1fr)_auto]' : 'grid-cols-[auto_minmax(5rem,1fr)_minmax(5.5rem,1.2fr)_auto]'
-      }`}>
+      {/* One column template for every row, so the stat pickers line up and so do the values. */}
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto_auto] items-center gap-1">
         <span className="flex w-4 justify-center" data-testid={`${testPrefix}-state-${index}`}>
           {inactive ? <BanIcon label={t('relic.affixInactive')} /> : null}
         </span>
@@ -192,7 +196,7 @@ function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix
             if (next) onChange(affixFrom(next))
           }} />
         {rare ? (
-          <span className="flex h-9 min-w-0 items-center overflow-hidden whitespace-nowrap rounded-md border border-border bg-muted/40 px-2 text-sm tabular-nums text-foreground"
+          <span className="flex h-9 min-w-0 items-center overflow-hidden truncate whitespace-nowrap rounded-md border border-border bg-muted/40 px-2 text-sm tabular-nums text-foreground"
             data-testid={`${testPrefix}-rung-${index}`}>
             {t('relic.rungOption', { value: show(rare), mark: rare.mark })}
           </span>
@@ -210,13 +214,52 @@ function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix
           aria-label={t('relic.removeAffix')} data-testid={`${testPrefix}-remove-${index}`}>
           ×
         </button>
+        <TierBadge tier={source?.tag ?? 0} testId={`${testPrefix}-tier-${index}`} />
       </div>
-      {rare && rare.effect ? (
-        <p className="mt-0.5 pl-5 text-xs leading-5 text-amber-700 dark:text-amber-300" data-testid={`${testPrefix}-effect-${index}`}>
-          <span className="font-semibold">{t('relic.rareName', { name: rare.name ?? '' })}</span>
-          {rareEffect(relics, rare, k2)}
-        </p>
-      ) : null}
+    </div>
+  )
+}
+
+/** The game's word-type marks: 1 凡 blue, 2 珍 purple, 3 稀 gold, 4 异 orange. */
+const TIER_CLASS: Record<number, string> = {
+  1: 'border-blue-500/60 bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  2: 'border-purple-500/60 bg-purple-500/10 text-purple-700 dark:text-purple-300',
+  3: 'border-yellow-500/70 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300',
+  4: 'border-orange-500/70 bg-orange-500/10 text-orange-700 dark:text-orange-300',
+}
+
+function TierBadge({ tier, testId }: { tier: number; testId: string }) {
+  const { t } = useTranslation()
+  const style = TIER_CLASS[tier]
+  return (
+    <span data-testid={testId} title={style ? t(`relic.tierName${tier}`) : undefined}
+      className={`inline-flex size-7 items-center justify-center rounded-md border text-xs font-bold ${style ?? 'border-transparent'}`}>
+      {style ? t(`relic.tier${tier}`) : ''}
+    </span>
+  )
+}
+
+/** The effects of the rare words on a material, under all of its affixes; absent when there are none. */
+function RareEffects({ relics, pool, affixes, k2, testId }: {
+  relics: Relics; pool: PoolAffix[]; affixes: ChosenRelicAffix[]; k2: number; testId: string
+}) {
+  const { t } = useTranslation()
+  const rares = affixes.flatMap((affix) => {
+    const source = pool.find((entry) => entry.id === affix.affixId)
+    return source && isRareAffix(source) && source.effect ? [source] : []
+  })
+  if (rares.length === 0) return null
+  return (
+    <div className="rounded-md border border-yellow-500/40 bg-yellow-500/5 p-2" data-testid={testId}>
+      <div className="text-xs font-semibold text-foreground">{t('relic.rareEffects')}</div>
+      <ul className="mt-0.5 space-y-0.5 text-xs leading-5 text-yellow-800 dark:text-yellow-200">
+        {rares.map((rare) => (
+          <li key={rare.id}>
+            <span className="font-semibold">{t('relic.rareName', { name: rare.name ?? '' })}</span>
+            {rareEffect(relics, rare, k2)}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -249,7 +292,7 @@ function GradeSlider({ relics, grade, scoredGrade, groupId, onChange }: {
       </div>
       <div className="px-6">
         <RangeField label={t('relic.grade')} min={0} max={grades.length - 1} value={position} valueText={valueText}
-          minLabel="" maxLabel="" tickLabel={(step) => label(grades[step] ?? grade)}
+          minLabel="" maxLabel="" tickLabel={(step) => t('relic.gradeBare', { grade: grades[step] ?? grade })}
           testId={`relic-grade-${groupId}`} onChange={(step) => onChange(grades[step] ?? grade)} />
       </div>
       {rung && rung.note !== '' ? <p className={PROSE_CLASS}>{rung.note}</p> : null}
@@ -308,64 +351,42 @@ function KnowledgeBar({ relics, level, k1, k2, season, onChange }: {
 }
 
 /**
- * 非凡共鸣 by affix count, at the grade the relic is scored at. Counts past the
- * grade's cap pay the cap's bonus only, so they are shown with the grade that
- * unlocks them instead, read off that grade's ladder.
+ * The 非凡共鸣 bonus at the material's current active affix count, read at the
+ * grade the relic is scored at. Words past the cap add nothing, so a grade-2
+ * relic with six words shows the five-word bonus.
  */
-function ResonanceLadder({ relics, groupId, scoredGrade, cap, activeCount, k1, season, server, testId }: {
-  relics: Relics; groupId: number; scoredGrade: number; cap: number; activeCount: number; k1: number
-  season: number | undefined; server: RelicServer; testId: string
+function ResonanceNow({ relics, material, k1, testId }: {
+  relics: Relics; material: MaterialResult; k1: number; testId: string
 }) {
   const { t } = useTranslation()
-  const grades = gradeOptions(relics)
-  const counts = Array.from({ length: maxAffixes(relics) }, (_, i) => i + 1)
-
+  if (material.activeCount === 0) return null
   return (
-    <div data-testid={testId}>
-      <div className="text-xs font-semibold text-foreground">{t('relic.resonanceLadder')}</div>
-      <ol className="mt-0.5 space-y-0.5 text-xs">
-        {counts.map((count) => {
-          const locked = count > cap
-          // The worst grade whose cap reaches this count, and whether this server allows it.
-          const unlock = locked ? grades.find((g) => effectiveAffixCap(relics, g) >= count) : scoredGrade
-          const reachable = unlock !== undefined && effectiveGrade(relics, unlock, server) === unlock
-          const rung = unlock === undefined ? undefined
-            : resonanceLadder(relics, groupId, unlock, season).find((r) => r.affixCount === count)
-          const current = !locked && count === activeCount
-          return (
-            <li key={count} data-current={current || undefined}
-              className={`rounded px-1.5 py-0.5 ${current ? 'bg-[color:var(--arkive-filter-active)] text-foreground' : locked ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span className={current ? 'font-semibold' : ''}>
-                  {t('relic.resonanceRow', { count })}
-                  {locked && unlock !== undefined
-                    ? ` · ${t(reachable ? 'relic.resonanceNeedsGrade' : 'relic.resonanceNeedsStrategic', { grade: unlock })}`
-                    : ''}
-                </span>
-                <span className="tabular-nums">{rung ? t('relic.resonanceRowScore', { score: Math.floor((rung.mark ?? 0) * k1) }) : '—'}</span>
-              </div>
-              {rung && rung.stats.length > 0 ? (
-                <div className="flex flex-wrap gap-x-3">
-                  {rung.stats.map(([stat, value]) => (
-                    <span key={stat} className="tabular-nums">
-                      {statName(relics, stat)} +{formatStat(relics, stat, Math.floor(value * k1))}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </li>
-          )
-        })}
-      </ol>
+    <div className="rounded-md bg-[color:var(--arkive-filter-active)] px-2 py-1.5 text-xs" data-testid={testId}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 font-semibold text-foreground">
+        <span>{t('relic.resonanceNow', { count: material.activeCount })}</span>
+        <span className="tabular-nums">{t('relic.resonanceRowScore', { score: decimal(material.resonanceScore) })}</span>
+      </div>
+      {material.resonanceStats.length > 0 ? (
+        <div className="mt-0.5 flex flex-wrap gap-x-3 text-muted-foreground">
+          {material.resonanceStats.map(([stat, value]) => (
+            <span key={stat} className="tabular-nums">
+              {statName(relics, stat)} +{formatStat(relics, stat, Math.floor(value * k1))}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
 
-function MaterialPanel({ relics, slot, material, result, k1, k2, season, server, swapTargets, onAffixes, onSwap }: {
+function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSwap, onAffixes, onSwapStart }: {
   relics: Relics; slot: RelicSlotState; material: MaterialResult; result: RelicSlotResult
-  k1: number; k2: number; season: number | undefined; server: RelicServer
-  swapTargets: { position: Position; label: string }[]
-  onAffixes: (affixes: ChosenRelicAffix[]) => void; onSwap: (to: Position) => void
+  k1: number; k2: number
+  /** Whether this material is the one being moved. */
+  swapping: boolean
+  /** Whether another position takes this material's type at all. */
+  canSwap: boolean
+  onAffixes: (affixes: ChosenRelicAffix[]) => void; onSwapStart: () => void
 }) {
   const { t } = useTranslation()
   const groupId = slot.groupId
@@ -374,6 +395,8 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, season, server,
   const testPrefix = `relic-affix-${groupId}-${material.index}`
   const affixes = material.affixes
   const over = material.inactive.filter(Boolean).length
+  const name = materialName(relics, material.type, pool, affixes)
+    ?? t('relic.materialTypeOption', { group: relics.groupNames[String(material.type)] ?? '' })
 
   // The first ordinary stat this material does not hold yet.
   const addAffix = () => {
@@ -387,22 +410,28 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, season, server,
   return (
     <div className="space-y-1.5" data-testid={`relic-material-${groupId}-${material.index}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className={`text-xs font-semibold ${material.applies ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}
-          data-testid={`relic-material-state-${groupId}-${material.index}`}>
-          {material.applies ? t('relic.materialActive') : t('relic.materialInactive')}
-        </span>
-        <span className="text-xs tabular-nums text-muted-foreground">{t('relic.materialScore', { score: material.affixScore })}</span>
+        <div className="min-w-0">
+          {/* Named as the game names it, from the words the material carries. */}
+          <div className={`${TYPE.name}`} data-testid={`relic-material-name-${groupId}-${material.index}`}>{name}</div>
+          <span className={`text-xs font-semibold ${material.applies ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}
+            data-testid={`relic-material-state-${groupId}-${material.index}`}>
+            {material.applies ? t('relic.materialActive') : t('relic.materialInactive')}
+          </span>
+          <span className="ml-2 text-xs tabular-nums text-muted-foreground">{t('relic.materialScore', { score: decimal(material.affixScore) })}</span>
+        </div>
+        {canSwap ? (
+          <button type="button" onClick={onSwapStart} aria-pressed={swapping}
+            className={`${BUTTON_CLASS} min-h-8 gap-1 px-2.5 py-1 ${swapping ? TAB_ACTIVE : ''}`}
+            data-testid={`relic-swap-${groupId}-${material.index}`}>
+            <span aria-hidden>⇄</span>
+            {t(swapping ? 'relic.swapCancel' : 'relic.swapStart')}
+          </button>
+        ) : null}
       </div>
-      {swapTargets.length > 0 ? (
-        <ChoiceSelect value="" label={t('relic.swapWith')} testId={`relic-swap-${groupId}-${material.index}`}
-          options={[
-            { value: '', label: t('relic.swapPlaceholder'), disabled: true },
-            ...swapTargets.map((target) => ({ value: `${target.position.groupId}:${target.position.index}`, label: target.label })),
-          ]}
-          onChange={(raw) => {
-            const [g, i] = raw.split(':').map(Number)
-            if (Number.isFinite(g) && Number.isFinite(i)) onSwap({ groupId: g, index: i })
-          }} />
+      {swapping ? (
+        <p className="text-xs font-semibold text-[color:var(--arkive-nav-accent)]" data-testid={`relic-swap-hint-${groupId}`}>
+          {t('relic.swapHint')}
+        </p>
       ) : null}
 
       <span className={LABEL_CLASS}>
@@ -425,18 +454,20 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, season, server,
         </p>
       ) : null}
 
-      <ResonanceLadder relics={relics} groupId={groupId} scoredGrade={result.resonanceGrade} cap={result.cap}
-        activeCount={material.activeCount} k1={k1} season={season} server={server}
-        testId={`relic-resonance-${groupId}-${material.index}`} />
+      <RareEffects relics={relics} pool={pool} affixes={affixes} k2={k2} testId={`${testPrefix}-rare`} />
+      <ResonanceNow relics={relics} material={material} k1={k1} testId={`relic-resonance-${groupId}-${material.index}`} />
     </div>
   )
 }
 
-function RelicCard({ relics, slot, result, k1, k2, season, server, swapTargets, onChange, onSwap }: {
+function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom, onChange, onSwapStart, onSwapTo }: {
   relics: Relics; slot: RelicSlotState; result: RelicSlotResult
-  k1: number; k2: number; season: number | undefined; server: RelicServer
-  swapTargets: (from: Position) => { position: Position; label: string }[]
-  onChange: (next: RelicSlotState) => void; onSwap: (from: Position, to: Position) => void
+  k1: number; k2: number; server: RelicServer
+  /** The position being moved, if any: every tab of its type becomes a drop target. */
+  swapFrom: Position | null
+  canSwapFrom: (from: Position) => boolean
+  onChange: (next: RelicSlotState) => void
+  onSwapStart: (from: Position) => void; onSwapTo: (to: Position) => void
 }) {
   const { t } = useTranslation()
   const positionLabel = usePositionLabel(relics)
@@ -451,6 +482,8 @@ function RelicCard({ relics, slot, result, k1, k2, season, server, swapTargets, 
   const title = t('relic.groupTitle', { group: relics.groupNames[String(groupId)] ?? '' })
 
   const patch = (next: Partial<RelicSlotState>) => onChange({ ...slot, ...next })
+  /** An artifact's own grade: stored per artifact, starting at the worst. */
+  const gradeOf = (id: number) => slot.grades?.[String(id)] ?? relics.promotion.worstGrade
   const choose = (at: number) => (spec ? patch({ materialType: materialTypeAt(groupId, at) }) : setViewed(at))
 
   return (
@@ -463,20 +496,23 @@ function RelicCard({ relics, slot, result, k1, k2, season, server, swapTargets, 
         </div>
         <div className="shrink-0 text-right">
           <div className="text-xs font-semibold text-muted-foreground">{t('relic.slotTotal')}</div>
-          <div className={TYPE.total} data-testid={`relic-total-${groupId}`}>{result.total.toLocaleString()}</div>
+          <div className={TYPE.total} data-testid={`relic-total-${groupId}`}>{decimal(result.total)}</div>
         </div>
       </header>
 
       <div className="space-y-2 p-2.5">
         <div>
           <span className={LABEL_CLASS}>{t('relic.artifact')}</span>
-          <ArtifactCell relics={relics} groupId={groupId} artifact={result.artifact}
-            onSelect={(artifactId) => patch({ artifactId })} />
+          <ArtifactCell relics={relics} groupId={groupId} artifact={result.artifact} gradeOf={gradeOf}
+            onSelect={(artifactId) => patch({ artifactId, grade: gradeOf(artifactId) })} />
           {/* Every line of the effect text, deliberately untruncated. */}
           <p className={PROSE_CLASS}>{result.artifact ? result.artifact.description : t('relic.artifactPlaceholder')}</p>
         </div>
         <GradeSlider relics={relics} grade={slot.grade} scoredGrade={result.resonanceGrade} groupId={groupId}
-          onChange={(grade) => patch({ grade })} />
+          onChange={(grade) => patch({
+            grade,
+            grades: slot.artifactId == null ? slot.grades : { ...slot.grades, [String(slot.artifactId)]: grade },
+          })} />
       </div>
 
       <div className={`${SECTION_CLASS} space-y-1.5`}>
@@ -484,23 +520,37 @@ function RelicCard({ relics, slot, result, k1, k2, season, server, swapTargets, 
             their resonance ladders line up across the three columns. */}
         <span className={LABEL_CLASS}>{t(spec ? 'relic.materialType' : 'relic.materialSlots')}</span>
         <div className="flex gap-1.5" role="group" aria-label={t(spec ? 'relic.materialType' : 'relic.materialSlots')}>
-          {Array.from({ length: MATERIAL_SLOTS }, (_, at) => (
-            <button key={at} type="button" aria-pressed={at === index} onClick={() => choose(at)}
-              data-testid={`relic-material-tab-${groupId}-${at}`}
-              className={`${BUTTON_CLASS} min-h-8 flex-1 gap-1 px-2.5 py-1 ${at === index ? TAB_ACTIVE : ''}`}>
-              {positionLabel(groupId, at)}
-              {!spec && !active.includes(at) ? <span className="text-amber-700 dark:text-amber-300">{t('relic.strategicOnly')}</span> : null}
-              {(slot.materials[at]?.length ?? 0) > 0 ? <span className="tabular-nums opacity-70">·{slot.materials[at].length}</span> : null}
-            </button>
-          ))}
+          {Array.from({ length: MATERIAL_SLOTS }, (_, at) => {
+            const self = swapFrom?.groupId === groupId && swapFrom.index === at
+            // While a material is being moved, every other position of its type
+            // takes it; the rest of the tabs sit the move out.
+            const target = swapFrom !== null && !self
+              && materialTypeAt(groupId, at) === materialTypeAt(swapFrom.groupId, swapFrom.index)
+            return (
+              <button key={at} type="button" aria-pressed={at === index}
+                disabled={swapFrom !== null && !target && !self}
+                onClick={() => (target ? onSwapTo({ groupId, index: at }) : choose(at))}
+                data-testid={`relic-material-tab-${groupId}-${at}`}
+                data-swap-target={target || undefined}
+                className={`${BUTTON_CLASS} min-h-8 flex-1 gap-1 px-2.5 py-1 ${
+                  target ? 'border-dashed border-[color:var(--arkive-nav-accent)] text-[color:var(--arkive-nav-accent)]' : at === index ? TAB_ACTIVE : ''
+                }`}>
+                {target ? <span aria-hidden>⇄</span> : null}
+                {positionLabel(groupId, at)}
+                {!spec && !active.includes(at) ? <span className="text-amber-700 dark:text-amber-300">{t('relic.strategicOnly')}</span> : null}
+                {(slot.materials[at]?.length ?? 0) > 0 ? <span className="tabular-nums opacity-70">·{slot.materials[at].length}</span> : null}
+              </button>
+            )
+          })}
         </div>
         <p className={PROSE_CLASS}>{t(spec ? 'relic.materialSpecHint' : 'relic.materialSlotsHint')}</p>
 
         {material ? (
           <MaterialPanel relics={relics} slot={slot} material={material} result={result} k1={k1} k2={k2}
-            season={season} server={server} swapTargets={swapTargets({ groupId, index })}
+            swapping={swapFrom?.groupId === groupId && swapFrom.index === index}
+            canSwap={canSwapFrom({ groupId, index })}
             onAffixes={(affixes) => patch({ materials: slot.materials.map((list, at) => (at === index ? affixes : list)) })}
-            onSwap={(to) => onSwap({ groupId, index }, to)} />
+            onSwapStart={() => onSwapStart({ groupId, index })} />
         ) : null}
       </div>
 
@@ -511,22 +561,6 @@ function RelicCard({ relics, slot, result, k1, k2, season, server, swapTargets, 
           <Line label={t('relic.affixScore')} value={result.affixScore} />
           <Line label={t('relic.slotTotal')} value={result.total} strong />
         </dl>
-        {material && material.applies && material.resonanceStats.length > 0 ? (
-          <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground" data-testid={`relic-resonance-stats-${groupId}`}>
-            {material.resonanceStats.map(([stat, value]) => (
-              <li key={stat} className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <span>{statName(relics, stat)}</span>
-                {/* The table value scaled by k1 and floored, which is what the panel prints. */}
-                <span className="tabular-nums">
-                  {t('relic.resonanceStat', {
-                    value: formatStat(relics, stat, Math.floor(value * k1)),
-                    mark: markForStat(relics, stat, value, season),
-                  })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </div>
     </article>
   )
@@ -537,7 +571,7 @@ function Line({ label, value, strong = false }: { label: string; value: number; 
     <div className="flex flex-wrap items-baseline justify-between gap-x-2">
       <dt className={strong ? 'font-semibold text-foreground' : 'text-muted-foreground'}>{label}</dt>
       <dd className={`tabular-nums ${strong ? 'font-bold text-foreground' : 'text-muted-foreground'}`}>
-        {value.toLocaleString()}
+        {decimal(value)}
       </dd>
     </div>
   )
@@ -553,11 +587,18 @@ function Line({ label, value, strong = false }: { label: string; value: number; 
 function restoreSlot(relics: Relics, groupId: number, stored: StoredRelicSlot | undefined, fresh: RelicSlotState): RelicSlotState {
   if (!stored) return fresh
   const grades = gradeOptions(relics)
-  const grade = grades.includes(stored.grade)
-    ? stored.grade
-    : gradeRung(relics, stored.grade) && grades.length > 0
-      ? Math.min(...grades.filter((g) => g >= stored.grade).concat(grades[grades.length - 1]))
-      : fresh.grade
+  // A grade the player cannot hold (0) reads as the best one they can.
+  const clamp = (value: number) => (grades.includes(value)
+    ? value
+    : gradeRung(relics, value) && grades.length > 0 ? grades[grades.length - 1] : fresh.grade)
+  const artifactId = artifactsInGroup(relics, groupId).some((a) => a.id === stored.artifactId) ? stored.artifactId : fresh.artifactId
+  // Older drafts kept one grade per slot; it becomes the stored artifact's.
+  const perArtifact: Record<string, number> = {}
+  for (const [id, value] of Object.entries(stored.grades ?? {})) perArtifact[id] = clamp(value)
+  if (artifactId != null && perArtifact[String(artifactId)] === undefined && stored.artifactId === artifactId) {
+    perArtifact[String(artifactId)] = clamp(stored.grade)
+  }
+  const grade = artifactId != null ? perArtifact[String(artifactId)] ?? fresh.grade : clamp(stored.grade)
   const legacyType = relics.materials.items.find((entry) => entry.id === stored.materialId)?.type
   const materialType = groupId === SPEC_GROUP ? (stored.materialType ?? legacyType ?? 1) : undefined
   const lists: ChosenRelicAffix[][] = stored.materials
@@ -579,8 +620,9 @@ function restoreSlot(relics: Relics, groupId: number, stored: StoredRelicSlot | 
   })
   return {
     groupId,
-    artifactId: artifactsInGroup(relics, groupId).some((a) => a.id === stored.artifactId) ? stored.artifactId : fresh.artifactId,
+    artifactId,
     grade,
+    grades: perArtifact,
     ...(materialType !== undefined ? { materialType } : {}),
     materials,
   }
@@ -592,7 +634,6 @@ export default function RelicSection({ relics, onTotals }: {
   onTotals?: (totals: RelicTotals) => void
 }) {
   const { t } = useTranslation()
-  const positionLabel = usePositionLabel(relics)
   const season = useMemo(() => currentSeason(relics), [relics])
   const [draft, setDraft] = useMemory(relicDraft)
   const [server] = useRelicServer()
@@ -619,20 +660,18 @@ export default function RelicSection({ relics, onTotals }: {
   const setSlots = (update: (prev: RelicSlotState[]) => RelicSlotState[]) =>
     setDraft((prev) => ({ ...prev, slots: update(slots) }))
 
-  /** Every other position holding the same material type, across all three slots. */
-  const swapTargets = (from: Position) =>
-    GROUP_IDS.flatMap((groupId) =>
-      Array.from({ length: MATERIAL_SLOTS }, (_, index) => ({ groupId, index })),
-    )
-      .filter((to) => !(to.groupId === from.groupId && to.index === from.index))
-      .filter((to) => materialTypeAt(to.groupId, to.index) === materialTypeAt(from.groupId, from.index))
-      .map((position) => ({
-        position,
-        label: t('relic.swapOption', {
-          group: relics.groupNames[String(position.groupId)] ?? '',
-          slot: positionLabel(position.groupId, position.index),
-        }),
-      }))
+  /** The material being moved; the next compatible tab clicked receives it. */
+  const [swapFrom, setSwapFrom] = useState<Position | null>(null)
+  const positions = GROUP_IDS.flatMap((groupId) => Array.from({ length: MATERIAL_SLOTS }, (_, index) => ({ groupId, index })))
+  const canSwapFrom = (from: Position) =>
+    positions.some((to) => !(to.groupId === from.groupId && to.index === from.index)
+      && materialTypeAt(to.groupId, to.index) === materialTypeAt(from.groupId, from.index))
+  useEffect(() => {
+    if (swapFrom === null) return
+    const cancel = (event: KeyboardEvent) => { if (event.key === 'Escape') setSwapFrom(null) }
+    window.addEventListener('keydown', cancel)
+    return () => window.removeEventListener('keydown', cancel)
+  }, [swapFrom])
 
   // Same type on both ends, so each affix list stays valid in its new pool.
   const swap = (a: Position, b: Position) =>
@@ -653,19 +692,7 @@ export default function RelicSection({ relics, onTotals }: {
     () => slots.map((slot) => evaluateRelicSlot(relics, slot, knowledgeLevel, season, server)),
     [relics, slots, knowledgeLevel, season, server],
   )
-  const totals = useMemo(
-    () =>
-      results.reduce(
-        (sum, r) => ({
-          assembly: sum.assembly + r.assemblyScore,
-          resonance: sum.resonance + r.resonanceScore,
-          affix: sum.affix + r.affixScore,
-          total: sum.total + r.total,
-        }),
-        { assembly: 0, resonance: 0, affix: 0, total: 0 },
-      ),
-    [results],
-  )
+  const totals = useMemo(() => relicTotals(results), [results])
   useEffect(() => {
     onTotals?.(totals)
   }, [onTotals, totals])
@@ -686,7 +713,12 @@ export default function RelicSection({ relics, onTotals }: {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         {slots.map((slot, index) => (
           <RelicCard key={slot.groupId} relics={relics} slot={slot} result={results[index]} k1={k1} k2={k2}
-            season={season} server={server} swapTargets={swapTargets} onSwap={swap}
+            server={server} swapFrom={swapFrom} canSwapFrom={canSwapFrom}
+            onSwapStart={(from) => setSwapFrom((prev) => (prev && prev.groupId === from.groupId && prev.index === from.index ? null : from))}
+            onSwapTo={(to) => {
+              if (swapFrom) swap(swapFrom, to)
+              setSwapFrom(null)
+            }}
             onChange={(next) => setSlots((prev) => prev.map((entry, at) => (at === index ? next : entry)))} />
         ))}
       </div>

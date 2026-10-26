@@ -79,6 +79,11 @@ PROP_MODES = {
     "3": {"PropMode": "SkillMulti_N", "PropName": "伤害加深", "ShowType": 1},
 }
 PROP_SETS = {"1": {"Prop": "Atk_N", "Discription": "攻击", "PropNameSet": ["pAtkMin_N", "mAtkMin_N"]}}
+NAME_RULES = {
+    "2": {"ID": 2, "Type": 1, "AppearRule": "SameWordTypeCount(2, 4)=true", "Name": "劲攻物质"},
+    "1": {"ID": 1, "Type": 1, "AppearRule": "HasWordType(4, 1)=true", "Name": "异变物质"},
+    "3": {"ID": 3, "Type": 1, "AppearRule": "LowQuality()=true", "Name": "基础物质"},
+}
 CONSTS = {"XMatMinWordNum": 1, "XMatMaxWordNum": 6, "SealWorstGrade": 3, "SealBestGrade": 1,
           "MainAttributeTipsEntryNumber": [6, 6, 5, 4], "Unwanted": "x"}
 # The 公证书 displays through a different item than its icon names; only the
@@ -97,6 +102,7 @@ def stub(monkeypatch):
         relics.MAT_WORD_TABLE: MAT_WORDS, relics.MAT_GROUP_TABLE: MAT_GROUPS,
         relics.CONST_TABLE: CONSTS,
         relics.PROP_MODE_TABLE: PROP_MODES, relics.PROP_SET_TABLE: PROP_SETS,
+        relics.MAT_NAME_TABLE: NAME_RULES,
     }
     monkeypatch.setattr(relics, "load_strings", lambda excel: {})
     monkeypatch.setattr(relics, "resolve_text", lambda payload, strings: payload)
@@ -248,3 +254,16 @@ def test_build_writes_the_payload_with_the_score_rule(stub, tmp_path):
     assert payload["scoreRule"] == relics.SCORE_RULE
     assert payload["groupNames"] == {"1": "攻击", "2": "防御", "3": "特化"}
     assert payload["statNames"]["Atk_N"] == {"name": "攻击", "format": "number"}
+
+
+def test_name_rules_parse_in_client_order(stub):
+    rules = relics.name_rules(None, {})
+    assert [r["id"] for r in rules] == [1, 2, 3]
+    assert rules[0] == {"id": 1, "type": 1, "name": "异变物质", "rule": "HasWordType", "args": [4, 1], "expect": True}
+    assert rules[2]["rule"] == "LowQuality" and rules[2]["args"] == []
+
+
+def test_an_unparsable_name_rule_stops_the_build(stub, monkeypatch):
+    monkeypatch.setitem(stub, relics.MAT_NAME_TABLE, {"1": {"ID": 1, "Type": 1, "AppearRule": "Weird", "Name": "x"}})
+    with pytest.raises(RuntimeError, match="unparsed rule"):
+        relics.name_rules(None, {})
