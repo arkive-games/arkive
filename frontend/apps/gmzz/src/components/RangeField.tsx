@@ -1,10 +1,10 @@
-import { useId } from 'react'
+import { useId, type ReactNode } from 'react'
 
 import { TYPE } from '@/lib/typography'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const RANGE_CLASS = `h-6 w-full cursor-pointer accent-[color:var(--arkive-nav-accent)] disabled:cursor-default disabled:opacity-50 ${FOCUS}`
-const ENDS_CLASS = `flex justify-between ${TYPE.valueMuted}`
+const ENDS_CLASS = `flex items-center justify-between gap-2 ${TYPE.valueMuted}`
 const TICKS_CLASS = `relative h-4 ${TYPE.valueMuted}`
 const HEADING_CLASS = 'flex items-baseline justify-between gap-2'
 /** The tick or reading that is the current value, picked out from the scale around it. */
@@ -29,7 +29,9 @@ export const THUMB_PX = 16
  * short enough that each rung deserves a name (the eight enhancement stages);
  * the two end labels are then not drawn, and the current step's label is
  * picked out, so the scale is also the reading. `showValue` puts the current
- * value between the two end labels for the same reason. `labels` puts the
+ * value between the two end labels for the same reason, and `middle` puts
+ * something of the caller's there instead — an exact-value box, so the reading
+ * and the place to type it are one. `labels` puts the
  * label row above the track instead of below, so two stacked sliders can share
  * the middle. A range with one value (`min === max`) is shown disabled: there is
  * nothing to drag to.
@@ -45,6 +47,7 @@ export default function RangeField({
   tickLabel,
   labels = 'below',
   showValue = false,
+  middle,
   testId,
   heading = false,
   onChange,
@@ -61,6 +64,8 @@ export default function RangeField({
   labels?: 'above' | 'below'
   /** Reads the current value between the two end labels. */
   showValue?: boolean
+  /** Drawn between the two end labels, in place of `showValue`'s reading. */
+  middle?: ReactNode
   testId: string
   heading?: boolean
   onChange: (value: number) => void
@@ -84,11 +89,11 @@ export default function RangeField({
   ) : (
     <div className={ENDS_CLASS}>
       <span>{minLabel}</span>
-      {showValue ? (
+      {middle ?? (showValue ? (
         <span className={CURRENT_CLASS} data-testid={`${testId}-value`}>
           {valueText}
         </span>
-      ) : null}
+      ) : null)}
       <span>{maxLabel}</span>
     </div>
   )

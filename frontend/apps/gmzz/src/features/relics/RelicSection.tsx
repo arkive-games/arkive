@@ -4,6 +4,7 @@ import { Hint, Input, TooltipProvider } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import RangeField from '@/components/RangeField'
+import StepSelect from '@/components/StepSelect'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
@@ -187,6 +188,12 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
   // What the other rows of this material already hold: a group at most once,
   // and one rare word at most.
   const taken = usedGroups(pool, others)
+  // The arrows walk the stat's rungs, which `poolRungs` lists richest first.
+  const at = rungs.findIndex((rung) => rung.id === affix.affixId)
+  const stepTo = (offset: number) => {
+    const next = at < 0 ? undefined : rungs[at + offset]
+    return next ? () => onChange(affixFrom(next)) : null
+  }
 
   return (
     <div className={`min-w-0 ${inactive ? 'opacity-60' : ''}`} data-inactive={inactive || undefined}>
@@ -230,12 +237,17 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
         ) : (
           // Keyed by the pool row's own id: two rungs of one stat can share a
           // value, so the value alone is not a unique handle.
-          <ChoiceSelect value={affix.affixId ?? ''} label={t('relic.affixRung')} testId={`${testPrefix}-rung-${index}`}
-            options={rungs.map((rung) => ({ value: rung.id, label: t('relic.rungOption', { value: show(rung), mark: rung.mark }) }))}
+          <StepSelect value={affix.affixId ?? ''} label={t('relic.affixRung')} testId={`${testPrefix}-rung-${index}`}
+            upLabel={t('relic.rungUp')} downLabel={t('relic.rungDown')} className={SELECT_CLASS}
+            onUp={stepTo(-1)} onDown={stepTo(1)}
             onChange={(raw) => {
               const next = rungs.find((rung) => rung.id === Number(raw))
               if (next) onChange(affixFrom(next))
-            }} />
+            }}>
+            {rungs.map((rung) => (
+              <option key={rung.id} value={rung.id}>{t('relic.rungOption', { value: show(rung), mark: rung.mark })}</option>
+            ))}
+          </StepSelect>
         )}
         <button type="button" onClick={onRemove} className={`${BUTTON_CLASS} size-7`}
           aria-label={t('relic.removeAffix')} data-testid={`${testPrefix}-remove-${index}`}>

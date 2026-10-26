@@ -224,24 +224,12 @@ export function rungsFor(equipment: Equipment, slot: number, family: string): { 
   // `classifyAffix` settles such a tie on the richer Mark, so that is the one listed.
   return (['extraordinary', 'normal', 'contaminated'] as AffixTier[]).flatMap((tier) => {
     const byValue = new Map<number, Rung>()
-    for (const rung of tierLadder(equipment, slot, tier, family)) {
+    for (const rung of ladderFor(equipment, slot, tier, family)) {
       const prior = byValue.get(rung[1])
       if (!prior || rung[0] > prior[0]) byValue.set(rung[1], rung)
     }
     return [...byValue.values()].sort((a, b) => b[1] - a[1]).map((rung) => ({ tier, rung }))
   })
-}
-
-/**
- * A tier's ladder as the picker offers it. The contaminated ladder does not
- * survive decoding (see `tools/apps/gmzz/equipment.py`), so where a slot has
- * none it mirrors the normal rungs below zero, Mark negated — the reading
- * `classifyAffix` already gives a negative value.
- */
-function tierLadder(equipment: Equipment, slot: number, tier: AffixTier, family: string): Rung[] {
-  const ladder = ladderFor(equipment, slot, tier, family)
-  if (tier !== 'contaminated' || ladder.length > 0) return ladder
-  return ladderFor(equipment, slot, 'normal', family).map(([mark, value]): Rung => [-mark, -value])
 }
 
 export function ladderFor(
@@ -298,19 +286,14 @@ export function nearestRung(ladder: Rung[], value: number): Rung | null {
  * contaminated affix, and a positive one belongs to whichever of the normal and
  * extraordinary ladders holds the nearest rung. The two do not overlap (攻击
  * normal tops out at 153, extraordinary starts at 159), so the nearest rung is
- * also the tier. A family with no contaminated ladder in a slot still reads a
- * negative value against its normal rungs, Mark negated.
+ * also the tier.
  */
 export function classifyAffix(equipment: Equipment, slot: number, affix: ChosenAffix): ScoredAffix {
   const { family, value } = affix
   if (family === '') return { ...affix, tier: 'normal', mark: 0 }
   if (value < 0) {
-    const ladder = ladderFor(equipment, slot, 'contaminated', family)
-    if (ladder.length > 0) {
-      return { ...affix, tier: 'contaminated', mark: nearestRung(ladder, value)?.[0] ?? 0 }
-    }
-    const fallback = nearestRung(ladderFor(equipment, slot, 'normal', family), -value)
-    return { ...affix, tier: 'contaminated', mark: fallback ? -fallback[0] : 0 }
+    const rung = nearestRung(ladderFor(equipment, slot, 'contaminated', family), value)
+    return { ...affix, tier: 'contaminated', mark: rung?.[0] ?? 0 }
   }
   if (value === 0) return { ...affix, tier: 'normal', mark: 0 }
   const normal = nearestRung(ladderFor(equipment, slot, 'normal', family), value)
@@ -470,7 +453,11 @@ export type PieceState = {
   itemId: number | null
   /** 0..maxStage — the enhancement stage; every stage up to it is complete. */
   enhanceStage: number
-  /** 0..100 — the piece's refinement (精炼度), independent of the stage. */
+  /**
+   * The piece's refinement (精炼度) as the game shows it, a whole percentage —
+   * independent of the stage. Only percentages a level can show are stored;
+   * see `refineLevelOf`.
+   */
   refinePercent: number
   affixes: ChosenAffix[]
 }
@@ -498,7 +485,9 @@ export type PieceResult = {
   grace: Grace | null
   /** baseScore + enhanceScore + reforgeScore. */
   total: number
-  /** The piece's refinement, 0..100: what the refinement set averages. */
+  /** The refinement level behind the shown percentage, 0..REFINE_LEVELS. */
+  refineLevel: number
+  /** That level's exact percentage (77.5 where the game shows 77): what the refinement set averages. */
   progressPercent: number
 }
 
@@ -606,9 +595,39 @@ export function enhanceOf(body: EnhanceBody | null, stage: number): { score: num
   return { score, stats: [...totals] }
 }
 
-/** A refinement as stored: a whole percentage, 0..100. */
+/**
+ * Refinement runs in levels, not percent: each of the eight enhancement stages
+ * splits into ten, so 80 levels of 1.25% each. The game shows the percentage
+ * rounded down — level 62 is 77.5% and reads 77%, level 55 is 68.75% and
+ * reads 68% — so averaging the shown figures drifts from the game's average.
+ */
+export const REFINE_LEVELS = 80
+
+/** The whole percentage the game shows for a refinement level. */
+export function refinePercentOf(level: number): number {
+  return Math.floor((level * 100) / REFINE_LEVELS)
+}
+
+/** The exact percentage of a refinement level. */
+export function refineExactOf(level: number): number {
+  return (level * 100) / REFINE_LEVELS
+}
+
+/**
+ * The level behind a percentage the game shows: the one whose rounded-down
+ * percentage it is. A step is wider than 1%, so no two levels show the same
+ * figure, and the smallest level reaching the figure is the one. A figure no
+ * level shows (4%, between 3.75 and 5) takes the next level up.
+ */
+export function refineLevelOf(percent: number): number {
+  if (!Number.isFinite(percent)) return 0
+  const whole = Math.min(100, Math.max(0, Math.trunc(percent)))
+  return Math.min(REFINE_LEVELS, Math.ceil((whole * REFINE_LEVELS) / 100))
+}
+
+/** A refinement as stored: a percentage the game can show, 0..100. */
 export function clampRefine(refinePercent: number): number {
-  return Number.isFinite(refinePercent) ? Math.min(100, Math.max(0, Math.trunc(refinePercent))) : 0
+  return refinePercentOf(refineLevelOf(refinePercent))
 }
 
 export function evaluatePiece(
@@ -628,6 +647,7 @@ export function evaluatePiece(
   const bonus = extraordinaryBonus(extraordinaryCount)
   const reforgeScore = affixMark + bonus
   const baseScore = item?.baseScore ?? 0
+  const refineLevel = refineLevelOf(state.refinePercent)
 
   return {
     state,
@@ -643,7 +663,8 @@ export function evaluatePiece(
     reforgeScore,
     grace: graceFor(graces, state.slot, affixes),
     total: baseScore + enhanceScore + reforgeScore,
-    progressPercent: clampRefine(state.refinePercent),
+    refineLevel,
+    progressPercent: refineExactOf(refineLevel),
   }
 }
 
@@ -671,6 +692,7 @@ export function suitTierFor(
   return null
 }
 
+/** The loadout's average refinement, from each piece's exact level rather than its shown percentage. */
 export function averageProgress(results: PieceResult[]): number {
   if (results.length === 0) return 0
   return results.reduce((total, r) => total + r.progressPercent, 0) / results.length

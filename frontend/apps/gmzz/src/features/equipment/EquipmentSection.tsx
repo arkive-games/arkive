@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import RangeField from '@/components/RangeField'
+import StepSelect from '@/components/StepSelect'
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
@@ -22,6 +23,9 @@ import {
   newPiece,
   clampRefine,
   familiesByGrace,
+  refineLevelOf,
+  refinePercentOf,
+  REFINE_LEVELS,
   rungsFor,
   scoredSlots,
   statLabel,
@@ -85,10 +89,10 @@ const PIP_CLASS = 'text-[color:var(--arkive-nav-accent)]'
 /** What enhancement or reforge added, wherever a figure is split into base and gain. */
 const GAIN_CLASS = 'text-emerald-700 dark:text-emerald-300'
 /**
- * One affix: pip, stat, value, Mark, remove. The value and Mark columns are
- * fixed so they line up down the list and the stat takes what is left.
+ * One affix: pip, stat, rung, remove. The rung's option already reads its
+ * value and Mark, so the two pickers split the row evenly.
  */
-const AFFIX_ROW_CLASS = 'grid min-w-0 grid-cols-[auto_minmax(0,1fr)_3.75rem_4rem_auto] items-center gap-1'
+const AFFIX_ROW_CLASS = 'grid min-w-0 grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1'
 /**
  * The rows layout's columns: item, stats, enhancement, affixes, brand. Shared
  * by the header and every row so the two cannot drift apart. Five columns only
@@ -298,8 +302,9 @@ function Picker({
 /**
  * The enhancement stage and the refinement (精炼度), each its own control.
  * They are unrelated in game: the stage runs +0..+N with every step labelled,
- * and the refinement runs 0..100 whatever the stage, with a box beside the
- * slider for an exact value.
+ * and the refinement runs 0..100% whatever the stage. The refinement slider
+ * steps by level (`REFINE_LEVELS`), so it only lands on figures the game can
+ * show, and the box for an exact figure sits under it between the two ends.
  */
 function EnhanceSliders({
   stage,
@@ -322,6 +327,7 @@ function EnhanceSliders({
   const { t } = useTranslation()
   const stageText = (value: number) => t('equip.stageOption', { stage: value })
   const percentText = (value: number) => t('equip.percentValue', { value })
+  const level = refineLevelOf(refine)
   return (
     <div className="min-w-0 space-y-1.5">
       {score !== undefined ? (
@@ -342,28 +348,33 @@ function EnhanceSliders({
         testId={`${testIdPrefix}-stage`}
         onChange={onStage}
       />
-      <div className="grid grid-cols-[minmax(0,1fr)_3.75rem] items-center gap-2">
-        <RangeField
-          label={t('equip.refinePercent')}
-          min={0}
-          max={100}
-          value={refine}
-          valueText={percentText(refine)}
-          minLabel={percentText(0)}
-          maxLabel={percentText(100)}
-          showValue
-          testId={`${testIdPrefix}-refine`}
-          onChange={onRefine}
-        />
-        <NumberField
-          value={refine}
-          min={0}
-          max={100}
-          label={t('equip.refinePercent')}
-          testId={`${testIdPrefix}-refine-value`}
-          onValue={onRefine}
-        />
-      </div>
+      <RangeField
+        label={t('equip.refinePercent')}
+        min={0}
+        max={REFINE_LEVELS}
+        value={level}
+        valueText={percentText(refinePercentOf(level))}
+        minLabel={percentText(0)}
+        maxLabel={percentText(100)}
+        middle={
+          <span className="flex items-center gap-1">
+            <span className="w-14">
+              <NumberField
+                value={refine}
+                min={0}
+                max={100}
+                label={t('equip.refinePercent')}
+                testId={`${testIdPrefix}-refine-value`}
+                onValue={onRefine}
+                commit={clampRefine}
+              />
+            </span>
+            %
+          </span>
+        }
+        testId={`${testIdPrefix}-refine`}
+        onChange={(next) => onRefine(refinePercentOf(next))}
+      />
     </div>
   )
 }
@@ -590,6 +601,13 @@ function AffixField({
   // The rung this value stands on: the one the classifier matched.
   const current = rungs.find(({ tier, rung }) => tier === affix.tier && rung[0] === affix.mark)
   const rungKey = (tier: AffixTier, rung: Rung) => `${tier}:${rung[1]}`
+  // The arrows walk the rungs by value, across tiers: contaminated, normal, extraordinary.
+  const byValue = [...rungs].sort((a, b) => a.rung[1] - b.rung[1])
+  const at = current ? byValue.indexOf(current) : -1
+  const stepTo = (offset: number) => {
+    const next = at < 0 ? undefined : byValue[at + offset]
+    return next ? () => onChange({ family: affix.family, value: next.rung[1] }) : null
+  }
   return (
     <div className={AFFIX_ROW_CLASS} data-testid={`equip-affix-${slot}-${index}`}>
       {affix.family === '' ? <span className="w-3" aria-hidden /> : <TierPip tier={affix.tier} />}
@@ -606,12 +624,16 @@ function AffixField({
           <option key={family} value={family}>{family}</option>
         ))}
       </Picker>
-      <Picker
+      <StepSelect
         value={current ? rungKey(current.tier, current.rung) : ''}
         label={t('equip.affixValue')}
+        upLabel={t('equip.rungUp')}
+        downLabel={t('equip.rungDown')}
         testId={`equip-affix-value-${slot}-${index}`}
         className={COMPACT_SELECT_CLASS}
-        onValue={(raw) => {
+        onUp={stepTo(1)}
+        onDown={stepTo(-1)}
+        onChange={(raw) => {
           const next = rungs.find(({ tier, rung }) => rungKey(tier, rung) === raw)
           if (next) onChange({ family: affix.family, value: next.rung[1] })
         }}
@@ -629,10 +651,7 @@ function AffixField({
             </optgroup>
           )
         })}
-      </Picker>
-      <span className={`whitespace-nowrap text-right ${TYPE.valueMuted}`} data-testid={`equip-affix-mark-${slot}-${index}`}>
-        {t('equip.affixMark', { mark: affix.mark })}
-      </span>
+      </StepSelect>
       <button
         type="button"
         onClick={onRemove}
@@ -967,7 +986,7 @@ export default function EquipmentSection({
               <BonusTier
                 equipment={equipment}
                 tier={refineTier}
-                title={t('equip.suitTier', { percent: averagePercent.toFixed(1), mark: (refineTier.mark ?? 0).toLocaleString() })}
+                title={t('equip.suitTier', { percent: averagePercent.toLocaleString(undefined, { maximumFractionDigits: 2 }), mark: (refineTier.mark ?? 0).toLocaleString() })}
               />
             ) : null}
           </div>

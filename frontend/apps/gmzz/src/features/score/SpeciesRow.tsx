@@ -129,8 +129,9 @@ export function ItemRow({
           <span className={`text-xs font-semibold ${bandStyle(BAND_CLASS, bandIndex)}`}>{item.band?.label}</span>
         </div>
 
-        {/* The fold control's own column, kept on rows without a detail too so every row's columns line up. */}
-        <div className="flex md:justify-end">
+        {/* The fold control's own column, kept on rows without a detail too so every row's columns line up,
+            and sat on the row's bottom edge, next to the detail it opens. */}
+        <div className="flex md:self-end md:justify-end">
           {toggle}
         </div>
       </div>

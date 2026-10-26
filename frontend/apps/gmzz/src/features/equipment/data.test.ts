@@ -21,6 +21,11 @@ import {
   maxStageFor,
   familiesByGrace,
   rungsFor,
+  clampRefine,
+  averageProgress,
+  refineLevelOf,
+  refinePercentOf,
+  REFINE_LEVELS,
   scoredSlots,
   statLines,
   suitOf,
@@ -268,8 +273,8 @@ describe('classifyAffix', () => {
     expect(classify('攻击', -80)).toMatchObject({ tier: 'contaminated', mark: -200 })
   })
 
-  it('negates the normal rung for a family with no contaminated ladder', () => {
-    expect(classify('穿刺', -50)).toMatchObject({ tier: 'contaminated', mark: -202 })
+  it('scores nothing for a negative value in a family with no contaminated ladder', () => {
+    expect(classify('穿刺', -50)).toMatchObject({ tier: 'contaminated', mark: 0 })
   })
 
   it('is a normal zero for nothing typed', () => {
@@ -589,7 +594,34 @@ describe('evaluatePiece', () => {
     }, 101)
     expect(result.enhanceScore).toBe(240)
     expect(result.total).toBe(240)
+    expect(result.refineLevel).toBe(40)
     expect(result.progressPercent).toBe(50)
+  })
+
+  it('averages the refinement from the levels behind the shown percentages', () => {
+    const piece = (refinePercent: number) => evaluatePiece(EQUIPMENT, GRACES, {
+      slot: 1, itemId: null, enhanceStage: 0, refinePercent, affixes: [],
+    }, 101)
+    // Level 62 shows 77% and level 55 shows 68%; the average is of 77.5 and 68.75.
+    expect(averageProgress([piece(77), piece(68)])).toBe((77.5 + 68.75) / 2)
+  })
+})
+
+describe('refinement levels', () => {
+  it('shows a level rounded down and reads a shown figure back to its level', () => {
+    expect(refinePercentOf(62)).toBe(77)
+    expect(refinePercentOf(55)).toBe(68)
+    expect(refineLevelOf(77)).toBe(62)
+    expect(refineLevelOf(68)).toBe(55)
+    for (let level = 0; level <= REFINE_LEVELS; level += 1) expect(refineLevelOf(refinePercentOf(level))).toBe(level)
+  })
+
+  it('takes a figure no level shows to the next level up, and bounds the rest', () => {
+    expect(refineLevelOf(4)).toBe(4)
+    expect(clampRefine(4)).toBe(5)
+    expect(clampRefine(150)).toBe(100)
+    expect(clampRefine(-3)).toBe(0)
+    expect(clampRefine(Number.NaN)).toBe(0)
   })
 
   it('subtracts a contaminated affix rather than adding it', () => {

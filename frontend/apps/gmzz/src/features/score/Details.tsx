@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useMemory } from '@gamemap/state-memory'
-import { IconChevronDown } from '@tabler/icons-react'
+import { IconChevronDown, IconChevronLeft } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
 import { gmzzMemory, isRecord } from '@/lib/memory'
@@ -21,7 +21,8 @@ export function useDetailsOpen(id: string): readonly [boolean, () => void] {
 }
 
 /**
- * The one fold control on the score page: a chevron and "展开详情 / 收起详情".
+ * The one fold control on the score page: "展开详情 / 收起详情" and a chevron
+ * pointing down while the detail is open, left while it is folded.
  * Every detail — an item's own calculator and a calculator shared by a whole
  * group — opens and closes through this button, so they all read the same.
  */
@@ -33,7 +34,9 @@ export function DetailsToggle({ open, onToggle, controls, testId }: {
     <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={controls} data-testid={testId}
       className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]">
       {t(open ? 'score.detailsHide' : 'score.detailsShow')}
-      <IconChevronDown className={`size-4 transition-transform ${open ? 'rotate-180' : ''}`} stroke={1.8} aria-hidden />
+      {open
+        ? <IconChevronDown className="size-4" stroke={1.8} aria-hidden />
+        : <IconChevronLeft className="size-4" stroke={1.8} aria-hidden />}
     </button>
   )
 }
