@@ -197,7 +197,7 @@ function AffixRow({ relics, affix, index, pool, k2, testPrefix, onChange, onRemo
               label: t('relic.affixRare'),
               options: rareAffixes(pool).map((entry) => ({
                 value: `${RARE_PREFIX}${entry.id}`,
-                label: t('relic.rareOption', { name: entry.name ?? '', stat: statName(relics, entry.stat) }),
+                label: t('relic.rareOption', { name: entry.name ?? statName(relics, entry.stat), stat: statName(relics, entry.stat) }),
               })),
             },
           ]}
@@ -227,7 +227,7 @@ function AffixRow({ relics, affix, index, pool, k2, testPrefix, onChange, onRemo
           ×
         </button>
       </div>
-      {rare ? (
+      {rare && rare.effect ? (
         <p className="mt-0.5 text-xs leading-5 text-amber-700 dark:text-amber-300" data-testid={`${testPrefix}-effect-${index}`}>
           <span className="font-semibold">{t('relic.rareName', { name: rare.name ?? '' })}</span>
           {rareEffect(relics, rare, k2)}
