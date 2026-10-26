@@ -1038,7 +1038,7 @@
 
 @media (max-width: 47.99rem) {
   .user-system-main {
-    padding-block: var(--arkive-content-page-top-space) 4.5rem;
+    padding-block: var(--arkive-content-page-top-space) calc(1.5rem + env(safe-area-inset-bottom));
   }
 
   .user-system-layout {

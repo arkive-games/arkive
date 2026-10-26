@@ -25,7 +25,6 @@ export function TopNav({ active }: { active: NavKey }) {
       homeUrl={ARKIVE_HOME_URL}
       homeLabel={t('brandHome')}
       brandName={brandName}
-      brandSlogan={t('brandSlogan')}
       nav={{
         items: ITEMS.map((item) => ({
           key: item.key,

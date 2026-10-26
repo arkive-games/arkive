@@ -60,7 +60,7 @@ describe("ArkiveMapTopBar", () => {
     expect(brand.closest("header")?.className).toContain("h-14")
     expect(getByTestId("map-link").textContent).toBe("Map")
     expect(label.classList.contains("arkive-nav-item-label")).toBe(true)
-    expect(getByTestId("map-link").classList.contains("arkive-nav-item--highlighted")).toBe(true)
+    expect(getByTestId("map-link").className).toContain("text-background")
     expect(getByRole("navigation").className).toContain("rounded-full")
     expect(getByTestId("nav-indicator").className).toContain("arkive-nav-indicator")
   })

@@ -63,9 +63,8 @@ export function BottomTabBar() {
   const { pathname } = useLocation()
   const active = activeKey(pathname)
 
-  // Five slots is the most a phone can fit without shrinking the labels below
-  // `text-xs`, so the bar carries the map plus the three most-used tools and
-  // everything else moves into the sheet.
+  // The map and the three most-used tools, listed first in the menu drawer;
+  // everything else follows them as the secondary grid.
   const primary: Tab[] = [
     { key: '/', label: t('breeding.navMap'), icon: Map },
     { key: '/breeding', label: t('breeding.navBreeding'), icon: Heart },

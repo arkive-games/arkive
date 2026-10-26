@@ -467,6 +467,13 @@ a:focus-visible > .arkive-wordmark {
     stroke-width: 1.8;
   }
 
+  /* The current page is listed only in the drawer, so the button is where the
+     visitor is: tint it as the drawer tints that page's cell. */
+  .arkive-menu-button[data-active="true"] {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
   /* The menu drawer slides in from the right, so only its inner edge rounds. */
   .arkive-more-sheet {
     border-radius: var(--arkive-radius-floating) 0 0 var(--arkive-radius-floating);

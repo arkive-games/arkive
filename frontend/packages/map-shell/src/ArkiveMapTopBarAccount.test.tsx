@@ -13,7 +13,6 @@ function renderTopBar(account?: ArkiveMapTopBarAccount, onLogin?: () => void) {
       homeUrl="https://arkive.example"
       homeLabel="Arkive home"
       brandName="Arkive"
-      brandSlogan="Sail Games With Us."
       nav={{
         items: [{ key: "map", label: "Map", active: true }],
         renderItem: (item, className, labelClassName) => (

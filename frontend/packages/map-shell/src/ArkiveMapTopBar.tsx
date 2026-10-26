@@ -34,11 +34,10 @@ export interface ArkiveMapTopBarProps {
   /** Accessible name of the wordmark link. */
   homeLabel: string
   /**
-   * Kept for hosts that still pass them; the bar now shows the "Arkive"
+   * Kept for hosts that still pass it; the bar now shows the "Arkive"
    * wordmark alone, whatever the language.
    */
   brandName?: string
-  brandSlogan?: string
   /**
    * `docked` spans the window under the page edge (game pages, maps);
    * `floating` is a capsule hovering over the page (the portal home).
@@ -194,7 +193,7 @@ export function ArkiveMapTopBar({
         ...nav,
         classNames: {
           item: cn(NAV_ITEM_CLASS, "text-foreground/70 hover:text-foreground"),
-          itemActive: cn(NAV_ITEM_CLASS, "arkive-nav-item--highlighted text-background"),
+          itemActive: cn(NAV_ITEM_CLASS, "text-background"),
           label: "arkive-nav-item-label inline-flex h-full items-center whitespace-nowrap",
           indicator: "arkive-nav-indicator",
         },
