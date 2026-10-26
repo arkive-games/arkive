@@ -561,6 +561,10 @@ const en = {
     "formula": "Each level of a talent node is worth {{normal}} points and each activated core talent {{special}}; only the active tree counts, which is exactly the shape of the game's own benchmark for this item."
   },
   bonds: {
+    "researchNow": "Research {{points}}",
+    "rankNone": "No rank yet",
+    "relationTier": "Tier {{tier}}",
+    "historyNoRelations": "No relation formed yet: set connection stars above.",
     "formulaLabel": "Calculation",
     "quality7": "Red",
     "quality6": "Orange",
@@ -1324,6 +1328,10 @@ const zhCN: Strings = {
     "formula": "天赋节点每级 {{normal}} 分，每个激活的核心天赋 {{special}} 分，只计当前生效的天赋树——这正是游戏为该项设定的基准值的构成方式。"
   },
   bonds: {
+    "researchNow": "研究值 {{points}}",
+    "rankNone": "未达段位",
+    "relationTier": "{{tier}} 阶",
+    "historyNoRelations": "尚未形成关系：先在上方设置人脉星级。",
     "formulaLabel": "计算方式",
     "quality7": "红色",
     "quality6": "橙色",
@@ -2089,6 +2097,10 @@ const zhTW: Strings = {
     "formula": "天賦節點每級 {{normal}} 分，每個啟用的核心天賦 {{special}} 分，只計目前生效的天賦樹——這正是遊戲為該項設定的基準值的構成方式。"
   },
   bonds: {
+    "researchNow": "研究值 {{points}}",
+    "rankNone": "未達段位",
+    "relationTier": "{{tier}} 階",
+    "historyNoRelations": "尚未形成關係：先在上方設定人脈星級。",
     "formulaLabel": "計算方式",
     "quality7": "紅色",
     "quality6": "橙色",

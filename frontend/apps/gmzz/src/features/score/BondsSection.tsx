@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 
 import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import type { Fellow, FellowRelation, HistoryResearchRank } from '@/features/fellows/data'
-import { HistoryResearchSlider } from '@/features/fellows/HistoryResearchSlider'
 import {
   activeAttributes,
   carriedPuppetSkill,
@@ -13,7 +12,6 @@ import {
   evaluatePuppets,
   hasMarks,
   clampSkillLevel,
-  extraResearchPoints,
   historyRankFor,
   puppetSkillScore,
   talentMark,
@@ -25,7 +23,7 @@ import { FormulaHint } from '@/features/score/FormulaHint'
 import { SkillLevelField } from '@/features/score/SkillLevelField'
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
 import FellowSkillCalculator from '@/features/score/FellowSkillSection'
-import { relationResearchPoints, starMap } from '@/features/score/fellowSkill'
+import { relationResearchPoints, relationTier, starMap } from '@/features/score/fellowSkill'
 import { GroupSection } from '@/features/score/GroupSection'
 import { portraitUrl, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { TYPE } from '@/lib/typography'
@@ -506,7 +504,6 @@ function HistoryPicker({
   relations,
   item,
   draft,
-  setDraft,
 }: {
   ranks: HistoryResearchRank[]
   relations: FellowRelation[]
@@ -515,52 +512,55 @@ function HistoryPicker({
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
   const { t } = useTranslation()
-  // The rank is not picked: it follows from the relations' tiers, which follow
-  // from the connection stars set under 人脉技能, plus points from elsewhere.
-  const fromRelations = relationResearchPoints(relations, starMap(draft.fellows ?? []))
-  const extra = extraResearchPoints(draft)
-  const total = fromRelations + extra
+  // Nothing is picked here: the rank follows from the relations' tiers, which
+  // follow from the connection stars set in the roster above.
+  const stars = starMap(draft.fellows ?? [])
+  const total = relationResearchPoints(relations, stars)
   const current = historyRankFor(ranks, total)
-  const sorted = [...ranks].sort((a, b) => a.score - b.score)
-  const next = sorted.find((rank) => rank.score > total)
+  const next = [...ranks].sort((a, b) => a.score - b.score).find((rank) => rank.score > total)
+  // Every relation formed so far, with its tier and the research it has paid.
+  const formed = relations
+    .map((relation) => {
+      const tier = relationTier(relation, stars)
+      const rewards = relation.researchRewards ?? []
+      return {
+        relation,
+        tier,
+        tierName: rewards.find((reward) => reward.grade === tier - 1)?.gradeName ?? '',
+        points: rewards.filter((reward) => reward.grade < tier).reduce((sum, reward) => sum + reward.value, 0),
+      }
+    })
+    .filter((entry) => entry.tier >= 1)
+    .sort((a, b) => b.points - a.points || a.relation.order - b.relation.order)
 
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,13rem)]" data-testid="bonds-history">
-      <div className="min-w-0">
-        <span className={LABEL_CLASS}>{t('bonds.rank')}</span>
-        <HistoryResearchSlider ranks={ranks} value={current?.id ?? null} onChange={() => {}} allowNone readOnly testId="bonds-rank" />
-        <span className="mt-1 block text-xs text-muted-foreground">
+    <div className="space-y-2" data-testid="bonds-history">
+      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm" data-testid="bonds-research-total">
+        <span className={TYPE.label}>{t('bonds.rank')}</span>
+        <span className="font-semibold text-foreground">{current ? current.name : t('bonds.rankNone')}</span>
+        <span className="tabular-nums text-muted-foreground">{t('bonds.researchNow', { points: total.toLocaleString() })}</span>
+        <span className="text-xs text-muted-foreground">
           {next
             ? t('bonds.rankNext', { name: next.name, points: next.score.toLocaleString(), mark: (next.mark - item.score).toLocaleString() })
             : t('bonds.rankTop')}
         </span>
-      </div>
-      <div className="space-y-2">
-        <p className="flex items-baseline justify-between gap-2 text-sm" data-testid="bonds-research-relations">
-          <span className="text-muted-foreground">{t('bonds.researchFromRelations')}</span>
-          <span className="font-medium tabular-nums text-foreground">{fromRelations.toLocaleString()}</span>
-        </p>
-        <label className="block">
-          <span className={LABEL_CLASS}>{t('bonds.researchExtra')}</span>
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={extra}
-            onChange={(event) => {
-              const value = Math.trunc(Number(event.target.value))
-              setDraft((prev) => ({ ...prev, historyExtraPoints: Number.isFinite(value) && value > 0 ? value : null }))
-            }}
-            className={NUMBER_CLASS}
-            data-testid="bonds-research-extra"
-          />
-        </label>
-        <p className="flex items-baseline justify-between gap-2 text-sm" data-testid="bonds-research-total">
-          <span className="text-muted-foreground">{t('bonds.researchTotal')}</span>
-          <span className="font-semibold tabular-nums text-foreground">{total.toLocaleString()}</span>
-        </p>
-        <span className="block text-xs text-muted-foreground">{t('bonds.researchHint')}</span>
-      </div>
+      </p>
+      {formed.length > 0 ? (
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-1.5" data-testid="bonds-history-relations">
+          {formed.map((entry) => (
+            <li key={entry.relation.id} className="rounded-md border border-border bg-background px-2 py-1.5"
+              data-testid={`bonds-history-relation-${entry.relation.id}`}>
+              <div className="truncate text-sm font-semibold text-foreground">{entry.relation.name}</div>
+              <div className="flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
+                <span>{entry.tierName || t('bonds.relationTier', { tier: entry.tier })}</span>
+                <span className="tabular-nums">+{entry.points.toLocaleString()}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={TYPE.body}>{t('bonds.historyNoRelations')}</p>
+      )}
     </div>
   )
 }

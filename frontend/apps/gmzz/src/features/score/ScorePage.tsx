@@ -19,7 +19,7 @@ import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { loadRelics, type Relics } from '@/features/relics/data'
 import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
-import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, extraResearchPoints, historyScore, isBondsDraft } from '@/features/score/bonds'
+import { carriedPuppetSkill, clampSkillLevel, emptyBondsDraft, evaluatePuppets, historyScore, isBondsDraft } from '@/features/score/bonds'
 import { carriedFellowSkill, relationResearchPoints, pathwaySkillScore, skillLevelCap, starMap } from '@/features/score/fellowSkill'
 import {
   benchmarkAt,
@@ -254,7 +254,7 @@ export default function ScorePage() {
       PUPPET_SKILL_MODULE,
       partners && scoring ? carriedPuppetSkill(bonds.puppets, partners, scoring, bonds.skillPartnerId, bonds.puppetSkillLevel)?.result.score ?? 0 : 0,
     )
-    const research = (relations ? relationResearchPoints(relations, starMap(bonds.fellows ?? [])) : 0) + extraResearchPoints(bonds)
+    const research = relations ? relationResearchPoints(relations, starMap(bonds.fellows ?? [])) : 0
     put(HISTORY_MODULE, ranks ? historyScore(ranks, research) : 0)
     put(
       FELLOW_SKILL_MODULE,
