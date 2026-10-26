@@ -334,6 +334,11 @@ export type MaterialResult = {
   applies: boolean
   /** floor(k2 × Σ mark of the active affixes); 0 when the position does not apply. */
   affixScore: number
+  /**
+   * What the affixes would score with none switched off, as the game also
+   * shows: k2 × Σ mark over every affix the material carries.
+   */
+  fullAffixScore: number
   /** 非凡共鸣 at the active count: floor(mark × k1). */
   resonanceScore: number
   /** The resonance rung's table stats; the game shows `floor(value × k1)`. */
@@ -434,6 +439,7 @@ export function evaluateRelicSlot(
       activeCount: effective.length,
       applies,
       affixScore: applies ? k2 * effective.reduce((sum, affix) => sum + affix.mark, 0) : 0,
+      fullAffixScore: k2 * affixes.reduce((sum, affix) => sum + affix.mark, 0),
       // `calcSealedEnhanceMark`: floor(Mark × professionCoefficient × k1). The
       // profession coefficients are 1 for every row shipped, so they are not
       // modelled; the floor is the client's. Each material is read against

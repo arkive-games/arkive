@@ -41,6 +41,15 @@ const CELL_CLASS = `flex w-full min-w-0 items-center gap-2 rounded-md border bor
 const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
 const SECTION_CLASS = 'border-t border-border/70 p-2.5'
+/**
+ * One part of a card. On wide screens the three cards are subgrids of one
+ * grid, so each part shares its row with the same part of the other two and
+ * they line up whatever each one holds. An empty part (no rare word, no
+ * active affix) collapses to nothing but keeps its row.
+ */
+const ROW_CLASS = 'min-w-0 px-2.5 pb-2 empty:pb-0'
+/** How many parts a card has: the subgrid spans this many rows. */
+const CARD_ROWS = 'lg:row-span-9'
 const PROSE_CLASS = `mt-0.5 whitespace-pre-line ${TYPE.body}`
 
 /**
@@ -408,7 +417,8 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
   const canAdd = affixes.length < max && poolStats(pool).some((stat) => !usedGroups(pool, affixes).groups.has(poolRungs(pool, stat)[0]?.groupId ?? -1))
 
   return (
-    <div className="space-y-1.5" data-testid={`relic-material-${groupId}-${material.index}`}>
+    <>
+    <div className={ROW_CLASS} data-testid={`relic-material-${groupId}-${material.index}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           {/* Named as the game names it, from the words the material carries. */}
@@ -418,6 +428,11 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
             {material.applies ? t('relic.materialActive') : t('relic.materialInactive')}
           </span>
           <span className="ml-2 text-xs tabular-nums text-muted-foreground">{t('relic.materialScore', { score: decimal(material.affixScore) })}</span>
+          {over > 0 ? (
+            <span className="ml-2 text-xs tabular-nums text-amber-700 dark:text-amber-300" data-testid={`relic-material-full-${groupId}-${material.index}`}>
+              {t('relic.materialFullScore', { score: decimal(material.fullAffixScore) })}
+            </span>
+          ) : null}
         </div>
         {canSwap ? (
           <button type="button" onClick={onSwapStart} aria-pressed={swapping}
@@ -429,11 +444,13 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
         ) : null}
       </div>
       {swapping ? (
-        <p className="text-xs font-semibold text-[color:var(--arkive-nav-accent)]" data-testid={`relic-swap-hint-${groupId}`}>
+        <p className="mt-1 text-xs font-semibold text-[color:var(--arkive-nav-accent)]" data-testid={`relic-swap-hint-${groupId}`}>
           {t('relic.swapHint')}
         </p>
       ) : null}
+    </div>
 
+    <div className={`${ROW_CLASS} space-y-1.5`}>
       <span className={LABEL_CLASS}>
         {t('relic.affixesOf', { group: relics.groupNames[String(material.type)] ?? '' })}
       </span>
@@ -453,10 +470,15 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
           {t('relic.cappedOut', { over, cap: result.cap })}
         </p>
       ) : null}
+    </div>
 
+    <div className={ROW_CLASS}>
       <RareEffects relics={relics} pool={pool} affixes={affixes} k2={k2} testId={`${testPrefix}-rare`} />
+    </div>
+    <div className={ROW_CLASS}>
       <ResonanceNow relics={relics} material={material} k1={k1} testId={`relic-resonance-${groupId}-${material.index}`} />
     </div>
+    </>
   )
 }
 
@@ -487,7 +509,7 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
   const choose = (at: number) => (spec ? patch({ materialType: materialTypeAt(groupId, at) }) : setViewed(at))
 
   return (
-    <article className="flex min-w-0 flex-col rounded-md border border-border bg-card"
+    <article className={`flex min-w-0 flex-col rounded-md border border-border bg-card lg:grid lg:grid-rows-subgrid lg:gap-0 ${CARD_ROWS}`}
       data-testid={`relic-card-${groupId}`} aria-label={title}>
       <header className="flex min-w-0 items-start justify-between gap-2 border-b border-border p-2.5">
         <div className="min-w-0">
@@ -500,14 +522,14 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
         </div>
       </header>
 
-      <div className="space-y-2 p-2.5">
-        <div>
+      <div className="min-w-0 px-2.5 pt-2.5 pb-2">
           <span className={LABEL_CLASS}>{t('relic.artifact')}</span>
           <ArtifactCell relics={relics} groupId={groupId} artifact={result.artifact} gradeOf={gradeOf}
             onSelect={(artifactId) => patch({ artifactId, grade: gradeOf(artifactId) })} />
           {/* Every line of the effect text, deliberately untruncated. */}
           <p className={PROSE_CLASS}>{result.artifact ? result.artifact.description : t('relic.artifactPlaceholder')}</p>
-        </div>
+      </div>
+      <div className="min-w-0 px-2.5 pb-2.5">
         <GradeSlider relics={relics} grade={slot.grade} scoredGrade={result.resonanceGrade} groupId={groupId}
           onChange={(grade) => patch({
             grade,
@@ -544,6 +566,7 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
           })}
         </div>
         <p className={PROSE_CLASS}>{t(spec ? 'relic.materialSpecHint' : 'relic.materialSlotsHint')}</p>
+      </div>
 
         {material ? (
           <MaterialPanel relics={relics} slot={slot} material={material} result={result} k1={k1} k2={k2}
@@ -551,8 +574,9 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
             canSwap={canSwapFrom({ groupId, index })}
             onAffixes={(affixes) => patch({ materials: slot.materials.map((list, at) => (at === index ? affixes : list)) })}
             onSwapStart={() => onSwapStart({ groupId, index })} />
-        ) : null}
-      </div>
+        ) : (
+          <><div /><div /><div /><div /></>
+        )}
 
       <div className={`${SECTION_CLASS} mt-auto`} data-testid={`relic-breakdown-${groupId}`}>
         <dl className="space-y-0.5 text-xs">
