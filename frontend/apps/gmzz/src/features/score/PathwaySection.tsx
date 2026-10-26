@@ -7,9 +7,10 @@ import { GroupSection } from '@/features/score/GroupSection'
 import { SkillLevelField } from '@/features/score/SkillLevelField'
 import { PATHWAY_SKILL_BASE, PATHWAY_SKILL_PER_LEVEL } from '@/features/score/fellowSkill'
 import {
-  clampLevel,
+  autoAllocate,
   evaluateTalents,
-  nodeCap,
+  normalNodes,
+  talentLimits,
   treeFor,
   treesFor,
   type TalentDraft,
@@ -25,7 +26,6 @@ export const TALENT_MODULE = 'Player_Talent'
 export const SKILL_MODULE = 'Player_Skill'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const CHECK_CLASS = `size-4 cursor-pointer accent-[color:var(--arkive-nav-accent)] ${FOCUS}`
 const TAB_CLASS = `inline-flex min-h-9 items-center gap-1.5 px-3 ${TYPE.control} font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)]`
 const BUTTON_CLASS = `inline-flex h-8 items-center justify-center rounded-md border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 
@@ -49,12 +49,15 @@ export default function PathwaySection({
   skillCap,
   relicSkillBonus,
   onSkillLevel,
+  talentBenchmark,
 }: {
   /** The shared skill level, its cap, and what relics add on top (not scored). */
   skillLevel: number
   skillCap: number | null
   relicSkillBonus: number
   onSkillLevel: (level: number) => void
+  /** The 非凡天赋 max benchmark at the current progression: it fixes the points, open nodes and level cap. */
+  talentBenchmark: number
   group: GenusResult
   rating: Rating
   talents: Talents | null
@@ -76,7 +79,7 @@ export default function PathwaySection({
           return {
             kind: 'derived',
             calculator: talents ? (
-              <TalentCalculator talents={talents} professionId={professionId} draft={draft} setDraft={setDraft} />
+              <TalentCalculator talents={talents} professionId={professionId} benchmark={talentBenchmark} draft={draft} setDraft={setDraft} />
             ) : (
               <p className={TYPE.body}>{t('pathway.unavailable')}</p>
             ),
@@ -105,18 +108,21 @@ export default function PathwaySection({
 function TalentCalculator({
   talents,
   professionId,
+  benchmark,
   draft,
   setDraft,
 }: {
   talents: Talents
   professionId: number | null
+  benchmark: number
   draft: TalentDraft
   setDraft: (update: (prev: TalentDraft) => TalentDraft) => void
 }) {
   const { t } = useTranslation()
   const trees = useMemo(() => treesFor(talents, professionId), [talents, professionId])
   const tree = useMemo(() => treeFor(talents, professionId, draft.treeId), [talents, professionId, draft.treeId])
-  const result = useMemo(() => evaluateTalents(tree, draft.levels), [tree, draft.levels])
+  const limits = useMemo(() => (tree ? talentLimits(tree, benchmark) : null), [tree, benchmark])
+  const result = useMemo(() => evaluateTalents(tree, draft.levels, limits), [tree, draft.levels, limits])
 
   if (!tree) return <p className={TYPE.body}>{t('pathway.noTrees')}</p>
 
@@ -127,11 +133,14 @@ function TalentCalculator({
       ...prev,
       levels: {
         ...prev.levels,
-        ...Object.fromEntries(tree.nodes.map((node) => [node.key, full ? nodeCap(node) : 0])),
+        ...(full ? autoAllocate(tree, limits) : Object.fromEntries(tree.nodes.map((node) => [node.key, 0]))),
       },
     }))
-  const normal = result.nodes.filter((entry) => entry.node.type === 'normal')
-  const special = result.nodes.filter((entry) => entry.node.type === 'special')
+  const normal = normalNodes(tree).flatMap((node) => result.nodes.filter((entry) => entry.node.key === node.key))
+  // One column per levelled node, the first left empty: each core sits under
+  // the node whose first level switches it on.
+  const coreUnder = new Map(result.nodes.filter((entry) => entry.node.type === 'special').map((entry) => [entry.node.parentKey, entry]))
+  const special = normal.map((entry) => coreUnder.get(entry.node.key) ?? null)
   const spentFull = result.pointsSpent >= result.pointCap
 
   return (
@@ -161,6 +170,11 @@ function TalentCalculator({
           <span className={`${TYPE.valueMuted} ${spentFull ? 'text-foreground' : ''}`} data-testid="talent-points">
             {t('pathway.points', { spent: result.pointsSpent, cap: result.pointCap })}
           </span>
+          {limits ? (
+            <span className={TYPE.valueMuted} data-testid="talent-limits">
+              {t('pathway.limits', { nodes: limits.nodes, level: limits.levelCap })}
+            </span>
+          ) : null}
           <button type="button" className={BUTTON_CLASS} onClick={() => fill(true)} data-testid="talent-fill">
             {t('pathway.fill')}
           </button>
@@ -173,20 +187,15 @@ function TalentCalculator({
 
       <ul className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-5">
         {normal.map((entry) => (
-          <NormalNode key={entry.node.key} entry={entry} onLevel={(level) => setLevel(entry.node.key, clampLevel(entry.node, level))} />
+          <NormalNode key={entry.node.key} entry={entry} onLevel={(level) => setLevel(entry.node.key, Math.min(entry.cap, Math.max(0, level)))} />
         ))}
       </ul>
-      <ul className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-4">
-        {special.map((entry) => (
+      <ul className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-5">
+        {special.map((entry, index) => entry === null ? <li key={`empty-${index}`} aria-hidden className="hidden xl:block" /> : (
           <li key={entry.node.key} className="rounded-md border border-border bg-background p-2" data-testid={`talent-node-${entry.node.key}`}>
-            <label className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                className={`${CHECK_CLASS} mt-0.5`}
-                checked={entry.level > 0}
-                onChange={(event) => setLevel(entry.node.key, event.target.checked ? 1 : 0)}
-                data-testid={`talent-special-${entry.node.key}`}
-              />
+            {/* No choice here: a core switches on when the node above it is learnt. */}
+            <div className={`flex items-start gap-2 ${entry.level > 0 ? '' : 'opacity-60'}`}
+              data-testid={`talent-special-${entry.node.key}`} data-active={entry.level > 0 || undefined}>
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-2">
                   <span className={TYPE.name}>{entry.node.name}</span>
@@ -196,21 +205,22 @@ function TalentCalculator({
                 </span>
                 <span className={`mt-0.5 block whitespace-pre-line ${TYPE.body}`}>{entry.node.description}</span>
               </span>
-            </label>
+            </div>
           </li>
         ))}
       </ul>
 
-      <p className={TYPE.body}>{t('pathway.formula', { normal: normal[0]?.node.mark ?? 180, special: special[0]?.node.mark ?? 1000 })}</p>
+      <p className={TYPE.body}>{t('pathway.formula', { normal: normal[0]?.node.mark ?? 180, special: special.find((entry) => entry !== null)?.node.mark ?? 1000 })}</p>
     </div>
   )
 }
 
 function NormalNode({ entry, onLevel }: { entry: TalentNodeResult; onLevel: (level: number) => void }) {
   const { t } = useTranslation()
-  const cap = nodeCap(entry.node)
+  const cap = entry.cap
   return (
-    <li className="rounded-md border border-border bg-background p-2" data-testid={`talent-node-${entry.node.key}`}>
+    <li className={`rounded-md border border-border bg-background p-2 ${entry.locked ? 'opacity-60' : ''}`}
+      data-testid={`talent-node-${entry.node.key}`} data-locked={entry.locked || undefined}>
       <div className="flex items-baseline justify-between gap-2">
         <span className={`truncate ${TYPE.name}`}>{entry.node.name}</span>
         <span className={TYPE.value} data-testid={`talent-score-${entry.node.key}`}>

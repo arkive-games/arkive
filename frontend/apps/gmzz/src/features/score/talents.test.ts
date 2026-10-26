@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  autoAllocate,
   clampLevel,
+  talentLimits,
   evaluateTalents,
   isTalentDraft,
   pointCap,
@@ -107,5 +109,46 @@ describe('talent draft validation', () => {
     expect(isTalentDraft({ treeId: '101', levels: {} })).toBe(false)
     expect(isTalentDraft({ treeId: 101, levels: { '10100': '3' } })).toBe(false)
     expect(isTalentDraft(null)).toBe(false)
+  })
+})
+
+describe('progression limits', () => {
+  const t = TALENTS.trees[0]
+
+  it('splits the max curve into points, open nodes and the level cap', () => {
+    // Divinity 19: 10200 = 3 cores + 40 points, four nodes at Lv10.
+    expect(talentLimits(t, 10200)).toEqual({ points: 40, nodes: 4, levelCap: 10 })
+    // Divinity 20: 11920 = 4 cores + 44 points, the last node opens and caps lift to 15.
+    expect(talentLimits(t, 11920)).toEqual({ points: 44, nodes: 5, levelCap: 15 })
+    expect(talentLimits(t, 17500)).toEqual({ points: 75, nodes: 5, levelCap: 15 })
+    // Role level 1: 1540 = 1 core + 3 points, two nodes open.
+    expect(talentLimits(t, 1540)).toEqual({ points: 3, nodes: 2, levelCap: 10 })
+  })
+
+  it('opens a node only after the one before it has a level, and switches its core on by itself', () => {
+    const limits = talentLimits(t, 10200)
+    const gap = evaluateTalents(t, { 10100: 5, 10101: 0, 10102: 5 }, limits)
+    expect(gap.nodes[2].locked).toBe(true)
+    expect(gap.nodes[2].level).toBe(0)
+    const chain = evaluateTalents(t, { 10100: 1, 10101: 1, 10102: 1 }, limits)
+    // Each core hangs under nodes 1..4; nodes 1 and 2 are learnt, so two cores are on.
+    expect(chain.activated).toBe(2)
+    expect(chain.total).toBe(3 * 180 + 2 * 1000)
+  })
+
+  it('never takes a node past the progression level cap, nor the fifth node before it opens', () => {
+    const limits = talentLimits(t, 10200)
+    const result = evaluateTalents(t, { 10100: 15, 10101: 15, 10102: 15, 10103: 15, 10104: 15 }, limits)
+    expect(result.nodes.slice(0, 5).map((n) => n.level)).toEqual([10, 10, 10, 10, 0])
+    expect(result.total).toBe(40 * 180 + 3 * 1000)
+  })
+
+  it('allocates one level everywhere first, then fills from the last node back', () => {
+    const limits = talentLimits(t, 11920)
+    const levels = autoAllocate(t, limits)
+    expect([10100, 10101, 10102, 10103, 10104].map((k) => levels[k])).toEqual([1, 1, 12, 15, 15])
+    expect(evaluateTalents(t, levels, limits).total).toBe(11920)
+    const early = autoAllocate(t, talentLimits(t, 10200))
+    expect([10100, 10101, 10102, 10103, 10104].map((k) => early[k])).toEqual([10, 10, 10, 10, 0])
   })
 })

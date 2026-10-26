@@ -33,7 +33,7 @@ import {
 } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
 import PathwaySection, { LEVEL_MODULE, SKILL_MODULE, TALENT_MODULE } from '@/features/score/PathwaySection'
-import { emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, treeFor, type Talents } from '@/features/score/talents'
+import { emptyTalentDraft, evaluateTalents, isTalentDraft, loadTalents, talentLimits, treeFor, type Talents } from '@/features/score/talents'
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { gmzzMemory, isFiniteNumber, isNullableNumber, isRecord } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
@@ -238,7 +238,11 @@ export default function ScorePage() {
         fellowCurve ? skillLevelCap(benchmarkAt(fellowCurve.max, roleLevel, divinityLevel, rating.maxRoleLevel)) : null,
       ))
     }
-    put(TALENT_MODULE, talents ? evaluateTalents(treeFor(talents, professionId, talentState.treeId), talentState.levels).total : 0)
+    // Talents are scored under the limits the progression allows (see `talentLimits`).
+    const talentCurve = rating.species.find((entry) => entry.module === TALENT_MODULE)
+    const talentTree = talents ? treeFor(talents, professionId, talentState.treeId) : null
+    const talentMax = talentCurve ? benchmarkAt(talentCurve.max, roleLevel, divinityLevel, rating.maxRoleLevel) : 0
+    put(TALENT_MODULE, talentTree ? evaluateTalents(talentTree, talentState.levels, talentLimits(talentTree, talentMax)).total : 0)
     for (const [part, module] of Object.entries(EQUIPMENT_MODULES)) {
       put(module, equipmentTotals?.[part as keyof EquipmentTotals] ?? 0)
     }
@@ -265,6 +269,8 @@ export default function ScorePage() {
     [rating, roleLevel, divinityLevel, scores],
   )
   const skillCap = capAt(roleLevel, divinityLevel)
+  const talentSpecies = rating?.species.find((entry) => entry.module === TALENT_MODULE)
+  const talentBenchmark = rating && talentSpecies ? benchmarkAt(talentSpecies.max, roleLevel, divinityLevel, rating.maxRoleLevel) : 0
   const relicSkillBonus = relicTotals?.skillLevelBonus ?? 0
   const bondsData: BondsData = { partners, scoring, ranks, fellows, relations, skillCap, relicSkillBonus }
   const gaps = useMemo(() => (result ? headroom(result).slice(0, 5) : []), [result])
@@ -371,6 +377,7 @@ export default function ScorePage() {
             skillCap={skillCap}
             relicSkillBonus={relicSkillBonus}
             onSkillLevel={(level) => setBonds((prev) => ({ ...prev, puppetSkillLevel: level }))}
+            talentBenchmark={talentBenchmark}
           />
         ))}
 

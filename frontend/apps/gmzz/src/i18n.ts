@@ -543,6 +543,7 @@ const en = {
     "sectionUnavailable": "The data this group needs has not loaded."
   },
   pathway: {
+    "limits": "Open talents {{nodes}} · up to Lv{{level}} each",
     "skillFormula": "Score = {{per}} × skill level + {{base}}, from the shared skill level (relic levels excluded). Below role level 47 some skills are still locked and the game's own curve is used.",
     "hint": "Level equals its expected benchmark and extraordinary talent is derived from the active talent tree. Pathway skill is a server value with no client formula, so copy it from the panel.",
     "unavailable": "The talent trees have not loaded.",
@@ -551,7 +552,7 @@ const en = {
     "skillNote": "Computed on the server; the skill score table ships empty. Copy the figure from the in-game Beyonder Rating panel.",
     "tree": "Talent tree",
     "points": "Points spent {{spent}}/{{cap}}",
-    "fill": "Max everything",
+    "fill": "Auto-allocate",
     "clear": "Clear",
     "nodeLevel": "{{name}} level",
     "levelValue": "Lv {{level}}/{{max}}",
@@ -1299,6 +1300,7 @@ const zhCN: Strings = {
     "sectionUnavailable": "该分组所需的数据暂未加载。"
   },
   pathway: {
+    "limits": "开放 {{nodes}} 个天赋 · 每个上限 {{level}} 级",
     "skillFormula": "分数 = {{per}} × 技能等级 + {{base}}，技能等级与秘偶、人脉共用（不含封印物加的等级）。扮演等级 47 级前部分技能未解锁，按游戏曲线计。",
     "hint": "等级分数等于其期望值；非凡天赋按当前生效的天赋树推算；途径技能由服务器计算、客户端没有公式，请抄面板数值。",
     "unavailable": "天赋树数据暂未加载。",
@@ -1307,7 +1309,7 @@ const zhCN: Strings = {
     "skillNote": "该项由服务器计算，技能评分表在客户端为空——请直接抄游戏内非凡评分面板上的数字。",
     "tree": "天赋树",
     "points": "已用天赋点 {{spent}}/{{cap}}",
-    "fill": "全部点满",
+    "fill": "一键加点",
     "clear": "清空",
     "nodeLevel": "{{name}} 等级",
     "levelValue": "Lv {{level}}/{{max}}",
@@ -2057,6 +2059,7 @@ const zhTW: Strings = {
     "sectionUnavailable": "該分組所需的資料尚未載入。"
   },
   pathway: {
+    "limits": "開放 {{nodes}} 個天賦 · 每個上限 {{level}} 級",
     "skillFormula": "分數 = {{per}} × 技能等級 + {{base}}，技能等級與秘偶、人脈共用（不含封印物加的等級）。扮演等級 47 級前部分技能未解鎖，按遊戲曲線計。",
     "hint": "等級分數等於其期望值；非凡天賦按目前生效的天賦樹推算；途徑技能由伺服器計算、客戶端沒有公式，請抄面板數值。",
     "unavailable": "天賦樹資料尚未載入。",
@@ -2065,7 +2068,7 @@ const zhTW: Strings = {
     "skillNote": "該項由伺服器計算，技能評分表在客戶端為空——請直接抄遊戲內非凡評分面板上的數字。",
     "tree": "天賦樹",
     "points": "已用天賦點 {{spent}}/{{cap}}",
-    "fill": "全部點滿",
+    "fill": "一鍵加點",
     "clear": "清空",
     "nodeLevel": "{{name}} 等級",
     "levelValue": "Lv {{level}}/{{max}}",
