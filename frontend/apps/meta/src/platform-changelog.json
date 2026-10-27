@@ -2,6 +2,35 @@
   "entries": [
     {
       "date": "2026-10-27",
+      "commit": "895921622dd44f256d087951952422626db0a179",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "A slimmer site footer, a warm search button on All Games, and a redesigned Tools Library.",
+            "zh-CN": "页脚更紧凑，全部游戏页搜索按钮改为暖色，工具库全新设计。",
+            "zh-TW": "頁尾更緊湊，全部遊戲頁搜尋按鈕改為暖色，工具庫全新設計。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The forum and its post composer have a softer, more compact look that matches the rest of the site.",
+            "zh-CN": "论坛与发帖页样式更柔和紧凑，与全站风格统一。",
+            "zh-TW": "論壇與發文頁樣式更柔和緊湊，與全站風格統一。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-27",
       "commit": "59322c1dd51ff5c41606d99fb18f97d7ac50d0c7",
       "targets": [
         "aion2",
