@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-10-28",
+      "commit": "b17397432ac52491dd86ad6676341646227f8224",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Every site now shows the Arkive brand in its page title and description, and publishes a sitemap so search engines can find its pages.",
+            "zh-CN": "所有站点的网页标题和简介都加上了「藏舟 Arkive」品牌，并提供站点地图，方便搜索引擎收录各页面。",
+            "zh-TW": "所有站點的網頁標題和簡介都加上了「藏舟 Arkive」品牌，並提供網站地圖，方便搜尋引擎收錄各頁面。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
       "commit": "10441922fa3cb08a721991348734b4901016a658",
       "targets": [
         "aion2",
