@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.25.0",
+      "date": "2026-10-28",
+      "commit": "fabc3f9f443cc24f31cea3a1bca4c35767fd259c",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Score calculator redesign: a side panel with a score ring, colour-coded group tabs, and compact equipment and relic slots that open detail dialogs, plus a one-step Enhance all dialog and an Unequip button.",
+            "zh-CN": "非凡评分计算器改版：左侧面板显示评分环，四个分组改为彩色标签页；装备和封印物改为紧凑栏位，点开弹窗查看详情，并新增统一强化弹窗和卸下装备按钮。",
+            "zh-TW": "非凡評分計算器改版：左側面板顯示評分環，四個分組改為彩色標籤頁；裝備和封印物改為緊湊欄位，點開彈窗查看詳情，並新增統一強化彈窗和卸下裝備按鈕。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.24.1",
       "date": "2026-10-28",
       "commit": "cb8e79a8a8f7a3439aa9498c4b154b117d15fdd6",
