@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import RangeField from '@/components/RangeField'
 import StepSelect from '@/components/StepSelect'
-import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
-import { useSection } from '@/features/characters/CharacterProvider'
+import PickerModal, { DETAIL_DIALOG_CLASS, IconTile, type PickerOption } from '@/features/equipment/PickerModal'
+import { useCharacterReadOnly, useSection } from '@/features/characters/CharacterProvider'
 import { gmzzMemory } from '@/lib/memory'
 import { TYPE } from '@/lib/typography'
-import { Input } from '@gamemap/ui'
+import { Button, Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input } from '@gamemap/ui'
 import { useMemory } from '@gamemap/state-memory'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -83,7 +83,9 @@ const SELECT_CLASS = `h-9 w-full min-w-0 rounded-md border border-border bg-back
 const COMPACT_SELECT_CLASS = `h-7 w-full min-w-0 rounded-md border border-border bg-background px-1 ${TYPE.control} text-foreground outline-none ${FOCUS}`
 const LABEL_CLASS = `mb-1.5 block ${TYPE.label}`
 const BUTTON_CLASS = `inline-flex items-center justify-center rounded-md border border-border ${TYPE.control} font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
-const SECTION_CLASS = 'border-t border-border/70 p-2.5'
+const SECTION_CLASS = 'border-t border-border/70 pt-3'
+/** The one destructive action in a piece's dialog, set apart in red. */
+const DANGER_CLASS = `inline-flex h-9 w-full items-center justify-center rounded-full border border-red-500/60 ${TYPE.control} font-semibold text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50 dark:text-red-400 ${FOCUS}`
 const BADGE_CLASS = `inline-block shrink-0 rounded border border-border px-1 align-middle ${TYPE.control} font-medium leading-4 text-muted-foreground`
 /** A grace's pips: one gold ◆ per extraordinary affix it counts, and no grey ones filling up to four. */
 const PIP_CLASS = 'text-[color:var(--arkive-nav-accent)]'
@@ -94,15 +96,6 @@ const GAIN_CLASS = 'text-emerald-700 dark:text-emerald-300'
  * value and Mark, so the two pickers split the row evenly.
  */
 const AFFIX_ROW_CLASS = 'grid min-w-0 grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1'
-/**
- * The rows layout's columns: item, stats, enhancement, affixes, brand. Shared
- * by the header and every row so the two cannot drift apart. Five columns only
- * fit from `xl` up — at 1100px the affix column was squeezed to a word a line —
- * so below that a row stacks its cells with their own labels. The enhancement
- * column is wide because its stage track labels all nine steps.
- */
-const ROW_GRID =
-  'xl:grid-cols-[minmax(10rem,12rem)_minmax(10rem,11rem)_minmax(16rem,19rem)_minmax(0,2fr)_minmax(9rem,12rem)] xl:gap-5'
 
 /* ------------------------------------------------------------- persistence */
 
@@ -159,21 +152,18 @@ function suitKind(t: TFunction, suit: Suit | null): string {
   return key ? t(key) : suit.tag ?? ''
 }
 
-/** `hidden` keeps the label for screens narrower than the rows grid, and screen readers, only. */
 function Cell({
   label,
-  hidden = false,
   className = '',
   children,
 }: {
   label: string
-  hidden?: boolean
   className?: string
   children: ReactNode
 }) {
   return (
     <div className={`min-w-0 ${className}`}>
-      <span className={`${LABEL_CLASS} ${hidden ? 'xl:sr-only' : ''}`}>{label}</span>
+      <span className={LABEL_CLASS}>{label}</span>
       {children}
     </div>
   )
@@ -376,25 +366,6 @@ function PieceScore({ result }: { result: PieceResult }) {
         ({result.baseScore.toLocaleString()}
         <span className={GAIN_CLASS}>{t('equip.pieceAdded', { added: added.toLocaleString() })}</span>)
       </span>
-    </div>
-  )
-}
-
-/**
- * The piece's card face, one fact a line: name with `+stage`, the PVE/PVP
- * marker, subtype and gear level. Shared by both layouts.
- */
-function PieceHeader({ result, kind, subtitle }: { result: PieceResult; kind: string; subtitle: string }) {
-  const { t } = useTranslation()
-  return (
-    <div className={`min-w-0 ${TYPE.body}`}>
-      <div className={`truncate ${TYPE.name}`}>
-        {result.item ? result.item.name : t('equip.emptySlot')}
-        <span className="ml-1 tabular-nums text-muted-foreground">+{result.state.enhanceStage}</span>
-      </div>
-      {/* The marker keeps its line even when there is none, so the lines below sit at the same height on every piece. */}
-      <div className="h-5">{kind ? <span className={BADGE_CLASS}>{kind}</span> : null}</div>
-      <div className="truncate">{subtitle}</div>
     </div>
   )
 }
@@ -674,92 +645,140 @@ function AffixEditor({ equipment, graces, result, onPatch }: PieceControlProps) 
   )
 }
 
-/** Column titles for the rows layout; the rows' own labels go screen-reader-only at `lg`. */
-function RowHeader() {
+/**
+ * A piece at a glance: icon, slot and gear level, name, its tags and its
+ * score. Everything that is edited sits behind it, in the piece's dialog, so
+ * the eight slots fit on one screen. `cards` stacks the face for a four-wide
+ * grid; `rows` lays it out on one line for a two-wide list.
+ */
+function PieceSlot({ result, slotName, kind, layout, onOpen }: {
+  result: PieceResult
+  slotName: string
+  kind: string
+  layout: LayoutMode
+  onOpen: () => void
+}) {
   const { t } = useTranslation()
+  const { item, state } = result
+  const tags = [
+    t('equip.stageOption', { stage: state.enhanceStage }),
+    t('equip.refineTag', { value: clampRefine(state.refinePercent) }),
+    result.extraordinaryCount > 0 ? t('equip.extraordinaryTag', { n: result.extraordinaryCount }) : null,
+    result.grace?.name ?? null,
+  ].filter((tag): tag is string => tag !== null)
+  const cards = layout === 'cards'
   return (
-    <div
-      className={`hidden px-2.5 ${TYPE.label} xl:grid ${ROW_GRID}`}
-      aria-hidden
-      data-testid="equip-rows-header"
+    <button
+      type="button"
+      aria-haspopup="dialog"
+      onClick={onOpen}
+      className={`flex min-w-0 gap-3 rounded-xl border border-border bg-card p-2.5 text-left transition-colors hover:border-[color:var(--arkive-nav-accent)] ${FOCUS} ${
+        cards ? 'flex-col items-start' : 'items-center'
+      }`}
+      data-testid={`equip-open-${state.slot}`}
     >
-      <span>{t('equip.item')}</span>
-      <span>{t('equip.stats')}</span>
-      <span>{t('equip.enhance')}</span>
-      <span>{t('equip.affixes')}</span>
-      <span>{t('equip.brand')}</span>
-    </div>
+      <IconPlaceholder item={item} />
+      <span className="min-w-0 flex-1 self-stretch">
+        <span className={`block truncate ${TYPE.body}`}>
+          {[slotName, item?.gearLevel != null ? t('equip.levelTag', { level: item.gearLevel }) : null, kind || null].filter(Boolean).join(' · ')}
+        </span>
+        <span className={`block truncate ${TYPE.name}`}>{item ? item.name : t('equip.emptySlot')}</span>
+        <span className="mt-1 flex flex-wrap gap-1">
+          {tags.map((tag) => <span key={tag} className={BADGE_CLASS}>{tag}</span>)}
+        </span>
+      </span>
+      <span className={`shrink-0 text-lg font-bold tabular-nums text-foreground ${cards ? 'self-end' : ''}`}
+        data-testid={`equip-slot-score-${state.slot}`}>
+        {result.total.toLocaleString()}
+      </span>
+    </button>
   )
 }
 
-function PieceRow({ equipment, graces, slotName, kind, result, onPatch, onOpenPicker }: PieceProps) {
+/**
+ * One piece's dialog: the item with a button to swap it, then its stats,
+ * enhancement, affixes and brand, and last the one destructive action. The
+ * dialog is portalled out of the page's read-only fieldset, so it carries its
+ * own.
+ */
+function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, onPatch, onOpenPicker }: PieceProps & { readOnly: boolean }) {
   const { t } = useTranslation()
   const controls: PieceControlProps = { equipment, graces, result, onPatch }
-  const typeName = equipment.types.find((type) => type.id === result.item?.typeId)?.name ?? slotName
+  const item = result.item
+  const typeName = equipment.types.find((type) => type.id === item?.typeId)?.name ?? slotName
   return (
-    <article
-      className={`grid gap-2 rounded-md border border-border bg-card p-2.5 xl:items-start ${ROW_GRID}`}
-      data-testid={`equip-row-${result.state.slot}`}
-    >
-      <div className="min-w-0">
+    <DialogContent className={DETAIL_DIALOG_CLASS} data-testid={`equip-dialog-${result.state.slot}`}>
+      <DialogHeader>
+        <DialogTitle className="text-left">{slotName}</DialogTitle>
+      </DialogHeader>
+      <fieldset disabled={readOnly} className="m-0 min-w-0 space-y-3 border-0 p-0">
+        <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-card/70 p-2.5">
+          <IconPlaceholder item={item} />
+          <div className="min-w-0 flex-1">
+            <div className={`truncate ${TYPE.name}`}>
+              {item ? item.name : t('equip.emptySlot')}
+              <span className="ml-1 tabular-nums text-muted-foreground">+{result.state.enhanceStage}</span>
+            </div>
+            <div className={`flex flex-wrap items-center gap-1 ${TYPE.body}`}>
+              {t('equip.typeAndLevel', { type: typeName, level: item?.gearLevel ?? '—' })}
+              {kind ? <span className={BADGE_CLASS}>{kind}</span> : null}
+            </div>
+          </div>
+          <button type="button" onClick={onOpenPicker}
+            className={`${BUTTON_CLASS} h-8 shrink-0 rounded-full px-3`} data-testid={`equip-open-picker-${result.state.slot}`}>
+            {item ? t('equip.swap') : t('equip.choose')}
+          </button>
+        </div>
         <PieceScore result={result} />
-        <button
-          type="button"
-          onClick={onOpenPicker}
-          title={t('equip.itemLabel')}
-          className={`flex w-full min-w-0 items-center gap-2 rounded-md border border-border bg-background/60 p-2 text-left transition-colors hover:border-[color:var(--arkive-nav-accent)] ${FOCUS}`}
-          data-testid={`equip-open-picker-${result.state.slot}`}
-        >
-          <IconPlaceholder item={result.item} />
-          <PieceHeader
-            result={result}
-            kind={kind}
-            subtitle={t('equip.typeAndLevel', { type: typeName, level: result.item?.gearLevel ?? '—' })}
-          />
-        </button>
-      </div>
-      <Cell label={t('equip.stats')} hidden><StatBlock equipment={equipment} result={result} /></Cell>
-      <Cell label={t('equip.enhance')} hidden><EnhanceControls {...controls} /></Cell>
-      <Cell label={t('equip.affixes')} hidden><AffixEditor {...controls} /></Cell>
-      <Cell label={t('equip.brand')} hidden>
-        <BrandNote result={result} />
-      </Cell>
-    </article>
+        <Cell label={t('equip.stats')}><StatBlock equipment={equipment} result={result} /></Cell>
+        <Cell label={t('equip.enhance')} className={SECTION_CLASS}><EnhanceControls {...controls} /></Cell>
+        <Cell label={t('equip.affixes')} className={SECTION_CLASS}><AffixEditor {...controls} /></Cell>
+        <Cell label={t('equip.brand')} className={SECTION_CLASS}><BrandNote result={result} /></Cell>
+        {item ? (
+          <button type="button" onClick={() => onPatch({ itemId: null })} className={DANGER_CLASS}
+            data-testid={`equip-unequip-${result.state.slot}`}>
+            {t('equip.unequip')}
+          </button>
+        ) : null}
+      </fieldset>
+    </DialogContent>
   )
 }
 
-function PieceCard({ equipment, graces, slotName, kind, result, onPatch, onOpenPicker }: PieceProps) {
+/**
+ * 统一强化: sets every piece's stage and refinement at once. The sliders are
+ * a draft until applied, so trying a value costs the loadout nothing; the
+ * content remounts on each open, which starts the draft from the last batch.
+ */
+function BatchDialog({ maxStage, stage, refine, readOnly, onApply }: {
+  maxStage: number; stage: number; refine: number; readOnly: boolean
+  onApply: (stage: number, refine: number) => void
+}) {
   const { t } = useTranslation()
-  const controls: PieceControlProps = { equipment, graces, result, onPatch }
-  const typeName = equipment.types.find((type) => type.id === result.item?.typeId)?.name ?? slotName
-
+  const [draftStage, setDraftStage] = useState(stage)
+  const [draftRefine, setDraftRefine] = useState(refine)
   return (
-    <article
-      className="flex min-w-0 flex-col rounded-md border border-border bg-card"
-      data-testid={`equip-card-${result.state.slot}`}
-    >
-      <div className="px-2.5 pt-2.5">
-        <PieceScore result={result} />
-      </div>
-      <button
-        type="button"
-        onClick={onOpenPicker}
-        title={t('equip.itemLabel')}
-        className="flex min-w-0 items-center justify-between gap-2 border-b border-border p-2.5 pt-0 text-left transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--arkive-nav-accent)]"
-        data-testid={`equip-open-picker-${result.state.slot}`}
-      >
-        <PieceHeader
-          result={result}
-          kind={kind}
-          subtitle={t('equip.typeAndLevel', { type: typeName, level: result.item?.gearLevel ?? '—' })}
-        />
-        <IconPlaceholder item={result.item} />
-      </button>
-      <Cell label={t('equip.stats')} className="p-2.5"><StatBlock equipment={equipment} result={result} /></Cell>
-      <Cell label={t('equip.enhance')} className={SECTION_CLASS}><EnhanceControls {...controls} /></Cell>
-      <Cell label={t('equip.affixes')} className={SECTION_CLASS}><AffixEditor {...controls} /></Cell>
-      <Cell label={t('equip.brand')} className={SECTION_CLASS}><BrandNote result={result} /></Cell>
-    </article>
+    <DialogContent className={DETAIL_DIALOG_CLASS} data-testid="equip-batch-dialog">
+      <DialogHeader>
+        <DialogTitle className="text-left">{t('equip.batchEnhance')}</DialogTitle>
+      </DialogHeader>
+      <fieldset disabled={readOnly} className="m-0 min-w-0 space-y-4 border-0 p-0">
+        <p className={TYPE.body}>{t('equip.batchHint')}</p>
+        <EnhanceSliders stage={draftStage} refine={draftRefine} maxStage={maxStage} testIdPrefix="equip-batch"
+          onStage={setDraftStage} onRefine={(value) => setDraftRefine(clampRefine(value))} />
+        <div className="flex justify-end gap-2">
+          <DialogClose asChild>
+            <Button type="button" variant="outline" className="rounded-full">{t('equip.cancel')}</Button>
+          </DialogClose>
+          <DialogClose asChild>
+            <Button type="button" className="rounded-full" data-testid="equip-batch-apply"
+              onClick={() => onApply(draftStage, draftRefine)}>
+              {t('equip.batchApply')}
+            </Button>
+          </DialogClose>
+        </div>
+      </fieldset>
+    </DialogContent>
   )
 }
 
@@ -795,6 +814,9 @@ export default function EquipmentSection({
   // Which slot's picker is open. One modal for all eight pieces: they never open
   // together, and a modal per piece would mount eight dialogs' worth of portals.
   const [pickerSlot, setPickerSlot] = useState<number | null>(null)
+  // Which slot's detail dialog is open; the picker opens over it.
+  const [openSlot, setOpenSlot] = useState<number | null>(null)
+  const readOnly = useCharacterReadOnly()
 
   // What is scored: the stored draft, one piece per scored slot, checked
   // against the dataset and the pathway. A slot the draft does not know starts
@@ -813,6 +835,7 @@ export default function EquipmentSection({
   )
 
   const results = useMemo(() => pieces.map((p) => evaluatePiece(equipment, graces, p)), [equipment, graces, pieces])
+  const openIndex = results.findIndex((result) => result.state.slot === openSlot)
   const averagePercent = useMemo(() => averageProgress(results), [results])
   const items = useMemo(() => results.map((r) => r.item), [results])
   const active = useMemo(() => activeSuits(equipment, items), [equipment, items])
@@ -915,16 +938,20 @@ export default function EquipmentSection({
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-2 xl:grid-cols-[minmax(0,22rem)_minmax(0,14rem)_minmax(0,1fr)_minmax(0,16rem)]">
+      <div className="grid gap-3 rounded-md border border-border bg-card p-3 md:grid-cols-2 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]">
         <Cell label={t('equip.batchEnhance')}>
-          <EnhanceSliders
-            stage={batch.stage}
-            refine={clampRefine(batch.badge)}
-            maxStage={globalMaxStage}
-            testIdPrefix="equip-batch"
-            onStage={(stage) => applyBatch(stage, batch.badge)}
-            onRefine={(refine) => applyBatch(batch.stage, refine)}
-          />
+          <p className={TYPE.valueMuted}>
+            {t('equip.stageOption', { stage: batch.stage })} · {t('equip.refineTag', { value: clampRefine(batch.badge) })}
+          </p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button type="button" className={`${BUTTON_CLASS} mt-2 h-8 rounded-full px-3`} data-testid="equip-batch-open">
+                {t('equip.batchOpen')}
+              </button>
+            </DialogTrigger>
+            <BatchDialog maxStage={globalMaxStage} stage={batch.stage} refine={clampRefine(batch.badge)}
+              readOnly={readOnly} onApply={applyBatch} />
+          </Dialog>
         </Cell>
 
         <Cell label={t('equip.bodyBonus')}>
@@ -1012,22 +1039,35 @@ export default function EquipmentSection({
       </div>
 
       <div
-        className={layout === 'cards' ? 'grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4' : 'space-y-2'}
+        className={`grid gap-2 ${layout === 'cards' ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2'}`}
         data-testid={`equip-${layout}`}
       >
-        {layout === 'rows' ? <RowHeader /> : null}
-        {results.map((result, index) => {
-          const slotName = slotNames.get(result.state.slot) ?? ''
-          const onPatch = (patch: Partial<PieceState>) => patchPiece(index, patch)
-          const props: PieceProps = {
-            equipment, graces, slotName, result, onPatch,
-            kind: kindOf(result.item),
-            onOpenPicker: () => setPickerSlot(result.state.slot),
-          }
-          const key = result.state.slot
-          return layout === 'cards' ? <PieceCard key={key} {...props} /> : <PieceRow key={key} {...props} />
-        })}
+        {results.map((result) => (
+          <PieceSlot
+            key={result.state.slot}
+            result={result}
+            slotName={slotNames.get(result.state.slot) ?? ''}
+            kind={kindOf(result.item)}
+            layout={layout}
+            onOpen={() => setOpenSlot(result.state.slot)}
+          />
+        ))}
       </div>
+
+      <Dialog open={openIndex >= 0} onOpenChange={(open) => { if (!open) setOpenSlot(null) }}>
+        {openIndex >= 0 ? (
+          <PieceDialog
+            equipment={equipment}
+            graces={graces}
+            slotName={slotNames.get(results[openIndex].state.slot) ?? ''}
+            kind={kindOf(results[openIndex].item)}
+            result={results[openIndex]}
+            readOnly={readOnly}
+            onPatch={(patch) => patchPiece(openIndex, patch)}
+            onOpenPicker={() => setPickerSlot(results[openIndex].state.slot)}
+          />
+        ) : null}
+      </Dialog>
 
       <PickerModal
         open={pickerSlot !== null}

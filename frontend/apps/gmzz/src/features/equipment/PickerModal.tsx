@@ -57,6 +57,16 @@ export function IconTile({
   )
 }
 
+/** Scrolls without drawing a scrollbar, which would crowd a dialog's compact layout. */
+const HIDDEN_SCROLLBAR = '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+
+/**
+ * The detail dialogs behind the score page's slot cards (one piece of
+ * equipment, one relic): capped to the viewport and scrolled inside, with the
+ * scrollbar hidden.
+ */
+export const DETAIL_DIALOG_CLASS = `max-h-[min(90dvh,48rem)] gap-3 overflow-y-auto ${HIDDEN_SCROLLBAR}`
+
 /**
  * A searchable icon-grid picker in a modal.
  *
@@ -115,7 +125,7 @@ export default function PickerModal({
         {shown.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t('equip.pickerEmpty')}</p>
         ) : (
-          <div className="max-h-[26rem] overflow-y-auto pr-1">
+          <div className={`max-h-[26rem] overflow-y-auto ${HIDDEN_SCROLLBAR}`}>
             <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
               {shown.map((option) => (
                 <button

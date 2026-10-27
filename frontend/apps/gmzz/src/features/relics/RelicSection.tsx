@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Hint, Input, TooltipProvider } from '@gamemap/ui'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, Hint, Input, TooltipProvider } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import RangeField from '@/components/RangeField'
 import StepSelect from '@/components/StepSelect'
-import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
+import PickerModal, { DETAIL_DIALOG_CLASS, IconTile, type PickerOption } from '@/features/equipment/PickerModal'
 import { TYPE } from '@/lib/typography'
 import { iconUrl } from '@/lib/urls'
 import { FormulaHint } from '@/features/score/FormulaHint'
-import { useSection } from '@/features/characters/CharacterProvider'
+import { useCharacterReadOnly, useSection } from '@/features/characters/CharacterProvider'
 import { storedAffixes, toStoredMaterials, type StoredRelicSlot } from '@/features/relics/memory'
 import { useRelicServer } from '@/features/relics/useRelicServer'
 import {
@@ -51,15 +51,8 @@ const CELL_CLASS = `flex w-full min-w-0 items-center gap-2 rounded-md border bor
 const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
 const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
 const SECTION_CLASS = 'border-t border-border/70 p-2.5'
-/**
- * One part of a card. On wide screens the three cards are subgrids of one
- * grid, so each part shares its row with the same part of the other two and
- * they line up whatever each one holds. An empty part (no rare word, no
- * active affix) collapses to nothing but keeps its row.
- */
+/** One part of a relic's dialog; an empty part (no rare word, no active affix) collapses to nothing. */
 const ROW_CLASS = 'min-w-0 px-2.5 pb-2 empty:pb-0'
-/** How many parts a card has: the subgrid spans this many rows. */
-const CARD_ROWS = 'lg:row-span-9'
 const PROSE_CLASS = `mt-0.5 whitespace-pre-line ${TYPE.body}`
 
 /**
@@ -511,9 +504,13 @@ function MaterialPanel({ relics, slot, material, result, k1, k2, swapping, canSw
   )
 }
 
-function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom, onChange, onSwapStart, onSwapTo }: {
+/**
+ * One relic's dialog. It is portalled out of the page's read-only fieldset,
+ * so it carries its own.
+ */
+function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom, readOnly, onChange, onSwapStart, onSwapTo }: {
   relics: Relics; slot: RelicSlotState; result: RelicSlotResult
-  k1: number; k2: number; server: RelicServer
+  k1: number; k2: number; server: RelicServer; readOnly: boolean
   /** The position being moved, if any: every tab of its type becomes a drop target. */
   swapFrom: Position | null
   canSwapFrom: (from: Position) => boolean
@@ -543,18 +540,18 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
   }
 
   return (
-    <article className={`flex min-w-0 flex-col rounded-md border border-border bg-card lg:grid lg:grid-rows-subgrid lg:gap-0 ${CARD_ROWS}`}
-      data-testid={`relic-card-${groupId}`} aria-label={title}>
-      <header className="flex min-w-0 items-start justify-between gap-2 border-b border-border p-2.5">
+    <DialogContent className={`${DETAIL_DIALOG_CLASS} gap-0 p-0`} data-testid={`relic-card-${groupId}`} aria-label={title}>
+      <DialogHeader className="flex-row items-start justify-between gap-2 border-b border-border p-4 pr-12 text-left">
         <div className="min-w-0">
-          <h3 className="text-base font-bold text-foreground">{title}</h3>
+          <DialogTitle>{title}</DialogTitle>
           <p className="text-xs text-muted-foreground">{t('relic.affixCap', { cap: result.cap })}</p>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-xs font-semibold text-muted-foreground">{t('relic.slotTotal')}</div>
           <div className={TYPE.total} data-testid={`relic-total-${groupId}`}>{decimal(result.total)}</div>
         </div>
-      </header>
+      </DialogHeader>
+      <fieldset disabled={readOnly} className="m-0 flex min-w-0 flex-col border-0 p-0 pb-1">
 
       <div className="min-w-0 px-2.5 pt-2.5 pb-2">
           <span className={LABEL_CLASS}>{t('relic.artifact')}</span>
@@ -619,7 +616,44 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
           <Line label={t('relic.slotTotal')} value={result.total} strong />
         </dl>
       </div>
-    </article>
+      </fieldset>
+    </DialogContent>
+  )
+}
+
+/**
+ * A relic at a glance -- artifact, slot, grade and total -- opening its dialog.
+ * The three sit side by side; everything edited is in the dialog.
+ */
+function RelicFace({ relics, slot, result, onOpen }: {
+  relics: Relics; slot: RelicSlotState; result: RelicSlotResult; onOpen: () => void
+}) {
+  const { t } = useTranslation()
+  const gradeLabel = useGradeLabel()
+  const groupId = slot.groupId
+  const artifact = result.artifact
+  return (
+    <button type="button" aria-haspopup="dialog" onClick={onOpen}
+      className={`flex min-w-0 items-center gap-3 rounded-xl border border-border bg-card p-2.5 text-left transition-colors hover:border-[color:var(--arkive-nav-accent)] ${FOCUS}`}
+      data-testid={`relic-open-${groupId}`}>
+      <IconTile
+        quality={artifact ? gradeQuality(slot.grade) : null}
+        src={artifact?.icon ? iconUrl(artifact.icon) : undefined}
+        alt={artifact?.name ?? ''}
+        label={artifact?.name.slice(0, 1)}
+        className="size-14"
+      />
+      <span className="min-w-0 flex-1">
+        <span className={`block truncate ${TYPE.body}`}>{t('relic.groupTitle', { group: relics.groupNames[String(groupId)] ?? '' })}</span>
+        <span className={`block truncate ${TYPE.name}`}>{artifact ? artifact.name : t('relic.artifactPlaceholder')}</span>
+        <span className={`mt-1 inline-block rounded border border-border px-1 ${TYPE.control} leading-4 text-muted-foreground`}>
+          {gradeLabel(slot.grade)}
+        </span>
+      </span>
+      <span className="shrink-0 text-lg font-bold tabular-nums text-foreground" data-testid={`relic-face-total-${groupId}`}>
+        {decimal(result.total)}
+      </span>
+    </button>
   )
 }
 
@@ -745,6 +779,10 @@ export default function RelicSection({ relics, onTotals }: {
       return next
     })
 
+  const [openGroup, setOpenGroup] = useState<number | null>(null)
+  const openIndex = slots.findIndex((slot) => slot.groupId === openGroup)
+  const readOnly = useCharacterReadOnly()
+
   const k2 = k2For(relics, knowledgeLevel, season)
   const k1 = k1For(relics, knowledgeLevel, season)
   const results = useMemo(
@@ -775,18 +813,37 @@ export default function RelicSection({ relics, onTotals }: {
     <section className="space-y-3" data-testid="relic-section" aria-label={t('relic.title')}>
       <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} onChange={setKnowledgeLevel} />
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {slots.map((slot, index) => (
-          <RelicCard key={slot.groupId} relics={relics} slot={slot} result={results[index]} k1={k1} k2={k2}
-            server={server} swapFrom={swapFrom} canSwapFrom={canSwapFrom}
+          <RelicFace key={slot.groupId} relics={relics} slot={slot} result={results[index]} onOpen={() => setOpenGroup(slot.groupId)} />
+        ))}
+      </div>
+
+      {/* A move survives closing the dialog, so a material can be carried to
+          another relic: close this one, open that one, click a dashed tab. */}
+      {swapFrom ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-[color:var(--arkive-nav-accent)] px-3 py-2 text-xs font-semibold text-[color:var(--arkive-nav-accent)]"
+          data-testid="relic-swap-pending">
+          {t('relic.swapPending')}
+          <button type="button" onClick={() => setSwapFrom(null)} className={`${BUTTON_CLASS} min-h-7 px-2.5`}
+            data-testid="relic-swap-cancel">
+            {t('relic.swapCancel')}
+          </button>
+        </div>
+      ) : null}
+
+      <Dialog open={openIndex >= 0} onOpenChange={(open) => { if (!open) setOpenGroup(null) }}>
+        {openIndex >= 0 ? (
+          <RelicCard key={slots[openIndex].groupId} relics={relics} slot={slots[openIndex]} result={results[openIndex]} k1={k1} k2={k2}
+            server={server} swapFrom={swapFrom} canSwapFrom={canSwapFrom} readOnly={readOnly}
             onSwapStart={(from) => setSwapFrom((prev) => (prev && prev.groupId === from.groupId && prev.index === from.index ? null : from))}
             onSwapTo={(to) => {
               if (swapFrom) swap(swapFrom, to)
               setSwapFrom(null)
             }}
-            onChange={(next) => setSlots((prev) => prev.map((entry, at) => (at === index ? next : entry)))} />
-        ))}
-      </div>
+            onChange={(next) => setSlots((prev) => prev.map((entry, at) => (at === openIndex ? next : entry)))} />
+        ) : null}
+      </Dialog>
 
     </section>
     </TooltipProvider>

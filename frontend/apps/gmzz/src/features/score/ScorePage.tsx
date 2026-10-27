@@ -65,6 +65,23 @@ const EQUIPMENT_GENUS = 2
 const RELICS_GENUS = 3
 const BONDS_GENUS = 4
 
+/** Each group's colour (an `r,g,b` triple, for alpha mixes): its folder tab, panel tint and share of the ring. */
+const GENUS_COLOR: Record<number, string> = {
+  [PATHWAY_GENUS]: '72,150,160',
+  [EQUIPMENT_GENUS]: '230,164,23',
+  [RELICS_GENUS]: '214,90,70',
+  [BONDS_GENUS]: '124,96,214',
+}
+const genusColor = (id: number) => GENUS_COLOR[id] ?? '120,120,120'
+
+/** The rating's wording for an overall percentage, worst to best, by its upper bound. */
+const BANDS: { upTo: number; key: string }[] = [
+  { upTo: 49, key: 'score.bandLow' },
+  { upTo: 75, key: 'score.bandMid' },
+  { upTo: 99, key: 'score.bandHigh' },
+  { upTo: Infinity, key: 'score.bandTop' },
+]
+
 /**
  * The score page on the local draft. A signed-in player who last edited a saved
  * character is taken back to it, unless they asked for the draft (`?draft`).
@@ -110,6 +127,9 @@ function ScoreView() {
   const [draft, setDraft] = useSection('character')
   const [bonds, setBonds] = useSection('bonds')
   const [talentState, setTalentState] = useSection('talents')
+  // The group whose panel is open. The others stay mounted, hidden: the
+  // equipment and relic sections report their totals only while mounted.
+  const [tab, setTab] = useState(PATHWAY_GENUS)
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
   const [talents, setTalents] = useState<Talents | null>(null)
@@ -368,76 +388,107 @@ function ScoreView() {
     </div>
   )
 
+  // Every group's inputs, one per tab. All stay mounted behind the hidden
+  // tabs: the equipment and relic sections report their totals from effects.
+  const panels: Record<number, React.ReactNode> = {
+    [PATHWAY_GENUS]: section(PATHWAY_GENUS, (group) => (
+      <PathwaySection
+        progression={progression}
+        group={group}
+        rating={rating}
+        talents={talents}
+        professionId={professionId}
+        draft={talentState}
+        setDraft={setTalentState}
+        skillLevel={Math.min(clampSkillLevel(bonds.puppetSkillLevel), skillCap ?? Infinity)}
+        skillCap={skillCap}
+        relicSkillBonus={relicSkillBonus}
+        onSkillLevel={(level) => setBonds((prev) => ({ ...prev, puppetSkillLevel: level }))}
+        talentBenchmark={talentBenchmark}
+      />
+    )),
+    [EQUIPMENT_GENUS]: section(EQUIPMENT_GENUS, (group) => (
+      <GroupSection group={group} rating={rating} hint={t('score.equipmentHint')} present={() => ({ kind: 'derived' })}>
+        {equipment ? (
+          <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals} />
+        ) : (
+          <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>
+        )}
+      </GroupSection>
+    )),
+    [RELICS_GENUS]: section(RELICS_GENUS, (group) => (
+      <GroupSection group={group} rating={rating} hint={t('score.relicsHint')} present={() => ({ kind: 'derived' })}>
+        {relics ? <RelicSection relics={relics} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
+      </GroupSection>
+    )),
+    [BONDS_GENUS]: section(BONDS_GENUS, (group) => (
+      <BondsSection group={group} rating={rating} data={bondsData} draft={bonds} setDraft={setBonds} />
+    )),
+  }
+
   return (
     <ContentPage active="/score" title={t('score.title')} wide>
-      <div data-testid="score-page" className="space-y-4">
-        {/* A slim bar that stays in view: the title and the one switch every
-            relic number depends on. It sticks to the top of the page's own
-            scroller (the shell scrolls a column, not the window), and pulls up
-            over the page's top padding and restores it as its own, so it spaces
-            like every other page's title and nothing shows above it once stuck. */}
-        <header className="sticky top-0 z-20 -mx-1 -mt-[var(--arkive-content-page-top-space)] !mb-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-background px-1 pt-[var(--arkive-content-page-top-space)] pb-4"
-          data-testid="score-header">
+      <div data-testid="score-page" className="grid items-start gap-5 lg:grid-cols-[19rem_minmax(0,1fr)]">
+        {/* The rail: who is being scored, the score, and the one switch every
+            relic number depends on. It stays in view beside the long panels on
+            wide screens and stacks above them on narrow ones. */}
+        <aside className="min-w-0 space-y-3 rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-0" data-testid="score-rail">
           <h1 className={TYPE.pageTitle}>{t('score.title')}</h1>
-          {relics ? <RelicServerToggle testId="score-relic-server" compact /> : null}
-        </header>
+          <CharacterBar />
+          <section aria-label={t('score.total')}>
+            <Summary result={result} day={day} />
+          </section>
+          {relics ? <RelicServerToggle testId="score-relic-server" /> : null}
+        </aside>
 
-        <CharacterBar />
+        <div className="min-w-0 space-y-4">
+        {/* The four groups as folder tabs: the open one joins the panel below in its colour. */}
+        <div role="tablist" aria-label={t('score.groupsLabel')}
+          className="grid grid-cols-2 items-end gap-1.5 sm:grid-cols-4" data-testid="score-tabs">
+          {result.groups.map((group) => {
+            const on = group.genus.id === tab
+            const color = genusColor(group.genus.id)
+            return (
+              <button key={group.genus.id} type="button" role="tab" aria-selected={on}
+                id={`score-tab-${group.genus.id}`} aria-controls={`score-panel-${group.genus.id}`}
+                onClick={() => setTab(group.genus.id)}
+                style={{ '--g': color } as React.CSSProperties}
+                className={`relative min-w-0 rounded-xl border px-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] sm:rounded-b-none sm:border-b-0 ${
+                  on
+                    ? 'z-10 border-[rgba(var(--g),0.45)] bg-[rgba(var(--g),0.1)] py-3 shadow-[inset_0_4px_0_rgb(var(--g))] sm:-mb-px sm:pb-3.5'
+                    : 'border-border bg-card py-2.5 hover:bg-[rgba(var(--g),0.06)]'
+                }`}
+                data-testid={`score-tab-${group.genus.id}`}>
+                <span className="flex items-center justify-between gap-2">
+                  <span className={`truncate text-sm font-bold ${on ? 'text-foreground' : 'text-muted-foreground'}`}>{group.genus.name}</span>
+                  <span className={`shrink-0 rounded-full px-2 text-xs font-bold tabular-nums ${on ? 'bg-[rgba(var(--g),0.18)] text-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    {Math.round(group.percent * 100)}%
+                  </span>
+                </span>
+                <span className={`block text-lg font-semibold tabular-nums ${on ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {group.score.toLocaleString()}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
         {/* Read-only for someone else's character: every control below is
             disabled at once, and the setters ignore writes besides. */}
-        <fieldset disabled={character.readOnly} className="m-0 min-w-0 space-y-4 border-0 p-0" data-testid="score-inputs">
+        <fieldset disabled={character.readOnly} className="m-0 -mt-4 min-w-0 border-0 p-0" data-testid="score-inputs">
 
-        <section aria-label={t('score.total')} className="rounded-md border border-border bg-card p-3">
-          <Summary result={result} day={day} />
-        </section>
-
-        {section(PATHWAY_GENUS, (group) => (
-          <PathwaySection
-            key={group.genus.id}
-            progression={progression}
-            group={group}
-            rating={rating}
-            talents={talents}
-            professionId={professionId}
-            draft={talentState}
-            setDraft={setTalentState}
-            skillLevel={Math.min(clampSkillLevel(bonds.puppetSkillLevel), skillCap ?? Infinity)}
-            skillCap={skillCap}
-            relicSkillBonus={relicSkillBonus}
-            onSkillLevel={(level) => setBonds((prev) => ({ ...prev, puppetSkillLevel: level }))}
-            talentBenchmark={talentBenchmark}
-          />
-        ))}
-        {section(EQUIPMENT_GENUS, (group) => (
-          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.equipmentHint')} present={() => ({ kind: 'derived' })}>
-            {equipment ? (
-              <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals} />
-            ) : (
-              <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>
-            )}
-          </GroupSection>
-        ))}
-
-        {section(RELICS_GENUS, (group) => (
-          <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.relicsHint')} present={() => ({ kind: 'derived' })}>
-            {relics ? <RelicSection relics={relics} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
-          </GroupSection>
-        ))}
-
-        {section(BONDS_GENUS, (group) => (
-          <BondsSection
-            key={group.genus.id}
-            group={group}
-            rating={rating}
-            data={bondsData}
-            draft={bonds}
-            setDraft={setBonds}
-          />
+        {result.groups.map((group) => (
+          <div key={group.genus.id} role="tabpanel" id={`score-panel-${group.genus.id}`} aria-labelledby={`score-tab-${group.genus.id}`}
+            hidden={group.genus.id !== tab}
+            style={{ '--g': genusColor(group.genus.id) } as React.CSSProperties}
+            className="min-w-0 rounded-2xl border border-[rgba(var(--g),0.45)] bg-[rgba(var(--g),0.05)] p-3 sm:rounded-t-none sm:p-4"
+            data-testid={`score-panel-${group.genus.id}`}>
+            {panels[group.genus.id] ?? null}
+          </div>
         ))}
 
         {gaps.length > 0 ? (
-          <section aria-label={t('score.headroom')} className="rounded-md border border-border bg-card p-3">
+          <section aria-label={t('score.headroom')} className="mt-4 rounded-md border border-border bg-card p-3">
             <h2 className="text-sm font-bold text-foreground">{t('score.headroom')}</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">{t('score.headroomHint')}</p>
             <ol className="mt-2 space-y-1" data-testid="score-headroom">
@@ -469,6 +520,7 @@ function ScoreView() {
             {t('score.aggregateNote')}
           </p>
         </div>
+        </div>
       </div>
     </ContentPage>
   )
@@ -477,43 +529,81 @@ function ScoreView() {
 function Summary({ result, day }: { result: NonNullable<ReturnType<typeof evaluate>>; day: number }) {
   const { t } = useTranslation()
   const percent = Math.round(result.percent * 100)
+  const band = BANDS.find((b) => percent <= b.upTo) ?? BANDS[BANDS.length - 1]
   return (
-    <div data-testid="score-summary">
-      <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
-        {/* Deliberately not labelled 非凡评分 (the in-game panel's name): that
-            rating is a separate server value, and nothing in the package says
-            it equals this sum. The hint sits below the row rather than inside
-            this cell — a third line here would bottom-align the other tiles
-            against it instead of against the total. */}
-        <div>
-          <div className={TYPE.label}>{t('score.total')}</div>
-          <div className="text-3xl font-bold tabular-nums text-foreground" data-testid="score-total">{result.score.toLocaleString()}</div>
+    <div data-testid="score-summary" className="space-y-3">
+      {/* Deliberately not labelled 非凡评分 (the in-game panel's name): that
+          rating is a separate server value, and nothing in the package says it
+          equals this sum. */}
+      <div className="relative mx-auto aspect-square w-full max-w-44 lg:max-w-56">
+        <ScoreRing result={result} />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className={TYPE.label}>{t('score.total')}</span>
+          <span className="text-3xl font-bold tabular-nums text-foreground" data-testid="score-total">{result.score.toLocaleString()}</span>
+          <span className="text-sm font-semibold tabular-nums text-muted-foreground">{t('score.overall')} {percent}%</span>
         </div>
-        <div>
-          <div className={TYPE.label}>{t('score.expectedTotal')}</div>
-          <div className="text-lg font-semibold tabular-nums text-muted-foreground">
-            {result.expected.toLocaleString()}
-          </div>
+      </div>
+      <div className="flex justify-center">
+        <span className="rounded-full bg-[color:var(--arkive-filter-active)] px-3 py-0.5 text-sm font-bold text-foreground" data-testid="score-band">
+          {t(band.key)}
+        </span>
+      </div>
+      <dl className="grid grid-cols-2 gap-2 text-center">
+        <div className="rounded-lg bg-muted/60 px-2 py-1.5">
+          <dt className={TYPE.label}>{t('score.expectedTotal')}</dt>
+          <dd className="text-base font-semibold tabular-nums text-foreground">{result.expected.toLocaleString()}</dd>
         </div>
-        <div>
-          <div className={TYPE.label}>{t('score.maxTotal')}</div>
-          <div className="text-lg font-semibold tabular-nums text-muted-foreground">{result.max.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className={TYPE.label}>{t('score.overall')}</div>
-          <div className="text-lg font-semibold tabular-nums text-foreground">{percent}%</div>
+        <div className="rounded-lg bg-muted/60 px-2 py-1.5">
+          <dt className={TYPE.label}>{t('score.maxTotal')}</dt>
+          <dd className="text-base font-semibold tabular-nums text-foreground">{result.max.toLocaleString()}</dd>
         </div>
         {day >= 1 ? (
-          <div className="ml-auto text-right">
-            <div className={TYPE.label}>{t('score.serverDayLabel')}</div>
-            <div className="text-lg font-semibold tabular-nums text-foreground" data-testid="score-server-day">
+          <div className="col-span-2 rounded-lg bg-muted/60 px-2 py-1.5">
+            <dt className={TYPE.label}>{t('score.serverDayLabel')}</dt>
+            <dd className="text-base font-semibold tabular-nums text-foreground" data-testid="score-server-day">
               {t('score.serverDay', { day })}
-            </div>
+            </dd>
           </div>
         ) : null}
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">{t('score.totalHint')}</p>
+      </dl>
+      <p className="text-xs text-muted-foreground">{t('score.totalHint')}</p>
     </div>
+  )
+}
+
+/**
+ * The total drawn as two rings: the outer one split by each group's share of
+ * the score, in the group's colour; the inner one filled to the overall percent.
+ */
+function ScoreRing({ result }: { result: NonNullable<ReturnType<typeof evaluate>> }) {
+  const outer = 46
+  const inner = 37
+  const outerLength = 2 * Math.PI * outer
+  const innerLength = 2 * Math.PI * inner
+  const total = result.groups.reduce((sum, group) => sum + Math.max(0, group.score), 0)
+  const gap = result.groups.length > 1 ? 1.5 : 0
+  let offset = 0
+  return (
+    <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden>
+      <circle cx="50" cy="50" r={outer} fill="none" className="stroke-muted" strokeWidth="5" />
+      {total > 0
+        ? result.groups.map((group) => {
+            const length = (Math.max(0, group.score) / total) * outerLength
+            const arc = (
+              <circle key={group.genus.id} cx="50" cy="50" r={outer} fill="none" strokeWidth="5"
+                stroke={`rgb(${genusColor(group.genus.id)})`}
+                strokeDasharray={`${Math.max(0, length - gap)} ${outerLength}`}
+                strokeDashoffset={-offset} />
+            )
+            offset += length
+            return arc
+          })
+        : null}
+      <circle cx="50" cy="50" r={inner} fill="none" className="stroke-muted" strokeWidth="3" />
+      <circle cx="50" cy="50" r={inner} fill="none" strokeWidth="3" strokeLinecap="round"
+        className="stroke-[color:var(--arkive-nav-accent)]"
+        strokeDasharray={`${Math.min(1, Math.max(0, result.percent)) * innerLength} ${innerLength}`} />
+    </svg>
   )
 }
 
