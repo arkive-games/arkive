@@ -323,6 +323,51 @@ function ScoreView() {
     return group ? render(group) : null
   }
 
+  // Role level, divinity level and pathway drive the whole page, but they head
+  // the 途径 group, whose items follow them most directly.
+  const progression = (
+    <div role="group" aria-label={t('score.progression')}
+      className="grid gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)]">
+      <LevelField
+        label={t('score.roleLevel')}
+        hint={t('score.roleLevelHint')}
+        value={roleLevel}
+        min={1}
+        max={rating.maxRoleLevel}
+        onChange={setRoleLevel}
+        testId="score-role-level"
+      />
+      <LevelField
+        label={t('score.divinityLevel')}
+        hint={atCap ? t('score.divinityHint') : t('score.divinityInactive', { level: rating.maxRoleLevel })}
+        value={divinityLevel}
+        min={0}
+        max={rating.maxDivinityLevel}
+        onChange={setDivinityLevel}
+        disabled={!atCap}
+        testId="score-divinity-level"
+      />
+      {equipment ? (
+        <label className="block">
+          <span className={`block ${TYPE.label}`}>{t('score.pathway')}</span>
+          <select
+            value={professionId ?? ''}
+            onChange={(event) => setProfessionId(event.target.value === '' ? null : Number(event.target.value))}
+            className="mt-0.5 h-9 w-full rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
+            data-testid="score-pathway"
+          >
+            {playableProfessions(equipment.equipment).map((profession) => (
+              <option key={profession.id} value={profession.id}>
+                {profession.sequenceName} · {profession.name}
+              </option>
+            ))}
+          </select>
+          <span className="mt-0.5 block text-xs text-muted-foreground">{t('score.pathwayHint')}</span>
+        </label>
+      ) : null}
+    </div>
+  )
+
   return (
     <ContentPage active="/score" title={t('score.title')} wide>
       <div data-testid="score-page" className="space-y-4">
@@ -343,55 +388,14 @@ function ScoreView() {
             disabled at once, and the setters ignore writes besides. */}
         <fieldset disabled={character.readOnly} className="m-0 min-w-0 space-y-4 border-0 p-0" data-testid="score-inputs">
 
-        {/* Progression drives every benchmark on the page, so it sits above the
-            items rather than beside them. */}
-        <section
-          aria-label={t('score.progression')}
-          className="grid gap-4 rounded-md border border-border bg-card p-3 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)_minmax(0,1fr)]"
-        >
-          <LevelField
-            label={t('score.roleLevel')}
-            hint={t('score.roleLevelHint')}
-            value={roleLevel}
-            min={1}
-            max={rating.maxRoleLevel}
-            onChange={setRoleLevel}
-            testId="score-role-level"
-          />
-          <LevelField
-            label={t('score.divinityLevel')}
-            hint={atCap ? t('score.divinityHint') : t('score.divinityInactive', { level: rating.maxRoleLevel })}
-            value={divinityLevel}
-            min={0}
-            max={rating.maxDivinityLevel}
-            onChange={setDivinityLevel}
-            disabled={!atCap}
-            testId="score-divinity-level"
-          />
-          {equipment ? (
-            <label className="block">
-              <span className={`block ${TYPE.label}`}>{t('score.pathway')}</span>
-              <select
-                value={professionId ?? ''}
-                onChange={(event) => setProfessionId(event.target.value === '' ? null : Number(event.target.value))}
-                className="mt-0.5 h-9 w-full rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
-                data-testid="score-pathway"
-              >
-                {playableProfessions(equipment.equipment).map((profession) => (
-                  <option key={profession.id} value={profession.id}>
-                    {profession.sequenceName} · {profession.name}
-                  </option>
-                ))}
-              </select>
-              <span className="mt-0.5 block text-xs text-muted-foreground">{t('score.pathwayHint')}</span>
-            </label>
-          ) : null}
+        <section aria-label={t('score.total')} className="rounded-md border border-border bg-card p-3">
           <Summary result={result} day={day} />
         </section>
 
         {section(PATHWAY_GENUS, (group) => (
           <PathwaySection
             key={group.genus.id}
+            progression={progression}
             group={group}
             rating={rating}
             talents={talents}
@@ -405,7 +409,6 @@ function ScoreView() {
             talentBenchmark={talentBenchmark}
           />
         ))}
-
         {section(EQUIPMENT_GENUS, (group) => (
           <GroupSection key={group.genus.id} group={group} rating={rating} hint={t('score.equipmentHint')} present={() => ({ kind: 'derived' })}>
             {equipment ? (

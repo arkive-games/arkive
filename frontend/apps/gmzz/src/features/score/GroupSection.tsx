@@ -59,12 +59,15 @@ export function GroupSection({
   rating,
   hint,
   present,
+  lead,
   children,
 }: {
   group: GenusResult
   rating: Rating
   hint: string
   present: (item: SpeciesResult) => ItemPresentation
+  /** Inputs the group's items are computed from, shown above them. */
+  lead?: ReactNode
   /** A calculator behind every item of the group: the whole group becomes one card. */
   children?: ReactNode
 }) {
@@ -86,6 +89,7 @@ export function GroupSection({
         </span>
       </h2>
       <div className="mt-2 space-y-2">
+        {lead}
         {cards(group.items, children ? () => ({ kind: 'derived', shared: 'all' }) : present).map((card) => (
           <ItemCard key={card.id} id={children ? `genus-${group.genus.id}` : card.id} items={card.items} rating={rating}
             details={children ?? card.details}

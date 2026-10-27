@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import RangeField from '@/components/RangeField'
@@ -37,8 +37,12 @@ const BUTTON_CLASS = `inline-flex h-8 items-center justify-center rounded-md bor
  * to its expected benchmark, so the page scores it as that benchmark at the
  * chosen levels. 途径技能 follows the shared skill level; see `pathwaySkillScore`.
  * 非凡天赋 follows the tree's Marks; see `talents.ts`.
+ *
+ * The inputs all three follow -- role and divinity level, the pathway and the
+ * shared skill level -- head the group, above its items.
  */
 export default function PathwaySection({
+  progression,
   group,
   rating,
   talents,
@@ -51,6 +55,8 @@ export default function PathwaySection({
   onSkillLevel,
   talentBenchmark,
 }: {
+  /** The role level, divinity level and pathway fields, owned by the page. */
+  progression: ReactNode
   /** The shared skill level, its cap, and what relics add on top (not scored). */
   skillLevel: number
   skillCap: number | null
@@ -72,6 +78,15 @@ export default function PathwaySection({
       group={group}
       rating={rating}
       hint={t('pathway.hint')}
+      lead={
+        <div className="space-y-3 rounded-md border border-border bg-card p-3" data-testid="pathway-progression">
+          {progression}
+          <div data-testid="pathway-skill">
+            <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="pathway-skill-level" onChange={onSkillLevel}
+              note={<FormulaHint testId="pathway-skill-formula">{t('pathway.skillFormula', { per: PATHWAY_SKILL_PER_LEVEL, base: PATHWAY_SKILL_BASE })}</FormulaHint>} />
+          </div>
+        </div>
+      }
       present={(item) => {
         if (item.species.module === TALENT_MODULE) {
           return {
@@ -83,18 +98,8 @@ export default function PathwaySection({
             ),
           }
         }
-        if (item.species.module === SKILL_MODULE) {
-          return {
-            kind: 'derived',
-            calculator: (
-              <div data-testid="pathway-skill">
-                <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="pathway-skill-level" onChange={onSkillLevel}
-                  note={<FormulaHint testId="pathway-skill-formula">{t('pathway.skillFormula', { per: PATHWAY_SKILL_PER_LEVEL, base: PATHWAY_SKILL_BASE })}</FormulaHint>} />
-              </div>
-            ),
-          }
-        }
-        // The level follows the level inputs: nothing to show beyond its row.
+        // The level and the pathway skill follow the inputs above: nothing to
+        // show beyond their rows.
         return { kind: 'derived' }
       }}
     />
