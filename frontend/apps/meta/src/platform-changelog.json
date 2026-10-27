@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-10-28",
+      "commit": "dd4f2180ab267f56f595a0eea4bc4c304b97b0fc",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The homepage carousel now opens with a call for contributors and a Phantom Blade Zero preview, with new posters for Palworld and Lord of the Mysteries; Phantom Blade Zero also leads the shortcut row.",
+            "zh-CN": "首页轮播新增共创伙伴招募和影之刃零预告，幻兽帕鲁、诡秘之主换上新海报；游戏快捷入口最前面加入影之刃零。",
+            "zh-TW": "首頁輪播新增共創夥伴招募和影之刃零預告，幻獸帕魯、詭秘之主換上新海報；遊戲快捷入口最前面加入影之刃零。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
       "commit": "a9fd4ebd76b5005cbe76bc08bb10a9ad782db85c",
       "targets": [
         "aion2",
