@@ -1,6 +1,27 @@
 {
   "entries": [
     {
+      "date": "2026-10-28",
+      "commit": "a9fd4ebd76b5005cbe76bc08bb10a9ad782db85c",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned the About, Contact, Site settings and clear-data dialogs: a bolder look, one-tap copy for the QQ group and WeChat IDs, and theme and language choices you can see at a glance.",
+            "zh-CN": "重做了关于藏舟、联系我们、网站设置和清除数据弹窗：更醒目的新外观，QQ 群号和微信号一键复制，主题和语言选项一眼可见。",
+            "zh-TW": "重做了關於藏舟、聯絡我們、網站設定和清除資料彈窗：更醒目的新外觀，QQ 群號和微信號一鍵複製，主題和語言選項一眼可見。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-27",
       "commit": "895921622dd44f256d087951952422626db0a179",
       "targets": [
