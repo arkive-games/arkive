@@ -130,7 +130,7 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
               placeholder={t('catalog.searchPlaceholder')}
             />
             {query && <button type="button" className="catalog-search-clear" aria-label={t('catalog.clearSearch')} onClick={() => { setQuery(''); setPage(1); inputRef.current?.focus() }}><IconX className="size-4" /></button>}
-            <button type="submit">{t('catalog.searchAction')}</button>
+            <button type="submit" aria-label={t('catalog.searchAction')}><IconArrowRight className="size-4" stroke={2.2} aria-hidden="true" /></button>
           </form>
 
           <div className="catalog-categories" aria-label={t('catalog.categoryLabel')}>

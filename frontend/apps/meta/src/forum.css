@@ -2576,7 +2576,6 @@
 }
 
 .forum-mobile-forum-tools,
-.forum-mobile-bottom-navigation,
 .forum-mobile-discovery {
   display: none;
 }
@@ -3696,49 +3695,6 @@
     padding-inline: 0.15rem;
   }
 
-  .forum-mobile-bottom-navigation {
-    position: fixed;
-    z-index: calc(var(--arkive-layer-sticky) + 1);
-    right: 0;
-    bottom: 0;
-    left: 0;
-    min-height: calc(4rem + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-    border-top: 1px solid var(--border);
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    background: color-mix(in srgb, var(--background) 96%, transparent);
-    backdrop-filter: blur(0.75rem);
-  }
-
-  .forum-mobile-bottom-navigation > button {
-    position: relative;
-    min-width: 0;
-    min-height: 4rem;
-    padding: 0.45rem 0.25rem;
-    border: 0;
-    display: grid;
-    place-items: center;
-    align-content: center;
-    gap: 0.2rem;
-    color: var(--muted-foreground);
-    background: transparent;
-    font-size: 0.75rem;
-  }
-
-  .forum-mobile-bottom-navigation > button.is-active {
-  color: var(--arkive-nav-active);
-  }
-
-  .forum-mobile-bottom-navigation > button.is-active::before {
-    position: absolute;
-    top: 0;
-    width: 2rem;
-    height: 0.15rem;
-  background: var(--arkive-nav-active);
-    content: '';
-  }
-
   .forum-mobile-discovery {
     display: block;
     margin-top: 0.75rem;
@@ -4168,4 +4124,480 @@
 .forum-publish-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------------------
+ * Site style
+ *
+ * The forum follows the rest of the portal: dark capsules for the current
+ * choice, warm amber for links and pressed states instead of the blue accent,
+ * rounded cards, and the warm round search arrow of the library pages. The
+ * layout itself is unchanged.
+ * ------------------------------------------------------------------------- */
+
+.forum-main {
+  --arkive-nav-active: #b8660b;
+  --arkive-filter-hover: color-mix(in srgb, #f5a524 9%, transparent);
+  --arkive-filter-active: color-mix(in srgb, #f5a524 14%, transparent);
+}
+
+/* Declared at the root so the compose button, rendered outside .forum-main, can use it too. */
+:root {
+  --forum-warm-button: linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c);
+}
+
+.dark .forum-main {
+  --arkive-nav-active: #ffc061;
+  --arkive-filter-hover: color-mix(in srgb, #ffc061 10%, transparent);
+  --arkive-filter-active: color-mix(in srgb, #ffc061 16%, transparent);
+}
+
+.forum-main:not(.forum-publish-main) .forum-panel,
+.forum-main:not(.forum-publish-main) .forum-profile-band,
+.forum-main:not(.forum-publish-main) .forum-cabin-banner {
+  border-radius: 1.25rem;
+}
+
+.forum-main:not(.forum-publish-main) .forum-panel {
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  background: var(--card);
+}
+
+/* The right rail's search used to be wider than its column. */
+.forum-right-rail > * {
+  min-width: 0;
+}
+
+.forum-main .forum-search {
+  min-height: 3rem;
+  padding: 0.3rem 0.3rem 0.3rem 1rem;
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 999rem;
+  background: var(--card);
+  box-shadow: none;
+}
+
+.forum-main .forum-search input {
+  width: 100%;
+}
+
+.forum-main .forum-search button {
+  width: 2.4rem;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  min-height: 2.4rem;
+  padding: 0;
+  flex: none;
+  align-self: center;
+  border-radius: 999rem;
+  color: #fff;
+  background: var(--forum-warm-button);
+  box-shadow: 0 0.3rem 0.8rem rgba(236, 122, 28, 0.28);
+}
+
+/* Left menu: the current item is a dark capsule, as in the top bar. */
+.forum-primary-navigation > button,
+.forum-information-navigation > button,
+.forum-followed-cabins > div > button {
+  border-radius: 999rem;
+}
+
+.forum-followed-cabins > div > button {
+  border-radius: 1rem;
+}
+
+.forum-primary-navigation > button.is-active {
+  color: var(--background);
+  background: var(--foreground);
+}
+
+.forum-primary-navigation > button.is-active::before {
+  content: none;
+}
+
+/* Feed, personal and cabin tabs: the All Games capsule switch. */
+.forum-feed-toolbar,
+.forum-personal-tabs,
+.forum-cabin-tabs {
+  min-height: 3.5rem;
+  padding-inline: 0.75rem;
+}
+
+.forum-feed-toolbar > div[role='tablist'],
+.forum-personal-tabs,
+.forum-cabin-tabs {
+  gap: 0.25rem;
+}
+
+.forum-feed-toolbar > div[role='tablist'] {
+  min-height: 0;
+  padding: 0.25rem;
+  border-radius: 999rem;
+  display: inline-flex;
+  align-items: center;
+  background: var(--muted);
+}
+
+.forum-feed-toolbar > div > button,
+.forum-personal-tabs > button,
+.forum-cabin-tabs > button {
+  min-height: 2.25rem;
+  padding-inline: 0.95rem;
+  border-radius: 999rem;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.forum-feed-toolbar > div > button:hover,
+.forum-personal-tabs > button:hover,
+.forum-cabin-tabs > button:hover {
+  color: var(--foreground);
+}
+
+.forum-feed-toolbar > div > button.is-active,
+.forum-personal-tabs > button.is-active,
+.forum-cabin-tabs > button.is-active {
+  color: var(--background);
+  background: var(--foreground);
+}
+
+.forum-feed-toolbar > div > button.is-active::after,
+.forum-personal-tabs > button.is-active::after,
+.forum-cabin-tabs > button.is-active::after {
+  content: none;
+}
+
+.forum-following-filter {
+  padding-inline: 0.85rem;
+  border-radius: 999rem;
+}
+
+.forum-following-filter.is-active {
+  color: var(--arkive-nav-active);
+  background: var(--arkive-filter-active);
+}
+
+/* Post cards: softer dividers and a warm tint on hover. */
+.forum-post + .forum-post {
+  border-top-color: color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.forum-main .forum-post {
+  background: transparent;
+  transition: background-color 0.3s;
+}
+
+.forum-main .forum-post:hover {
+  background: color-mix(in srgb, #f5a524 6%, var(--card));
+}
+
+.dark .forum-main .forum-post:hover {
+  background: color-mix(in srgb, #ffc061 8%, var(--card));
+}
+
+.forum-post-actions,
+.forum-detail-actions {
+  border-top-style: dashed;
+}
+
+.forum-post-actions button + button,
+.forum-detail-actions button + button {
+  border-left: 0;
+}
+
+.forum-hot-empty {
+  margin: 0;
+  padding: 1rem 0.9rem 1.1rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: var(--arkive-leading-body);
+}
+
+.forum-hot-posts b {
+  color: var(--arkive-nav-active);
+}
+
+/* Phones: Home / Mine switch above the search, and a floating Post button
+   instead of the old bottom tab bar. */
+.forum-mobile-switch,
+.forum-compose-fab {
+  display: none;
+}
+
+@media (max-width: 47.99rem) {
+  .forum-main:not(.forum-publish-main) {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  .forum-mobile-switch {
+    justify-self: start;
+    padding: 0.25rem;
+    border-radius: 999rem;
+    display: inline-flex;
+    gap: 0.25rem;
+    background: var(--muted);
+  }
+
+  .forum-mobile-switch > button {
+    min-height: 2.25rem;
+    padding-inline: 0.9rem;
+    border: 0;
+    border-radius: 999rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--muted-foreground);
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .forum-mobile-switch > button.is-active {
+    color: var(--background);
+    background: var(--foreground);
+  }
+
+  .forum-mobile-cabins > button {
+    border-color: color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: 999rem;
+    background: var(--card);
+  }
+
+  .forum-mobile-discovery {
+    border-radius: 1.25rem;
+    background: var(--card);
+  }
+
+  .forum-compose-fab {
+    position: fixed;
+    z-index: calc(var(--arkive-layer-sticky) + 1);
+    right: 1rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    min-height: 3rem;
+    padding: 0 1.15rem 0 1rem;
+    border: 0;
+    border-radius: 999rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #fff;
+    background: var(--forum-warm-button);
+    box-shadow: 0 0.5rem 1.25rem rgba(236, 122, 28, 0.34);
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .forum-compose-fab:active {
+    transform: translateY(0.06rem);
+  }
+}
+
+/* Composer: same layout, warm focus, pill controls and a framed form. */
+.forum-main {
+  --forum-focus-border: color-mix(in srgb, #f5a524 70%, var(--forum-border));
+  --forum-focus-shadow: color-mix(in srgb, #f5a524 18%, transparent);
+}
+
+.forum-publish-back {
+  padding-inline: 0.75rem 0.9rem;
+  border-radius: 999rem;
+  background: var(--arkive-filter-hover);
+  transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.forum-publish-back:hover {
+  background: var(--arkive-filter-active);
+}
+
+.forum-publish-page-header h1 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.forum-publish-author {
+  width: fit-content;
+  padding: 0.25rem 0.85rem 0.25rem 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--forum-border) 70%, transparent);
+  border-radius: 999rem;
+  background: var(--card);
+}
+
+.forum-publish-form {
+  padding: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--forum-border) 70%, transparent);
+  border-radius: 1.25rem;
+  gap: 1.15rem;
+  background: var(--card);
+  box-shadow: 0 0.75rem 2rem rgb(120 72 20 / 6%);
+}
+
+.forum-token-input,
+.forum-publish-editor-field > input,
+.forum-rich-editor {
+  border-radius: 0.9rem;
+  background: var(--background);
+  transition: border-color var(--arkive-motion-standard) var(--arkive-motion-easing), box-shadow var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.forum-publish-editor-field > input {
+  min-height: 3rem;
+  padding-inline: 1rem;
+  font-size: 1rem;
+}
+
+/* The warm ring on each field is the focus indicator; drop the global blue outline. */
+.forum-publish-form input:focus-visible,
+.forum-publish-form textarea:focus-visible {
+  outline: none;
+}
+
+.forum-rich-editor:focus-within {
+  border-color: var(--forum-focus-border);
+  box-shadow: 0 0 0 0.2rem var(--forum-focus-shadow);
+}
+
+.forum-rich-toolbar {
+  padding-inline: 0.6rem;
+  border-bottom-style: dashed;
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+}
+
+.forum-rich-toolbar > button {
+  border-radius: 999rem;
+}
+
+.forum-rich-editor > textarea {
+  padding: 1rem 1.1rem;
+}
+
+.forum-token,
+.forum-token button {
+  border-radius: 999rem;
+}
+
+.forum-token {
+  padding-left: 0.7rem;
+  border-color: color-mix(in srgb, #f5a524 28%, var(--forum-border));
+  background: var(--arkive-filter-hover);
+}
+
+.forum-game-token {
+  padding-left: 0.3rem;
+}
+
+.forum-game-token img {
+  border-radius: 50%;
+}
+
+.forum-autocomplete {
+  border-radius: 1rem;
+}
+
+.forum-autocomplete-options > button {
+  border-radius: 0.7rem;
+}
+
+.forum-publish-footer {
+  border-top-style: dashed;
+}
+
+.forum-publish-cancel,
+.forum-publish-submit {
+  min-height: 2.6rem;
+  padding-inline: 1.2rem;
+  border-radius: 999rem;
+}
+
+.forum-publish-cancel:hover {
+  background: var(--muted);
+}
+
+.forum-publish-submit {
+  border: 0;
+  background: var(--forum-warm-button);
+  box-shadow: 0 0.4rem 1rem rgb(236 122 28 / 28%);
+}
+
+.forum-publish-submit:hover {
+  filter: brightness(1.05);
+}
+
+/* Compact top: back, heading and author share one row; games and tags sit side by side. */
+.forum-publish-page {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.85rem;
+}
+
+.forum-publish-page > .forum-publish-form {
+  grid-column: 1 / -1;
+}
+
+.forum-publish-page-header {
+  margin-block: 0 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.85rem;
+}
+
+.forum-publish-back {
+  margin-bottom: 0.9rem;
+}
+
+.forum-publish-page-header h1 {
+  font-size: 1.375rem;
+}
+
+.forum-publish-author {
+  margin-top: 0;
+}
+
+.forum-publish-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+  padding: 1.25rem;
+}
+
+.forum-publish-form > :not(.forum-token-field) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 47.99rem) {
+  .forum-publish-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .forum-publish-page-header h1 {
+    font-size: 1.125rem;
+  }
+
+  .forum-publish-author {
+    padding-right: 0.6rem;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  /* The phone composer is already a sheet, so the inner frame would double it. */
+  .forum-publish-form {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .forum-publish-page {
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forum-main .forum-post,
+  .forum-feed-toolbar > div > button,
+  .forum-personal-tabs > button,
+  .forum-cabin-tabs > button {
+    transition: none;
+  }
 }

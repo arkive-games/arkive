@@ -22,6 +22,7 @@ import {
 import {
   IconAdjustmentsHorizontal,
   IconArrowLeft,
+  IconArrowRight,
   IconBookmark,
   IconBold,
   IconCheck,
@@ -698,7 +699,7 @@ export function ForumPage({
         aria-label={t('forum.search.placeholder')}
         placeholder={t('forum.search.placeholder')}
       />
-      <button type="submit"><IconSearch className="size-5" stroke={1.8} aria-hidden="true" /><span>{t('forum.search.action')}</span></button>
+      <button type="submit" aria-label={t('forum.search.action')}><IconArrowRight className="size-4" stroke={2.2} aria-hidden="true" /></button>
     </form>
   )
 
@@ -784,6 +785,10 @@ export function ForumPage({
         <section className="forum-content-column">
           {!selectedPost && (
             <div className="forum-mobile-forum-tools">
+              <nav className="forum-mobile-switch" aria-label={t('forum.redesign.navigation')}>
+                <button type="button" className={forumMode === 'personal' ? undefined : 'is-active'} aria-pressed={forumMode !== 'personal'} onClick={showHome}><IconHome className="size-4" stroke={1.8} aria-hidden="true" />{t('forum.redesign.home')}</button>
+                <button type="button" className={forumMode === 'personal' ? 'is-active' : undefined} aria-pressed={forumMode === 'personal'} onClick={showPersonal}><IconUser className="size-4" stroke={1.8} aria-hidden="true" />{t('forum.redesign.mine')}</button>
+              </nav>
               {renderSearch('forum-mobile-search')}
               <nav className="forum-mobile-cabins" aria-label={t('forum.redesign.followedCabins')}>
                 {sites.map((site) => (
@@ -1074,13 +1079,12 @@ export function ForumPage({
         </aside>
       </div>
       </main>
-      {!composerOpen && (
-        <nav className="forum-mobile-bottom-navigation" aria-label={t('forum.redesign.navigation')}>
-          <button type="button" className={forumMode === 'home' && !selectedPost ? 'is-active' : undefined} onClick={showHome}><IconHome className="size-5" stroke={1.8} /><span>{t('forum.redesign.home')}</span></button>
-          <button type="button" onClick={() => compose('body')}><IconPencil className="size-5" stroke={1.8} /><span>{t('forum.redesign.compose')}</span></button>
-          <button type="button" className={forumMode === 'personal' && !selectedPost ? 'is-active' : undefined} onClick={showPersonal}><IconUser className="size-5" stroke={1.8} /><span>{t('forum.redesign.mine')}</span></button>
-        </nav>
-      )}
+      {/* The website has no bottom tab bar on phones (that is reserved for a
+          native app); posting is a floating button instead. */}
+      <button type="button" className="forum-compose-fab" onClick={() => compose('body')}>
+        <IconPencil className="size-5" stroke={2} aria-hidden="true" />
+        <span>{t('forum.redesign.compose')}</span>
+      </button>
       {publishNotice && (
         <div className="forum-publish-toast" role="status">
           <IconCheck className="size-5" stroke={2} aria-hidden="true" />
@@ -1395,7 +1399,9 @@ function ForumHotPosts({ posts, onOpenPost, onComingSoon }: { posts: ForumPost[]
   return (
     <section className="forum-panel forum-hot-posts">
       <header><h2>{t('forum.redesign.hotPosts')}</h2><button type="button" onClick={onComingSoon}>{t('forum.redesign.viewAll')}</button></header>
-      <ol>{posts.slice(0, 5).map((post, index) => <li key={post.postNo}><button type="button" onClick={() => onOpenPost(post.postNo)}><b>{index + 1}</b><span>{postTitle(post)}</span><small>{post.likeCount}</small></button></li>)}</ol>
+      {posts.length > 0
+        ? <ol>{posts.slice(0, 5).map((post, index) => <li key={post.postNo}><button type="button" onClick={() => onOpenPost(post.postNo)}><b>{index + 1}</b><span>{postTitle(post)}</span><small>{post.likeCount}</small></button></li>)}</ol>
+        : <p className="forum-hot-empty">{t('forum.redesign.hotPostsEmpty')}</p>}
     </section>
   )
 }

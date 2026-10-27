@@ -230,6 +230,23 @@ export function searchCatalog(
     .map(({ hit }) => hit)]
 }
 
+/**
+ * Whether a tool matches the tools page's search box. Only tools are searched:
+ * their names and descriptions in every locale, their keywords, and their
+ * game's id and localized names -- so "帕鲁" lists every Palworld tool.
+ */
+export function matchesTool(feature: GameFeature, query: string, gameNames: readonly string[]): boolean {
+  const needle = normalize(query)
+  if (!needle) return true
+  return [
+    ...Object.values(feature.name),
+    ...Object.values(feature.description ?? {}),
+    ...(feature.keywords ?? []),
+    feature.gameId,
+    ...gameNames,
+  ].some((term) => normalize(term).includes(needle))
+}
+
 function normalize(value: string): string {
   return value.normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, '')
 }

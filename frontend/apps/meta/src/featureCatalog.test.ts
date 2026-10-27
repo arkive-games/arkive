@@ -4,6 +4,7 @@ import {
   featureHref,
   featuresOf,
   localize,
+  matchesTool,
   recentFeatures,
   searchCatalog,
   type GameFeature,
@@ -161,5 +162,26 @@ describe('searchCatalog', () => {
 
   it('returns nothing for a blank query', () => {
     expect(ids('  ')).toEqual([])
+  })
+})
+
+describe('matchesTool', () => {
+  const breeding = FEATURES.find((feature) => feature.id === 'palworld-breeding')!
+  const names = ['Palworld', '幻兽帕鲁']
+
+  it('matches every tool on an empty query', () => {
+    expect(matchesTool(breeding, '  ', names)).toBe(true)
+  })
+
+  it('matches name, description, keyword and game, ignoring case and spaces', () => {
+    expect(matchesTool(breeding, 'Breeding  CALC', names)).toBe(true)
+    expect(matchesTool(breeding, '最短路线', names)).toBe(true)
+    expect(matchesTool(breeding, '孵化', names)).toBe(true)
+    expect(matchesTool(breeding, '帕鲁', names)).toBe(true)
+    expect(matchesTool(breeding, 'palworld', [])).toBe(true)
+  })
+
+  it('rejects a query nothing in the tool carries', () => {
+    expect(matchesTool(breeding, '积分', names)).toBe(false)
   })
 })

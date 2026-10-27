@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AccountDialog,
@@ -28,11 +28,8 @@ import {
   GAME_LOGOS,
   IS_TOY,
   VISIBLE_SITES,
-  loadSiteClickCounts,
-  rankSitesByClicks,
   siteHref,
   type SiteCard,
-  type SiteClickCounts,
 } from './sites'
 import { AllGamesPage } from './AllGamesPage'
 import { ToolsPage } from './ToolsPage'
@@ -189,7 +186,6 @@ function routeFromHash(): HomeRoute {
 export default function App() {
   const { t, i18n } = useTranslation()
   const { theme, setTheme } = useTheme()
-  const [clickCounts, setClickCounts] = useState<SiteClickCounts>({})
   const [noticeId, setNoticeId] = useState(0)
   const [activeRoute, setActiveRoute] = useState<HomeRoute>(routeFromHash)
   const [forumComposerDirty, setForumComposerDirty] = useState(false)
@@ -199,12 +195,6 @@ export default function App() {
   const settingsProps = useArkiveSettingsProps(useSettingsConfig())
   const [settingsOpen, setSettingsOpen] = useState(false)
   const brandName = getArkiveBrandName(lng, t('brand.name'))
-
-  useEffect(() => {
-    const controller = new AbortController()
-    void loadSiteClickCounts(controller.signal).then(setClickCounts)
-    return () => controller.abort()
-  }, [])
 
   useEffect(() => {
     const updateView = () => {
@@ -261,10 +251,6 @@ export default function App() {
     return () => window.clearTimeout(timeout)
   }, [noticeId])
 
-  const rankedSites = useMemo(
-    () => rankSitesByClicks(VISIBLE_SITES, clickCounts),
-    [clickCounts],
-  )
   const showComingSoon = () => setNoticeId((value) => value + 1)
   const auth = useAuth()
   const [accountOpen, setAccountOpen] = useState(false)
@@ -294,17 +280,9 @@ export default function App() {
     now: memoryNow,
     maxAge: RECENT_ACTIVITY_RETENTION.milliseconds,
   })
-  const continueDestination = recentDestinations.find((destination) =>
-    memoryNow - destination.timestamp < RECENT_ACTIVITY_RETENTION.milliseconds
-    && VISIBLE_SITES.some((site) => site.id === destination.gameId && siteHref(site)))
-  const continueSite = continueDestination
-    ? VISIBLE_SITES.find((site) => site.id === continueDestination.gameId)
-    : undefined
-  // The game a visitor was last in leads the shelf; everyone else sees the
-  // curated order, popularity-ranked once a click source is configured.
-  const displayedSites = continueSite
-    ? [continueSite, ...rankedSites.filter((site) => site.id !== continueSite.id)]
-    : rankedSites
+  // The shelf keeps the curated SITES order: a game never moves because a
+  // visitor opened it, so each one stays where they expect to find it.
+  const displayedSites = VISIBLE_SITES
   const [communityPosts, setCommunityPosts] = useState<HomeCommunityPost[]>([])
 
   useEffect(() => {

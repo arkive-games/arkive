@@ -66,14 +66,14 @@ function SiteFooter({
       ref={footerRef}
       data-slot="site-footer"
       className={cn(
-        "mt-auto bg-card px-4 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-xs text-muted-foreground md:px-8 md:py-10",
+        "mt-auto bg-background px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] text-xs font-normal text-muted-foreground md:px-8 md:py-4",
         className
       )}
       {...props}
     >
       <FooterVoyage footerRef={footerRef} />
-      <div className="mx-auto flex max-w-[85rem] flex-wrap items-center gap-x-6 gap-y-4">
-        <span className="mr-auto inline-flex items-center">
+      <div className="mx-auto grid max-w-[85rem] items-center gap-x-4 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <span className="inline-flex items-center">
           <a
             href={homeUrl}
             target="_blank"
@@ -85,7 +85,8 @@ function SiteFooter({
             Arkive
           </a>
         </span>
-        {navigation && <div className="flex w-full flex-wrap gap-4 text-sm md:w-auto">{navigation}</div>}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-normal md:justify-center [&_button]:font-normal [&_a]:font-normal">{navigation}</div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs md:justify-end md:text-right">
         <span>© 2025-2026 Arkive.games</span>
         {versionLink ? (
           <span
@@ -118,6 +119,7 @@ function SiteFooter({
             {icpBeian}
           </a>
         ) : null}
+        </div>
       </div>
     </footer>
   )

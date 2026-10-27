@@ -21,7 +21,7 @@ const FORUM_REDESIGN_COPY = {
     navigation: '论坛主要功能', home: '首页', compose: '发帖', mine: '我的', followedCabins: '我关注的游戏舱',
     updatedRecently: '最近有更新', arkiveInfo: '藏舟资讯',
     changelog: '更新日志', feedback: '意见反馈', guidelines: '社区公约', communityDiscovery: '社区发现', popularGames: '热门游戏', allGames: '全部游戏',
-    hotPosts: '藏舟热帖', viewAll: '查看全部', female: '女性', male: '男性', uid: 'UID {{id}}',
+    hotPosts: '藏舟热帖', hotPostsEmpty: '还没有热帖，来发第一帖吧。', viewAll: '查看全部', female: '女性', male: '男性', uid: 'UID {{id}}',
     posts: '帖子', following: '关注', followers: '粉丝', editProfile: '编辑资料', personalContent: '我的社区内容',
     personalTabs: { posts: '帖子', replies: '回复', likes: '点赞', bookmarks: '收藏' },
     personalEmpty: { posts: '还没有发布帖子', replies: '还没有参与回复', likes: '还没有点赞帖子', bookmarks: '还没有收藏帖子', description: '对应的社区内容会显示在这里。' },
@@ -31,7 +31,7 @@ const FORUM_REDESIGN_COPY = {
     navigation: '論壇主要功能', home: '首頁', compose: '發帖', mine: '我的', followedCabins: '我關注的遊戲艙',
     updatedRecently: '最近有更新', arkiveInfo: '藏舟資訊',
     changelog: '更新日誌', feedback: '意見回饋', guidelines: '社群公約', communityDiscovery: '社群探索', popularGames: '熱門遊戲', allGames: '全部遊戲',
-    hotPosts: '藏舟熱帖', viewAll: '查看全部', female: '女性', male: '男性', uid: 'UID {{id}}',
+    hotPosts: '藏舟熱帖', hotPostsEmpty: '還沒有熱帖，來發第一帖吧。', viewAll: '查看全部', female: '女性', male: '男性', uid: 'UID {{id}}',
     posts: '帖子', following: '關注', followers: '粉絲', editProfile: '編輯資料', personalContent: '我的社群內容',
     personalTabs: { posts: '帖子', replies: '回覆', likes: '按讚', bookmarks: '收藏' },
     personalEmpty: { posts: '還沒有發佈帖子', replies: '還沒有參與回覆', likes: '還沒有按讚帖子', bookmarks: '還沒有收藏帖子', description: '對應的社群內容會顯示在這裡。' },
@@ -41,7 +41,7 @@ const FORUM_REDESIGN_COPY = {
     navigation: 'Forum navigation', home: 'Home', compose: 'Post', mine: 'My content', followedCabins: 'Followed game cabins',
     updatedRecently: 'Recently updated', arkiveInfo: 'Arkive information',
     changelog: 'Changelog', feedback: 'Feedback', guidelines: 'Community guidelines', communityDiscovery: 'Community discovery', popularGames: 'Popular games', allGames: 'All games',
-    hotPosts: 'Arkive hot posts', viewAll: 'View all', female: 'Female', male: 'Male', uid: 'UID {{id}}',
+    hotPosts: 'Arkive hot posts', hotPostsEmpty: 'No hot posts yet. Start the first one.', viewAll: 'View all', female: 'Female', male: 'Male', uid: 'UID {{id}}',
     posts: 'Posts', following: 'Following', followers: 'Followers', editProfile: 'Edit profile', personalContent: 'My community content',
     personalTabs: { posts: 'Posts', replies: 'Replies', likes: 'Likes', bookmarks: 'Bookmarks' },
     personalEmpty: { posts: 'No posts yet', replies: 'No replies yet', likes: 'No liked posts yet', bookmarks: 'No bookmarked posts yet', description: 'Your corresponding community content will appear here.' },
@@ -50,14 +50,14 @@ const FORUM_REDESIGN_COPY = {
   'ja-JP': {
     navigation: 'フォーラムナビゲーション', home: 'ホーム', compose: '投稿', mine: '自分', followedCabins: 'フォロー中のゲームキャビン',
     updatedRecently: '最近更新', arkiveInfo: '蔵舟情報', changelog: '更新履歴', feedback: 'フィードバック', guidelines: 'コミュニティ規約', communityDiscovery: 'コミュニティを探す',
-    popularGames: '人気ゲーム', allGames: 'すべてのゲーム', hotPosts: '人気投稿', viewAll: 'すべて見る', female: '女性', male: '男性', uid: 'UID {{id}}',
+    popularGames: '人気ゲーム', allGames: 'すべてのゲーム', hotPosts: '人気投稿', hotPostsEmpty: '人気投稿はまだありません。最初の投稿をどうぞ。', viewAll: 'すべて見る', female: '女性', male: '男性', uid: 'UID {{id}}',
     posts: '投稿', following: 'フォロー', followers: 'フォロワー', editProfile: 'プロフィール編集', personalContent: 'コミュニティ履歴',
     personalTabs: { posts: '投稿', replies: '返信', likes: 'いいね', bookmarks: '保存' }, personalEmpty: { posts: '投稿はまだありません', replies: '返信はまだありません', likes: 'いいねした投稿はありません', bookmarks: '保存した投稿はありません', description: '該当するコミュニティ履歴がここに表示されます。' },
     cabinContent: 'ゲームキャビン', cabinTabs: { hot: '人気', latest: '新着', guides: '攻略' }, openWorld: 'オープンワールド', crossServer: 'クロスサーバー',
     cabinDescription: '{{game}}プレイヤー向けの攻略コミュニティです。装備、マップ、クエスト、ダンジョン情報を共有します。', more: 'もっと見る', share: '再投稿', reply: '返信', },
   'ko-KR': {
     navigation: '포럼 탐색', home: '홈', compose: '글쓰기', mine: '내 활동', followedCabins: '팔로우한 게임 선실', updatedRecently: '최근 업데이트', arkiveInfo: 'Arkive 정보',
-    changelog: '업데이트 기록', feedback: '의견 보내기', guidelines: '커뮤니티 규칙', communityDiscovery: '커뮤니티 둘러보기', popularGames: '인기 게임', allGames: '전체 게임', hotPosts: '인기 게시글', viewAll: '전체 보기', female: '여성', male: '남성', uid: 'UID {{id}}',
+    changelog: '업데이트 기록', feedback: '의견 보내기', guidelines: '커뮤니티 규칙', communityDiscovery: '커뮤니티 둘러보기', popularGames: '인기 게임', allGames: '전체 게임', hotPosts: '인기 게시글', hotPostsEmpty: '아직 인기 게시글이 없습니다. 첫 글을 남겨 보세요.', viewAll: '전체 보기', female: '여성', male: '남성', uid: 'UID {{id}}',
     posts: '게시글', following: '팔로잉', followers: '팔로워', editProfile: '프로필 편집', personalContent: '내 커뮤니티 활동', personalTabs: { posts: '게시글', replies: '답글', likes: '좋아요', bookmarks: '저장' },
     personalEmpty: { posts: '작성한 게시글이 없습니다', replies: '작성한 답글이 없습니다', likes: '좋아요한 게시글이 없습니다', bookmarks: '저장한 게시글이 없습니다', description: '해당 커뮤니티 활동이 여기에 표시됩니다.' },
     cabinContent: '게임 선실 콘텐츠', cabinTabs: { hot: '인기', latest: '최신', guides: '공략' }, openWorld: '오픈 월드', crossServer: '크로스 서버',
@@ -503,6 +503,9 @@ const resources = {
       },
       toolsLibrary: {
         eyebrow: '实用工具', title: '工具库', description: '按游戏查找计算、规划与资料整理工具。',
+        searchPlaceholder: '搜索工具，如：配种、评分', searchLabel: '搜索工具', clearSearch: '清空搜索', searchAction: '搜索',
+        filterLabel: '按游戏筛选', all: '全部', open: '打开', resultCount: '{{count}} 个工具',
+        emptyTitle: '没有找到「{{query}}」相关的工具', emptyDescription: '换个关键词试试，比如“配种”或“积分”。',
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['zh-CN'],
@@ -645,6 +648,9 @@ const resources = {
       },
       toolsLibrary: {
         eyebrow: '實用工具', title: '工具庫', description: '按遊戲查找計算、規劃與資料整理工具。',
+        searchPlaceholder: '搜尋工具，如：配種、評分', searchLabel: '搜尋工具', clearSearch: '清空搜尋', searchAction: '搜尋',
+        filterLabel: '按遊戲篩選', all: '全部', open: '開啟', resultCount: '{{count}} 個工具',
+        emptyTitle: '沒有找到「{{query}}」相關的工具', emptyDescription: '換個關鍵字試試，例如「配種」或「積分」。',
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['zh-TW'],
@@ -758,6 +764,9 @@ const resources = {
       },
       toolsLibrary: {
         eyebrow: 'Practical tools', title: 'Tool library', description: 'Find calculators, planners, and reference tools by game.',
+        searchPlaceholder: 'Search tools, e.g. breeding, rating', searchLabel: 'Search tools', clearSearch: 'Clear search', searchAction: 'Search',
+        filterLabel: 'Filter by game', all: 'All', open: 'Open', resultCount: '{{count}} tools',
+        emptyTitle: 'No tools match “{{query}}”', emptyDescription: 'Try another keyword, such as “breeding” or “league”.',
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['en-US'],
@@ -865,6 +874,9 @@ const resources = {
       },
       toolsLibrary: {
         eyebrow: '実用ツール', title: 'ツールライブラリ', description: 'ゲーム別の計算、計画、資料整理ツールを探せます。',
+        searchPlaceholder: 'ツールを検索（例：配合、評価）', searchLabel: 'ツールを検索', clearSearch: '検索をクリア', searchAction: '検索',
+        filterLabel: 'ゲームで絞り込む', all: 'すべて', open: '開く', resultCount: '{{count}}件のツール',
+        emptyTitle: '「{{query}}」に一致するツールはありません', emptyDescription: '別のキーワードを試してください。',
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['ja-JP'],
@@ -969,6 +981,9 @@ const resources = {
       },
       toolsLibrary: {
         eyebrow: '실용 도구', title: '도구 모음', description: '게임별 계산기, 계획 도구와 참고 자료를 찾습니다.',
+        searchPlaceholder: '도구 검색 (예: 교배, 평가)', searchLabel: '도구 검색', clearSearch: '검색 지우기', searchAction: '검색',
+        filterLabel: '게임별 필터', all: '전체', open: '열기', resultCount: '도구 {{count}}개',
+        emptyTitle: '“{{query}}”와 일치하는 도구가 없습니다', emptyDescription: '다른 키워드로 검색해 보세요.',
       },
       forum: {
         redesign: FORUM_REDESIGN_COPY['ko-KR'],
