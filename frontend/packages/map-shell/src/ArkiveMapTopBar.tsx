@@ -11,12 +11,14 @@ import {
   IconSettings,
   IconSun,
   IconSunMoon,
+  IconUser,
   IconUserCircle,
 } from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
 import { useOptionalTheme } from "./theme/ThemeProvider"
 import {
   ShellTopBar,
+  TOP_BAR_MENU_ANCHOR_CLASS,
   TOP_BAR_MENU_CLASS,
   TOP_BAR_MENU_ITEM_CLASS,
   type ShellTopBarNav,
@@ -307,6 +309,7 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
             }
           }}
         >
+          {entry.key === "profile" && <IconUser className="size-4" stroke={1.8} />}
           {entry.key === "settings" && <IconSettings className="size-4" stroke={1.8} />}
           {entry.key === "sign-out" && <IconLogout className="size-4" stroke={1.8} />}
           <span className="flex-1">{entry.label}</span>
@@ -354,7 +357,7 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
     // reachable without an account. A split trigger would cost that click.
     return (
       <div
-        className="relative inline-flex items-center"
+        className={TOP_BAR_MENU_ANCHOR_CLASS}
         onPointerEnter={() => setOpen(true)}
         onPointerLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
@@ -374,12 +377,14 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
 
   return (
     <div
-      className="relative inline-flex items-center"
+      className={TOP_BAR_MENU_ANCHOR_CLASS}
       onPointerEnter={() => setOpen(true)}
       onPointerLeave={() => setOpen(false)}
       onFocus={() => setOpen(true)}
       onBlur={closeWhenFocusLeaves}
     >
+      {/* No `title`: the menu already heads itself with the name, and a native
+          tooltip on hover would be a second popup beside it. */}
       <Button
         ref={triggerRef}
         type="button"
@@ -389,7 +394,6 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={account.accountLabel}
-        title={account.userName ?? account.accountLabel}
         data-testid="account-menu"
         onClick={() => setOpen(true)}
         onPointerUp={(event) => event.currentTarget.blur()}

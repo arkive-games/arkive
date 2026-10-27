@@ -2,6 +2,9 @@ export { ShellLayout, type ShellLayoutProps } from "./ShellLayout"
 export {
   ShellTopBar,
   ShellUtilityDropdown,
+  TOP_BAR_MENU_ANCHOR_CLASS,
+  TOP_BAR_MENU_CLASS,
+  TOP_BAR_MENU_ITEM_CLASS,
   type ShellTopBarProps,
   type ShellTopBarNav,
   type ShellNavItem,

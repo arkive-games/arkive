@@ -22,8 +22,16 @@ import {
   cn,
 } from "@gamemap/ui"
 
+/**
+ * Every top-bar menu drops the same distance below its trigger. The anchor
+ * class bridges that gap with an invisible strip, so a pointer travelling
+ * from the trigger into the menu never leaves the hover area on the way.
+ */
 export const TOP_BAR_MENU_CLASS =
-  `top-full z-[var(--arkive-layer-popover)] ${MENU_CONTENT_CLASS}`
+  `top-[calc(100%+0.5rem)] z-[var(--arkive-layer-popover)] ${MENU_CONTENT_CLASS}`
+
+export const TOP_BAR_MENU_ANCHOR_CLASS =
+  "relative inline-flex items-center after:absolute after:inset-x-0 after:top-full after:h-2 after:content-['']"
 
 export const TOP_BAR_MENU_ITEM_CLASS =
   `${MENU_ITEM_CLASS} !min-h-9 !py-1.5 whitespace-nowrap [&>[data-slot=nav-item-label]]:min-w-0 [&>[data-slot=nav-item-label]]:flex-1`
@@ -328,7 +336,7 @@ export function ShellUtilityDropdown({
 
   return (
     <div
-      className="relative inline-flex items-center"
+      className={TOP_BAR_MENU_ANCHOR_CLASS}
       onPointerEnter={() => onOpenChange(true)}
       onPointerLeave={() => onOpenChange(false)}
       onFocus={() => onOpenChange(true)}
@@ -376,7 +384,7 @@ export function ShellUtilityDropdown({
             usesLanguageGrid
               ? "grid w-[22rem] max-w-[calc(100vw-2rem)] grid-cols-2"
               : TOP_BAR_MENU_WIDTH_CLASS,
-            menuSide === "top" && "top-auto bottom-full mb-2",
+            menuSide === "top" && "top-auto bottom-[calc(100%+0.5rem)]",
             menuClassName,
           )}
         >
@@ -455,7 +463,7 @@ function NavDropdown({
   return (
     <div
       data-nav-key={item.key}
-      className="relative inline-flex items-center"
+      className={TOP_BAR_MENU_ANCHOR_CLASS}
       onPointerEnter={() => {
         setOpen(true)
         onHighlight(item.key)
@@ -508,17 +516,21 @@ function NavDropdown({
           // collapsing it to the longest WORD and wrapping every label. A floor
           // alone still wraps the long ones -- fr-FR "Simulateur de statistiques"
           // needs ~214px against the 10rem floor. `max-w-80` keeps it bounded.
+          // A grouped menu is centred under its trigger and only as wide as its
+          // longest names, so short game names do not sit a column apart.
           className={cn(
-            "absolute left-0",
+            "absolute",
             TOP_BAR_MENU_CLASS,
             TOP_BAR_MENU_VIEWPORT_CLASS,
-            groups ? "w-[24rem] max-w-[calc(100vw-2rem)] px-4 py-3" : TOP_BAR_MENU_WIDTH_CLASS,
+            groups
+              ? "left-1/2 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2"
+              : cn("left-0", TOP_BAR_MENU_WIDTH_CLASS),
           )}
         >
           {groups ? (
             <div
               className="grid"
-              style={{ gridTemplateColumns: `repeat(${groups.length}, minmax(0, 1fr))` }}
+              style={{ gridTemplateColumns: `repeat(${groups.length}, minmax(0, auto))` }}
             >
               {groups.map(([heading, leaves], index) => (
                 <div
@@ -527,8 +539,8 @@ function NavDropdown({
                   aria-label={heading || undefined}
                   className={cn(
                     "flex min-w-0 flex-col",
-                    index > 0 && "border-l border-border/70 pl-3.5",
-                    index < groups.length - 1 && "pr-3.5",
+                    index > 0 && "border-l border-border/70 pl-2",
+                    index < groups.length - 1 && "pr-2",
                   )}
                 >
                   {heading && (
@@ -550,7 +562,7 @@ function NavDropdown({
                         ),
                       },
                       cn(
-                        "flex min-h-9 w-full items-center rounded-lg px-2 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none",
+                        "flex min-h-9 w-full items-center rounded-lg py-1.5 pr-3 pl-2 text-sm font-medium whitespace-nowrap transition-colors outline-none",
                         "hover:bg-[color-mix(in_srgb,var(--nav-tint)_13%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--nav-tint)_13%,transparent)]",
                         child.active ? "text-primary" : "text-foreground",
                       ),

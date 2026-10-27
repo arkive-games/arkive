@@ -454,7 +454,9 @@ export function ArkiveSettingsDialog({
           </DialogClose>
           <DialogDescription className="col-span-2">{panel.strings.lede}</DialogDescription>
         </DialogHeader>
-        <div className="-mx-1 min-h-0 overflow-y-auto px-1">
+        {/* Padded on every side: the cards draw their outline as a 1px ring
+            outside their box, which the scroller would otherwise clip. */}
+        <div className="-m-1 min-h-0 overflow-y-auto p-1">
           <ArkiveSettingsPanel {...panel} />
         </div>
       </DialogContent>
