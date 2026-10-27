@@ -500,7 +500,7 @@ const LANDING_COPY = {
     arrived: 'Arrived in port',
   },
   'ja-JP': {
-    carousel: { label: 'ゲームカルーセル', enter: '入る', slide: '{{n}} 枚目：{{name}}', previous: '前のゲーム', next: '次のゲーム', pause: 'カルーセルを一時停止', play: 'カルーセルを再生', recruit: { name: '仲間募集', desc: '一緒に攻略サイトを作りませんか', go: 'お問い合わせ' }, pbz: { name: '影之刃零', go: '近日公開', soon: '影之刃零の攻略サイトは準備中です。お楽しみに！' } },
+    carousel: { label: 'ゲームカルーセル', enter: '入る', slide: '{{n}} 枚目：{{name}}', previous: '前のゲーム', next: '次のゲーム', pause: 'カルーセルを一時停止', play: 'カルーセルを再生', recruit: { name: '仲間募集', desc: '一緒に攻略サイトを作りませんか', go: 'お問い合わせ' }, pbz: { name: 'ファントムブレード ゼロ', go: '近日公開', soon: 'ファントムブレード ゼロの攻略サイトは準備中です。お楽しみに！' } },
     quick: { label: 'ショートカット', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム', updates: '更新履歴', badge: '新着' },
     dock: { title: 'ツールドック', subtitle: '資料を探さず、すぐに結果を', all: 'すべてのツール' },
     community: { title: 'コミュニティの話題', action: 'フォーラムへ' },

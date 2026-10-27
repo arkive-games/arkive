@@ -25,7 +25,7 @@ import { GAME_LOGOS, IS_TOY, recentUpdateDays, siteHref, type SiteCard } from '.
 import { TOOL_ICONS } from './toolIcons'
 import { HomeCarousel } from './HomeCarousel'
 import platformChangelog from './platform-changelog.json'
-import pbzIcon from './assets/pbz-icon.webp'
+import { UPCOMING_PBZ } from './upcoming'
 
 const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
   tool: IconTool,
@@ -95,11 +95,11 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
       <div className="home-shell">
         <nav className="home-quick" aria-label={t('landing.quick.label')}>
           {/* Phantom Blade Zero leads before its guide opens, so it shows a notice instead of linking. */}
-          <button type="button" aria-haspopup="dialog" style={{ '--i': 0, '--qc': '#c98a3e' } as CSSProperties} onClick={() => setSoonOpen(true)}>
+          <button type="button" aria-haspopup="dialog" style={{ '--i': 0, '--qc': UPCOMING_PBZ.color } as CSSProperties} onClick={() => setSoonOpen(true)}>
             <span className="home-quick-tile">
-              <span className="home-quick-icon is-game"><img src={pbzIcon} alt="" /></span>
+              <span className="home-quick-icon is-game"><img src={UPCOMING_PBZ.icon} alt="" /></span>
             </span>
-            <span>{t('landing.carousel.pbz.name')}</span>
+            <span>{t(UPCOMING_PBZ.nameKey)}</span>
           </button>
           {games.map((site, index) => (
             <a key={site.id} href={siteHref(site)} style={{ '--i': index + 1, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
@@ -181,7 +181,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
       <Dialog open={soonOpen} onOpenChange={setSoonOpen}>
         <DialogContent className="footer-dialog sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t('landing.carousel.pbz.go')}</DialogTitle>
+            <DialogTitle className="arkive-dialog-title">{t('landing.carousel.pbz.go')}</DialogTitle>
             <DialogDescription>{t('landing.carousel.pbz.soon')}</DialogDescription>
           </DialogHeader>
         </DialogContent>

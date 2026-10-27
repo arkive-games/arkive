@@ -5,9 +5,7 @@ import { ContactDialog } from './HomeFooter'
 import { GAME_LOGOS, siteHref, type GameId, type SiteCard } from './sites'
 import recruitBanner from './assets/recruit-banner.webp'
 import recruitBannerPhone from './assets/recruit-banner-phone.webp'
-import pbzBanner from './assets/pbz-banner.webp'
-import pbzBannerPhone from './assets/pbz-banner-phone.webp'
-import pbzIcon from './assets/pbz-icon.webp'
+import { UPCOMING_PBZ } from './upcoming'
 import gmzzPoster from './assets/gmzz-poster.webp'
 import gmzzPosterPhone from './assets/gmzz-poster-phone.webp'
 import palworldPoster from './assets/palworld-poster.webp'
@@ -24,6 +22,9 @@ const GAME_POSTERS: Partial<Record<GameId, { banner: string; phoneBanner: string
   palworld: { banner: palworldPoster, phoneBanner: palworldPosterPhone },
   gmzz: { banner: gmzzPoster, phoneBanner: gmzzPosterPhone },
 }
+
+/** The dominant colour of the recruitment poster art, used for the carousel glow. */
+const RECRUIT_COLOR = '#3fb0e6'
 
 const AUTO_MS = 5000
 const SWIPE_PX = 40
@@ -106,19 +107,19 @@ export function HomeCarousel({ sites, onOpenSite, onComingSoon }: {
       phoneBanner: recruitBannerPhone,
       poster: true,
       icon: `${import.meta.env.BASE_URL}favicon.svg`,
-      color: '#3fb0e6',
+      color: RECRUIT_COLOR,
       open: () => setContactOpen(true),
     },
     {
-      key: 'pbz',
-      name: t('landing.carousel.pbz.name'),
+      key: UPCOMING_PBZ.key,
+      name: t(UPCOMING_PBZ.nameKey),
       desc: '',
       go: t('landing.carousel.pbz.go'),
-      banner: pbzBanner,
-      phoneBanner: pbzBannerPhone,
+      banner: UPCOMING_PBZ.banner,
+      phoneBanner: UPCOMING_PBZ.phoneBanner,
       poster: true,
-      icon: pbzIcon,
-      color: '#c98a3e',
+      icon: UPCOMING_PBZ.icon,
+      color: UPCOMING_PBZ.color,
       open: onComingSoon,
     },
     ...CAROUSEL_GAMES.flatMap((id) => {
