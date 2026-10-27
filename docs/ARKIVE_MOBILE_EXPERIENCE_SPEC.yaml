@@ -1,8 +1,8 @@
-schema_version: "2.0.0"
+schema_version: "3.0.0"
 spec_id: "arkive.mobile-experience"
 title: "Arkive Mobile Web Experience Specification"
 status: "canonical"
-last_reviewed: "2026-10-26"
+last_reviewed: "2026-10-27"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -59,7 +59,7 @@ mobile_principles:
 ownership:
   shared_shell:
     mobile_header: "frontend/packages/map-shell/src/ArkiveMobileHeader.tsx"
-    bottom_navigation: "frontend/packages/map-shell/src/ShellBottomNav.tsx"
+    phone_menu_drawer: "frontend/packages/map-shell/src/ShellBottomNav.tsx"
   shared_interactions:
     search: "frontend/packages/map-shell/src/SearchPanel.tsx"
     marker_detail: "frontend/packages/map-shell/src/MarkerDetailDrawer.tsx"
@@ -100,9 +100,8 @@ viewport_shell:
 
 # Owner decision (2026-10): the mobile WEBSITE has no bottom tab bar. That
 # pattern is reserved for a future native app or mini-program; on the web it
-# hid the bottom of every page and map. The key keeps its historical name
-# because ShellBottomNav still owns the phone navigation.
-bottom_navigation:
+# hid the bottom of every page and map.
+phone_menu_drawer:
   menu_button:
     placement: "Fixed in the top-right corner, below the top safe area, above page and map content"
     size: "Use touch_target_standard from the UI-foundations specification; pill radius"
@@ -127,7 +126,6 @@ bottom_navigation:
       - "Site information and feedback when supplied"
     excluded:
       - "Duplicate Arkive branding"
-      - "Login or account access"
       - "Map renderer selection"
     behavior:
       - "Reopen on the main pane, not a remembered language sub-page."
@@ -173,7 +171,7 @@ portal_home:
     plain rows: discover, all games, tools and forum; then account and
     notifications when signed in; then settings for everyone; then a sign-in
     pill when signed out. Every other destination is reachable from one of
-    these, so bottom_navigation.route_inventory still holds. The forum keeps
+    these, so phone_menu_drawer.route_inventory still holds. The forum keeps
     its own in-page Home, Compose and Mine bar.
   continue: "Use valid recent activity, not popularity presented as personal history."
   game_media: "Show inspectable game artwork in a stable frame: 3:1 carousel banners on desktop, 2:1 on a phone."
@@ -202,15 +200,7 @@ catalogs_and_lists:
     touch: "All controls use the shared minimum touch target."
     behavior:
       - "Reset to page one when query, filters, mode, or data scope changes."
-      - >-
-        Changing page returns the content scroller to the result heading, marked with
-        `data-pagination-anchor`. PARTIAL: only the four catalogs that render a result
-        count (pals, items, buildings, merchants) carry the anchor; the other eleven
-        paginated palworld views fall back to the top of the scroller, which is what
-        every page did before. The shared filters row cannot serve as the anchor --
-        it returns null once the filters move into the mobile sheet, which is exactly
-        when pagination is active -- so the remaining pages each need a decision about
-        what their result heading is rather than a mechanical edit.
+      - "Changing page returns the content scroller to the result heading, marked with `data-pagination-anchor` (see known_gaps)."
     page_size: "Choose from record density; do not force one value across unlike catalogs."
 
 detail_pages:
@@ -254,7 +244,7 @@ forms_forum_and_account:
   actions: "Keep the active submit or save action reachable when the software keyboard opens."
   draft: "Use the state-memory draft contract for consequential multi-field work."
   validation: "Preserve entered values and move focus to the first invalid field without hiding its message."
-  account_access: "Expose account access in the content header, not the More sheet."
+  account_access: "Expose account access in the content header or the drawer rows described by portal_home.navigation; never in both places on one screen."
 
 overlays_safe_areas_and_input:
   popovers:
@@ -327,24 +317,14 @@ verification:
     - "Confirm breakpoint changes close transient UI and preserve semantic task state."
   evidence_policy: "Keep only final review evidence and remove browser artifacts before handoff."
 
-migration_from_1_3:
-  - "Read global typography, spacing, shape, control size, responsive, and motion values from the UI-foundations specification."
-  - "Replace seven-control narrow pagination with the width-safe responsive contract."
+known_gaps:
   - >-
-    DONE, by wrapping. OverflowMarquee is gone; OverflowLabel shows the whole label on
-    as many lines as it needs, so no motion and no pointer are involved and the
-    WCAG 2.2.2 failure in the breeding picker (iterations: Infinity, no pause) is
-    removed rather than relocated. Two options were measured and rejected: manual
-    horizontal scroll puts a scroller inside a tap target, where drag competes with
-    tap; and a two-line clamp still clipped every long label in the 20rem sidebar,
-    keeping the problem while paying most of the cost. The accepted cost is row
-    height -- a long marker label needs three lines, taking a filter chip from 38px to
-    62px. Chips in one grid row stay equal, so the grid steps rather than looking
-    ragged. Two height-fixed pickers keep single-line clipping (the map selector
-    trigger and the h-20 breeding tile); both are pickers, so the full label is one
-    tap away in the list the value came from.
-  - "Replace hard-coded dark map overlays with the color-system map_overlay token."
-  - "Remove duplicated global accessibility and state-memory rules."
+    Only the four catalogs that render a result count (pals, items, buildings,
+    merchants) carry `data-pagination-anchor`; the other eleven paginated
+    palworld views fall back to the top of the scroller. The shared filters
+    row cannot serve as the anchor — it returns null once the filters move
+    into the mobile sheet, which is exactly when pagination is active — so the
+    remaining pages each need a decision about what their result heading is.
 
 maintenance:
   rules:

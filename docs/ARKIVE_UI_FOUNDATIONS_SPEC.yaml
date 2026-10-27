@@ -1,8 +1,8 @@
-schema_version: "1.0.0"
+schema_version: "2.0.0"
 spec_id: "arkive.ui-foundations"
 title: "Arkive UI Foundations Specification"
 status: "canonical"
-last_reviewed: "2026-10-26"
+last_reviewed: "2026-10-27"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -23,12 +23,19 @@ purpose:
     - "High information density comes from organization, not smaller text or inconsistent spacing."
     - "New games reuse the same framework and primitives instead of creating another design system."
 
+# Owner decision (2026-10): the portal reads warm, young, rounded and lively;
+# game artwork stays the loudest thing on screen. Tools and maps keep the
+# precise, dense layer underneath.
 design_profile:
   audience: "Players repeatedly scanning maps, catalogs, databases, and tools"
-  direction: "A quiet game-world encyclopedia with a precise tool layer"
+  direction: "A warm, rounded game-guide harbour on the portal, over a precise and dense tool layer in maps and calculators"
+  surfaces:
+    portal: "Home, All Games, Tools and Forum: rounded cards, pill controls, warm main actions, springy feedback"
+    game_content: "Encyclopedias and detail pages: the shared shell and footer, dense multi-column records, one page scroller"
+    workspace: "Maps and calculators: compact, precise, no decoration"
   calibration:
     design_variance: 5
-    motion_intensity: 2
+    motion_intensity: 4
     visual_density: 8
   priority_order:
     - "Task completion"
@@ -37,10 +44,15 @@ design_profile:
     - "Cross-game consistency"
     - "Decoration"
   avoid:
+    - "Re-skins that keep an old layout under new colours"
+    - "A left vertical rail as site navigation"
+    - "Logos or marks built from strokes"
+    - "Promoting one game over the others on shared surfaces"
+    - "Colour filters, masks, or tints laid over game artwork"
+    - "Hover tilt or 3D motion in the page body (top-bar micro-motion is allowed)"
+    - "Promotional intros or explanatory notes above a tool or catalog"
     - "Marketing-page scale inside tools or content panels"
     - "Decorative cards around every group"
-    - "Automatic ambient motion"
-    - "Game-colored shared chrome"
     - "Arbitrary one-off pixel, radius, shadow, or z-index values"
 
 implementation_foundation:
@@ -166,12 +178,24 @@ shared_component_contracts:
   compact_site_footer:
     owner: "frontend/packages/ui/src/site-footer.tsx"
     use: "Scrollable portal and game pages that are not the true portal home view."
-    geometry: "Quiet neutral surface with the Arkive wordmark, optional host-owned navigation, and wrapping legal/version metadata. No extra top border. A desktop-only gold voyage line and boat follow the actual scroll container and dock at the footer; neither appears on mobile."
+    desktop_layout: "Three columns: the Arkive wordmark on the left, host-owned links in the middle, the legal and version line on the right"
+    geometry: "Quiet neutral surface, no extra top border, tight spacing. A desktop-only gold voyage line and boat follow the actual scroll container and dock at the footer; neither appears on mobile."
     homepage_exception: "Keep the discovery homepage's sea footer unchanged."
     exclusions:
       - "Full-screen map workspaces"
       - "Portal-home sea background and arrival animation"
       - "Mobile version identifiers"
+  portal_catalog_card:
+    use: "A repeated game or tool record on All Games, Tools, the home tool dock and the forum feed"
+    frame: "card surface, a visible neutral border, card_radius; media inside it uses media_radius"
+    hover: "A light tint of the record's own game_color; no lift beyond 2px, no tilt, no shadow bloom"
+    media: "Game covers keep their own colours with no filter; 4:3 on desktop, square on a phone"
+    content: "Icon or logo, localized name, one short functional description; no counts or promotional copy"
+  portal_controls:
+    search: "One pill field with the input and a round warm_action submit button inside it"
+    category_filters: "One muted pill track holding pill buttons; the active pill fills and keeps its text label"
+    pagination: "Round neutral icon buttons with the current page between them"
+    secondary_actions: "Neutral pills; the warm gradient stays reserved for the single main action"
 
 spacing:
   base: "0.25rem"
@@ -203,19 +227,22 @@ spacing:
 
 shape:
   tokens:
-    compact_radius: "0.375rem"
-    standard_radius: "0.5rem"
-    pill_radius: "999rem"
-    floating_radius: "1rem"
-    dialog_radius: "1.5rem"
+    compact_radius: { value: "0.375rem", css: "--arkive-radius-compact" }
+    standard_radius: { value: "0.5rem", css: "--arkive-radius-standard" }
+    media_radius: { value: "0.875rem", css: "--arkive-radius-media (to add)" }
+    floating_radius: { value: "1rem", css: "--arkive-radius-floating" }
+    card_radius: { value: "1.25rem", css: "--arkive-radius-card (to add)" }
+    dialog_radius: { value: "1.5rem", css: "--arkive-radius-dialog" }
+    pill_radius: { value: "999rem", css: "rounded-full" }
   rules:
-    - "Cards, inputs, popovers, dialogs, sheets, and tool surfaces use standard_radius."
-    - "dialog_radius (1.5rem, --arkive-radius-dialog) is reserved for the account and settings dialogs; the collapsible cards inside the settings dialog use floating_radius."
+    - "Portal surfaces (Home, All Games, Tools, Forum) use card_radius for record cards and framed forms, and media_radius for covers, editors and inputs inside them."
+    - "Game content, maps and data tools keep standard_radius for cards, inputs, popovers and sheets."
+    - "dialog_radius is reserved for the account and settings dialogs; the collapsible cards inside the settings dialog use floating_radius."
+    - "floating_radius is for floating chrome (top-bar menus, the mobile drawer's leading corners) and small square icon tiles."
     - "Small badges, checkboxes, and compact internal controls may use compact_radius."
-    - "Use pill_radius only for tags, segmented indicators, avatars, top-bar tabs and round buttons, the floating top bar, and controls whose shape communicates a real role."
-    - "floating_radius (1rem, --arkive-radius-floating) is reserved for floating chrome: the mobile menu drawer's leading corners and floating top-bar menus."
-    - "Nested surfaces do not increase radius with every level."
-    - "Arbitrary radii such as 0.55rem, 0.65rem, 0.8rem, or 1.35rem are not permitted."
+    - "Use pill_radius for tags, filters, search fields, buttons on portal surfaces, avatars, top-bar tabs, and the floating top bar."
+    - "Nested surfaces do not increase radius with every level; an inner surface uses the next smaller token."
+    - "Use only these tokens. Values such as 0.55rem, 0.9rem, or 1.375rem are not permitted."
 
 control_geometry:
   desktop_compact_height: "2.25rem"
@@ -273,11 +300,18 @@ motion:
     immediate: "120ms"
     standard: "180ms"
     panel: "240ms"
-  easing: "cubic-bezier(0.16, 1, 0.3, 1)"
+    spring: "350ms"
+  easing:
+    standard: "cubic-bezier(0.16, 1, 0.3, 1)"
+    spring: "cubic-bezier(0.34, 1.56, 0.64, 1), for the top-bar indicator, round icon buttons and the search submit"
+  approved_ambient_motion:
+    - "The home carousel auto-advances every 5 seconds and pauses on mouse hover, keyboard focus, a hidden tab, reduced motion, or its pause button."
+    - "The voyage line and boat follow scroll progress and come to rest at the footer."
   rules:
-    - "Animate only to communicate feedback, hierarchy, or a state transition."
+    - "Animate only to communicate feedback, hierarchy, or a state transition, plus the approved ambient motion above."
     - "Prefer opacity and transform; do not animate layout dimensions when a transform can express the change."
-    - "Do not use automatic page-entry, parallax, magnetic, or perpetual animation in routine product surfaces."
+    - "Do not add other automatic page-entry, parallax, magnetic, or perpetual animation."
+    - "No hover tilt or 3D motion in the page body."
     - "Marquee runs only when essential text is clipped and no wrap or disclosure solution is viable."
     - "Respect reduced motion and provide an instant or static alternative."
 
@@ -315,7 +349,7 @@ elevation_and_layers:
     - "Use local layer tokens only inside a component that establishes its own isolated stacking context."
     - "Use nested_overlay only when an overlay is intentionally triggered from an open sheet or dialog."
     - "Do not add arbitrary z-index values."
-    - "Elevation communicates interaction hierarchy, not decoration."
+    - "Elevation communicates interaction hierarchy, not decoration; a soft shadow under a framed portal form or the warm main action is allowed."
     - "Do not combine a strong border, heavy shadow, blur, and glow on one surface."
 
 iconography:
@@ -371,6 +405,12 @@ verification:
     - "Test the viewports required by the owning mobile or desktop specification."
     - "Test light, dark, keyboard, touch, reduced motion, and 200 percent zoom."
     - "Confirm there is no document-level horizontal overflow or content overlap."
+
+known_gaps:
+  - >-
+    --arkive-radius-media and --arkive-radius-card are not yet defined in
+    arkive-map-theme.css. Meta CSS pastes 0.9rem, 1.25rem, 1.375rem, 1.625rem
+    and 1.75rem directly; move them to the two tokens.
 
 maintenance:
   rules:

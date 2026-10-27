@@ -1,8 +1,8 @@
-schema_version: "2.1.0"
+schema_version: "3.0.0"
 spec_id: "arkive.site-color-system"
 title: "Arkive Site-wide Color System"
 status: "canonical"
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-10-27"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -19,12 +19,9 @@ purpose:
     - "Shared chrome remains recognizably Arkive in every game."
     - "A component consumes a semantic role instead of choosing a palette value."
     - >-
-      Text, focus indicators, and the boundaries required to IDENTIFY a control meet
-      their required contrast. Decorative separators do not: --border is a divider,
-      not a control boundary, and measures 1.38:1 light and 1.66:1 dark against the
-      surfaces beside it. WCAG 1.4.11 does not ask for 3:1 there, and the earlier
-      blanket claim was simply false -- which is worse than silence, because it stops
-      anyone re-checking.
+      Text, focus indicators, and the boundaries required to identify a control
+      meet their required contrast. Decorative dividers (--border, 1.38:1 light,
+      1.66:1 dark) are not control boundaries and are not held to 3:1.
 
 scope:
   applies_to:
@@ -41,85 +38,93 @@ source:
   families:
     neutral: "Gray"
     interactive: "Blue"
+    warm_action: "Arkive warm gradient (peach, coral, rose) plus Amber accents"
     orientation: "Amber"
-    high_value_action: "Orange"
     destructive: "Red"
   rule: >-
     This specification stores only approved semantic values. Do not duplicate
     all Radix scale steps here or in application code. When a new role is
     required, select and verify its value here before implementation.
 
+# Owner decision (2026-10): the site reads warm, young, rounded and lively.
+# The warm gradient is Arkive's main call to action; blue stays the colour of
+# links and keyboard focus so the warm accent never has to carry state alone.
 brand_direction:
-  summary: "Neutral surfaces, blue interaction and focus, amber orientation, and restrained orange emphasis"
+  summary: "Neutral surfaces, a warm gradient for the main action, warm amber accents, and blue for links and focus"
   roles:
     neutral: "Owns all large surfaces and most component backgrounds"
-    blue: "Owns links, navigation, selection, routine primary actions, and focus"
-    amber: "Owns orientation, warnings, and beacon-like indicators"
-    orange: "Owns at most one exceptional high-value action in a compact surface"
+    warm_action: "Owns the main call to action of a surface: sign-in, submit, publish, search, and the selected tab capsule of warm views"
+    amber: "Owns warm accents: field focus borders, active filter tints, search-term highlights, the voyage line, and warnings"
+    blue: "Owns links, keyboard focus rings, and selection inside data tools and maps"
+    game_color: "Each game's own colour (sites.ts color and menuTint) may tint that game's own icon, card hover, and menu row"
   rules:
-    - "Game colors never replace shared chrome roles."
-    - "Blue, amber, and orange are semantic roles, not three decorative accents."
-    - "A compact control does not use amber and orange as competing emphasis."
+    - "A game colour only ever marks its own game; it never becomes shared chrome."
+    - "One warm_action control per compact surface; secondary actions use neutral pills."
+    - "Do not put white text or icons on any warm gradient; use the warm-action foreground."
 
 semantic_tokens:
   light:
-    background: "#FCFCFC"
-    foreground: "#202020"
-    card: "#F9F9F9"
-    card_foreground: "#202020"
-    popover: "#FCFCFC"
-    popover_foreground: "#202020"
-    primary: "#0090FF"
-    primary_foreground: "#202020"
-    link: "#0D74CE"
-    secondary: "#F0F0F0"
-    secondary_foreground: "#202020"
-    muted: "#F0F0F0"
-    muted_foreground: "#646464"
-    hover: "#E8E8E8"
-    border: "#D9D9D9"
-    input: "#F0F0F0"
-    focus_ring: "#0D74CE"
-    selected_surface: "#E6F4FE"
-    navigation: "#0D74CE"
-    navigation_foreground: "#FFFFFF"
-    beacon: "#AB6400"
-    brand_slogan: "#AB6400"
-    action: "#CC4E00"
-    action_foreground: "#FFFFFF"
-    destructive: "#CE2C31"
-    destructive_foreground: "#FFFFFF"
-    warning: "#AB6400"
-    warning_foreground: "#FFFFFF"
+    background: { value: "#FCFCFC", css: "--background" }
+    foreground: { value: "#202020", css: "--foreground" }
+    card: { value: "#F9F9F9", css: "--card" }
+    card_foreground: { value: "#202020", css: "--card-foreground" }
+    popover: { value: "#FCFCFC", css: "--popover" }
+    popover_foreground: { value: "#202020", css: "--popover-foreground" }
+    primary: { value: "#0090FF", css: "--primary" }
+    primary_foreground: { value: "#202020", css: "--primary-foreground" }
+    link: { value: "#0D74CE", css_note: "No separate token; use --arkive-nav-active" }
+    secondary: { value: "#F0F0F0", css: "--secondary" }
+    secondary_foreground: { value: "#202020", css: "--secondary-foreground" }
+    muted: { value: "#F0F0F0", css: "--muted" }
+    muted_foreground: { value: "#646464", css: "--muted-foreground" }
+    hover: { value: "#E8E8E8", css: "--accent" }
+    border: { value: "#D9D9D9", css: "--border" }
+    input: { value: "#F0F0F0", css: "--input" }
+    focus_ring: { value: "#0D74CE", css: "--ring" }
+    selected_surface: { value: "#E6F4FE", css: "--arkive-filter-active when no tint, plus non-color indicator" }
+    navigation: { value: "#0D74CE", css: "--arkive-nav-active" }
+    navigation_foreground: { value: "#FFFFFF", css: "--arkive-nav-on-active" }
+    warm_action: { value: "linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be)", css: "--arkive-warm-action" }
+    warm_action_foreground: { value: "#40251c", css: "--arkive-warm-action-foreground" }
+    warm_accent: { value: "#AB6400", css: "--arkive-nav-accent, --arkive-brand-slogan, --arkive-nav-beacon, --arkive-orange" }
+    game_color_tint: { note: "Each game's sites.ts color property tints its own card hover and menu row", css: "--game-color local variable" }
+    action: { value: "#CC4E00", css: "--arkive-action" }
+    action_foreground: { value: "#FFFFFF", css: "--arkive-action-on" }
+    destructive: { value: "#CE2C31", css: "--destructive" }
+    destructive_foreground: { value: "#FFFFFF", css: "--destructive-foreground" }
+    warning: { value: "#AB6400", css: "--arkive-nav-accent" }
+    warning_foreground: { value: "#FFFFFF", css_note: "White on #AB6400 is 4.61:1" }
   dark:
-    background: "#111111"
-    foreground: "#EEEEEE"
-    card: "#191919"
-    card_foreground: "#EEEEEE"
-    popover: "#222222"
-    popover_foreground: "#EEEEEE"
-    primary: "#0090FF"
-    primary_foreground: "#061018"
-    link: "#70B8FF"
-    secondary: "#222222"
-    secondary_foreground: "#EEEEEE"
-    muted: "#222222"
-    muted_foreground: "#B4B4B4"
-    hover: "#2A2A2A"
-    border: "#3A3A3A"
-    input: "#222222"
-    focus_ring: "#70B8FF"
-    selected_surface: "#0D2847"
-    navigation: "#0090FF"
-    navigation_foreground: "#061018"
-    beacon: "#FFC53D"
-    brand_slogan: "#FFC53D"
-    action: "#F76B15"
-    action_foreground: "#202020"
-    destructive: "#E5484D"
-    destructive_foreground: "#111111"
-    warning: "#FFC53D"
-    warning_foreground: "#111111"
+    background: { value: "#111111", css: "--background" }
+    foreground: { value: "#EEEEEE", css: "--foreground" }
+    card: { value: "#191919", css: "--card" }
+    card_foreground: { value: "#EEEEEE", css: "--card-foreground" }
+    popover: { value: "#222222", css: "--popover" }
+    popover_foreground: { value: "#EEEEEE", css: "--popover-foreground" }
+    primary: { value: "#0090FF", css: "--primary" }
+    primary_foreground: { value: "#061018", css: "--primary-foreground" }
+    link: { value: "#70B8FF", css_note: "No separate token; use --arkive-nav-active" }
+    secondary: { value: "#222222", css: "--secondary" }
+    secondary_foreground: { value: "#EEEEEE", css: "--secondary-foreground" }
+    muted: { value: "#222222", css: "--muted" }
+    muted_foreground: { value: "#B4B4B4", css: "--muted-foreground" }
+    hover: { value: "#2A2A2A", css: "--accent" }
+    border: { value: "#3A3A3A", css: "--border" }
+    input: { value: "#222222", css: "--input" }
+    focus_ring: { value: "#70B8FF", css: "--ring" }
+    selected_surface: { value: "#0D2847", css: "--arkive-filter-active when no tint, plus non-color indicator" }
+    navigation: { value: "#0090FF", css: "--arkive-nav-active" }
+    navigation_foreground: { value: "#061018", css: "--arkive-nav-on-active" }
+    warm_action: { value: "linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be)", css: "--arkive-warm-action (same as light)" }
+    warm_action_foreground: { value: "#40251c", css: "--arkive-warm-action-foreground (same as light)" }
+    warm_accent: { value: "#FFC53D", css: "--arkive-nav-accent, --arkive-brand-slogan, --arkive-nav-beacon, --arkive-orange" }
+    game_color_tint: { note: "Each game's sites.ts color property tints its own card hover and menu row", css: "--game-color local variable" }
+    action: { value: "#F76B15", css: "--arkive-action" }
+    action_foreground: { value: "#202020", css: "--arkive-action-on" }
+    destructive: { value: "#E5484D", css: "--destructive" }
+    destructive_foreground: { value: "#111111", css: "--destructive-foreground" }
+    warning: { value: "#FFC53D", css: "--arkive-nav-accent" }
+    warning_foreground: { value: "#111111", css_note: "#111111 on #FFC53D is 11.96:1" }
   map_overlay:
     surface: "rgba(25, 25, 25, 0.88)"
     foreground: "#EEEEEE"
@@ -130,7 +135,7 @@ contrast_contract:
   thresholds:
     normal_text: "4.5:1"
     large_text: "3:1"
-    icons_controls_and_focus: >-
+    interactive_boundary_and_focus: >-
       3:1 against adjacent colors, for meaningful icons, focus indicators, and any
       boundary a user needs in order to identify a control. Not required of
       decorative dividers, or between two adjacent surfaces (--input is a field
@@ -138,16 +143,20 @@ contrast_contract:
   verified_pairs:
     light_primary_text: "#202020 on #0090FF, 4.99:1"
     dark_primary_text: "#061018 on #0090FF, 5.87:1"
+    light_warm_text: "#40251c on #ffd08a (lightest gradient stop), 9.76:1"
+    dark_warm_text: "#40251c on #ffd08a, 9.76:1 (same in both modes)"
     light_action_text: "#FFFFFF on #CC4E00, 4.51:1"
     dark_action_text: "#202020 on #F76B15, 5.48:1"
     light_destructive_text: "#FFFFFF on #CE2C31, 5.21:1"
     dark_destructive_text: "#111111 on #E5484D, 4.82:1"
     light_focus_against_background: "#0D74CE against #FCFCFC, 4.65:1"
     dark_focus_against_background: "#70B8FF against #111111, 8.98:1"
+    light_warm_accent_text: "#FFFFFF on #AB6400, 4.61:1"
+    dark_warm_accent_text: "#111111 on #FFC53D, 11.96:1"
   rules:
     - "Do not infer contrast from a palette step; verify the actual foreground and background pair."
     - "Muted text still meets normal-text contrast."
-    - "Beacon and warning colors are not used as small body text without a verified foreground pair."
+    - "Warm-accent and warning colors are not used as small body text without a verified foreground pair."
     - "State differences never rely on color alone."
 
 feedback_and_data_color:
@@ -174,21 +183,23 @@ theme_contract:
     - "Theme preference behavior is shared across the portal and games."
 
 component_usage:
-  routine_primary_action: "primary and primary_foreground"
+  main_call_to_action: "warm_action and warm_action_foreground, on a pill"
+  secondary_action: "neutral pill: muted or card surface with foreground text"
+  data_tool_primary_action: "primary and primary_foreground inside map and calculator workspaces"
   navigation_and_link: "navigation or link according to whether the role is a surface or text"
-  selected_control: "selected_surface plus foreground, border, and a non-color state indicator"
+  selected_control: "selected_surface or a game_color_tint, plus a non-color state indicator"
   keyboard_focus: "focus_ring"
-  field_focus: "focus_ring for the border plus a 20% focus_ring outer halo"
-  brand_slogan: "brand_slogan"
-  high_value_action: "action and action_foreground"
+  field_focus: "On portal forms, a warm_accent border plus an 18% warm_accent halo; in data tools, focus_ring plus a 20% halo"
+  game_identity: "game_color_tint on the game's own icon background, card hover, and menu-row hover"
+  map_overlay_action: "action and action_foreground, for a solid action button drawn over map or game artwork where a gradient would lose contrast"
   destructive_action: "destructive and destructive_foreground"
   map_status_overlay: "map_overlay"
   rules:
     - "Components consume tokens; application JSX and app-local CSS do not paste these values."
     - "Use one dominant interaction emphasis per compact surface."
-    - "Do not use action orange for routine submit, search, pagination, or filter controls."
+    - "Pagination and filter chips stay neutral; only the active state may take a warm or game tint."
     - "A composite field draws focus on its outer container and suppresses a duplicate inner-input outline."
-    - "The localized brand slogan is the only shared copy that uses the amber brand_slogan role."
+    - "Keyboard focus-visible keeps a visible ring even where a warm field-focus border is shown."
 
 verification:
   - "Validate this YAML file."
@@ -197,13 +208,12 @@ verification:
   - "Verify representative game artwork does not reduce shared-control legibility."
   - "Confirm changed UI contains no new app-local shared-chrome color literals."
 
-migration_from_2_0:
+known_gaps:
   - >-
-    DONE. Amber focus rings replaced by the shared blue focus_ring; amber remains
-    reserved for orientation and warning roles. The five that remained in the aion2
-    wiki (TypeHub) were converted after the token flipped, which is what the item
-    had been recording as complete while they were still there.
-  - "Remove duplicate inner outlines from composite search fields."
+    Meta CSS (all-games.css, forum.css, tools-page.css) still pastes an orange
+    gradient (#ffc061, #f5a524, #ec7a1c) with white text instead of
+    --arkive-warm-action. White on those stops is 1.62 to 2.85:1, below 4.5:1.
+    Move them to the shared token and foreground.
 
 maintenance:
   rules:
