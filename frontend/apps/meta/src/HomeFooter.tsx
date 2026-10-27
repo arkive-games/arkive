@@ -389,12 +389,13 @@ export function ContactDialog({ open, onOpenChange }: {
 
         <div className="footer-pass">
           <div className="footer-pass-main">
-            <div className="footer-pass-kicker">
-              <IconMessageCircle className="size-3.5" stroke={2.4} aria-hidden="true" />
-              {t('footerDialogs.contact.feedbackGroup')}
+            <div className="footer-pass-info">
+              <div className="footer-pass-kicker">
+                <IconMessageCircle className="size-3.5" stroke={2.4} aria-hidden="true" />
+                {t('footerDialogs.contact.feedbackGroup')}
+              </div>
+              <div className="footer-pass-number">{ARKIVE_FEEDBACK_QQ_GROUP}</div>
             </div>
-            <div className="footer-pass-number">{ARKIVE_FEEDBACK_QQ_GROUP}</div>
-            <div className="footer-pass-note">{t('footerDialogs.contact.groupNote')}</div>
             <button
               type="button"
               className="footer-pass-copy"
@@ -407,6 +408,7 @@ export function ContactDialog({ open, onOpenChange }: {
                 : <IconCopy className="size-4" stroke={2.2} aria-hidden="true" />}
               <span aria-live="polite">{t(copiedGroup ? 'footerDialogs.contact.copiedGroup' : 'footerDialogs.contact.copyGroup')}</span>
             </button>
+            <div className="footer-pass-note">{t('footerDialogs.contact.groupNote')}</div>
           </div>
           <div className="footer-pass-stub" aria-hidden="true">
             <IconAnchor stroke={2} />

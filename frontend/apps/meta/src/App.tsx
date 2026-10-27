@@ -325,15 +325,6 @@ export default function App() {
     key,
     label: t(`nav.${key}`),
     active: key === activeRoute.view,
-    children: key === 'allGames'
-      ? VISIBLE_SITES.map((site) => ({
-          key: `game:${site.id}`,
-          label: t(site.nameKey),
-          group: t(site.kind === 'online' ? 'nav.groupOnline' : 'nav.groupOffline'),
-          iconSrc: site.icon ?? GAME_LOGOS[site.id],
-          tint: site.menuTint ?? site.color,
-        }))
-      : undefined,
   }))
 
   const updateForumComposerDirty = useCallback((dirty: boolean) => {
@@ -382,33 +373,12 @@ export default function App() {
         variant={isHome || ['allGames', 'tools', 'forum'].includes(activeRoute.view) ? 'floating' : 'docked'}
         nav={{
           items: navItems,
-          onDropdownTriggerClick: (item) => {
-            if (item.key === 'allGames') window.location.hash = '#games'
-            if (item.key === 'tools') window.location.hash = '#tools'
-          },
           renderItem: (item, className, labelClassName) => {
             const label = <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
-            const game = item.key.startsWith('game:')
-              ? VISIBLE_SITES.find((site) => item.key === `game:${site.id}`)
-              : undefined
-            const gameHref = game ? siteHref(game) : undefined
-            return game && gameHref ? (
-              <a href={gameHref} className={className} onClick={() => rememberSite(game)}>{label}</a>
-            ) : game ? (
-              // Announced but not open yet: keep it listed, without a href.
-              <button
-                type="button"
-                className={className}
-                onClick={(event) => {
-                  event.currentTarget.blur()
-                  showComingSoon()
-                }}
-              >
-                {label}
-                <span className="nav-soon-badge">{t('comingSoon.badge')}</span>
-              </button>
-            ) : item.key === 'discoverGames' ? (
+            return item.key === 'discoverGames' ? (
               <a href="#explore" className={className}>{label}</a>
+            ) : item.key === 'allGames' ? (
+              <a href="#games" className={className}>{label}</a>
             ) : item.key === 'forum' ? (
               <a href="#forum" className={className}>{label}</a>
             ) : item.key === 'tools' ? (
