@@ -156,6 +156,10 @@ shared_component_contracts:
       labels: "Keep menu labels on one line. Localized text determines width within the declared bounds."
     close_control: "Touch target on mobile and desktop_compact_height on desktop, with the shared focus treatment."
     modal_overlay: "One shared neutral overlay treatment; app-level dialogs do not invent another opacity or blur."
+  scrollbars:
+    owner: "frontend/packages/map-shell/src/arkive-map-theme.css"
+    default: "Every scroll container uses one thin scrollbar: a transparent track and a muted-foreground thumb at 42 percent opacity, 62 percent on hover. Never the platform default."
+    overrides: "A surface may hide its scrollbar or recolor the thumb for its own palette; it does not reintroduce a wide or opaque track."
   compact_site_footer:
     owner: "frontend/packages/ui/src/site-footer.tsx"
     use: "Scrollable portal and game pages that are not the true portal home view."
