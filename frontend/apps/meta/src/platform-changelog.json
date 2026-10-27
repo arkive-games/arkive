@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-10-27",
+      "commit": "59322c1dd51ff5c41606d99fb18f97d7ac50d0c7",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The final Arkive logo replaces the temporary wordmark across the site",
+            "zh-CN": "全站换上正式的 Arkive 标志，替换原先的临时字标",
+            "zh-TW": "全站換上正式的 Arkive 標誌，替換原先的臨時字標"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-27",
       "commit": "c478070ad3d509cb3e5de5a3851c5e09542ceafb",
       "targets": [
         "aion2",
