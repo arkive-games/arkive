@@ -143,10 +143,10 @@ typography:
     - "The document language follows the active application locale so browsers and assistive technology select the correct glyph and pronunciation rules."
 
 shared_component_contracts:
-  # Owner decision (2026-10): top bar "style A". The wordmark font is a
-  # placeholder (Fredoka, OFL) until the designed logo is delivered.
+  # Owner decision (2026-10): top bar "style A", carrying the designer's final
+  # Arkive logo (2026-10-27), drawn as a vector rather than set in a font.
   desktop_brand_block:
-    wordmark: "The English \"Arkive\" wordmark in the Arkive Wordmark face, identical in every language; no mark or slogan"
+    wordmark: "The drawn English \"Arkive\" logo (frontend/packages/map-shell/src/assets/arkive-logo.svg through the shared .arkive-wordmark class), identical in every language; no mark or slogan"
     game_chip: "Optional on game pages: a 2.5rem pill holding a 2rem round game icon and the localized game name"
     navigation_gap: "1.75rem"
     rules:

@@ -175,7 +175,7 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
       </svg>
       <div className="home-footer-sea">
         <div className="home-shell home-footer-row">
-          <a className="home-footer-brand" href="#top">Arkive</a>
+          <a className="home-footer-brand arkive-wordmark" href="#top">Arkive</a>
           <nav className="home-footer-links" aria-label={t('footer.about')}>
             <button type="button" aria-haspopup="dialog" onClick={() => setDialog('about')}>{t('footer.aboutArkive')}</button>
             <button type="button" aria-haspopup="dialog" onClick={() => setDialog('contact')}>{t('footer.contact')}</button>

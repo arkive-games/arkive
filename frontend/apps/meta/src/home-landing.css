@@ -5,8 +5,6 @@
    2.5rem between every block and 3.5rem before the footer. Phones use
    1rem / 0.75rem / 1.75rem / 2.5rem. */
 
-/* "Arkive Wordmark" is declared by the shared arkive-map-theme.css. */
-
 @property --glow {
   syntax: "<color>";
   inherits: true;
@@ -860,15 +858,11 @@
   gap: 2rem;
 }
 
-.home-footer-brand {
+/* The shared .arkive-wordmark logo, kept small and white on the sea. */
+.home-footer-brand.arkive-wordmark {
   flex: none;
-  color: #fff;
-  font-family: "Arkive Wordmark", ui-rounded, "Nunito", sans-serif;
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  text-decoration: none;
+  font-size: 1.75rem;
+  background: #fff;
 }
 
 .home-footer-links {

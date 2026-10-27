@@ -57,6 +57,12 @@ brand_direction:
     amber: "Owns warm accents: field focus borders, active filter tints, search-term highlights, the voyage line, and warnings"
     blue: "Owns links, keyboard focus rings, and selection inside data tools and maps"
     game_color: "Each game's own colour (sites.ts color and menuTint) may tint that game's own icon, card hover, and menu row"
+  # Owner decision (2026-10-27): the logo's gradient fill in light mode, plain
+  # white in dark mode and on the homepage sea footer.
+  logo:
+    light: "linear-gradient(90deg, #17181c, #4d3b17 48%, #8f6511 80%, #b57e0d)"
+    dark: "#FFFFFF"
+    on_sea_footer: "#FFFFFF"
   rules:
     - "A game colour only ever marks its own game; it never becomes shared chrome."
     - "One warm_action control per compact surface; secondary actions use neutral pills."

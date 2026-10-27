@@ -203,15 +203,6 @@ textarea {
   }
 }
 
-/* Only the glyphs of "Arkive", until the drawn logo replaces the wordmark.
-   License: ./assets/fredoka-arkive.LICENSE.txt */
-@font-face {
-  font-family: "Arkive Wordmark";
-  src: url("./assets/fredoka-arkive.woff2") format("woff2");
-  font-weight: 600;
-  font-display: swap;
-}
-
 /* Only the glyphs of the account and settings dialog titles (plus ASCII).
    Regenerate the subset when one of those titles changes.
    License: ./assets/resource-han-rounded-titles.LICENSE.txt */
@@ -309,23 +300,27 @@ textarea {
   }
 }
 
-/* The brand in every top bar and phone header: the word "Arkive" alone. */
+/* The brand in every top bar and phone header: the drawn "Arkive" logo,
+   masked over its gradient and sized by the font-size class beside it. The
+   element's text is pushed out of the box and stays only for assistive tech. */
 .arkive-wordmark {
   display: inline-block;
-  font-family: "Arkive Wordmark", system-ui, sans-serif;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  background: linear-gradient(100deg, #17181c 30%, #c98a0c);
-  -webkit-background-clip: text;
-  background-clip: text;
+  width: 3.26em;
+  height: 0.75em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-indent: 110%;
+  vertical-align: middle;
+  background: linear-gradient(90deg, #17181c, #4d3b17 48%, #8f6511 80%, #b57e0d);
+  -webkit-mask: url("./assets/arkive-logo.svg") center / contain no-repeat;
+  mask: url("./assets/arkive-logo.svg") center / contain no-repeat;
   color: transparent;
   transition: transform var(--arkive-motion-panel) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dark .arkive-wordmark,
 .abyss .arkive-wordmark {
-  background-image: linear-gradient(100deg, #ffffff 30%, #ffd88a);
+  background: #ffffff;
 }
 
 a:hover > .arkive-wordmark,
