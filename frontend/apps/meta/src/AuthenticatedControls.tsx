@@ -9,7 +9,12 @@ import {
   IconThumbUp,
 } from '@tabler/icons-react'
 import { ArkiveAccountControl, useAuth } from '@gamemap/auth'
-import { MENU_CONTENT_CLASS, MENU_ITEM_CLASS, cn } from '@gamemap/ui'
+import {
+  TOP_BAR_MENU_ANCHOR_CLASS,
+  TOP_BAR_MENU_CLASS,
+  TOP_BAR_MENU_ITEM_CLASS,
+} from '@gamemap/map-shell'
+import { cn } from '@gamemap/ui'
 import { useUserSystem } from './UserSystemState'
 
 const NOTIFICATION_LINKS = [
@@ -39,7 +44,7 @@ export function AuthenticatedControls({ onOpenSettings }: { onOpenSettings: () =
   return (
     <div className="authenticated-controls">
       <div
-        className="notification-control"
+        className={TOP_BAR_MENU_ANCHOR_CLASS}
         onPointerEnter={() => setNotificationsOpen(true)}
         onPointerLeave={() => setNotificationsOpen(false)}
         onFocus={() => {
@@ -80,7 +85,7 @@ export function AuthenticatedControls({ onOpenSettings }: { onOpenSettings: () =
         {notificationsOpen && (
           <div
             ref={menuRef}
-            className={cn('notification-popover', MENU_CONTENT_CLASS)}
+            className={cn('notification-popover absolute right-0', TOP_BAR_MENU_CLASS)}
             role="menu"
             aria-label={t('userSystem.notifications.menuLabel')}
           >
@@ -99,7 +104,7 @@ export function AuthenticatedControls({ onOpenSettings }: { onOpenSettings: () =
                   key={key}
                   href={`#notifications/${key}`}
                   role="menuitem"
-                  className={cn('notification-popover-item', MENU_ITEM_CLASS)}
+                  className={cn('notification-popover-item', TOP_BAR_MENU_ITEM_CLASS)}
                   onKeyDown={(event) => {
                     if (event.key === 'Escape') closeNotificationsAndRestoreFocus()
                   }}
@@ -112,7 +117,7 @@ export function AuthenticatedControls({ onOpenSettings }: { onOpenSettings: () =
             })}
             <div className="notification-popover-separator" role="separator" />
             <a
-              className={MENU_ITEM_CLASS}
+              className={TOP_BAR_MENU_ITEM_CLASS}
               href="#notifications/settings"
               role="menuitem"
               onKeyDown={(event) => {

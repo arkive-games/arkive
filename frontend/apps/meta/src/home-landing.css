@@ -877,22 +877,24 @@ button.home-slide {
   transition: background 0.5s;
 }
 
+/* Brand, links and legal on one line, the links centred on the page rather
+   than in whatever space the two ends leave. */
 .home-footer-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 2rem;
 }
 
 /* The shared .arkive-wordmark logo, kept small and white on the sea. */
 .home-footer-brand.arkive-wordmark {
-  flex: none;
+  justify-self: start;
   font-size: 1.75rem;
   background: #fff;
 }
 
 .home-footer-links {
   display: flex;
-  flex: 1;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem 1.625rem;
@@ -921,12 +923,13 @@ button.home-slide {
 }
 
 .home-footer-legal {
-  display: grid;
-  gap: 0.1875rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem 1rem;
   margin: 0;
   color: var(--ffaint);
-  font-size: 0.8125rem;
-  text-align: right;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
@@ -1321,38 +1324,38 @@ button.home-slide {
     display: none;
   }
 
-  /* One centred column: brand, a wrapped link row, then the legal lines. */
+  /* A low, centred stack: brand, one line of links, one line of legal. */
   .home-footer {
-    margin-top: 2.5rem;
+    margin-top: 2rem;
   }
 
   .home-footer-edge {
-    height: 4.375rem;
+    height: 3rem;
   }
 
   .home-footer-sea {
-    padding: 0.25rem 0 calc(1.875rem + env(safe-area-inset-bottom));
+    padding: 0 0 calc(1rem + env(safe-area-inset-bottom));
   }
 
   .home-footer-row {
-    flex-direction: column;
-    align-items: center;
-    gap: 1.125rem;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 0.625rem;
     text-align: center;
+  }
+
+  .home-footer-brand.arkive-wordmark {
+    justify-self: center;
+    font-size: 1.5rem;
   }
 
   .home-footer-links {
-    flex: none;
-    width: 100%;
-    gap: 0.625rem 1.375rem;
-    padding: 0.875rem 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    gap: 0.25rem 1.25rem;
   }
 
   .home-footer-legal {
-    font-size: 0.75rem;
-    text-align: center;
+    justify-content: center;
+    gap: 0.125rem 0.75rem;
     white-space: normal;
   }
 

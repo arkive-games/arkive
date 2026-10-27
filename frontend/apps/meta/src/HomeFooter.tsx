@@ -62,6 +62,8 @@ const ROUTE_H = 24
 const ROUTE_Y = 16
 const EDGE_Y = 58
 const STEP = 6
+/** How much of the full swell a phone's shorter edge shows. */
+const PHONE_SWELL = 0.55
 
 const ripple = (x: number, ph: number) => 1.8 * Math.sin((x / 40) * 2 * Math.PI + ph * 2)
 const swell = (x: number, ph: number, W: number) =>
@@ -109,6 +111,8 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
     const moored = pick<HTMLElement>(layer, '.home-boat.is-moored')
     const port = pick<HTMLElement>(layer, '.home-port')
     const still = window.matchMedia('(prefers-reduced-motion: reduce)')
+    // Matches the home-landing.css breakpoint that hides `.home-route`.
+    const phone = window.matchMedia('(max-width: 760px)')
 
     let frame = 0
     const draw = (ms: number) => {
@@ -122,8 +126,13 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
       const edgeTop = edge.getBoundingClientRect().top
       const routeBase = vh - ROUTE_H + ROUTE_Y
       const rise = routeBase - (edgeTop + EDGE_Y)
-      const attached = rise >= 0
-      const t = attached ? smoothstep(Math.min(1, rise / 100)) : 0
+      // Phones hide the route, so the edge has nothing to rise from: it is a
+      // wave from the start rather than a flat line waiting for it, and a
+      // gentler one, centred in the phone's lower edge.
+      const routeless = phone.matches
+      const attached = routeless || rise >= 0
+      const t = routeless ? PHONE_SWELL : attached ? smoothstep(Math.min(1, rise / 100)) : 0
+      const edgeY = routeless ? edgeH / 2 + 4 : EDGE_Y
 
       edge.setAttribute('viewBox', `0 0 ${W} ${edgeH}`)
       route.setAttribute('viewBox', `0 0 ${W} ${ROUTE_H}`)
@@ -134,13 +143,13 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
         routeDone.setAttribute('d', d)
         routeDone.style.clipPath = clip
       }
-      const d = linePath(W, EDGE_Y, ph, t)
+      const d = linePath(W, edgeY, ph, t)
       edgeFill.setAttribute('d', `${d} L${W + STEP} ${edgeH} L0 ${edgeH} Z`)
       edgeTrack.setAttribute('d', d)
       edgeDone.setAttribute('d', d)
       edgeDone.style.clipPath = clip
 
-      const base = attached ? edgeTop + EDGE_Y : routeBase
+      const base = attached ? edgeTop + edgeY : routeBase
       const put = (element: HTMLElement, x: number) => {
         element.style.left = `${x}px`
         element.style.top = `${base + lineY(x, ph, W, t)}px`

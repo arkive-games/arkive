@@ -4,19 +4,6 @@
   gap: 0.55rem;
 }
 
-.notification-control {
-  position: relative;
-}
-
-.notification-control::after {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 14rem;
-  height: 0.55rem;
-  content: '';
-}
-
 /* A round icon button, like the theme and language triggers beside it. */
 .notification-trigger {
   position: relative;
@@ -52,11 +39,8 @@
   box-shadow: 0 0 0 2px var(--ring);
 }
 
+/* Placed by the shared top-bar menu classes; only its width is its own. */
 .notification-popover {
-  position: absolute;
-  top: calc(100% + 0.55rem);
-  right: 0;
-  z-index: var(--arkive-layer-popover);
   width: 14rem;
 }
 
