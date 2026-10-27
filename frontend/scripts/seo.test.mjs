@@ -39,7 +39,9 @@ describe("search engine discovery", () => {
       })
 
       it("points robots.txt at its own sitemap", () => {
-        expect(read(app, "public/robots.txt")).toContain(`Sitemap: https://${domain}/sitemap.xml`)
+        const robots = read(app, "public/robots.txt")
+        expect(robots).toContain(`Sitemap: https://${domain}/sitemap.xml`)
+        expect(robots).not.toMatch(/^Disallow:\s*\/\s*$/m)
       })
 
       it("lists only servable pages on its own host", () => {

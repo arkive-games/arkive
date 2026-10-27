@@ -91,6 +91,10 @@ execSync(`pnpm --filter ${app} exec vite build --base ./ --outDir dist-toy --emp
   env,
 })
 
+// robots.txt and sitemap.xml are host config for the app's own domain, like
+// edgeone.json; inside /toy/<slug>/ no crawler consults them.
+for (const hostFile of ['robots.txt', 'sitemap.xml']) fs.rmSync(path.join(outDir, hostFile), { force: true })
+
 // Fonts: shipped by the PORTAL toy only, and referenced by the others.
 //
 // Every toy lives on one origin, differing by path (/toy/<slug>/), so they share a

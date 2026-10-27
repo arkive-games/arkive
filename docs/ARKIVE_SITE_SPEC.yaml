@@ -51,6 +51,14 @@ brand_identity:
   slogan:
     zh-CN: "万千攻略，藏于一舟"
     en-US: "Sail Games With Us."
+  search_metadata:
+    title_brand: "藏舟 Arkive"
+    rules:
+      - "Every deployed site's index.html <title> and og:site_name carry title_brand; a game site's title leads with the game and what the page offers, then ' | 藏舟 Arkive'."
+      - "The home page title is 'title_brand | slogan.zh-CN'."
+      - "Meta descriptions open with official_site_name.zh-CN on the home page, or '藏舟（Arkive）' on a game site, so both search terms appear in the snippet."
+      - "The home page's schema.org WebSite record uses name '藏舟' with alternateName ['Arkive', official_site_name.zh-CN, 'Arkive Games']."
+    rationale: "Players search for either 藏舟 or Arkive, so search-facing metadata carries both; on-page brand copy keeps official_site_name."
   concept_glossary:
     cang:
       source_term: "藏"
