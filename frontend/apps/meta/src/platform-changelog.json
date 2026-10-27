@@ -2,6 +2,28 @@
   "entries": [
     {
       "date": "2026-10-27",
+      "commit": "bbc496fd7107d50672024c5b04aadf1a9359910c",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz",
+        "sts2"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Scrollbars across every page are now thin and unobtrusive, replacing the browser's wide default.",
+            "zh-CN": "全站滚动条统一改为纤细、透明背景的样式，不再使用浏览器默认的宽滚动条。",
+            "zh-TW": "全站捲軸統一改為纖細、透明背景的樣式，不再使用瀏覽器預設的寬捲軸。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-27",
       "commit": "a07e36c91e9287c7a2aeeee2cf4c1d59e0abd68b",
       "targets": [
         "aion2",
