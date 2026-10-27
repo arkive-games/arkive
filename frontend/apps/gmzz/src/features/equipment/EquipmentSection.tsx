@@ -85,7 +85,7 @@ const LABEL_CLASS = `mb-1.5 block ${TYPE.label}`
 const BUTTON_CLASS = `inline-flex items-center justify-center rounded-md border border-border ${TYPE.control} font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:opacity-50 ${FOCUS}`
 const SECTION_CLASS = 'border-t border-border/70 pt-3'
 /** The one destructive action in a piece's dialog, set apart in red. */
-const DANGER_CLASS = `inline-flex h-9 w-full items-center justify-center rounded-full border border-red-500/60 ${TYPE.control} font-semibold text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50 dark:text-red-400 ${FOCUS}`
+const DANGER_CLASS = `inline-flex h-9 w-full items-center justify-center rounded-full border border-destructive/60 ${TYPE.control} font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50 ${FOCUS}`
 const BADGE_CLASS = `inline-block shrink-0 rounded border border-border px-1 align-middle ${TYPE.control} font-medium leading-4 text-muted-foreground`
 /** A grace's pips: one gold ◆ per extraordinary affix it counts, and no grey ones filling up to four. */
 const PIP_CLASS = 'text-[color:var(--arkive-nav-accent)]'
@@ -945,7 +945,7 @@ export default function EquipmentSection({
           </p>
           <Dialog>
             <DialogTrigger asChild>
-              <button type="button" className={`${BUTTON_CLASS} mt-2 h-8 rounded-full px-3`} data-testid="equip-batch-open">
+              <button type="button" disabled={readOnly} className={`${BUTTON_CLASS} mt-2 h-8 rounded-full px-3`} data-testid="equip-batch-open">
                 {t('equip.batchOpen')}
               </button>
             </DialogTrigger>
@@ -995,7 +995,7 @@ export default function EquipmentSection({
                     key={entry.suit.id}
                     type="button"
                     aria-pressed={chosen}
-                    disabled={suitScores.length === 1}
+                    disabled={readOnly || suitScores.length === 1}
                     onClick={() => setDraft((prev) => ({ ...prev, suitChoice: entry.suit.id }))}
                     className={`min-w-0 rounded-md border p-2 text-left transition-colors disabled:cursor-default ${FOCUS} ${
                       chosen

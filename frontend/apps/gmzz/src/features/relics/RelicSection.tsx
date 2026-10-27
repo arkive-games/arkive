@@ -811,7 +811,11 @@ export default function RelicSection({ relics, onTotals }: {
   return (
     <TooltipProvider delayDuration={200}>
     <section className="space-y-3" data-testid="relic-section" aria-label={t('relic.title')}>
-      <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} onChange={setKnowledgeLevel} />
+      {/* The page leaves this section's read-only state to it, so the relic
+          faces stay clickable; only the inputs lock. */}
+      <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0">
+        <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} onChange={setKnowledgeLevel} />
+      </fieldset>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {slots.map((slot, index) => (

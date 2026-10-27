@@ -451,7 +451,18 @@ function ScoreView() {
             return (
               <button key={group.genus.id} type="button" role="tab" aria-selected={on}
                 id={`score-tab-${group.genus.id}`} aria-controls={`score-panel-${group.genus.id}`}
+                tabIndex={on ? 0 : -1}
                 onClick={() => setTab(group.genus.id)}
+                onKeyDown={(event) => {
+                  const ids = result.groups.map((g) => g.genus.id)
+                  const at = ids.indexOf(group.genus.id)
+                  const next = { ArrowRight: at + 1, ArrowLeft: at - 1, Home: 0, End: ids.length - 1 }[event.key]
+                  if (next === undefined) return
+                  event.preventDefault()
+                  const id = ids[(next + ids.length) % ids.length]
+                  setTab(id)
+                  document.getElementById(`score-tab-${id}`)?.focus()
+                }}
                 style={{ '--g': color } as React.CSSProperties}
                 className={`relative min-w-0 rounded-xl border px-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] sm:rounded-b-none sm:border-b-0 ${
                   on
@@ -473,9 +484,7 @@ function ScoreView() {
           })}
         </div>
 
-        {/* Read-only for someone else's character: every control below is
-            disabled at once, and the setters ignore writes besides. */}
-        <fieldset disabled={character.readOnly} className="m-0 -mt-4 min-w-0 border-0 p-0" data-testid="score-inputs">
+        <div className="-mt-4 min-w-0" data-testid="score-inputs">
 
         {result.groups.map((group) => (
           <div key={group.genus.id} role="tabpanel" id={`score-panel-${group.genus.id}`} aria-labelledby={`score-tab-${group.genus.id}`}
@@ -483,7 +492,14 @@ function ScoreView() {
             style={{ '--g': genusColor(group.genus.id) } as React.CSSProperties}
             className="min-w-0 rounded-2xl border border-[rgba(var(--g),0.45)] bg-[rgba(var(--g),0.05)] p-3 sm:rounded-t-none sm:p-4"
             data-testid={`score-panel-${group.genus.id}`}>
-            {panels[group.genus.id] ?? null}
+            {/* Read-only for someone else's character: the panel's controls are
+                disabled at once, and the setters ignore writes besides. Equipment
+                and relics are exempt: their slots open dialogs that must stay
+                viewable, and those sections lock their own inputs. */}
+            <fieldset className="m-0 min-w-0 border-0 p-0"
+              disabled={character.readOnly && group.genus.id !== EQUIPMENT_GENUS && group.genus.id !== RELICS_GENUS}>
+              {panels[group.genus.id] ?? null}
+            </fieldset>
           </div>
         ))}
 
@@ -508,7 +524,7 @@ function ScoreView() {
           </section>
         ) : null}
 
-        </fieldset>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <p className="flex items-center gap-2">
