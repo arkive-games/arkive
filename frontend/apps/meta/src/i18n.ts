@@ -476,7 +476,7 @@ const FOOTER_DIALOG_COPY = {
  */
 const LANDING_COPY = {
   'zh-CN': {
-    carousel: { label: '游戏封面轮播', enter: '进入', slide: '第 {{n}} 个：{{name}}', previous: '上一个游戏', next: '下一个游戏', pause: '暂停轮播', play: '继续轮播' },
+    carousel: { label: '游戏封面轮播', enter: '进入', slide: '第 {{n}} 个：{{name}}', previous: '上一个游戏', next: '下一个游戏', pause: '暂停轮播', play: '继续轮播', recruit: { name: '共创伙伴招募', desc: '一起把攻略站做起来', go: '联系我们' }, pbz: { name: '影之刃零', go: '敬请期待', soon: '影之刃零攻略站正在建设中，敬请期待！' } },
     quick: { label: '快速入口', allGames: '全部游戏', tools: '工具库', forum: '论坛', updates: '更新日志', badge: '新' },
     dock: { title: '工具码头', subtitle: '不用翻资料，直接算出结果', all: '全部工具' },
     community: { title: '社区在聊', action: '去论坛' },
@@ -484,7 +484,7 @@ const LANDING_COPY = {
     arrived: '已抵达港口',
   },
   'zh-TW': {
-    carousel: { label: '遊戲封面輪播', enter: '進入', slide: '第 {{n}} 個：{{name}}', previous: '上一個遊戲', next: '下一個遊戲', pause: '暫停輪播', play: '繼續輪播' },
+    carousel: { label: '遊戲封面輪播', enter: '進入', slide: '第 {{n}} 個：{{name}}', previous: '上一個遊戲', next: '下一個遊戲', pause: '暫停輪播', play: '繼續輪播', recruit: { name: '共創夥伴招募', desc: '一起把攻略站做起來', go: '聯絡我們' }, pbz: { name: '影之刃零', go: '敬請期待', soon: '影之刃零攻略站正在建設中，敬請期待！' } },
     quick: { label: '快速入口', allGames: '全部遊戲', tools: '工具庫', forum: '論壇', updates: '更新日誌', badge: '新' },
     dock: { title: '工具碼頭', subtitle: '不用翻資料，直接算出結果', all: '全部工具' },
     community: { title: '社群在聊', action: '去論壇' },
@@ -492,7 +492,7 @@ const LANDING_COPY = {
     arrived: '已抵達港口',
   },
   'en-US': {
-    carousel: { label: 'Game carousel', enter: 'Enter', slide: 'Slide {{n}}: {{name}}', previous: 'Previous game', next: 'Next game', pause: 'Pause carousel', play: 'Play carousel' },
+    carousel: { label: 'Game carousel', enter: 'Enter', slide: 'Slide {{n}}: {{name}}', previous: 'Previous game', next: 'Next game', pause: 'Pause carousel', play: 'Play carousel', recruit: { name: 'Join the crew', desc: 'Help us build this guide site', go: 'Contact us' }, pbz: { name: 'Phantom Blade Zero', go: 'Coming soon', soon: 'The Phantom Blade Zero guide is on its way. Stay tuned!' } },
     quick: { label: 'Shortcuts', allGames: 'All games', tools: 'Tools', forum: 'Forum', updates: 'Updates', badge: 'NEW' },
     dock: { title: 'Tool dock', subtitle: 'Skip the spreadsheets and get the answer', all: 'All tools' },
     community: { title: 'Community talk', action: 'Visit the forum' },
@@ -500,7 +500,7 @@ const LANDING_COPY = {
     arrived: 'Arrived in port',
   },
   'ja-JP': {
-    carousel: { label: 'ゲームカルーセル', enter: '入る', slide: '{{n}} 枚目：{{name}}', previous: '前のゲーム', next: '次のゲーム', pause: 'カルーセルを一時停止', play: 'カルーセルを再生' },
+    carousel: { label: 'ゲームカルーセル', enter: '入る', slide: '{{n}} 枚目：{{name}}', previous: '前のゲーム', next: '次のゲーム', pause: 'カルーセルを一時停止', play: 'カルーセルを再生', recruit: { name: '仲間募集', desc: '一緒に攻略サイトを作りませんか', go: 'お問い合わせ' }, pbz: { name: '影之刃零', go: '近日公開', soon: '影之刃零の攻略サイトは準備中です。お楽しみに！' } },
     quick: { label: 'ショートカット', allGames: 'すべてのゲーム', tools: 'ツール', forum: 'フォーラム', updates: '更新履歴', badge: '新着' },
     dock: { title: 'ツールドック', subtitle: '資料を探さず、すぐに結果を', all: 'すべてのツール' },
     community: { title: 'コミュニティの話題', action: 'フォーラムへ' },
@@ -508,7 +508,7 @@ const LANDING_COPY = {
     arrived: '港に到着しました',
   },
   'ko-KR': {
-    carousel: { label: '게임 캐러셀', enter: '입장', slide: '{{n}}번째: {{name}}', previous: '이전 게임', next: '다음 게임', pause: '캐러셀 일시정지', play: '캐러셀 재생' },
+    carousel: { label: '게임 캐러셀', enter: '입장', slide: '{{n}}번째: {{name}}', previous: '이전 게임', next: '다음 게임', pause: '캐러셀 일시정지', play: '캐러셀 재생', recruit: { name: '함께할 동료 모집', desc: '공략 사이트를 함께 만들어요', go: '문의하기' }, pbz: { name: '팬텀 블레이드 제로', go: '준비 중', soon: '팬텀 블레이드 제로 공략 사이트를 준비하고 있어요. 기대해 주세요!' } },
     quick: { label: '바로가기', allGames: '전체 게임', tools: '도구', forum: '포럼', updates: '업데이트', badge: '신규' },
     dock: { title: '도구 부두', subtitle: '자료를 뒤질 필요 없이 바로 계산', all: '전체 도구' },
     community: { title: '커뮤니티 이야기', action: '포럼으로' },

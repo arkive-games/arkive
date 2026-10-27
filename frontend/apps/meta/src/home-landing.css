@@ -90,6 +90,22 @@
     opacity 0.5s;
 }
 
+/* A poster slide opens a dialog, so it is a button rather than a link. */
+button.home-slide {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+/* The poster carries its own title, so only the action pill is drawn over it. */
+.home-slide.is-poster .home-slide-icon,
+.home-slide.is-poster .home-slide-text {
+  display: none;
+}
+
 /* A slide wrapping round the loop jumps to its new slot unseen. */
 .home-slide.is-wrapping {
   transition: none;
@@ -400,7 +416,16 @@
   display: none;
 }
 
-.home-quick > a {
+/* The upcoming game's tile opens a notice, so it is a button reset to match. */
+.home-quick > button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.home-quick > :is(a, button) {
   display: grid;
   align-content: start;
   justify-items: center;
@@ -455,19 +480,19 @@
   stroke-width: 2.2;
 }
 
-.home-quick > a:hover {
+.home-quick > :is(a, button):hover {
   color: var(--foreground);
 }
 
-.home-quick > a:hover .home-quick-tile {
+.home-quick > :is(a, button):hover .home-quick-tile {
   transform: translateY(-0.375rem) scale(1.05);
 }
 
-.home-quick > a:hover .home-quick-icon {
+.home-quick > :is(a, button):hover .home-quick-icon {
   box-shadow: 0 1.125rem 1.625rem -0.75rem color-mix(in srgb, var(--qc, var(--c2, #000)) 80%, transparent);
 }
 
-.home-quick > a:active .home-quick-tile {
+.home-quick > :is(a, button):active .home-quick-tile {
   transform: scale(0.94);
 }
 
@@ -1221,7 +1246,7 @@
     padding: 1.375rem var(--arkive-page-gutter) 0.25rem;
   }
 
-  .home-quick > a {
+  .home-quick > :is(a, button) {
     gap: 0.5rem;
     font-size: 0.75rem;
   }
@@ -1338,7 +1363,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-quick > a,
+  .home-quick > :is(a, button),
   .home-boat svg,
   .home-sheet {
     animation: none;

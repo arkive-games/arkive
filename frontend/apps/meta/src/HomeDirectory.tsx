@@ -11,6 +11,7 @@ import {
   IconSparkles,
   IconTool,
 } from '@tabler/icons-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@gamemap/ui'
 
 import {
   FEATURES,
@@ -24,6 +25,7 @@ import { GAME_LOGOS, IS_TOY, recentUpdateDays, siteHref, type SiteCard } from '.
 import { TOOL_ICONS } from './toolIcons'
 import { HomeCarousel } from './HomeCarousel'
 import platformChangelog from './platform-changelog.json'
+import pbzIcon from './assets/pbz-icon.webp'
 
 const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
   tool: IconTool,
@@ -65,6 +67,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const [now] = useState(() => new Date())
+  const [soonOpen, setSoonOpen] = useState(false)
   const games = sites.filter((site) => siteHref(site))
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
     && games.some((site) => site.id === feature.gameId))
@@ -87,12 +90,19 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   return (
     <section className="home-directory" aria-labelledby="home-heading">
       <h1 id="home-heading" className="sr-only">{t('home.title')}</h1>
-      <HomeCarousel sites={games} onOpenSite={onOpenSite} />
+      <HomeCarousel sites={games} onOpenSite={onOpenSite} onComingSoon={() => setSoonOpen(true)} />
 
       <div className="home-shell">
         <nav className="home-quick" aria-label={t('landing.quick.label')}>
+          {/* Phantom Blade Zero leads before its guide opens, so it shows a notice instead of linking. */}
+          <button type="button" aria-haspopup="dialog" style={{ '--i': 0, '--qc': '#c98a3e' } as CSSProperties} onClick={() => setSoonOpen(true)}>
+            <span className="home-quick-tile">
+              <span className="home-quick-icon is-game"><img src={pbzIcon} alt="" /></span>
+            </span>
+            <span>{t('landing.carousel.pbz.name')}</span>
+          </button>
           {games.map((site, index) => (
-            <a key={site.id} href={siteHref(site)} style={{ '--i': index, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
+            <a key={site.id} href={siteHref(site)} style={{ '--i': index + 1, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
               <span className="home-quick-tile">
                 <span className="home-quick-icon is-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" /></span>
                 {recentUpdateDays(updatedDates[site.id], now) !== undefined && <b>{badge}</b>}
@@ -101,7 +111,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
             </a>
           ))}
           {entries.map(({ href, label, icon: EntryIcon, colors, fresh }, index) => (
-            <a key={href} href={href} style={gradient(colors, games.length + index)}>
+            <a key={href} href={href} style={gradient(colors, games.length + 1 + index)}>
               <span className="home-quick-tile">
                 <span className="home-quick-icon"><EntryIcon stroke={1.9} aria-hidden="true" /></span>
                 {fresh && <b>{badge}</b>}
@@ -168,6 +178,14 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
           </section>
         )}
       </div>
+      <Dialog open={soonOpen} onOpenChange={setSoonOpen}>
+        <DialogContent className="footer-dialog sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('landing.carousel.pbz.go')}</DialogTitle>
+            <DialogDescription>{t('landing.carousel.pbz.soon')}</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }
