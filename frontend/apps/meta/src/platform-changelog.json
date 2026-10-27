@@ -18,6 +18,22 @@
             "zh-CN": "重新设计登录与网站设置弹窗：圆润标题、更柔和的输入框，设置项改为可展开卡片并直接显示当前值。",
             "zh-TW": "重新設計登入與網站設定視窗：圓潤標題、更柔和的輸入框，設定項改為可展開卡片並直接顯示目前值。"
           }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The games menu now groups games into Online and Single & co-op columns, each with its icon.",
+            "zh-CN": "游戏菜单按「网游」与「单机／联机」分栏展示，并附带游戏图标。",
+            "zh-TW": "遊戲選單依「網遊」與「單機／連線」分欄顯示，並附上遊戲圖示。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "On phones, the homepage menu is now a short list of plain rows, and the notification bell is a round icon button.",
+            "zh-CN": "手机端首页菜单改为简洁的文字列表，通知铃铛改为圆形图标按钮。",
+            "zh-TW": "手機端首頁選單改為簡潔的文字列表，通知鈴鐺改為圓形圖示按鈕。"
+          }
         }
       ]
     },
