@@ -4143,7 +4143,7 @@
 
 /* Declared at the root so the compose button, rendered outside .forum-main, can use it too. */
 :root {
-  --forum-warm-button: linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c);
+  --forum-warm-button: var(--arkive-warm-search);
 }
 
 .dark .forum-main {
@@ -4190,7 +4190,7 @@
   flex: none;
   align-self: center;
   border-radius: 999rem;
-  color: #fff;
+  color: var(--arkive-warm-search-foreground);
   background: var(--forum-warm-button);
   box-shadow: 0 0.3rem 0.8rem rgba(236, 122, 28, 0.28);
 }
@@ -4379,7 +4379,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: #fff;
+    color: var(--arkive-warm-search-foreground);
     background: var(--forum-warm-button);
     box-shadow: 0 0.5rem 1.25rem rgba(236, 122, 28, 0.34);
     font-size: 0.875rem;
@@ -4392,12 +4392,7 @@
   }
 }
 
-/* Composer: same layout, warm focus, pill controls and a framed form. */
-.forum-main {
-  --forum-focus-border: color-mix(in srgb, #f5a524 70%, var(--forum-border));
-  --forum-focus-shadow: color-mix(in srgb, #f5a524 18%, transparent);
-}
-
+/* Composer: same layout, pill controls and a framed form. */
 .forum-publish-back {
   padding-inline: 0.75rem 0.9rem;
   border-radius: 999rem;
@@ -4514,6 +4509,7 @@
 
 .forum-publish-submit {
   border: 0;
+  color: var(--arkive-warm-search-foreground);
   background: var(--forum-warm-button);
   box-shadow: 0 0.4rem 1rem rgb(236 122 28 / 28%);
 }

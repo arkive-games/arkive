@@ -158,8 +158,8 @@ product_model:
       A game may provide maps, encyclopedias, tools, routes, languages, data,
       and artwork. It must reuse the cross-site shell and brand identity.
     inventory_owner: "frontend/apps/meta/src/sites.ts (SITES, VISIBLE_SITES)"
-    live_order: ["aion2", "gmzz", "palworld", "vrising", "ro3"]
-    display_order: "The home page ranks live games by click count (rankSitesByClicks); live_order only breaks ties."
+    live_order: ["aion2", "palworld", "gmzz", "ro3", "vrising"]
+    display_order: "Every portal list shows live games in live_order (the SITES order in sites.ts); clicks and recent visits never reorder them."
     unlaunched: "sts2 and lostark stay out of the home page, the game menu, All Games and the forum cabins until they open."
     game_colour: "Each game's colour tints only that game's own icon, card hover and menu row."
   game_about:

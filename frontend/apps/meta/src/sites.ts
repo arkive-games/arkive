@@ -85,8 +85,6 @@ export interface SiteCard {
   comingSoon?: boolean
 }
 
-export type SiteClickCounts = Record<string, number>
-
 function resolveSiteUrl(envUrl: string | undefined, devUrl: string, productionUrl: string) {
   return envUrl ?? (import.meta.env.DEV ? devUrl : productionUrl)
 }
@@ -255,45 +253,4 @@ export function recentUpdateDays(date: string | undefined, now: Date): number | 
 export function siteHref(site: SiteCard): string | undefined {
   if (site.comingSoon) return undefined
   return IS_TOY && site.toySlug ? `/toy/${site.toySlug}/index.html` : site.url
-}
-
-/**
- * Keep popularity ordering independent from the page so a future analytics
- * source can replace the current adapter without changing the visual layer.
- * Ties preserve the curated SITES order.
- */
-export function rankSitesByClicks(sites: SiteCard[], counts: SiteClickCounts): SiteCard[] {
-  return sites
-    .map((site, index) => ({ site, index }))
-    .sort((left, right) => {
-      const difference = (counts[right.site.id] ?? 0) - (counts[left.site.id] ?? 0)
-      return difference || left.index - right.index
-    })
-    .map(({ site }) => site)
-}
-
-/**
- * Optional response shape: `{ "aion2": 120, "palworld": 98 }`.
- * Without a configured endpoint the homepage uses a deterministic zero-count
- * fallback. No traffic numbers are invented in the client.
- */
-export async function loadSiteClickCounts(signal?: AbortSignal): Promise<SiteClickCounts> {
-  const endpoint = import.meta.env.VITE_GAME_POPULARITY_URL
-  if (!endpoint || IS_TOY) return {}
-
-  try {
-    const response = await fetch(endpoint, { signal, credentials: 'same-origin' })
-    if (!response.ok) return {}
-    const value: unknown = await response.json()
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-
-    return Object.fromEntries(
-      Object.entries(value).filter((entry): entry is [string, number] => {
-        const count = entry[1]
-        return typeof count === 'number' && Number.isFinite(count) && count >= 0
-      }),
-    )
-  } catch {
-    return {}
-  }
 }

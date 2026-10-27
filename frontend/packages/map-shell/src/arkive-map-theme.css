@@ -9,6 +9,10 @@
   /* The warm call-to-action pill of the account dialog and the phone menu. */
   --arkive-warm-action: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
   --arkive-warm-action-foreground: #40251c;
+  /* The deeper orange of the portal search and the forum's compose and publish
+     buttons; the dark foreground keeps 4.9:1 on its darkest stop. */
+  --arkive-warm-search: linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c);
+  --arkive-warm-search-foreground: #40251c;
   --arkive-touch-target: 2.75rem;
   --arkive-motion-immediate: 120ms;
   --arkive-motion-standard: 180ms;

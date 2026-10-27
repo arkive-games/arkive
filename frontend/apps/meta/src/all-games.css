@@ -8,7 +8,7 @@
 .catalog-search input::-webkit-search-cancel-button { display: none; }
 .catalog-search button { flex: none; display: grid; place-items: center; width: 2.5rem; min-height: 2.5rem; padding: 0; border: 0; border-radius: 999px; background: var(--muted); color: var(--muted-foreground); cursor: pointer; transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s; }
 /* Warm amber, in the family of the nav's gradient login pill and the gold voyage line. */
-.catalog-search button[type="submit"] { background: linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c); color: #fff; box-shadow: 0 .3rem .8rem rgba(236, 122, 28, .28); }
+.catalog-search button[type="submit"] { background: var(--arkive-warm-search); color: var(--arkive-warm-search-foreground); box-shadow: 0 .3rem .8rem rgba(236, 122, 28, .28); }
 .catalog-search button[type="submit"]:hover { transform: scale(1.06); box-shadow: 0 .4rem 1rem rgba(236, 122, 28, .38); }
 .catalog-search button[type="submit"] svg { transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
 .catalog-search button[type="submit"]:hover svg { transform: translateX(2px); }

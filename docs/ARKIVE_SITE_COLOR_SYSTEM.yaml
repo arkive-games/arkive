@@ -92,6 +92,8 @@ semantic_tokens:
     navigation_foreground: { value: "#FFFFFF", css: "--arkive-nav-on-active" }
     warm_action: { value: "linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be)", css: "--arkive-warm-action" }
     warm_action_foreground: { value: "#40251c", css: "--arkive-warm-action-foreground" }
+    warm_search: { value: "linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c)", css: "--arkive-warm-search" }
+    warm_search_foreground: { value: "#40251c", css: "--arkive-warm-search-foreground" }
     warm_accent: { value: "#AB6400", css: "--arkive-nav-accent, --arkive-brand-slogan, --arkive-nav-beacon, --arkive-orange" }
     game_color_tint: { note: "Each game's sites.ts color property tints its own card hover and menu row", css: "--game-color local variable" }
     action: { value: "#CC4E00", css: "--arkive-action" }
@@ -123,6 +125,8 @@ semantic_tokens:
     navigation_foreground: { value: "#061018", css: "--arkive-nav-on-active" }
     warm_action: { value: "linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be)", css: "--arkive-warm-action (same as light)" }
     warm_action_foreground: { value: "#40251c", css: "--arkive-warm-action-foreground (same as light)" }
+    warm_search: { value: "linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c)", css: "--arkive-warm-search (same as light)" }
+    warm_search_foreground: { value: "#40251c", css: "--arkive-warm-search-foreground (same as light)" }
     warm_accent: { value: "#FFC53D", css: "--arkive-nav-accent, --arkive-brand-slogan, --arkive-nav-beacon, --arkive-orange" }
     game_color_tint: { note: "Each game's sites.ts color property tints its own card hover and menu row", css: "--game-color local variable" }
     action: { value: "#F76B15", css: "--arkive-action" }
@@ -151,6 +155,7 @@ contrast_contract:
     dark_primary_text: "#061018 on #0090FF, 5.87:1"
     light_warm_text: "#40251c on #ffa7be (worst gradient stop), 7.68:1"
     dark_warm_text: "#40251c on #ffa7be, 7.68:1 (same in both modes)"
+    warm_search_text: "#40251c on #ec7a1c (darkest gradient stop), 4.92:1 (same in both modes)"
     light_action_text: "#FFFFFF on #CC4E00, 4.51:1"
     dark_action_text: "#202020 on #F76B15, 5.48:1"
     light_destructive_text: "#FFFFFF on #CE2C31, 5.21:1"
@@ -190,6 +195,7 @@ theme_contract:
 
 component_usage:
   main_call_to_action: "warm_action and warm_action_foreground, on a pill"
+  portal_search_and_compose: "warm_search and warm_search_foreground, only for the portal's game-search submit and the forum's compose and publish buttons"
   secondary_action: "neutral pill: muted or card surface with foreground text"
   data_tool_primary_action: "primary and primary_foreground inside map and calculator workspaces"
   navigation_and_link: "navigation or link according to whether the role is a surface or text"
