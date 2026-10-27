@@ -1,9 +1,24 @@
 {
   "entries": [
     {
+      "version": "0.25.1",
+      "date": "2026-10-28",
+      "commit": "0363c82cda8938fbc00c8532b030e48ebb743412",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Score calculator: viewers of someone else's character can open equipment and relic slots to see the details, and the group tabs work with the arrow keys.",
+            "zh-CN": "非凡评分计算器：查看他人角色时也能点开装备和封印物格子查看详情；分组标签支持方向键切换。",
+            "zh-TW": "非凡評分計算器：查看他人角色時也能點開裝備和封印物格子查看詳情；分組標籤支援方向鍵切換。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.25.0",
       "date": "2026-10-28",
-      "commit": "fabc3f9f443cc24f31cea3a1bca4c35767fd259c",
+      "commit": "5ed0731a6e82abd30f19707bd051e8c6af38d395",
       "changes": [
         {
           "kind": "improvement",
