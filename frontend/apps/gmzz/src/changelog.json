@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.24.1",
+      "date": "2026-10-28",
+      "commit": "cb8e79a8a8f7a3439aa9498c4b154b117d15fdd6",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Score calculator: role level, divinity level, pathway and skill level now sit at the top of the Pathway group.",
+            "zh-CN": "非凡评分计算器：扮演等级、神性等级、职业途径和技能等级移到「途径」分区顶部。",
+            "zh-TW": "非凡評分計算器：扮演等級、神性等級、職業途徑和技能等級移到「途徑」分區頂部。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.24.0",
       "date": "2026-10-27",
       "commit": "e49c7d14f9f5d97423d0d478270b31e1471d3949",
