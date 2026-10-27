@@ -161,7 +161,7 @@ shared_component_contracts:
     modal_overlay: "One shared neutral overlay treatment; app-level dialogs do not invent another opacity or blur."
   scrollbars:
     owner: "frontend/packages/map-shell/src/arkive-map-theme.css"
-    default: "Every scroll container uses one thin scrollbar: a transparent track and a muted-foreground thumb at 42 percent opacity, 62 percent on hover. Never the platform default."
+    default: "Every scroll container uses one thin scrollbar: a transparent track and a muted-foreground thumb at 42 percent opacity, set with the standard scrollbar-width and scrollbar-color properties. Never the platform default. Browsers without scrollbar-color keep their native overlay scrollbar rather than a WebKit pseudo-element imitation."
     overrides: "A surface may hide its scrollbar or recolor the thumb for its own palette; it does not reintroduce a wide or opaque track."
   compact_site_footer:
     owner: "frontend/packages/ui/src/site-footer.tsx"

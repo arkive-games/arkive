@@ -180,37 +180,14 @@ textarea {
 
 /* One thin scrollbar for every surface: a quiet thumb on a transparent track.
  * Layered as base so a utility such as [scrollbar-width:none] still wins, and
- * an app's own unlayered scrollbar rule overrides it by plain cascade. */
+ * an app's own unlayered scrollbar rule overrides it by plain cascade.
+ * Deliberately no ::-webkit-scrollbar fallback: styling it on macOS replaces
+ * the auto-hiding overlay scrollbar with a permanent one that takes layout
+ * space, and the overlay one is already thin and transparent. */
 @layer base {
   * {
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--muted-foreground) 42%, transparent) transparent;
-  }
-
-  /* Browsers without scrollbar-color (older Safari) style through the WebKit
-   * pseudo-elements instead; the rest ignore them once scrollbar-color is set. */
-  @supports not (scrollbar-color: auto) {
-    ::-webkit-scrollbar {
-      width: 0.375rem;
-      height: 0.375rem;
-    }
-
-    ::-webkit-scrollbar-track,
-    ::-webkit-scrollbar-corner {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      border: 0.0625rem solid transparent;
-      border-radius: 0.25rem;
-      background: color-mix(in srgb, var(--muted-foreground) 42%, transparent);
-      background-clip: padding-box;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: color-mix(in srgb, var(--muted-foreground) 62%, transparent);
-      background-clip: padding-box;
-    }
   }
 }
 
