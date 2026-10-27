@@ -162,7 +162,7 @@ shared_component_contracts:
     surface: "Use the shared floating or modal surface class from frontend/packages/ui/src/popup-styles.ts."
     # Owner decision (2026-10, PR #161).
     # Owner decision (2026-10-27): every dialog, not only sign-in and settings, uses this one look.
-    dialogs: "Every Dialog and AlertDialog is borderless, uses dialog_radius and a faint warm gradient over the background (.arkive-dialog-surface), has a left-aligned bold title, a round close button in the top-right corner and no footer Close button. A dialog's one main action is a warm-action gradient pill (.arkive-dialog-primary); secondary actions are neutral outline pills and destructive confirms stay red. Static titles use the rounded display face (.arkive-dialog-title); titles carrying dynamic text keep the body face, because the rounded face is a glyph subset."
+    dialogs: "Every Dialog and AlertDialog is borderless, uses dialog_radius and a faint warm gradient over the background (.arkive-dialog-surface), has a left-aligned bold title, a round close button in the top-right corner and no footer Close button. Confirmations (a destructive confirm, a conflict choice) are the exception: they have no close button, because their own Cancel already is one. A dialog's one main action is a warm-action gradient pill (.arkive-dialog-primary); secondary actions are neutral outline pills and destructive confirms stay red. Static titles use the rounded display face (.arkive-dialog-title); titles carrying dynamic text keep the body face, because the rounded face is a glyph subset."
     menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500. Desktop top-bar hover menus are the sole compact exception: 2.25rem rows with no extra inter-row gap."
     desktop_top_bar_menus:
       width: "Content-sized from 10rem through 20rem for navigation, theme, and account menus."
@@ -308,6 +308,9 @@ motion:
   approved_ambient_motion:
     - "The home carousel auto-advances every 5 seconds and pauses on mouse hover, keyboard focus, a hidden tab, reduced motion, or its pause button."
     - "The voyage line and boat follow scroll progress and come to rest at the footer."
+    - "The small ship on the shore of the About and Contact dialogs bobs gently while the dialog is open (owner decision, 2026-10-28)."
+    - "The dashed ring around the clear-everything confirm's badge turns slowly while the confirm is open (owner decision, 2026-10-28)."
+    - "Both dialog loops stop under reduced motion."
   rules:
     - "Animate only to communicate feedback, hierarchy, or a state transition, plus the approved ambient motion above."
     - "Prefer opacity and transform; do not animate layout dimensions when a transform can express the change."

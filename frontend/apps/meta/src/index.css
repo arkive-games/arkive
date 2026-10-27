@@ -194,7 +194,7 @@ footer a:focus-visible {
 }
 
 .footer-crew-line a {
-  color: #e0784f;
+  color: var(--arkive-warm-text);
   font-weight: 700;
   text-decoration: none;
 }
@@ -220,7 +220,7 @@ footer a:focus-visible {
 .footer-route > summary {
   cursor: pointer;
   list-style: none;
-  border-radius: 0.5rem;
+  border-radius: var(--arkive-radius-standard);
   outline: none;
 }
 
@@ -387,7 +387,7 @@ footer a:focus-visible {
   font-size: 0.9375rem;
   font-weight: 700;
   cursor: pointer;
-  transition: transform var(--arkive-motion-standard) cubic-bezier(0.2, 1.4, 0.4, 1);
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-spring);
 }
 
 .footer-pass-copy:hover {
@@ -495,7 +495,7 @@ footer a:focus-visible {
 }
 
 .footer-mate-role a {
-  color: #e0784f;
+  color: var(--arkive-warm-text);
   font-weight: 600;
   text-decoration: none;
 }
@@ -634,7 +634,7 @@ footer a:focus-visible {
   }
 
   .footer-pass-copy {
-    height: 2rem;
+    height: var(--arkive-touch-target);
     gap: 0.375rem;
     margin-top: 0.625rem;
     padding: 0 0.875rem;

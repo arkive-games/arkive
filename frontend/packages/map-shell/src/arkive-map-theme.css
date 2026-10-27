@@ -9,6 +9,10 @@
   /* The warm call-to-action pill of the account dialog and the phone menu. */
   --arkive-warm-action: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
   --arkive-warm-action-foreground: #40251c;
+  /* The warm action's edge, for a selected card's border. */
+  --arkive-warm-selection: #ffb398;
+  /* Warm text on the page background: 5.7:1 light, 6:1 dark. */
+  --arkive-warm-text: #a8461f;
   /* The deeper orange of the portal search and the forum's compose and publish
      buttons; the dark foreground keeps 4.9:1 on its darkest stop. */
   --arkive-warm-search: linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c);
@@ -18,6 +22,7 @@
   --arkive-motion-standard: 180ms;
   --arkive-motion-panel: 240ms;
   --arkive-motion-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --arkive-motion-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --arkive-layer-base: 0;
   --arkive-layer-local-backdrop: -2;
   --arkive-layer-local-underlay: -1;
@@ -98,6 +103,7 @@
   --arkive-nav-active: #0090FF;
   --arkive-nav-on-active: #061018;
   --arkive-nav-accent: #FFC53D;
+  --arkive-warm-text: #e0784f;
   --arkive-brand-slogan: #FFC53D;
   --arkive-nav-beacon: #FFC53D;
   --arkive-action: #F76B15;
@@ -342,7 +348,7 @@ textarea {
   font-weight: 600;
   text-align: center;
   cursor: pointer;
-  transition: transform var(--arkive-motion-standard) cubic-bezier(0.2, 1.4, 0.4, 1);
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-spring);
 }
 
 .arkive-theme-card:hover {
@@ -350,13 +356,13 @@ textarea {
 }
 
 .arkive-theme-card[aria-pressed="true"] {
-  border-color: #ffb398;
+  border-color: var(--arkive-warm-selection);
   box-shadow: 0 10px 22px -14px rgb(255 140 110 / 0.9);
 }
 
 .arkive-theme-card[aria-pressed="true"] > span:last-child::before {
   content: "✓ ";
-  color: #e0784f;
+  color: var(--arkive-warm-text);
 }
 
 .arkive-theme-mini {
@@ -392,7 +398,7 @@ textarea {
 }
 
 .arkive-theme-mini > span > i {
-  border-radius: 0.25rem;
+  border-radius: var(--arkive-radius-compact);
   background: var(--mini-card);
 }
 
@@ -474,13 +480,9 @@ textarea {
   height: 2.25rem;
   flex: none;
   place-items: center;
-  border-radius: 0.75rem;
-  color: #1f6f99;
-  background: color-mix(in srgb, #2f8fb5 14%, var(--card));
-}
-
-.dark .arkive-data-hold-icon {
-  color: #7cc4e8;
+  border-radius: var(--arkive-radius-standard);
+  color: var(--arkive-nav-active);
+  background: var(--arkive-filter-active);
 }
 
 .arkive-local-data {
@@ -494,7 +496,7 @@ textarea {
   align-items: center;
   gap: 0.75rem;
   padding: 0 0.5rem;
-  border-radius: 0.75rem;
+  border-radius: var(--arkive-radius-standard);
   font-size: 0.875rem;
 }
 
@@ -505,7 +507,7 @@ textarea {
 .arkive-local-data-row[data-danger] {
   margin-top: 0.25rem;
   border-top: 1px dashed var(--border);
-  border-radius: 0 0 0.75rem 0.75rem;
+  border-radius: 0 0 var(--arkive-radius-standard) var(--arkive-radius-standard);
   color: var(--destructive);
 }
 
@@ -518,6 +520,13 @@ textarea {
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* A full touch target on a phone, where the row is no longer the button. */
+@media (max-width: 47.99rem) {
+  .arkive-local-data-action {
+    min-height: var(--arkive-touch-target);
+  }
 }
 
 .arkive-local-data-action:hover {
