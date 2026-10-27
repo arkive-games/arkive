@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-10-28",
-      "commit": "e9e1e2d3af492070f9f3ff6e248da970db94b5f0",
+      "commit": "10441922fa3cb08a721991348734b4901016a658",
       "targets": [
         "aion2",
         "palworld",
@@ -14,9 +14,9 @@
         {
           "kind": "improvement",
           "text": {
-            "en-US": "Tidier top-bar menus: every popover opens at the same distance, the All Games menu is centred and compact, the avatar shows a single menu, and the logo no longer tilts on hover. The footer keeps copyright and ICP on one line and is much shorter on phones.",
-            "zh-CN": "顶部菜单更整齐：所有弹出菜单与按钮间距一致，全部游戏菜单居中且更紧凑，头像悬停只出现一个菜单，Logo 悬停不再倾斜。页脚版权与备案号同排显示，手机端页脚更矮更紧凑。",
-            "zh-TW": "頂部選單更整齊：所有彈出選單與按鈕間距一致，全部遊戲選單置中且更緊湊，頭像懸停只出現一個選單，Logo 懸停不再傾斜。頁尾版權與備案號同排顯示，手機端頁尾更矮更緊湊。"
+            "en-US": "Tidier top bar: every menu opens at the same distance, All Games is a plain link, the avatar shows a single menu, and the logo no longer tilts on hover. Slimmer About and Contact dialogs. The footer keeps copyright and ICP on one line and is much shorter on phones.",
+            "zh-CN": "顶部导航更整齐：所有弹出菜单与按钮间距一致，全部游戏改为直接跳转，头像悬停只出现一个菜单，Logo 悬停不再倾斜。关于藏舟和联系我们弹窗更紧凑。页脚版权与备案号同排显示，手机端页脚更矮更紧凑。",
+            "zh-TW": "頂部導覽更整齊：所有彈出選單與按鈕間距一致，全部遊戲改為直接跳轉，頭像懸停只出現一個選單，Logo 懸停不再傾斜。關於藏舟和聯絡我們彈窗更緊湊。頁尾版權與備案號同排顯示，手機端頁尾更矮更緊湊。"
           }
         }
       ]
