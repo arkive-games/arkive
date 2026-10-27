@@ -1,6 +1,6 @@
 resource-han-rounded-titles.woff2 is a subset of Resource Han Rounded CN Bold
-(glyphs of the account and settings dialog titles plus printable ASCII), used
-for those titles in the shared dialogs.
+(glyphs of the dialog titles that use it, plus printable ASCII), used for
+those titles in the shared and site dialogs.
 
 Copyright (c) 2018-2019 Cyano Hao. Portions (c) 2014, 2015, 2018 Adobe (http://www.adobe.com/).
 Source: https://github.com/CyanoHao/Resource-Han-Rounded

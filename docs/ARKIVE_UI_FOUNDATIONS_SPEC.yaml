@@ -161,7 +161,8 @@ shared_component_contracts:
   popup_surfaces:
     surface: "Use the shared floating or modal surface class from frontend/packages/ui/src/popup-styles.ts."
     # Owner decision (2026-10, PR #161).
-    account_and_settings_dialogs: "The sign-in and site settings dialogs are the one exception: borderless, dialog_radius, a faint warm gradient over the background, a rounded display title, and a warm-action gradient pill as the primary action. Their close control keeps the shared touch target and draws a round tinted face inside it."
+    # Owner decision (2026-10-27): every dialog, not only sign-in and settings, uses this one look.
+    dialogs: "Every Dialog and AlertDialog is borderless, uses dialog_radius and a faint warm gradient over the background (.arkive-dialog-surface), has a left-aligned bold title, a round close button in the top-right corner and no footer Close button. A dialog's one main action is a warm-action gradient pill (.arkive-dialog-primary); secondary actions are neutral outline pills and destructive confirms stay red. Static titles use the rounded display face (.arkive-dialog-title); titles carrying dynamic text keep the body face, because the rounded face is a glyph subset."
     menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500. Desktop top-bar hover menus are the sole compact exception: 2.25rem rows with no extra inter-row gap."
     desktop_top_bar_menus:
       width: "Content-sized from 10rem through 20rem for navigation, theme, and account menus."
@@ -169,7 +170,7 @@ shared_component_contracts:
       grouped_layout: "A menu whose leaves carry a group (the games menu: online, then single-player and co-op) shows one labelled column per group in a 24rem surface, each leaf with its icon and a hover tint in its own colour."
       overflow: "Keep the menu within the viewport; only unusually short desktop viewports may scroll the menu internally."
       labels: "Keep menu labels on one line. Localized text determines width within the declared bounds."
-    close_control: "Touch target on mobile and desktop_compact_height on desktop, with the shared focus treatment."
+    close_control: "Touch target on mobile and desktop_compact_height on desktop, with the shared focus treatment; dialogs draw a round tinted face inside it."
     modal_overlay: "One shared neutral overlay treatment; app-level dialogs do not invent another opacity or blur."
   scrollbars:
     owner: "frontend/packages/map-shell/src/arkive-map-theme.css"
@@ -237,7 +238,7 @@ shape:
   rules:
     - "Portal surfaces (Home, All Games, Tools, Forum) use card_radius for record cards and framed forms, and media_radius for covers, editors and inputs inside them."
     - "Game content, maps and data tools keep standard_radius for cards, inputs, popovers and sheets."
-    - "dialog_radius is reserved for the account and settings dialogs; the collapsible cards inside the settings dialog use floating_radius."
+    - "Every dialog and alert dialog uses dialog_radius; the collapsible cards inside the settings dialog use floating_radius."
     - "floating_radius is for floating chrome (top-bar menus, the mobile drawer's leading corners) and small square icon tiles."
     - "Small badges, checkboxes, and compact internal controls may use compact_radius."
     - "Use pill_radius for tags, filters, search fields, buttons on portal surfaces, avatars, top-bar tabs, and the floating top bar."

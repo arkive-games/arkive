@@ -2,9 +2,7 @@ import type { ReactNode } from "react"
 import {
   Button,
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -20,11 +18,10 @@ export interface ArkiveSiteInfoDialogLabels {
 
 /**
  * The "About / site info" dialog: a trigger button, the panel in a scrollable
- * max-height body, and a close action in the footer.
+ * max-height body, and the round close button in the corner.
  *
- * The trigger carries `site-info-open` and the body starts with
- * `site-info-close`, the hooks the e2e suites and every app's settings sheet
- * already look for.
+ * The trigger carries `site-info-open` and the close button `site-info-close`,
+ * the hooks the e2e suites and every app's settings sheet already look for.
  */
 export function ArkiveSiteInfoDialog({
   labels,
@@ -43,20 +40,17 @@ export function ArkiveSiteInfoDialog({
         </Button>
       </DialogTrigger>
       <DialogContent
-        showCloseButton={false}
-        className="max-h-[min(80dvh,44rem)] grid-rows-[auto_minmax(0,1fr)_auto]"
+        closeButtonProps={{
+          "aria-label": labels.close,
+          title: labels.close,
+          "data-testid": "site-info-close",
+        }}
+        className="max-h-[min(80dvh,44rem)] grid-rows-[auto_minmax(0,1fr)]"
       >
         <DialogHeader>
           <DialogTitle className="sr-only">{labels.title}</DialogTitle>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto pr-1">{children}</div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="outline" data-testid="site-info-close">
-              {labels.close}
-            </Button>
-          </DialogClose>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

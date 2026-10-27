@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from "react"
-import { IconCheck, IconChevronDown, IconX } from "@tabler/icons-react"
+import { IconArchive, IconCheck, IconChevronDown, IconX } from "@tabler/icons-react"
 import {
   Button,
   cn,
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   POPUP_CLOSE_CONTROL_CLASS,
@@ -18,9 +19,13 @@ import { useOptionalTheme, type Theme } from "./theme/ThemeProvider"
 
 export interface ArkiveSettingsStrings {
   title: string
+  /** One line under the title: where these choices are kept. */
+  lede: string
   /** Carries `{game}`. */
   siteSection: string
   theme: string
+  /** Beside the theme heading, explaining the automatic option. */
+  themeHint: string
   language: string
   /** Carries `{game}`. */
   siteTheme: string
@@ -33,8 +38,8 @@ export interface ArkiveSettingsStrings {
   otherSitesNote: string
   /** The local-data card's label. */
   localData: string
-  /** The local-data card's value pill. */
-  manage: string
+  /** The local-data card's second line: what it holds. */
+  localDataSummary: string
   close: string
 }
 
@@ -182,18 +187,96 @@ function Hint({ children }: { children: ReactNode }) {
   return <p className="text-xs text-muted-foreground">{children}</p>
 }
 
+/** A heading for an always-open group, with an optional note on the right. */
+function GroupHead({ label, note }: { label: string; note?: string }) {
+  return (
+    <div className="arkive-settings-group-head">
+      <b>{label}</b>
+      {note && <span>{note}</span>}
+    </div>
+  )
+}
+
+/**
+ * The shared theme as three small pictures of a page, so the choice reads before
+ * its label does. Drawn in CSS from the value: "auto" is split down the middle.
+ */
+function ThemeCards({
+  label,
+  options,
+  current,
+  onChange,
+}: {
+  label: string
+  options: { value: Theme; label: string }[]
+  current: Theme
+  onChange: (value: Theme) => void
+}) {
+  return (
+    <div role="group" aria-label={label} className="arkive-theme-cards">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          data-testid={`settings-general-theme-${option.value}`}
+          aria-pressed={current === option.value}
+          onClick={() => onChange(option.value)}
+          className="arkive-theme-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="arkive-theme-mini" data-theme={option.value} aria-hidden="true">
+            <i />
+            <span><i /><i /></span>
+          </span>
+          <span className="truncate">{option.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function LanguagePills({
+  label,
+  options,
+  current,
+  onChange,
+}: {
+  label: string
+  options: { code: string; label: string }[]
+  current: string
+  onChange: (code: string) => void
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap gap-2">
+      {options.map((option) => (
+        <button
+          key={option.code}
+          type="button"
+          data-testid={`settings-general-language-${option.code}`}
+          aria-pressed={current === option.code}
+          onClick={() => onChange(option.code)}
+          className="arkive-language-pill outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /** The value the site-level options use to mean "follow General". */
 const FOLLOW = ""
 
-type CardId = "theme" | "language" | "site-theme" | "site-language" | "local-data"
+type CardId = "site-theme" | "site-language" | "local-data"
 
 /**
- * Every preference this site can express, as a list of cards.
+ * Every preference this site can express.
  *
- * Both layers stay legible without a click: each card's pill names its value,
- * so a game overriding the shared theme reads as such in the closed list. Only
- * one card opens at a time, which keeps the 17-locale language list from
- * pushing everything else out of a phone sheet.
+ * The shared theme and language are always open -- they are what people come
+ * here to change, and three pictures and a row of pills cost little height. The
+ * per-game overrides and the local data fold into cards, each naming its value
+ * in a pill, so a game overriding the shared theme still reads as such in the
+ * closed list. Only one card opens at a time, which keeps the 17-locale language
+ * list from pushing everything else out of a phone sheet.
  *
  * Purely presentational. Values, callbacks and strings all arrive from the host,
  * because this package is grep-gated against storage, network and i18n.
@@ -228,42 +311,28 @@ export function ArkiveSettingsPanel({
   return (
     <div className="arkive-settings-list flex flex-col gap-2.5" data-testid="arkive-settings-panel">
       {theme && (
-        <SettingsCard
-          label={strings.theme}
-          value={themeLabel(theme.generalValue)}
-          open={openCard === "theme"}
-          onToggle={() => toggle("theme")}
-          testId="settings-card-theme"
-        >
-          <Options
+        <section className="arkive-settings-group" data-testid="settings-group-theme">
+          <GroupHead label={strings.theme} note={strings.themeHint} />
+          <ThemeCards
             label={strings.theme}
-            testId="settings-general-theme"
             options={theme.options}
             current={theme.generalValue}
-            onChange={(value) => choose(() => theme.onSetGeneral(value as Theme))}
+            onChange={theme.onSetGeneral}
           />
-          {site && <Hint>{strings.otherSitesNote}</Hint>}
-        </SettingsCard>
+        </section>
       )}
       {language && (
-        <SettingsCard
-          label={strings.language}
-          value={languageLabel(language.generalValue)}
-          open={openCard === "language"}
-          onToggle={() => toggle("language")}
-          testId="settings-card-language"
-        >
-          <Options
+        <section className="arkive-settings-group" data-testid="settings-group-language">
+          <GroupHead label={strings.language} />
+          <LanguagePills
             label={strings.language}
-            testId="settings-general-language"
-            options={languageOptions}
+            options={language.options}
             current={language.generalValue}
-            columns={languageColumns}
-            onChange={(code) => choose(() => language.onSetGeneral(code))}
+            onChange={language.onSetGeneral}
           />
-          {site && <Hint>{strings.otherSitesNote}</Hint>}
-        </SettingsCard>
+        </section>
       )}
+      {site && (theme || language) && <Hint>{strings.otherSitesNote}</Hint>}
 
       {site && theme && (
         <SettingsCard
@@ -313,15 +382,30 @@ export function ArkiveSettingsPanel({
       )}
       {site && siteExtras}
 
-      <SettingsCard
-        label={strings.localData}
-        value={strings.manage}
-        open={openCard === "local-data"}
-        onToggle={() => toggle("local-data")}
-        testId="settings-card-local-data"
-      >
+      <details className="arkive-data-hold" open={openCard === "local-data"} data-testid="settings-card-local-data">
+        <summary
+          className="outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={(event) => {
+            event.preventDefault()
+            toggle("local-data")
+          }}
+        >
+          <span className="arkive-data-hold-icon" aria-hidden="true">
+            <IconArchive className="size-4.5" stroke={2.2} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <b>{strings.localData}</b>
+            <small>{strings.localDataSummary}</small>
+          </span>
+          <IconChevronDown
+            data-slot="settings-chevron"
+            className="size-4.5 text-muted-foreground"
+            stroke={2.2}
+            aria-hidden="true"
+          />
+        </summary>
         <LocalDataControls strings={localData} />
-      </SettingsCard>
+      </details>
     </div>
   )
 }
@@ -350,7 +434,7 @@ export function ArkiveSettingsDialog({
         showTideLine={false}
         className="arkive-settings-dialog max-h-[min(85dvh,44rem)] grid-rows-[auto_minmax(0,1fr)] gap-5 rounded-[var(--arkive-radius-dialog)] border-0 p-6 sm:max-w-[25rem]"
       >
-        <DialogHeader className="flex-row items-center justify-between gap-3 text-left">
+        <DialogHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-left">
           <DialogTitle className="arkive-dialog-title text-xl font-bold sm:text-2xl">
             {panel.strings.title}
           </DialogTitle>
@@ -368,6 +452,7 @@ export function ArkiveSettingsDialog({
               </span>
             </Button>
           </DialogClose>
+          <DialogDescription className="col-span-2">{panel.strings.lede}</DialogDescription>
         </DialogHeader>
         <div className="-mx-1 min-h-0 overflow-y-auto px-1">
           <ArkiveSettingsPanel {...panel} />

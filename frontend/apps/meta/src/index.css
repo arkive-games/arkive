@@ -50,131 +50,612 @@ footer a:focus-visible {
   margin-inline: auto;
 }
 
-.footer-mark {
-  display: grid;
-  width: 2.8rem;
-  height: 2.8rem;
-  place-items: center;
-  border-radius: var(--arkive-radius-standard);
-  color: var(--home-deep);
-  background: var(--home-mist);
-}
-
-.footer-mark svg {
-  width: 2rem;
-  height: 2rem;
-}
-
-.footer-dialog-brand {
+/* --- About and Contact dialogs -----------------------------------------------
+   Both end on the footer's sea: a strip of waves along the dialog's foot with a
+   small ship riding it. The warm pieces (the About hero, the boarding pass) keep
+   their light colours in dark mode, so their text is pinned dark too. */
+.footer-section-label {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.footer-dialog-brand > span:last-child {
-  display: flex;
-  flex-direction: column;
-}
-
-.footer-dialog-brand strong {
-  color: var(--foreground);
-  font-size: 1rem;
-  font-weight: 750;
-}
-
-.footer-dialog-brand small {
-  color: var(--arkive-brand-slogan);
+  gap: 0.5rem;
+  margin: 1.5rem 0 0.625rem;
+  color: var(--muted-foreground);
   font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.footer-section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.footer-shore {
+  position: relative;
+  isolation: isolate;
+  margin: 1.5rem -1.5rem 0;
+  padding: 2.75rem 1.5rem 1.25rem;
+  color: #eaf6ff;
+}
+
+.footer-shore::before {
+  content: "";
+  position: absolute;
+  inset: 2.25rem 0 0;
+  z-index: -1;
+  background: linear-gradient(180deg, #1f6f99, #175a80);
+}
+
+.footer-shore-waves {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 3rem;
+}
+
+.footer-shore-ship {
+  position: absolute;
+  top: 0.125rem;
+  right: 18%;
+  width: 1.75rem;
+  animation: footer-ship-bob 3.2s ease-in-out infinite;
+}
+
+.footer-about .footer-shore-ship {
+  right: auto;
+  left: 14%;
+}
+
+@keyframes footer-ship-bob {
+  50% { transform: translateY(3px) rotate(-3deg); }
+}
+
+.footer-faces > *,
+.footer-mate-avatar > * {
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--background);
+  border-radius: 9999px;
+  object-fit: cover;
+  color: var(--arkive-warm-action-foreground);
+  background: linear-gradient(140deg, #ffe3c2, #ffc9b5);
+  font-family: "Arkive Rounded", system-ui, sans-serif;
   font-weight: 700;
 }
 
-.footer-dialog-body {
-  display: grid;
-  gap: 0.75rem;
-  color: var(--foreground);
-  font-size: 0.875rem;
-  line-height: var(--arkive-leading-body);
+/* About */
+.footer-about-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: -1.5rem -1.5rem 0;
+  padding: 2rem 1.5rem 1.5rem;
+  color: var(--arkive-warm-action-foreground);
+  background: var(--arkive-warm-action);
 }
 
-.footer-dialog-body p {
+.footer-about-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(90% 120% at 100% 0%, rgb(255 255 255 / 0.55), transparent 60%);
+}
+
+.footer-about-sun {
+  position: absolute;
+  top: -2.5rem;
+  right: -2.5rem;
+  z-index: -1;
+  width: 9rem;
+  height: 9rem;
+  border: 2px dashed rgb(64 37 28 / 0.18);
+  border-radius: 9999px;
+}
+
+.footer-about-sun::after {
+  content: "";
+  position: absolute;
+  inset: 1.25rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.35);
+}
+
+.footer-about-hero .footer-about-wordmark {
+  display: block;
+  font-size: 3rem;
+  background: var(--arkive-warm-action-foreground);
+}
+
+.footer-about-slogan {
+  margin-top: 0.875rem;
+  color: inherit;
+  font-size: 1.875rem;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+.footer-crew-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--arkive-radius-floating);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.footer-crew-line p {
   margin: 0;
 }
 
-.footer-dialog-domain {
+.footer-crew-line a {
+  color: #e0784f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.footer-crew-line a:hover {
+  text-decoration: underline;
+}
+
+.footer-faces {
+  display: flex;
+  flex: none;
+}
+
+.footer-faces > * {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.footer-faces > * + * {
+  margin-left: -0.75rem;
+}
+
+.footer-route > summary {
+  cursor: pointer;
+  list-style: none;
+  border-radius: 0.5rem;
+  outline: none;
+}
+
+.footer-route > summary:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.footer-route > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The rule sits between the label and the chevron. */
+.footer-route .footer-route-chevron {
+  order: 2;
+  flex: none;
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.footer-route[open] .footer-route-chevron {
+  transform: rotate(180deg);
+}
+
+.footer-route-stops {
+  position: relative;
+  display: grid;
+  gap: 0.875rem;
+  margin: 0.25rem 0 0;
+  padding: 0 0 0 2rem;
+  list-style: none;
+}
+
+.footer-route-stops::before {
+  content: "";
+  position: absolute;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  left: 0.4375rem;
+  border-left: 2px dashed #f0a63a;
+}
+
+.footer-route-stops > li {
+  position: relative;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.footer-route-stops > li::before {
+  content: "";
+  position: absolute;
+  top: 0.3125rem;
+  left: -2rem;
+  width: 1rem;
+  height: 1rem;
+  border: 3px solid #f0a63a;
+  border-radius: 9999px;
+  background: var(--background);
+}
+
+.footer-route-stops > li[data-stop="now"]::before {
+  background: #f0a63a;
+  box-shadow: 0 0 0 4px rgb(240 166 58 / 0.25);
+}
+
+.footer-route-stops > li[data-stop="next"] {
+  color: var(--muted-foreground);
+}
+
+.footer-route-stops > li[data-stop="next"]::before {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--muted-foreground) 50%, transparent);
+}
+
+.footer-route-stops small {
+  display: block;
   color: var(--muted-foreground);
   font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
-.footer-dialog-body a {
-  color: var(--primary);
-  font-weight: 650;
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
+.footer-about-domain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
 }
 
-.footer-dialog-body a:hover {
-  text-decoration-thickness: 2px;
+.footer-about-domain b {
+  font-family: "Arkive Rounded", system-ui, sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
 }
 
-.footer-contact-list {
+.footer-about-domain span {
+  opacity: 0.75;
+}
+
+/* Contact: the QQ group as a boarding pass */
+.footer-pass {
+  position: relative;
+  isolation: isolate;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow: hidden;
+  margin-top: 1.25rem;
+  border-radius: var(--arkive-radius-floating);
+  color: var(--arkive-warm-action-foreground);
+  background: var(--arkive-warm-action);
+  box-shadow: 0 12px 28px -12px rgb(255 140 110 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+
+.footer-pass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(120% 90% at 0% 0%, rgb(255 255 255 / 0.55), transparent 55%);
+}
+
+.footer-pass-main {
+  min-width: 0;
+  padding: 1.125rem 1.25rem 1.25rem;
+}
+
+.footer-pass-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+.footer-pass-number {
+  margin-top: 0.25rem;
+  font-family: "Arkive Rounded", system-ui, sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.footer-pass-note {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+
+.footer-pass-copy {
+  display: inline-flex;
+  height: 2.75rem;
+  align-items: center;
   gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0 1.25rem;
+  border: 0;
+  border-radius: 9999px;
+  color: #ffe2c4;
+  background: var(--arkive-warm-action-foreground);
+  box-shadow: 0 6px 16px -6px rgb(64 37 28 / 0.6);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--arkive-motion-standard) cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.footer-pass-copy:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.footer-pass-copy:active {
+  transform: scale(0.97);
+}
+
+.footer-pass-copy[data-copied] {
+  color: #ffffff;
+  background: #2f7a4e;
+}
+
+/* The stub, torn off along a perforation. */
+.footer-pass-stub {
+  position: relative;
+  display: grid;
+  width: 6.5rem;
+  align-content: center;
+  place-items: center;
+  gap: 0.375rem;
+  padding: 1rem 0.5rem;
+  border-left: 2px dashed rgb(64 37 28 / 0.28);
+}
+
+.footer-pass-stub::before,
+.footer-pass-stub::after {
+  content: "";
+  position: absolute;
+  left: -0.6875rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: var(--background);
+}
+
+.footer-pass-stub::before { top: -0.625rem; }
+.footer-pass-stub::after { bottom: -0.625rem; }
+
+.footer-pass-stub svg {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.footer-pass-stub b {
+  padding-left: 0.3em;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+}
+
+.footer-pass-stub small {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+/* Contact: the crew */
+.footer-crew {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.footer-contact-list > li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--arkive-radius-compact);
-}
-
-.footer-contact-list > li > span {
-  display: flex;
+.footer-mate {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
   min-width: 0;
-  flex-direction: column;
+  padding: 1.125rem 0.75rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--arkive-radius-floating);
+  background: var(--card);
+  box-shadow: 0 8px 20px -14px rgb(30 20 10 / 0.35);
+  text-align: center;
 }
 
-.footer-contact-list small {
+.footer-mate-avatar {
+  width: 4rem;
+  height: 4rem;
+  padding: 3px;
+  border-radius: 9999px;
+  background: conic-gradient(from 200deg, #ffd08a, #ffa7be, #8ec5ff, #ffd08a);
+}
+
+.footer-mate-avatar > * {
+  width: 100%;
+  height: 100%;
+  font-size: 1.5rem;
+}
+
+.footer-mate strong {
+  margin-top: 0.375rem;
+  font-family: "Arkive Rounded", system-ui, sans-serif;
+  font-size: 1rem;
+}
+
+.footer-mate-role {
   color: var(--muted-foreground);
   font-size: 0.75rem;
 }
 
-.footer-contact-list strong {
-  overflow: hidden;
+.footer-mate-role a {
+  color: #e0784f;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.footer-mate-role a:hover {
+  text-decoration: underline;
+}
+
+.footer-wechat {
+  display: flex;
+  width: 100%;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0 0.625rem;
+  border: 0;
+  border-radius: 9999px;
+  color: #0b7a42;
+  background: rgb(7 193 96 / 0.1);
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.dark .footer-wechat {
+  color: #4fd68b;
+}
+
+.footer-wechat:hover {
+  background: rgb(7 193 96 / 0.18);
+}
+
+.footer-wechat-id {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.footer-contact-action {
-  display: inline-flex;
-  min-height: 2.25rem;
+.footer-wechat-hint {
+  flex: none;
+  opacity: 0.6;
+}
+
+.footer-wechat svg {
+  flex: none;
+}
+
+/* Contact: the repository on the waves */
+.footer-repo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 9999px;
+  color: inherit;
+  background: rgb(255 255 255 / 0.1);
+  text-decoration: none;
+  transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.footer-repo:hover {
+  background: rgb(255 255 255 / 0.18);
+}
+
+.footer-repo-mark {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  place-items: center;
+  border-radius: 9999px;
+  color: #17202a;
+  background: #ffffff;
+}
+
+.footer-repo-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.footer-repo-text b {
+  font-size: 0.875rem;
+}
+
+.footer-repo-text small {
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.footer-repo-go {
+  display: flex;
   flex: none;
   align-items: center;
-  gap: 0.35rem;
-  padding-inline: 0.7rem;
-  border: 0;
-  border-radius: var(--arkive-radius-compact);
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
+  gap: 0.25rem;
+  padding-right: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
-.footer-contact-action:hover {
-  background: color-mix(in srgb, var(--primary) 16%, transparent);
-}
+/* Phones: a shorter hero and a compact pass, so the crew is in view without scrolling. */
+@media (max-width: 47.99rem) {
+  .footer-about-slogan {
+    font-size: 1.5rem;
+  }
 
+  .footer-crew-line {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .footer-pass-main {
+    padding: 0.875rem 1rem 1rem;
+  }
+
+  .footer-pass-number {
+    font-size: 1.625rem;
+  }
+
+  .footer-pass-note {
+    display: none;
+  }
+
+  /* Too narrow for both words: the ID stays readable, and "Copied" takes its
+     place only for the moment after a tap. */
+  .footer-wechat:not([data-copied]) .footer-wechat-hint,
+  .footer-wechat[data-copied] .footer-wechat-id {
+    display: none;
+  }
+
+  .footer-pass-copy {
+    height: 2rem;
+    gap: 0.375rem;
+    margin-top: 0.625rem;
+    padding: 0 0.875rem;
+    box-shadow: none;
+    font-size: 0.8125rem;
+  }
+
+  .footer-pass-copy svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .footer-pass-stub {
+    width: 5.25rem;
+  }
+
+  .footer-pass-stub svg {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
 .coming-soon-toast {
   position: fixed;
   top: 50%;

@@ -240,7 +240,7 @@ function SaveDraftDialog({ open, onClose, onSaved }: { open: boolean; onClose: (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent size="sm" data-testid="character-save-dialog">
         <DialogHeader>
-          <DialogTitle>{t('characters.saveAsNewTitle')}</DialogTitle>
+          <DialogTitle className="arkive-dialog-title">{t('characters.saveAsNewTitle')}</DialogTitle>
           <DialogDescription>{t('characters.saveAsNewBody')}</DialogDescription>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); void submit() }}>
@@ -250,8 +250,8 @@ function SaveDraftDialog({ open, onClose, onSaved }: { open: boolean; onClose: (
           </Field>
           {failure ? <p className="text-xs text-red-700 dark:text-red-300" role="alert">{failure}</p> : null}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>{t('characters.cancel')}</Button>
-            <Button type="submit" disabled={busy} data-testid="character-save-submit">{t('characters.save')}</Button>
+            <Button type="button" variant="outline" className="rounded-full px-5" onClick={onClose}>{t('characters.cancel')}</Button>
+            <Button type="submit" className="arkive-dialog-primary px-5" disabled={busy} data-testid="character-save-submit">{t('characters.save')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -323,7 +323,7 @@ function ManageDialog({ open, character, servers, label, onClose, onOpen }: {
     <Dialog open={open} onOpenChange={(next) => { if (next) reset(); else onClose() }}>
       <DialogContent data-testid="character-manage-dialog">
         <DialogHeader>
-          <DialogTitle>{t('characters.manageTitle')}</DialogTitle>
+          <DialogTitle className="arkive-dialog-title">{t('characters.manageTitle')}</DialogTitle>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); void save() }}>
           <Field label={t('characters.name')}>
@@ -351,8 +351,8 @@ function ManageDialog({ open, character, servers, label, onClose, onOpen }: {
           <Check checked={showUid} onChange={setShowUid} testId="character-show-uid">{t('characters.showUid')}</Check>
           {failure ? <p className="text-xs text-red-700 dark:text-red-300" role="alert">{failure}</p> : null}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>{t('characters.cancel')}</Button>
-            <Button type="submit" disabled={busy} data-testid="character-manage-save">{t('characters.save')}</Button>
+            <Button type="button" variant="outline" className="rounded-full px-5" onClick={onClose}>{t('characters.cancel')}</Button>
+            <Button type="submit" className="arkive-dialog-primary px-5" disabled={busy} data-testid="character-manage-save">{t('characters.save')}</Button>
           </DialogFooter>
         </form>
 
@@ -420,12 +420,12 @@ function ConflictDialog() {
       <DialogContent size="sm" showCloseButton={false} data-testid="character-conflict"
         onEscapeKeyDown={(event) => event.preventDefault()} onPointerDownOutside={(event) => event.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>{t('characters.conflictTitle')}</DialogTitle>
+          <DialogTitle className="arkive-dialog-title">{t('characters.conflictTitle')}</DialogTitle>
           <DialogDescription>{t('characters.conflictBody')}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={takeServer} data-testid="character-conflict-server">{t('characters.takeServer')}</Button>
-          <Button onClick={keepMine} data-testid="character-conflict-mine">{t('characters.keepMine')}</Button>
+          <Button variant="outline" className="rounded-full px-5" onClick={takeServer} data-testid="character-conflict-server">{t('characters.takeServer')}</Button>
+          <Button className="arkive-dialog-primary px-5" onClick={keepMine} data-testid="character-conflict-mine">{t('characters.keepMine')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

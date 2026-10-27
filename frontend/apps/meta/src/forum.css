@@ -1799,15 +1799,9 @@
 
 .forum-media-dialog-header {
   position: relative;
-  padding: 1rem 1.15rem 0.85rem;
-  border-bottom: 1px solid var(--forum-border);
+  padding: 1.25rem 1.25rem 0.25rem;
   gap: 0.25rem;
   text-align: left;
-}
-
-.forum-media-dialog-header [data-slot='dialog-title'] {
-  padding-right: 2.5rem;
-  font-size: 1rem;
 }
 
 .forum-media-dialog-header [data-slot='dialog-description'] {
@@ -1819,7 +1813,7 @@
 .forum-media-dialog-header > button {
   position: absolute;
   top: 0.75rem;
-  right: 0.75rem;
+  right: 0.875rem;
 }
 
 .forum-image-dropzone {

@@ -10,14 +10,15 @@ import { scrollToResults } from './scrollToResults'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
 import {
+  Button,
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogRoundClose,
   DialogTitle,
-  POPUP_CLOSE_CONTROL_CLASS,
 } from '@gamemap/ui'
 import {
   IconAdjustmentsHorizontal,
@@ -2004,9 +2005,9 @@ function ForumComposerPage({
       <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
         <DialogContent className="forum-media-dialog forum-video-dialog z-[var(--arkive-layer-sheet)]" overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]" showCloseButton={false}>
           <DialogHeader className="forum-media-dialog-header">
-            <DialogTitle>{t('forum.composer.videoDialogTitle')}</DialogTitle>
+            <DialogTitle className="arkive-dialog-title">{t('forum.composer.videoDialogTitle')}</DialogTitle>
             <DialogDescription>{t('forum.composer.videoDialogDescription')}</DialogDescription>
-            <DialogClose asChild><button type="button" className={POPUP_CLOSE_CONTROL_CLASS} aria-label={t('forum.composer.closeMediaDialog')}><IconX className="size-5" stroke={1.8} /></button></DialogClose>
+            <DialogRoundClose aria-label={t('forum.composer.closeMediaDialog')} title={t('forum.composer.closeMediaDialog')} />
           </DialogHeader>
           <div className="forum-video-platforms" aria-label={t('forum.composer.supportedVideoPlatforms')}>
             <span>{t('forum.composer.videoPlatforms.bilibili')}</span>
@@ -2365,16 +2366,18 @@ function ForumPostDetail({
       </article>
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent className="forum-confirm-dialog">
-          <DialogHeader>
-            <DialogTitle>{t('forum.detailExtra.deleteTitle')}</DialogTitle>
+        <DialogContent className="forum-confirm-dialog" size="sm" showCloseButton={false}>
+          <DialogHeader className="text-left">
+            <DialogTitle className="arkive-dialog-title">{t('forum.detailExtra.deleteTitle')}</DialogTitle>
             <DialogDescription>{t('forum.detailExtra.deleteDescription')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <DialogClose className={POPUP_CLOSE_CONTROL_CLASS}>{t('forum.detailExtra.deleteCancel')}</DialogClose>
-            <button type="button" onClick={() => { setConfirmDelete(false); onDeletePost() }}>
+            <DialogClose asChild>
+              <Button type="button" variant="outline" className="rounded-full px-5">{t('forum.detailExtra.deleteCancel')}</Button>
+            </DialogClose>
+            <Button type="button" variant="destructive" className="rounded-full px-5" onClick={() => { setConfirmDelete(false); onDeletePost() }}>
               {t('forum.detailExtra.delete')}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

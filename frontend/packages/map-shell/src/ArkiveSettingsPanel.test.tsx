@@ -69,8 +69,7 @@ describe('ArkiveSettingsPanel', () => {
       },
     })
 
-    // General still reads zh-CN while this site reads ja-JP, both on closed cards.
-    expect(cardText('settings-card-language')).toContain(LANGUAGE_OPTIONS[1].label)
+    // General still reads zh-CN while this site's closed card reads ja-JP.
     expect(cardText('settings-card-site-language')).toContain('Palworld language')
     expect(cardText('settings-card-site-language')).toContain(LANGUAGE_OPTIONS[2].label)
     expect(cardText('settings-card-site-theme')).toContain('Follow general')
@@ -85,10 +84,18 @@ describe('ArkiveSettingsPanel', () => {
     expect(screen.getByText(`Following general (${LANGUAGE_OPTIONS[1].label})`)).toBeTruthy()
   })
 
+  it('keeps the shared theme and language open, with no card to expand first', () => {
+    const props = panel()
+
+    expect(pressed('settings-general-theme-auto')).toBe(true)
+    fireEvent.click(screen.getByTestId('settings-general-language-en-US'))
+    expect(props.language?.onSetGeneral).toHaveBeenCalledWith('en-US')
+  })
+
   it('opens one card at a time and closes it once a value is chosen', () => {
     panel()
-    const theme = screen.getByTestId('settings-card-theme') as HTMLDetailsElement
-    const language = screen.getByTestId('settings-card-language') as HTMLDetailsElement
+    const theme = screen.getByTestId('settings-card-site-theme') as HTMLDetailsElement
+    const language = screen.getByTestId('settings-card-site-language') as HTMLDetailsElement
 
     fireEvent.click(theme.querySelector('summary')!)
     expect(theme.open).toBe(true)
@@ -96,7 +103,7 @@ describe('ArkiveSettingsPanel', () => {
     expect(theme.open).toBe(false)
     expect(language.open).toBe(true)
 
-    fireEvent.click(screen.getByTestId('settings-general-language-en-US'))
+    fireEvent.click(screen.getByTestId('settings-site-language-en-US'))
     expect(language.open).toBe(false)
   })
 
@@ -137,17 +144,17 @@ describe('ArkiveSettingsPanel', () => {
   it('drops the override cards on the portal, which has no site to override', () => {
     panel({ site: undefined })
 
-    expect(screen.getByTestId('settings-card-theme')).toBeTruthy()
+    expect(screen.getByTestId('settings-group-theme')).toBeTruthy()
     expect(screen.queryByTestId('settings-card-site-theme')).toBeNull()
     expect(screen.queryByTestId('settings-card-site-language')).toBeNull()
     // The note about other games only makes sense where an override layer exists.
     expect(screen.queryByText(/Other games keep/)).toBeNull()
   })
 
-  it('renders without a language card for a host that has no localization', () => {
+  it('renders without a language group for a host that has no localization', () => {
     panel({ language: undefined })
 
-    expect(screen.queryByTestId('settings-card-language')).toBeNull()
+    expect(screen.queryByTestId('settings-group-language')).toBeNull()
     expect(screen.getByTestId('settings-general-theme-auto')).toBeTruthy()
   })
 

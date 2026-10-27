@@ -59,9 +59,14 @@ function DialogContent({
   children,
   size = "default",
   showCloseButton = true,
-  showTideLine = true,
+  showTideLine = false,
+  closeButtonProps,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  /** Extra attributes for the built-in close button, e.g. a localized `aria-label`. */
+  closeButtonProps?: React.ComponentProps<typeof DialogPrimitive.Close> & {
+    "data-testid"?: string
+  }
   /**
    * Width above `sm`. The size classes are variant-scoped, so a plain `max-w-*`
    * in `className` cannot override them — pick a size instead. `lg` is for
@@ -79,8 +84,9 @@ function DialogContent({
         data-slot="dialog-content"
         data-size={size}
         className={cn(
-          "fixed top-[50%] left-[50%] z-[var(--arkive-layer-sheet)] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 p-5 duration-[var(--arkive-motion-standard)] data-[size=default]:sm:max-w-lg data-[size=sm]:sm:max-w-md data-[size=lg]:sm:max-w-4xl data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          "fixed top-[50%] left-[50%] z-[var(--arkive-layer-sheet)] grid w-full max-w-[calc(100%-2rem)] grid-cols-1 translate-x-[-50%] translate-y-[-50%] gap-4 p-6 duration-[var(--arkive-motion-standard)] data-[size=default]:sm:max-w-lg data-[size=sm]:sm:max-w-md data-[size=lg]:sm:max-w-4xl data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           MODAL_SURFACE_CLASS,
+          "arkive-dialog-surface rounded-[var(--arkive-radius-dialog)] border-0",
           className
         )}
         {...props}
@@ -88,19 +94,43 @@ function DialogContent({
         {showTideLine && <DialogTideLine />}
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
+          // Centred on the first line of a default title.
+          <DialogRoundClose
+            {...closeButtonProps}
             className={cn(
-              "absolute top-2 right-2 z-[var(--arkive-layer-local-control)] md:top-3 md:right-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-              POPUP_CLOSE_CONTROL_CLASS,
+              "absolute top-4 right-4.5 z-[var(--arkive-layer-local-control)] md:top-5 md:right-5.5",
+              closeButtonProps?.className,
             )}
-          >
-            <XIcon />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
+          />
         )}
       </DialogPrimitive.Content>
     </DialogPortal>
+  )
+}
+
+/**
+ * The dialogs' close control: a small round face inside a full touch target.
+ * For a dialog that lays out its own header instead of the built-in corner button.
+ */
+function DialogRoundClose({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close> & { "data-testid"?: string }) {
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      {...props}
+      className={cn(
+        "group shrink-0 hover:bg-transparent [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        POPUP_CLOSE_CONTROL_CLASS,
+        className,
+      )}
+    >
+      <span className="grid size-8 place-items-center rounded-full bg-foreground/[0.06] transition-colors group-hover:bg-foreground/10">
+        <XIcon className="size-4" />
+      </span>
+      {!props["aria-label"] && <span className="sr-only">Close</span>}
+    </DialogPrimitive.Close>
   )
 }
 
@@ -135,7 +165,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-2 text-left", className)}
       {...props}
     />
   )
@@ -175,7 +205,8 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-tight font-semibold", className)}
+      // The right padding keeps a long title clear of the round close button.
+      className={cn("pr-10 text-xl leading-snug font-bold", className)}
       {...props}
     />
   )
@@ -203,6 +234,7 @@ export {
   DialogHeader,
   DialogOverlay,
   DialogPortal,
+  DialogRoundClose,
   DialogTitle,
   DialogTrigger,
 }

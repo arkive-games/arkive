@@ -1,7 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { IconArrowUpRight, IconCheck, IconCopy } from '@tabler/icons-react'
-import { ArkiveMark, settingsStringsFor } from '@gamemap/map-shell'
+import {
+  IconAnchor,
+  IconArrowUpRight,
+  IconBrandGithub,
+  IconBrandWechat,
+  IconCheck,
+  IconChevronDown,
+  IconCopy,
+  IconMessageCircle,
+} from '@tabler/icons-react'
+import { getUserByUid, result } from '@gamemap/api-core'
+import { useAuth } from '@gamemap/auth'
+import { settingsStringsFor } from '@gamemap/map-shell'
 import { ARKIVE_FEEDBACK_QQ_GROUP, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@gamemap/ui'
 import { FEATURES } from './featureCatalog'
 import { IS_TOY, VISIBLE_SITES, siteHref } from './sites'
@@ -9,13 +20,26 @@ import { IS_TOY, VISIBLE_SITES, siteHref } from './sites'
 // Identity and contact details are the same in every language, so they are
 // spelled out once here rather than repeated in each locale's copy.
 const ARKIVE_DOMAIN = 'www.Arkive.games'
+/** Chinese for a Chinese page, English for every other language. */
 const SLOGANS = ['万千攻略，藏于一舟', 'Sail Games With Us.'] as const
-const CREATORS = [
-  { name: '双酿', handle: 'liuyh615' },
-  { name: '苏烟', handle: 'Suyn77' },
-] as const
 const GITHUB_URL = 'https://github.com/arkive-games/arkive/tree/master/tools'
 const SUYN_URL = 'https://space.bilibili.com/33004908/upload/video'
+
+interface Creator {
+  name: string
+  /** WeChat ID. */
+  handle: string
+  /** Shown until the avatar loads, and in its place when there is no account to read it from. */
+  initial: string
+  /** Site account whose public avatar is shown. */
+  uid?: number
+  href?: string
+}
+
+const CREATORS: readonly Creator[] = [
+  { name: '双酿', handle: 'liuyh615', initial: '双' },
+  { name: '苏烟', handle: 'Suyn77', initial: '苏', uid: 10001, href: SUYN_URL },
+]
 
 type FooterDialog = 'about' | 'contact' | null
 
@@ -209,43 +233,132 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
   )
 }
 
+/**
+ * A creator's real site avatar, read from their public profile while a dialog
+ * shows it. Until it arrives, or when the API is unreachable, the face is the
+ * creator's initial instead.
+ */
+function useCreatorAvatars(active: boolean) {
+  const auth = useAuth()
+  const client = auth.enabled ? auth.client.requestClient : null
+  const [avatars, setAvatars] = useState<Record<number, string>>({})
+
+  useEffect(() => {
+    if (!active || !client) return
+    let live = true
+    for (const { uid } of CREATORS) {
+      if (uid === undefined) continue
+      void result(getUserByUid({ client, throwOnError: true, path: { uid } }))
+        .then((user) => {
+          if (live && user.avatarUrl) setAvatars((current) => ({ ...current, [uid]: user.avatarUrl! }))
+        })
+        .catch(() => {})
+    }
+    return () => { live = false }
+  }, [active, client])
+
+  return (creator: Creator) => (creator.uid === undefined ? undefined : avatars[creator.uid])
+}
+
+function CreatorFace({ creator, src }: { creator: Creator; src: string | undefined }) {
+  return src ? <img src={src} alt="" /> : <span>{creator.initial}</span>
+}
+
+function ShoreWaves() {
+  return (
+    <>
+      <svg className="footer-shore-waves" viewBox="0 0 512 48" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 26c32-10 64-10 96 0s64 10 96 0 64-10 96 0 64 10 96 0 64-10 96 0 32 5 32 5V48H0Z" fill="#2f8fb5" opacity=".55" />
+        <path d="M0 32c40-9 72-9 108 0s70 9 104 0 70-9 106 0 72 9 104 0 58-6 90 0V48H0Z" fill="#1f6f99" />
+      </svg>
+      <svg className="footer-shore-ship" viewBox="0 0 32 28" aria-hidden="true">
+        <path d="M15 2v17H6Z" fill="#ffd08a" />
+        <path d="M17 6v13h8Z" fill="#ffb398" />
+        <path d="M3 20h26l-4 6H7Z" fill="#40251c" />
+      </svg>
+    </>
+  )
+}
+
 export function AboutDialog({ open, brandName, onOpenChange }: {
   open: boolean
   brandName: string
   onOpenChange: (open: boolean) => void
 }) {
-  const { t } = useTranslation()
-  // Counted, not written into the copy, so the paragraph stays true as games
-  // and tools are added.
+  const { t, i18n } = useTranslation()
+  const avatarOf = useCreatorAvatars(open)
+  // Counted, not written into the copy, so the route stays true as games and
+  // tools are added.
   const games = VISIBLE_SITES.filter((site) => siteHref(site)).length
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
     && VISIBLE_SITES.some((site) => site.id === feature.gameId && siteHref(site))).length
+  const slogan = (i18n.resolvedLanguage ?? i18n.language).startsWith('zh') ? SLOGANS[0] : SLOGANS[1]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="footer-dialog sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t('footerDialogs.about.title')}</DialogTitle>
-          <DialogDescription className="footer-dialog-brand">
-            <span className="footer-mark"><ArkiveMark /></span>
-            <span>
-              <strong>{brandName}</strong>
-              <small>{SLOGANS.join(' · ')}</small>
-              <span className="footer-dialog-domain">{ARKIVE_DOMAIN}</span>
-            </span>
-          </DialogDescription>
-        </DialogHeader>
-        <div className="footer-dialog-body">
+      <DialogContent
+        className="footer-dialog footer-about max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto pb-0"
+        closeButtonProps={{ className: '[&>span]:bg-white/55 [&>span]:text-[#40251c]' }}
+      >
+        <div className="footer-about-hero">
+          <span className="footer-about-sun" aria-hidden="true" />
+          <span className="arkive-wordmark footer-about-wordmark">{brandName}</span>
+          <DialogTitle className="sr-only">{t('footerDialogs.about.title')}</DialogTitle>
+          <DialogDescription className="footer-about-slogan arkive-dialog-title">{slogan}</DialogDescription>
+        </div>
+
+        <div className="footer-crew-line">
+          <span className="footer-faces" aria-hidden="true">
+            {CREATORS.map((creator) => <CreatorFace key={creator.handle} creator={creator} src={avatarOf(creator)} />)}
+          </span>
           <p>
             <Trans
               i18nKey="footerDialogs.about.team"
               components={{ suyn: <a href={SUYN_URL} target="_blank" rel="noreferrer" /> }}
             />
           </p>
-          <p>{t('footerDialogs.about.history', { games, tools })}</p>
+        </div>
+
+        <AboutRoute games={games} tools={tools} />
+
+        <div className="footer-shore">
+          <ShoreWaves />
+          <div className="footer-about-domain">
+            <b>{ARKIVE_DOMAIN}</b>
+            <span>{t('footerDialogs.about.arrived')} ⚓</span>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/** The voyage so far: open on a desktop, folded on a phone where the dialog is tall already. */
+function AboutRoute({ games, tools }: { games: number; tools: number }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(() => window.matchMedia('(min-width: 48rem)').matches)
+
+  return (
+    <details className="footer-route" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary className="footer-section-label">
+        {t('footerDialogs.about.route')}
+        <IconChevronDown className="footer-route-chevron size-3.5" stroke={2.4} aria-hidden="true" />
+      </summary>
+      <ol className="footer-route-stops">
+        <li>
+          <small>{t('footerDialogs.about.maidenLabel')}</small>
+          {t('footerDialogs.about.maiden')}
+        </li>
+        <li data-stop="now">
+          <small>{t('footerDialogs.about.nowLabel')}</small>
+          {t('footerDialogs.about.now', { games, tools })}
+        </li>
+        <li data-stop="next">
+          <small>{t('footerDialogs.about.nextLabel')}</small>
+          {t('footerDialogs.about.next')}
+        </li>
+      </ol>
+    </details>
   )
 }
 
@@ -254,50 +367,107 @@ export function ContactDialog({ open, onOpenChange }: {
   onOpenChange: (open: boolean) => void
 }) {
   const { t } = useTranslation()
-  const rows = [
-    { key: 'qq', label: t('footerDialogs.contact.feedbackGroup'), value: ARKIVE_FEEDBACK_QQ_GROUP },
-    ...CREATORS.map((creator) => ({
-      key: creator.handle,
-      label: t('footerDialogs.contact.creator', { name: creator.name }),
-      value: creator.handle,
-    })),
-  ]
+  const avatarOf = useCreatorAvatars(open)
+  const [copiedGroup, copyGroup] = useCopied()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="footer-dialog sm:max-w-lg">
+      <DialogContent className="footer-dialog footer-contact max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto pb-0">
         <DialogHeader>
-          <DialogTitle>{t('footerDialogs.contact.title')}</DialogTitle>
+          <DialogTitle className="arkive-dialog-title">{t('footerDialogs.contact.title')}</DialogTitle>
           <DialogDescription>{t('footerDialogs.contact.description')}</DialogDescription>
         </DialogHeader>
-        <ul className="footer-contact-list">
-          {rows.map((row) => (
-            <li key={row.key}>
-              <span>
-                <small>{row.label}</small>
-                <strong>{row.value}</strong>
+
+        <div className="footer-pass">
+          <div className="footer-pass-main">
+            <div className="footer-pass-kicker">
+              <IconMessageCircle className="size-3.5" stroke={2.4} aria-hidden="true" />
+              {t('footerDialogs.contact.feedbackGroup')}
+            </div>
+            <div className="footer-pass-number">{ARKIVE_FEEDBACK_QQ_GROUP}</div>
+            <div className="footer-pass-note">{t('footerDialogs.contact.groupNote')}</div>
+            <button
+              type="button"
+              className="footer-pass-copy"
+              data-copied={copiedGroup || undefined}
+              data-testid="footer-copy-qq"
+              onClick={() => copyGroup(ARKIVE_FEEDBACK_QQ_GROUP)}
+            >
+              {copiedGroup
+                ? <IconCheck className="size-4" stroke={2.4} aria-hidden="true" />
+                : <IconCopy className="size-4" stroke={2.2} aria-hidden="true" />}
+              <span aria-live="polite">{t(copiedGroup ? 'footerDialogs.contact.copiedGroup' : 'footerDialogs.contact.copyGroup')}</span>
+            </button>
+          </div>
+          <div className="footer-pass-stub" aria-hidden="true">
+            <IconAnchor stroke={2} />
+            <b>{t('footerDialogs.contact.board')}</b>
+            <small>ARKIVE</small>
+          </div>
+        </div>
+
+        <div className="footer-section-label">{t('footerDialogs.contact.crew')}</div>
+        <ul className="footer-crew">
+          {CREATORS.map((creator) => (
+            <li key={creator.handle} className="footer-mate">
+              <span className="footer-mate-avatar"><CreatorFace creator={creator} src={avatarOf(creator)} /></span>
+              <strong>{creator.name}</strong>
+              <span className="footer-mate-role">
+                {t('footerDialogs.contact.role')}
+                {creator.href && (
+                  <>
+                    {' · '}
+                    <a href={creator.href} target="_blank" rel="noreferrer">{t('footerDialogs.contact.bilibili')}</a>
+                  </>
+                )}
               </span>
-              <CopyButton value={row.value} label={row.label} />
+              <WechatButton creator={creator} />
             </li>
           ))}
-          <li>
-            <span>
-              <small>{t('footerDialogs.contact.github')}</small>
-              <strong>{GITHUB_URL.replace(/^https:\/\//, '')}</strong>
-            </span>
-            <a className="footer-contact-action" href={GITHUB_URL} target="_blank" rel="noreferrer">
-              {t('footerDialogs.contact.open')}
-              <IconArrowUpRight className="size-4" stroke={1.8} aria-hidden="true" />
-            </a>
-          </li>
         </ul>
+
+        <div className="footer-shore">
+          <ShoreWaves />
+          <a className="footer-repo" href={GITHUB_URL} target="_blank" rel="noreferrer">
+            <span className="footer-repo-mark"><IconBrandGithub className="size-5" stroke={1.8} aria-hidden="true" /></span>
+            <span className="footer-repo-text">
+              <b>{t('footerDialogs.contact.github')}</b>
+              <small>{GITHUB_URL.replace(/^https:\/\//, '').replace(/\/tree\/.*$/, '')}</small>
+            </span>
+            <span className="footer-repo-go">
+              {t('footerDialogs.contact.open')}
+              <IconArrowUpRight className="size-3.5" stroke={2.4} aria-hidden="true" />
+            </span>
+          </a>
+        </div>
       </DialogContent>
     </Dialog>
   )
 }
 
-function CopyButton({ value, label }: { value: string; label: string }) {
+function WechatButton({ creator }: { creator: Creator }) {
   const { t } = useTranslation()
+  const [copied, copy] = useCopied()
+
+  return (
+    <button
+      type="button"
+      className="footer-wechat"
+      data-copied={copied || undefined}
+      aria-label={t('footerDialogs.contact.copyWechat', { name: creator.name, id: creator.handle })}
+      onClick={() => copy(creator.handle)}
+    >
+      <IconBrandWechat className="size-4.5" stroke={1.8} aria-hidden="true" />
+      <span className="footer-wechat-id">{creator.handle}</span>
+      <span className="footer-wechat-hint" aria-live="polite">
+        {t(copied ? 'footerDialogs.contact.copied' : 'footerDialogs.contact.copyAction')}
+      </span>
+    </button>
+  )
+}
+
+/** Copies a value and reports it as copied for two seconds. */
+function useCopied() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -306,21 +476,8 @@ function CopyButton({ value, label }: { value: string; label: string }) {
     return () => window.clearTimeout(timeout)
   }, [copied])
 
-  const copy = () => {
+  const copy = (value: string) => {
     void navigator.clipboard?.writeText(value).then(() => setCopied(true))
   }
-
-  return (
-    <button
-      type="button"
-      className="footer-contact-action"
-      aria-label={t('footerDialogs.contact.copy', { label })}
-      onClick={copy}
-    >
-      {copied
-        ? <IconCheck className="size-4" stroke={2} aria-hidden="true" />
-        : <IconCopy className="size-4" stroke={1.8} aria-hidden="true" />}
-      <span aria-live="polite">{t(copied ? 'footerDialogs.contact.copied' : 'footerDialogs.contact.copyAction')}</span>
-    </button>
-  )
+  return [copied, copy] as const
 }

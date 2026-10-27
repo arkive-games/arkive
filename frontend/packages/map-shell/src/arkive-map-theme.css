@@ -4,7 +4,7 @@
   --arkive-radius-standard: 0.5rem;
   /* Surfaces that float free of the page: top-bar menus and the phone menu drawer. */
   --arkive-radius-floating: 1rem;
-  /* The account and settings dialogs only; every other dialog stays standard. */
+  /* Every dialog, from the shared Dialog and AlertDialog. */
   --arkive-radius-dialog: 1.5rem;
   /* The warm call-to-action pill of the account dialog and the phone menu. */
   --arkive-warm-action: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
@@ -207,8 +207,9 @@ textarea {
   }
 }
 
-/* Only the glyphs of the account and settings dialog titles (plus ASCII).
-   Regenerate the subset when one of those titles changes.
+/* Only the glyphs of the dialog titles that carry .arkive-dialog-title (plus
+   ASCII). Regenerate the subset when one of those titles changes, and keep the
+   class off titles with dynamic text, which would mix in a fallback face.
    License: ./assets/resource-han-rounded-titles.LICENSE.txt */
 @font-face {
   font-family: "Arkive Rounded";
@@ -217,7 +218,7 @@ textarea {
   font-display: swap;
 }
 
-/* The friendly heading of the account and settings dialogs. */
+/* The friendly heading of the site's dialogs. */
 .arkive-dialog-title {
   font-family: "Arkive Rounded", system-ui, sans-serif;
   font-weight: 700;
@@ -225,9 +226,10 @@ textarea {
   letter-spacing: 0.01em;
 }
 
-/* The primary action of the account dialog: a warm gradient pill. */
-.arkive-dialog-submit {
-  min-height: 2.875rem;
+/* The one main action of a dialog: a warm gradient pill. The account dialog's
+   full-width submit adds the taller height. */
+.arkive-dialog-submit,
+.arkive-dialog-primary {
   border-radius: 9999px;
   background: var(--arkive-warm-action);
   color: var(--arkive-warm-action-foreground);
@@ -238,10 +240,21 @@ textarea {
     filter var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
-.arkive-dialog-submit:hover:not(:disabled) {
+.arkive-dialog-submit {
+  min-height: 2.875rem;
+}
+
+.arkive-dialog-submit:hover:not(:disabled),
+.arkive-dialog-primary:hover:not(:disabled) {
   background: var(--arkive-warm-action);
   filter: brightness(1.03);
   transform: translateY(-1px);
+}
+
+/* The faint warm wash every dialog sits on. Declared before the account and
+   settings variants so their own angle wins. */
+.arkive-dialog-surface {
+  background: linear-gradient(155deg, color-mix(in srgb, #ffd8a0 13%, var(--background)), var(--background) 44%);
 }
 
 .arkive-account-dialog {
@@ -282,8 +295,310 @@ textarea {
   transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
 }
 
-.arkive-settings-card[open] > summary > [data-slot="settings-chevron"] {
+.arkive-settings-card[open] > summary > [data-slot="settings-chevron"],
+.arkive-data-hold[open] > summary > [data-slot="settings-chevron"] {
   transform: rotate(180deg);
+}
+
+.arkive-settings-group + .arkive-settings-group {
+  margin-top: 0.75rem;
+}
+
+.arkive-settings-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.625rem;
+}
+
+.arkive-settings-group-head b {
+  font-family: "Arkive Rounded", system-ui, sans-serif;
+  font-size: 1rem;
+}
+
+.arkive-settings-group-head span {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+/* The shared theme: three small pictures of a page. */
+.arkive-theme-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.arkive-theme-card {
+  display: grid;
+  gap: 0.375rem;
+  padding: 0.375rem 0.375rem 0.5rem;
+  border: 2px solid transparent;
+  border-radius: var(--arkive-radius-floating);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--border);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: transform var(--arkive-motion-standard) cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.arkive-theme-card:hover {
+  transform: translateY(-2px);
+}
+
+.arkive-theme-card[aria-pressed="true"] {
+  border-color: #ffb398;
+  box-shadow: 0 10px 22px -14px rgb(255 140 110 / 0.9);
+}
+
+.arkive-theme-card[aria-pressed="true"] > span:last-child::before {
+  content: "✓ ";
+  color: #e0784f;
+}
+
+.arkive-theme-mini {
+  display: grid;
+  height: 2.5rem;
+  grid-template-rows: 0.625rem 1fr;
+  gap: 0.1875rem;
+  overflow: hidden;
+  padding: 0.3125rem;
+  border-radius: var(--arkive-radius-standard);
+  --mini-page: #f6f3ee;
+  --mini-bar: #ffffff;
+  --mini-card: #ffd2b0;
+  background: var(--mini-page);
+}
+
+.arkive-theme-mini[data-theme="dark"] {
+  --mini-page: #1d2230;
+  --mini-bar: #2c3446;
+  --mini-card: #5a6c8f;
+}
+
+.arkive-theme-mini > span {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+
+.arkive-theme-mini i {
+  display: block;
+  border-radius: 9999px;
+  background: var(--mini-bar);
+}
+
+.arkive-theme-mini > span > i {
+  border-radius: 0.25rem;
+  background: var(--mini-card);
+}
+
+.arkive-theme-mini[data-theme="auto"] {
+  background: linear-gradient(90deg, #f6f3ee 50%, #1d2230 50%);
+}
+
+.arkive-theme-mini[data-theme="auto"] > i {
+  background: linear-gradient(90deg, #ffffff 50%, #2c3446 50%);
+}
+
+.arkive-theme-mini[data-theme="auto"] > span > i:last-child {
+  background: #5a6c8f;
+}
+
+.arkive-language-pill {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.arkive-language-pill:hover {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.arkive-language-pill[aria-pressed="true"] {
+  color: var(--arkive-warm-action-foreground);
+  background: var(--arkive-warm-action);
+  box-shadow: 0 6px 14px -8px rgb(255 140 110 / 0.9);
+}
+
+/* Local data: a folded hold with its contents listed, the irreversible row last. */
+.arkive-data-hold {
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--arkive-radius-floating);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.arkive-data-hold > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--arkive-radius-floating);
+  cursor: pointer;
+  list-style: none;
+}
+
+.arkive-data-hold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.arkive-data-hold > summary > [data-slot="settings-chevron"] {
+  flex: none;
+  transition: transform var(--arkive-motion-standard) var(--arkive-motion-easing);
+}
+
+.arkive-data-hold b {
+  display: block;
+  font-size: 0.9375rem;
+}
+
+.arkive-data-hold small {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.arkive-data-hold-icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  place-items: center;
+  border-radius: 0.75rem;
+  color: #1f6f99;
+  background: color-mix(in srgb, #2f8fb5 14%, var(--card));
+}
+
+.dark .arkive-data-hold-icon {
+  color: #7cc4e8;
+}
+
+.arkive-local-data {
+  display: grid;
+  padding: 0 0.5rem 0.5rem;
+}
+
+.arkive-local-data-row {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.arkive-local-data-row:hover {
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.arkive-local-data-row[data-danger] {
+  margin-top: 0.25rem;
+  border-top: 1px dashed var(--border);
+  border-radius: 0 0 0.75rem 0.75rem;
+  color: var(--destructive);
+}
+
+.arkive-local-data-action {
+  flex: none;
+  min-height: 2rem;
+  padding: 0 0.875rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.arkive-local-data-action:hover {
+  background: color-mix(in srgb, var(--foreground) 11%, transparent);
+}
+
+.arkive-local-data-row[data-danger] .arkive-local-data-action {
+  color: var(--destructive);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+
+.arkive-local-data-row[data-danger] .arkive-local-data-action:hover {
+  background: color-mix(in srgb, var(--destructive) 16%, transparent);
+}
+
+/* The clear-everything confirm: a red badge, then the losses struck through. */
+.arkive-clear-confirm {
+  justify-items: center;
+  gap: 0;
+  padding-top: 2rem;
+  text-align: center;
+}
+
+.arkive-clear-badge {
+  position: relative;
+  display: grid;
+  width: 4.5rem;
+  height: 4.5rem;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: 9999px;
+  color: var(--destructive);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+
+.arkive-clear-badge::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
+  border: 2px dashed color-mix(in srgb, var(--destructive) 25%, transparent);
+  border-radius: 9999px;
+  animation: arkive-clear-spin 18s linear infinite;
+}
+
+@keyframes arkive-clear-spin {
+  to { transform: rotate(1turn); }
+}
+
+.arkive-clear-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 1rem;
+}
+
+.arkive-clear-chips > li {
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--destructive) 60%, transparent);
+  text-decoration-thickness: 2px;
+}
+
+.arkive-clear-warning {
+  margin-top: 0.875rem;
+  color: var(--destructive);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.arkive-clear-confirm [data-slot="alert-dialog-footer"] {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.arkive-clear-action {
+  box-shadow: 0 10px 20px -10px color-mix(in srgb, var(--destructive) 80%, transparent);
 }
 
 @media (max-width: 360px) {
@@ -299,8 +614,12 @@ textarea {
     gap: 0.5rem;
   }
 
-  .arkive-local-data-row {
-    padding: 0.625rem 0.5rem;
+  .arkive-local-data {
+    padding: 0 0.25rem 0.25rem;
+  }
+
+  .arkive-theme-card {
+    font-size: 0.75rem;
   }
 }
 
@@ -420,11 +739,19 @@ a:focus-visible > .arkive-wordmark {
   .arkive-round-button svg,
   .arkive-login-pill,
   .arkive-dialog-submit,
+  .arkive-dialog-primary,
   .arkive-settings-card,
   .arkive-settings-card > summary > [data-slot="settings-chevron"],
+  .arkive-data-hold > summary > [data-slot="settings-chevron"],
+  .arkive-theme-card,
+  .arkive-language-pill,
   .arkive-nav-indicator,
   .arkive-nav-indicator[data-animate="true"] {
     transition: none;
+  }
+
+  .arkive-clear-badge::after {
+    animation: none;
   }
 }
 

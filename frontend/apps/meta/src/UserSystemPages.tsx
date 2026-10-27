@@ -45,7 +45,6 @@ import {
   IconUpload,
   IconUserPlus,
   IconUsers,
-  IconX,
 } from '@tabler/icons-react'
 import {
   Button,
@@ -55,9 +54,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogRoundClose,
   DialogTitle,
   DialogTrigger,
-  POPUP_CLOSE_CONTROL_CLASS,
 } from '@gamemap/ui'
 import { SITES, siteHref } from './sites'
 import { AVATAR_PRESETS, DEFAULT_AVATAR_SRC } from './avatarPresets'
@@ -808,24 +807,18 @@ function AvatarUploadDialog({
         overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
         className="z-[var(--arkive-layer-sheet)] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0"
       >
-        <div className="relative border-b border-border bg-background px-6 py-5">
-          <DialogClose asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={`absolute right-3 top-3 ${POPUP_CLOSE_CONTROL_CLASS}`}
-              aria-label={t('userSystem.account.avatarDialog.close')}
-            >
-              <IconX className="size-4" stroke={1.8} />
-            </Button>
-          </DialogClose>
+        <div className="relative px-6 pt-6 pb-2">
+          <DialogRoundClose
+            className="absolute top-4 right-4.5 md:top-5 md:right-5.5"
+            aria-label={t('userSystem.account.avatarDialog.close')}
+            title={t('userSystem.account.avatarDialog.close')}
+          />
           <DialogHeader className="pr-9 text-left">
             <div className="flex items-center gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <IconPhoto className="size-5" stroke={1.8} aria-hidden="true" />
               </span>
-              <DialogTitle>
+              <DialogTitle className="arkive-dialog-title pr-0">
                 {t('userSystem.account.avatarDialog.title')}
               </DialogTitle>
             </div>
@@ -991,13 +984,13 @@ function AvatarUploadDialog({
 
         <DialogFooter className="sticky bottom-0 z-[var(--arkive-layer-local-control)] border-t border-border bg-card/95 px-6 py-4 backdrop-blur-sm">
           <DialogClose asChild>
-            <Button type="button" variant="outline" className="h-11 rounded-lg">
+            <Button type="button" variant="outline" className="h-11 rounded-full px-5">
               {t('userSystem.account.avatarDialog.cancel')}
             </Button>
           </DialogClose>
           <Button
             type="button"
-            className="h-11 rounded-lg bg-primary px-5 font-semibold text-white"
+            className="arkive-dialog-primary h-11 px-5"
             disabled={!selectedSrc || !croppedAreaPixels || processing}
             onClick={() => void applyAvatar()}
           >
