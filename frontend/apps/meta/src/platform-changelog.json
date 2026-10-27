@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-10-28",
+      "commit": "f619c293d6ee1aaaa89585db254d17d3f5b5d917",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The homepage carousel now features five slides, so V Rising and Ragnarok Online 3 are reached from the shortcut row below it; the Phantom Blade Zero notice now matches the other dialogs.",
+            "zh-CN": "首页轮播固定为五张，夜族崛起和仙境传说3请从下方快捷入口进入；影之刃零的「敬请期待」弹窗标题与其他弹窗样式统一。",
+            "zh-TW": "首頁輪播固定為五張，夜族崛起和仙境傳說3請從下方快捷入口進入；影之刃零的「敬請期待」彈窗標題與其他彈窗樣式統一。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
       "commit": "dd4f2180ab267f56f595a0eea4bc4c304b97b0fc",
       "targets": [
         "aion2",
