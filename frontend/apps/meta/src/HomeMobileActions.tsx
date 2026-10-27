@@ -21,7 +21,7 @@ const THEME_ICONS = { auto: IconSunMoon, light: IconSun, dark: IconMoon } as con
 /**
  * The portal's phone header controls on every view: language, theme and a site
  * menu, as three round buttons. The phone site has no bottom tab bar, so the
- * menu sheet carries the sections, then the account and settings once signed in.
+ * menu sheet carries the sections, the account once signed in, and settings.
  */
 export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLanguageChange, onThemeChange, onLogin, onOpenSettings }: {
   isSignedIn: boolean
@@ -134,21 +134,23 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
           {hasTools && <a href="#tools" onClick={close}>{t('landing.menu.tools')}</a>}
           <a href="#forum" onClick={close}>{t('landing.menu.forum')}</a>
           <hr />
-          {isSignedIn ? (
+          {isSignedIn && (
             <>
               <a href="#account/edit" onClick={close}>{t('landing.menu.account')}</a>
               <a href="#notifications/settings" onClick={close}>{t('landing.menu.notifications')}</a>
-              <button
-                type="button"
-                onClick={() => {
-                  close()
-                  onOpenSettings()
-                }}
-              >
-                {settingsStringsFor(language).title}
-              </button>
             </>
-          ) : (
+          )}
+          {/* Signed out too: clearing local data lives nowhere else on a phone. */}
+          <button
+            type="button"
+            onClick={() => {
+              close()
+              onOpenSettings()
+            }}
+          >
+            {settingsStringsFor(language).title}
+          </button>
+          {!isSignedIn && (
             <button type="button" className="home-sheet-login" onClick={login}>{t('landing.menu.login')}</button>
           )}
         </nav>

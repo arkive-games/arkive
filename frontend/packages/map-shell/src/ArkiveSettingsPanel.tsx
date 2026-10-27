@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  POPUP_CLOSE_CONTROL_CLASS,
 } from "@gamemap/ui"
 import { useLanguagePreference } from "@gamemap/state-memory"
 
@@ -347,10 +348,10 @@ export function ArkiveSettingsDialog({
         data-testid="settings-dialog"
         showCloseButton={false}
         showTideLine={false}
-        className="arkive-settings-dialog max-h-[min(85dvh,44rem)] grid-rows-[auto_minmax(0,1fr)] gap-5 rounded-[1.5rem] border-0 p-6 sm:max-w-[430px]"
+        className="arkive-settings-dialog max-h-[min(85dvh,44rem)] grid-rows-[auto_minmax(0,1fr)] gap-5 rounded-[var(--arkive-radius-dialog)] border-0 p-6 sm:max-w-[25rem]"
       >
         <DialogHeader className="flex-row items-center justify-between gap-3 text-left">
-          <DialogTitle className="arkive-dialog-title text-[1.375rem] font-bold sm:text-2xl">
+          <DialogTitle className="arkive-dialog-title text-xl font-bold sm:text-2xl">
             {panel.strings.title}
           </DialogTitle>
           <DialogClose asChild>
@@ -358,11 +359,13 @@ export function ArkiveSettingsDialog({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-8 shrink-0 rounded-full bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+              className={cn(POPUP_CLOSE_CONTROL_CLASS, "group shrink-0 -m-1.5 md:-m-0.5 hover:bg-transparent")}
               aria-label={panel.strings.close}
               title={panel.strings.close}
             >
-              <IconX className="size-4" stroke={1.8} />
+              <span className="grid size-8 place-items-center rounded-full bg-foreground/[0.06] transition-colors group-hover:bg-foreground/10">
+                <IconX className="size-4" stroke={1.8} />
+              </span>
             </Button>
           </DialogClose>
         </DialogHeader>

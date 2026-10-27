@@ -44,7 +44,10 @@ describe("AccountDialog", () => {
     expect(dialog.className).toContain("arkive-account-dialog")
     expect(dialog.className).toContain("shadow-lg")
     expect(dialog.querySelector('[data-slot="dialog-tide-line"]')).toBeNull()
-    expect(getByRole("button", { name: "Close" }).className).toContain("rounded-full")
+    // A touch target on phones and the compact height on desktop, whatever the face looks like.
+    expect(getByRole("button", { name: "Close" }).className).toContain("size-11")
+    expect(getByRole("button", { name: "Close" }).className).toContain("md:size-9")
+    expect(getByRole("button", { name: "Close" }).querySelector(".rounded-full")).toBeTruthy()
 
     expect(getByRole("heading", { name: "Welcome aboard Arkive~" })).toBeTruthy()
     expect(getByRole("button", { name: "Sign in" }).className).toContain("arkive-dialog-submit")

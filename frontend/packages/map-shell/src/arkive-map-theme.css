@@ -4,6 +4,11 @@
   --arkive-radius-standard: 0.5rem;
   /* Surfaces that float free of the page: top-bar menus and the phone menu drawer. */
   --arkive-radius-floating: 1rem;
+  /* The account and settings dialogs only; every other dialog stays standard. */
+  --arkive-radius-dialog: 1.5rem;
+  /* The warm call-to-action pill of the account dialog and the phone menu. */
+  --arkive-warm-action: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
+  --arkive-warm-action-foreground: #40251c;
   --arkive-touch-target: 2.75rem;
   --arkive-motion-immediate: 120ms;
   --arkive-motion-standard: 180ms;
@@ -252,8 +257,8 @@ textarea {
 .arkive-dialog-submit {
   min-height: 2.875rem;
   border-radius: 9999px;
-  background: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
-  color: #40251c;
+  background: var(--arkive-warm-action);
+  color: var(--arkive-warm-action-foreground);
   font-weight: 600;
   box-shadow: 0 6px 16px -10px #c35932;
   transition:
@@ -262,7 +267,7 @@ textarea {
 }
 
 .arkive-dialog-submit:hover:not(:disabled) {
-  background: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
+  background: var(--arkive-warm-action);
   filter: brightness(1.03);
   transform: translateY(-1px);
 }
@@ -277,7 +282,7 @@ textarea {
 
 /* One collapsible row of the settings dialog. */
 .arkive-settings-card {
-  border-radius: 18px;
+  border-radius: var(--arkive-radius-floating);
   padding: 0 1rem;
   background: color-mix(in srgb, var(--muted) 65%, var(--background));
   transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
@@ -289,10 +294,10 @@ textarea {
 
 .arkive-settings-card > summary {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 12px;
+  grid-template-columns: minmax(0, 1fr) auto 0.75rem;
   align-items: center;
   gap: 0.625rem;
-  min-height: 58px;
+  min-height: 3.5rem;
   cursor: pointer;
   list-style: none;
 }
@@ -323,7 +328,7 @@ textarea {
   }
 
   .arkive-local-data-row {
-    padding: 10px 8px;
+    padding: 0.625rem 0.5rem;
   }
 }
 

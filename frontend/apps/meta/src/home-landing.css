@@ -1150,8 +1150,8 @@
   justify-content: center;
   margin-top: 0.125rem;
   border-radius: 999px;
-  color: #40251c;
-  background: linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be);
+  color: var(--arkive-warm-action-foreground);
+  background: var(--arkive-warm-action);
   font-weight: 700;
 }
 .home-sheet hr {

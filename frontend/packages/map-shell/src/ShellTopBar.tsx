@@ -524,16 +524,18 @@ function NavDropdown({
                 <div
                   key={heading}
                   role="group"
-                  aria-label={heading}
+                  aria-label={heading || undefined}
                   className={cn(
                     "flex min-w-0 flex-col",
                     index > 0 && "border-l border-border/70 pl-3.5",
                     index < groups.length - 1 && "pr-3.5",
                   )}
                 >
-                  <span aria-hidden="true" className="px-2 pb-1.5 text-xs text-muted-foreground">
-                    {heading}
-                  </span>
+                  {heading && (
+                    <span aria-hidden="true" className="px-2 pb-1.5 text-xs text-muted-foreground">
+                      {heading}
+                    </span>
+                  )}
                   {leaves.map((child) => {
                     const rendered = nav.renderItem(
                       {
@@ -548,7 +550,7 @@ function NavDropdown({
                         ),
                       },
                       cn(
-                        "flex min-h-[38px] w-full items-center rounded-lg px-2 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none",
+                        "flex min-h-9 w-full items-center rounded-lg px-2 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none",
                         "hover:bg-[color-mix(in_srgb,var(--nav-tint)_13%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--nav-tint)_13%,transparent)]",
                         child.active ? "text-primary" : "text-foreground",
                       ),

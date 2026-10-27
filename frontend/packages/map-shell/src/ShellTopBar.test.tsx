@@ -213,6 +213,26 @@ describe("ShellTopBar nav", () => {
     expect((getByTestId("link-a").parentElement as HTMLElement).style.getPropertyValue("--nav-tint")).toBe("#123456")
   })
 
+  it("gives ungrouped leaves beside grouped ones a column without an empty heading", () => {
+    const items: ShellNavItem[] = [
+      {
+        key: "games",
+        label: "Games",
+        children: [
+          { key: "a", label: "Alpha", group: "Online" },
+          { key: "b", label: "Beta" },
+        ],
+      },
+    ]
+    const { getAllByRole, getByTestId } = render(<ShellTopBar nav={{ items, renderItem }} />)
+
+    fireEvent.click(getByTestId("nav-dropdown-games"))
+    const columns = getAllByRole("group")
+    expect(columns).toHaveLength(2)
+    expect(columns[1].hasAttribute("aria-label")).toBe(false)
+    expect(columns[1].querySelector("[aria-hidden=true]")).toBeNull()
+  })
+
   it("uses one geometry and type treatment for nav and utility menu items", () => {
     const items: ShellNavItem[] = [
       {

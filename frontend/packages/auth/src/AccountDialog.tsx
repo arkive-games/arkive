@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  POPUP_CLOSE_CONTROL_CLASS,
+  cn,
 } from "@gamemap/ui"
 
 import { AltchaAbortError, solveAltcha } from "./altcha"
@@ -225,27 +227,29 @@ export function AccountDialog({
         showCloseButton={false}
         overlayClassName="z-[var(--arkive-layer-sheet-backdrop)]"
         showTideLine={false}
-        className="arkive-account-dialog z-[var(--arkive-layer-sheet)] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-[1.5rem] border-0 p-0 sm:max-w-[420px]"
+        className="arkive-account-dialog z-[var(--arkive-layer-sheet)] max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-[var(--arkive-radius-dialog)] border-0 p-0 sm:max-w-[25rem]"
         data-testid="account-dialog"
       >
         <div className="flex items-center justify-between px-6 pt-5">
-          <span className="arkive-wordmark text-[1.375rem] opacity-60" aria-hidden="true">Arkive</span>
+          <span className="arkive-wordmark text-xl opacity-60" aria-hidden="true">Arkive</span>
           <DialogClose asChild>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="size-8 rounded-full bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+              className={cn(POPUP_CLOSE_CONTROL_CLASS, "group shrink-0 -m-1.5 md:-m-0.5 hover:bg-transparent")}
               aria-label={strings.close}
               title={strings.close}
             >
-              <IconX className="size-4" stroke={1.8} />
+              <span className="grid size-8 place-items-center rounded-full bg-foreground/[0.06] transition-colors group-hover:bg-foreground/10">
+                <IconX className="size-4" stroke={1.8} />
+              </span>
             </Button>
           </DialogClose>
         </div>
 
         <DialogHeader className="items-start gap-1 px-6 pt-5 text-left">
-          <DialogTitle className="arkive-dialog-title text-[1.5rem] leading-normal font-bold sm:text-[1.625rem]">
+          <DialogTitle className="arkive-dialog-title text-2xl leading-normal font-bold">
             {title}
           </DialogTitle>
           {subtitle && (

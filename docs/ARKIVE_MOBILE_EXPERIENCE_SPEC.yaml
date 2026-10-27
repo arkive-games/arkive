@@ -165,12 +165,16 @@ portal_home:
   search: "Do not place a search control on the homepage body."
   # Owner decision (2026-10): the mobile website has no bottom tab bar; that bar
   # is reserved for a future native app or mini-program.
+  # Owner decision (2026-10, PR #161): the menu sheet is plain text rows. The
+  # favorites shortcut and the return-to-top row were dropped; favorites stay
+  # reachable from the account page's own sections.
   navigation: >-
-    Every portal view's header carries language, theme and a menu sheet holding
-    every destination — account or login, notifications, all games, tools,
-    forum, favorites, settings — plus a return to the top, so
-    bottom_navigation.route_inventory still holds. The forum keeps its own
-    in-page Home, Compose and Mine bar.
+    Every portal view's header carries language, theme and a menu sheet of
+    plain rows: discover, all games, tools and forum; then account and
+    notifications when signed in; then settings for everyone; then a sign-in
+    pill when signed out. Every other destination is reachable from one of
+    these, so bottom_navigation.route_inventory still holds. The forum keeps
+    its own in-page Home, Compose and Mine bar.
   continue: "Use valid recent activity, not popularity presented as personal history."
   game_media: "Show inspectable game artwork in a stable frame: 3:1 carousel banners on desktop, 2:1 on a phone."
   participation: "Keep the join section unframed and separate it with one divider."

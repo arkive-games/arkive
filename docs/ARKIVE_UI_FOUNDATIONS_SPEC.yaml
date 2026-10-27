@@ -148,10 +148,13 @@ shared_component_contracts:
     utilities: "Round 2.5rem icon buttons for language and theme, a gradient login pill, and a ringed 2.5rem avatar"
   popup_surfaces:
     surface: "Use the shared floating or modal surface class from frontend/packages/ui/src/popup-styles.ts."
+    # Owner decision (2026-10, PR #161).
+    account_and_settings_dialogs: "The sign-in and site settings dialogs are the one exception: borderless, dialog_radius, a faint warm gradient over the background, a rounded display title, and a warm-action gradient pill as the primary action. Their close control keeps the shared touch target and draws a round tinted face inside it."
     menu_row: "At least touch_target_standard high, standard radius, text-sm, and weight 500. Desktop top-bar hover menus are the sole compact exception: 2.25rem rows with no extra inter-row gap."
     desktop_top_bar_menus:
       width: "Content-sized from 10rem through 20rem for navigation, theme, and account menus."
       language_layout: "Use one content-sized column for up to 8 languages. Use two equal columns in a 22rem surface for 9 or more languages."
+      grouped_layout: "A menu whose leaves carry a group (the games menu: online, then single-player and co-op) shows one labelled column per group in a 24rem surface, each leaf with its icon and a hover tint in its own colour."
       overflow: "Keep the menu within the viewport; only unusually short desktop viewports may scroll the menu internally."
       labels: "Keep menu labels on one line. Localized text determines width within the declared bounds."
     close_control: "Touch target on mobile and desktop_compact_height on desktop, with the shared focus treatment."
@@ -204,8 +207,10 @@ shape:
     standard_radius: "0.5rem"
     pill_radius: "999rem"
     floating_radius: "1rem"
+    dialog_radius: "1.5rem"
   rules:
     - "Cards, inputs, popovers, dialogs, sheets, and tool surfaces use standard_radius."
+    - "dialog_radius (1.5rem, --arkive-radius-dialog) is reserved for the account and settings dialogs; the collapsible cards inside the settings dialog use floating_radius."
     - "Small badges, checkboxes, and compact internal controls may use compact_radius."
     - "Use pill_radius only for tags, segmented indicators, avatars, top-bar tabs and round buttons, the floating top bar, and controls whose shape communicates a real role."
     - "floating_radius (1rem, --arkive-radius-floating) is reserved for floating chrome: the mobile menu drawer's leading corners and floating top-bar menus."
