@@ -149,8 +149,8 @@ contrast_contract:
   verified_pairs:
     light_primary_text: "#202020 on #0090FF, 4.99:1"
     dark_primary_text: "#061018 on #0090FF, 5.87:1"
-    light_warm_text: "#40251c on #ffd08a (lightest gradient stop), 9.76:1"
-    dark_warm_text: "#40251c on #ffd08a, 9.76:1 (same in both modes)"
+    light_warm_text: "#40251c on #ffa7be (worst gradient stop), 7.68:1"
+    dark_warm_text: "#40251c on #ffa7be, 7.68:1 (same in both modes)"
     light_action_text: "#FFFFFF on #CC4E00, 4.51:1"
     dark_action_text: "#202020 on #F76B15, 5.48:1"
     light_destructive_text: "#FFFFFF on #CE2C31, 5.21:1"
@@ -214,12 +214,7 @@ verification:
   - "Verify representative game artwork does not reduce shared-control legibility."
   - "Confirm changed UI contains no new app-local shared-chrome color literals."
 
-known_gaps:
-  - >-
-    Meta CSS (all-games.css, forum.css, tools-page.css) still pastes an orange
-    gradient (#ffc061, #f5a524, #ec7a1c) with white text instead of
-    --arkive-warm-action. White on those stops is 1.62 to 2.85:1, below 4.5:1.
-    Move them to the shared token and foreground.
+known_gaps: []
 
 maintenance:
   rules:

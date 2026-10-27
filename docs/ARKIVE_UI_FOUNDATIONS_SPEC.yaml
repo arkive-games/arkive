@@ -409,7 +409,7 @@ verification:
 known_gaps:
   - >-
     --arkive-radius-media and --arkive-radius-card are not yet defined in
-    arkive-map-theme.css. Meta CSS pastes 0.9rem, 1.25rem, 1.375rem, 1.625rem
+    arkive-map-theme.css. all-games.css and home-landing.css paste 0.9rem, 1.25rem, 1.375rem, 1.625rem
     and 1.75rem directly; move them to the two tokens.
 
 maintenance:

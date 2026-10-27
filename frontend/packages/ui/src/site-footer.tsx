@@ -79,7 +79,7 @@ function SiteFooter({
             target="_blank"
             rel="noopener noreferrer"
             data-testid="site-footer-home"
-            className="arkive-wordmark text-2xl font-semibold text-foreground"
+            className="arkive-wordmark text-2xl"
             {...homeLinkProps}
           >
             Arkive
