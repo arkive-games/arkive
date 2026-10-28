@@ -36,7 +36,7 @@ import {
 } from '@/features/score/data'
 import { GroupSection } from '@/features/score/GroupSection'
 import PathwaySection, { LEVEL_MODULE, SKILL_MODULE, TALENT_MODULE } from '@/features/score/PathwaySection'
-import { carryTalents, evaluateTalents, loadTalents, talentLimits, treeFor, type Talents } from '@/features/score/talents'
+import { carryTalents, evaluateTalents, isHealingBuild, loadTalents, talentLimits, treeFor, type Talents } from '@/features/score/talents'
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { CharacterBar } from '@/features/characters/CharacterBar'
 import { CharacterProvider, useCharacter, useSection } from '@/features/characters/CharacterProvider'
@@ -436,7 +436,8 @@ function ScoreView() {
       <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}
         formula={(item) => equipmentFormula(item.species.module, equipment, professionId)}>
         {equipment ? (
-          <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals} />
+          <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals}
+            healing={isHealingBuild(talents, professionId, talentState.treeId)} />
         ) : (
           <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>
         )}

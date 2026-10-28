@@ -116,6 +116,20 @@ export function treeFor(talents: Talents, professionId: number | null, treeId: n
   return trees.find((tree) => tree.id === treeId) ?? trees.find((tree) => tree.default) ?? trees[0] ?? null
 }
 
+/**
+ * The talent trees that make a healer: 观众's 安抚 (强化治疗). The tree table
+ * carries no healing flag, only the localized tag, so the tree is named here.
+ * A healer reads the healing form of item effects (神话词条 `WordDesc2`, 恩赐
+ * `Brief2`); every other pathway and tree reads the damage form.
+ */
+export const HEALING_TREES: ReadonlySet<number> = new Set([201])
+
+/** Whether the tree in effect for a pathway is a healing one. */
+export function isHealingBuild(talents: Talents | null, professionId: number | null, treeId: number | null): boolean {
+  const tree = talents ? treeFor(talents, professionId, treeId) : null
+  return tree !== null && HEALING_TREES.has(tree.id)
+}
+
 /** The level cap on a node: its `maxLevel`, or 1 for an activate-only node. */
 export function nodeCap(node: TalentNode): number {
   return node.type === 'special' ? 1 : node.maxLevel

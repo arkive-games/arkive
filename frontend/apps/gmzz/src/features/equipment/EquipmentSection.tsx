@@ -367,7 +367,6 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
   const { item, state } = result
   // One diamond per rolled affix: gold extraordinary, white normal, red contaminated.
   const rolled = result.affixes.filter((affix) => affix.family !== '')
-  const label = [slotName, item?.gearLevel != null ? t('equip.levelTag', { level: item.gearLevel }) : null].filter(Boolean).join(' · ')
   return (
     <button
       type="button"
@@ -378,7 +377,7 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
     >
       <IconTile quality={item?.quality ?? null} src={item ? equipmentIconUrl(item.icon) : undefined} alt={item?.name ?? ''} label="?" className="ic" />
       <span className="nm">
-        <span className="kind"><span className="lb">{label}</span><KindMark kind={kind} /></span>
+        <span className="kind"><span className="lb">{slotName}</span><KindMark kind={kind} /></span>
         <b>
           <span className="n">{item ? item.name : t('equip.emptySlot')}</span>
           {item ? <StageMark stage={state.enhanceStage} /> : null}
@@ -388,6 +387,7 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
       <span className="s num" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
       {item ? (
         <span className="tags">
+          {item.gearLevel != null ? <span className="lv num">{t('equip.levelTag', { level: item.gearLevel })}</span> : null}
           {rolled.length > 0 ? (
             <span className="gz-dia" data-testid={`equip-slot-affixes-${state.slot}`}>
               {rolled.map((affix, at) => <i key={at} className={affix.tier} aria-hidden>◆</i>)}
@@ -441,11 +441,13 @@ function ItemPicker({ equipment, slot, professionId, selectedId, onSelect, onCol
  * first the 恩赐 the extraordinary affixes trigger, then the 神话词条 and the
  * 烙印 that come with the item.
  */
-function PieceEffects({ result }: { result: PieceResult }) {
+function PieceEffects({ result, healing }: { result: PieceResult; healing: boolean }) {
   const { t } = useTranslation()
   const slot = result.state.slot
   const myth = result.item?.myth
   const grace = result.grace
+  // A healer reads the healing form where the game words one; anyone else the damage form.
+  const pick = (damage: string, heal: string | undefined) => (healing && heal ? heal : damage)
   return (
     <>
       {grace ? (
@@ -454,7 +456,7 @@ function PieceEffects({ result }: { result: PieceResult }) {
             {t('equip.grace')} · {grace.name}
             <span className="meta gz-pips">{'◆'.repeat(grace.extraordinaryCount)}</span>
           </div>
-          <p className="note">{grace.brief1}</p>
+          <p className="note">{pick(grace.brief1, grace.brief2)}</p>
         </div>
       ) : result.extraordinaryCount >= 2 ? (
         <div className="gz-fx" data-kind="grace" data-testid={`equip-grace-${slot}`}>
@@ -465,7 +467,7 @@ function PieceEffects({ result }: { result: PieceResult }) {
       {myth ? (
         <div className="gz-fx" data-kind="myth" data-testid={`equip-myth-${slot}`}>
           <div className="sub">{t('equip.myth')} · {myth.name}</div>
-          <p className="note">{myth.effect}</p>
+          <p className="note">{pick(myth.effect, myth.healEffect)}</p>
         </div>
       ) : null}
       {result.brand ? (
@@ -485,7 +487,7 @@ function PieceEffects({ result }: { result: PieceResult }) {
  * on the item list. The dialog is portalled out of the page's read-only
  * fieldset, so it carries its own.
  */
-function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, professionId, onPatch }: {
+function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, professionId, healing, onPatch }: {
   equipment: Equipment
   graces: Grace[]
   slotName: string
@@ -493,6 +495,8 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
   result: PieceResult
   readOnly: boolean
   professionId: number | null
+  /** Whether the character's talent tree is a healing one; see `HEALING_TREES`. */
+  healing: boolean
   onPatch: (patch: Partial<PieceState>) => void
 }) {
   const { t } = useTranslation()
@@ -594,7 +598,7 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
           </div>
         </div>
 
-        <PieceEffects result={result} />
+        <PieceEffects result={result} healing={healing} />
       </fieldset>
       {/* Outside the fieldset so a read-only viewer can still close. Every
           change applies as it is made; Confirm only closes. */}
@@ -687,6 +691,7 @@ export default function EquipmentSection({
   equipment,
   graces,
   professionId,
+  healing = false,
   onTotals,
 }: {
   equipment: Equipment
@@ -704,6 +709,8 @@ export default function EquipmentSection({
    * than being chosen inside this section.
    */
   professionId: number | null
+  /** Whether the character heals: item effects then read their healing form. */
+  healing?: boolean
 }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useSection('equipment')
@@ -861,6 +868,7 @@ export default function EquipmentSection({
             result={results[openIndex]}
             readOnly={readOnly}
             professionId={professionId}
+            healing={healing}
             onPatch={(patch) => patchPiece(openIndex, patch)}
           />
         ) : null}

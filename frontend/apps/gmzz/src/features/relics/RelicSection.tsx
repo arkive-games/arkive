@@ -50,36 +50,26 @@ function shownValue(relics: Relics, affix: { stat: string; value: number; scaled
 const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
 
 /**
- * A rare word's colour, as the game grades them: the rarest (愚者) orange, the
- * words that also raise every skill level gold, the plain stat words purple.
+ * A rare word's colour. Every rare word is 稀 except 愚者 (异), and the game
+ * colours the 稀 ones by kind: the three-character plain stat words purple, the
+ * four-character words that also raise every skill level gold, 愚者 orange.
+ * The skill-level bonus is what tells the two 稀 kinds apart in the data; it
+ * matches the name length on every word in this build.
  */
 function rareGrade(affix: PoolAffix): 'orange' | 'gold' | 'purple' {
-  if (affix.rarest) return 'orange'
+  if (affix.rarest || affix.tag === 4) return 'orange'
   return (affix.skillLevelPlus ?? 0) > 0 ? 'gold' : 'purple'
 }
 
 /**
- * An affix's kind pill (普通 / 稀有), its word type (凡 · 珍 · 稀 · 异) on the
- * tooltip. A row with nothing picked shows a blank pill.
+ * An affix's word type as the game names it — 凡 · 珍 · 稀 · 异, blue, purple,
+ * gold and orange — from its pool tag. A row with nothing picked shows a blank pill.
  */
-
 function KindPip({ source }: { source: PoolAffix | undefined }) {
   const { t } = useTranslation()
-  if (!source) return <span className="gz-pip" aria-hidden />
-  const rare = isRareAffix(source)
-  const tier = source.tag ?? 0
-  const known = tier >= 1 && tier <= 4
-  const pip = (
-    <span className={`gz-pip ${rare ? 'rare' : 'ordinary'}`} tabIndex={known ? 0 : undefined}>
-      {t(rare ? 'relic.pipRare' : 'relic.pipOrdinary')}
-    </span>
-  )
-  if (!known) return pip
-  return (
-    <TipOn content={t('relic.tierTip', { tier: t(`relic.tierName${tier}`), kind: t(rare ? 'relic.affixRare' : 'relic.affixOrdinary') })}>
-      {pip}
-    </TipOn>
-  )
+  const tier = source?.tag ?? 0
+  if (!source || tier < 1 || tier > 4) return <span className="gz-pip" aria-hidden />
+  return <span className={`gz-pip t${tier}`} data-tier={tier}>{t(`relic.tierName${tier}`)}</span>
 }
 
 /**
