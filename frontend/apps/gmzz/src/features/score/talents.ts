@@ -1,5 +1,5 @@
 // Relative imports, like the rest of `features/score`: the root vitest config has no `@` alias.
-import { dataUrl } from '../../lib/urls'
+import { dataUrl, RES_BASE } from '../../lib/urls'
 
 /**
  * 非凡天赋 — the one 途径 item the package can score.
@@ -26,6 +26,11 @@ export type TalentNode = {
   parentKey: number | null
   position: number
   description: string
+  /**
+   * The art the game draws for it, under `talents/` in the resource root: a
+   * stat glyph for a levelled node, the icon of the skill a core changes.
+   */
+  icon?: string | null
 }
 
 export type TalentTree = {
@@ -39,6 +44,8 @@ export type TalentTree = {
   /** Talent points available at each sequence stage; the last is the cap on levels. */
   pointCapsBySequenceStage: number[]
   maxScore: number
+  /** The tree's tab icon, under `talents/` in the resource root. */
+  icon?: string | null
   nodes: TalentNode[]
 }
 
@@ -53,6 +60,9 @@ export async function loadTalents(): Promise<Talents> {
   }
   return payload as Talents
 }
+
+/** URL of a talent or tree icon (`TalentNode.icon`, `TalentTree.icon`). */
+export const talentIconUrl = (icon: string) => `${RES_BASE}/talents/${icon}.webp`
 
 /** The player's tree and what they put into it: node key → level (1 for an activated special node). */
 export type TalentDraft = {

@@ -18,6 +18,8 @@ import {
 import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import RelicServerToggle from '@/features/relics/RelicServerToggle'
 import { loadRelics, type Relics } from '@/features/relics/data'
+import { relicFormula, useRelicFormulaContext } from '@/features/relics/formulas'
+import { equipmentFormula } from '@/features/equipment/formulas'
 import BondsSection, { FELLOW_SKILL_MODULE, HISTORY_MODULE, PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, type BondsData } from '@/features/score/BondsSection'
 import { carriedPuppetSkill, clampSkillLevel, evaluatePuppets, historyScore, scoringOnDay } from '@/features/score/bonds'
 import { serverDay } from '@/lib/server'
@@ -38,7 +40,7 @@ import { carryTalents, evaluateTalents, loadTalents, talentLimits, treeFor, type
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { CharacterBar } from '@/features/characters/CharacterBar'
 import { CharacterProvider, useCharacter, useSection } from '@/features/characters/CharacterProvider'
-import { SECTIONS } from '@/features/characters/envelope'
+import { GzSelect } from '@/components/GzSelect'
 import { lastCharacter } from '@/features/characters/memory'
 import { useMemory } from '@gamemap/state-memory'
 import { TYPE } from '@/lib/typography'
@@ -145,6 +147,7 @@ function ScoreView() {
   const [tab, setTab] = useState(PATHWAY_GENUS)
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
+  const relicFormulaContext = useRelicFormulaContext(relics)
   const [talents, setTalents] = useState<Talents | null>(null)
   const [partners, setPartners] = useState<SecretPartner[] | null>(null)
   const [rawScoring, setScoring] = useState<PartnerScoring | null>(null)
@@ -208,16 +211,17 @@ function ScoreView() {
     if (talents) setTalentState((prev) => carryTalents(talents, prev, professionId, next))
     setDraft((prev) => ({ ...prev, professionId: next }))
   }
-  // 重新填写: every section back to its default, keeping only the pathway and
-  // the relic server, which describe the player rather than what they entered.
+  // 重新填写: a fresh local draft, keeping only the pathway and the relic
+  // server, which describe the player rather than what they entered. On a
+  // saved character it never writes the character: the draft is emptied and
+  // opened instead, and the character stays as it was saved.
+  const navigate = useNavigate()
   const reset = () => {
-    if (character.readOnly || !window.confirm(t('score.resetConfirm'))) return
-    const { setSection } = character
-    setSection('character', { ...SECTIONS.character.default(), professionId })
-    setSection('talents', SECTIONS.talents.default())
-    setSection('bonds', SECTIONS.bonds.default())
-    setSection('equipment', SECTIONS.equipment.default())
-    setSection('relics', (prev) => ({ ...SECTIONS.relics.default(), server: prev.server }))
+    const saved = character.id ? character.character : null
+    const question = saved ? t('characters.resetToDraftConfirm', { name: saved.name }) : t('score.resetConfirm')
+    if (!window.confirm(question)) return
+    character.resetDraft(professionId)
+    if (character.id) void navigate({ to: '/score', search: { draft: true } })
   }
 
   useEffect(() => {
@@ -373,23 +377,20 @@ function ScoreView() {
   const progression = (
     <div role="group" aria-label={t('score.progression')} className="contents">
       {equipment ? (
-        <label className="gz-field">
+        <div className="gz-field">
           <span>{t('score.pathway')}</span>
-          <span className="gz-select">
-            <select
-              value={professionId ?? ''}
-              onChange={(event) => setProfessionId(event.target.value === '' ? null : Number(event.target.value))}
-              data-testid="score-pathway"
-            >
-              {playableProfessions(equipment.equipment).map((profession) => (
-                <option key={profession.id} value={profession.id}>
-                  {profession.sequenceName} · {profession.name}
-                </option>
-              ))}
-            </select>
-            <IconChevronDown stroke={2} aria-hidden />
-          </span>
-        </label>
+          <GzSelect
+            value={professionId === null ? '' : String(professionId)}
+            onChange={(next) => setProfessionId(next === '' ? null : Number(next))}
+            options={playableProfessions(equipment.equipment).map((profession) => ({
+              value: String(profession.id),
+              label: `${profession.sequenceName} · ${profession.name}`,
+            }))}
+            label={t('score.pathway')}
+            testId="score-pathway"
+            className="gz-sel-lg"
+          />
+        </div>
       ) : null}
       <LevelField
         label={t('score.roleLevel')}
@@ -432,7 +433,8 @@ function ScoreView() {
       />
     )),
     [EQUIPMENT_GENUS]: section(EQUIPMENT_GENUS, (group) => (
-      <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}>
+      <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}
+        formula={(item) => equipmentFormula(item.species.module, equipment, professionId)}>
         {equipment ? (
           <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals} />
         ) : (
@@ -441,7 +443,8 @@ function ScoreView() {
       </GroupSection>
     )),
     [RELICS_GENUS]: section(RELICS_GENUS, (group) => (
-      <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}>
+      <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}
+        formula={(item) => relicFormula(item.species.module, relicFormulaContext)}>
         {relics ? <RelicSection relics={relics} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
       </GroupSection>
     )),
@@ -460,7 +463,7 @@ function ScoreView() {
           <div className="gz-phead">
             <h1>{t('score.title')}</h1>
             <CharacterBar />
-            <button type="button" className="gz-reset" onClick={reset} disabled={character.readOnly} data-testid="score-reset">
+            <button type="button" className="gz-reset" onClick={reset} data-testid="score-reset">
               {t('score.reset')}
             </button>
           </div>

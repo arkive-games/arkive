@@ -19,6 +19,7 @@ import {
   LOCAL_RECORDS,
   readSection,
   readSections,
+  SECTIONS,
   upgrade,
   withSection,
   type Envelope,
@@ -85,6 +86,14 @@ export type CharacterContextValue = {
   keepMine(): void
   takeServer(): void
   updateMeta(meta: CharacterMeta): Promise<void>
+  /** Uploads the open character's unsent edits now instead of when they settle. */
+  saveNow(): Promise<void>
+  /**
+   * Empties the local draft, keeping only the given pathway and the relic
+   * server, which describe the player rather than what they entered. Never
+   * touches a saved character: resetting one opens this fresh draft instead.
+   */
+  resetDraft(professionId: number | null): void
   /** Saves the local draft as a new character and returns its id. */
   saveDraftAs(name: string): Promise<string>
   copy(id: string, name?: string): Promise<string>
@@ -361,6 +370,24 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
     }
   }, [api, id, server, bound, refreshList])
 
+  const saveNow = useCallback(async () => {
+    const saver = saverRef.current
+    if (!saver || blocked.current) return
+    if (retryTimer.current) clearTimeout(retryTimer.current)
+    // Marked as an edit first: after a failed upload nothing is pending in the
+    // scheduler, and a bare flush would send nothing.
+    saver.touch()
+    await saver.flush()
+  }, [])
+
+  const resetDraft = useCallback((professionId: number | null) => {
+    setLocalCharacter(() => ({ ...SECTIONS.character.default(), professionId }))
+    setLocalTalents(() => SECTIONS.talents.default())
+    setLocalBonds(() => SECTIONS.bonds.default())
+    setLocalEquipment(() => SECTIONS.equipment.default())
+    setLocalRelics((prev) => ({ ...SECTIONS.relics.default(), server: readSection('relics', prev).server }))
+  }, [setLocalCharacter, setLocalTalents, setLocalBonds, setLocalEquipment, setLocalRelics])
+
   const saveDraftAs = useCallback(async (name: string) => {
     if (!api) throw new Error('no API configured')
     const local: Sections = {
@@ -415,12 +442,14 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
     keepMine,
     takeServer,
     updateMeta,
+    saveNow,
+    resetDraft,
     saveDraftAs,
     copy: copyCharacter,
     remove,
     reorder,
     refreshList,
-  }), [id, sections, setSection, readOnly, status, server, characters, conflict, copy, userId, api, keepMine, takeServer, updateMeta, saveDraftAs, copyCharacter, remove, reorder, refreshList])
+  }), [id, sections, setSection, readOnly, status, server, characters, conflict, copy, userId, api, keepMine, takeServer, updateMeta, saveNow, resetDraft, saveDraftAs, copyCharacter, remove, reorder, refreshList])
 
   return <CharacterContext.Provider value={value}>{children}</CharacterContext.Provider>
 }

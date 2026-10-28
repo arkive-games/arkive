@@ -1,17 +1,16 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { IconArrowDown, IconArrowUp, IconChevronDown, IconCopy, IconLink, IconLock, IconSettings } from '@tabler/icons-react'
+import { IconArrowDown, IconArrowUp, IconCopy, IconDeviceFloppy, IconLink, IconLock, IconSettings } from '@tabler/icons-react'
 import { AccountDialog, authStringsFor, useOptionalAuth } from '@gamemap/auth'
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
-import { isLimitReached, MAX_CHARACTERS, type SavedCharacter } from '@/features/characters/api'
+import { GzSelect, type GzOption, type GzOptionGroup } from '@/components/GzSelect'
+import { isLimitReached, MAX_CHARACTERS, type CharacterSummary, type SavedCharacter } from '@/features/characters/api'
 import { useCharacter, type SyncStatus } from '@/features/characters/CharacterProvider'
 import { serverName, useServers, type GameServer } from '@/features/characters/servers'
 import { TYPE } from '@/lib/typography'
 
-const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const SELECT_CLASS = `h-9 min-w-0 max-w-full rounded-md border border-border bg-background px-2 text-sm ${FOCUS}`
 const LOCAL = ''
 
 /** The link a character is shared by: the page's own address for it. */
@@ -110,27 +109,26 @@ export function CharacterBar() {
           switcher, reading "name · server"), its UID, then the actions. The
           plain local draft needs no status line. */}
       {status === 'local' ? null : (
-        <span className={`gz-status ${STATUS_TONE[status] ?? ''}`} data-testid="character-status" role="status">
-          <i aria-hidden />
-          {t(STATUS_KEY[status])}
-        </span>
+        <div className="gz-cstat">
+          <span className={`gz-status ${STATUS_TONE[status] ?? ''}`} data-testid="character-status" role="status">
+            <i aria-hidden />
+            {t(STATUS_KEY[status])}
+          </span>
+          {/* Uploads happen on their own once edits settle; this sends them now,
+              and is the way to retry at once after a failed upload. */}
+          {owned && (status === 'pending' || status === 'saving' || status === 'offline') ? (
+            <button type="button" className="gz-btn gz-savenow" disabled={status === 'saving'} data-testid="character-save-now"
+              onClick={() => void run(() => ctx.saveNow())}>
+              <IconDeviceFloppy className="size-4" stroke={1.8} aria-hidden />
+              {t('characters.save')}
+            </button>
+          ) : null}
+        </div>
       )}
 
-      <span className="gz-select gz-cname">
-        <select value={id ?? LOCAL} data-testid="character-switcher" aria-label={t('characters.switcher')}
-          onChange={(event) => open(event.target.value === LOCAL ? null : event.target.value)}>
-          <option value={LOCAL}>{t('characters.localDraft')}</option>
-          {characters && characters.length > 0 ? (
-            <optgroup label={t('characters.mine', { count: characters.length, max: MAX_CHARACTERS })}>
-              {characters.map((entry) => (
-                <option key={entry.id} value={entry.id}>{label(entry.name, entry.serverId)}</option>
-              ))}
-            </optgroup>
-          ) : null}
-          {foreign ? <option value={foreign.id}>{label(foreign.name, foreign.serverId)}</option> : null}
-        </select>
-        <IconChevronDown stroke={2} aria-hidden />
-      </span>
+      <GzSelect value={id ?? LOCAL} onChange={(next) => open(next === LOCAL ? null : next)}
+        label={t('characters.switcher')} testId="character-switcher" className="gz-cname"
+        options={switcherOptions(t('characters.localDraft'), characters, foreign, label, t('characters.mine', { count: characters?.length ?? 0, max: MAX_CHARACTERS }))} />
 
       {id && character ? <Identity character={character} /> : null}
 
@@ -141,7 +139,7 @@ export function CharacterBar() {
           </button>
         ) : null}
         {!id && signedIn ? (
-          <button type="button" className="gz-btn pri" disabled={full} title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
+          <button type="button" className="gz-btn pri" disabled={full}
             onClick={() => setDialog('save')} data-testid="character-save-draft">
             {t('characters.saveAsNew')}
           </button>
@@ -162,7 +160,6 @@ export function CharacterBar() {
               {t('characters.manage')}
             </button>
             <button type="button" className="gz-btn" disabled={busy || full} data-testid="character-save-copy"
-              title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
               onClick={() => void run(async () => open(await ctx.copy(character.id, t('characters.copyName', { name: character.name }).slice(0, 32))))}>
               <IconCopy className="size-4" stroke={1.8} aria-hidden />
               {t('characters.saveCopy')}
@@ -172,7 +169,6 @@ export function CharacterBar() {
 
         {foreign && signedIn ? (
           <button type="button" className="gz-btn pri" disabled={busy || full} data-testid="character-copy-foreign"
-            title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
             onClick={() => void run(async () => open(await ctx.copy(foreign.id)))}>
             <IconCopy className="size-4" stroke={1.8} aria-hidden />
             {t('characters.copyToMine')}
@@ -186,6 +182,11 @@ export function CharacterBar() {
       </div>
 
       {foreign && !signedIn ? <p className="gz-cbar-hint">{t('characters.signInToCopy')}</p> : null}
+      {/* Why the save and copy buttons are off, said where it can be read
+          rather than in a hover title a phone never shows. */}
+      {full && signedIn && (!id || owned || foreign) ? (
+        <p className="gz-cbar-hint" data-testid="character-limit">{t('characters.limitReached', { max: MAX_CHARACTERS })}</p>
+      ) : null}
       {failure && !dialog ? <p className="gz-cbar-hint bad" role="alert">{failure}</p> : null}
 
       {auth ? <AccountDialog open={dialog === 'login'} onOpenChange={(next) => setDialog(next ? 'login' : null)} strings={authStrings} /> : null}
@@ -200,6 +201,25 @@ export function CharacterBar() {
 
 function withServer(name: string, server?: string): string {
   return server ? `${name} · ${server}` : name
+}
+
+/**
+ * The switcher's entries: the local draft, then the player's own characters
+ * under their count, then the open character when it is someone else's.
+ */
+function switcherOptions(
+  draft: string,
+  characters: CharacterSummary[] | null,
+  foreign: SavedCharacter | null,
+  label: (name: string, serverId?: number) => string,
+  mine: string,
+): (GzOption | GzOptionGroup)[] {
+  const options: (GzOption | GzOptionGroup)[] = [{ value: LOCAL, label: draft }]
+  if (characters && characters.length > 0) {
+    options.push({ label: mine, options: characters.map((entry) => ({ value: entry.id, label: label(entry.name, entry.serverId) })) })
+  }
+  if (foreign) options.push({ value: foreign.id, label: label(foreign.name, foreign.serverId) })
+  return options
 }
 
 /** The game UID on its own small line; the switcher above already reads "name · server". */
@@ -356,14 +376,15 @@ function ManageDialog({ open, character, servers, label, onClose, onOpen }: {
               {/* Only the game's own player servers: the list comes from the client's
                   ServerData, and the character keeps the id, never the name. A stored
                   id the list no longer has stays selectable as itself until changed. */}
-              <select className={`${SELECT_CLASS} w-full`} value={serverId} onChange={(event) => setServerId(Number(event.target.value))}
-                data-testid="character-server">
-                <option value={0}>{t('characters.serverNone')}</option>
-                {servers.map((server) => <option key={server.id} value={server.id}>{server.name}</option>)}
-                {serverId !== 0 && !servers.some((server) => server.id === serverId)
-                  ? <option value={serverId}>{t('characters.unknownServer')}</option>
-                  : null}
-              </select>
+              <GzSelect value={String(serverId)} onChange={(next) => setServerId(Number(next))}
+                label={t('characters.server')} testId="character-server" className="gz-sel-form"
+                options={[
+                  { value: '0', label: t('characters.serverNone') },
+                  ...servers.map((server) => ({ value: String(server.id), label: server.name })),
+                  ...(serverId !== 0 && !servers.some((server) => server.id === serverId)
+                    ? [{ value: String(serverId), label: t('characters.unknownServer') }]
+                    : []),
+                ]} />
             </Field>
             <Field label={t('characters.uid')} hint={t('characters.uidHint')}>
               <Input value={uid} maxLength={32} placeholder={t('characters.serverPlaceholder')} onChange={(event) => setUid(event.target.value)} data-testid="character-uid" />
@@ -401,7 +422,6 @@ function ManageDialog({ open, character, servers, label, onClose, onOpen }: {
 
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <Button type="button" variant="outline" size="sm" disabled={busy || list.length >= MAX_CHARACTERS} data-testid="character-duplicate"
-            title={list.length >= MAX_CHARACTERS ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
             onClick={() => void run(async () => {
               const created = await ctx.copy(character.id, t('characters.copyName', { name: character.name }).slice(0, 32))
               onClose()
@@ -410,6 +430,9 @@ function ManageDialog({ open, character, servers, label, onClose, onOpen }: {
             <IconCopy className="size-4" stroke={1.8} aria-hidden />
             {t('characters.duplicate')}
           </Button>
+          {list.length >= MAX_CHARACTERS ? (
+            <span className="text-xs text-muted-foreground">{t('characters.limitReached', { max: MAX_CHARACTERS })}</span>
+          ) : null}
           <span className="ml-auto" />
           {confirmDelete ? (
             <>

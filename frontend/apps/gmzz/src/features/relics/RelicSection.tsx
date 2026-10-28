@@ -1,20 +1,24 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Dialog, DialogClose, DialogContent } from '@gamemap/ui'
+import { useEffect, useId, useMemo, useState } from 'react'
+import { Dialog, DialogClose, DialogContent, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
+import { IconChevronDown } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
+import { GzSelect } from '@/components/GzSelect'
 import { DialogHead, ItemHead, PickBox } from '@/features/equipment/EquipmentSection'
 import { IconTile } from '@/features/equipment/PickerModal'
 import { iconUrl } from '@/lib/urls'
 import { Stepper } from '@/features/score/Stepper'
+import { Tip, TipOn } from '@/features/score/Tip'
 import { useCharacterReadOnly, useSection } from '@/features/characters/CharacterProvider'
-import { storedAffixes, toStoredMaterials, type StoredRelicSlot } from '@/features/relics/memory'
+import { toStoredMaterials } from '@/features/relics/memory'
 import { useRelicServer } from '@/features/relics/useRelicServer'
+import { EMPTY_RELIC_AFFIX, GROUP_IDS, SPEC_GROUP, affixFrom, knowledgeLevelOf, restoreSlots } from '@/features/relics/slots'
 import {
   MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason, effectiveAffixCap, effectiveGrade,
-  evaluateRelicSlot, formatStat, gradeOptions, gradeQuality, gradeRung, isRareAffix, k1For, k2For,
-  knowledgeLadder, materialTypeAt, maxAffixes, newRelicSlot, poolRungs, poolStats, rareAffixes,
+  evaluateRelicSlot, formatStat, gradeQuality, gradeOptions, gradeRung, isRareAffix, k1For, k2For,
+  knowledgeLadder, materialName, materialTypeAt, maxAffixes, poolRungs, poolStats, rareAffixes,
   rareEffect, relicTotals, specIndex, statName, typePool, usedGroups,
-  type ChosenRelicAffix, type PoolAffix, type Relics, type RelicServer,
+  type ChosenRelicAffix, type MaterialResult, type PoolAffix, type Relics, type RelicServer,
   type RelicSlotResult, type RelicSlotState,
 } from '@/features/relics/data'
 
@@ -30,14 +34,6 @@ export type RelicTotals = {
 }
 
 /**
- * The panel's three slots. 1 攻击 and 2 防御 are fixed — an artifact's `groupId`
- * *is* the slot it goes in, and so is the material type it takes. 3 特化 takes
- * either, and is the only one that asks which.
- */
-const GROUP_IDS = [1, 2, 3]
-const SPEC_GROUP = 3
-
-/**
  * A relic part before the final floor, to two decimals. The game floors only
  * once the three relics are added up, so the cards show what is being added.
  */
@@ -46,24 +42,54 @@ const decimal = (value: number) => value.toLocaleString(undefined, { maximumFrac
 /** A material position across the three slots, for swapping. */
 type Position = { groupId: number; index: number }
 
-/** A freshly added affix row: no stat picked, so it scores and counts as nothing. */
-const EMPTY_RELIC_AFFIX: ChosenRelicAffix = { stat: '', value: 0, mark: 0 }
+/** An affix's value as the game prints it, with its sign. */
+function shownValue(relics: Relics, affix: { stat: string; value: number; scaled?: boolean }, k2: number): string {
+  return `+${formatStat(relics, affix.stat, affixValue(affix, k2))}`
+}
 
-function affixFrom(rung: PoolAffix): ChosenRelicAffix {
-  return { stat: rung.stat, value: rung.value, mark: rung.mark, affixId: rung.id, scaled: rung.scaled }
+/** `Artifact.tag` is a usage bucket: 1 副本, 2 竞技, 3 通用. */
+const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
+
+/**
+ * An affix's kind pill (普通 / 稀有), its word type (凡 · 珍 · 稀 · 异) on the
+ * tooltip. A row with nothing picked shows a blank pill.
+ */
+function KindPip({ source }: { source: PoolAffix | undefined }) {
+  const { t } = useTranslation()
+  if (!source) return <span className="gz-pip" aria-hidden />
+  const rare = isRareAffix(source)
+  const tier = source.tag ?? 0
+  const known = tier >= 1 && tier <= 4
+  const pip = (
+    <span className={`gz-pip ${rare ? 'rare' : 'ordinary'}`} tabIndex={known ? 0 : undefined}>
+      {t(rare ? 'relic.pipRare' : 'relic.pipOrdinary')}
+    </span>
+  )
+  if (!known) return pip
+  return (
+    <TipOn content={t('relic.tierTip', { tier: t(`relic.tierName${tier}`), kind: t(rare ? 'relic.affixRare' : 'relic.affixOrdinary') })}>
+      {pip}
+    </TipOn>
+  )
 }
 
 /**
- * One affix row. An ordinary affix picks a stat and a rung; a rare word picks
- * the word and reads out its effect. A row past the grade's cap is dimmed and
- * tagged in its end column, the reason on the tag's tooltip.
+ * One affix row, laid out as the piece dialog's: kind, stat, the value between
+ * −/+ that walk its rungs (the value opens every rung at once), and at the end
+ * what it scores and ×. A rare word picks the word; its value and score are
+ * fixed, read out as they are, and its effect runs under the row. A row past
+ * the grade's cap is dimmed and its score gives way to a tag whose tooltip
+ * says why.
  */
-function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix, onChange, onRemove }: {
+function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testPrefix, onChange, onRemove }: {
   relics: Relics; affix: ChosenRelicAffix; others: ChosenRelicAffix[]; index: number; inactive: boolean
+  /** How many affixes the grade lets take effect, for the switched-off tooltip. */
+  cap: number
   pool: PoolAffix[]; k2: number; testPrefix: string
   onChange: (next: ChosenRelicAffix) => void; onRemove: () => void
 }) {
   const { t } = useTranslation()
+  const [valueOpen, setValueOpen] = useState(false)
   const source = pool.find((entry) => entry.id === affix.affixId)
   const rare = source && isRareAffix(source) ? source : null
   // What the other rows of this material already hold: a group at most once,
@@ -73,64 +99,109 @@ function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix
     <button type="button" className="gz-rm" onClick={onRemove} aria-label={t('relic.removeAffix')}
       data-testid={`${testPrefix}-remove-${index}`}>×</button>
   )
+  /** What the row scores, its Mark × k2 on the tooltip. */
+  const score = (mark: number) => (
+    <TipOn content={t('relic.affixScoreOf', { score: decimal(mark * k2), mark: mark.toLocaleString() })}>
+      <span className="mk num gz-hov" tabIndex={0} data-testid={`${testPrefix}-score-${index}`}>{decimal(mark * k2)}</span>
+    </TipOn>
+  )
+  const end = (mark: number | null) => (
+    <span className="end">
+      {inactive ? (
+        <TipOn content={t('relic.cappedOut', { cap })} title={t('relic.affixInactive')}>
+          <span className="why" tabIndex={0} data-testid={`${testPrefix}-state-${index}`}>{t('relic.affixOff')}</span>
+        </TipOn>
+      ) : mark === null ? <span className="mk num">—</span> : score(mark)}
+      {remove}
+    </span>
+  )
 
   if (rare) {
     return (
-      <div className="gz-aff rare" data-testid={`${testPrefix}-row-${index}`}>
-        <span className="gz-pip rare">{t('relic.pipRare')}</span>
-        <select value={rare.id} aria-label={t('relic.affixRare')} data-testid={`${testPrefix}-stat-${index}`}
-          onChange={(event) => {
-            const next = pool.find((entry) => entry.id === Number(event.target.value))
+      <div className="gz-aff eq relx rare" data-testid={`${testPrefix}-row-${index}`}>
+        <KindPip source={rare} />
+        <GzSelect value={String(rare.id)} label={t('relic.affixRare')} testId={`${testPrefix}-stat-${index}`}
+          options={rareAffixes(pool).map((entry) => ({
+            value: String(entry.id),
+            label: entry.name ?? statName(relics, entry.stat),
+            disabled: entry.id !== rare.id && taken.groups.has(entry.groupId),
+          }))}
+          onChange={(raw) => {
+            const next = pool.find((entry) => entry.id === Number(raw))
             if (next) onChange(affixFrom(next))
-          }}>
-          {rareAffixes(pool).map((entry) => (
-            <option key={entry.id} value={entry.id} disabled={entry.id !== rare.id && taken.groups.has(entry.groupId)}>
-              {entry.name ?? statName(relics, entry.stat)}
-            </option>
-          ))}
-        </select>
-        <span className="desc" data-testid={`${testPrefix}-rung-${index}`}>{rareEffect(relics, rare, k2)}</span>
-        <span className="end">{remove}</span>
+          }} />
+        {/* A rare word has one value: read out, not picked. */}
+        <span className="gz-val ro num" data-testid={`${testPrefix}-value-${index}`}>{shownValue(relics, rare, k2)}</span>
+        {end(rare.mark)}
+        <span className="desc full" data-testid={`${testPrefix}-rung-${index}`}>{rareEffect(relics, rare, k2)}</span>
       </div>
     )
   }
 
-  const rungs = poolRungs(pool, affix.stat)
-  const at = rungs.findIndex((rung) => rung.id === affix.affixId)
+  // The arrows walk the stat's rungs by value, smallest first.
+  const byValue = [...poolRungs(pool, affix.stat)].reverse()
+  const at = byValue.findIndex((rung) => rung.id === affix.affixId)
+  const current = at < 0 ? undefined : byValue[at]
+  const stepTo = (offset: number) => {
+    const next = at < 0 ? undefined : byValue[at + offset]
+    return next ? () => onChange(affixFrom(next)) : undefined
+  }
+  const up = stepTo(1)
+  const down = stepTo(-1)
+  // The picker groups the rungs by word type, the richer type first.
+  const tiers = [...new Set(byValue.map((rung) => rung.tag ?? 0))].sort((a, b) => b - a)
   return (
-    <div className={`gz-aff ${inactive ? 'off' : ''}`} data-inactive={inactive || undefined} data-testid={`${testPrefix}-row-${index}`}>
-      <span className="gz-pip ordinary">{t('relic.pipOrdinary')}</span>
-      <select value={affix.stat} aria-label={t('relic.affixStat')} data-testid={`${testPrefix}-stat-${index}`}
-        onChange={(event) => {
-          const next = poolRungs(pool, event.target.value)[0]
+    <div className={`gz-aff eq relx ${inactive ? 'off' : ''}`} data-inactive={inactive || undefined} data-testid={`${testPrefix}-row-${index}`}>
+      <KindPip source={source} />
+      <GzSelect value={affix.stat} label={t('relic.affixStat')} testId={`${testPrefix}-stat-${index}`}
+        // An unpicked row reads "Pick an affix", which cannot be picked back.
+        options={[
+          ...(affix.stat === '' ? [{ value: '', label: t('relic.affixPick'), disabled: true }] : []),
+          ...poolStats(pool).map((stat) => ({
+            value: stat,
+            label: statName(relics, stat),
+            disabled: stat !== affix.stat && taken.groups.has(poolRungs(pool, stat)[0]?.groupId ?? -1),
+          })),
+        ]}
+        onChange={(raw) => {
+          const next = poolRungs(pool, raw)[0]
           if (next) onChange(affixFrom(next))
-        }}>
-        {affix.stat === '' ? <option value="" disabled>{t('relic.affixPick')}</option> : null}
-        {poolStats(pool).map((stat) => (
-          <option key={stat} value={stat} disabled={stat !== affix.stat && taken.groups.has(poolRungs(pool, stat)[0]?.groupId ?? -1)}>
-            {statName(relics, stat)}
-          </option>
-        ))}
-      </select>
+        }} />
       {/* Keyed by the pool row's own id: two rungs of one stat can share a value. */}
-      <select value={affix.affixId ?? ''} aria-label={t('relic.affixRung')} data-testid={`${testPrefix}-rung-${index}`}
-        onChange={(event) => {
-          const next = rungs.find((rung) => rung.id === Number(event.target.value))
-          if (next) onChange(affixFrom(next))
-        }}>
-        {at < 0 ? <option value="">—</option> : null}
-        {rungs.map((rung) => (
-          <option key={rung.id} value={rung.id}>
-            {t('relic.rungOption', { value: formatStat(relics, rung.stat, affixValue(rung, k2)), mark: rung.mark })}
-          </option>
-        ))}
-      </select>
-      <span className="end">
-        {inactive ? (
-          <span className="why" title={t('relic.affixInactive')} data-testid={`${testPrefix}-state-${index}`}>{t('relic.affixOff')}</span>
-        ) : null}
-        {remove}
+      <span className="gz-val">
+        <button type="button" disabled={!down} onClick={down} aria-label={t('equip.rungDown')}
+          data-testid={`${testPrefix}-rung-${index}-down`}>−</button>
+        <Popover open={valueOpen} onOpenChange={setValueOpen}>
+          <PopoverTrigger asChild>
+            <button type="button" className="v num" disabled={byValue.length === 0} aria-label={t('relic.affixRung')}
+              data-testid={`${testPrefix}-rung-${index}`}>
+              {current ? shownValue(relics, current, k2) : '—'}
+              <IconChevronDown stroke={2} aria-hidden />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="center" collisionPadding={8} className="gz-valpop"
+            data-testid={`${testPrefix}-rung-${index}-menu`}>
+            {tiers.map((tier) => (
+              <section key={tier}>
+                <span className="gz-pip ordinary">{t(`relic.tier${tier}`, { defaultValue: '' })}</span>
+                <div className="grid">
+                  {byValue.filter((rung) => (rung.tag ?? 0) === tier).map((rung) => (
+                    <button key={rung.id} type="button" className="num" aria-pressed={rung.id === current?.id}
+                      onClick={() => { onChange(affixFrom(rung)); setValueOpen(false) }}
+                      data-testid={`${testPrefix}-rung-${index}-${rung.id}`}>
+                      <b>{shownValue(relics, rung, k2)}</b>
+                      <small>{decimal(rung.mark * k2)}</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </PopoverContent>
+        </Popover>
+        <button type="button" disabled={!up} onClick={up} aria-label={t('equip.rungUp')}
+          data-testid={`${testPrefix}-rung-${index}-up`}>+</button>
       </span>
+      {end(current ? current.mark : null)}
     </div>
   )
 }
@@ -138,8 +209,9 @@ function AffixRow({ relics, affix, others, index, inactive, pool, k2, testPrefix
 /** A knowledge coefficient as the game prints it: k 0.1 (level 0) reads 100%, k 0.88 reads 880%. */
 const percent = (k: number) => `${Number((k * 1000).toFixed(1))}%`
 
-function KnowledgeBar({ relics, level, k1, k2, season, onChange }: {
-  relics: Relics; level: number; k1: number; k2: number; season: number | undefined; onChange: (level: number) => void
+function KnowledgeBar({ relics, level, k1, k2, season, readOnly, onChange }: {
+  relics: Relics; level: number; k1: number; k2: number; season: number | undefined; readOnly: boolean
+  onChange: (level: number) => void
 }) {
   const { t } = useTranslation()
   const ladder = useMemo(() => knowledgeLadder(relics, season), [relics, season])
@@ -151,7 +223,8 @@ function KnowledgeBar({ relics, level, k1, k2, season, onChange }: {
   return (
     <div className="gz-know" data-testid="relic-knowledge-bar">
       <span className="meta">{t('relic.knowledge')}</span>
-      <Stepper value={level} min={min} max={max} onChange={onChange} label={t('relic.knowledge')} testId="relic-knowledge" />
+      <Stepper value={level} min={min} max={max} onChange={onChange} label={t('relic.knowledge')} testId="relic-knowledge"
+        disabled={readOnly} />
       {/* The two lines the game's 非凡知识提升 panel shows, in its own words. */}
       <span className="gz-eff">
         {t('relic.resonanceEfficiency')} <b className="num" data-testid="relic-k1">{percent(k1)}</b>
@@ -159,20 +232,33 @@ function KnowledgeBar({ relics, level, k1, k2, season, onChange }: {
         {t('relic.affixEfficiency')} <b className="num" data-testid="relic-k2">{percent(k2)}</b>
         {role !== null ? <> · {t('relic.knowledgeRole', { level: role })}</> : null}
       </span>
+      <Tip content={t('relic.knowledgeHint', { min, max, k1, k2 })} title={t('relic.knowledge')} testId="relic-knowledge-formula" />
     </div>
+  )
+}
+
+/** 非凡共鸣 at the relic's active word count: the stats it grants, as the game shows them (floor(value × k1)). */
+function ResonanceStats({ relics, material, k1 }: { relics: Relics; material: MaterialResult | undefined; k1: number }) {
+  if (!material || material.activeCount === 0 || material.resonanceStats.length === 0) return null
+  return (
+    <>
+      {material.resonanceStats.map(([stat, value]) => (
+        <span key={stat} className="num">{statName(relics, stat)} +{formatStat(relics, stat, Math.floor(value * k1))}</span>
+      ))}
+    </>
   )
 }
 
 /**
  * One relic's dialog: the artifact with a button to swap it, the grade, the
- * material being edited and its affixes, the three figures they come to, and
- * last the one destructive action. With no artifact it opens straight on the
- * artifact grid. It is portalled out of the page's read-only fieldset, so it
- * carries its own.
+ * material being edited and its affixes, the resonance they come to, the three
+ * figures, and last the one destructive action. With no artifact it opens
+ * straight on the artifact grid. It is portalled out of the page's read-only
+ * fieldset, so it carries its own.
  */
-function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, readOnly, onChange, onSwapStart, onSwapTo }: {
+function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom, readOnly, onChange, onSwapStart, onSwapTo }: {
   relics: Relics; slot: RelicSlotState; result: RelicSlotResult
-  k2: number; server: RelicServer; readOnly: boolean
+  k1: number; k2: number; server: RelicServer; readOnly: boolean
   /** The position being moved, if any: every tab of its type becomes a drop target. */
   swapFrom: Position | null
   canSwapFrom: (from: Position) => boolean
@@ -180,6 +266,7 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
   onSwapStart: (from: Position) => void; onSwapTo: (to: Position) => void
 }) {
   const { t } = useTranslation()
+  const ids = useId()
   const groupId = slot.groupId
   const spec = groupId === SPEC_GROUP
   const group = relics.groupNames[String(groupId)] ?? ''
@@ -200,8 +287,11 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
     <PickBox onCollapse={artifact ? () => setPicking(false) : undefined} collapseTestId={`relic-artifact-collapse-${groupId}`}>
       <div className="gz-arts">
         {artifactsInGroup(relics, groupId).map((entry) => (
+          // No tooltip here: on a phone a hint on a button opens its sheet on
+          // the same tap that picks. The picked artifact's effect sits on the
+          // ⓘ in the dialog's head.
           <button key={entry.id} type="button" className={entry.id === artifact?.id ? 'on' : ''} aria-pressed={entry.id === artifact?.id}
-            title={entry.description} data-testid={`relic-artifact-option-${entry.id}`}
+            data-testid={`relic-artifact-option-${entry.id}`}
             onClick={() => { patch({ artifactId: entry.id, grade: gradeOf(entry.id) }); setPicking(false) }}>
             {entry.icon ? <img src={iconUrl(entry.icon)} alt="" /> : null}
             <span>{entry.name}</span>
@@ -232,14 +322,15 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
   const taken = usedGroups(pool, affixes)
   const nextRare = taken.rare ? undefined : rareAffixes(pool).find((entry) => !taken.groups.has(entry.groupId))
   const swapping = swapFrom?.groupId === groupId && swapFrom.index === index
-  // Every rare word in effect across the relic's materials, with its effect.
-  const rares = applying.flatMap((entry) => {
-    const list = typePool(relics, entry.type)
-    return entry.affixes.flatMap((affix) => {
-      const source = list.find((row) => row.id === affix.affixId)
-      return source && isRareAffix(source) && source.effect ? [{ source, k: `${entry.index}-${source.id}` }] : []
-    })
-  })
+  const scored = effectiveGrade(relics, slot.grade, server)
+  const assemblyMark = (gradeRung(relics, scored)?.mark ?? 0) * k2
+  // The material row's notes, in its label's tooltip rather than as prose:
+  // how the fills (or 特化's two types) work, and what applies right now.
+  const materialNotes = [
+    t(spec ? 'relic.materialSpecHint' : 'relic.materialSlotsHint'),
+    material && !material.applies ? t('relic.fillTwoNote') : null,
+    swapping ? t('relic.swapHint') : null,
+  ].filter((line): line is string => line !== null)
 
   return (
     <DialogContent className="gz-dlg" data-testid={`relic-card-${groupId}`}>
@@ -248,7 +339,12 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
           icon={<IconTile quality={gradeQuality(slot.grade)} src={artifact.icon ? iconUrl(artifact.icon) : undefined} alt=""
             label={artifact.name.slice(0, 1)} className="ic" />}
           title={`${t('relic.groupTitle', { group })} · ${artifact.name}`}
-          sub={t('relic.headSub', { group, n: activeCount })}
+          sub={<>
+            {t('relic.headSub', { group, n: activeCount })}{' '}
+            <Tip kind="info" title={artifact.name} testId={`relic-artifact-info-${groupId}`} content={
+              `${t('relic.artifactDetail', { group: artifact.groupName ?? group, tag: t(TAG_KEY[artifact.tag ?? 0] ?? 'relic.tagUnknown') })}\n${artifact.description}`
+            } />
+          </>}
           scoreLabel={t('relic.relicScore')}
           score={decimal(result.total)}
           scoreTestId={`relic-total-${groupId}`}
@@ -260,9 +356,9 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
 
         {/* The same grid as the piece dialog: label, body, end. */}
         <div className="gz-form">
-          <div className="gz-row grade">
-            <span className="lab">{t('relic.dangerGrade')}</span>
-            <div className="gz-seg full" role="group" aria-label={t('relic.dangerGrade')}>
+          <div className="gz-row grade relx">
+            <span className="lab" id={`${ids}-grade`}>{t('relic.dangerGrade')}</span>
+            <div className="gz-seg full" role="group" aria-labelledby={`${ids}-grade`}>
               {gradeOptions(relics).map((grade) => (
                 <button key={grade} type="button" className="gz-chip" aria-pressed={grade === slot.grade}
                   data-testid={`relic-grade-${groupId}-${grade}`}
@@ -274,40 +370,48 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
                 </button>
               ))}
             </div>
-            {(() => {
-              const scored = effectiveGrade(relics, slot.grade, server)
-              const mark = (gradeRung(relics, scored)?.mark ?? 0) * k2
-              return (
-                <span className="gz-tags" data-testid={`relic-grade-line-${groupId}`}>
-                  <span>{t('relic.tagMark', { mark: decimal(mark) })}</span>
-                  <span>{t('relic.tagCap', { cap: effectiveAffixCap(relics, scored) })}</span>
-                  {scored !== slot.grade ? <span className="warn">{t('relic.scoredAsGrade', { grade: scored })}</span> : null}
-                </span>
-              )
-            })()}
+            {/* Every piece keeps its width whichever grade is picked: the Mark
+                sits in a fixed-width box, and the 本服 note is a mark in a
+                slot that is always reserved. */}
+            <span className="gz-tags" data-testid={`relic-grade-line-${groupId}`}>
+              <span>{t('relic.tagMarkLabel')} <b className="num">{decimal(assemblyMark)}</b></span>
+              <span>{t('relic.tagCap', { cap: effectiveAffixCap(relics, scored) })}</span>
+              <i className="slot">
+                {scored !== slot.grade ? (
+                  <Tip kind="info" on content={`${t('relic.scoredAsGrade', { grade: scored })}\n${t('relic.serverHint')}`}
+                    title={t('relic.dangerGrade')} testId={`relic-grade-scored-${groupId}`} />
+                ) : null}
+              </i>
+            </span>
           </div>
 
           <div className="gz-row">
-            <span className="lab">{t('relic.extraMaterial')}</span>
+            <span className="lab tipped" id={`${ids}-material`}>
+              {t('relic.extraMaterial')}
+              <Tip kind="info" on={materialNotes.length > 1} content={materialNotes.join('\n')} title={t('relic.extraMaterial')}
+                testId={`relic-material-hint-${groupId}`} />
+            </span>
             {/* 特化 picks which type it takes; the other two view a position. */}
-            <div className="gz-tabsx" role="group" aria-label={t(spec ? 'relic.materialType' : 'relic.extraMaterial')}>
+            <div className="gz-tabsx" role="group" aria-labelledby={`${ids}-material`}>
               {Array.from({ length: MATERIAL_SLOTS }, (_, at) => {
                 const self = swapFrom?.groupId === groupId && swapFrom.index === at
                 // While a material is being moved, every other position of its
                 // type takes it; the rest of the tabs sit the move out.
                 const target = swapFrom !== null && !self
                   && materialTypeAt(groupId, at) === materialTypeAt(swapFrom.groupId, swapFrom.index)
+                const on = active.includes(at)
+                // A fill's dot is green while it counts; the label's ⓘ says so in
+                // words (a tooltip on the tab itself would steal its tap on a phone).
                 return (
                   <button key={at} type="button" className={at === index ? 'on' : ''} aria-pressed={at === index}
                     disabled={swapFrom !== null && !target && !self}
                     onClick={() => (target ? onSwapTo({ groupId, index: at })
                       : spec ? patch({ materialType: materialTypeAt(groupId, at) }) : setViewed(at))}
                     data-testid={`relic-material-tab-${groupId}-${at}`} data-swap-target={target || undefined}
-                    data-fill={spec ? undefined : active.includes(at) ? 'on' : 'off'}
-                    title={spec ? undefined : `${t(at === 0 ? 'relic.fill1' : 'relic.fill2')} · ${t(active.includes(at) ? 'relic.fillOn' : 'relic.fillOff')}`}>
+                    data-fill={spec ? undefined : on ? 'on' : 'off'}>
                     {spec
                       ? t('relic.materialTypeOption', { group: relics.groupNames[String(materialTypeAt(groupId, at))] ?? '' })
-                      : <><i aria-hidden />{t(at === 0 ? 'relic.fill1' : 'relic.fill2')}<span className="sr-only">{` · ${t(active.includes(at) ? 'relic.fillOn' : 'relic.fillOff')}`}</span></>}
+                      : <><i aria-hidden />{t(at === 0 ? 'relic.fill1' : 'relic.fill2')}<span className="sr-only">{` · ${t(on ? 'relic.fillOn' : 'relic.fillOff')}`}</span></>}
                   </button>
                 )
               })}
@@ -319,12 +423,11 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
               </button>
             ) : null}
           </div>
-          {swapping ? <p className="note" data-testid={`relic-swap-hint-${groupId}`}>{t('relic.swapHint')}</p> : null}
-          {material && !material.applies ? <p className="note" data-testid={`relic-material-state-${groupId}-${index}`}>{t('relic.fillTwoNote')}</p> : null}
 
           <div className="gz-affs" data-testid={`relic-material-${groupId}-${index}`}>
             {affixes.map((affix, at) => (
               <AffixRow key={at} relics={relics} affix={affix} index={at} inactive={material?.inactive[at] ?? false}
+                cap={result.cap}
                 others={affixes.filter((_, other) => other !== at)} pool={pool} k2={k2} testPrefix={testPrefix}
                 onChange={(next) => writeAffixes(affixes.map((entry, other) => (other === at ? next : entry)))}
                 onRemove={() => writeAffixes(affixes.filter((_, other) => other !== at))} />
@@ -343,25 +446,26 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
           </div>
         </div>
 
-        <div className="gz-kv" data-testid={`relic-breakdown-${groupId}`}>
-          <div>{t('relic.assembly')}<b className="num">{decimal(result.assemblyScore)}</b></div>
-          <div>
-            {t('relic.resonanceCount', { n: resonating?.activeCount ?? 0 })}<b className="num">{decimal(result.resonanceScore)}</b>
-          </div>
-          <div>{t('relic.affixScore')}<b className="num">{decimal(result.affixScore)}</b></div>
+        {/* The relic's one resonance: the stats it grants, read off the
+            material in effect with the most active affixes. */}
+        <div className="sub">
+          {t('relic.resonance')}
+          <span className="meta">{t('relic.resonanceRow', { count: resonating?.activeCount ?? 0 })}</span>
+          {resonating && resonating.index !== index && resonating.activeCount > 0 ? (
+            <Tip kind="info" content={t('relic.resonanceOther')} title={t('relic.resonance')} testId={`relic-resonance-hint-${groupId}`} />
+          ) : null}
+        </div>
+        <div className="gz-res" data-testid={`relic-resonance-${groupId}`}>
+          {resonating && resonating.activeCount > 0
+            ? <ResonanceStats relics={relics} material={resonating} k1={k1} />
+            : <p className="note">{t('relic.resonanceNone')}</p>}
         </div>
 
-        {rares.length > 0 ? (
-          <>
-            <div className="sub">{t('relic.rareEffects')}</div>
-            <div className="gz-rare" data-testid={`${testPrefix}-rare`}>
-              {rares.map(({ source, k }) => (
-                <div key={k}><b>{source.name ?? ''}</b>{'　'}{rareEffect(relics, source, k2)}</div>
-              ))}
-            </div>
-          </>
-        ) : null}
-
+        <div className="gz-kv" data-testid={`relic-breakdown-${groupId}`}>
+          <div>{t('relic.assembly')}<b className="num">{decimal(result.assemblyScore)}</b></div>
+          <div>{t('relic.resonance')}<b className="num">{decimal(result.resonanceScore)}</b></div>
+          <div>{t('relic.affixScore')}<b className="num">{decimal(result.affixScore)}</b></div>
+        </div>
       </fieldset>
       {/* As the piece dialog: outside the fieldset so a read-only viewer can
           still close. Every change applies as it is made; Confirm only closes. */}
@@ -379,95 +483,91 @@ function RelicCard({ relics, slot, result, k2, server, swapFrom, canSwapFrom, re
 }
 
 /**
- * A relic at a glance -- artifact, slot, grade and total -- opening its dialog.
- * The three sit side by side; everything edited is in the dialog.
+ * What a relic carries, under its face: the affixes of each material in
+ * effect (named as the game names the material) and the stats its 非凡共鸣
+ * grants.
  */
-function RelicFace({ relics, slot, result, onOpen }: {
-  relics: Relics; slot: RelicSlotState; result: RelicSlotResult; onOpen: () => void
+function RelicDetail({ relics, result, k1, k2 }: { relics: Relics; result: RelicSlotResult; k1: number; k2: number }) {
+  const { t } = useTranslation()
+  const groupId = result.state.groupId
+  const applying = result.materials.filter((material) => material.applies)
+  const two = applying.length > 1
+  const filled = applying.filter((material) => material.affixes.some((affix) => affix.stat !== ''))
+  const resonating = result.materials.find((material) => material.resonates)
+  return (
+    <div className="gz-rdet" data-testid={`relic-face-detail-${groupId}`}>
+      {filled.length === 0 ? <p className="none">{t('relic.noAffix')}</p> : null}
+      {filled.map((material) => {
+        const pool = typePool(relics, material.type)
+        const name = materialName(relics, material.type, pool, material.affixes)
+          ?? t('relic.materialTypeOption', { group: relics.groupNames[String(material.type)] ?? '' })
+        return (
+          <div key={material.index} data-testid={`relic-face-affixes-${groupId}-${material.index}`}>
+            <span className="h">{two ? `${t(material.index === 0 ? 'relic.fill1' : 'relic.fill2')} · ${name}` : name}</span>
+            <ul>
+              {material.affixes.map((affix, at) => {
+                if (affix.stat === '') return null
+                const source = pool.find((entry) => entry.id === affix.affixId)
+                const rare = source && isRareAffix(source) ? source : null
+                const off = material.inactive[at]
+                return (
+                  <li key={at} className={`${rare ? 'rare' : ''} ${off ? 'off' : ''}`}>
+                    <span>{rare ? t('relic.rareName', { name: rare.name ?? '' }) : statName(relics, affix.stat)}</span>
+                    {off ? <small>{t('relic.affixOff')}</small> : null}
+                    <b className="num">{shownValue(relics, affix, k2)}</b>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )
+      })}
+      {resonating && resonating.activeCount > 0 && resonating.resonanceStats.length > 0 ? (
+        <div data-testid={`relic-face-resonance-${groupId}`}>
+          <span className="h">{t('relic.resonanceNow', { count: resonating.activeCount })}</span>
+          <div className="res"><ResonanceStats relics={relics} material={resonating} k1={k1} /></div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * A relic at a glance -- artifact, slot, grade and total -- opening its dialog,
+ * with what it carries listed under it. The three sit side by side; everything
+ * edited is in the dialog.
+ */
+function RelicFace({ relics, slot, result, k1, k2, onOpen }: {
+  relics: Relics; slot: RelicSlotState; result: RelicSlotResult; k1: number; k2: number; onOpen: () => void
 }) {
   const { t } = useTranslation()
   const groupId = slot.groupId
   const artifact = result.artifact
   return (
-    <button type="button" aria-haspopup="dialog" onClick={onOpen}
-      className={`gz-relic ${artifact ? '' : 'empty'}`}
-      data-testid={`relic-open-${groupId}`}>
-      <IconTile
-        quality={artifact ? gradeQuality(slot.grade) : null}
-        src={artifact?.icon ? iconUrl(artifact.icon) : undefined}
-        alt={artifact?.name ?? ''}
-        label={artifact?.name.slice(0, 1)}
-        className="ic"
-      />
-      <span className="t">
-        <small>{t('relic.groupTitle', { group: relics.groupNames[String(groupId)] ?? '' })}</small>
-        <b>{artifact ? artifact.name : t('relic.artifactPlaceholder')}</b>
-        <span className="tags">
-          <span>{t('relic.gradeBare', { grade: slot.grade })}</span>
-          {artifact ? (
-            <>
-              <span className="num">{t('relic.faceAffixes', { counts: result.materials.map((m) => m.affixes.length).join('+') })}</span>
-              <span className="num">{t('relic.faceResonance', { count: result.materials.find((m) => m.resonates)?.activeCount ?? 0 })}</span>
-            </>
-          ) : null}
+    <div className={`gz-relic-card ${artifact ? '' : 'empty'}`}>
+      <button type="button" aria-haspopup="dialog" onClick={onOpen}
+        className={`gz-relic ${artifact ? '' : 'empty'}`}
+        data-testid={`relic-open-${groupId}`}>
+        <IconTile
+          quality={artifact ? gradeQuality(slot.grade) : null}
+          src={artifact?.icon ? iconUrl(artifact.icon) : undefined}
+          label={artifact?.name.slice(0, 1)}
+          className="ic"
+        />
+        <span className="t">
+          <small>{t('relic.groupTitle', { group: relics.groupNames[String(groupId)] ?? '' })}</small>
+          <b>{artifact ? artifact.name : t('relic.artifactPlaceholder')}</b>
+          <span className="tags">
+            <span>{t('relic.gradeBare', { grade: slot.grade })}</span>
+          </span>
         </span>
-      </span>
-      <span className="s num" data-testid={`relic-face-total-${groupId}`}>
-        {decimal(result.total)}
-      </span>
-    </button>
+        <span className="s num" data-testid={`relic-face-total-${groupId}`}>
+          {decimal(result.total)}
+        </span>
+      </button>
+      {artifact ? <RelicDetail relics={relics} result={result} k1={k1} k2={k2} /> : null}
+    </div>
   )
-}
-
-/**
- * A stored slot read against the dataset: the grade clamped to the ones a
- * player can hold, each affix resolved by id against its position's pool, and
- * a group or a second rare word repeated within a material dropped — those
- * cannot exist in game. An id the pool no longer has is dropped too. A relic
- * the player removed stays removed.
- */
-function restoreSlot(relics: Relics, groupId: number, stored: StoredRelicSlot | undefined, fresh: RelicSlotState): RelicSlotState {
-  if (!stored) return fresh
-  const grades = gradeOptions(relics)
-  // A grade the player cannot hold (0) reads as the best one they can.
-  const clamp = (value: number) => (grades.includes(value)
-    ? value
-    : gradeRung(relics, value) && grades.length > 0 ? grades[grades.length - 1] : fresh.grade)
-  const artifactId = stored.artifactId === null ? null
-    : artifactsInGroup(relics, groupId).some((a) => a.id === stored.artifactId) ? stored.artifactId : fresh.artifactId
-  // Older drafts kept one grade per slot; it becomes the stored artifact's.
-  const perArtifact: Record<string, number> = {}
-  for (const [id, value] of Object.entries(stored.grades ?? {})) perArtifact[id] = clamp(value)
-  if (artifactId != null && perArtifact[String(artifactId)] === undefined && stored.artifactId === artifactId) {
-    perArtifact[String(artifactId)] = clamp(stored.grade)
-  }
-  const grade = artifactId != null ? perArtifact[String(artifactId)] ?? fresh.grade : clamp(stored.grade)
-  const materialType = groupId === SPEC_GROUP ? (stored.materialType ?? 1) : undefined
-  const materials = Array.from({ length: MATERIAL_SLOTS }, (_, at) => {
-    const pool = typePool(relics, materialTypeAt(groupId, at))
-    const kept: ChosenRelicAffix[] = []
-    for (const affix of storedAffixes(stored.materials?.[at])) {
-      // An empty row the player added but has not filled yet stays.
-      if (affix.affixId === null) {
-        kept.push(EMPTY_RELIC_AFFIX)
-        continue
-      }
-      const source = pool.find((entry) => entry.id === affix.affixId)
-      if (!source) continue
-      const taken = usedGroups(pool, kept)
-      if (taken.groups.has(source.groupId) || (taken.rare && isRareAffix(source))) continue
-      kept.push(affixFrom(source))
-    }
-    return kept.slice(0, maxAffixes(relics))
-  })
-  return {
-    groupId,
-    artifactId,
-    grade,
-    grades: perArtifact,
-    ...(materialType !== undefined ? { materialType } : {}),
-    materials,
-  }
 }
 
 export default function RelicSection({ relics, onTotals }: {
@@ -479,26 +579,9 @@ export default function RelicSection({ relics, onTotals }: {
   const season = useMemo(() => currentSeason(relics), [relics])
   const [draft, setDraft] = useSection('relics')
   const [server] = useRelicServer()
-  const knowledgeLevel = useMemo(() => {
-    const ladder = knowledgeLadder(relics, season)
-    const known = ladder.some((rung) => rung.level === draft.knowledgeLevel)
-    return known ? (draft.knowledgeLevel as number) : ladder.find((rung) => rung.level != null)?.level ?? 0
-  }, [draft.knowledgeLevel, relics, season])
+  const knowledgeLevel = useMemo(() => knowledgeLevelOf(relics, draft.knowledgeLevel, season), [draft.knowledgeLevel, relics, season])
   const setKnowledgeLevel = (level: number) => setDraft((prev) => ({ ...prev, knowledgeLevel: level }))
-  // Pre-picked so a card shows real effects on first paint. The scorer ignores
-  // `artifactId`, so this changes no number.
-  const slots = useMemo<RelicSlotState[]>(
-    () =>
-      GROUP_IDS.map((groupId) => {
-        const fresh: RelicSlotState = {
-          ...newRelicSlot(groupId, relics.promotion.worstGrade),
-          artifactId: artifactsInGroup(relics, groupId)[0]?.id ?? null,
-          ...(groupId === SPEC_GROUP ? { materialType: 1 } : {}),
-        }
-        return restoreSlot(relics, groupId, draft.slots.find((slot) => slot.groupId === groupId), fresh)
-      }),
-    [draft.slots, relics],
-  )
+  const slots = useMemo<RelicSlotState[]>(() => restoreSlots(relics, draft.slots), [draft.slots, relics])
   // Stored as ids only; the derived stat, value and Mark are re-read from the dataset.
   const setSlots = (update: (prev: RelicSlotState[]) => RelicSlotState[]) =>
     setDraft((prev) => ({
@@ -562,19 +645,19 @@ export default function RelicSection({ relics, onTotals }: {
   }, [onTotals, totals])
 
   return (
-    <section className="space-y-3" data-testid="relic-section" aria-label={t('relic.title')}>
+    <section className="space-y-3" data-testid="relic-section">
       {/* The page leaves this section's read-only state to it, so the relic
-          faces stay clickable; only the inputs lock. */}
+          faces stay clickable and the formula mark readable; only the inputs lock. */}
       <div className="gz-panel-head">
         <h3>{t('relic.title')}</h3>
-        <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0">
-          <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} onChange={setKnowledgeLevel} />
-        </fieldset>
+        <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} readOnly={readOnly}
+          onChange={setKnowledgeLevel} />
       </div>
 
       <div className="gz-relics">
         {slots.map((slot, index) => (
-          <RelicFace key={slot.groupId} relics={relics} slot={slot} result={results[index]} onOpen={() => setOpenGroup(slot.groupId)} />
+          <RelicFace key={slot.groupId} relics={relics} slot={slot} result={results[index]} k1={k1} k2={k2}
+            onOpen={() => setOpenGroup(slot.groupId)} />
         ))}
       </div>
 
@@ -592,7 +675,7 @@ export default function RelicSection({ relics, onTotals }: {
 
       <Dialog open={openIndex >= 0} onOpenChange={(open) => { if (!open) setOpenGroup(null) }}>
         {openIndex >= 0 ? (
-          <RelicCard key={slots[openIndex].groupId} relics={relics} slot={slots[openIndex]} result={results[openIndex]} k2={k2}
+          <RelicCard key={slots[openIndex].groupId} relics={relics} slot={slots[openIndex]} result={results[openIndex]} k1={k1} k2={k2}
             server={server} swapFrom={swapFrom} canSwapFrom={canSwapFrom} readOnly={readOnly}
             onSwapStart={(from) => setSwapFrom((prev) => (prev && prev.groupId === from.groupId && prev.index === from.index ? null : from))}
             onSwapTo={(to) => {

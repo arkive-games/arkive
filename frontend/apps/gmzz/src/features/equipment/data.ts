@@ -2,6 +2,7 @@
 // aliases (each app owns its own `@`), and this module's arithmetic is the part
 // most worth testing.
 import { dataUrl, iconUrl } from '../../lib/urls'
+import type { EquipmentDraft } from './memory'
 
 /** A `[mark, statValue]` rung. Ladders arrive richest-first. */
 export type Rung = [number, number]
@@ -60,8 +61,21 @@ export type EquipItem = {
   setId: number | null
   /** The 烙印 this item wears (`Brand.id`), or null. */
   brandId: number | null
+  /**
+   * The 冒险 / 竞技 mark the item card draws (`ItemNewData.Tag`): 1 for PVE,
+   * 2 for PVP, absent on an item with neither. Every suit piece carries one,
+   * and so do pieces of no suit, so it is read off the item, not the suit.
+   */
+  tag?: number | null
+  /** The mark's wording, 冒险 or 竞技. */
+  tagName?: string | null
+  /** The 神话词条 a quality-7 item carries, joined from `EquipmentMythData`. */
+  myth?: Myth
   flavour: string
 }
+
+/** 神话词条 — the named effect a mythic item comes with; `healEffect` is the healing form's reading. */
+export type Myth = { name: string; effect: string; healEffect: string }
 
 /**
  * 烙印 — a named special effect. Items point at it via `EquipItem.brandId`;
@@ -117,14 +131,25 @@ export type SuitTier = {
 /** `perLevel × (gearLevel − origin)`: what a suit's piece-count effect scores at a gear level. */
 export type SuitLevelScore = { perLevel: number; origin: number }
 
+/**
+ * One stat a suit effect grants, as a line in the gear level the effect runs
+ * at: `perLevel × (gearLevel − origin)`, the client's own `FormulaData` row.
+ * `percent` stats (压制, 抵抗) are fractions the card prints as a percentage.
+ */
+export type SuitProp = { key: string; perLevel: number; origin: number; percent: boolean }
+
 export type Suit = {
   id: number
   name: string
   fullName: string
   tag: string | null
   pieceCounts: number[]
+  /** The two-piece effect's text; `{Key}` placeholders are filled from `props`. */
   effect2: string
+  /** The three-piece effect's text. */
   effect3: string
+  /** What each piece-count effect grants, aligned with `pieceCounts`. */
+  props?: SuitProp[][]
 }
 
 export type AffixTier = 'normal' | 'extraordinary' | 'contaminated' | 'special'
@@ -721,6 +746,21 @@ export function averageProgress(results: PieceResult[]): number {
   return results.reduce((total, r) => total + r.progressPercent, 0) / results.length
 }
 
+/** The PVE/PVP bucket an item's `tag` stands for. */
+const TAG_MODE: Record<number, 'pve' | 'pvp'> = { 1: 'pve', 2: 'pvp' }
+
+/**
+ * An item's 冒险 (PVE) / 竞技 (PVP) mark, from the item's own tag and else from
+ * its suit's — the two agree on every suit piece — or null for neither.
+ */
+export function itemMode(equipment: Equipment, item: EquipItem | null): { mode: 'pve' | 'pvp' | null; name: string } | null {
+  if (!item) return null
+  if (item.tag != null && (TAG_MODE[item.tag] || item.tagName)) return { mode: TAG_MODE[item.tag] ?? null, name: item.tagName ?? '' }
+  const tag = suitOf(equipment, item)?.tag
+  if (!tag) return null
+  return { mode: tag.startsWith('冒险') ? 'pve' : tag.startsWith('竞技') ? 'pvp' : null, name: tag }
+}
+
 /** The suit an item belongs to, or null for the 212 unaffiliated pieces. */
 export function suitOf(equipment: Equipment, item: EquipItem | null): Suit | null {
   if (item?.suitId == null) return null
@@ -775,6 +815,29 @@ export function suitScoreFor(equipment: Equipment, suit: Suit, items: (EquipItem
     effects.push({ pieces, gearLevel, score: Math.max(0, Math.round(formula.perLevel * (gearLevel - formula.origin))) })
   })
   return { total: effects.reduce((sum, effect) => sum + effect.score, 0), effects }
+}
+
+/** A suit stat's figure at a gear level: `300`, or `1.5%` for a percentage stat. */
+export function suitPropText(prop: SuitProp, gearLevel: number): string {
+  const value = prop.perLevel * (gearLevel - prop.origin)
+  if (prop.percent) return `${(Math.round(value * 10000) / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
+  return Math.round(value).toLocaleString()
+}
+
+/**
+ * A suit effect's text with its figures filled in, as the item card reads it
+ * at that gear level: the client substitutes each `{Key}` of the description
+ * with the stat's formula evaluated at the level the effect runs at. A key the
+ * effect has no formula for is left as it is rather than blanked.
+ */
+export function suitEffectText(suit: Suit, pieces: number, gearLevel: number): string {
+  const index = suit.pieceCounts.indexOf(pieces)
+  const text = index === 0 ? suit.effect2 : index === 1 ? suit.effect3 : ''
+  const props = new Map((suit.props?.[index] ?? []).map((prop) => [prop.key, prop]))
+  return text.replace(/\{([^}]+)\}/g, (whole, key: string) => {
+    const prop = props.get(key)
+    return prop ? suitPropText(prop, gearLevel) : whole
+  })
 }
 
 /**
@@ -851,4 +914,112 @@ export function itemsForSlot(
 
 export function newPiece(slot: number): PieceState {
   return { slot, itemId: null, enhanceStage: 0, refinePercent: 0, affixes: [] }
+}
+
+/* ----------------------------------------------------------------- loadout */
+
+/** A sanity ceiling for the stored affix values; the game has no real one. */
+const SCORE_CAP = 999999
+
+function readInt(raw: string | number, min: number, max: number): number {
+  const whole = Math.trunc(Number(raw))
+  if (!Number.isFinite(whole)) return 0
+  return Math.min(Math.max(whole, min), max)
+}
+
+/**
+ * A stored piece checked against the dataset it is about to be scored with.
+ *
+ * The draft outlives the data: an item can leave the dataset, a ladder can
+ * shorten, and a weapon belongs to one pathway. Each is corrected here rather
+ * than trusted, so a stale draft degrades to an empty slot instead of a piece
+ * that scores nothing for no visible reason. A weapon of another pathway is
+ * swapped for this pathway's counterpart — every weapon has one per pathway —
+ * and only dropped when there is none. The stored draft itself is left alone,
+ * so switching the pathway back brings the original weapon back.
+ */
+export function sanitizePiece(equipment: Equipment, piece: PieceState, professionId: number | null): PieceState {
+  const maxStage = maxStageFor(equipment, piece.slot)
+  const stored = equipment.items.find((item) => item.id === piece.itemId && item.slot === piece.slot) ?? null
+  const worn = stored ? counterpartFor(equipment, stored, professionId) : null
+  const enhanceStage = Math.min(Math.max(Math.trunc(piece.enhanceStage), 0), maxStage)
+  const families = familiesFor(equipment, piece.slot)
+  return {
+    slot: piece.slot,
+    itemId: worn?.id ?? null,
+    enhanceStage,
+    refinePercent: clampRefine(piece.refinePercent),
+    affixes: piece.affixes
+      // An empty family is a freshly added row with nothing picked yet.
+      .filter((affix) => affix.family === '' || families.includes(affix.family))
+      .slice(0, maxAffixesFor(equipment, piece.slot, worn))
+      .map((affix) => ({ family: affix.family, value: clampAffixValue(equipment, piece.slot, affix.family, readInt(affix.value, -SCORE_CAP, SCORE_CAP)) })),
+  }
+}
+
+/** A live suit with what it scores from the pieces of it worn. */
+export type SuitScore = ActiveSuit & { total: number; effects: SuitEffectScore[] }
+
+/** The whole loadout scored: every piece, both whole-body sets, the suit, and the game's four parts. */
+export type Loadout = {
+  pieces: PieceState[]
+  results: PieceResult[]
+  /** The loadout's average refinement (see `averageProgress`). */
+  averagePercent: number
+  /** The type-1 enhancement set reached (全身+N), or null. */
+  bodyTier: SuitTier | null
+  /** The type-2 refinement set reached, or null. */
+  refineTier: SuitTier | null
+  suitScores: SuitScore[]
+  /** The suit that scores: the player's pick, else the best-scoring live one. */
+  chosenSuit: SuitScore | null
+  /** 基础, 强化 (the pieces' own part, then with both whole-body sets), 词条 and 套装. */
+  totals: { base: number; pieces: number; enhance: number; reforge: number; suit: number; total: number }
+}
+
+/**
+ * The loadout as the rating sees it: the stored draft, one piece per scored
+ * slot, checked against the dataset and the pathway, then scored. A slot the
+ * draft does not know starts empty; a weapon the pathway cannot wear is shown
+ * empty but kept stored.
+ *
+ * The four parts are the game's: 基础 is the items' own Marks; 强化 the pieces'
+ * refinement scores plus both whole-loadout sets (全身+N and the average
+ * refinement set), which belong to no one piece; 词条 the reforge scores,
+ * affixes and bonus together; and 套装 the one suit in effect — only one can be
+ * active in game, so the player's pick counts and the best-scoring one stands
+ * in until they pick.
+ */
+export function evaluateLoadout(
+  equipment: Equipment,
+  graces: Grace[],
+  draft: Pick<EquipmentDraft, 'pieces' | 'suitChoice'>,
+  professionId: number | null,
+): Loadout {
+  const pieces = scoredSlots(equipment, graces).map((slot) =>
+    sanitizePiece(equipment, draft.pieces.find((piece) => piece.slot === slot.id) ?? newPiece(slot.id), professionId))
+  const results = pieces.map((piece) => evaluatePiece(equipment, graces, piece))
+  const averagePercent = averageProgress(results)
+  const items = results.map((result) => result.item)
+  const suitScores = activeSuits(equipment, items).map((entry) => ({ ...entry, ...suitScoreFor(equipment, entry.suit, items) }))
+  const bestSuit = suitScores.reduce<SuitScore | null>((best, entry) => (best === null || entry.total > best.total ? entry : best), null)
+  const chosenSuit = suitScores.find((entry) => entry.suit.id === draft.suitChoice) ?? bestSuit
+  const bodyTier = wholeBodyTier(equipment, pieces.map((piece) => piece.enhanceStage))
+  const refineTier = suitTierFor(equipment, 2, averagePercent)
+  const sums = results.reduce(
+    (sum, r) => ({ base: sum.base + r.baseScore, pieces: sum.pieces + r.enhanceScore, reforge: sum.reforge + r.reforgeScore }),
+    { base: 0, pieces: 0, reforge: 0 },
+  )
+  const suit = chosenSuit?.total ?? 0
+  const enhance = sums.pieces + (bodyTier?.mark ?? 0) + (refineTier?.mark ?? 0)
+  return {
+    pieces,
+    results,
+    averagePercent,
+    bodyTier,
+    refineTier,
+    suitScores,
+    chosenSuit,
+    totals: { ...sums, enhance, suit, total: sums.base + enhance + sums.reforge + suit },
+  }
 }

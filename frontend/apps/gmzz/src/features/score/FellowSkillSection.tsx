@@ -1,14 +1,29 @@
 import { useMemo, type ReactNode } from 'react'
+import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
+import { GzSelect } from '@/components/GzSelect'
 import { IconTile } from '@/features/equipment/PickerModal'
 import { fellowPortraitUrl, type Fellow, type FellowRelation } from '@/features/fellows/data'
 import { clampSkillLevel, type BondsDraft } from '@/features/score/bonds'
-import { carriedFellowSkill, fellowOptions, MAX_FELLOW_STAR, starMap } from '@/features/score/fellowSkill'
+import { carriedFellowSkill, fellowOptions, MAX_FELLOW_STAR, starMap, type FellowSkillResult } from '@/features/score/fellowSkill'
 import LevelAllDialog from '@/features/score/LevelAllDialog'
 import { useCharacterReadOnly } from '@/features/characters/CharacterProvider'
+import { TipOn } from '@/features/score/Tip'
 
-const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
+/** What one connection's skill scores as shown: the base, what the relation adds, and the total. */
+function fellowTip(t: TFunction, fellow: Fellow, result: FellowSkillResult | undefined): string {
+  if (!result) return t('bonds.fellowTipUnowned')
+  return [
+    t('bonds.fellowTipSkill', { name: fellow.skill.name, star: result.star }),
+    t('bonds.fellowTipBase', { score: result.base.toLocaleString() }),
+    result.relation
+      ? t('bonds.fellowTipRelation', { relation: result.relation.name, tier: result.tier, added: (result.score - result.base).toLocaleString() })
+      : t('bonds.fellowTipNoRelation'),
+    t('bonds.fellowTipTotal', { score: result.score.toLocaleString() }) + (result.estimated ? '*' : ''),
+    result.estimated ? t('bonds.fellowTipEstimated') : null,
+  ].filter(Boolean).join('\n')
+}
 
 /**
  * The 人脉 panel: every connection with its stars and the relation its skill
@@ -77,15 +92,16 @@ export default function FellowSkillCalculator({
           const star = stars.get(fellow.id)
           const isCarried = carried?.fellow.id === fellow.id
           // Only relations already formed are a choice; none formed means the skill scores alone.
-          const options = fellowOptions(fellow, relations, stars, skillLevel).flatMap((option) => (option.relation ? [option.relation] : []))
-          const relationId = isCarried ? carried?.relation?.id : options[0]?.id
+          const results = fellowOptions(fellow, relations, stars, skillLevel)
+          const formed = results.filter((option) => option.relation !== null)
+          const relationId = isCarried ? carried?.relation?.id : formed[0]?.relation?.id
+          const shown = isCarried && carried ? carried : results[0]
           return (
             <li key={fellow.id} className={`gz-person ${isCarried ? 'on' : ''} ${star === undefined ? 'zero' : ''}`} data-testid={`bonds-fellow-${fellow.id}`}>
               <button
                 type="button"
                 disabled={star === undefined}
                 aria-pressed={isCarried}
-                title={fellow.skill.name}
                 aria-label={t('bonds.fellowCarryToggle', { name: fellow.name })}
                 onClick={() => carry(isCarried && !autoCarry ? null : fellow.id)}
                 className="gz-face"
@@ -94,21 +110,25 @@ export default function FellowSkillCalculator({
                 <IconTile quality={fellow.quality} src={fellow.portrait ? fellowPortraitUrl(fellow.portrait) : undefined} alt={fellow.name} label={fellow.name.slice(0, 1)} className="size-14" />
               </button>
               {isCarried ? <span className="gz-carry" data-testid={`bonds-fellow-carried-${fellow.id}`}>{t('bonds.skillCarried')}</span> : null}
-              <b title={fellow.name}>{fellow.shortName || fellow.name}</b>
+              <TipOn title={fellow.name} content={fellowTip(t, fellow, shown)}>
+                <b className="gz-hov" data-testid={`bonds-fellow-tip-${fellow.id}`}>{fellow.shortName || fellow.name}</b>
+              </TipOn>
               <StarPicker star={star} name={fellow.name} testId={`bonds-fellow-star-${fellow.id}`} onChange={(next) => setStar(fellow.id, next)} />
-              <select
-                className={`gz-rel ${FOCUS}`}
-                aria-label={t('bonds.fellowRelationFor', { name: fellow.name })}
-                disabled={options.length === 0}
-                value={relationId ?? ''}
-                onChange={(event) => carry(fellow.id, event.target.value === '' ? null : Number(event.target.value))}
-                data-testid={`bonds-fellow-relation-${fellow.id}`}
-              >
-                {options.length === 0 ? <option value="">{t('bonds.fellowRelationNone')}</option> : null}
-                {options.map((relation) => (
-                  <option key={relation.id} value={relation.id}>{relation.name}</option>
-                ))}
-              </select>
+              <GzSelect
+                className="gz-rel"
+                label={t('bonds.fellowRelationFor', { name: fellow.name })}
+                disabled={formed.length === 0}
+                value={relationId == null ? '' : String(relationId)}
+                onChange={(value) => carry(fellow.id, value === '' ? null : Number(value))}
+                testId={`bonds-fellow-relation-${fellow.id}`}
+                options={formed.length === 0
+                  ? [{ value: '', label: t('bonds.fellowRelationNone') }]
+                  // Each relation with what it adds over the skill alone.
+                  : formed.map((option) => ({
+                      value: String(option.relation?.id),
+                      label: `${option.relation?.name} +${(option.score - option.base).toLocaleString()}${option.estimated ? '*' : ''}`,
+                    }))}
+              />
             </li>
           )
         })}

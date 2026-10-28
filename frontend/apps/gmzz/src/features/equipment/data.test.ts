@@ -7,7 +7,10 @@ import {
   itemsForSlot,
   playableProfessions,
   enhanceOf,
+  evaluateLoadout,
   evaluatePiece,
+  itemMode,
+  suitEffectText,
   equipmentIconUrl,
   extraordinaryBonus,
   familiesFor,
@@ -33,6 +36,7 @@ import {
   suitTierFor,
   wholeBodyTier,
   type Equipment,
+  type Suit,
   type Grace,
 } from './data'
 
@@ -695,5 +699,68 @@ describe('itemsForSlot', () => {
       items: [{ ...EQUIPMENT.items[0], id: 1, quality: 4 }, { ...EQUIPMENT.items[0], id: 2, quality: 6 }],
     }
     expect(itemsForSlot(twoAtOnce, 1, 1200002).map((i) => i.id)).toEqual([2, 1])
+  })
+})
+
+describe('itemMode', () => {
+  const plain = EQUIPMENT.items[2]
+
+  it("reads the item card's own 冒险/竞技 tag, suit or no suit", () => {
+    expect(itemMode(EQUIPMENT, { ...plain, tag: 2, tagName: '竞技' })).toEqual({ mode: 'pvp', name: '竞技' })
+    expect(itemMode(EQUIPMENT, { ...plain, tag: 1, tagName: '冒险' })).toEqual({ mode: 'pve', name: '冒险' })
+  })
+
+  it("falls back to the suit's tag, and is null for an item with neither", () => {
+    expect(itemMode(EQUIPMENT, EQUIPMENT.items[0])).toEqual({ mode: 'pve', name: '冒险套装' })
+    expect(itemMode(EQUIPMENT, plain)).toBeNull()
+    expect(itemMode(EQUIPMENT, null)).toBeNull()
+  })
+})
+
+describe('suitEffectText', () => {
+  const suit: Suit = {
+    ...EQUIPMENT.suits.suits[0],
+    effect2: '怪物专攻增加{AllRaceHurtPlus_N}，怪物压制增加{AllRaceHurtMulti_N}。',
+    effect3: '怪物专攻增加{AllRaceHurtPlus_N}，{Unknown_N}。',
+    props: [
+      [
+        { key: 'AllRaceHurtMulti_N', perLevel: 0.001, origin: 49, percent: true },
+        { key: 'AllRaceHurtPlus_N', perLevel: 20, origin: 49, percent: false },
+      ],
+      [{ key: 'AllRaceHurtPlus_N', perLevel: 25, origin: 49, percent: false }],
+    ],
+  }
+
+  it('fills each placeholder with its formula at the gear level, a percentage stat as one', () => {
+    expect(suitEffectText(suit, 2, 64)).toBe('怪物专攻增加300，怪物压制增加1.5%。')
+  })
+
+  it('takes the three-piece text and line for three pieces, and leaves an unknown key as it is', () => {
+    expect(suitEffectText(suit, 3, 65)).toBe('怪物专攻增加400，{Unknown_N}。')
+  })
+})
+
+describe('evaluateLoadout', () => {
+  it('sanitizes the draft per scored slot and sums the four parts', () => {
+    const loadout = evaluateLoadout(EQUIPMENT, GRACES, {
+      pieces: [{
+        slot: 1, itemId: 3020623, enhanceStage: 3, refinePercent: 37,
+        affixes: [{ family: '攻击', value: 308 }, { family: '攻击', value: 233 }, { family: '技能增强', value: 70 }, { family: '不存在', value: 1 }],
+      }],
+      suitChoice: null,
+    }, 1200002)
+    expect(loadout.pieces.map((piece) => piece.slot)).toEqual([1])
+    expect(loadout.pieces[0].affixes).toHaveLength(3)
+    // 基础 2430, 强化 240 (three whole stages), 重塑 805 + 610 + 870 + 1200 = 3485.
+    expect(loadout.totals).toEqual({ base: 2430, pieces: 240, enhance: 240, reforge: 3485, suit: 0, total: 2430 + 240 + 3485 })
+    expect(loadout.chosenSuit).toBeNull()
+  })
+
+  it("swaps a weapon for the pathway's counterpart", () => {
+    const loadout = evaluateLoadout(EQUIPMENT, GRACES, {
+      pieces: [{ slot: 1, itemId: 3020623, enhanceStage: 0, refinePercent: 0, affixes: [] }],
+      suitChoice: null,
+    }, 1200001)
+    expect(loadout.results[0].item?.id).toBe(3010623)
   })
 })

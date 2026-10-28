@@ -59,6 +59,7 @@ export const characterMessages = {
     keepMine: 'Keep mine',
     takeServer: 'Load saved version',
     failed: 'That did not work. Please try again.',
+    resetToDraftConfirm: 'Start over on a fresh local draft? "{{name}}" stays saved as it is; the local draft on this device is cleared.',
   },
   'zh-CN': {
     switcher: '角色',
@@ -119,6 +120,7 @@ export const characterMessages = {
     keepMine: '保留我的',
     takeServer: '载入已保存的版本',
     failed: '操作没有成功，请重试。',
+    resetToDraftConfirm: '在新的本地草稿上重新填写？「{{name}}」保持已保存的样子不变；此设备上的本地草稿会被清空。',
   },
   'zh-TW': {
     switcher: '角色',
@@ -179,5 +181,6 @@ export const characterMessages = {
     keepMine: '保留我的',
     takeServer: '載入已儲存的版本',
     failed: '操作沒有成功，請重試。',
+    resetToDraftConfirm: '在新的本機草稿上重新填寫？「{{name}}」保持已儲存的樣子不變；此裝置上的本機草稿會被清空。',
   },
 } as const

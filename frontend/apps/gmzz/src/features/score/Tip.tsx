@@ -33,10 +33,12 @@ export function Tip({ content, title, kind = 'formula', on = false, testId, labe
   return (
     <TooltipProvider delayDuration={150}>
       <Hint content={<div className={BODY}>{content}</div>} title={heading} srTitle={label ?? heading ?? ''}>
-        <button type="button" aria-label={label ?? heading} data-testid={testId} className={`gz-tip ${on ? 'on' : ''}`}
+        {/* A span, not a button: a button inside a read-only view's
+            `<fieldset disabled>` is disabled too and never shows its tooltip. */}
+        <span role="button" tabIndex={0} aria-label={label ?? heading} data-testid={testId} className={`gz-tip ${on ? 'on' : ''}`}
           onClick={(event) => event.stopPropagation()}>
           <Icon stroke={1.8} aria-hidden />
-        </button>
+        </span>
       </Hint>
     </TooltipProvider>
   )

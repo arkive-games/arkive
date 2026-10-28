@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { MAX_SKILL_LEVEL } from '@/features/score/bonds'
@@ -15,13 +14,11 @@ import { Tip } from '@/features/score/Tip'
  * (`SkillLvPlus_N`); those take effect in game but never count toward the
  * score, so they are only told on the info mark's tooltip, never added.
  */
-export function SkillLevelField({ value, cap, relicBonus, testId, note, onChange }: {
+export function SkillLevelField({ value, cap, relicBonus, testId, onChange }: {
   value: number
   cap: number | null
   relicBonus: number
   testId: string
-  /** Drawn last: a formula hint for how this skill scores. */
-  note?: ReactNode
   onChange: (level: number) => void
 }) {
   const { t } = useTranslation()
@@ -35,7 +32,6 @@ export function SkillLevelField({ value, cap, relicBonus, testId, note, onChange
         {t('bonds.skillLevel')}
         {cap !== null ? <em className="num" data-testid={`${testId}-cap`}>{t('bonds.skillLevelCapShort', { cap })}</em> : null}
         <Tip kind="info" content={relicTip} title={t('bonds.skillLevel')} on={relicBonus > 0} testId={`${testId}-relic`} />
-        {note}
       </span>
       <Stepper value={Math.min(value, max)} min={1} max={max} onChange={onChange} label={t('bonds.skillLevel')} testId={testId} />
     </div>

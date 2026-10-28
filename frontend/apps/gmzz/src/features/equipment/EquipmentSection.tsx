@@ -1,37 +1,31 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { IconBuildingCastle, IconChevronDown, IconChevronUp, IconSwords } from '@tabler/icons-react'
+import { GzSelect } from '@/components/GzSelect'
 import { IconTile } from '@/features/equipment/PickerModal'
+import { Tip, TipOn } from '@/features/score/Tip'
 import { useCharacterReadOnly, useSection } from '@/features/characters/CharacterProvider'
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 import {
-  activeSuits,
   equipmentIconUrl,
-  averageProgress,
-  clampAffixValue,
-  counterpartFor,
-  evaluatePiece,
-  familiesFor,
+  evaluateLoadout,
+  itemMode,
   itemsForSlot,
   maxAffixesFor,
   maxStageFor,
-  newPiece,
   clampRefine,
   familiesByGrace,
   refineLevelOf,
   refinePercentOf,
   REFINE_LEVELS,
+  REFINE_PER_STAGE,
   rungsFor,
-  scoredSlots,
   statLabel,
   statLines,
-  suitOf,
-  suitScoreFor,
+  suitEffectText,
   suitThreshold,
-  suitTierFor,
-  wholeBodyTier,
   type AffixTier,
   type ChosenAffix,
   type EquipItem,
@@ -42,8 +36,8 @@ import {
   type Rung,
   type ScoredAffix,
   type StatRange,
+  type SuitScore,
   type SuitTier,
-  type Suit,
 } from '@/features/equipment/data'
 
 /** The label on the pill beside an affix: gold extraordinary, grey normal, red contaminated. */
@@ -54,88 +48,48 @@ const TIER_KEY: Record<AffixTier, string> = {
   special: 'equip.tierSpecial',
 }
 
-/**
- * `Suit.tag` is the game's own bucket for a suit's items — 冒险套装 is worn
- * for PVE, 竞技套装 for PVP. Keyed on the tag text because that is what the
- * dataset carries; an unknown tag shows as itself rather than not at all.
- */
-const SUIT_KINDS: Record<string, { mode: 'pve' | 'pvp'; key: string }> = {
-  冒险套装: { mode: 'pve', key: 'equip.kindAdventure' },
-  竞技套装: { mode: 'pvp', key: 'equip.kindArena' },
-}
+/** The wording of the two marks the item card draws — 冒险 for PVE, 竞技 for PVP. */
+const KIND_KEY: Record<'pve' | 'pvp', string> = { pve: 'equip.kindAdventure', pvp: 'equip.kindArena' }
 
 /** An item's PVE/PVP bucket: the mode when the tag is a known one, and its wording. */
 type SuitKind = { mode: 'pve' | 'pvp' | null; label: string }
 
-/** A sanity ceiling for the stored affix values; the game has no real one. */
-const SCORE_CAP = 999999
-
-/* ------------------------------------------------------------- persistence */
-
-/**
- * A stored piece checked against the dataset it is about to be scored with.
- *
- * The draft outlives the data: an item can leave the dataset, a ladder can
- * shorten, and a weapon belongs to one pathway. Each is corrected here rather
- * than trusted, so a stale draft degrades to an empty slot instead of a piece
- * that scores nothing for no visible reason. A weapon of another pathway is
- * swapped for this pathway's counterpart — every weapon has one per pathway —
- * and only dropped when there is none. The stored draft itself is left alone,
- * so switching the pathway back brings the original weapon back.
- */
-function sanitizePiece(equipment: Equipment, piece: PieceState, professionId: number | null): PieceState {
-  const maxStage = maxStageFor(equipment, piece.slot)
-  const stored = equipment.items.find((item) => item.id === piece.itemId && item.slot === piece.slot) ?? null
-  const worn = stored ? counterpartFor(equipment, stored, professionId) : null
-  const enhanceStage = Math.min(Math.max(Math.trunc(piece.enhanceStage), 0), maxStage)
-  const families = familiesFor(equipment, piece.slot)
-  return {
-    slot: piece.slot,
-    itemId: worn?.id ?? null,
-    enhanceStage,
-    refinePercent: clampRefine(piece.refinePercent),
-    affixes: piece.affixes
-      // An empty family is a freshly added row with nothing picked yet.
-      .filter((affix) => affix.family === '' || families.includes(affix.family))
-      .slice(0, maxAffixesFor(equipment, piece.slot, worn))
-      .map((affix) => ({ family: affix.family, value: clampAffixValue(equipment, piece.slot, affix.family, readInt(affix.value, -SCORE_CAP, SCORE_CAP)) })),
-  }
-}
-
 /* ------------------------------------------------------------------ helpers */
-
-function readInt(raw: string | number, min: number, max: number): number {
-  const whole = Math.trunc(Number(raw))
-  if (!Number.isFinite(whole)) return 0
-  return Math.min(Math.max(whole, min), max)
-}
 
 /** A freshly added affix: nothing picked yet, so it scores nothing until a stat is chosen. */
 const EMPTY_AFFIX: ChosenAffix = { family: '', value: 0 }
 
-/** The PVE/PVP bucket of an item's suit; null for an unaffiliated item. */
-function suitKind(t: TFunction, suit: Suit | null): SuitKind | null {
-  if (!suit) return null
-  const known = SUIT_KINDS[suit.tag ?? '']
-  if (known) return { mode: known.mode, label: t(known.key) }
-  return suit.tag ? { mode: null, label: suit.tag } : null
+/** An item's PVE/PVP bucket, read off the item card's own mark; null for an item with none. */
+function kindOf(t: TFunction, equipment: Equipment, item: EquipItem | null): SuitKind | null {
+  const mark = itemMode(equipment, item)
+  if (!mark) return null
+  return { mode: mark.mode, label: mark.mode ? t(KIND_KEY[mark.mode]) : mark.name }
 }
 
 /**
  * The PVE/PVP mark: crossed swords for 竞技, a keep for 副本, each in its own
- * colour, with the wording on hover. An unknown tag is shown as its text.
+ * colour. The icon alone carries its wording in a tooltip; it sits inside the
+ * slot and picker buttons, so a tap on it opens the tooltip rather than the
+ * button too. An unknown tag is shown as its text.
  */
 function KindMark({ kind, withLabel = false }: { kind: SuitKind | null; withLabel?: boolean }) {
   if (!kind) return null
   if (!kind.mode) return <span className="gz-kind">{kind.label}</span>
   const Icon = kind.mode === 'pvp' ? IconSwords : IconBuildingCastle
-  return (
-    <span className={`gz-kind ${kind.mode} ${withLabel ? 'wide' : ''}`} role="img" title={kind.label} aria-label={kind.label}
-      data-kind={kind.mode}>
+  const mark = (
+    <span className={`gz-kind ${kind.mode} ${withLabel ? 'wide' : ''}`} data-kind={kind.mode}
+      onClick={withLabel ? undefined : (event) => event.stopPropagation()}>
       <Icon stroke={2} aria-hidden />
-      {withLabel ? <span aria-hidden>{kind.label}</span> : null}
+      {withLabel ? <span>{kind.label}</span> : null}
     </span>
   )
+  return withLabel ? mark : <TipOn content={kind.label}>{mark}</TipOn>
+}
+
+/** `+12` after an item's name: its enhancement stage, as the item card reads it. */
+function StageMark({ stage }: { stage: number }) {
+  const { t } = useTranslation()
+  return <span className="gz-lv num">{t('equip.stageOption', { stage })}</span>
 }
 
 /** `327~607` for a range, `1,960` for a single value. */
@@ -163,7 +117,7 @@ export function DialogHead({ title }: { title: string }) {
  */
 export function ItemHead({ icon, title, sub, scoreLabel, score, scoreTestId, swapLabel, swapTestId, onSwap }: {
   icon: ReactNode
-  title: string
+  title: ReactNode
   sub: ReactNode
   scoreLabel?: string
   score?: string
@@ -228,7 +182,7 @@ export function RangeRow({ label, value, min = 0, max, output, testId, onChange 
   return (
     <label className="gz-rng">
       <span>{label}</span>
-      <input type="range" min={min} max={max} value={value} aria-label={label} data-testid={testId}
+      <input type="range" min={min} max={max} value={value} data-testid={testId}
         onChange={(event) => onChange(Number(event.target.value))} />
       <output className="num" data-testid={`${testId}-value`}>{output}</output>
     </label>
@@ -262,15 +216,31 @@ function EnhanceRanges({ stage, refine, maxStage, testIdPrefix, onStage, onRefin
 }
 
 /**
- * One whole-loadout set: what it is, the tier reached and its score, and the
- * stats it grants in the tooltip, labelled by family. A set not reached says
- * so with a dash.
+ * One whole-loadout set: what it is and the tier reached. The tooltip holds
+ * what the tier asks for, the stats it grants, labelled by family, and the
+ * score it counts; a set not reached shows a dash, and its tooltip what
+ * reaching the first tier takes.
  */
-function BonusTier({ equipment, tier, label, title }: { equipment: Equipment; tier: SuitTier | null; label: string; title: string | null }) {
+function BonusTier({ equipment, tier, need, children }: {
+  equipment: Equipment
+  tier: SuitTier | null
+  /** What the reached tier (or, with none, the first one) asks for. */
+  need: string
+  children: ReactNode
+}) {
+  const { t } = useTranslation()
+  const content = tier
+    ? [
+        need,
+        ...tier.stats.map(([key, amount]) => t('equip.tierStat', { stat: statLabel(equipment, key), amount: amount.toLocaleString() })),
+        tier.effect || null,
+        t('equip.tierScore', { mark: (tier.mark ?? 0).toLocaleString() }),
+      ].filter(Boolean).join('\n')
+    : need
   return (
-    <span title={tier ? tier.stats.map(([key, amount]) => `${statLabel(equipment, key)} +${amount.toLocaleString()}`).join('\n') : undefined}>
-      {label}&nbsp;<b className="num">{title ?? '—'}</b>
-    </span>
+    <TipOn content={content}>
+      <span className="gz-hov" tabIndex={0}>{children}</span>
+    </TipOn>
   )
 }
 
@@ -313,26 +283,25 @@ function AffixRow({
       {affix.family === '' ? <span className="gz-pip" aria-hidden /> : (
         <span className={`gz-pip ${affix.tier}`} data-tier={affix.tier}>{t(TIER_KEY[affix.tier])}</span>
       )}
-      <select
+      <GzSelect
         value={affix.family}
-        aria-label={t('equip.affixFamily')}
-        data-testid={`equip-affix-family-${slot}-${index}`}
+        label={t('equip.affixFamily')}
+        testId={`equip-affix-family-${slot}-${index}`}
+        // An unpicked row reads "Pick a stat", which cannot be picked back.
+        options={[
+          ...(affix.family === '' ? [{ value: '', label: t('equip.affixPick'), disabled: true }] : []),
+          ...families.map((family) => ({ value: family, label: family })),
+        ]}
         // A new stat starts on its best rung, the one a player is usually reaching for.
-        onChange={(event) => {
-          const raw = event.target.value
-          onChange({ family: raw, value: raw === '' ? 0 : rungsFor(equipment, slot, raw)[0]?.rung[1] ?? 0 })
-        }}
-      >
-        <option value="">{t('equip.affixPick')}</option>
-        {families.map((family) => <option key={family} value={family}>{family}</option>)}
-      </select>
+        onChange={(raw) => onChange({ family: raw, value: raw === '' ? 0 : rungsFor(equipment, slot, raw)[0]?.rung[1] ?? 0 })}
+      />
       {/* The value between −/+ that walk its rungs; the picker jumps straight to one. */}
       <span className="gz-val">
         <button type="button" disabled={!down} onClick={down} aria-label={t('equip.rungDown')}
           data-testid={`equip-affix-value-${slot}-${index}-down`}>−</button>
         <Popover open={valueOpen} onOpenChange={setValueOpen}>
           <PopoverTrigger asChild>
-            <button type="button" className="v num" disabled={rungs.length === 0} aria-label={t('equip.affixValue')}
+            <button type="button" className="v num" disabled={rungs.length === 0}
               data-testid={`equip-affix-value-${slot}-${index}`}>
               {current ? signed(current.rung[1]) : '—'}
               <IconChevronDown stroke={2} aria-hidden />
@@ -366,7 +335,11 @@ function AffixRow({
           data-testid={`equip-affix-value-${slot}-${index}-up`}>+</button>
       </span>
       <span className="end">
-        <span className="mk num">{current ? current.rung[0].toLocaleString() : '—'}</span>
+        {current ? (
+          <TipOn content={t('equip.affixMarkHint')}>
+            <span className="mk num gz-hov" tabIndex={0}>{current.rung[0].toLocaleString()}</span>
+          </TipOn>
+        ) : <span className="mk num">—</span>}
         <button type="button" className="gz-rm" onClick={onRemove} aria-label={t('equip.removeAffix')}
           data-testid={`equip-affix-remove-${slot}-${index}`}>×</button>
       </span>
@@ -375,9 +348,9 @@ function AffixRow({
 }
 
 /**
- * A piece at a glance: icon, slot and gear level, name, its tags and its
- * score. Everything that is edited sits behind it, in the piece's dialog, so
- * the eight slots fit on one screen.
+ * A piece at a glance: icon, slot and gear level, name with its enhancement
+ * stage after it, its tags and its score. Everything that is edited sits
+ * behind it, in the piece's dialog, so the eight slots fit on one screen.
  */
 function PieceSlot({ result, slotName, kind, onOpen }: {
   result: PieceResult
@@ -388,7 +361,6 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
   const { t } = useTranslation()
   const { item, state } = result
   const tags = [
-    t('equip.stageOption', { stage: state.enhanceStage }),
     t('equip.refineTag', { value: clampRefine(state.refinePercent) }),
     result.extraordinaryCount > 0 ? t('equip.extraordinaryTag', { n: result.extraordinaryCount }) : null,
     result.grace?.name ?? null,
@@ -404,8 +376,11 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
     >
       <IconTile quality={item?.quality ?? null} src={item ? equipmentIconUrl(item.icon) : undefined} alt={item?.name ?? ''} label="?" className="ic" />
       <span className="nm">
-        <span className="kind"><span className="lb" title={label}>{label}</span><KindMark kind={kind} /></span>
-        <b>{item ? item.name : t('equip.emptySlot')}</b>
+        <span className="kind"><span className="lb">{label}</span><KindMark kind={kind} /></span>
+        <b>
+          <span className="n">{item ? item.name : t('equip.emptySlot')}</span>
+          {item ? <StageMark stage={state.enhanceStage} /> : null}
+        </b>
       </span>
       <span className="s num" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
       <span className="tags">
@@ -434,32 +409,77 @@ function ItemPicker({ equipment, slot, professionId, selectedId, onSelect, onCol
       <input className="gz-inp" type="search" value={query} placeholder={t('equip.pickerSearch')} aria-label={t('equip.pickerSearch')}
         onChange={(event) => setQuery(event.target.value)} data-testid="equip-picker-search" />
       <div className="gz-picker">
-        {shown.length === 0 ? <p className="note">{t('equip.pickerEmpty')}</p> : shown.map((item) => {
-          const kind = suitKind(t, suitOf(equipment, item))
-          return (
-            <button key={item.id} type="button" className={`gz-pick ${item.id === selectedId ? 'on' : ''}`}
-              aria-pressed={item.id === selectedId} onClick={() => onSelect(item.id)} data-testid={`equip-picker-option-${item.id}`}>
-              {/* The PVE/PVP mark sits on the icon's corner. */}
-              <span className="icw">
-                <IconTile quality={item.quality} src={equipmentIconUrl(item.icon)} alt="" className="ic" />
-                <KindMark kind={kind} />
-              </span>
-              <b>{item.name}</b>
-              <small>{t('equip.levelTag', { level: item.gearLevel ?? '—' })}</small>
-            </button>
-          )
-        })}
+        {shown.length === 0 ? <p className="note">{t('equip.pickerEmpty')}</p> : shown.map((item) => (
+          <button key={item.id} type="button" className={`gz-pick ${item.id === selectedId ? 'on' : ''}`}
+            aria-pressed={item.id === selectedId} onClick={() => onSelect(item.id)} data-testid={`equip-picker-option-${item.id}`}>
+            {/* The PVE/PVP mark sits on the icon's corner. */}
+            <span className="icw">
+              <IconTile quality={item.quality} src={equipmentIconUrl(item.icon)} alt="" className="ic" />
+              <KindMark kind={kindOf(t, equipment, item)} />
+            </span>
+            <b>{item.name}</b>
+            <small>{t('equip.levelTag', { level: item.gearLevel ?? '—' })}</small>
+          </button>
+        ))}
       </div>
     </PickBox>
   )
 }
 
 /**
- * One piece's dialog: the item with a button to swap it, its stats,
- * enhancement, affixes, the four figures they come to, and last the one
- * destructive action. An empty slot opens straight on the item list. The
- * dialog is portalled out of the page's read-only fieldset, so it carries its
- * own.
+ * The effects a piece carries, each a heading (kind · name) over its text:
+ * the 烙印 and the 神话词条 come with the item, and the 恩赐 below them follows
+ * from the extraordinary affixes rolled. The healing form's reading, which the
+ * card shows a healer instead, sits in an ⓘ beside the heading.
+ */
+function PieceEffects({ result }: { result: PieceResult }) {
+  const { t } = useTranslation()
+  const slot = result.state.slot
+  const myth = result.item?.myth
+  const grace = result.grace
+  const healTip = (text: string | undefined, effect: string) =>
+    text && text !== effect ? <Tip kind="info" title={t('equip.healForm')} content={text} /> : null
+  return (
+    <>
+      {result.brand ? (
+        <div className="gz-fx" data-kind="brand" data-testid={`equip-brand-${slot}`}>
+          <div className="sub">{t('equip.brand')} · {result.brand.name}</div>
+          <p className="note">{result.brand.effect}</p>
+        </div>
+      ) : null}
+      {myth ? (
+        <div className="gz-fx" data-kind="myth" data-testid={`equip-myth-${slot}`}>
+          <div className="sub">{t('equip.myth')} · {myth.name}{healTip(myth.healEffect, myth.effect)}</div>
+          <p className="note">{myth.effect}</p>
+        </div>
+      ) : null}
+      {grace ? (
+        <div className="gz-fx" data-kind="grace" data-testid={`equip-grace-${slot}`}>
+          <div className="sub">
+            {t('equip.grace')} · {grace.name}
+            <TipOn content={t('equip.graceNeed', { n: grace.extraordinaryCount })}>
+              <span className="meta gz-pips gz-hov" tabIndex={0}>{'◆'.repeat(grace.extraordinaryCount)}</span>
+            </TipOn>
+            {healTip(grace.brief2, grace.brief1)}
+          </div>
+          <p className="note">{grace.brief1}</p>
+        </div>
+      ) : result.extraordinaryCount >= 2 ? (
+        <div className="gz-fx" data-kind="grace" data-testid={`equip-grace-${slot}`}>
+          <div className="sub">{t('equip.grace')}</div>
+          <p className="note">{t('equip.noGrace')}</p>
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+/**
+ * One piece's dialog: the item with a button to swap it, its stats and the
+ * three scores the piece adds up to, enhancement and affixes, the effects it
+ * carries, and last the one destructive action. An empty slot opens straight
+ * on the item list. The dialog is portalled out of the page's read-only
+ * fieldset, so it carries its own.
  */
 function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, professionId, onPatch }: {
   equipment: Equipment
@@ -494,13 +514,13 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
   const plain = (list: ScoredAffix[]): ChosenAffix[] => list.map(({ family, value }) => ({ family, value }))
   const write = (next: ChosenAffix[]) => onPatch({ affixes: next })
   const lines = statLines(equipment, item.baseStats, result.enhanceStats)
-  const grace = result.grace
+  const n = (value: number) => value.toLocaleString()
   return (
     <DialogContent className="gz-dlg" data-testid={`equip-dialog-${slot}`}>
       <fieldset disabled={readOnly}>
         <ItemHead
           icon={<IconTile quality={item.quality} src={equipmentIconUrl(item.icon)} alt="" className="ic" />}
-          title={`${slotName} · ${item.name}`}
+          title={<>{slotName} · {item.name} <StageMark stage={state.enhanceStage} /></>}
           sub={<>{t('equip.pickerDetail', { level: item.gearLevel ?? '—', quality: item.quality })}<KindMark kind={kind} withLabel /></>}
           swapLabel={picking ? t('equip.collapse') : t('equip.swap')}
           swapTestId={`equip-open-picker-${slot}`}
@@ -516,10 +536,35 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
               </span>
             ))}
           </div>
-          <span className="gz-escore">
-            <small>{t('equip.pieceScoreLabel')}</small>
-            <b className="num" data-testid={`equip-score-${slot}`}>{result.total.toLocaleString()}</b>
-          </span>
+          <TipOn content={t('equip.pieceBreakdown', { base: n(result.baseScore), enhance: n(result.enhanceScore), reforge: n(result.reforgeScore), total: n(result.total) })}>
+            <span className="gz-escore" tabIndex={0}>
+              <small className="gz-hov">{t('equip.pieceScoreLabel')}</small>
+              <b className="num" data-testid={`equip-score-${slot}`}>{n(result.total)}</b>
+            </span>
+          </TipOn>
+        </div>
+        {/* The three scores the piece adds up to, each with how it is worked out. */}
+        <div className="gz-kv gz-eqkv" data-testid={`equip-reforge-${slot}`}>
+          <div>
+            <span className="lab">{t('equip.baseScore')}<Tip kind="info" title={t('equip.baseScore')} content={t('equip.baseHint')} /></span>
+            <b className="num" data-testid={`equip-base-score-${slot}`}>{n(result.baseScore)}</b>
+          </div>
+          <div>
+            <span className="lab">
+              {t('equip.enhanceRefineShort')}
+              <Tip content={t('equip.enhanceHint', { per: REFINE_PER_STAGE, level: result.refineLevel, max: REFINE_LEVELS, score: n(result.enhanceScore) })} />
+            </span>
+            <b className="num" data-testid={`equip-${slot}-enhance-score`}>{n(result.enhanceScore)}</b>
+            <small>{t('equip.stageOption', { stage: state.enhanceStage })} · {t('equip.refineTag', { value: clampRefine(state.refinePercent) })}</small>
+          </div>
+          <div>
+            <span className="lab">
+              {t('equip.reforgeScoreLabel')}
+              <Tip content={t('equip.reforgeHint', { mark: n(result.affixMark), bonus: n(result.extraordinaryBonus), score: n(result.reforgeScore), n: result.extraordinaryCount })} />
+            </span>
+            <b className="num">{n(result.reforgeScore)}</b>
+            <small>{t('equip.bonusIncluded', { n: n(result.extraordinaryBonus) })}</small>
+          </div>
         </div>
         {picking ? picker : null}
 
@@ -545,30 +590,7 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
           </div>
         </div>
 
-        <div className="gz-kv" data-testid={`equip-reforge-${slot}`}>
-          <div>{t('equip.baseScore')}<b className="num" data-testid={`equip-base-score-${slot}`}>{result.baseScore.toLocaleString()}</b></div>
-          <div>
-            {t('equip.reforgeScoreLabel')}<b className="num">{result.reforgeScore.toLocaleString()}</b>
-            <small>{t('equip.bonusIncluded', { n: result.extraordinaryBonus.toLocaleString() })}</small>
-          </div>
-          <div>
-            {t('equip.grace')}<b>{grace ? grace.name : '—'}</b>
-            {grace ? <small>{'◆'.repeat(grace.extraordinaryCount)}</small>
-              : result.extraordinaryCount >= 2 ? <small>{t('equip.noGrace')}</small> : null}
-          </div>
-          <div>
-            {t('equip.enhanceRefineShort')}
-            <b className="num" data-testid={`equip-${slot}-enhance-score`}>{result.enhanceScore.toLocaleString()}</b>
-            <small>{t('equip.stageOption', { stage: state.enhanceStage })} · {t('equip.refineTag', { value: clampRefine(state.refinePercent) })}</small>
-          </div>
-        </div>
-        {grace ? <p className="note" style={{ marginTop: '.625rem' }}>{grace.brief1}</p> : null}
-        {result.brand ? (
-          <>
-            <div className="sub">{t('equip.brand')} · {result.brand.name}</div>
-            <p className="note">{result.brand.effect}</p>
-          </>
-        ) : null}
+        <PieceEffects result={result} />
       </fieldset>
       {/* Outside the fieldset so a read-only viewer can still close. Every
           change applies as it is made; Confirm only closes. */}
@@ -582,6 +604,34 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
         </DialogClose>
       </div>
     </DialogContent>
+  )
+}
+
+/**
+ * What a live suit's effects come to, for its tooltip: each piece-count effect
+ * the worn pieces reach, with the stats it grants at the gear level it runs at
+ * and its score, and those not reached as such.
+ */
+function SuitEffects({ equipment, entry }: { equipment: Equipment; entry: SuitScore }) {
+  const { t } = useTranslation()
+  return (
+    <>
+      {entry.suit.pieceCounts.map((pieces, index) => {
+        const effect = entry.effects.find((reached) => reached.pieces === pieces)
+        const formula = equipment.suits.levelScores?.[String(index + 1)]
+        if (!effect) return <div key={pieces}>{t('equip.suitEffectOff', { pieces, count: entry.count })}</div>
+        return (
+          <div key={pieces}>
+            {t('equip.suitEffectLine', { pieces, level: effect.gearLevel, text: suitEffectText(entry.suit, pieces, effect.gearLevel) })}
+            {formula ? (
+              <div>
+                {t('equip.suitEffectScoreLine', { perLevel: formula.perLevel, level: effect.gearLevel, origin: formula.origin, score: effect.score.toLocaleString() })}
+              </div>
+            ) : null}
+          </div>
+        )
+      })}
+    </>
   )
 }
 
@@ -619,6 +669,7 @@ function BatchDialog({ maxStage, stage, refine, readOnly, onApply }: {
   )
 }
 
+
 /** The four 装备 items as the page's rating grades them. */
 export type EquipmentTotals = { base: number; enhance: number; reforge: number; suit: number; total: number }
 
@@ -645,71 +696,31 @@ export default function EquipmentSection({
   professionId: number | null
 }) {
   const { t } = useTranslation()
-  const slots = useMemo(() => scoredSlots(equipment, graces), [equipment, graces])
   const [draft, setDraft] = useSection('equipment')
   // Which slot's detail dialog is open.
   const [openSlot, setOpenSlot] = useState<number | null>(null)
   const readOnly = useCharacterReadOnly()
 
-  // What is scored: the stored draft, one piece per scored slot, checked
-  // against the dataset and the pathway. A slot the draft does not know starts
-  // empty; a weapon the pathway cannot wear is shown empty but kept stored.
-  const pieces = useMemo(
-    () =>
-      slots.map((slot) =>
-        sanitizePiece(equipment, draft.pieces.find((piece) => piece.slot === slot.id) ?? newPiece(slot.id), professionId),
-      ),
-    [draft.pieces, equipment, professionId, slots],
+  // What is scored: the stored draft checked against the dataset and the
+  // pathway (see `evaluateLoadout`), the same reading the formula marks take.
+  const loadout = useMemo(
+    () => evaluateLoadout(equipment, graces, draft, professionId),
+    [draft, equipment, graces, professionId],
   )
-  const { batch, suitChoice } = draft
+  const { pieces, results, averagePercent, bodyTier, refineTier, suitScores, chosenSuit } = loadout
+  const { batch } = draft
   const writePieces = useCallback(
     (next: PieceState[]) => setDraft((prev) => ({ ...prev, pieces: next })),
     [setDraft],
   )
-
-  const results = useMemo(() => pieces.map((p) => evaluatePiece(equipment, graces, p)), [equipment, graces, pieces])
   const openIndex = results.findIndex((result) => result.state.slot === openSlot)
-  const averagePercent = useMemo(() => averageProgress(results), [results])
-  const items = useMemo(() => results.map((r) => r.item), [results])
-  const active = useMemo(() => activeSuits(equipment, items), [equipment, items])
-  // Each live suit scored from its own pieces; only one suit can be active in
-  // game, so the player's pick counts, and the best-scoring one stands in
-  // until they pick.
-  const suitScores = useMemo(
-    () => active.map((entry) => ({ ...entry, ...suitScoreFor(equipment, entry.suit, items) })),
-    [active, equipment, items],
-  )
-  const bestSuit = suitScores.reduce<(typeof suitScores)[number] | null>(
-    (best, entry) => (best === null || entry.total > best.total ? entry : best),
-    null,
-  )
-  const chosenSuit = suitScores.find((entry) => entry.suit.id === suitChoice) ?? bestSuit
-  // The whole-loadout enhancement set — 全身+3 and up — is part of the
-  // enhancement score, not of any one piece.
-  const bodyTier = useMemo(() => wholeBodyTier(equipment, pieces.map((piece) => piece.enhanceStage)), [equipment, pieces])
-  // The refinement set — type 2, gated on the average enhancement percentage
-  // across the loadout — is the other whole-body bonus, and like the first it
-  // counts towards the enhancement part.
-  const refineTier = useMemo(() => suitTierFor(equipment, 2, averagePercent), [equipment, averagePercent])
   const suitNeed = Math.min(...equipment.suits.suits.map(suitThreshold))
   const slotNames = useMemo(() => new Map(equipment.slots.map((slot) => [slot.id, slot.name])), [equipment])
-  const kindOf = (item: EquipItem | null) => suitKind(t, suitOf(equipment, item))
 
   // The game's four parts: 基础, 强化 (the pieces' plus both whole-body sets),
   // 词条 (the reforge, affixes and bonus together) and 套装.
-  const totals = useMemo(() => {
-    const pieceSums = results.reduce(
-      (sum, r) => ({
-        base: sum.base + r.baseScore,
-        pieces: sum.pieces + r.enhanceScore,
-        reforge: sum.reforge + r.reforgeScore,
-      }),
-      { base: 0, pieces: 0, reforge: 0 },
-    )
-    const suit = chosenSuit?.total ?? 0
-    const enhance = pieceSums.pieces + (bodyTier?.mark ?? 0) + (refineTier?.mark ?? 0)
-    return { ...pieceSums, enhance, suit, total: pieceSums.base + enhance + pieceSums.reforge + suit }
-  }, [bodyTier, chosenSuit, refineTier, results])
+  const { base, enhance, reforge, suit, total } = loadout.totals
+  const totals = useMemo(() => ({ base, enhance, reforge, suit, total }), [base, enhance, reforge, suit, total])
   useEffect(() => {
     onTotals?.(totals)
   }, [onTotals, totals])
@@ -730,16 +741,30 @@ export default function EquipmentSection({
     }))
   }
 
+  // What each whole-loadout set asks for: the tier reached, or the first one.
+  const firstTier = (type: number) => equipment.suits.tiers
+    .filter((tier) => tier.type === type)
+    .sort((a, b) => (a.level ?? 0) - (b.level ?? 0))[0] ?? null
+  const bodyNeed = bodyTier ?? firstTier(1)
+  const refineNeed = refineTier ?? firstTier(2)
+  const percent = averagePercent.toLocaleString(undefined, { maximumFractionDigits: 2 })
+  const n = (value: number) => value.toLocaleString()
+
   return (
-    <section className="space-y-2.5" data-testid="equip-section" aria-label={t('equip.title')}>
+    <section className="space-y-2.5" data-testid="equip-section">
       <div className="gz-panel-head">
         <h3>{t('equip.worn')}</h3>
         <span className="meta">{t('equip.slotHint')}</span>
         <div className="acts">
+          {/* The loadout's total, split into the game's four parts on hover. */}
+          <TipOn content={t('equip.totalBreakdown', { base: n(base), enhance: n(enhance), reforge: n(reforge), suit: n(suit) })}>
+            <span className="gz-eqtotal" tabIndex={0} data-testid="equip-totals">
+              <span className="gz-hov">{t('equip.totalScore')}</span> <b className="num">{n(total)}</b>
+            </span>
+          </TipOn>
           <Dialog>
             <DialogTrigger asChild>
-              <button type="button" disabled={readOnly} className="gz-chip" data-testid="equip-batch-open"
-                title={`${t('equip.stageOption', { stage: batch.stage })} · ${t('equip.refineTag', { value: clampRefine(batch.badge) })}`}>
+              <button type="button" disabled={readOnly} className="gz-chip" data-testid="equip-batch-open">
                 {t('equip.batchEnhance')}
               </button>
             </DialogTrigger>
@@ -755,20 +780,29 @@ export default function EquipmentSection({
             key={result.state.slot}
             result={result}
             slotName={slotNames.get(result.state.slot) ?? ''}
-            kind={kindOf(result.item)}
+            kind={kindOf(t, equipment, result.item)}
             onOpen={() => setOpenSlot(result.state.slot)}
           />
         ))}
       </div>
 
       <div className="gz-eqfoot">
-        {/* The two whole-loadout sets: what each reached and the stats it grants. */}
+        {/* The two whole-loadout sets: what each reached, and in the tooltip
+            what it asks for, the stats it grants and the score it counts. */}
         <div className="gz-wb" data-testid="equip-body-tier">
-          <BonusTier equipment={equipment} tier={bodyTier} label={t('equip.bodyBonus')}
-            title={bodyTier ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: (bodyTier.mark ?? 0).toLocaleString() }) : null} />
+          <BonusTier equipment={equipment} tier={bodyTier}
+            need={bodyNeed ? t('equip.bodyTierNeed', { pieces: bodyNeed.requiredPieces ?? pieces.length, stage: bodyNeed.requiredStage ?? 0 }) : ''}>
+            {t('equip.bodyBonus')}&nbsp;
+            <b className="num">{bodyTier ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: n(bodyTier.mark ?? 0) }) : '—'}</b>
+          </BonusTier>
           <BonusTier equipment={equipment} tier={refineTier}
-            label={t('equip.refineAverage', { percent: averagePercent.toLocaleString(undefined, { maximumFractionDigits: 2 }) })}
-            title={refineTier ? `+${(refineTier.mark ?? 0).toLocaleString()}` : null} />
+            need={refineNeed ? t('equip.refineTierNeed', { percent: refineNeed.requiredAveragePercent ?? 0 }) : ''}>
+            {refineTier ? (
+              <b className="num">{t('equip.suitTier', { percent, mark: n(refineTier.mark ?? 0) })}</b>
+            ) : (
+              <>{t('equip.refineAverage', { percent })}&nbsp;<b className="num">—</b></>
+            )}
+          </BonusTier>
         </div>
 
         <div className="gz-suit">
@@ -780,34 +814,34 @@ export default function EquipmentSection({
           ) : (
             // Only one suit can be in effect, so the live ones are a choice: the
             // chosen one is highlighted and scores; with a single live suit there
-            // is nothing to choose and it is taken as is.
-            <div className="gz-seg" role="group" aria-label={t('equip.suitChoose')}>
+            // is nothing to choose and it is taken as is. Each one's effects, at
+            // the gear level they run at, sit in the ⓘ after it.
+            <div className="gz-seg" role="group">
               {suitScores.map((entry) => {
                 const chosen = entry.suit.id === chosenSuit?.suit.id
                 return (
-                  <button
-                    key={entry.suit.id}
-                    type="button"
-                    aria-pressed={chosen}
-                    disabled={readOnly || suitScores.length === 1}
-                    onClick={() => setDraft((prev) => ({ ...prev, suitChoice: entry.suit.id }))}
-                    className="gz-chip"
-                    // `effect2`/`effect3` are not shown: the client substitutes
-                    // `{AllRaceHurtPlus_N}` at runtime from formula refs this
-                    // pipeline cannot evaluate, so they would render as raw placeholders.
-                    title={entry.effects.map((effect) =>
-                      t('equip.suitEffectScore', { pieces: effect.pieces, level: effect.gearLevel, score: effect.score.toLocaleString() })).join('\n')}
-                    data-testid={`equip-suit-${entry.suit.id}`}
-                    data-chosen={chosen}
-                  >
-                    {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
-                    <small className="num">{entry.total.toLocaleString()}</small>
-                  </button>
+                  <span key={entry.suit.id} className="gz-suitopt">
+                    <button
+                      type="button"
+                      aria-pressed={chosen}
+                      disabled={readOnly || suitScores.length === 1}
+                      onClick={() => setDraft((prev) => ({ ...prev, suitChoice: entry.suit.id }))}
+                      className="gz-chip"
+                      data-testid={`equip-suit-${entry.suit.id}`}
+                      data-chosen={chosen}
+                    >
+                      {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
+                      <small className="num">{n(entry.total)}</small>
+                    </button>
+                    <Tip kind="info" on={chosen} title={entry.suit.fullName || entry.suit.name} testId={`equip-suit-info-${entry.suit.id}`}
+                      content={<SuitEffects equipment={equipment} entry={entry} />} />
+                  </span>
                 )
               })}
+              {suitScores.length > 1 ? <Tip kind="info" title={t('equip.suitChoose')} content={t('equip.suitChooseHint')} /> : null}
             </div>
           )}
-          <span className="s num">{t('equip.suitScore', { score: totals.suit.toLocaleString() })}</span>
+          <span className="s num">{t('equip.suitScore', { score: n(suit) })}</span>
         </div>
       </div>
 
@@ -818,7 +852,7 @@ export default function EquipmentSection({
             equipment={equipment}
             graces={graces}
             slotName={slotNames.get(results[openIndex].state.slot) ?? ''}
-            kind={kindOf(results[openIndex].item)}
+            kind={kindOf(t, equipment, results[openIndex].item)}
             result={results[openIndex]}
             readOnly={readOnly}
             professionId={professionId}

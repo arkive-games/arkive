@@ -63,6 +63,10 @@ Joins worth writing down, because none are guessable:
   `EquipmentGrowBodyEnhanceData` are keyed by that same body id. One slot has
   several bodies, one per season, so the season has to be carried through or the
   page silently mixes ladders from different seasons.
+- **`ItemNewData.Tag` is the 冒险/竞技 mark**: 1 with `TagName` 冒险, 2 with
+  竞技 — the PVE and PVP icons `ItemNml` puts on the item tile (`ItemTagData`
+  412/413). It agrees with the suit's `SuitTag` on every suit piece and is the
+  only mark the unaffiliated ones have.
 - **Affix tier is the group id's tail**: 01–12 普通, 21–32 非凡, 41–52 污染,
   61–63 the 途径/怪物专攻 specials. `Set 4` is the current gear tier; Sets 1–3
   are legacy and cap at Mark 114.
@@ -86,12 +90,15 @@ SLOT_TABLE = "EquipmentSlotData"
 TYPE_TABLE = "EquipmentTypeData"
 ITEM_TABLE = "ItemNewData"
 BRAND_TABLE = "EquipmentUniqueData"
+MYTH_TABLE = "EquipmentMythData"
 BODY_TABLE = "EquipmentGrowBodyConfigData"
 STAGE_TABLE = "EquipmentGrowBodyEnhanceData"
 STAGE_PROP_TABLE = "EquipmentGrowEnhancePropData"
 SUIT_TIER_TABLE = "EquipmentGrowBodySuitData"
 SUIT_TABLE = "EquipmentSuitData"
 FORMULA_TABLE = "FormulaData"
+PROP_MODE_TABLE = "FightPropModeData"
+PROP_SET_TABLE = "FightPropModeSetData"
 PROFESSION_TABLE = "TransferPathProfessionData"
 WORD_TABLE = "EquipmentWordRandomWordData"
 GROUP_TABLES = ("EquipmentWordRandomGroupData", "EquipmentWordInitRandomGroupData")
@@ -100,6 +107,9 @@ GROUP_TABLES = ("EquipmentWordRandomGroupData", "EquipmentWordInitRandomGroupDat
 #: pieces, 2 = three) — ``FormulaData`` rows of the shape ``return 201*($1 -49)``,
 #: where ``$1`` is the gear level the effect runs at.
 SUIT_SCORE_FORMULAS = {1: "EQUIP_SUIT_LEVEL_SCORE_1", 2: "EQUIP_SUIT_LEVEL_SCORE_2"}
+#: `FightPropModeData.ShowType` of a stat the client prints as a percentage
+#: (压制 and 抵抗: 0.015 reads 1.5%); 0 is a plain number.
+PERCENT_SHOW_TYPE = 1
 _LINEAR_FORMULA = re.compile(r"^\s*return\s+(?P<slope>\d+(?:\.\d+)?)\s*\*\s*\(\s*\$1\s*-\s*(?P<origin>\d+)\s*\)\s*$")
 
 #: The gear tier the current season rolls. Sets 1-3 are legacy ladders.
@@ -265,6 +275,11 @@ def items(
             "setId": row.get("SetId"),
             # The 烙印 this item wears, an `EquipmentUniqueData` id.
             "brandId": brand_id,
+            # The 冒险 (PVE) / 竞技 (PVP) mark the item card draws: `Tag` 1 or 2, and
+            # `TagName` its wording. Carried by every suit piece and by 74 more
+            # that belong to no suit, so the suit's own tag cannot stand in for it.
+            "tag": row.get("Tag") or None,
+            "tagName": row.get("TagName") or None,
             "flavour": _plain(row.get("itemDes") or ""),
         })
     out.sort(key=lambda i: i["id"])
@@ -318,6 +333,24 @@ def brands(excel: Path, strings: dict) -> list[dict]:
     return out
 
 
+def myths(excel: Path, strings: dict) -> dict[int, dict]:
+    """神话词条 — the named effect every quality-7 item carries, by item id.
+
+    EquipmentMythData has one row per mythic item, keyed by the item's own id
+    (not by a brand), so it is joined onto the item rather than shipped as a
+    second kind of 烙印. WordDesc is the effect the card prints; the healing
+    form's variant (WordDesc2) is kept beside it.
+    """
+    out = {}
+    for row in _rows(resolve_text(load_table(excel, MYTH_TABLE), strings)):
+        name = row.get("WordName") or ""
+        effect = _plain(row.get("WordDesc") or "")
+        if not name or not effect:
+            continue
+        out[row["ID"]] = {"name": name, "effect": effect, "healEffect": _plain(row.get("WordDesc2") or "")}
+    return out
+
+
 def enhancement(excel: Path, strings: dict) -> dict:
     """The 强化 ladder, per body (a slot within one season).
 
@@ -362,6 +395,8 @@ def enhancement(excel: Path, strings: dict) -> dict:
 
 def suits(excel: Path, strings: dict) -> dict:
     """The two suits, and the Mark ladder their tiers are worth."""
+    formulas = {r["ID"]: r for r in _rows(load_table(excel, FORMULA_TABLE))}
+    percent = percent_stats(excel)
     named = [
         {
             "id": r["ID"],
@@ -371,6 +406,7 @@ def suits(excel: Path, strings: dict) -> dict:
             "pieceCounts": list(r.get("BeSuitNum") or []),
             "effect2": _plain(r.get("SuitDesc1") or ""),
             "effect3": _plain(r.get("SuitDesc2") or ""),
+            "props": suit_props(r, formulas, percent),
         }
         for r in _rows(resolve_text(load_table(excel, SUIT_TABLE), strings))
     ]
@@ -402,6 +438,52 @@ def suits(excel: Path, strings: dict) -> dict:
     return {"suits": named, "tiers": tiers, "levelScores": suit_level_scores(excel)}
 
 
+def _linear(name: str, body: str) -> dict:
+    """``return A*($1 -B)`` as ``{perLevel: A, origin: B}``; any other shape raises."""
+    match = _LINEAR_FORMULA.match(body.replace("\n", " "))
+    if not match:
+        raise RuntimeError(f"{name} is not of the shape 'return A*($1 -B)': {body!r}")
+    return {"perLevel": float(match.group("slope")), "origin": int(match.group("origin"))}
+
+
+def percent_stats(excel: Path) -> set[str]:
+    """Stat keys the client prints as a percentage.
+
+    A plain key carries its own ``ShowType``; an aggregate such as
+    ``AllRaceHurtMulti_N`` (怪物压制) has no row of its own and stands for the
+    ``FightPropModeSetData`` members it sets, so it takes theirs when they agree.
+    """
+    modes = {r["ID"]: r for r in _rows(load_table(excel, PROP_MODE_TABLE))}
+    out = {r["PropMode"] for r in modes.values() if r.get("ShowType") == PERCENT_SHOW_TYPE}
+    for row in _rows(load_table(excel, PROP_SET_TABLE)):
+        members = [modes[i] for i in row.get("PropSet") or [] if i in modes]
+        if members and all(m.get("ShowType") == PERCENT_SHOW_TYPE for m in members):
+            out.add(row["Prop"])
+    return out
+
+
+def suit_props(row: dict, formulas: dict, percent: set[str]) -> list[list[dict]]:
+    """What each of a suit's piece-count effects grants, as a line in the gear level.
+
+    ``SuitPropN`` maps a stat key to a ``FormulaData`` reference
+    (``{IsFFunc: true, Value: 1600175}``, i.e. ``return 20*($1 -49)``) that
+    the client calls with the gear level the effect runs at — the same level its
+    score formula takes — and substitutes into ``SuitDescN``'s ``{key}``
+    placeholders. One list per effect, aligned with ``pieceCounts``. The
+    ``_Heal`` variants are the healing form's and match these in this build.
+    """
+    out = []
+    for level in range(1, len(row.get("BeSuitNum") or []) + 1):
+        entries = []
+        for key, ref in sorted((row.get(f"SuitProp{level}") or {}).items()):
+            formula = formulas.get(ref.get("Value")) if isinstance(ref, dict) and ref.get("IsFFunc") else None
+            if formula is None:
+                raise RuntimeError(f"{SUIT_TABLE} {row['ID']}: SuitProp{level}.{key} is not a formula reference: {ref!r}")
+            entries.append({"key": key, **_linear(formula["Name"], formula["Formula"]), "percent": key in percent})
+        out.append(entries)
+    return out
+
+
 def suit_level_scores(excel: Path) -> dict:
     """The score a suit effect earns at a gear level, per effect level.
 
@@ -416,10 +498,7 @@ def suit_level_scores(excel: Path) -> dict:
         body = by_name.get(name)
         if body is None:
             raise RuntimeError(f"{FORMULA_TABLE} has no row named {name}")
-        match = _LINEAR_FORMULA.match(body.replace("\n", " "))
-        if not match:
-            raise RuntimeError(f"{name} is not of the shape 'return A*($1 -B)': {body!r}")
-        out[str(level)] = {"perLevel": float(match.group("slope")), "origin": int(match.group("origin"))}
+        out[str(level)] = _linear(name, body)
     return out
 
 
@@ -511,6 +590,10 @@ def build(excel: Path, data_out: Path, res_out: Path | None = None) -> dict[str,
     if res_out is not None:
         _reuse_icons(item_rows, res_out)
     brand_rows = brands(excel, strings)
+    myth_rows = myths(excel, strings)
+    for item in item_rows:
+        if item["id"] in myth_rows:
+            item["myth"] = myth_rows[item["id"]]
     enhance = enhancement(excel, strings)
     suit = suits(excel, strings)
     affix = affixes(excel, strings)
@@ -535,7 +618,7 @@ def build(excel: Path, data_out: Path, res_out: Path | None = None) -> dict[str,
     counts = {
         "slots": len(slot_rows), "types": len(type_rows), "items": len(item_rows),
         "professions": len(profession_rows),
-        "brands": len(brand_rows), "bodies": len(enhance["bodies"]),
+        "brands": len(brand_rows), "myths": sum(1 for i in item_rows if "myth" in i), "bodies": len(enhance["bodies"]),
         "suits": len(suit["suits"]), "suitTiers": len(suit["tiers"]),
         "affixSlots": len(affix["bySlot"]),
     }

@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useRelicServer } from '@/features/relics/useRelicServer'
@@ -15,14 +16,15 @@ export default function RelicServerToggle({ testId }: { testId: string }) {
   const { t } = useTranslation()
   const [server, setServer] = useRelicServer()
   const hint = t('relic.serverHint')
+  const labelId = useId()
 
   return (
     <div className="gz-field">
       <span className="flex items-center gap-1">
-        {t('relic.server')}
+        <span id={labelId}>{t('relic.server')}</span>
         <Tip kind="info" content={hint} title={t('relic.server')} testId={`${testId}-hint`} />
       </span>
-      <div className="gz-seg full" role="group" aria-label={t('relic.server')}>
+      <div className="gz-seg full" role="group" aria-labelledby={labelId}>
         {SERVERS.map((entry) => (
           <button
             key={entry}

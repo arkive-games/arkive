@@ -288,7 +288,7 @@ export function clampSkillLevel(skillLevel: number | null | undefined): number {
 }
 
 /** Each skill tier past the first adds this fraction of the tier-1 score, in thousandths. */
-const TIER_STEP_PER_MILLE = 215
+export const TIER_STEP_PER_MILLE = 215
 
 /**
  * The puppet's skill tier at a level: the highest `upgrades` row whose

@@ -13,6 +13,9 @@ import {
   type Talents,
   type TalentTree,
 } from './talents'
+import { pathwayFormula, LEVEL_MODULE, SKILL_MODULE, TALENT_MODULE } from './pathwayFormulas'
+import type { Rating, SpeciesResult } from './data'
+import type { TFunction } from 'i18next'
 
 function tree(id: number, professionId: number, isDefault = false): TalentTree {
   const normal = Array.from({ length: 5 }, (_, i) => ({
@@ -163,5 +166,37 @@ describe('carryTalents', () => {
     expect(carried.levels[20101]).toBe(3)
     // The old keys stay, so switching back restores them.
     expect(carryTalents(TALENTS, carried, 1200002, 1200001).levels[10100]).toBe(5)
+  })
+})
+
+describe('pathwayFormula', () => {
+  // Keys and their arguments, so each assertion reads what the text would carry.
+  const t = ((key: string, args?: Record<string, unknown>) => (args ? `${key} ${JSON.stringify(args)}` : key)) as unknown as TFunction
+  const rating = { maxRoleLevel: 70, maxDivinityLevel: 30 } as Rating
+  const item = (module: string, score: number) => ({ species: { module }, score } as unknown as SpeciesResult)
+
+  it('reads the talent tree the calculator scores', () => {
+    const tree101 = TALENTS.trees[0]
+    const limits = talentLimits(tree101, 10200)
+    const result = evaluateTalents(tree101, autoAllocate(tree101, limits), limits)
+    const text = String(pathwayFormula(item(TALENT_MODULE, result.total), { rating, talents: result, limits }, t))
+    expect(text).toContain('"points":40')
+    expect(text).toContain('"cores":3')
+    expect(text).toContain(`"score":"${(10200).toLocaleString()}"`)
+  })
+
+  it('tells the fitted pathway-skill line from the curve value', () => {
+    const live = String(pathwayFormula(item(SKILL_MODULE, 82 * 38 + 741), { rating, talents: null, limits: null }, t))
+    expect(live).toContain('pathway.skillFormulaLive')
+    expect(live).toContain('"level":38')
+    // 1394 is a curve value before every skill unlocks: never 741 modulo 82.
+    const curve = String(pathwayFormula(item(SKILL_MODULE, 1394), { rating, talents: null, limits: null }, t))
+    expect(curve).toContain('pathway.skillFormulaCurve')
+  })
+
+  it('states the level as its benchmark and the progression bounds', () => {
+    const text = String(pathwayFormula(item(LEVEL_MODULE, 5000), { rating, talents: null, limits: null }, t))
+    expect(text).toContain('"maxRole":70')
+    expect(pathwayFormula(item('Other', 1), { rating, talents: null, limits: null }, t)).toBeNull()
   })
 })

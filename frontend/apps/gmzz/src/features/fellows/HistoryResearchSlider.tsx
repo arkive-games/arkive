@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { formatResearchAttribute, type HistoryResearchRank } from './data'
+import { TipOn } from '../score/Tip'
 import { TYPE } from '../../lib/typography'
 import { THUMB_PX } from '../../components/RangeField'
 
@@ -104,9 +105,11 @@ export function HistoryResearchSlider({
                   <dd className="shrink-0 tabular-nums">
                     {formatResearchAttribute(attribute, locale)}
                     {previous && Math.abs(gain) > 1e-9 ? (
-                      <span className="ml-1.5 text-xs text-emerald-700 dark:text-emerald-300" title={t('fellows.researchGain')}>
-                        ({formatResearchAttribute({ ...attribute, value: gain }, locale)})
-                      </span>
+                      <TipOn content={t('fellows.researchGain')}>
+                        <span className="ml-1.5 cursor-help text-xs text-emerald-700 underline decoration-dotted underline-offset-2 dark:text-emerald-300">
+                          ({formatResearchAttribute({ ...attribute, value: gain }, locale)})
+                        </span>
+                      </TipOn>
                     ) : null}
                   </dd>
                 </div>

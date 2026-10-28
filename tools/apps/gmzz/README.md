@@ -503,6 +503,14 @@ nodes, for the active tree only. The build asserts the shape it rests on
 levels) and drops `TalentTreeData`'s two blank rows for the pathway without
 talents. `TalentNodeDevData` is the designers' working copy and is not read.
 
+It also writes `resource-gmzz/talents/<name>.webp`, the art the talent panel
+draws: each tree's `TabIcon`, the stat glyph of every levelled node, and the
+skill icon each core borrows. A node's `Icon` is a bare texture name the client
+resolves by name, so the build looks it up under `ConfigIcon/Talent` and
+`Skill/Profession` and fails on a missing or ambiguous match. Export both roots
+first; `Talent_AnD_R` is missing from the patched view and has to come from
+`--profile gmzz-base` (see the module docstring).
+
 等级 has no Mark anywhere in the package, but the in-game panel always shows
 its score equal to its expected benchmark — which, for this species, is also
 its max: the two curves are identical. The page therefore scores it as the

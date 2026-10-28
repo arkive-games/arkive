@@ -794,10 +794,149 @@ select.gz-select {
 }
 
 /* ---------------------------------------------------------------- GzSelect */
+/*
+ * The site's dropdown (`components/GzSelect.tsx`). Every value falls back to a
+ * site token: the trigger is also used in dialogs, and the menu is portalled
+ * to the body, both outside `.gz-score` where the `--gz-*` values live. Plain
+ * rules here outrank the Tailwind utilities the shared Select ships with.
+ */
 .gz-sel {
-  height: 2rem; width: 100%; min-width: 0; padding: 0 .75rem; border: 0; border-radius: 999px; background: var(--gz-card);
-  box-shadow: inset 0 0 0 1px var(--gz-line); font-size: .875rem; font-weight: 700; color: var(--gz-ink);
+  height: 2rem; width: 100%; min-width: 0; padding: 0 .625rem 0 .75rem; gap: .375rem; border: 0; border-radius: 999px;
+  background: var(--gz-card, var(--background));
+  box-shadow: inset 0 0 0 1px var(--gz-line, color-mix(in srgb, var(--foreground) 20%, transparent));
+  font-size: .875rem; font-weight: 700; color: var(--gz-ink, var(--foreground)); text-align: left; cursor: pointer;
 }
-.gz-sel:hover { box-shadow: inset 0 0 0 1px var(--gz-sub); }
+.gz-sel > [data-slot=select-value] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.gz-sel > svg { color: var(--gz-sub, var(--muted-foreground)); opacity: 1; transition: transform .15s; }
+.gz-sel[data-state=open] > svg { transform: rotate(180deg); }
+.gz-sel:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--gz-sub, var(--muted-foreground)); }
 .gz-sel[data-state=open] { box-shadow: inset 0 0 0 2px rgb(var(--c, 230, 164, 23)); }
-.gz-sel-menu { border-radius: .75rem; }
+.gz-sel:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--arkive-nav-accent, currentColor); }
+.gz-sel:disabled { cursor: not-allowed; opacity: .5; }
+/* Sizes: the score page's bar fields, and a form field in a dialog. */
+.gz-sel.gz-sel-lg { height: 2.375rem; padding: 0 .875rem 0 1rem; font-size: 1rem; font-weight: 400; }
+.gz-sel.gz-sel-form { height: 2.25rem; font-weight: 400; }
+
+.gz-sel-menu {
+  --gz-sel-hi: color-mix(in srgb, var(--arkive-nav-accent, var(--foreground)) 14%, transparent);
+  min-width: max(var(--radix-select-trigger-width), 10rem); max-width: min(24rem, 100vw - 1rem);
+  border-radius: .875rem; border-color: color-mix(in srgb, var(--foreground) 14%, transparent);
+  background: var(--card); color: var(--foreground);
+  box-shadow: 0 18px 40px -18px rgb(0 0 0 / .45), 0 2px 6px -2px rgb(0 0 0 / .12);
+}
+.dark .gz-sel-menu { background: #1a1a1a; border-color: color-mix(in srgb, var(--foreground) 18%, transparent); }
+.gz-sel-menu [data-slot=select-item] {
+  min-height: 2.25rem; padding: .375rem 2rem .375rem .75rem; border-radius: .5rem; line-height: 1.3;
+  font-size: .875rem; font-weight: 400; color: var(--foreground);
+}
+.gz-sel-menu [data-slot=select-item][data-highlighted],
+.gz-sel-menu [data-slot=select-item]:hover,
+.gz-sel-menu [data-slot=select-item]:focus { background: var(--gz-sel-hi); color: var(--foreground); box-shadow: none; }
+.gz-sel-menu [data-slot=select-item][data-state=checked] { font-weight: 700; }
+.gz-sel-menu [data-slot=select-item][data-state=checked] svg { color: var(--arkive-nav-accent, currentColor); }
+.gz-sel-menu [data-slot=select-label] {
+  padding: .5rem .75rem .25rem; font-size: .75rem; font-weight: 700; color: var(--muted-foreground); letter-spacing: .02em;
+}
+.gz-sel-menu [data-slot=select-separator] { margin: .25rem .25rem; background: color-mix(in srgb, var(--foreground) 12%, transparent); }
+
+/* ---- bonds ---- */
+/* The relation picker on a connection card: GzSelect at the old native select's compact size. */
+.gz-sel.gz-rel {
+  height: 1.5rem; margin-top: .125rem; padding: 0 .5rem; border-radius: .5rem; background: var(--gz-well);
+  font-size: .75rem; font-weight: 400;
+}
+.gz-sel.gz-rel:disabled { color: var(--gz-faint); }
+.gz-research .rank { display: inline-flex; align-items: center; gap: .25rem; }
+
+/* ---- characters ---- */
+/* The status line under the title, with the save-now button beside an unsaved edit. */
+.gz-cstat { width: 100%; display: flex; align-items: center; gap: .5rem; min-height: 1.5rem; padding-left: .75rem; }
+.gz-cstat > .gz-status { font-size: .75rem; }
+.gz-cbar .gz-savenow {
+  height: 1.5rem; padding: 0 .625rem; gap: .25rem; font-size: .75rem; color: var(--arkive-nav-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--arkive-nav-accent) 55%, transparent);
+}
+.gz-cbar .gz-savenow:hover:not(:disabled) { background: color-mix(in srgb, var(--arkive-nav-accent) 12%, transparent); box-shadow: inset 0 0 0 1px var(--arkive-nav-accent); }
+/* The switcher reads as the character's name: borderless until hovered. */
+.gz-sel.gz-cname { height: 2.25rem; font-size: 1rem; background: transparent; box-shadow: none; }
+.gz-sel.gz-cname:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--gz-line); }
+.gz-sel.gz-cname[data-state=open] { box-shadow: inset 0 0 0 2px rgb(var(--c, 230, 164, 23)); }
+.gz-sel.gz-cname:focus-visible { box-shadow: inset 0 0 0 2px var(--arkive-nav-accent); }
+
+/* ---- relics ---- */
+/* A relic's face is a card: the button that opens its dialog, then what it carries. */
+.gz-relic-card {
+  display: flex; flex-direction: column; min-width: 0; border-radius: 1rem;
+  background: var(--gz-card); box-shadow: inset 0 0 0 1px var(--gz-line); transition: box-shadow .2s;
+}
+.gz-relic-card:has(> .gz-relic:hover) { box-shadow: inset 0 0 0 1.5px rgba(var(--c), .6); }
+.gz-relic-card > .gz-relic, .gz-relic-card > .gz-relic:hover { background: none; box-shadow: none; }
+.gz-rdet { display: grid; gap: .5rem; padding: 0 .875rem .875rem; font-size: .75rem; color: var(--gz-sub); }
+.gz-rdet .h { display: block; margin-bottom: .125rem; font-weight: 700; color: var(--gz-faint); }
+.gz-rdet .none { margin: 0; color: var(--gz-faint); }
+.gz-rdet ul { display: grid; gap: .125rem; margin: 0; padding: 0; list-style: none; }
+.gz-rdet li { display: flex; align-items: baseline; gap: .375rem; }
+.gz-rdet li > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gz-rdet li b { flex: none; font-weight: 800; color: var(--gz-ink); font-variant-numeric: tabular-nums; }
+.gz-rdet li.rare > span { font-weight: 700; color: #7b5fd6; }
+.gz-rdet li.off { opacity: .5; }
+.gz-rdet li.off b { text-decoration: line-through; }
+.gz-rdet .res, .gz-res { display: flex; flex-wrap: wrap; gap: .25rem; }
+.gz-rdet .res span, .gz-res > span {
+  padding: .125rem .5rem; border-radius: 999px; background: rgba(var(--c), .12);
+  font-size: .75rem; font-weight: 700; color: var(--gz-ink); white-space: nowrap;
+}
+.gz-res > .note { margin: 0; font-size: .75rem; }
+/*
+ * The grade row keeps every piece's width whichever grade is picked: the
+ * assembly Mark sits in a box wide enough for any grade's, and the 本服 mark
+ * has a slot that is reserved while it is absent.
+ */
+.gz-row.grade.relx .gz-tags { flex-wrap: nowrap; align-items: center; }
+.gz-row.grade.relx .gz-tags b.num { display: inline-block; min-width: 6ch; text-align: right; font-weight: 800; color: var(--gz-ink); }
+.gz-row.grade.relx .gz-tags i.slot { display: inline-flex; flex: none; align-items: center; width: 1rem; font-style: normal; }
+.gz-row .lab.tipped { display: flex; align-items: center; flex-wrap: wrap; gap: .125rem; }
+/* A rare word's value: read out in the value's place, not a picker. */
+.gz-aff.relx .gz-val.ro { justify-content: center; background: var(--gz-well); box-shadow: none; font-size: .875rem; font-weight: 700; color: var(--gz-ink); }
+.gz-aff.relx .desc.full { grid-column: 2 / -1; white-space: pre-line; }
+.gz-aff.relx .gz-pip[tabindex] { cursor: help; }
+.gz-aff.relx .mk { white-space: nowrap; }
+@media (max-width: 760px) {
+  .gz-rdet { padding: 0 .75rem .625rem; }
+  .gz-aff.relx .mk { font-size: .75rem; }
+}
+
+/* ---- pathway ---- */
+/*
+ * Talent art as the game draws it: the stat glyphs and tree tabs are pale line
+ * art made for a dark panel, so they sit on a dark disc in either theme; a
+ * core's skill icon is already a full-colour roundel.
+ */
+.gz-ticon { width: 1.75rem; height: 1.75rem; flex: none; border-radius: 999px; background: #26221d; object-fit: contain; }
+.gz-tcard.zero .gz-ticon { filter: grayscale(1); opacity: .7; }
+.gz-ttab { width: 1.25rem; height: 1.25rem; flex: none; padding: .125rem; border-radius: 999px; background: #26221d; object-fit: contain; }
+.gz-tc.ic { grid-template-columns: 1.5rem minmax(0, 1fr) auto; }
+.gz-tc.ic > img { width: 1.5rem; height: 1.5rem; border-radius: 999px; object-fit: cover; filter: grayscale(1); opacity: .6; }
+.gz-tc.ic[data-active] > img { filter: none; opacity: 1; }
+
+/* ---- equipment ---- */
+/* The enhancement stage right after an item's name, as the item card reads it. */
+.gz-lv { flex: none; margin-left: .25rem; font-weight: 800; color: rgb(var(--c, 230, 164, 23)); white-space: nowrap; }
+.gz-slot .nm b { display: flex; align-items: baseline; min-width: 0; }
+.gz-slot .nm b .n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The piece's three scores: a label with its mark over the figure. */
+.gz-eqkv { margin-top: .75rem; }
+.gz-eqkv .lab { display: flex; align-items: center; gap: .125rem; }
+.gz-escore[tabindex] { cursor: help; }
+/* The effects a piece carries — 烙印, 神话词条, 恩赐 — one heading over its text each. */
+.gz-fx .sub { flex-wrap: wrap; gap: .25rem .375rem; }
+.gz-fx[data-kind=myth] .sub { color: #c8483a; }
+.gz-fx .gz-pips { color: #d99a12; letter-spacing: .05em; }
+.gz-eqtotal { display: inline-flex; align-items: baseline; gap: .25rem; margin-right: .5rem; font-size: .875rem; color: var(--gz-sub); white-space: nowrap; }
+.gz-eqtotal b { font-size: 1rem; font-weight: 800; color: var(--gz-ink); }
+.gz-suitopt { display: inline-flex; align-items: center; gap: .125rem; }
+
+/* ---- integration ---- */
+/* The fellow card's relation picker is only a card wide: trim the pill's padding and chevron so the name fits. */
+.gz-sel.gz-rel { height: 1.5rem; padding: 0 .25rem 0 .375rem; gap: .125rem; font-weight: 600; }
+.gz-sel.gz-rel svg { width: .75rem; height: .75rem; }

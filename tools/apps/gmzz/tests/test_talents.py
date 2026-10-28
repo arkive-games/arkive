@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import pytest
 
-from gmzz.talents import build_trees
+from PIL import Image
+
+from gmzz.talents import ICON_ROOTS, build_trees, icon_names, locate_icons
 
 
 def tree_row(key=101, profession=1200001, caps=(10, 40, 75), name="颂歌"):
     return {"Key": key, "Profession": profession, "Name": name, "Tag": "群伤辅助",
-            "Description": "强化歌颂者的群体辅助和输出能力", "SequenceTalentPointMax": list(caps)}
+            "Description": "强化歌颂者的群体辅助和输出能力", "SequenceTalentPointMax": list(caps),
+            "TabIcon": f"/Game/Arts/UI_2/Resource/ConfigIcon/Talent/Talent_Bard_{key % 100}.Talent_Bard_{key % 100}"}
 
 
 def normal(key, tree=101, parent=None, position=0, max_level=15):
     row = {"Key": key, "TreeID": tree, "Type": 1, "Mark": 180, "MaxLevel": max_level, "Name": f"node{key}",
-           "Position": position, "PointDesc": "增加穿刺、格挡和防御。"}
+           "Position": position, "PointDesc": "增加穿刺、格挡和防御。", "Icon": "Talent_Atk_Y"}
     if parent is not None:
         row["ParentNode"] = parent
     return row
@@ -22,7 +25,7 @@ def normal(key, tree=101, parent=None, position=0, max_level=15):
 
 def special(key, tree=101, parent=None, position=0):
     return {"Key": key, "TreeID": tree, "Type": 2, "Mark": 1000, "MaxLevel": 0, "Name": f"special{key}",
-            "Position": position, "ParentNode": parent,
+            "Position": position, "ParentNode": parent, "Icon": f"Bard_Skill_{key % 100:02d}",
             "PointDesc": '<HyperLink u="86011040">逐日</>施放后伤害提升20%。;\n<HyperLink u="86011030">太阳誓约</>冷却减少1.5秒。'}
 
 
@@ -75,3 +78,38 @@ def test_broken_tables_fail_loudly(problem):
         nodes["10100"]["TreeID"] = 999
     with pytest.raises(ValueError):
         build_trees(trees, nodes, defaults)
+
+
+def test_trees_and_nodes_name_their_icons():
+    tree = build_trees(*sample())[0]
+    assert tree["icon"] == "Talent_Bard_1"
+    assert tree["nodes"][0]["icon"] == "Talent_Atk_Y"
+    assert icon_names([tree]) == ["Bard_Skill_05", "Bard_Skill_06", "Bard_Skill_07", "Bard_Skill_08", "Talent_Atk_Y", "Talent_Bard_1"]
+
+
+def test_an_unparseable_tab_icon_fails_loudly():
+    trees, nodes, defaults = sample()
+    trees["101"]["TabIcon"] = "Talent_Bard_1"
+    with pytest.raises(ValueError):
+        build_trees(trees, nodes, defaults)
+
+
+def _png(path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGBA", (4, 4)).save(path)
+
+
+def test_icons_are_found_by_name_under_either_root(tmp_path):
+    _png(tmp_path / ICON_ROOTS[0] / "Talent_Atk_Y.png")
+    _png(tmp_path / ICON_ROOTS[1] / "Bard" / "Bard_Skill_05.png")
+    found = locate_icons(tmp_path, ["Bard_Skill_05", "Talent_Atk_Y"])
+    assert found["Bard_Skill_05"].parent.name == "Bard"
+
+
+def test_a_missing_or_ambiguous_icon_fails_loudly(tmp_path):
+    _png(tmp_path / ICON_ROOTS[1] / "Bard" / "Bard_Skill_05.png")
+    with pytest.raises(FileNotFoundError):
+        locate_icons(tmp_path, ["Talent_Atk_Y"])
+    _png(tmp_path / ICON_ROOTS[1] / "Seer" / "Bard_Skill_05.png")
+    with pytest.raises(ValueError):
+        locate_icons(tmp_path, ["Bard_Skill_05"])

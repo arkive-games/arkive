@@ -47,7 +47,7 @@ ITEMS = {
     "3020623": {
         "ID": 3020623, "itemName": "无形之编排", "subType": 302, "quality": 6, "icon": "3020623",
         "TC": 62, "lvReq": 60, "Mark": 2430, "SuitID": 101, "SetId": 4, "UniqueID": 0,
-        "itemDes": "悄无声息的引导。", "ShowCondition": [101, 7],
+        "itemDes": "悄无声息的引导。", "ShowCondition": [101, 7], "Tag": 1, "TagName": "冒险",
         "AtkMin_N": 327, "AtkMax_N": 607, "MaxHp_N": 1960, "AllProHurtPlus_N": 0,
     },
     "3001059": {
@@ -84,7 +84,42 @@ FORMULAS = {
     "1600176": {"ID": 1600176, "Name": "EQUIP_SUIT_LEVEL_SCORE_1", "Formula": "return 201*($1 -49)"},
     "1600177": {"ID": 1600177, "Name": "EQUIP_SUIT_LEVEL_SCORE_2", "Formula": "return 323*($1 -49)"},
     "1600175": {"ID": 1600175, "Name": "EQUIP_SUIT_LEVEL1_FIXED", "Formula": "return 20*($1 -49)"},
+    "1600185": {"ID": 1600185, "Name": "EQUIP_SUIT_LEVEL1_PER", "Formula": "return 0.001*($1 -49)"},
 }
+
+#: 怪物专攻 is a number; 怪物压制 has no mode row of its own and takes its members' percent.
+PROP_MODES = {
+    "3180": {"ID": 3180, "PropMode": "CreepHurtMulti_N", "ShowType": 1},
+    "3181": {"ID": 3181, "PropMode": "BossHurtMulti_N", "ShowType": 1},
+    "3020": {"ID": 3020, "PropMode": "MaxHp_N", "ShowType": 0},
+}
+PROP_SETS = {
+    "4013": {"ID": 4013, "Prop": "AllRaceHurtMulti_N", "PropSet": [3180, 3181]},
+    "4001": {"ID": 4001, "Prop": "AllRaceHurtPlus_N", "PropSet": [3020]},
+}
+SUIT_ROW = {
+    "ID": 101, "SuitName": "灵与知回响", "SuitNameAll": "[冒险]灵与知回响", "SuitTag": "冒险套装", "BeSuitNum": [2, 3],
+    "SuitDesc1": "a", "SuitDesc2": "b",
+    "SuitProp1": {"AllRaceHurtPlus_N": {"IsFFunc": True, "Value": 1600175}, "AllRaceHurtMulti_N": {"IsFFunc": True, "Value": 1600185}},
+    "SuitProp2": {"AllRaceHurtPlus_N": {"IsFFunc": True, "Value": 1600175}},
+}
+
+
+def test_suit_props_resolves_each_effect_to_a_line_in_the_gear_level(stub):
+    stub({equipment.PROP_MODE_TABLE: PROP_MODES, equipment.PROP_SET_TABLE: PROP_SETS})
+    percent = equipment.percent_stats(None)
+    assert "AllRaceHurtMulti_N" in percent and "AllRaceHurtPlus_N" not in percent
+    formulas = {int(k): v for k, v in FORMULAS.items()}
+    props = equipment.suit_props(SUIT_ROW, formulas, percent)
+    assert props == [
+        [
+            {"key": "AllRaceHurtMulti_N", "perLevel": 0.001, "origin": 49, "percent": True},
+            {"key": "AllRaceHurtPlus_N", "perLevel": 20.0, "origin": 49, "percent": False},
+        ],
+        [{"key": "AllRaceHurtPlus_N", "perLevel": 20.0, "origin": 49, "percent": False}],
+    ], "one list per piece count, aligned with BeSuitNum"
+    with pytest.raises(RuntimeError, match="not a formula reference"):
+        equipment.suit_props({**SUIT_ROW, "SuitProp2": {"Atk_N": 5}}, formulas, percent)
 
 
 def test_suit_level_scores_reads_the_two_linear_formulas(stub):
@@ -139,6 +174,8 @@ def test_items_reads_base_stats_off_the_item_and_drops_zeroes(stub):
     # AllProHurtPlus_N is 0 and the game hides it.
     assert dict(item["baseStats"]) == {"AtkMin_N": 327, "AtkMax_N": 607, "MaxHp_N": 1960}
     assert rows[3001059]["brandId"] == 10035, "UniqueID is the 烙印 the item wears"
+    assert (item["tag"], item["tagName"]) == (1, "冒险"), "Tag is the item card's 冒险/竞技 mark"
+    assert rows[3001059]["tag"] is None and rows[3001059]["tagName"] is None, "an untagged item carries neither"
 
 
 def test_items_drops_unreleased_gear(stub):
@@ -278,6 +315,7 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
         equipment.PROFESSION_TABLE: PROFESSIONS,
         equipment.ITEM_TABLE: ITEMS,
         equipment.BRAND_TABLE: BRANDS,
+        equipment.MYTH_TABLE: {"1": {"ID": 3020623, "WordName": "神话具现", "WordDesc": "冷却<Mark>20</>秒。", "WordDesc2": "治疗<Mark>8</>秒。"}},
         equipment.BODY_TABLE: BODIES,
         equipment.STAGE_TABLE: STAGES,
         equipment.STAGE_PROP_TABLE: STAGE_PROPS,
@@ -285,8 +323,10 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
             "1": {"ID": 1, "Type": 2, "Level": 1, "Mark": 1003, "RequireAvgPercent": 50, "SuitProp": {"Atk_N": 10}, "SuitAdditionDesc": "x"},
             "2": {"ID": 2, "Type": 1, "Level": 1, "Mark": 560, "Require": 1, "RequireLevel": 3, "RequirePromote": 8, "SuitProp": {"Atk_N": 80}},
         },
-        equipment.SUIT_TABLE: {"101": {"ID": 101, "SuitName": "灵与知回响", "SuitNameAll": "[冒险]灵与知回响", "SuitTag": "冒险套装", "BeSuitNum": [2, 3], "SuitDesc1": "a", "SuitDesc2": "b"}},
+        equipment.SUIT_TABLE: {"101": SUIT_ROW},
         equipment.FORMULA_TABLE: FORMULAS,
+        equipment.PROP_MODE_TABLE: PROP_MODES,
+        equipment.PROP_SET_TABLE: PROP_SETS,
         equipment.GROUP_TABLES[0]: GROUPS,
         equipment.GROUP_TABLES[1]: {},
         equipment.WORD_TABLE: WORDS,
@@ -303,5 +343,9 @@ def test_build_writes_the_payload_and_rejects_an_orphan_slot(stub, tmp_path):
         "1": {"perLevel": 201.0, "origin": 49},
         "2": {"perLevel": 323.0, "origin": 49},
     }
+    assert payload["suits"]["suits"][0]["props"][0][1] == {"key": "AllRaceHurtPlus_N", "perLevel": 20.0, "origin": 49, "percent": False}
     assert {i["id"]: i["baseScore"] for i in payload["items"]} == {3001059: 2685, 3020623: 2430}
+    myth = {i["id"]: i.get("myth") for i in payload["items"]}
+    assert myth[3020623] == {"name": "神话具现", "effect": "冷却20秒。", "healEffect": "治疗8秒。"}, "joined by item id, markup stripped"
+    assert myth[3001059] is None, "only mythic items carry one"
 

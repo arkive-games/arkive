@@ -2,10 +2,24 @@
 
 Run from ``tools/``::
 
+    uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/ConfigIcon/Talent
+    uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Skill/Profession
     uv run python -m gmzz.talents
 
 Writes ``score/talents.json``: every talent tree (``TalentTreeData``, two per
-pathway) with its nodes (``TalentNodeData``) and each node's ``Mark``.
+pathway) with its nodes (``TalentNodeData``) and each node's ``Mark``, and the
+art the talent panel draws for them into ``resource-gmzz/talents/``.
+
+**Icons.** A tree's ``TabIcon`` is a full object path. A node's ``Icon`` is a
+bare texture name that the client's ``GetIcon`` resolves by name: a levelled
+node's is one of six stat glyphs in ``ConfigIcon/Talent`` (``Talent_Atk_Y``),
+a core's is the icon of the skill it changes, under
+``Skill/Profession/<pathway>/``. No table maps the name to a directory, so it
+is looked up here among those two roots and must match exactly one texture.
+``Talent_AnD_R`` (the first node of every second tree) is absent from the
+patched view — its updated chunk was never downloaded — so export it from the
+install instead: ``uex export --profile gmzz-base --only
+C7/Content/Arts/UI_2/Resource/ConfigIcon/Talent/Talent_AnD_R.uasset``.
 
 **Why the Mark is the 非凡天赋 score.** No client script reads
 ``TalentNodeData.Mark`` — the talent panel jumps to the rating panel and
@@ -37,6 +51,8 @@ import argparse
 import re
 from pathlib import Path
 
+from PIL import Image
+
 from .common import write_json
 from .env import excel_dir, require_dir
 from .tables import load_strings, load_table, resolve_text, unresolved_ids
@@ -47,6 +63,18 @@ NODE_TABLE = "TalentNodeData"
 DEFAULT_TABLE = "TalentDefaultData"
 
 OUT_FILE = "score/talents.json"
+ICON_SUBDIR = "talents"
+WEBP_QUALITY = 90
+
+#: Where ``GetIcon`` finds a talent's art, relative to GMZZ_RAW: the stat glyphs
+#: of levelled nodes and the tree tabs, then the skill icons cores borrow.
+ICON_ROOTS = (
+    "C7/Content/Arts/UI_2/Resource/ConfigIcon/Talent",
+    "C7/Content/Arts/UI_2/Resource/Skill/Profession",
+)
+
+#: ``TabIcon`` is a UE object path, ``/Game/<dir>/<Name>.<Name>``.
+_OBJECT_PATH = re.compile(r"^/Game/.+/(?P<name>[^/.]+)\.(?P=name)$")
 
 #: ``TalentNodeData.Type``: 1 is a levelled node, 2 an activate-only one.
 NORMAL_NODE = 1
@@ -64,6 +92,44 @@ def _plain(text) -> str:
     if not isinstance(text, str):
         return ""
     return "\n".join(part.strip() for part in _TAG.sub("", text).split(";") if part.strip())
+
+
+def _object_name(path) -> str | None:
+    """The asset name of an object path; None when the row has none."""
+    if not path:
+        return None
+    match = _OBJECT_PATH.match(path)
+    if not match:
+        raise ValueError(f"{TREE_TABLE}: unparseable TabIcon {path!r}")
+    return match.group("name")
+
+
+def icon_names(trees: list[dict]) -> list[str]:
+    """Every texture the trees name, trees' tabs and nodes alike."""
+    names = {tree["icon"] for tree in trees} | {node["icon"] for tree in trees for node in tree["nodes"]}
+    return sorted(name for name in names if name)
+
+
+def locate_icons(raw: Path, names: list[str]) -> dict[str, Path]:
+    """``{name: exported PNG}`` for every name, searched under :data:`ICON_ROOTS`.
+
+    Raises when a name has no PNG (a partial export would ship holes) or more
+    than one (the client's by-name lookup would be ambiguous, so ours is too).
+    """
+    found: dict[str, list[Path]] = {}
+    for root in ICON_ROOTS:
+        for png in (Path(raw) / root).rglob("*.png"):
+            found.setdefault(png.stem, []).append(png)
+    missing = [name for name in names if name not in found]
+    if missing:
+        raise FileNotFoundError(
+            f"{len(missing)} talent icon(s) absent from the export, e.g. {missing[:5]} — "
+            f"run: uex export --profile gmzz --only <root> for each of {list(ICON_ROOTS)} (see this module's docstring)"
+        )
+    ambiguous = [name for name in names if len(found[name]) > 1]
+    if ambiguous:
+        raise ValueError(f"talent icon name(s) match more than one texture: {ambiguous[:5]}")
+    return {name: found[name][0] for name in names}
 
 
 def build_trees(trees, nodes, defaults) -> list[dict]:
@@ -96,6 +162,7 @@ def build_trees(trees, nodes, defaults) -> list[dict]:
             "parentKey": int(row["ParentNode"]) if row.get("ParentNode") else None,
             "position": int(row.get("Position") or 0),
             "description": _plain(row.get("PointDesc")),
+            "icon": row.get("Icon") or None,
         })
 
     out = []
@@ -123,6 +190,7 @@ def build_trees(trees, nodes, defaults) -> list[dict]:
             "description": row.get("Description") or "",
             "professionId": profession,
             "default": default_tree.get(profession) == key,
+            "icon": _object_name(row.get("TabIcon")),
             "pointCapsBySequenceStage": caps,
             "maxScore": sum(n["mark"] * n["maxLevel"] for n in members if n["type"] == "normal")
             + sum(n["mark"] for n in members if n["type"] == "special"),
@@ -135,7 +203,7 @@ def build_trees(trees, nodes, defaults) -> list[dict]:
     return out
 
 
-def build(excel: Path, data_out: Path) -> dict[str, int]:
+def build(excel: Path, data_out: Path, raw: Path, res_out: Path) -> dict[str, int]:
     strings = load_strings(excel)
     trees = build_trees(
         resolve_text(load_table(excel, TREE_TABLE), strings),
@@ -145,10 +213,18 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
     missing = unresolved_ids(trees)
     if missing:
         raise RuntimeError(f"{NODE_TABLE}: {len(missing)} text id(s) unresolved, e.g. {sorted(missing)[:3]}")
+    # Every icon is located before anything is written, so a partial export
+    # cannot leave the dataset naming images the image repo does not have.
+    icons = locate_icons(raw, icon_names(trees))
+    target = Path(res_out) / ICON_SUBDIR
+    target.mkdir(parents=True, exist_ok=True)
+    for name, png in icons.items():
+        with Image.open(png) as img:
+            img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
     payload = {"trees": trees}
     write_json(Path(data_out) / OUT_FILE, payload)
-    counts = {"trees": len(trees), "nodes": sum(len(t["nodes"]) for t in trees)}
-    print(f"talents: {counts} -> {OUT_FILE}")
+    counts = {"trees": len(trees), "nodes": sum(len(t["nodes"]) for t in trees), "icons": len(icons)}
+    print(f"talents: {counts} -> {OUT_FILE}, {target}")
     return counts
 
 
@@ -156,10 +232,17 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--excel", type=Path, default=None, help="override the exported Data/Excel dir")
     parser.add_argument("--out", type=Path, default=None, help="override GMZZ_DATA_OUT")
+    parser.add_argument("--raw", type=Path, default=None, help="override GMZZ_RAW")
+    parser.add_argument("--res-out", type=Path, default=None, help="override GMZZ_RES_OUT")
     args = parser.parse_args(argv)
 
     data_out = args.out or require_dir("GMZZ_DATA_OUT")
-    build(args.excel or excel_dir(), data_out)
+    build(
+        args.excel or excel_dir(),
+        data_out,
+        args.raw or require_dir("GMZZ_RAW"),
+        args.res_out or require_dir("GMZZ_RES_OUT"),
+    )
     stamp_version(data_out)
 
 
