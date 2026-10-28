@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Input } from '@gamemap/ui'
+import { IconChevronDown, IconSparkles } from '@tabler/icons-react'
+import { Dialog, DialogContent, DialogTrigger } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
-import PickerModal, { IconTile, type PickerOption } from '@/features/equipment/PickerModal'
+import { DialogHead } from '@/features/equipment/EquipmentSection'
+import { IconTile } from '@/features/equipment/PickerModal'
 import type { Fellow, FellowRelation, HistoryResearchRank } from '@/features/fellows/data'
 import {
-  activeAttributes,
   carriedPuppetSkill,
   clampSlots,
   clampStage,
@@ -15,15 +16,14 @@ import {
   historyRankFor,
   puppetSkillScore,
   talentMark,
-  type ActiveAttribute,
   type BondsDraft,
-  type PuppetsResult,
 } from '@/features/score/bonds'
-import { FormulaHint } from '@/features/score/FormulaHint'
-import { SkillLevelField } from '@/features/score/SkillLevelField'
+import LevelAllDialog from '@/features/score/LevelAllDialog'
+import { Stepper } from '@/features/score/Stepper'
+import { useCharacterReadOnly } from '@/features/characters/CharacterProvider'
 import type { GenusResult, Rating } from '@/features/score/data'
 import FellowSkillCalculator from '@/features/score/FellowSkillSection'
-import { relationResearchPoints, relationTier, relationTierName, starMap } from '@/features/score/fellowSkill'
+import { relationResearchPoints, starMap } from '@/features/score/fellowSkill'
 import { GroupSection } from '@/features/score/GroupSection'
 import { portraitUrl, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { TYPE } from '@/lib/typography'
@@ -35,8 +35,6 @@ export const HISTORY_MODULE = 'Bonds_FellowGain'
 export const FELLOW_SKILL_MODULE = 'Bonds_FellowSkill'
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const NUMBER_CLASS = 'h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]'
-const LABEL_CLASS = `mb-0.5 block ${TYPE.label}`
 
 export type BondsData = {
   partners: SecretPartner[] | null
@@ -50,13 +48,15 @@ export type BondsData = {
   relicSkillBonus: number
 }
 
+const KNOWN = new Set([PUPPET_GAIN_MODULE, PUPPET_SKILL_MODULE, HISTORY_MODULE, FELLOW_SKILL_MODULE])
+
 /**
  * The 非凡人物 group: all four items derived.
  *
- * Each comes with a calculator under its row and shows the figure it produced.
- * 秘偶属性 and 秘偶技能 share one lineup, drawn under 秘偶属性; 人脉技能 has its own
- * roster of connections and stars. The two skill items follow formulas fitted
- * to in-game readings rather than client code. The derived scores
+ * Below the ledger sit two panels side by side — 秘偶 (the lineup, which
+ * scores 秘偶属性 and 秘偶技能) and 人脉 (the roster, which scores 人脉技能).
+ * Each opens on one row level with the other's: the deploy slots and carried
+ * skill, and the 历史研究 rank the relations add up to. The derived scores
  * are computed by the page (they feed the same `evaluate` as everything else)
  * and arrive here already inside `group`.
  */
@@ -74,83 +74,100 @@ export default function BondsSection({
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
   const { t } = useTranslation()
+  const unavailable = <p className={TYPE.body}>{t('bonds.unavailable')}</p>
 
   return (
     <GroupSection
       group={group}
       rating={rating}
-      hint={t('bonds.hint')}
-      present={(item) => {
-        // The puppet items come from one lineup and the connection items from
-        // one roster, so each pair is one card with one detail.
-        if (item.species.module === PUPPET_GAIN_MODULE || item.species.module === PUPPET_SKILL_MODULE) {
-          return {
-            kind: 'derived',
-            shared: 'puppets',
-            calculator:
-              data.partners && data.scoring ? (
-                <div className="space-y-3">
-                  <PuppetLineup partners={data.partners} scoring={data.scoring} skillCap={data.skillCap} relicSkillBonus={data.relicSkillBonus} draft={draft} setDraft={setDraft} />
-                  <PuppetSkillSummary partners={data.partners} scoring={data.scoring} draft={draft} />
-                </div>
-              ) : (
-                <p className={TYPE.body}>{t('bonds.unavailable')}</p>
-              ),
-          }
-        }
-        if (item.species.module === FELLOW_SKILL_MODULE || item.species.module === HISTORY_MODULE) {
-          return {
-            kind: 'derived',
-            shared: 'fellows',
-            calculator:
-              data.fellows && data.relations && data.ranks ? (
-                <div className="space-y-3">
-                  <FellowSkillCalculator fellows={data.fellows} relations={data.relations} skillCap={data.skillCap} relicSkillBonus={data.relicSkillBonus} draft={draft} setDraft={setDraft} />
-                  <HistoryPicker ranks={data.ranks} relations={data.relations} draft={draft} setDraft={setDraft} />
-                </div>
-              ) : (
-                <p className={TYPE.body}>{t('bonds.unavailable')}</p>
-              ),
-          }
-        }
-        return { kind: 'unsupported' }
-      }}
+      present={(item) => (KNOWN.has(item.species.module) ? { kind: 'derived' } : { kind: 'unsupported' })}
+      after={
+        <>
+          <div className="gz-split">
+            {data.partners && data.scoring ? (
+              <PuppetLineup partners={data.partners} scoring={data.scoring} draft={draft} setDraft={setDraft} />
+            ) : unavailable}
+            {data.fellows && data.relations ? (
+              <FellowSkillCalculator fellows={data.fellows} relations={data.relations} draft={draft} setDraft={setDraft}
+                lead={data.ranks ? <HistoryResearch ranks={data.ranks} relations={data.relations} draft={draft} /> : null} />
+            ) : unavailable}
+          </div>
+        </>
+      }
     />
   )
 }
 
 /* ------------------------------------------------------------- puppet lineup */
 
-type Picking = 'deploy' | 'carry' | null
+/**
+ * Which puppet's skill is carried: a field showing the choice, opening a
+ * fixed-size dialog of the owned puppets, best skill first, after an automatic
+ * option that always takes the best.
+ */
+function CarryPicker({ options, auto, carried, readOnly, onPick }: {
+  options: { partner: SecretPartner; skill: { score: number } }[]
+  auto: boolean
+  /** The puppet whose skill is carried now, chosen or automatic. */
+  carried: SecretPartner | null
+  readOnly: boolean
+  onPick: (partnerId: number | null) => void
+}) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const pick = (partnerId: number | null) => { onPick(partnerId); setOpen(false) }
+  const current = carried ? `${carried.name} · ${carried.skill.name}` : '—'
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button type="button" className={`gz-select gz-carry-field ${FOCUS}`} disabled={readOnly} aria-label={t('bonds.skillPuppet')}
+          data-testid="bonds-carry-slot">
+          <span>{auto ? `${t('bonds.carryAuto')} · ${current}` : current}</span>
+          <IconChevronDown aria-hidden />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="gz-dlg gz-carry-dlg" data-testid="bonds-carry-dialog">
+        <DialogHead title={t('bonds.carryTitle')} />
+        <div className="gz-carry-list">
+          <button type="button" className="gz-carry-opt auto" aria-pressed={auto} onClick={() => pick(null)}
+            data-testid="bonds-carry-auto">
+            <span className="ic"><IconSparkles stroke={1.8} aria-hidden /></span>
+            <span className="t"><b>{t('bonds.carryAuto')}</b><small>{t('bonds.skillPuppetBest')}</small></span>
+          </button>
+          {options.map(({ partner, skill }) => (
+            <button key={partner.id} type="button" className="gz-carry-opt" aria-pressed={!auto && carried?.id === partner.id}
+              onClick={() => pick(partner.id)} data-testid={`bonds-carry-option-${partner.id}`}>
+              <IconTile quality={partner.quality} src={partner.portrait ? portraitUrl(partner.portrait) : undefined} alt=""
+                label={partner.name.slice(0, 1)} className="ic" />
+              <span className="t"><b>{partner.name}</b><small>{partner.skill.name}</small></span>
+              <span className="s num">{skill.score.toLocaleString()}</span>
+            </button>
+          ))}
+          {options.length === 0 ? <p className="note">{t('bonds.carryEmpty')}</p> : null}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 /**
- * The lineup: 秘偶属性 and 秘偶技能 off one roster, the way the game's own
- * lineup screen works.
- *
- * The bar at the top holds the deploy slots (上阵) and the carried skill; a
- * slot opens a picker sorted by the score that slot is about, so choosing who
- * to deploy and whose skill to carry is a pick from a ranked list rather than a
- * mode to switch. The grid below is where levels are typed (0 means not owned);
- * clicking an icon there is a shortcut for deploy only, so one click never has
- * two meanings.
+ * The 秘偶 panel: 秘偶属性 and 秘偶技能 off one roster, the way the game's own
+ * lineup screen works. A click on the card deploys or stands down; the stepper
+ * on it sets the level (0 = not owned).
  */
 function PuppetLineup({
   partners,
   scoring,
-  skillCap,
-  relicSkillBonus,
   draft,
   setDraft,
 }: {
   partners: SecretPartner[]
   scoring: PartnerScoring
-  skillCap: number | null
-  relicSkillBonus: number
   draft: BondsDraft
   setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
   const { t } = useTranslation()
-  const [picking, setPicking] = useState<Picking>(null)
+  const readOnly = useCharacterReadOnly()
   const skillLevel = clampSkillLevel(draft.puppetSkillLevel)
   const result = useMemo(
     () => evaluatePuppets(draft.puppets, partners, scoring, draft.dominateSlots),
@@ -163,7 +180,6 @@ function PuppetLineup({
   const autoCarry = !result.rows.some((row) => row.partner.id === draft.skillPartnerId)
   // Best first, so the puppets a player is likely to own lead the grid.
   const ordered = useMemo(() => [...partners].sort((a, b) => b.quality - a.quality || a.id - b.id), [partners])
-  const qualities = useMemo(() => [...new Set(ordered.map((partner) => partner.quality))], [ordered])
 
   // Each owned puppet's attributes as if deployed, and its skill for the carry picker.
   const owned = result.rows.map((row) => {
@@ -174,6 +190,7 @@ function PuppetLineup({
       skill: puppetSkillScore(row.partner, stage, skillLevel),
     }
   })
+  const carryOptions = [...owned].sort((a, b) => b.skill.score - a.skill.score || b.partner.quality - a.partner.quality)
 
   const update = (partnerId: number, patch: Partial<{ stage: number; dominated: boolean }>) =>
     setDraft((prev) => {
@@ -183,31 +200,6 @@ function PuppetLineup({
         : [...prev.puppets, { partnerId, stage: 0, dominated: false, ...patch }]
       return { ...prev, puppets }
     })
-
-  const tile = (partner: SecretPartner, className = 'size-12') => (
-    <IconTile quality={partner.quality} src={partner.portrait ? portraitUrl(partner.portrait) : undefined} alt={partner.name} label={partner.name.slice(0, 1)} className={className} />
-  )
-
-  const deployOptions: PickerOption[] = owned
-    .filter((row) => !(entries.get(row.partner.id)?.dominated ?? false))
-    .sort((a, b) => (b.deployScore ?? -1) - (a.deployScore ?? -1))
-    .map((row) => ({
-      id: row.partner.id,
-      name: row.partner.name,
-      detail: t('bonds.pickDeployDetail', { score: row.deployScore === null ? '—' : Math.round(row.deployScore).toLocaleString() }),
-      quality: row.partner.quality,
-      iconUrl: row.partner.portrait ? portraitUrl(row.partner.portrait) : undefined,
-    }))
-  const carryOptions: PickerOption[] = [...owned]
-    .sort((a, b) => b.skill.score - a.skill.score || b.partner.quality - a.partner.quality)
-    .map((row) => ({
-      id: row.partner.id,
-      name: `${row.partner.name} · ${row.partner.skill.name}`,
-      detail: t('bonds.pickCarryDetail', { tier: row.skill.tier, score: row.skill.score.toLocaleString() }) + (row.skill.estimated ? '*' : ''),
-      quality: row.partner.quality,
-      iconUrl: row.partner.portrait ? portraitUrl(row.partner.portrait) : undefined,
-      keywords: row.partner.skill.name,
-    }))
 
   // One click fills the slots with the owned puppets worth most deployed, and stands the rest down.
   const deployBest = () => {
@@ -221,116 +213,45 @@ function PuppetLineup({
     setDraft((prev) => ({ ...prev, puppets: prev.puppets.map((entry) => ({ ...entry, dominated: best.has(entry.partnerId) })) }))
   }
 
-  const deployed = result.rows.filter((row) => row.dominated)
-  const emptySlots = Math.max(0, result.slots - deployed.length)
-
   return (
-    <div className="space-y-3" data-testid="bonds-puppets">
-      {/* The shared skill level on a line of its own, above the lineup it scores. */}
-      <SkillLevelField value={skillLevel} cap={skillCap} relicBonus={relicSkillBonus} testId="bonds-skill-level"
-        onChange={(level) => setDraft((prev) => ({ ...prev, puppetSkillLevel: level }))} />
-
-      {/* The lineup bar. */}
-      <div className="flex flex-wrap items-start gap-x-6 gap-y-3 rounded-md border border-border p-2" data-testid="bonds-lineup">
-        <div className="min-w-0">
-          <div className="mb-0.5 flex items-center gap-2">
-            <span className={TYPE.label} data-testid="bonds-dominated">
-              {t('bonds.dominated', { used: result.dominated, slots: result.slots })}
-            </span>
-            <button
-              type="button"
-              disabled={owned.length === 0 || result.slots === 0}
-              onClick={deployBest}
-              className={`inline-flex h-6 items-center rounded border border-border px-1.5 text-xs text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`}
-              data-testid="bonds-deploy-best"
-            >
-              {t('bonds.deployBest')}
-            </button>
-          </div>
-          <ul className="flex flex-wrap gap-2">
-            {deployed.map((row) => (
-              <li key={row.partner.id} className="relative" data-testid={`bonds-slot-${row.partner.id}`}>
-                <div title={row.partner.name}>{tile(row.partner)}</div>
-                <button
-                  type="button"
-                  aria-label={t('bonds.undeploy', { name: row.partner.name })}
-                  onClick={() => update(row.partner.id, { dominated: false })}
-                  className={`absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full border border-border bg-background text-xs text-muted-foreground hover:text-foreground ${FOCUS}`}
-                  data-testid={`bonds-undeploy-${row.partner.id}`}
-                >
-                  ✕
-                </button>
-              </li>
-            ))}
-            {Array.from({ length: emptySlots }, (_, index) => (
-              <li key={`empty-${index}`}>
-                <button
-                  type="button"
-                  disabled={deployOptions.length === 0}
-                  onClick={() => setPicking('deploy')}
-                  aria-label={t('bonds.addDeploy')}
-                  title={t('bonds.addDeploy')}
-                  className={`flex size-12 items-center justify-center rounded border border-dashed border-border text-lg text-muted-foreground transition hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`}
-                  data-testid="bonds-slot-empty"
-                >
-                  +
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="min-w-0">
-          <span className={LABEL_CLASS}>{t('bonds.skillPuppet')}</span>
-          <button
-            type="button"
-            disabled={owned.length === 0}
-            onClick={() => setPicking('carry')}
-            className={`flex h-12 items-center gap-2 rounded border border-border pr-3 text-left transition hover:border-[color:var(--arkive-nav-accent)] disabled:cursor-not-allowed disabled:opacity-50 ${FOCUS}`}
-            data-testid="bonds-carry-slot"
-          >
-            {carried ? tile(carried.partner) : <span className="size-12" />}
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold text-foreground">
-                {carried ? carried.partner.skill.name || carried.partner.name : t('bonds.skillNone')}
-              </span>
-              <span className="block text-xs text-muted-foreground">
-                {carried
-                  ? `${autoCarry ? `${t('bonds.skillPuppetBest')} · ` : ''}${t('bonds.pickCarryDetail', { tier: carried.result.tier, score: carried.result.score.toLocaleString() })}`
-                  : ''}
-              </span>
-            </span>
+    <div className="gz-panel gz-tint" data-testid="bonds-puppets">
+      <div className="gz-panel-head">
+        <h3>{t('bonds.puppetsTitle')}</h3>
+        <span className="meta num" data-testid="bonds-dominated">{t('bonds.dominated', { used: result.dominated, slots: result.slots })}</span>
+        <div className="acts">
+          <button type="button" disabled={owned.length === 0 || result.slots === 0} onClick={deployBest} className="gz-chip"
+            data-testid="bonds-deploy-best">
+            {t('bonds.deployBest')}
           </button>
-        </div>
-
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="block w-24">
-            <span className={LABEL_CLASS}>{t('bonds.slots')}</span>
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={scoring.maxDominateSlots}
-              value={result.slots}
-              onChange={(event) =>
-                setDraft((prev) => ({ ...prev, dominateSlots: clampSlots(Number(event.target.value), scoring) }))
+          {/* Every puppet, owned or not: levelling an unowned one adds it. */}
+          <LevelAllDialog title={t('bonds.levelAllPuppets')} hint={t('bonds.levelAllPuppetsHint')} label={t('bonds.levelAllPuppetsLabel')}
+            apply={t('bonds.levelAllPuppetsApply')} min={1} max={scoring.maxStar} initial={scoring.maxStar}
+            format={(value) => String(value)} disabled={readOnly} testId="bonds-level-all"
+            onApply={(value) => setDraft((prev) => {
+              const stage = clampStage(value, scoring)
+              const byId = new Map(prev.puppets.map((entry) => [entry.partnerId, entry]))
+              return {
+                ...prev,
+                puppets: partners.map((partner) => {
+                  const entry = byId.get(partner.id)
+                  return entry ? { ...entry, stage } : { partnerId: partner.id, stage, dominated: false }
+                }),
               }
-              className={NUMBER_CLASS}
-              data-testid="bonds-slots"
-            />
-          </label>
+            })} />
         </div>
       </div>
 
-      <p className={TYPE.body}>{t('bonds.gridHint', { max: scoring.maxStar })}</p>
+      <div className="gz-pickrow gz-foot-row" data-testid="bonds-lineup">
+        <span>{t('bonds.slots')}</span>
+        <Stepper value={result.slots} min={0} max={scoring.maxDominateSlots} label={t('bonds.slots')} testId="bonds-slots"
+          disabled={readOnly} onChange={(value) => setDraft((prev) => ({ ...prev, dominateSlots: clampSlots(value, scoring) }))} />
+        <span>{t('bonds.skillPuppet')}</span>
+        <CarryPicker options={carryOptions} auto={autoCarry} carried={carried?.partner ?? null} readOnly={readOnly}
+          onPick={(partnerId) => setDraft((prev) => ({ ...prev, skillPartnerId: partnerId }))} />
+      </div>
 
-      {/* The roster, one row per quality (red, orange, gold, purple): every
-          puppet, its level, and its attribute score. */}
-      {qualities.map((quality) => (
-      <div key={quality} data-testid={`bonds-puppet-row-${quality}`}>
-      <span className={LABEL_CLASS}>{t(`bonds.quality${quality}`, { defaultValue: String(quality) })}</span>
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2">
-        {ordered.filter((partner) => partner.quality === quality).map((partner) => {
+      <ul className="gz-people pups">
+        {ordered.map((partner) => {
           const entry = entries.get(partner.id)
           const row = rows.get(partner.id)
           const level = clampStage(entry?.stage ?? 0, scoring)
@@ -340,243 +261,68 @@ function PuppetLineup({
           // deployed after the slot count dropped must stay clickable so the
           // mark can be cleared, rather than lurking until a slot frees up.
           const stored = entry?.dominated ?? false
-          const canDeploy = level >= 1 && (stored || !slotsFull)
+          const canDeploy = !readOnly && level >= 1 && (stored || !slotsFull)
           return (
-            <li key={partner.id} className="flex min-w-0 flex-col items-center gap-1" data-testid={`bonds-puppet-${partner.id}`}>
+            // The whole card toggles the deploy, the stepper aside. The portrait
+            // stays the keyboard's button; its click bubbles here like any other.
+            <li key={partner.id} className={`gz-person ${isDeployed ? 'on' : ''} ${level < 1 ? 'zero' : ''} ${canDeploy ? '' : 'fixed'}`}
+              data-testid={`bonds-puppet-${partner.id}`}
+              onClick={(event) => {
+                if (!canDeploy || (event.target as HTMLElement).closest('.gz-mini')) return
+                update(partner.id, { dominated: !stored })
+              }}>
               <button
                 type="button"
                 aria-pressed={stored}
                 disabled={!canDeploy}
                 title={partner.name}
-                aria-label={t('bonds.deployToggle', { name: partner.name })}
-                onClick={() => update(partner.id, { dominated: !stored })}
-                className={`relative rounded-md p-0.5 transition ${FOCUS} ${isDeployed ? 'ring-2 ring-[color:var(--arkive-nav-accent)]' : stored ? 'ring-2 ring-border' : ''} ${level < 1 ? 'opacity-40 grayscale' : ''} disabled:cursor-not-allowed`}
+                aria-label={t(stored ? 'bonds.undeploy' : 'bonds.deployToggle', { name: partner.name })}
+                className="gz-face"
                 data-testid={`bonds-dominate-${partner.id}`}
               >
-                {tile(partner, 'size-16')}
-                {isDeployed ? (
-                  <span className="absolute -right-1 -top-1 rounded bg-primary px-1 text-xs font-semibold text-primary-foreground">
-                    {t('bonds.dominate')}
-                  </span>
-                ) : null}
-                {isCarried ? (
-                  <span className="absolute -bottom-1 -left-1 rounded bg-secondary px-1 text-xs font-semibold text-secondary-foreground" data-testid={`bonds-carried-${partner.id}`}>
-                    {t('bonds.skillCarried')}
-                  </span>
-                ) : null}
+                <IconTile quality={partner.quality} src={partner.portrait ? portraitUrl(partner.portrait) : undefined} alt={partner.name} label={partner.name.slice(0, 1)} className="size-14" />
               </button>
-              <span className="w-full truncate text-center text-xs text-muted-foreground">{partner.name}</span>
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={scoring.maxStar}
-                value={level}
-                aria-label={t('bonds.levelFor', { name: partner.name })}
-                onChange={(event) => {
-                  const next = clampStage(Number(event.target.value), scoring)
+              {isDeployed ? <span className="gz-flag">{t('bonds.dominate')}</span> : null}
+              {isCarried ? (
+                <span className="gz-carry" data-testid={`bonds-carried-${partner.id}`}>{t('bonds.skillCarried')}</span>
+              ) : null}
+              <b title={partner.name}>{partner.name}</b>
+              <Stepper variant="mini" value={level} min={0} max={scoring.maxStar} label={t('bonds.levelFor', { name: partner.name })}                testId={`bonds-stage-${partner.id}`}
+                onChange={(value) => {
+                  const next = clampStage(value, scoring)
                   if (next < 1) {
                     update(partner.id, { stage: 0, dominated: false })
                     setDraft((prev) => (prev.skillPartnerId === partner.id ? { ...prev, skillPartnerId: null } : prev))
                   } else update(partner.id, { stage: next })
-                }}
-                className="h-7 w-16 border-border bg-background px-1 text-center text-xs tabular-nums shadow-none"
-                data-testid={`bonds-stage-${partner.id}`}
-              />
-              {row ? (
-                <span className="text-center text-xs leading-4 tabular-nums text-muted-foreground" data-testid={`bonds-score-${partner.id}`}>
-                  {hasMarks(partner) ? Math.round(row.score).toLocaleString() : '—'}
-                </span>
-              ) : null}
+                }} />
             </li>
           )
         })}
       </ul>
-      </div>
-      ))}
-
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        {t('bonds.formulaLabel')}
-        <FormulaHint testId="bonds-formula">{t('bonds.formula', { inRate: scoring.inDominateRate, outRate: scoring.nonDominateRate })}</FormulaHint>
-      </div>
-
-      <ActiveAttributes result={result} scoring={scoring} />
-
-      <PickerModal
-        open={picking === 'deploy'}
-        onOpenChange={(open) => setPicking(open ? 'deploy' : null)}
-        title={t('bonds.pickDeployTitle')}
-        options={deployOptions}
-        selectedId={null}
-        onSelect={(id) => update(id, { dominated: true })}
-        testIdPrefix="bonds-pick-deploy"
-      />
-      <PickerModal
-        open={picking === 'carry'}
-        onOpenChange={(open) => setPicking(open ? 'carry' : null)}
-        title={t('bonds.pickCarryTitle')}
-        options={carryOptions}
-        selectedId={autoCarry ? null : (draft.skillPartnerId ?? null)}
-        onSelect={(id) => setDraft((prev) => ({ ...prev, skillPartnerId: id }))}
-        testIdPrefix="bonds-pick-carry"
-        footer={
-          <button
-            type="button"
-            aria-pressed={autoCarry}
-            onClick={() => {
-              setDraft((prev) => ({ ...prev, skillPartnerId: null }))
-              setPicking(null)
-            }}
-            className={`h-9 w-full rounded-md border text-sm transition ${FOCUS} ${autoCarry ? 'border-[color:var(--arkive-nav-accent)] text-foreground' : 'border-border text-muted-foreground'}`}
-            data-testid="bonds-skill-best"
-          >
-            {t('bonds.skillPuppetBest')}
-          </button>
-        }
-      />
-    </div>
-  )
-}
-
-function formatTotal(attribute: ActiveAttribute) {
-  return attribute.format === 'percent'
-    ? `${Number((attribute.value * 100).toFixed(2))}%`
-    : Number(attribute.value.toFixed(2)).toLocaleString()
-}
-
-/** Every attribute the owned puppets grant right now, summed. */
-function ActiveAttributes({ result, scoring }: { result: PuppetsResult; scoring: PartnerScoring }) {
-  const { t } = useTranslation()
-  const totals = useMemo(() => activeAttributes(result, scoring), [result, scoring])
-  return (
-    <div className="border-t border-border pt-2" data-testid="bonds-attributes">
-      <span className={LABEL_CLASS}>{t('bonds.activeAttributes')}</span>
-      {totals.length === 0 ? (
-        <p className={TYPE.body}>{t('bonds.activeAttributesNone')}</p>
-      ) : (
-        <dl className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-4 gap-y-1">
-          {totals.map((attribute) => (
-            <div key={attribute.key} className="flex min-w-0 items-baseline justify-between gap-2" data-testid={`bonds-attribute-${attribute.key}`}>
-              <dt className="truncate text-sm text-muted-foreground" title={t('bonds.activeAttributeSources', { count: attribute.sources })}>
-                {attribute.name}
-              </dt>
-              <dd className="text-sm font-medium tabular-nums text-foreground">+{formatTotal(attribute)}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      <p className="mt-1 text-xs text-muted-foreground">
-        {t('bonds.activeAttributesHint', { inRate: scoring.inDominateRate, outRate: scoring.nonDominateRate })}
-      </p>
-    </div>
-  )
-}
-
-/* -------------------------------------------------------------- puppet skill */
-
-/**
- * The 秘偶技能 row's explanation. The carried puppet is chosen in the lineup
- * under 秘偶属性, so this only says what it scored and why.
- */
-function PuppetSkillSummary({
-  partners,
-  scoring,
-  draft,
-}: {
-  partners: SecretPartner[]
-  scoring: PartnerScoring
-  draft: BondsDraft
-}) {
-  const { t } = useTranslation()
-  const carried = carriedPuppetSkill(draft.puppets, partners, scoring, draft.skillPartnerId, draft.puppetSkillLevel)
-  const nextTier = carried
-    ? carried.partner.upgrades.find((upgrade) => upgrade.tier === carried.result.tier + 1)
-    : undefined
-  return (
-    <div className="space-y-1" data-testid="bonds-puppet-skill">
-      {carried ? (
-        <p className={TYPE.body}>
-          {t('bonds.skillTier', { name: carried.partner.name, tier: carried.result.tier })}
-          {nextTier ? ` ${t('bonds.skillNextTier', { level: nextTier.requiredStage })}` : ''}
-          {carried.result.estimated ? ` ${t('bonds.skillEstimated')}` : ''}
-        </p>
-      ) : (
-        <p className={TYPE.body}>{t('bonds.skillNone')}</p>
-      )}
-      <div className="flex items-center gap-1">
-        <p className={TYPE.body}>{t('bonds.skillFromLineup')}</p>
-        <FormulaHint testId="bonds-skill-formula">{t('bonds.skillFormula')}</FormulaHint>
-      </div>
     </div>
   )
 }
 
 /* ----------------------------------------------------------------- history */
 
-function HistoryPicker({
-  ranks,
-  relations,
-  draft,
-}: {
+/** The 历史研究 rank: it follows from the relations' tiers, which follow from the stars above. */
+function HistoryResearch({ ranks, relations, draft }: {
   ranks: HistoryResearchRank[]
   relations: FellowRelation[]
   draft: BondsDraft
-  setDraft: (update: (prev: BondsDraft) => BondsDraft) => void
 }) {
   const { t } = useTranslation()
-  // Nothing is picked here: the rank follows from the relations' tiers, which
-  // follow from the connection stars set in the roster above.
-  const stars = starMap(draft.fellows ?? [])
-  const total = relationResearchPoints(relations, stars)
+  const total = relationResearchPoints(relations, starMap(draft.fellows ?? []))
   const current = historyRankFor(ranks, total)
   const next = [...ranks].sort((a, b) => a.score - b.score).find((rank) => rank.score > total)
-  // Every relation formed so far, with its tier and the research it has paid.
-  const formed = relations
-    .map((relation) => {
-      const tier = relationTier(relation, stars)
-      const rewards = relation.researchRewards ?? []
-      return {
-        relation,
-        tier,
-        tierName: relationTierName(relation, tier),
-        points: rewards.filter((reward) => reward.grade < tier).reduce((sum, reward) => sum + reward.value, 0),
-      }
-    })
-    .filter((entry) => entry.tier >= 1)
-    .sort((a, b) => b.points - a.points || a.relation.order - b.relation.order)
 
   return (
-    <div className="space-y-2" data-testid="bonds-history">
-      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm" data-testid="bonds-research-total">
-        <span className={TYPE.label}>{t('bonds.rank')}</span>
-        <span className="font-semibold text-foreground">{current ? current.name : t('bonds.rankNone')}</span>
-        <span className="tabular-nums text-muted-foreground">{t('bonds.researchNow', { points: total.toLocaleString() })}</span>
-        {next ? (
-          <>
-            <span className={TYPE.label}>{t('bonds.rankNextLabel')}</span>
-            <span className="font-semibold text-foreground">{next.name}</span>
-            <span className="tabular-nums text-muted-foreground">{t('bonds.rankNextPoints', { points: next.score.toLocaleString() })}</span>
-          </>
-        ) : (
-          <span className="text-xs text-muted-foreground">{t('bonds.rankTop')}</span>
-        )}
-      </p>
-      {formed.length > 0 ? (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-1.5" data-testid="bonds-history-relations">
-          {formed.map((entry) => (
-            <li key={entry.relation.id} className="rounded-md border border-border bg-background px-2 py-1.5"
-              data-testid={`bonds-history-relation-${entry.relation.id}`}>
-              <div className="truncate text-sm font-semibold text-foreground">{entry.relation.name}</div>
-              <div className="flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
-                <span>{entry.tierName ? t('bonds.relationTierNamed', { tier: entry.tier, name: entry.tierName }) : t('bonds.relationTier', { tier: entry.tier })}</span>
-                <span className="tabular-nums">+{entry.points.toLocaleString()}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className={TYPE.body}>{t('bonds.historyNoRelations')}</p>
-      )}
+    <div className="gz-research gz-foot-row" data-testid="bonds-history">
+      <span className="rank" data-testid="bonds-research-total">{t('bonds.researchTitle')}{'　'}{current ? current.name : t('bonds.rankNone')}</span>
+      <small className="num">
+        {t('bonds.researchLine', { points: total.toLocaleString() })}
+        {next ? ` · ${t('bonds.researchNext', { name: next.name, points: next.score.toLocaleString() })}` : ` · ${t('bonds.rankTop')}`}
+      </small>
     </div>
   )
 }

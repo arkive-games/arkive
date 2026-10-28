@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import { IconDatabase, IconInfoCircle } from '@tabler/icons-react'
-import { Input, useDocumentTitle } from '@gamemap/ui'
+import { IconChevronDown } from '@tabler/icons-react'
+import { useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
 import { ContentPage } from '@/components/ContentPage'
@@ -38,9 +38,14 @@ import { carryTalents, evaluateTalents, loadTalents, talentLimits, treeFor, type
 import { loadPartnerScoring, loadSecretPartners, type PartnerScoring, type SecretPartner } from '@/features/secretpartners/data'
 import { CharacterBar } from '@/features/characters/CharacterBar'
 import { CharacterProvider, useCharacter, useSection } from '@/features/characters/CharacterProvider'
+import { SECTIONS } from '@/features/characters/envelope'
 import { lastCharacter } from '@/features/characters/memory'
 import { useMemory } from '@gamemap/state-memory'
 import { TYPE } from '@/lib/typography'
+import { RES_BASE } from '@/lib/urls'
+import { bandVar } from '@/features/score/SpeciesRow'
+import { Stepper } from '@/features/score/Stepper'
+import './score.css'
 
 /**
  * The client's module keys for the items whose score a section derives and
@@ -73,6 +78,14 @@ const GENUS_COLOR: Record<number, string> = {
   [BONDS_GENUS]: '124,96,214',
 }
 const genusColor = (id: number) => GENUS_COLOR[id] ?? '120,120,120'
+
+/** Each group's tab icon, a path under the resource root without its extension. */
+const GENUS_ICON: Record<number, string> = {
+  [PATHWAY_GENUS]: 'utopia/Bard_Skill_04',
+  [EQUIPMENT_GENUS]: 'icons/3010660',
+  [RELICS_GENUS]: 'icons/2000543',
+  [BONDS_GENUS]: 'secretpartners/100',
+}
 
 /** The rating's wording for an overall percentage, worst to best, by its upper bound. */
 const BANDS: { upTo: number; key: string }[] = [
@@ -194,6 +207,17 @@ function ScoreView() {
   const setProfessionId = (next: number | null) => {
     if (talents) setTalentState((prev) => carryTalents(talents, prev, professionId, next))
     setDraft((prev) => ({ ...prev, professionId: next }))
+  }
+  // 重新填写: every section back to its default, keeping only the pathway and
+  // the relic server, which describe the player rather than what they entered.
+  const reset = () => {
+    if (character.readOnly || !window.confirm(t('score.resetConfirm'))) return
+    const { setSection } = character
+    setSection('character', { ...SECTIONS.character.default(), professionId })
+    setSection('talents', SECTIONS.talents.default())
+    setSection('bonds', SECTIONS.bonds.default())
+    setSection('equipment', SECTIONS.equipment.default())
+    setSection('relics', (prev) => ({ ...SECTIONS.relics.default(), server: prev.server }))
   }
 
   useEffect(() => {
@@ -343,14 +367,32 @@ function ScoreView() {
     return group ? render(group) : null
   }
 
-  // Role level, divinity level and pathway drive the whole page, but they head
-  // the 途径 group, whose items follow them most directly.
+  // Pathway, role level and divinity level drive the whole page, but they head
+  // the 途径 group, whose items follow them most directly. They sit in that
+  // group's one bar, beside the shared skill level.
   const progression = (
-    <div role="group" aria-label={t('score.progression')}
-      className="grid gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(2,minmax(0,10rem))_minmax(0,13rem)]">
+    <div role="group" aria-label={t('score.progression')} className="contents">
+      {equipment ? (
+        <label className="gz-field">
+          <span>{t('score.pathway')}</span>
+          <span className="gz-select">
+            <select
+              value={professionId ?? ''}
+              onChange={(event) => setProfessionId(event.target.value === '' ? null : Number(event.target.value))}
+              data-testid="score-pathway"
+            >
+              {playableProfessions(equipment.equipment).map((profession) => (
+                <option key={profession.id} value={profession.id}>
+                  {profession.sequenceName} · {profession.name}
+                </option>
+              ))}
+            </select>
+            <IconChevronDown stroke={2} aria-hidden />
+          </span>
+        </label>
+      ) : null}
       <LevelField
         label={t('score.roleLevel')}
-        hint={t('score.roleLevelHint')}
         value={roleLevel}
         min={1}
         max={rating.maxRoleLevel}
@@ -359,7 +401,7 @@ function ScoreView() {
       />
       <LevelField
         label={t('score.divinityLevel')}
-        hint={atCap ? t('score.divinityHint') : t('score.divinityInactive', { level: rating.maxRoleLevel })}
+        hint={atCap ? undefined : t('score.divinityAfter', { level: rating.maxRoleLevel })}
         value={divinityLevel}
         min={0}
         max={rating.maxDivinityLevel}
@@ -367,24 +409,6 @@ function ScoreView() {
         disabled={!atCap}
         testId="score-divinity-level"
       />
-      {equipment ? (
-        <label className="block">
-          <span className={`block ${TYPE.label}`}>{t('score.pathway')}</span>
-          <select
-            value={professionId ?? ''}
-            onChange={(event) => setProfessionId(event.target.value === '' ? null : Number(event.target.value))}
-            className="mt-0.5 h-9 w-full rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
-            data-testid="score-pathway"
-          >
-            {playableProfessions(equipment.equipment).map((profession) => (
-              <option key={profession.id} value={profession.id}>
-                {profession.sequenceName} · {profession.name}
-              </option>
-            ))}
-          </select>
-          <span className="mt-0.5 block text-xs text-muted-foreground">{t('score.pathwayHint')}</span>
-        </label>
-      ) : null}
     </div>
   )
 
@@ -408,7 +432,7 @@ function ScoreView() {
       />
     )),
     [EQUIPMENT_GENUS]: section(EQUIPMENT_GENUS, (group) => (
-      <GroupSection group={group} rating={rating} hint={t('score.equipmentHint')} present={() => ({ kind: 'derived' })}>
+      <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}>
         {equipment ? (
           <EquipmentSection equipment={equipment.equipment} graces={equipment.graces} professionId={professionId} onTotals={onEquipmentTotals} />
         ) : (
@@ -417,7 +441,7 @@ function ScoreView() {
       </GroupSection>
     )),
     [RELICS_GENUS]: section(RELICS_GENUS, (group) => (
-      <GroupSection group={group} rating={rating} hint={t('score.relicsHint')} present={() => ({ kind: 'derived' })}>
+      <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}>
         {relics ? <RelicSection relics={relics} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
       </GroupSection>
     )),
@@ -428,26 +452,50 @@ function ScoreView() {
 
   return (
     <ContentPage active="/score" title={t('score.title')} wide>
-      <div data-testid="score-page" className="grid items-start gap-5 lg:grid-cols-[19rem_minmax(0,1fr)]">
+      <div data-testid="score-page" className="gz-score">
         {/* The rail: who is being scored, the score, and the one switch every
             relic number depends on. It stays in view beside the long panels on
             wide screens and stacks above them on narrow ones. */}
-        <aside className="min-w-0 space-y-3 rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-0" data-testid="score-rail">
-          <h1 className={TYPE.pageTitle}>{t('score.title')}</h1>
-          <CharacterBar />
-          <section aria-label={t('score.total')}>
-            <Summary result={result} day={day} />
+        <aside className="gz-side gz-tint" data-testid="score-rail">
+          <div className="gz-phead">
+            <h1>{t('score.title')}</h1>
+            <CharacterBar />
+            <button type="button" className="gz-reset" onClick={reset} disabled={character.readOnly} data-testid="score-reset">
+              {t('score.reset')}
+            </button>
+          </div>
+          <section className="gz-hero" aria-label={t('score.ratingLabel')}>
+            <Summary result={result} day={day} tab={tab} onTab={setTab}
+              relicServer={relics ? <RelicServerToggle testId="score-relic-server" /> : null} />
           </section>
-          {relics ? <RelicServerToggle testId="score-relic-server" /> : null}
+          {gaps.length > 0 ? (
+            <details className="gz-gaps" data-testid="score-headroom-section">
+              <summary>
+                {t('score.headroom')}
+                <IconChevronDown stroke={2} aria-hidden />
+              </summary>
+              <ol className="gz-gap-list" data-testid="score-headroom">
+                {gaps.map((item, index) => (
+                  <li key={item.species.id} className="gz-gap">
+                    <span className="n num">{index + 1}</span>
+                    <span className="t">
+                      <b>{item.species.name}</b>
+                      <small className="num">{t('score.gapToExpected', { points: item.toExpected.toLocaleString() })}</small>
+                      <small>{materialsFor(rating, item.species).map((m) => m.name).join(' · ')}</small>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          ) : null}
         </aside>
 
-        <div className="min-w-0 space-y-4">
+        <div className="gz-work">
         {/* The four groups as folder tabs: the open one joins the panel below in its colour. */}
-        <div role="tablist" aria-label={t('score.groupsLabel')}
-          className="grid grid-cols-2 items-end gap-1.5 sm:grid-cols-4" data-testid="score-tabs">
+        <div role="tablist" aria-label={t('score.groupsLabel')} className="gz-gtabs" data-testid="score-tabs">
           {result.groups.map((group) => {
             const on = group.genus.id === tab
-            const color = genusColor(group.genus.id)
+            const icon = GENUS_ICON[group.genus.id]
             return (
               <button key={group.genus.id} type="button" role="tab" aria-selected={on}
                 id={`score-tab-${group.genus.id}`} aria-controls={`score-panel-${group.genus.id}`}
@@ -463,78 +511,34 @@ function ScoreView() {
                   setTab(id)
                   document.getElementById(`score-tab-${id}`)?.focus()
                 }}
-                style={{ '--g': color } as React.CSSProperties}
-                className={`relative min-w-0 rounded-xl border px-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] sm:rounded-b-none sm:border-b-0 ${
-                  on
-                    ? 'z-10 border-[rgba(var(--g),0.45)] bg-[rgba(var(--g),0.1)] py-3 shadow-[inset_0_4px_0_rgb(var(--g))] sm:-mb-px sm:pb-3.5'
-                    : 'border-border bg-card py-2.5 hover:bg-[rgba(var(--g),0.06)]'
-                }`}
+                style={{ '--c': genusColor(group.genus.id) } as React.CSSProperties}
+                className={`gz-gtab ${on ? 'on' : ''}`}
                 data-testid={`score-tab-${group.genus.id}`}>
-                <span className="flex items-center justify-between gap-2">
-                  <span className={`truncate text-sm font-bold ${on ? 'text-foreground' : 'text-muted-foreground'}`}>{group.genus.name}</span>
-                  <span className={`shrink-0 rounded-full px-2 text-xs font-bold tabular-nums ${on ? 'bg-[rgba(var(--g),0.18)] text-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    {Math.round(group.percent * 100)}%
-                  </span>
-                </span>
-                <span className={`block text-lg font-semibold tabular-nums ${on ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {group.score.toLocaleString()}
-                </span>
+                {icon ? <img src={`${RES_BASE}/${icon}.webp`} alt="" loading="lazy" /> : <span aria-hidden />}
+                <strong>{group.genus.name}</strong>
+                <span className="v num">{group.score.toLocaleString()}</span>
+                <span className="pct num">{Math.round(group.percent * 100)}%</span>
               </button>
             )
           })}
         </div>
 
-        <div className="-mt-4 min-w-0" data-testid="score-inputs">
-
+        <div className="gz-main" style={{ '--c': genusColor(tab) } as React.CSSProperties} data-testid="score-inputs">
         {result.groups.map((group) => (
           <div key={group.genus.id} role="tabpanel" id={`score-panel-${group.genus.id}`} aria-labelledby={`score-tab-${group.genus.id}`}
             hidden={group.genus.id !== tab}
-            style={{ '--g': genusColor(group.genus.id) } as React.CSSProperties}
-            className="min-w-0 rounded-2xl border border-[rgba(var(--g),0.45)] bg-[rgba(var(--g),0.05)] p-3 sm:rounded-t-none sm:p-4"
+            style={{ '--c': genusColor(group.genus.id) } as React.CSSProperties}
+            className="min-w-0"
             data-testid={`score-panel-${group.genus.id}`}>
             {/* Read-only for someone else's character: the panel's controls are
                 disabled at once, and the setters ignore writes besides. Equipment
                 and relics are exempt: their slots open dialogs that must stay
                 viewable, and those sections lock their own inputs. */}
-            <fieldset className="m-0 min-w-0 border-0 p-0"
-              disabled={character.readOnly && group.genus.id !== EQUIPMENT_GENUS && group.genus.id !== RELICS_GENUS}>
+            <fieldset disabled={character.readOnly && group.genus.id !== EQUIPMENT_GENUS && group.genus.id !== RELICS_GENUS}>
               {panels[group.genus.id] ?? null}
             </fieldset>
           </div>
         ))}
-
-        {gaps.length > 0 ? (
-          <section aria-label={t('score.headroom')} className="mt-4 rounded-md border border-border bg-card p-3">
-            <h2 className="text-sm font-bold text-foreground">{t('score.headroom')}</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">{t('score.headroomHint')}</p>
-            <ol className="mt-2 space-y-1" data-testid="score-headroom">
-              {gaps.map((item, index) => (
-                <li key={item.species.id} className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                  <span className="tabular-nums text-muted-foreground">{index + 1}.</span>
-                  <span className="font-medium text-foreground">{item.species.name}</span>
-                  <span className="tabular-nums text-muted-foreground">
-                    {t('score.gapToExpected', { points: item.toExpected.toLocaleString() })}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {materialsFor(rating, item.species).map((m) => m.name).join(' · ')}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
-
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-          <p className="flex items-center gap-2">
-            <IconDatabase className="size-4" stroke={1.8} aria-hidden />
-            {t('score.dataNote')}
-          </p>
-          <p className="flex items-center gap-2">
-            <IconInfoCircle className="size-4" stroke={1.8} aria-hidden />
-            {t('score.aggregateNote')}
-          </p>
         </div>
         </div>
       </div>
@@ -542,83 +546,77 @@ function ScoreView() {
   )
 }
 
-function Summary({ result, day }: { result: NonNullable<ReturnType<typeof evaluate>>; day: number }) {
+/** The rating's band for an overall percentage, and its position worst to best. */
+function bandFor(percent: number) {
+  const index = BANDS.findIndex((b) => percent <= b.upTo)
+  return index < 0 ? BANDS.length - 1 : index
+}
+
+function Summary({ result, day, tab, onTab, relicServer }: {
+  result: NonNullable<ReturnType<typeof evaluate>>
+  day: number
+  /** The open group, whose share of the ring is drawn wider; a click on a share opens its group. */
+  tab: number
+  onTab: (id: number) => void
+  relicServer: React.ReactNode
+}) {
   const { t } = useTranslation()
   const percent = Math.round(result.percent * 100)
-  const band = BANDS.find((b) => percent <= b.upTo) ?? BANDS[BANDS.length - 1]
+  const band = bandFor(percent)
   return (
-    <div data-testid="score-summary" className="space-y-3">
-      {/* Deliberately not labelled 非凡评分 (the in-game panel's name): that
-          rating is a separate server value, and nothing in the package says it
-          equals this sum. */}
-      <div className="relative mx-auto aspect-square w-full max-w-44 lg:max-w-56">
-        <ScoreRing result={result} />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className={TYPE.label}>{t('score.total')}</span>
-          <span className="text-3xl font-bold tabular-nums text-foreground" data-testid="score-total">{result.score.toLocaleString()}</span>
-          <span className="text-sm font-semibold tabular-nums text-muted-foreground">{t('score.overall')} {percent}%</span>
+    <div data-testid="score-summary" className="contents" style={{ '--b': bandVar(band) } as React.CSSProperties}>
+      <div className="gz-ring">
+        <ScoreRing result={result} tab={tab} onTab={onTab} />
+        <div className="gz-rc">
+          <span className="label">{t('score.ratingLabel')}</span>
+          <span className="total num" data-testid="score-total">{result.score.toLocaleString()}</span>
+          <span className="gz-bandchip num" data-testid="score-band">{t(BANDS[band].key)} {percent}%</span>
         </div>
+        <p className="gz-vs num">
+          {t('score.expectedTotal')} <b>{result.expected.toLocaleString()}</b>{'　'}
+          {t('score.maxTotal')} <b>{result.max.toLocaleString()}</b>
+        </p>
       </div>
-      <div className="flex justify-center">
-        <span className="rounded-full bg-[color:var(--arkive-filter-active)] px-3 py-0.5 text-sm font-bold text-foreground" data-testid="score-band">
-          {t(band.key)}
-        </span>
-      </div>
-      <dl className="grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-lg bg-muted/60 px-2 py-1.5">
-          <dt className={TYPE.label}>{t('score.expectedTotal')}</dt>
-          <dd className="text-base font-semibold tabular-nums text-foreground">{result.expected.toLocaleString()}</dd>
-        </div>
-        <div className="rounded-lg bg-muted/60 px-2 py-1.5">
-          <dt className={TYPE.label}>{t('score.maxTotal')}</dt>
-          <dd className="text-base font-semibold tabular-nums text-foreground">{result.max.toLocaleString()}</dd>
-        </div>
+      <div className="gz-setup">
         {day >= 1 ? (
-          <div className="col-span-2 rounded-lg bg-muted/60 px-2 py-1.5">
-            <dt className={TYPE.label}>{t('score.serverDayLabel')}</dt>
-            <dd className="text-base font-semibold tabular-nums text-foreground" data-testid="score-server-day">
-              {t('score.serverDay', { day })}
-            </dd>
+          <div className="gz-field">
+            <span>{t('score.serverDayLabel')}</span>
+            <span className="gz-pill num" data-testid="score-server-day">{t('score.serverDay', { day })}</span>
           </div>
         ) : null}
-      </dl>
-      <p className="text-xs text-muted-foreground">{t('score.totalHint')}</p>
+        {relicServer ? <div className={day >= 1 ? '' : 'wide'}>{relicServer}</div> : null}
+      </div>
     </div>
   )
 }
 
 /**
  * The total drawn as two rings: the outer one split by each group's share of
- * the score, in the group's colour; the inner one filled to the overall percent.
+ * the score, in the group's colour, with the open group's share drawn wider;
+ * the inner one filled to the overall percent in the band's colour.
  */
-function ScoreRing({ result }: { result: NonNullable<ReturnType<typeof evaluate>> }) {
-  const outer = 46
-  const inner = 37
-  const outerLength = 2 * Math.PI * outer
-  const innerLength = 2 * Math.PI * inner
+function ScoreRing({ result, tab, onTab }: { result: NonNullable<ReturnType<typeof evaluate>>; tab: number; onTab: (id: number) => void }) {
   const total = result.groups.reduce((sum, group) => sum + Math.max(0, group.score), 0)
-  const gap = result.groups.length > 1 ? 1.5 : 0
-  let offset = 0
+  const gap = result.groups.length > 1 ? 1.4 : 0
+  const percent = Math.min(1, Math.max(0, result.percent)) * 100
+  const lengths = result.groups.map((group) => (total > 0 ? (Math.max(0, group.score) / total) * 100 : 100 / result.groups.length))
   return (
-    <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden>
-      <circle cx="50" cy="50" r={outer} fill="none" className="stroke-muted" strokeWidth="5" />
-      {total > 0
-        ? result.groups.map((group) => {
-            const length = (Math.max(0, group.score) / total) * outerLength
-            const arc = (
-              <circle key={group.genus.id} cx="50" cy="50" r={outer} fill="none" strokeWidth="5"
-                stroke={`rgb(${genusColor(group.genus.id)})`}
-                strokeDasharray={`${Math.max(0, length - gap)} ${outerLength}`}
-                strokeDashoffset={-offset} />
-            )
-            offset += length
-            return arc
-          })
-        : null}
-      <circle cx="50" cy="50" r={inner} fill="none" className="stroke-muted" strokeWidth="3" />
-      <circle cx="50" cy="50" r={inner} fill="none" strokeWidth="3" strokeLinecap="round"
-        className="stroke-[color:var(--arkive-nav-accent)]"
-        strokeDasharray={`${Math.min(1, Math.max(0, result.percent)) * innerLength} ${innerLength}`} />
+    <svg viewBox="0 0 200 200" aria-hidden>
+      <g transform="rotate(-90 100 100)">
+        {result.groups.map((group, index) => {
+          const shown = Math.max(lengths[index] - gap, 0.1)
+          const offset = lengths.slice(0, index).reduce((sum, length) => sum + length, 0)
+          return (
+            <circle key={group.genus.id} className={`arc ${group.genus.id === tab ? 'on' : ''}`} cx="100" cy="100" r="84" pathLength={100}
+              stroke={`rgb(${genusColor(group.genus.id)})`}
+              strokeDasharray={`${shown} ${100 - shown}`}
+              strokeDashoffset={-offset}
+              onClick={() => onTab(group.genus.id)} />
+          )
+        })}
+        <circle className="trk" cx="100" cy="100" r="68" pathLength={100} />
+        <circle className="pv" cx="100" cy="100" r="68" pathLength={100} strokeDasharray={`${percent} ${100 - percent}`} />
+      </g>
     </svg>
   )
 }
@@ -634,7 +632,8 @@ function LevelField({
   testId,
 }: {
   label: string
-  hint: string
+  /** A short note beside the label, such as when a disabled field takes effect. */
+  hint?: string
   value: number
   min: number
   max: number
@@ -642,41 +641,10 @@ function LevelField({
   disabled?: boolean
   testId: string
 }) {
-  // The field holds what was typed; the clamp lands on blur.
-  //
-  // Clamping on every keystroke makes a two-digit level unretypable: clearing
-  // "70" snaps the box to the minimum, and the next digits append to it — type
-  // "65" and you get "165", clamped straight back to 70, so the box shows the
-  // value you were trying to replace. `draft` is null whenever the field is not
-  // being edited, so external changes still flow in.
-  const [draft, setDraft] = useState<string | null>(null)
-
   return (
-    <label className={`block ${disabled ? 'opacity-60' : ''}`}>
-      <span className={`block ${TYPE.label}`}>{label}</span>
-      <Input
-        type="number"
-        inputMode="numeric"
-        min={min}
-        max={max}
-        value={draft ?? value}
-        disabled={disabled}
-        onChange={(event) => {
-          const raw = event.target.value
-          setDraft(raw)
-          // An in-range value applies as you type; anything else waits for blur
-          // rather than yanking the caret to a clamped number.
-          const parsed = Math.trunc(Number(raw))
-          if (raw !== '' && Number.isFinite(parsed) && parsed >= min && parsed <= max) onChange(parsed)
-        }}
-        onBlur={() => {
-          if (draft !== null) onChange(clamp(Math.trunc(Number(draft)), min, max))
-          setDraft(null)
-        }}
-        className="mt-0.5 h-9 border-border bg-background text-sm tabular-nums shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
-        data-testid={testId}
-      />
-      <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>
-    </label>
+    <div className={`gz-field ${disabled ? 'off' : ''}`} title={disabled ? hint : undefined}>
+      <span>{label}{hint ? <> <em className="num">{hint}</em></> : null}</span>
+      <Stepper value={value} min={min} max={max} onChange={onChange} label={label} testId={testId} disabled={disabled} />
+    </div>
   )
 }

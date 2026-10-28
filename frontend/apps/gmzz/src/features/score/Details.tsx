@@ -39,7 +39,7 @@ export function DetailsToggle({ open, onToggle, controls, testId }: {
   const { t } = useTranslation()
   return (
     <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={controls} data-testid={testId}
-      className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-[color:var(--arkive-nav-accent)] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]">
+      className="gz-chip">
       {t(open ? 'score.detailsHide' : 'score.detailsShow')}
       {open
         ? <IconChevronDown className="size-4" stroke={1.8} aria-hidden />
@@ -55,7 +55,7 @@ export function DetailsToggle({ open, onToggle, controls, testId }: {
  */
 export function DetailsBody({ id, open, children }: { id: string; open: boolean; children: ReactNode }) {
   return (
-    <div id={id} hidden={!open} className="mt-2.5 border-t border-border/70 pt-2.5">
+    <div id={id} hidden={!open} className="min-w-0">
       {children}
     </div>
   )

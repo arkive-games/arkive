@@ -1,158 +1,79 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useCharacterReadOnly } from '@/features/characters/CharacterProvider'
-import { DetailsBody, DetailsToggle, useDetailsOpen } from '@/features/score/Details'
 import { clamp, materialsFor, type Rating, type SpeciesResult } from '@/features/score/data'
-import { TYPE } from '@/lib/typography'
 
 /**
- * Band colours, worst to best.
+ * A band's colour variable (`--b1`..`--b4` in score.css, worst to best).
  *
  * Indexed by the band's *position* in the sorted list rather than keyed by its
  * threshold. Keying on the threshold looks tidier but couples the palette to
- * the client's current numbers: re-tune 99 to 98 and the lookup misses, the bar
- * renders with no background class at all, and an invisible fill over the muted
- * track reads as a styling glitch rather than a stale palette. A position that
- * runs off the end falls back to the last colour, which is wrong but visible.
+ * the client's current numbers: re-tune 99 to 98 and the lookup misses. A
+ * position that runs off the end falls back to the last colour, which is wrong
+ * but visible.
  */
-export const BAND_CLASS = [
-  'text-rose-700 dark:text-rose-300',
-  'text-amber-700 dark:text-amber-300',
-  'text-sky-700 dark:text-sky-300',
-  'text-emerald-700 dark:text-emerald-300',
-]
-
-export const BAND_BAR_CLASS = [
-  'bg-rose-500/70',
-  'bg-amber-500/70',
-  'bg-sky-500/70',
-  'bg-emerald-500/70',
-]
-
-export function bandStyle(palette: string[], index: number): string {
-  return palette[Math.min(Math.max(index, 0), palette.length - 1)]
+export function bandVar(index: number): string {
+  return `var(--b${Math.min(Math.max(index, 0), 3) + 1})`
 }
 
 /**
- * One of the panel's items: name and materials, the score, its bar against the
- * benchmarks, and the band.
- *
- * The score is always a figure the page derived; the calculator that derived
- * it is drawn under the row inside the same card, so the number and what
- * produced it cannot be read as two things. An `unsupported` item — one the
- * page does not know how to derive yet — says so and scores nothing.
+ * One of the panel's items as a ledger line: its name, a bar filled to its
+ * share of the max benchmark in its band's colour, the score against the
+ * expected one, and the percentage. Materials, benchmarks and the gap are in
+ * the line's tooltip. An `unsupported` item — one the page does not know how
+ * to derive yet — says so and scores nothing.
  */
-export function ItemRow({
-  item,
-  rating,
-  unsupported = false,
-  toggle,
-}: {
-  item: SpeciesResult
-  rating: Rating
-  unsupported?: boolean
-  /** The card's fold control, drawn in this line's last column. */
-  toggle?: ReactNode
-}) {
+export function ItemRow({ item, rating, unsupported = false }: { item: SpeciesResult; rating: Rating; unsupported?: boolean }) {
   const { t } = useTranslation()
-  // Resolved here rather than passed in: the only valid producer is this one
-  // expression, and it belongs next to the bandStyle calls that consume it.
   const bandIndex = rating.bands.findIndex((band) => band.id === item.band?.id)
   // Guarded before it reaches a CSS width: a non-finite percentage would render
   // as `width: NaN%`, which the browser drops, leaving a bar stuck full-width
   // with no other symptom.
   const percent = Number.isFinite(item.percent) ? Math.round(clamp(item.percent, 0, 1) * 100) : 0
   const materials = materialsFor(rating, item.species)
+  const gap = item.toExpected > 0
+    ? t('score.gapToExpected', { points: item.toExpected.toLocaleString() })
+    : item.toMax > 0
+      ? t('score.gapToMax', { points: item.toMax.toLocaleString() })
+      : t('score.atMax')
+  const title = [
+    item.species.name,
+    materials.map((m) => m.name).join(' · '),
+    `${t('score.expectedValue', { value: item.expected.toLocaleString() })} · ${t('score.maxValue', { value: item.max.toLocaleString() })}`,
+    unsupported ? t('score.unsupported') : gap,
+    item.band?.label,
+  ].filter(Boolean).join('\n')
 
   return (
-      <div data-testid={`score-item-${item.species.id}`} className="grid gap-2 md:grid-cols-[minmax(9rem,13rem)_minmax(7rem,9rem)_minmax(0,1fr)_minmax(8rem,11rem)_6.5rem] md:items-center">
-        <div className="min-w-0">
-          <div className={TYPE.name}>{item.species.name}</div>
-          {materials.length > 0 ? (
-            <div className="mt-0.5 truncate text-xs text-muted-foreground" title={materials.map((m) => `${m.name}: ${m.description}`).join('\n')}>
-              {materials.map((m) => m.name).join(' · ')}
-            </div>
-          ) : null}
-        </div>
-
+    <div className="gz-item" style={{ '--b': bandVar(bandIndex) } as CSSProperties} title={title} data-testid={`score-item-${item.species.id}`}>
+      <div className="top">
+        <span className="name">{item.species.name}</span>
         {unsupported ? (
-          <div className="text-xs text-muted-foreground" data-testid={`score-unsupported-${item.species.id}`}>
-            {t('score.unsupported')}
-          </div>
+          <span className="unsup" data-testid={`score-unsupported-${item.species.id}`}>{t('score.unsupported')}</span>
         ) : (
-          <div className="flex items-baseline gap-2 md:block">
-            <span className="block text-xs text-muted-foreground">{t('score.derivedScore')}</span>
-            <span className="text-lg font-bold tabular-nums text-foreground" data-testid={`score-derived-${item.species.id}`}>
-              {item.score.toLocaleString()}
-            </span>
-          </div>
+          <span className="val num">
+            <b data-testid={`score-derived-${item.species.id}`}>{item.score.toLocaleString()}</b>
+          </span>
         )}
-
-        <div className="min-w-0">
-          <div
-            className="h-2 w-full overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-            aria-valuenow={percent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={item.species.name}
-          >
-            <div className={`h-full rounded-full transition-all ${bandStyle(BAND_BAR_CLASS, bandIndex)}`} style={{ width: `${percent}%` }} />
-          </div>
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 text-xs tabular-nums text-muted-foreground">
-            <span>{t('score.expectedValue', { value: item.expected.toLocaleString() })}</span>
-            <span>{t('score.maxValue', { value: item.max.toLocaleString() })}</span>
-            {item.toExpected > 0 ? (
-              <span className="text-foreground/80">{t('score.gapToExpected', { points: item.toExpected.toLocaleString() })}</span>
-            ) : item.toMax > 0 ? (
-              <span>{t('score.gapToMax', { points: item.toMax.toLocaleString() })}</span>
-            ) : (
-              <span className="text-emerald-700 dark:text-emerald-300">{t('score.atMax')}</span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-baseline gap-2 md:justify-end">
-          <span className={`text-lg font-bold tabular-nums ${bandStyle(BAND_CLASS, bandIndex)}`}>{percent}%</span>
-          <span className={`text-xs font-semibold ${bandStyle(BAND_CLASS, bandIndex)}`}>{item.band?.label}</span>
-        </div>
-
-        {/* The fold control's own column, kept on rows without a detail too so every row's columns line up,
-            and sat on the row's bottom edge, next to the detail it opens. */}
-        <div className="flex md:self-end md:justify-end">
-          {toggle}
-        </div>
       </div>
+      <div className="gz-bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label={item.species.name}>
+        <i style={{ width: `${percent}%` }} />
+        <span className="band num">{percent}%</span>
+      </div>
+    </div>
   )
 }
 
 /**
- * One card on the score page: the line of every item it holds and, when it
- * has one, the single detail that computes them, behind one fold control.
- * A card holds one item or several that share a calculator, in the same
- * frame either way, so there is no second kind of details box.
+ * The calculator behind one or several items, as a tinted panel under the
+ * group's ledger. The calculator draws its own head (title, meta, actions),
+ * so the panel is only the surface. Items sharing a calculator share the
+ * panel, so there is no second kind of details box.
  */
-export function ItemCard({ id, items, rating, unsupported, details }: {
-  id: string
-  items: SpeciesResult[]
-  rating: Rating
-  /** Whether an item is one the page cannot derive yet. */
-  unsupported?: (item: SpeciesResult) => boolean
-  details?: ReactNode
-}) {
-  const [open, toggle] = useDetailsOpen(id)
-  const readOnly = useCharacterReadOnly()
-  const bodyId = `score-details-${id}`
+export function ItemPanel({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <article className="space-y-2 rounded-md border border-border bg-card p-2.5" data-testid={`score-card-${id}`}>
-      {items.map((item, index) => (
-        <ItemRow key={item.species.id} item={item} rating={rating} unsupported={unsupported?.(item) ?? false}
-          toggle={details && index === 0 && !readOnly
-            ? <DetailsToggle open={open} onToggle={toggle} controls={bodyId} testId={`score-details-toggle-${id}`} />
-            : null} />
-      ))}
-      {details ? <DetailsBody id={bodyId} open={open}>{details}</DetailsBody> : null}
+    <article className="gz-panel gz-tint" data-testid={`score-card-${id}`}>
+      {children}
     </article>
   )
 }

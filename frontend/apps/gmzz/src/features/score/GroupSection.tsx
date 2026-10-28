@@ -1,10 +1,7 @@
-import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
+import type { CSSProperties, ReactNode } from 'react'
 
 import type { GenusResult, Rating, SpeciesResult } from '@/features/score/data'
-import { FormulaHint } from '@/features/score/FormulaHint'
-import { ItemCard } from '@/features/score/SpeciesRow'
-import { TYPE } from '@/lib/typography'
+import { ItemPanel, ItemRow } from '@/features/score/SpeciesRow'
 
 /**
  * How one of a group's items is shown.
@@ -50,52 +47,45 @@ function cards(items: SpeciesResult[], present: (item: SpeciesResult) => ItemPre
 }
 
 /**
- * One of the panel's four groups: its heading with the group total, its
- * hint, and one row per item in the panel's order. Every group on the page
- * goes through this, so every item reads the same way wherever it sits.
+ * One of the panel's four groups: the inputs it follows, a ledger of every
+ * item in the panel's order, and then one panel per calculator. Every group on the page goes
+ * through this, so every item reads the same way wherever it sits.
  */
 export function GroupSection({
   group,
   rating,
-  hint,
   present,
   lead,
+  after,
   children,
 }: {
   group: GenusResult
   rating: Rating
-  hint: string
   present: (item: SpeciesResult) => ItemPresentation
-  /** Inputs the group's items are computed from, shown above them. */
+  /** Inputs the group's items are computed from, shown under the ledger. */
   lead?: ReactNode
+  /** Panels of the group's own layout, shown below the ledger instead of per-item cards. */
+  after?: ReactNode
   /** A calculator behind every item of the group: the whole group becomes one card. */
   children?: ReactNode
 }) {
-  const { t } = useTranslation()
+  const panels = cards(group.items, children ? () => ({ kind: 'derived', shared: 'all' }) : present)
+    .filter((card) => (children ?? card.details) !== undefined)
 
   return (
-    <section aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
-      <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1.5">
-        <span className="inline-flex items-center gap-1.5">
-          <span className={TYPE.sectionTitle}>{group.genus.name}</span>
-          <FormulaHint testId={`score-genus-hint-${group.genus.id}`}>{hint}</FormulaHint>
-        </span>
-        <span className="text-lg font-semibold tabular-nums text-muted-foreground" data-testid={`score-genus-total-${group.genus.id}`}>
-          {t('score.groupTotal', {
-            score: group.score.toLocaleString(),
-            expected: group.expected.toLocaleString(),
-            percent: Math.round(group.percent * 100),
-          })}
-        </span>
-      </h2>
-      <div className="mt-2 space-y-2">
-        {lead}
-        {cards(group.items, children ? () => ({ kind: 'derived', shared: 'all' }) : present).map((card) => (
-          <ItemCard key={card.id} id={children ? `genus-${group.genus.id}` : card.id} items={card.items} rating={rating}
-            details={children ?? card.details}
-            unsupported={(item) => !children && present(item).kind === 'unsupported'} />
+    <section className="gz-sec" aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
+      <div className="gz-items" style={{ '--n': group.items.length } as CSSProperties}>
+        {group.items.map((item) => (
+          <ItemRow key={item.species.id} item={item} rating={rating} unsupported={!children && present(item).kind === 'unsupported'} />
         ))}
       </div>
+      {lead}
+      {panels.map((card) => (
+        <ItemPanel key={card.id} id={children ? `genus-${group.genus.id}` : card.id}>
+          {children ?? card.details}
+        </ItemPanel>
+      ))}
+      {after}
     </section>
   )
 }

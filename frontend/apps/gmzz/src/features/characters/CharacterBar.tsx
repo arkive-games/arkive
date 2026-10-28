@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { IconArrowDown, IconArrowUp, IconCopy, IconLink, IconLock, IconSettings } from '@tabler/icons-react'
+import { IconArrowDown, IconArrowUp, IconChevronDown, IconCopy, IconLink, IconLock, IconSettings } from '@tabler/icons-react'
+import { AccountDialog, authStringsFor, useOptionalAuth } from '@gamemap/auth'
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -34,32 +35,40 @@ const STATUS_KEY: Record<SyncStatus, string> = {
   error: 'characters.statusError',
 }
 
+/** The status dot's colour: saved, unsaved, in flight, someone else's, or a problem. */
 const STATUS_TONE: Partial<Record<SyncStatus, string>> = {
-  saved: 'text-emerald-700 dark:text-emerald-300',
-  offline: 'text-amber-700 dark:text-amber-300',
-  conflict: 'text-amber-700 dark:text-amber-300',
-  'signed-out': 'text-amber-700 dark:text-amber-300',
-  newer: 'text-amber-700 dark:text-amber-300',
-  error: 'text-red-700 dark:text-red-300',
+  saved: 'ok',
+  pending: 'dirty',
+  saving: 'busy',
+  loading: 'busy',
+  readonly: 'view',
+  offline: 'warn',
+  conflict: 'warn',
+  'signed-out': 'warn',
+  newer: 'warn',
+  missing: 'bad',
+  error: 'bad',
 }
 
 /**
  * The strip above the score page's inputs: which character is open, whether
- * its edits have reached the server, and what can be done with it.
+ * its edits have reached the server, and what can be done with it. Shown even
+ * where no character API is configured, so the local draft and the way to sign
+ * in are always visible.
  */
 export function CharacterBar() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const ctx = useCharacter()
-  const { id, status, character, characters, signedIn, api } = ctx
+  const auth = useOptionalAuth()
+  const { id, status, character, characters, signedIn } = ctx
   const servers = useServers()
   const label = (name: string, serverId?: number) => withServer(name, serverName(servers, serverId, t('characters.unknownServer')))
-  const [dialog, setDialog] = useState<'save' | 'manage' | null>(null)
+  const [dialog, setDialog] = useState<'save' | 'manage' | 'login' | null>(null)
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
-
-  if (!api) return null
+  const authStrings = authStringsFor(i18n.language)
 
   const owned = Boolean(character?.editable)
   const open = (target: string | null) => {
@@ -96,75 +105,90 @@ export function CharacterBar() {
   const foreign = id && character && !owned ? character : null
 
   return (
-    <section className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-border bg-card p-2.5" data-testid="character-bar"
-      aria-label={t('characters.switcher')}>
-      {signedIn || foreign ? (
-        <label className="flex min-w-0 items-center gap-2">
-          <span className={TYPE.label}>{t('characters.switcher')}</span>
-          <select className={SELECT_CLASS} value={id ?? LOCAL} data-testid="character-switcher"
-            onChange={(event) => open(event.target.value === LOCAL ? null : event.target.value)}>
-            <option value={LOCAL}>{t('characters.localDraft')}</option>
-            {characters && characters.length > 0 ? (
-              <optgroup label={t('characters.mine', { count: characters.length, max: MAX_CHARACTERS })}>
-                {characters.map((entry) => (
-                  <option key={entry.id} value={entry.id}>{label(entry.name, entry.serverId)}</option>
-                ))}
-              </optgroup>
-            ) : null}
-            {foreign ? <option value={foreign.id}>{label(foreign.name, foreign.serverId)}</option> : null}
-          </select>
-        </label>
-      ) : null}
+    <section className="gz-cbar" data-testid="character-bar" aria-label={t('characters.switcher')}>
+      {/* Top to bottom: where the edits stand, the character itself (the
+          switcher, reading "name · server"), its UID, then the actions. The
+          plain local draft needs no status line. */}
+      {status === 'local' ? null : (
+        <span className={`gz-status ${STATUS_TONE[status] ?? ''}`} data-testid="character-status" role="status">
+          <i aria-hidden />
+          {t(STATUS_KEY[status])}
+        </span>
+      )}
 
-      {foreign ? <ForeignIdentity character={foreign} servers={servers} /> : null}
-
-      <span className={`text-xs ${STATUS_TONE[status] ?? 'text-muted-foreground'}`} data-testid="character-status" role="status">
-        {t(STATUS_KEY[status])}
+      <span className="gz-select gz-cname">
+        <select value={id ?? LOCAL} data-testid="character-switcher" aria-label={t('characters.switcher')}
+          onChange={(event) => open(event.target.value === LOCAL ? null : event.target.value)}>
+          <option value={LOCAL}>{t('characters.localDraft')}</option>
+          {characters && characters.length > 0 ? (
+            <optgroup label={t('characters.mine', { count: characters.length, max: MAX_CHARACTERS })}>
+              {characters.map((entry) => (
+                <option key={entry.id} value={entry.id}>{label(entry.name, entry.serverId)}</option>
+              ))}
+            </optgroup>
+          ) : null}
+          {foreign ? <option value={foreign.id}>{label(foreign.name, foreign.serverId)}</option> : null}
+        </select>
+        <IconChevronDown stroke={2} aria-hidden />
       </span>
 
-      <div className="ml-auto flex flex-wrap items-center gap-2">
+      {id && character ? <Identity character={character} /> : null}
+
+      <div className="acts">
+        {!signedIn ? (
+          <button type="button" className="gz-btn pri" disabled={!auth} onClick={() => setDialog('login')} data-testid="character-sign-in">
+            {authStrings.signIn}
+          </button>
+        ) : null}
         {!id && signedIn ? (
-          <Button size="sm" variant="outline" disabled={full} title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
+          <button type="button" className="gz-btn pri" disabled={full} title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
             onClick={() => setDialog('save')} data-testid="character-save-draft">
             {t('characters.saveAsNew')}
-          </Button>
+          </button>
         ) : null}
-        {!id && !signedIn ? <span className="text-xs text-muted-foreground">{t('characters.signInToSave', { max: MAX_CHARACTERS })}</span> : null}
 
         {id && owned && character ? (
           <>
             {character.visibility === 'private' ? (
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><IconLock className="size-4" stroke={1.8} aria-hidden />{t('characters.privateBadge')}</span>
+              <span className="gz-btn" aria-disabled><IconLock className="size-4" stroke={1.8} aria-hidden />{t('characters.privateBadge')}</span>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => void copyLink()} data-testid="character-copy-link">
+              <button type="button" className="gz-btn pri" onClick={() => void copyLink()} data-testid="character-copy-link">
                 <IconLink className="size-4" stroke={1.8} aria-hidden />
                 {copied ? t('characters.linkCopied') : t('characters.copyLink')}
-              </Button>
+              </button>
             )}
-            <Button size="sm" variant="outline" onClick={() => setDialog('manage')} data-testid="character-manage">
+            <button type="button" className="gz-btn" onClick={() => setDialog('manage')} data-testid="character-manage">
               <IconSettings className="size-4" stroke={1.8} aria-hidden />
               {t('characters.manage')}
-            </Button>
+            </button>
+            <button type="button" className="gz-btn" disabled={busy || full} data-testid="character-save-copy"
+              title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
+              onClick={() => void run(async () => open(await ctx.copy(character.id, t('characters.copyName', { name: character.name }).slice(0, 32))))}>
+              <IconCopy className="size-4" stroke={1.8} aria-hidden />
+              {t('characters.saveCopy')}
+            </button>
           </>
         ) : null}
 
+        {foreign && signedIn ? (
+          <button type="button" className="gz-btn pri" disabled={busy || full} data-testid="character-copy-foreign"
+            title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
+            onClick={() => void run(async () => open(await ctx.copy(foreign.id)))}>
+            <IconCopy className="size-4" stroke={1.8} aria-hidden />
+            {t('characters.copyToMine')}
+          </button>
+        ) : null}
         {foreign ? (
-          signedIn ? (
-            <Button size="sm" variant="outline" disabled={busy || full} data-testid="character-copy-foreign"
-              title={full ? t('characters.limitReached', { max: MAX_CHARACTERS }) : undefined}
-              onClick={() => void run(async () => open(await ctx.copy(foreign.id)))}>
-              <IconCopy className="size-4" stroke={1.8} aria-hidden />
-              {t('characters.copyToMine')}
-            </Button>
-          ) : (
-            <span className="text-xs text-muted-foreground">{t('characters.signInToCopy')}</span>
-          )
+          <button type="button" className="gz-btn" onClick={() => open(null)} data-testid="character-back-to-draft">
+            {t('characters.backShort')}
+          </button>
         ) : null}
       </div>
 
-      {foreign ? <p className="basis-full text-xs text-muted-foreground">{t('characters.viewingNote')}</p> : null}
-      {failure && !dialog ? <p className="basis-full text-xs text-red-700 dark:text-red-300" role="alert">{failure}</p> : null}
+      {foreign && !signedIn ? <p className="gz-cbar-hint">{t('characters.signInToCopy')}</p> : null}
+      {failure && !dialog ? <p className="gz-cbar-hint bad" role="alert">{failure}</p> : null}
 
+      {auth ? <AccountDialog open={dialog === 'login'} onOpenChange={(next) => setDialog(next ? 'login' : null)} strings={authStrings} /> : null}
       <ConflictDialog />
       <SaveDraftDialog open={dialog === 'save'} onClose={() => setDialog(null)} onSaved={(created) => open(created)} />
       {character && owned ? (
@@ -178,14 +202,12 @@ function withServer(name: string, server?: string): string {
   return server ? `${name} · ${server}` : name
 }
 
-function ForeignIdentity({ character, servers }: { character: SavedCharacter; servers: GameServer[] }) {
+/** The game UID on its own small line; the switcher above already reads "name · server". */
+function Identity({ character }: { character: SavedCharacter }) {
   const { t } = useTranslation()
-  const server = serverName(servers, character.serverId, t('characters.unknownServer'))
+  if (!character.uid) return null
   return (
-    <span className="text-xs text-muted-foreground" data-testid="character-identity">
-      {[server && `${t('characters.server')} ${server}`, character.uid && `${t('characters.uid')} ${character.uid}`]
-        .filter(Boolean).join(' · ')}
-    </span>
+    <small className="gz-who num" data-testid="character-identity">{`${t('characters.uid')} ${character.uid}`}</small>
   )
 }
 
