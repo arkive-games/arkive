@@ -11,7 +11,6 @@ arkive.memory.aion2.wiki.recent-entries	-	apps/aion2/src/features/wiki/wikiRecen
 arkive.memory.gmzz.score.bonds	-	apps/gmzz/src/features/score/memory.ts
 arkive.memory.gmzz.score.character	-	apps/gmzz/src/features/score/memory.ts
 arkive.memory.gmzz.score.equipment	-	apps/gmzz/src/features/equipment/memory.ts
-arkive.memory.gmzz.score.equipment-layout	-	apps/gmzz/src/features/equipment/EquipmentSection.tsx
 arkive.memory.gmzz.score.folded	-	apps/gmzz/src/features/score/Details.tsx
 arkive.memory.gmzz.score.last-character	-	apps/gmzz/src/features/characters/memory.ts
 arkive.memory.gmzz.score.relics	-	apps/gmzz/src/features/relics/memory.ts
