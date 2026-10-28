@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://oss.arkive.games/sitemap.xml
