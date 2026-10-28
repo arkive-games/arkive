@@ -3,14 +3,14 @@
     {
       "version": "0.18.0",
       "date": "2026-10-28",
-      "commit": "32e35a0bc019a4a56bacc1651ab98d9d1c29f3e2",
+      "commit": "8c7b695e729c30a166886638360e874100814400",
       "changes": [
         {
           "kind": "feature",
           "text": {
-            "en-US": "Redesigned the class skills page: class portraits, an advancement track, active and passive skills grouped apart, and a per-level description picker.",
-            "zh-CN": "职业技能页全新改版：职业头像选择、转职路线图、主动与被动技能分组，并可逐级查看技能说明。",
-            "zh-TW": "職業技能頁全新改版：職業頭像選擇、轉職路線圖、主動與被動技能分組，並可逐級查看技能說明。"
+            "en-US": "Redesigned the class skills page: pick a class and branch, then every advancement stacks in order with its skills as square icons; the picked skill is described below with a level stepper. The wiki also gets a new sidebar and a compact phone header.",
+            "zh-CN": "职业技能页全新改版：选职业和路线后，各转职阶段按顺序排开，技能以方形图标展示，点选即可在下方查看说明并切换等级；百科侧栏与手机端顶部也一并改版，更紧凑。",
+            "zh-TW": "職業技能頁全新改版：選職業和路線後，各轉職階段按順序排開，技能以方形圖示展示，點選即可在下方查看說明並切換等級；百科側欄與手機端頂部也一併改版，更緊湊。"
           }
         }
       ]
