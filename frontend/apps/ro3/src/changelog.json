@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.17.0",
+      "date": "2026-10-28",
+      "commit": "070b96950f0b99fce24af290eb14aa219cfa8758",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The homepage now opens at the site root with grouped icon entries; the skills wiki moved to /skills. Text uses the site-wide font and type scale, and phones get a back-to-top button.",
+            "zh-CN": "首页改为网站根地址，并以分组图标入口呈现；职业技能移至 /skills。文字统一为全站字体与字号，手机端新增「回到顶部」按钮。",
+            "zh-TW": "首頁改為網站根位址，並以分組圖示入口呈現；職業技能移至 /skills。文字統一為全站字型與字級，手機端新增「回到頂部」按鈕。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.16.2",
       "date": "2026-10-14",
       "commit": "72633b55ef03b0dd380ac49adb0c4cb61ff91d98",
