@@ -623,34 +623,39 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
  * the worn pieces reach, with the stats it grants at the gear level it runs at
  * and its score, and those not reached as such.
  */
-function SuitEffects({ equipment, entry }: { equipment: Equipment; entry: SuitScore }) {
+function SuitEffects({ entry }: { entry: SuitScore }) {
   const { t } = useTranslation()
   return (
     <ul className="gz-suitfx" data-testid={`equip-suit-effects-${entry.suit.id}`}>
-      {entry.suit.pieceCounts.map((pieces, index) => {
+      {entry.suit.pieceCounts.map((pieces) => {
         const effect = entry.effects.find((reached) => reached.pieces === pieces)
-        const formula = equipment.suits.levelScores?.[String(index + 1)]
         return (
           <li key={pieces} className={effect ? 'on' : ''}>
-            <b>{t('equip.suitPieces', { pieces })}</b>
-            {effect ? (
-              <>
-                <span className="tx">{t('equip.suitAtLevel', { level: effect.gearLevel })} {suitEffectText(entry.suit, pieces, effect.gearLevel)}</span>
-                {formula ? (
-                  <TipOn content={t('equip.suitEffectScoreLine', { perLevel: formula.perLevel, level: effect.gearLevel, origin: formula.origin, score: effect.score.toLocaleString() })}>
-                    <span className="s num" tabIndex={0}>+{effect.score.toLocaleString()}</span>
-                  </TipOn>
-                ) : <span className="s num">+{effect.score.toLocaleString()}</span>}
-              </>
-            ) : (
-              <span className="tx">{t('equip.suitEffectOffShort', { count: entry.count })}</span>
-            )}
+            <b>{t('equip.suitPieces', { pieces })}{effect ? <small className="num">{t('equip.suitAtLevel', { level: effect.gearLevel })}</small> : null}</b>
+            <span className="tx">
+              {effect ? suitEffectText(entry.suit, pieces, effect.gearLevel) : t('equip.suitEffectOffShort', { count: entry.count })}
+            </span>
           </li>
         )
       })}
     </ul>
   )
 }
+
+/** Each live piece-count effect's score and how it is worked out, for the suit score's tooltip. */
+function suitScoreLines(t: TFunction, equipment: Equipment, entry: SuitScore | null): string {
+  if (!entry || entry.effects.length === 0) return t('equip.eqSuitNone')
+  return entry.effects.map((effect) => {
+    const formula = equipment.suits.levelScores?.[String(entry.suit.pieceCounts.indexOf(effect.pieces) + 1)]
+    const line = formula
+      ? t('equip.suitEffectScoreLine', { perLevel: formula.perLevel, level: effect.gearLevel, origin: formula.origin, score: effect.score.toLocaleString() })
+      : effect.score.toLocaleString()
+    return `${t('equip.suitPieces', { pieces: effect.pieces })}：${line}`
+  }).join('\n')
+}
+
+/** A suit's short name, its kind as the game tags it: 冒险 or 竞技. */
+const suitShort = (suit: SuitScore['suit']) => suit.tag?.replace(/套装$/, '') || suit.name
 
 /**
  * 统一强化: sets every piece's stage and refinement at once. The sliders are
@@ -821,7 +826,9 @@ export default function EquipmentSection({
         </div>
 
         <div className="gz-suit">
-          <b>{t('equip.suit')}</b>
+          {/* One head line, as the set cards have: title, the live suits, the score. */}
+          <div className="hd">
+          <span>{t('equip.suit')}</span>
           {suitScores.length === 0 ? (
             <span data-testid="equip-suit-active">
               {t('equip.suitNone', { need: Number.isFinite(suitNeed) ? suitNeed : '—' })}
@@ -846,17 +853,23 @@ export default function EquipmentSection({
                       data-testid={`equip-suit-${entry.suit.id}`}
                       data-chosen={chosen}
                     >
-                      {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
+                      {/* The kind and score; the suit's full name and pieces worn are the tooltip. */}
+                      <TipOn content={t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}>
+                        <span className="gz-hov">{suitShort(entry.suit)}</span>
+                      </TipOn>
                       <small className="num">{n(entry.total)}</small>
                     </button>
                   </span>
                 )
               })}
-              {suitScores.length > 1 ? <span className="note">{t('equip.suitChooseHint')}</span> : null}
             </div>
           )}
-          <span className="s num">{t('equip.suitScore', { score: n(suit) })}</span>
-          {chosenSuit ? <SuitEffects equipment={equipment} entry={chosenSuit} /> : null}
+          <TipOn title={t('equip.suit')} content={suitScoreLines(t, equipment, chosenSuit)}>
+            <span className="s num gz-hov" tabIndex={0} data-testid="equip-suit-score">{n(suit)}</span>
+          </TipOn>
+          </div>
+          {suitScores.length > 1 ? <p className="note">{t('equip.suitChooseHint')}</p> : null}
+          {chosenSuit ? <SuitEffects entry={chosenSuit} /> : null}
         </div>
       </div>
 

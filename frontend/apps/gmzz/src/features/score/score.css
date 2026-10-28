@@ -1000,7 +1000,7 @@ select.gz-select {
 .gz-slot { position: relative; grid-template-columns: 3.25rem minmax(0, 1fr); }
 .gz-slot .nm { grid-column: 2; }
 .gz-slot .kind { min-height: 1.375rem; padding-right: 4.5rem; }
-.gz-slot .s { position: absolute; top: .3125rem; right: .75rem; line-height: 1.25; }
+.gz-slot .s { position: absolute; top: .375rem; right: .75rem; line-height: 1; }
 .gz-slot .tags { grid-column: 2; align-items: center; }
 /* A talent's stats at its current level, under its level bar. */
 .gz-tnstats { display: grid; gap: .125rem; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--gz-sub); }
@@ -1027,8 +1027,6 @@ select.gz-select {
 .gz-tc.ic { grid-template-columns: 1.5rem minmax(0, 1fr); }
 .gz-tc.ic b { text-align: right; }
 .gz-tcard .th .gz-hov { flex: 0 1 auto; }
-.gz-barhov { cursor: help; }
-.gz-barhov:focus-visible { outline: 2px solid rgb(var(--c, 230, 164, 23)); outline-offset: 2px; }
 /* The footer as one row: the two whole-loadout sets a share each, the suit two. */
 .gz-eqfoot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr); align-items: stretch; }
 .gz-eqfoot > .gz-wb { display: contents; }
@@ -1048,3 +1046,25 @@ select.gz-select {
   .gz-tcard .th { grid-column: 1 / -1; }
   .gz-tcard .gz-mini { grid-column: 1 / -1; grid-row: 2; width: auto; }
 }
+/* The suit card: title, choices and score on one centred line; effects in two columns under it. */
+.gz-eqfoot > .gz-suit { align-items: center; }
+.gz-suit > .hd { line-height: 2rem; }
+.gz-suit > .s { font-size: 1rem; font-weight: 800; color: var(--gz-ink); }
+.gz-suitfx li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); align-items: baseline; gap: .5rem; }
+.gz-suitfx li > b { display: grid; line-height: 1.3; }
+.gz-suitfx li > b small { font-size: .75rem; font-weight: 400; color: var(--gz-faint); }
+/* A suit effect: the piece count and gear level on one line, the effect flush right. */
+.gz-suitfx li { grid-template-columns: auto minmax(0, 1fr); }
+.gz-suitfx li > b { display: flex; align-items: baseline; gap: .375rem; white-space: nowrap; }
+.gz-suitfx li .tx { text-align: right; }
+/* The suit card laid out like the set cards beside it: one head line, then its content. */
+.gz-eqfoot > .gz-suit { display: grid; gap: .375rem; align-content: start; align-items: start; padding: .625rem .875rem; }
+.gz-suit > .hd { display: flex; align-items: center; gap: .5rem; min-width: 0; min-height: 1.5rem; }
+.gz-suit > .hd > span:first-child { font-weight: 700; color: var(--gz-ink); }
+.gz-suit > .hd .s { margin-left: auto; font-size: .875rem; font-weight: 800; color: var(--gz-ink); }
+.gz-suit > .hd .gz-seg { padding: 0; background: none; box-shadow: none; gap: .25rem; }
+.gz-suit > .hd .gz-chip { height: 1.5rem; padding: 0 .5rem; font-size: .75rem; }
+.gz-suit > .note { margin: 0; font-size: .75rem; color: var(--gz-faint); }
+.gz-suit .gz-suitfx { padding-top: 0; border-top: 0; }
+.gz-wbc .hd { align-items: center; min-height: 1.5rem; }
+.gz-wbc .hd, .gz-suit > .hd { height: 1.75rem; min-height: 0; line-height: 1.75rem; }

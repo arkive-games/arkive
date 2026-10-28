@@ -44,11 +44,13 @@ export function ItemRow({ item, rating, unsupported = false, formula }: {
     : item.toMax > 0
       ? t('score.gapToMax', { points: item.toMax.toLocaleString() })
       : t('score.atMax')
-  // The bar's tooltip: the benchmarks, the gap, the band, and on its own
+  // Where the item stands, under how it is calculated in the score's tooltip:
+  // the share of the maximum, the benchmarks, the gap, the band, and on its own
   // labelled line what raises the item.
-  const barTip = [
+  const standing = [
+    t('score.percentOfMax', { percent }),
     `${t('score.expectedValue', { value: item.expected.toLocaleString() })} · ${t('score.maxValue', { value: item.max.toLocaleString() })}`,
-    unsupported ? t('score.unsupported') : gap,
+    gap,
     item.band?.label ? t('score.bandIs', { band: item.band.label }) : null,
     materials.length > 0 ? t('score.raiseWith', { list: materials.map((m) => m.name).join(' · ') }) : null,
   ].filter(Boolean).join('\n')
@@ -62,19 +64,17 @@ export function ItemRow({ item, rating, unsupported = false, formula }: {
         ) : (
           <span className="val num">
             {formula ? (
-              <TipOn title={item.species.name} content={<>{formula}<div className="mt-1.5">{t('score.percentOfMax', { percent })}</div></>}>
+              <TipOn title={item.species.name} content={<>{formula}<div className="mt-1.5">{standing}</div></>}>
                 <b className="gz-hov" tabIndex={0} data-testid={`score-derived-${item.species.id}`}>{item.score.toLocaleString()}</b>
               </TipOn>
             ) : <b data-testid={`score-derived-${item.species.id}`}>{item.score.toLocaleString()}</b>}
           </span>
         )}
       </div>
-      <TipOn title={item.species.name} content={barTip}>
-        <div className="gz-bar gz-barhov" tabIndex={0}>
-          <i style={{ width: `${percent}%` }} />
-          <span className="band num">{percent}%</span>
-        </div>
-      </TipOn>
+      <div className="gz-bar">
+        <i style={{ width: `${percent}%` }} />
+        <span className="band num">{percent}%</span>
+      </div>
     </div>
   )
 }
