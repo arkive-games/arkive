@@ -10,14 +10,14 @@ export const SERVER_LAUNCH = { year: 2026, month: 8, day: 21 } as const
 const DAY_MS = 86_400_000
 
 /**
- * Which day of the server this is, launch day being day 1, by the visitor's
- * own calendar date. Compared as UTC midnights of the local dates, so a
- * daylight-saving shift cannot move the count by an hour into the wrong day.
+ * Which day of the server this is, launch day being day 1, by the server's
+ * clock rather than the visitor's: each day starts at 08:00 UTC+8, so 07:59 in
+ * China still counts as the day before, wherever the visitor happens to be.
+ * 08:00 UTC+8 is 00:00 UTC, so a day boundary is simply a UTC midnight.
  */
 export function serverDay(now: Date = new Date()): number {
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
   const launch = Date.UTC(SERVER_LAUNCH.year, SERVER_LAUNCH.month - 1, SERVER_LAUNCH.day)
-  return Math.floor((today - launch) / DAY_MS) + 1
+  return Math.floor((now.getTime() - launch) / DAY_MS) + 1
 }
 
 /** Whole days elapsed since launch — 0 on launch day — the unit the client's unlock tables count in. */
