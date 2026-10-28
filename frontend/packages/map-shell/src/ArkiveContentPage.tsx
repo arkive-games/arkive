@@ -40,6 +40,11 @@ export interface ArkiveContentPageProps {
   backToTopLabel?: string
   /** Keep the footer on desktop only (pages with their own phone pagination). */
   hideMobileFooter?: boolean
+  /**
+   * Full-bleed content above the content column, inside the scroller so it
+   * scrolls away with the page: a landing page's banner.
+   */
+  hero?: ReactNode
   className?: string
   contentClassName?: string
   children: ReactNode
@@ -78,6 +83,7 @@ export function ArkiveContentPage({
   resultsKey,
   backToTopLabel,
   hideMobileFooter = false,
+  hero,
   className,
   contentClassName,
   children,
@@ -134,6 +140,7 @@ export function ArkiveContentPage({
         ) : null}
         <div ref={scrollRef} data-content-scroll className="relative min-h-0 flex-1 overflow-y-auto">
           <div className="flex min-h-full flex-col">
+            {hero}
             <main
               className={cn(
                 "arkive-content-page mx-auto w-full flex-1 pb-6",

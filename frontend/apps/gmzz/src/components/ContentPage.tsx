@@ -30,11 +30,13 @@ export interface ContentPageProps {
   filtersActive?: boolean
   /** Only result-scope changes reset reading position, not edits inside cards. */
   resultsKey?: string
+  /** Full-bleed banner above the content column. */
+  hero?: ReactNode
   children: ReactNode
 }
 
 /** This game's navigation, strings and links, in the shared page shell. */
-export function ContentPage({ active, title, heading = false, wide = false, toolbar, toolbarLead, filtersActive = false, resultsKey, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, wide = false, toolbar, toolbarLead, filtersActive = false, resultsKey, hero, children }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
@@ -70,6 +72,7 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
       filterLabel={t('filterToggle')}
       filtersActive={filtersActive}
       resultsKey={resultsKey}
+      hero={hero}
     >
       {children}
     </ArkiveContentPage>

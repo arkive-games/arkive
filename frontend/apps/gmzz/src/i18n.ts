@@ -220,7 +220,10 @@ const en = {
   },
   home: {
     "tagline": "Calculators, a wiki and the Fool's Gambit guide for Lord of Mysteries, built straight from the game files.",
-    "dataNote": "Data extracted from game build {{version}}."
+    "dataNote": "Data extracted from game build {{version}}.",
+    "bannerDesc": "Pick your traits and gear, and get the rating in one click.",
+    "bannerCta": "Calculate",
+    "desc": {"stationTool": "Plan stations and cargo routes", "score": "Pick traits and gear, get the rating", "league": "Project standings and promotion", "autochess": "The auto-battler mode: pieces, bonds, items and talents", "traintrade": "Goods, stations and earnings at a glance", "managedtrade": "Trade War goods and rules", "fellows": "Favour, gifts and how they relate", "secretpartners": "Skills and how to raise them", "utopia": "Theater stages and rewards", "reforge": "Grace effects and how to reforge"}
   },
   changelog: {
     title: 'Changelog',
@@ -1007,7 +1010,10 @@ const zhCN: Strings = {
   },
   home: {
     "tagline": "诡秘之主的计算工具、百科资料与愚者棋局攻略，全部直接取自游戏文件。",
-    "dataNote": "数据提取自游戏版本 {{version}}。"
+    "dataNote": "数据提取自游戏版本 {{version}}。",
+    "bannerDesc": "选好非凡特性与搭配，一键算出评分",
+    "bannerCta": "去计算",
+    "desc": {"stationTool": "规划站点与货物路线", "score": "选好特性与搭配，算出评分", "league": "推演排名与晋级", "autochess": "自走棋玩法，查棋子、共鸣、装备与天赋", "traintrade": "货物、站点与收益一览", "managedtrade": "贸易战的商品与规则", "fellows": "角色好感、礼物与相互关系", "secretpartners": "秘偶的技能与培养方式", "utopia": "剧场关卡与奖励", "reforge": "恩赐效果与重塑方式"}
   },
   changelog: {
     title: '更新日志',
@@ -1796,7 +1802,10 @@ const zhTW: Strings = {
   },
   home: {
     "tagline": "詭秘之主的計算工具、百科資料與愚者棋局攻略，全部直接取自遊戲檔案。",
-    "dataNote": "資料擷取自遊戲版本 {{version}}。"
+    "dataNote": "資料擷取自遊戲版本 {{version}}。",
+    "bannerDesc": "選好非凡特性與搭配，一鍵算出評分",
+    "bannerCta": "去計算",
+    "desc": {"stationTool": "規劃站點與貨物路線", "score": "選好特性與搭配，算出評分", "league": "推演排名與晉級", "autochess": "自走棋玩法，查棋子、共鳴、裝備與天賦", "traintrade": "貨物、站點與收益一覽", "managedtrade": "貿易戰的商品與規則", "fellows": "角色好感、禮物與相互關係", "secretpartners": "秘偶的技能與培養方式", "utopia": "劇場關卡與獎勵", "reforge": "恩賜效果與重塑方式"}
   },
   changelog: {
     title: '更新日誌',

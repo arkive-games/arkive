@@ -47,6 +47,8 @@ export interface NavEntry {
    * page by what it looks like before reading its name.
    */
   art: string
+  /** The home page's one-line caption under the label; tools and wiki pages only. */
+  descKey?: string
   /** The glyph the mobile strip's sheets use, where game art would be too busy. */
   icon: LucideIcon
 }
@@ -79,10 +81,10 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: Wrench,
     children: [
       // Goods art, since the planner is about what you carry between stations.
-      { key: '/tools/traintrade-station', labelKey: 'nav.stationTool', art: 'icons/2000270', icon: Route },
+      { key: '/tools/traintrade-station', labelKey: 'nav.stationTool', descKey: 'home.desc.stationTool', art: 'icons/2000270', icon: Route },
       // Equipment, which is what the calculator scores.
-      { key: '/score', labelKey: 'nav.score', art: 'icons/3250455', icon: Gauge },
-      { key: '/tools/league-points', labelKey: 'nav.league', art: 'icons/3200663', icon: Trophy },
+      { key: '/score', labelKey: 'nav.score', descKey: 'home.desc.score', art: 'icons/3250455', icon: Gauge },
+      { key: '/tools/league-points', labelKey: 'nav.league', descKey: 'home.desc.league', art: 'icons/3200663', icon: Trophy },
     ],
   },
   {
@@ -90,15 +92,15 @@ export const NAV_GROUPS: NavGroup[] = [
     labelKey: 'nav.wiki',
     icon: BookOpen,
     children: [
-      { key: '/traintrade', labelKey: 'trainTrade.title', art: 'icons/2000235', icon: Package },
+      { key: '/traintrade', labelKey: 'trainTrade.title', descKey: 'home.desc.traintrade', art: 'icons/2000235', icon: Package },
       // A trade-war specialty, so the two trade modes are told apart by their goods.
-      { key: '/managedtrade', labelKey: 'managedtrade.title', art: 'icons/2000292', icon: Coins },
+      { key: '/managedtrade', labelKey: 'managedtrade.title', descKey: 'home.desc.managedtrade', art: 'icons/2000292', icon: Coins },
       // One entry for both Connections pages: the menu is a single level, and
       // Roster and Relations switch between each other from their own tab control.
-      { key: '/fellows', labelKey: 'nav.fellows', art: 'fellows/7_Klein', icon: Contact },
-      { key: '/secretpartners', labelKey: 'secretpartners.title', art: 'secretpartners/100', icon: Users },
-      { key: '/utopia', labelKey: 'nav.utopia', art: 'utopia/Rogue_Common_05', icon: Users },
-      { key: '/reforge', labelKey: 'nav.reforge', art: 'icons/3210613', icon: Hammer },
+      { key: '/fellows', labelKey: 'nav.fellows', descKey: 'home.desc.fellows', art: 'fellows/7_Klein', icon: Contact },
+      { key: '/secretpartners', labelKey: 'secretpartners.title', descKey: 'home.desc.secretpartners', art: 'secretpartners/100', icon: Users },
+      { key: '/utopia', labelKey: 'nav.utopia', descKey: 'home.desc.utopia', art: 'utopia/Rogue_Common_05', icon: Users },
+      { key: '/reforge', labelKey: 'nav.reforge', descKey: 'home.desc.reforge', art: 'icons/3210613', icon: Hammer },
     ],
   },
   {
