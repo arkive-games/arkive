@@ -1,6 +1,53 @@
 {
   "entries": [
     {
+      "version": "0.28.0",
+      "date": "2026-10-28",
+      "commit": "1a763097e55db65b659433ecdcac7971cb8d4c2b",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Score calculator: every score item has a formula hint next to its score, and the attribute details, puppet and connection breakdowns and total-attribute summaries are back as tooltips",
+            "zh-CN": "评分计算器：每个评分项的分数旁都有公式提示，属性详情、秘偶与人脉的分数拆分、总属性汇总以悬停提示形式回归",
+            "zh-TW": "評分計算器：每個評分項的分數旁都有公式提示，屬性詳情、秘偶與人脈的分數拆分、總屬性彙總以懸停提示形式回歸"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Extraordinary talents show the game's icon for every talent and special effect",
+            "zh-CN": "非凡天赋中每个天赋和特效都显示游戏内图标",
+            "zh-TW": "非凡天賦中每個天賦和特效都顯示遊戲內圖示"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Equipment: the enhancement level follows the name, PvP/PvE marks on every tagged item, mythic and grace affixes back in the slot dialog, and set tooltips list their stats",
+            "zh-CN": "装备：强化等级紧跟名称，所有带标记的装备显示 PVP/PVE，装备弹窗恢复神话词条与恩赐词条，套装提示列出具体属性",
+            "zh-TW": "裝備：強化等級緊跟名稱，所有帶標記的裝備顯示 PVP/PVE，裝備彈窗恢復神話詞條與恩賜詞條，套裝提示列出具體屬性"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Relics: each relic lists its material affixes and resonance bonus; the edit dialog steps affix values like equipment and keeps its layout steady",
+            "zh-CN": "封印物：每个封印物下方列出物质词条与非凡共鸣加成；编辑时词条数值与装备一样用加减调节，切换危险等级布局不再跳动",
+            "zh-TW": "封印物：每個封印物下方列出物質詞條與非凡共鳴加成；編輯時詞條數值與裝備一樣用加減調節，切換危險等級佈局不再跳動"
+          }
+        },
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Starting over on a saved character now opens a fresh draft instead of wiping the character; a manual save button sits by the unsaved status; dropdowns share one themed style",
+            "zh-CN": "在已保存角色上重新填写会打开新草稿，不再清空该角色；未保存提示旁新增手动保存按钮；下拉菜单统一风格",
+            "zh-TW": "在已儲存角色上重新填寫會開啟新草稿，不再清空該角色；未儲存提示旁新增手動儲存按鈕；下拉選單統一風格"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.27.2",
       "date": "2026-10-28",
       "commit": "00ac4a2251d42bec3561e3d27d745e8c630776c4",
