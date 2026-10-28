@@ -5,7 +5,6 @@
 @source "../../../packages/auth/src";
 
 :root {
-  font-family: "Arkive Sans SC", "Microsoft YaHei", system-ui, sans-serif;
 
   /* The encyclopedia and the build manual were painted as a parchment copy of
      the in-game manual, in some 670 inline browns, creams and golds, folded
@@ -253,7 +252,7 @@
   color: var(--ro3-tone-05);
   background: transparent;
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .profession-search button {
@@ -311,8 +310,6 @@
 .profession-skill-panel h3 {
   margin: 0.15rem 0 0;
   color: var(--ro3-tone-04);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
-  letter-spacing: 0;
 }
 
 .profession-route-panel h2,
@@ -540,7 +537,7 @@
 
 .profession-skill-list strong {
   overflow: hidden;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -585,7 +582,6 @@
   overflow: hidden;
   margin: 0.1rem 0;
   color: var(--ro3-tone-04);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 1rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -628,7 +624,7 @@
 .talent-facts dd {
   margin: 0.15rem 0 0;
   color: var(--ro3-tone-04);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 750;
 }
 
@@ -642,7 +638,7 @@
 .talent-detail h4 {
   margin: 0 0 0.35rem;
   color: var(--ro3-tone-05);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .profession-skill-detail p,
@@ -681,7 +677,7 @@
   place-items: center;
   padding: 1rem;
   color: var(--ro3-tone-10);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   text-align: center;
 }
 
@@ -924,7 +920,7 @@
 
 .talent-detail-section strong {
   color: var(--ro3-accent-05);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 @media (max-width: 63.999rem) {
@@ -1039,17 +1035,16 @@
   align-items: center;
   gap: 0.35rem;
   color: var(--ro3-accent-05);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
 }
 
 .database-eyebrow svg { width: 0.9rem; height: 0.9rem; }
-.database-header h2 { margin: 0.2rem 0 0; color: var(--ro3-tone-04); font-family: 'Arkive Display', 'Arkive Sans', sans-serif; font-size: 1.45rem; }
-.database-header p { max-width: 42rem; margin: 0.3rem 0 0; color: var(--ro3-tone-09); font-size: 0.76rem; }
+.database-header h2 { margin: 0.2rem 0 0; color: var(--ro3-tone-04); font-size: 1.5rem; }
+.database-header p { max-width: 42rem; margin: 0.3rem 0 0; color: var(--ro3-tone-09); font-size: 0.75rem; }
 .database-stat { display: grid; min-width: 5.2rem; justify-items: end; color: var(--ro3-tone-10); }
-.database-stat strong { color: var(--ro3-accent-05); font-family: 'Arkive Display', sans-serif; font-size: 1.55rem; line-height: 1; }
-.database-stat span { margin-top: 0.25rem; font-size: 0.7rem; }
+.database-stat strong { color: var(--ro3-accent-05); font-size: 1.5rem; line-height: 1; }
+.database-stat span { margin-top: 0.25rem; font-size: 0.75rem; }
 
 .database-toolbar {
   display: flex;
@@ -1062,7 +1057,7 @@
 }
 
 .database-toolbar .wiki-search { flex: 1 1 15rem; min-width: 12rem; height: 2.35rem; background: color-mix(in srgb, var(--ro3-tone-22) 84%, transparent); }
-.database-toolbar > label:not(.wiki-search) { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--ro3-tone-08); font-size: 0.72rem; font-weight: 750; }
+.database-toolbar > label:not(.wiki-search) { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--ro3-tone-08); font-size: 0.75rem; font-weight: 750; }
 .database-toolbar select { min-height: 2.15rem; padding: 0 1.8rem 0 0.55rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 38%, transparent); color: var(--ro3-tone-06); background: var(--ro3-tone-21); font: inherit; }
 
 .database-layout { display: grid; min-height: 40rem; grid-template-columns: minmax(0, 1fr) 21rem; align-items: start; }
@@ -1072,8 +1067,8 @@
 .equipment-tile-art, .soul-tile-art { display: grid; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 35%, transparent); background: var(--ro3-tone-16); }
 .equipment-tile-art img, .soul-tile-art img { width: 82%; height: 82%; object-fit: contain; image-rendering: auto; }
 .equipment-tile-art svg, .soul-tile-art svg { width: 1.55rem; color: var(--ro3-tone-10); }
-.equipment-tile-name, .soul-tile-name { overflow: hidden; font-size: 0.76rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.equipment-tile-meta, .soul-tile-meta { overflow: hidden; color: var(--ro3-tone-10); font-size: 0.66rem; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-tile-name, .soul-tile-name { overflow: hidden; font-size: 0.75rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-tile-meta, .soul-tile-meta { overflow: hidden; color: var(--ro3-tone-10); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
 .equipment-quality-dots { display: inline-flex; align-items: center; gap: 0.16rem; vertical-align: middle; }
 .equipment-quality-dots i { display: inline-block; width: 0.42rem; height: 0.42rem; border-radius: 50%; background: #9a9a9a; }
 .equipment-quality-dots i.quality-1 { background: #9a9a9a; }
@@ -1095,58 +1090,58 @@
 .database-detail-icon { display: grid; width: 3.5rem; aspect-ratio: 1; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 40%, transparent); background: var(--ro3-tone-16); }
 .database-detail-icon img { width: 88%; height: 88%; object-fit: contain; }
 .database-detail-icon svg { width: 1.4rem; color: var(--ro3-tone-10); }
-.database-kicker { color: var(--ro3-accent-05); font-size: 0.68rem; font-weight: 800; }
+.database-kicker { color: var(--ro3-accent-05); font-size: 0.75rem; font-weight: 800; }
 .database-detail-heading h3 { margin: 0.16rem 0; color: var(--ro3-tone-04); font-size: 1rem; }
-.database-detail-heading p { margin: 0; color: var(--ro3-tone-10); font-size: 0.68rem; }
+.database-detail-heading p { margin: 0; color: var(--ro3-tone-10); font-size: 0.75rem; }
 .database-detail-section { display: grid; gap: 0.35rem; padding-top: 0.5rem; border-top: 1px solid color-mix(in srgb, var(--ro3-tone-07) 20%, transparent); }
-.database-detail-section h4 { margin: 0; color: var(--ro3-accent-03); font-size: 0.76rem; }
+.database-detail-section h4 { margin: 0; color: var(--ro3-accent-03); font-size: 0.75rem; }
 .detail-chip-list { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.detail-chip-list span { padding: 0.25rem 0.38rem; color: var(--ro3-tone-06); background: color-mix(in srgb, var(--ro3-accent-08) 15%, transparent); font-size: 0.68rem; }
+.detail-chip-list span { padding: 0.25rem 0.38rem; color: var(--ro3-tone-06); background: color-mix(in srgb, var(--ro3-accent-08) 15%, transparent); font-size: 0.75rem; }
 .detail-chip-list b { margin-left: 0.2rem; color: var(--ro3-accent-05); font-weight: 800; }
 .detail-effect-list { display: grid; gap: 0.28rem; }
 .detail-effect-list div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; padding: 0.3rem 0.4rem; background: color-mix(in srgb, var(--ro3-tone-21) 55%, transparent); }
-.detail-effect-list strong { color: var(--ro3-tone-06); font-size: 0.7rem; font-weight: 700; }
-.detail-effect-list small { color: var(--ro3-tone-10); font-size: 0.65rem; text-align: right; }
-.detail-copy { margin: 0; color: var(--ro3-tone-08); font-size: 0.7rem; line-height: 1.5; }
-.database-detail-empty, .wiki-empty { display: grid; min-height: 12rem; place-items: center; color: var(--ro3-tone-10); font-size: 0.78rem; }
+.detail-effect-list strong { color: var(--ro3-tone-06); font-size: 0.75rem; font-weight: 700; }
+.detail-effect-list small { color: var(--ro3-tone-10); font-size: 0.75rem; text-align: right; }
+.detail-copy { margin: 0; color: var(--ro3-tone-08); font-size: 0.75rem; line-height: 1.5; }
+.database-detail-empty, .wiki-empty { display: grid; min-height: 12rem; place-items: center; color: var(--ro3-tone-10); font-size: 0.75rem; }
 .soul-mark-list { display: grid; gap: 0.32rem; }
 .soul-mark-list div { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 0.4rem; padding: 0.3rem 0.4rem; background: color-mix(in srgb, var(--ro3-tone-21) 55%, transparent); }
-.soul-mark-list strong { color: var(--ro3-accent-05); font-size: 0.68rem; }
-.soul-mark-list span { color: var(--ro3-tone-07); font-size: 0.68rem; line-height: 1.35; }
+.soul-mark-list strong { color: var(--ro3-accent-05); font-size: 0.75rem; }
+.soul-mark-list span { color: var(--ro3-tone-07); font-size: 0.75rem; line-height: 1.35; }
 .soul-resonance-strip { display: flex; flex-wrap: wrap; gap: 0.32rem; padding-top: 0.35rem; }
-.soul-resonance-strip span { display: inline-flex; align-items: center; gap: 0.22rem; color: var(--ro3-tone-07); font-size: 0.65rem; }
+.soul-resonance-strip span { display: inline-flex; align-items: center; gap: 0.22rem; color: var(--ro3-tone-07); font-size: 0.75rem; }
 .soul-resonance-strip img { width: 1rem; height: 1rem; object-fit: contain; }
 
 .ro3-builds-page { min-height: calc(100dvh - 8rem); padding: 1.25rem 0 2rem; background: var(--ro3-tone-19); }
 .build-planner { width: 100%; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 28%, transparent); background: color-mix(in srgb, var(--ro3-tone-20) 92%, transparent); box-shadow: 0 0.7rem 1.8rem color-mix(in srgb, var(--ro3-tone-04) 10%, transparent); }
 .build-planner-header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem 0.85rem; border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-07) 25%, transparent); background: color-mix(in srgb, var(--ro3-tone-20) 95%, transparent); }
-.build-planner-header h2 { margin: 0.18rem 0 0; color: var(--ro3-tone-04); font-family: 'Arkive Display', 'Arkive Sans', sans-serif; font-size: 1.45rem; }
-.build-planner-header p { margin: 0.3rem 0 0; color: var(--ro3-tone-09); font-size: 0.76rem; }
+.build-planner-header h2 { margin: 0.18rem 0 0; color: var(--ro3-tone-04); font-size: 1.5rem; }
+.build-planner-header p { margin: 0.3rem 0 0; color: var(--ro3-tone-09); font-size: 0.75rem; }
 .build-planner-actions { display: flex; align-items: center; gap: 0.55rem; }
 .build-mode-tabs { display: inline-flex; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 40%, transparent); background: color-mix(in srgb, var(--ro3-tone-21) 72%, transparent); }
-.build-mode-tabs button, .build-new-button, .build-view-title-actions button, .build-save-button, .build-publish-button { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; gap: 0.35rem; padding: 0 0.7rem; border: 0; color: var(--ro3-tone-07); background: transparent; font: inherit; font-size: 0.74rem; font-weight: 800; cursor: pointer; }
+.build-mode-tabs button, .build-new-button, .build-view-title-actions button, .build-save-button, .build-publish-button { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; gap: 0.35rem; padding: 0 0.7rem; border: 0; color: var(--ro3-tone-07); background: transparent; font: inherit; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
 .build-mode-tabs button + button { border-left: 1px solid color-mix(in srgb, var(--ro3-tone-08) 28%, transparent); }
 .build-mode-tabs button.is-active { color: var(--ro3-tone-04); background: var(--ro3-tone-16); box-shadow: inset 0 -0.15rem var(--ro3-accent-07); }
 .build-mode-tabs svg, .build-new-button svg, .build-view-title-actions button svg, .build-save-button svg, .build-publish-button svg { width: 0.9rem; height: 0.9rem; }
 .build-new-button { border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 40%, transparent); background: var(--ro3-tone-19); }
 .build-view-layout { display: grid; min-height: 48rem; grid-template-columns: 12rem minmax(0, 1fr); }
 .build-library { display: grid; align-content: start; gap: 0.2rem; padding: 0.8rem; border-right: 1px solid color-mix(in srgb, var(--ro3-tone-07) 25%, transparent); background: color-mix(in srgb, var(--ro3-tone-18) 62%, transparent); }
-.build-library-head { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 0.35rem 0.5rem; color: var(--ro3-tone-07); font-size: 0.78rem; }
+.build-library-head { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem 0.35rem 0.5rem; color: var(--ro3-tone-07); font-size: 0.75rem; }
 .build-library-head span { color: var(--ro3-accent-05); }
 .build-library > button:not(.build-publish-button) { display: grid; gap: 0.15rem; padding: 0.55rem 0.5rem; border: 1px solid transparent; color: var(--ro3-tone-07); background: transparent; text-align: left; cursor: pointer; }
 .build-library > button:not(.build-publish-button):hover, .build-library > button.is-active { border-color: color-mix(in srgb, var(--ro3-accent-05) 40%, transparent); background: color-mix(in srgb, var(--ro3-tone-20) 82%, transparent); }
-.build-library > button span { overflow: hidden; font-size: 0.74rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.build-library > button small { color: var(--ro3-tone-11); font-size: 0.66rem; }
+.build-library > button span { overflow: hidden; font-size: 0.75rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.build-library > button small { color: var(--ro3-tone-11); font-size: 0.75rem; }
 .build-publish-button { display: grid; grid-template-columns: auto 1fr; justify-content: start; text-align: left; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 28%, transparent); color: var(--ro3-tone-10); background: color-mix(in srgb, var(--ro3-tone-20) 64%, transparent); }
-.build-publish-button span { grid-column: 2; color: var(--ro3-tone-11); font-size: 0.64rem; font-weight: 500; }
+.build-publish-button span { grid-column: 2; color: var(--ro3-tone-11); font-size: 0.75rem; font-weight: 500; }
 .build-publish-button:disabled { cursor: not-allowed; opacity: 0.78; }
 .build-view-main { min-width: 0; padding: 1rem 1.15rem 1.4rem; }
 .build-view-title { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-07) 24%, transparent); }
-.build-view-title > div > span { color: var(--ro3-accent-05); font-size: 0.7rem; font-weight: 800; }
+.build-view-title > div > span { color: var(--ro3-accent-05); font-size: 0.75rem; font-weight: 800; }
 .build-view-title h3 { margin: 0.16rem 0 0; color: var(--ro3-tone-04); font-size: 1.25rem; }
-.build-view-title p { margin: 0.3rem 0 0; color: var(--ro3-tone-09); font-size: 0.73rem; }
+.build-view-title p { margin: 0.3rem 0 0; color: var(--ro3-tone-09); font-size: 0.75rem; }
 .build-view-title-actions button { border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 38%, transparent); background: color-mix(in srgb, var(--ro3-tone-20) 80%, transparent); }
-.build-stat-strip { display: flex; flex-wrap: wrap; gap: 0.35rem 1.2rem; padding: 0.65rem 0; color: var(--ro3-tone-09); font-size: 0.68rem; }
+.build-stat-strip { display: flex; flex-wrap: wrap; gap: 0.35rem 1.2rem; padding: 0.65rem 0; color: var(--ro3-tone-09); font-size: 0.75rem; }
 .build-stat-strip span { display: inline-flex; align-items: center; gap: 0.25rem; }
 .build-stat-strip svg { width: 0.8rem; height: 0.8rem; color: var(--ro3-accent-06); }
 .build-section { padding: 0.75rem 0 0.85rem; border-top: 1px solid color-mix(in srgb, var(--ro3-tone-07) 20%, transparent); }
@@ -1154,48 +1149,48 @@
 .build-section-action { display: inline-grid; width: 1.7rem; height: 1.7rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 32%, transparent); border-radius: 50%; color: var(--ro3-tone-06); background: color-mix(in srgb, var(--ro3-tone-17) 72%, transparent); cursor: pointer; }
 .build-section-action:hover, .build-section-action:focus-visible { border-color: var(--ro3-accent-07); color: var(--ro3-tone-04); background: var(--ro3-tone-15); outline: 0; }
 .build-section-action svg { width: .9rem; height: .9rem; }
-.build-section > header span, .build-editor-section > header span { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; font-weight: 850; }
+.build-section > header span, .build-editor-section > header span { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; font-weight: 850; }
 .build-section > header svg, .build-editor-section > header svg { width: 0.85rem; height: 0.85rem; }
 .build-chip-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .build-chip { display: inline-flex; min-width: 9rem; align-items: center; gap: 0.4rem; padding: 0.35rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 25%, transparent); background: color-mix(in srgb, var(--ro3-tone-22) 65%, transparent); }
 .build-chip.build-hover-target { position: relative; cursor: help; }
 .build-hover-target { position: relative; }
 .build-hover-card { position: absolute; z-index: 30; left: 0; bottom: calc(100% + .45rem); display: grid; width: min(20rem, 78vw); gap: .24rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-11) 70%, transparent); color: var(--ro3-tone-05); background: linear-gradient(145deg, var(--ro3-tone-20), var(--ro3-tone-18)); box-shadow: 0 .7rem 1.8rem color-mix(in srgb, var(--ro3-tone-03) 24%, transparent); opacity: 0; pointer-events: none; transform: translateY(.25rem); transition: opacity var(--arkive-motion-immediate) var(--arkive-motion-easing), transform var(--arkive-motion-immediate) var(--arkive-motion-easing); }
-.build-hover-card strong { color: var(--ro3-tone-04); font-size: .74rem; font-weight: 850; }
-.build-hover-card > span { color: var(--ro3-tone-07); font-size: .64rem; line-height: 1.45; }
+.build-hover-card strong { color: var(--ro3-tone-04); font-size: 0.75rem; font-weight: 850; }
+.build-hover-card > span { color: var(--ro3-tone-07); font-size: 0.75rem; line-height: 1.45; }
 .build-hover-target:hover > .build-hover-card, .build-hover-target:focus-within > .build-hover-card { opacity: 1; transform: translateY(0); }
-.build-chip-more { display: inline-flex; align-items: center; padding: .35rem .5rem; color: var(--ro3-tone-09); font-size: .68rem; }
+.build-chip-more { display: inline-flex; align-items: center; padding: .35rem .5rem; color: var(--ro3-tone-09); font-size: 0.75rem; }
 .build-card-chip-row { display: inline-flex; flex-wrap: wrap; gap: .3rem; margin-left: .25rem; vertical-align: middle; }
 .build-card-chip-row .build-chip { min-width: 8rem; padding: .2rem; }
 .build-card-chip-row .build-chip img, .build-card-chip-row .build-chip-placeholder { width: 1.7rem; height: 1.7rem; }
 .build-chip img, .build-chip-placeholder { display: grid; width: 2.1rem; height: 2.1rem; place-items: center; object-fit: contain; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 25%, transparent); background: var(--ro3-tone-17); }
 .build-chip-placeholder svg { width: 0.9rem; color: var(--ro3-tone-11); }
 .build-chip > span:last-child { display: grid; gap: 0.12rem; min-width: 0; }
-.build-chip strong { overflow: hidden; color: var(--ro3-tone-05); font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
-.build-chip small { color: var(--ro3-tone-10); font-size: 0.63rem; }
-.build-section-empty { color: var(--ro3-tone-11); font-size: 0.7rem; }
+.build-chip strong { overflow: hidden; color: var(--ro3-tone-05); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
+.build-chip small { color: var(--ro3-tone-10); font-size: 0.75rem; }
+.build-section-empty { color: var(--ro3-tone-11); font-size: 0.75rem; }
 .build-attribute-grid { display: grid; grid-template-columns: repeat(6, minmax(5rem, 1fr)); gap: 0.35rem; }
 .build-attribute-grid div { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.5rem; background: color-mix(in srgb, var(--ro3-tone-18) 50%, transparent); }
-.build-attribute-grid span { color: var(--ro3-tone-09); font-size: 0.7rem; }
-.build-attribute-grid strong { color: var(--ro3-accent-05); font-size: 0.85rem; }
+.build-attribute-grid span { color: var(--ro3-tone-09); font-size: 0.75rem; }
+.build-attribute-grid strong { color: var(--ro3-accent-05); font-size: 0.875rem; }
 .build-editor { padding: 1rem 1.15rem 1.3rem; }
 .build-editor-form { display: grid; grid-template-columns: 1.1fr 0.8fr 2fr; gap: 0.55rem; padding-bottom: 0.9rem; }
-.build-editor-form label, .editor-attribute-grid label { display: grid; gap: 0.3rem; color: var(--ro3-tone-07); font-size: 0.7rem; font-weight: 800; }
-.build-editor-form input, .build-editor-form select, .build-editor-form textarea, .editor-attribute-grid input { width: 100%; min-height: 2.25rem; padding: 0.45rem 0.55rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 34%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-22) 84%, transparent); font: inherit; font-size: 0.74rem; }
+.build-editor-form label, .editor-attribute-grid label { display: grid; gap: 0.3rem; color: var(--ro3-tone-07); font-size: 0.75rem; font-weight: 800; }
+.build-editor-form input, .build-editor-form select, .build-editor-form textarea, .editor-attribute-grid input { width: 100%; min-height: 2.25rem; padding: 0.45rem 0.55rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 34%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-22) 84%, transparent); font: inherit; font-size: 0.75rem; }
 .build-editor-form textarea { min-height: 4.4rem; resize: vertical; }
 .build-editor-section { padding: 0.75rem 0; border-top: 1px solid color-mix(in srgb, var(--ro3-tone-07) 22%, transparent); }
-.build-editor-section > header small { color: var(--ro3-tone-11); font-size: 0.66rem; }
+.build-editor-section > header small { color: var(--ro3-tone-11); font-size: 0.75rem; }
 .editor-attribute-grid { display: grid; grid-template-columns: repeat(6, minmax(5rem, 1fr)); gap: 0.45rem; }
 .editor-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: 0.4rem; max-height: 15rem; overflow-y: auto; padding: 0.1rem; }
 .editor-picker-search { display: block; margin-bottom: 0.45rem; }
-.editor-picker-search input { width: min(24rem, 100%); min-height: 2rem; padding: 0.35rem 0.5rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 30%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-22) 80%, transparent); font: inherit; font-size: 0.7rem; }
+.editor-picker-search input { width: min(24rem, 100%); min-height: 2rem; padding: 0.35rem 0.5rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 30%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-22) 80%, transparent); font: inherit; font-size: 0.75rem; }
 .editor-picker-grid button { position: relative; display: grid; grid-template-columns: 2.3rem minmax(0, 1fr); align-items: center; gap: 0.4rem; min-height: 3rem; padding: 0.3rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); color: var(--ro3-tone-06); background: color-mix(in srgb, var(--ro3-tone-22) 60%, transparent); text-align: left; cursor: pointer; }
 .editor-picker-grid button:hover, .editor-picker-grid button.is-selected { border-color: var(--ro3-accent-07); background: color-mix(in srgb, var(--ro3-tone-17) 60%, transparent); }
 .editor-picker-grid button > svg { position: absolute; top: 0.25rem; right: 0.25rem; width: 0.8rem; height: 0.8rem; color: var(--ro3-accent-05); }
 .editor-picker-art { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 25%, transparent); background: var(--ro3-tone-17); }
 .editor-picker-art img { width: 100%; height: 100%; object-fit: contain; }
 .editor-picker-art svg { width: 0.9rem; color: var(--ro3-tone-11); }
-.editor-picker-grid button > span:last-of-type { overflow: hidden; font-size: 0.67rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.editor-picker-grid button > span:last-of-type { overflow: hidden; font-size: 0.75rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .build-editor-footer { display: flex; gap: 0.5rem; padding-top: 0.85rem; }
 .build-save-button { color: var(--ro3-tone-21); background: var(--ro3-accent-05); }
 .build-editor-footer .build-publish-button { border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 32%, transparent); }
@@ -1204,46 +1199,46 @@
 .build-editor-form { grid-template-columns: minmax(10rem, 1fr) minmax(8rem, .7fr) minmax(10rem, .9fr) minmax(14rem, 1.8fr); }
 .build-summary-field { grid-column: span 1; }
 .build-stage-strip { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .5rem; }
-.build-stage-strip span { padding: .25rem .45rem; color: var(--ro3-tone-08); background: color-mix(in srgb, var(--ro3-tone-18) 45%, transparent); font-size: .66rem; }
+.build-stage-strip span { padding: .25rem .45rem; color: var(--ro3-tone-08); background: color-mix(in srgb, var(--ro3-tone-18) 45%, transparent); font-size: 0.75rem; }
 .build-config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .55rem; }
 .build-config-card { padding: .55rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 25%, transparent); background: color-mix(in srgb, var(--ro3-tone-22) 55%, transparent); }
 .build-config-head { display: flex; align-items: center; gap: .45rem; }
 .build-config-head img { width: 2.45rem; height: 2.45rem; object-fit: contain; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 25%, transparent); background: var(--ro3-tone-17); }
 .build-config-head > svg { width: 1.25rem; height: 1.25rem; color: var(--ro3-tone-11); }
 .build-config-head div { display: grid; min-width: 0; gap: .12rem; }
-.build-config-head strong { overflow: hidden; color: var(--ro3-tone-05); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
-.build-config-head small, .build-config-lines span { color: var(--ro3-tone-10); font-size: .63rem; }
+.build-config-head strong { overflow: hidden; color: var(--ro3-tone-05); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
+.build-config-head small, .build-config-lines span { color: var(--ro3-tone-10); font-size: 0.75rem; }
 .build-config-lines { display: grid; gap: .2rem; margin-top: .45rem; }
 .build-config-editor-list { display: grid; gap: .55rem; }
 .build-equip-editor, .build-soul-editor { padding: .65rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); background: color-mix(in srgb, var(--ro3-tone-22) 48%, transparent); }
-.build-config-editor-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .45rem; color: var(--ro3-accent-03); font-size: .74rem; }
+.build-config-editor-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .45rem; color: var(--ro3-accent-03); font-size: 0.75rem; }
 .build-config-editor-head button { display: inline-grid; width: 1.7rem; height: 1.7rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); color: var(--ro3-tone-10); background: transparent; cursor: pointer; }
 .build-config-editor-head svg { width: .8rem; height: .8rem; }
 .build-editor-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(7rem, .7fr); gap: .45rem; }
-.build-editor-grid label { display: grid; gap: .25rem; color: var(--ro3-tone-07); font-size: .66rem; font-weight: 800; }
-.build-editor-grid select, .build-socket-row select { width: 100%; min-height: 2rem; padding: .32rem .42rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 30%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-22) 84%, transparent); font: inherit; font-size: .68rem; }
+.build-editor-grid label { display: grid; gap: .25rem; color: var(--ro3-tone-07); font-size: 0.75rem; font-weight: 800; }
+.build-editor-grid select, .build-socket-row select { width: 100%; min-height: 2rem; padding: .32rem .42rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 30%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-22) 84%, transparent); font: inherit; font-size: 0.75rem; }
 .build-entry-group, .build-soul-options { display: grid; gap: .3rem; margin-top: .55rem; }
-.build-entry-group > span, .build-soul-options > span { color: var(--ro3-tone-08); font-size: .66rem; font-weight: 800; }
+.build-entry-group > span, .build-soul-options > span { color: var(--ro3-tone-08); font-size: 0.75rem; font-weight: 800; }
 .build-entry-group > div, .build-soul-options > div { display: flex; flex-wrap: wrap; gap: .28rem; }
-.build-entry-group button, .build-soul-options button { padding: .25rem .38rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); color: var(--ro3-tone-07); background: color-mix(in srgb, var(--ro3-tone-22) 65%, transparent); font: inherit; font-size: .63rem; cursor: pointer; }
+.build-entry-group button, .build-soul-options button { padding: .25rem .38rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); color: var(--ro3-tone-07); background: color-mix(in srgb, var(--ro3-tone-22) 65%, transparent); font: inherit; font-size: 0.75rem; cursor: pointer; }
 .build-entry-group button:hover, .build-entry-group button.is-selected, .build-soul-options button:hover, .build-soul-options button.is-selected { border-color: var(--ro3-accent-07); color: var(--ro3-accent-02); background: color-mix(in srgb, var(--ro3-tone-17) 72%, transparent); }
-.build-entry-group small, .build-editor-muted { color: var(--ro3-tone-11); font-size: .64rem; }
+.build-entry-group small, .build-editor-muted { color: var(--ro3-tone-11); font-size: 0.75rem; }
 .build-socket-row { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
-.build-add-row { display: inline-flex; align-items: center; justify-content: center; gap: .3rem; min-height: 2.1rem; border: 1px dashed color-mix(in srgb, var(--ro3-accent-05) 45%, transparent); color: var(--ro3-tone-08); background: color-mix(in srgb, var(--ro3-tone-22) 38%, transparent); font: inherit; font-size: .68rem; cursor: pointer; }
+.build-add-row { display: inline-flex; align-items: center; justify-content: center; gap: .3rem; min-height: 2.1rem; border: 1px dashed color-mix(in srgb, var(--ro3-accent-05) 45%, transparent); color: var(--ro3-tone-08); background: color-mix(in srgb, var(--ro3-tone-22) 38%, transparent); font: inherit; font-size: 0.75rem; cursor: pointer; }
 .build-add-row:hover { border-color: var(--ro3-accent-05); color: var(--ro3-accent-02); background: color-mix(in srgb, var(--ro3-tone-17) 50%, transparent); }
 .build-add-row:disabled { cursor: not-allowed; opacity: .55; }
-.editor-picker-count { display: block; margin-top: .35rem; color: var(--ro3-tone-11); font-size: .64rem; }
+.editor-picker-count { display: block; margin-top: .35rem; color: var(--ro3-tone-11); font-size: 0.75rem; }
 .equipment-choice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: .35rem; max-height: 13rem; overflow-y: auto; padding: .1rem; }
 .equipment-choice-grid button { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; gap: .12rem .35rem; min-height: 3.1rem; padding: .3rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); color: var(--ro3-tone-06); background: color-mix(in srgb, var(--ro3-tone-22) 60%, transparent); text-align: left; cursor: pointer; }
 .equipment-choice-grid button:hover, .equipment-choice-grid button.is-selected { border-color: var(--ro3-accent-07); background: color-mix(in srgb, var(--ro3-tone-17) 72%, transparent); }
 .equipment-choice-art { display: grid; grid-row: 1 / span 2; width: 2.2rem; height: 2.2rem; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 25%, transparent); background: var(--ro3-tone-17); }
 .equipment-choice-art img { width: 100%; height: 100%; object-fit: contain; }
 .equipment-choice-art svg { width: .9rem; color: var(--ro3-tone-11); }
-.equipment-choice-grid button > span:not(.equipment-choice-art) { overflow: hidden; font-size: .66rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.equipment-choice-grid button small { overflow: hidden; color: var(--ro3-tone-10); font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
-.equipment-selected-preview { display: flex; align-items: center; gap: .35rem; min-height: 2rem; margin-top: 1.15rem; color: var(--ro3-tone-08); font-size: .64rem; }
+.equipment-choice-grid button > span:not(.equipment-choice-art) { overflow: hidden; font-size: 0.75rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-choice-grid button small { overflow: hidden; color: var(--ro3-tone-10); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
+.equipment-selected-preview { display: flex; align-items: center; gap: .35rem; min-height: 2rem; margin-top: 1.15rem; color: var(--ro3-tone-08); font-size: 0.75rem; }
 .equipment-selected-preview img { width: 2rem; height: 2rem; object-fit: contain; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); background: var(--ro3-tone-17); }
-.build-config-editor-head small { color: var(--ro3-tone-11); font-size: .64rem; font-weight: 500; }
+.build-config-editor-head small { color: var(--ro3-tone-11); font-size: 0.75rem; font-weight: 500; }
 .build-equipment-slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: .55rem; }
 .build-equipment-slot-card { display: grid; width: 100%; grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: center; gap: .55rem; min-height: 5.2rem; padding: .55rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 28%, transparent); color: var(--ro3-tone-05); background: linear-gradient(135deg, color-mix(in srgb, var(--ro3-tone-22) 88%, transparent), color-mix(in srgb, var(--ro3-tone-18) 62%, transparent)); text-align: left; cursor: pointer; transition: border-color var(--arkive-motion-immediate) var(--arkive-motion-easing), background var(--arkive-motion-immediate) var(--arkive-motion-easing), transform var(--arkive-motion-immediate) var(--arkive-motion-easing); }
 .build-equipment-slot-card:hover, .build-equipment-slot-card:focus-visible { border-color: var(--ro3-accent-07); background: linear-gradient(135deg, color-mix(in srgb, var(--ro3-tone-22) 98%, transparent), color-mix(in srgb, var(--ro3-tone-17) 82%, transparent)); outline: 0; }
@@ -1252,14 +1247,14 @@
 .build-equipment-slot-art img { width: 100%; height: 100%; object-fit: contain; }
 .build-equipment-slot-art svg { width: 1.25rem; height: 1.25rem; color: var(--ro3-tone-11); }
 .build-equipment-slot-copy { display: grid; min-width: 0; gap: .16rem; }
-.build-equipment-slot-copy strong { color: var(--ro3-accent-03); font-size: .72rem; font-weight: 850; }
-.build-equipment-slot-copy span { overflow: hidden; color: var(--ro3-tone-05); font-size: .7rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.build-equipment-slot-copy small { color: var(--ro3-tone-10); font-size: .63rem; }
-.build-equipment-slot-action { padding: .2rem .35rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 28%, transparent); color: var(--ro3-tone-08); background: color-mix(in srgb, var(--ro3-tone-22) 72%, transparent); font-size: .62rem; font-weight: 800; white-space: nowrap; }
+.build-equipment-slot-copy strong { color: var(--ro3-accent-03); font-size: 0.75rem; font-weight: 850; }
+.build-equipment-slot-copy span { overflow: hidden; color: var(--ro3-tone-05); font-size: 0.75rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.build-equipment-slot-copy small { color: var(--ro3-tone-10); font-size: 0.75rem; }
+.build-equipment-slot-action { padding: .2rem .35rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 28%, transparent); color: var(--ro3-tone-08); background: color-mix(in srgb, var(--ro3-tone-22) 72%, transparent); font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
 .build-equipment-modal-backdrop { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 1rem; background: color-mix(in srgb, var(--ro3-tone-02) 58%, transparent); backdrop-filter: blur(.16rem); }
 .build-equipment-modal { width: min(58rem, 100%); max-height: min(90dvh, 48rem); overflow-y: auto; padding: .9rem; border: 1px solid color-mix(in srgb, var(--ro3-accent-10) 70%, transparent); background: linear-gradient(145deg, var(--ro3-tone-20), var(--ro3-tone-19)); box-shadow: 0 1.2rem 3rem color-mix(in srgb, var(--ro3-tone-02) 30%, transparent); }
 .build-equipment-modal .build-config-editor-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: .55rem; padding-bottom: .65rem; border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); }
-.build-equipment-modal .build-config-editor-head strong { color: var(--ro3-tone-04); font-size: .88rem; }
+.build-equipment-modal .build-config-editor-head strong { color: var(--ro3-tone-04); font-size: 0.875rem; }
 .build-equipment-modal-close { display: inline-grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 30%, transparent); color: var(--ro3-accent-03); background: color-mix(in srgb, var(--ro3-tone-22) 72%, transparent); cursor: pointer; }
 .build-equipment-modal-close:hover, .build-equipment-modal-close:focus-visible { border-color: var(--ro3-accent-07); background: var(--ro3-tone-17); outline: 0; }
 .build-equipment-modal-close svg { width: 1rem; height: 1rem; }
@@ -1273,7 +1268,7 @@
 .game-build-panel { min-width: 0; border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-08) 28%, transparent); background: color-mix(in srgb, var(--ro3-tone-21) 54%, transparent); }
 .game-build-panel:last-child { border-bottom: 0; }
 .game-build-panel > header { display: flex; min-height: 2.35rem; align-items: center; justify-content: space-between; gap: .5rem; padding: .35rem .65rem; border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-08) 24%, transparent); background: transparent; color: var(--ro3-tone-05); }
-.game-build-panel > header > span { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; font-weight: 900; }
+.game-build-panel > header > span { display: inline-flex; align-items: center; gap: .35rem; font-size: 0.75rem; font-weight: 900; }
 .game-build-panel > header svg { width: 1rem; height: 1rem; color: var(--ro3-accent-04); }
 .game-build-panel > header button { display: inline-grid; width: 1.7rem; height: 1.7rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 35%, transparent); border-radius: 50%; color: var(--ro3-tone-06); background: color-mix(in srgb, var(--ro3-tone-21) 65%, transparent); cursor: pointer; }
 .game-build-panel > header button:hover, .game-build-panel > header button:focus-visible { border-color: var(--ro3-accent-06); background: var(--ro3-tone-16); outline: 0; }
@@ -1296,24 +1291,24 @@
 .game-build-slot:focus-visible { outline: 2px solid var(--ro3-gold-06); outline-offset: .15rem; }
 .game-build-slot-frame { position: relative; display: grid; width: 3.45rem; height: 3.45rem; place-items: center; overflow: hidden; border: 2px solid color-mix(in srgb, var(--ro3-gold-06) 70%, transparent); background: var(--ro3-tone-18) url('./assets/native-ui/skill_bg_title_03.png') center / 100% 100% no-repeat; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ro3-tone-21) 65%, transparent); }
 .game-build-slot-frame img { width: 100%; height: 100%; object-fit: contain; }
-.game-build-slot-frame small { position: absolute; right: .1rem; bottom: .05rem; padding: .02rem .14rem; color: var(--ro3-tone-21); background: color-mix(in srgb, var(--ro3-tone-03) 80%, transparent); font-size: .56rem; font-weight: 900; line-height: 1.2; }
+.game-build-slot-frame small { position: absolute; right: .1rem; bottom: .05rem; padding: .02rem .14rem; color: var(--ro3-tone-21); background: color-mix(in srgb, var(--ro3-tone-03) 80%, transparent); font-size: 0.75rem; font-weight: 900; line-height: 1.2; }
 .game-build-slot-empty-mark { color: color-mix(in srgb, var(--ro3-tone-08) 42%, transparent); font-size: 1.5rem; font-weight: 300; }
 .game-build-slot.is-empty .game-build-slot-frame { border-style: dashed; opacity: .7; }
-.game-build-slot strong { width: 100%; overflow: hidden; color: var(--ro3-tone-06); font-size: .62rem; font-weight: 800; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-.game-build-slot-effects { display: block; width: 100%; overflow: hidden; color: var(--ro3-tone-08); font-size: .56rem; line-height: 1.3; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.game-build-slot strong { width: 100%; overflow: hidden; color: var(--ro3-tone-06); font-size: 0.75rem; font-weight: 800; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.game-build-slot-effects { display: block; width: 100%; overflow: hidden; color: var(--ro3-tone-08); font-size: 0.75rem; line-height: 1.3; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .game-build-slot.is-portrait .game-build-slot-frame { border-radius: 50%; }
 .game-build-slot.is-card .game-build-slot-frame { width: 3.2rem; height: 4rem; border-width: 1px; }
 .game-build-slot.is-diamond .game-build-slot-frame { transform: rotate(45deg); border-color: color-mix(in srgb, var(--ro3-gold-04) 84%, transparent); }
 .game-build-slot.is-diamond .game-build-slot-frame img, .game-build-slot.is-diamond .game-build-slot-frame small { transform: rotate(-45deg); }
 .game-build-attributes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
 .game-build-attributes > div { display: flex; align-items: center; justify-content: space-between; min-height: 2rem; padding: .3rem .45rem; background: color-mix(in srgb, var(--ro3-tone-17) 55%, transparent); }
-.game-build-attributes span { color: var(--ro3-tone-07); font-size: .66rem; font-weight: 800; }
+.game-build-attributes span { color: var(--ro3-tone-07); font-size: 0.75rem; font-weight: 800; }
 .game-build-attributes span { display: inline-flex; align-items: center; gap: .22rem; }
 .game-build-attributes span img { width: 1rem; height: 1rem; object-fit: contain; }
 .game-build-attributes span img { filter: brightness(0) saturate(100%); opacity: .7; }
-.game-build-attributes strong { color: var(--ro3-accent-03); font-size: .85rem; }
+.game-build-attributes strong { color: var(--ro3-accent-03); font-size: 0.875rem; }
 .game-pet-roster { display: grid; gap: .35rem; }
-.game-pet-roster > span { color: var(--ro3-tone-08); font-size: .64rem; font-weight: 900; }
+.game-pet-roster > span { color: var(--ro3-tone-08); font-size: 0.75rem; font-weight: 900; }
 .game-pet-mode-label { display: inline-flex; align-items: center; gap: .25rem; }
 .game-pet-mode-label img { width: 1.85rem; height: 1.85rem; object-fit: contain; }
 .game-pet-roster .game-build-slots { padding: 0; }
@@ -1329,7 +1324,7 @@
    label wrapped under its own icon and spilled over the select. */
 .build-view-title-actions { display: flex; flex: none; align-items: center; gap: .5rem; }
 .build-view-title-actions button { white-space: nowrap; }
-.build-view-build-select select { min-height: 2.25rem; min-width: 9rem; padding: 0 .65rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 38%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-20) 88%, transparent); font: inherit; font-size: .72rem; font-weight: 800; }
+.build-view-build-select select { min-height: 2.25rem; min-width: 9rem; padding: 0 .65rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 38%, transparent); color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-20) 88%, transparent); font: inherit; font-size: 0.75rem; font-weight: 800; }
 .game-build-manual, .game-build-column, .game-build-panel { overflow: visible; }
 .game-build-slot > .build-hover-card { z-index: 999; visibility: hidden; }
 .game-build-slot:hover > .build-hover-card, .game-build-slot:focus-within > .build-hover-card { visibility: visible; }
@@ -1392,9 +1387,9 @@
   border: 1px solid color-mix(in srgb, var(--ro3-gold-05) 38%, transparent);
   color: var(--ro3-gold-03);
   background: color-mix(in srgb, var(--ro3-tone-20) 90%, transparent);
-  font-size: .54rem;
+  font-size: 0.75rem;
 }
-.game-build-slot.is-skill .game-build-slot-frame small { right: 50%; bottom: .08rem; transform: translateX(50%); min-width: 2.05rem; padding: 0 .16rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-21) 95%, transparent); color: #fff; background: color-mix(in srgb, var(--ro3-tone-03) 82%, transparent); font-size: .68rem; line-height: 1.2; text-align: center; text-shadow: 0 1px 1px #000; }
+.game-build-slot.is-skill .game-build-slot-frame small { right: 50%; bottom: .08rem; transform: translateX(50%); min-width: 2.05rem; padding: 0 .16rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-21) 95%, transparent); color: #fff; background: color-mix(in srgb, var(--ro3-tone-03) 82%, transparent); font-size: 0.75rem; line-height: 1.2; text-align: center; text-shadow: 0 1px 1px #000; }
 .game-build-slot.is-equipment .game-build-slot-frame {
   width: 4.5rem;
   height: 4.5rem;
@@ -1402,7 +1397,7 @@
   background-image: url('./assets/native-ui/genre/genremanual_img_equip_bar_01.webp');
 }
 .game-build-slot.is-equipment .game-build-slot-frame { border: 2px solid var(--ro3-tone-10); background-color: var(--ro3-tone-19); }
-.game-build-slot.is-equipment .game-build-slot-frame small { top: .18rem; right: auto; bottom: auto; left: .2rem; padding: 0 .12rem; border: 0; color: #774b99; background: color-mix(in srgb, var(--ro3-tone-20) 90%, transparent); font-size: .72rem; line-height: 1.15; text-shadow: 0 1px 0 #fff; }
+.game-build-slot.is-equipment .game-build-slot-frame small { top: .18rem; right: auto; bottom: auto; left: .2rem; padding: 0 .12rem; border: 0; color: #774b99; background: color-mix(in srgb, var(--ro3-tone-20) 90%, transparent); font-size: 0.75rem; line-height: 1.15; text-shadow: 0 1px 0 #fff; }
 .game-build-slot.is-equipment.is-quality-1 .game-build-slot-frame { border-color: #8f8f8f; background-color: #dcdcdc; }
 .game-build-slot.is-equipment.is-quality-2 .game-build-slot-frame { border-color: #74a96c; background-color: #d7ebd0; }
 .game-build-slot.is-equipment.is-quality-3 .game-build-slot-frame { border-color: #5f91c8; background-color: #d5e6f7; }
@@ -1455,7 +1450,7 @@
 .game-build-slot.is-diamond .game-build-slot-frame small { transform: none; }
 /* The name under a slot is page text, not part of the slot artwork, so it
    follows the theme even though the slot's own palette is pinned. */
-.game-build-slot strong { color: var(--foreground); font-size: .64rem; }
+.game-build-slot strong { color: var(--foreground); font-size: 0.75rem; }
 .game-build-slot.is-card strong {
   box-sizing: border-box;
   width: 100%;
@@ -1511,8 +1506,8 @@
 .game-pet-effect-summary span:nth-of-type(1) { grid-column: 1; grid-row: 3; }
 .game-pet-effect-summary span:nth-of-type(2) { grid-column: 2; grid-row: 3; }
 .game-pet-effect-summary img { width: 2rem; height: 2rem; object-fit: contain; }
-.game-pet-effect-summary strong { font-size: .61rem; }
-.game-pet-effect-summary span { color: var(--ro3-tone-10); font-size: .56rem; }
+.game-pet-effect-summary strong { font-size: 0.75rem; }
+.game-pet-effect-summary span { color: var(--ro3-tone-10); font-size: 0.75rem; }
 .game-pet-effect-summary span { max-width: 4.6rem; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .game-pet-effect-summary { grid-template-columns: repeat(2, 2rem); grid-template-rows: repeat(2, 2rem); min-height: 11.5rem; gap: .35rem; align-content: center; }
 .game-pet-effect-summary span { display: grid; width: 2rem; height: 2rem; place-items: center; max-width: none; }
@@ -1529,14 +1524,14 @@
   color: var(--ro3-accent-03);
 }
 .game-soul-resonance-summary img { width: 1.45rem; height: 1.45rem; object-fit: contain; }
-.game-soul-resonance-summary strong { font-size: .62rem; }
-.game-soul-resonance-summary small { color: var(--ro3-tone-10); font-size: .52rem; }
+.game-soul-resonance-summary strong { font-size: 0.75rem; }
+.game-soul-resonance-summary small { color: var(--ro3-tone-10); font-size: 0.75rem; }
 .game-build-unavailable {
   display: grid;
   min-height: 5rem;
   place-items: center;
   color: var(--ro3-tone-13);
-  font-size: .72rem;
+  font-size: 0.75rem;
   background: transparent;
 }
 .game-build-slot.is-card strong,
@@ -1546,7 +1541,7 @@
 .game-soul-notes { display: flex; justify-content: center; gap: .08rem; margin-top: -.35rem; }
 .game-soul-notes img { width: .7rem; height: .7rem; object-fit: contain; }
 .game-build-slot.is-soul .game-build-slot-frame { background-color: var(--ro3-gold-09); background-image: url('./assets/native-ui/genre/genremanual_bg_property_10.webp'); background-blend-mode: multiply; }
-.game-build-slot.is-soul .game-build-slot-frame small { top: .1rem; right: auto; bottom: auto; left: .12rem; padding: 0 .14rem; border: 0; color: #fff; background: color-mix(in srgb, var(--ro3-tone-02) 88%, transparent); font-size: .7rem; line-height: 1.2; }
+.game-build-slot.is-soul .game-build-slot-frame small { top: .1rem; right: auto; bottom: auto; left: .12rem; padding: 0 .14rem; border: 0; color: #fff; background: color-mix(in srgb, var(--ro3-tone-02) 88%, transparent); font-size: 0.75rem; line-height: 1.2; }
 .game-soul-notes { gap: .04rem; margin-top: -.25rem; }
 .game-soul-notes img { width: .78rem; height: .78rem; }
 .game-build-slot.is-soul .game-soul-notes { width: 4.35rem; justify-content: space-between; padding: .1rem .12rem 0; background: #3d3c38; }
@@ -1622,7 +1617,6 @@ button,
 input,
 select {
   font: inherit;
-  letter-spacing: 0;
 }
 
 button,
@@ -1764,18 +1758,15 @@ select {
 .ro3-identity > span {
   display: block;
   color: rgba(255, 255, 255, 0.74);
-  font-family: Georgia, "Times New Roman", serif;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
 }
 
 .ro3-identity h1 {
   margin: 0.35rem 0 0.3rem;
-  font-size: 2.5rem;
+  font-size: 1.875rem;
   font-weight: 800;
   line-height: 1.2;
-  letter-spacing: 0;
 }
 
 .ro3-identity p {
@@ -1898,13 +1889,12 @@ select {
   font-size: 1.5rem;
   font-weight: 800;
   line-height: var(--arkive-leading-title);
-  letter-spacing: 0;
 }
 
 .ro3-section-heading p {
   margin: 0.4rem 0 0;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: var(--arkive-leading-body);
 }
 
@@ -1961,7 +1951,7 @@ select {
 .ro3-catalog-card strong {
   grid-row: 1;
   grid-column: 2;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 750;
 }
 
@@ -2023,7 +2013,6 @@ select {
   font-size: 1.125rem;
   font-weight: 800;
   line-height: var(--arkive-leading-title);
-  letter-spacing: 0;
 }
 
 .destination-panel p {
@@ -2145,7 +2134,7 @@ select {
 }
 
 .ro3-toast strong {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .ro3-toast small {
@@ -2177,7 +2166,7 @@ select {
   border: 0;
   color: var(--muted-foreground);
   background: transparent;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -2195,23 +2184,20 @@ select {
 .wiki-section-heading > div > span {
   display: block;
   color: var(--arkive-nav-active);
-  font-family: Georgia, "Times New Roman", serif;
   font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
 }
 
 .wiki-title-block h1 {
   margin: 0.15rem 0 0.25rem;
-  font-size: 1.625rem;
+  font-size: 1.5rem;
   line-height: 1.2;
-  letter-spacing: 0;
 }
 
 .wiki-title-block p {
   margin: 0;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-stats {
@@ -2385,7 +2371,7 @@ select {
 .wiki-profession-summary-copy p {
   margin: 0.25rem 0 0;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 
@@ -2404,7 +2390,7 @@ select {
 
 .wiki-profession-summary-stats dt {
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .wiki-profession-summary-stats dd {
@@ -2425,9 +2411,8 @@ select {
 
 .wiki-section-heading h2 {
   margin: 0.2rem 0 0;
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   line-height: 1.25;
-  letter-spacing: 0;
 }
 
 .wiki-section-heading > small,
@@ -2552,7 +2537,7 @@ select {
   max-width: 44rem;
   margin: 0.45rem 0 0;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.6;
 }
 
@@ -2613,7 +2598,7 @@ select {
   outline: 0;
   color: var(--foreground);
   background: transparent;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-search button {
@@ -2646,7 +2631,7 @@ select {
   outline: 0;
   color: var(--foreground);
   background: var(--card);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 
@@ -2726,7 +2711,7 @@ select {
 .wiki-skill-row > * {
   min-width: 0;
   padding: 0.625rem 0.875rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-skill-row > * + * {
@@ -2748,7 +2733,6 @@ select {
   display: grid;
   gap: 0.2rem;
   color: var(--arkive-nav-active);
-  font-family: "Arkive Sans", "Segoe UI", sans-serif;
   font-size: 0.875rem;
 }
 
@@ -2774,8 +2758,7 @@ select {
 .wiki-skill-row > strong small {
   overflow: hidden;
   color: var(--muted-foreground);
-  font-family: "Arkive Sans", "Segoe UI", sans-serif;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2786,7 +2769,7 @@ select {
 }
 
 .wiki-skill-row > span:nth-child(3) b {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-skill-row > span:nth-child(3) small {
@@ -2848,7 +2831,7 @@ select {
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.625rem 0.875rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-card-row > * + * {
@@ -3023,14 +3006,13 @@ select {
 .wiki-card-dialog-body h2 {
   margin: 0;
   color: var(--foreground);
-  font-family: "Arkive Display", "Arkive Sans", "Segoe UI", sans-serif;
-  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-size: 1.5rem;
 }
 
 .wiki-card-dialog-body > p {
   margin: 0;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.6;
 }
 
@@ -3051,7 +3033,7 @@ select {
 
 .wiki-card-detail-grid dt {
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .wiki-card-detail-grid dd {
@@ -3084,7 +3066,7 @@ select {
   border-radius: var(--arkive-radius-compact);
   color: var(--foreground);
   background: var(--background);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .wiki-card-detail-evidence {
@@ -3106,7 +3088,7 @@ select {
 .wiki-card-detail-evidence p {
   margin: 0;
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   line-height: 1.55;
 }
 
@@ -3177,7 +3159,6 @@ select {
 
 .wiki-skill-dialog-header h2 {
   margin: 0.2rem 0 0;
-  font-family: "Arkive Display", "Arkive Sans", "Segoe UI", sans-serif;
   font-size: 1.5rem;
   line-height: 1.25;
 }
@@ -3185,7 +3166,7 @@ select {
 .wiki-skill-dialog-header p {
   margin: 0.3rem 0 0;
   color: var(--muted-foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-skill-dialog-body {
@@ -3216,7 +3197,7 @@ select {
 }
 
 .wiki-skill-detail-status strong {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-skill-detail-status span {
@@ -3242,19 +3223,19 @@ select {
 
 .wiki-skill-detail-grid dt {
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .wiki-skill-detail-grid dd {
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-skill-detail-grid code {
   color: var(--arkive-nav-active);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.75rem;
 }
 
@@ -3289,7 +3270,7 @@ select {
 
 .wiki-skill-missing-field span {
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .wiki-skill-missing-field strong {
@@ -3326,7 +3307,6 @@ select {
 
 .wiki-skill-levels > h3 {
   margin: 0;
-  font-family: "Arkive Display", "Arkive Sans", "Segoe UI", sans-serif;
   font-size: 1rem;
 }
 
@@ -3342,13 +3322,13 @@ select {
 
 .wiki-skill-level-row > strong {
   color: var(--arkive-nav-active);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .wiki-skill-level-row > p {
   margin: 0;
   color: var(--foreground);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.6;
 }
 
@@ -3364,13 +3344,13 @@ select {
   display: flex;
   gap: 0.3rem;
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .wiki-skill-level-row > dl dd {
   margin: 0;
   color: var(--foreground);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 .wiki-skill-asset-evidence {
@@ -3405,7 +3385,7 @@ select {
 .wiki-skill-asset-evidence small {
   overflow-wrap: anywhere;
   color: var(--muted-foreground);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 79.999rem) {
@@ -3472,7 +3452,7 @@ select {
   }
 
   .wiki-title-block h1 {
-    font-size: 1.625rem;
+    font-size: 1.5rem;
   }
 
   .wiki-content {
@@ -3674,7 +3654,6 @@ select {
   min-width: 0;
   margin: 0;
   color: var(--ro3-tone-05);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 1.25rem;
   line-height: 1.3;
 }
@@ -4005,7 +3984,6 @@ select {
 
 .pet-detail-hero h3 {
   margin: 0.15rem 0 0;
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 1.25rem;
 }
 
@@ -4101,7 +4079,6 @@ select {
   gap: 0.35rem;
   margin: 0 0 0.35rem;
   color: var(--ro3-tone-05);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 0.875rem;
 }
 
@@ -4403,7 +4380,6 @@ select {
   overflow: hidden;
   margin: 0.15rem 0;
   color: var(--ro3-tone-04);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 1rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4702,9 +4678,7 @@ select {
 .skill-native-bar-title,
 .card-native-bar > strong {
   color: var(--ro3-tone-17);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.04em;
+  font-size: 1.125rem;
 }
 
 .skill-native-bar-state,
@@ -4807,8 +4781,7 @@ select {
 .skill-native-profession h2 {
   margin: 0.15rem 0 0;
   color: var(--ro3-tone-05);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
 }
 
 .skill-native-points {
@@ -4821,14 +4794,14 @@ select {
 
 .skill-native-points strong {
   color: #6b8d2c;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   line-height: 1;
 }
 
 .skill-native-points small {
   grid-column: 1 / -1;
   color: var(--ro3-tone-10);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .skill-native-school select {
@@ -4898,7 +4871,6 @@ select {
   place-items: center;
   color: var(--ro3-tone-08);
   background: var(--ro3-tone-18);
-  font-family: 'Arkive Display', sans-serif;
   font-weight: 800;
 }
 
@@ -4994,7 +4966,7 @@ select {
 
 .skill-native-node strong {
   color: var(--ro3-tone-05);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   text-shadow: 0 1px rgba(255, 255, 255, 0.75);
 }
 
@@ -5002,7 +4974,7 @@ select {
   max-width: 6.2rem;
   overflow: hidden;
   color: var(--ro3-tone-09);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5040,7 +5012,7 @@ select {
   align-items: center;
   gap: 0.4rem;
   color: var(--ro3-tone-10);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   line-height: 1.4;
   text-align: right;
 }
@@ -5071,8 +5043,7 @@ select {
 .card-native-center-head h2 {
   margin: 0;
   color: var(--ro3-tone-05);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
 }
 
 .card-catalog-toolbar {
@@ -5138,7 +5109,7 @@ select {
 
 .card-category-tabs small {
   color: var(--ro3-tone-11);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .card-native-toolbar {
@@ -5194,7 +5165,7 @@ select {
   border-radius: 50%;
   color: var(--ro3-tone-21);
   background: var(--ro3-accent-06);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .card-filter-panel {
@@ -5237,7 +5208,6 @@ select {
 
 .card-filter-panel > header strong {
   flex: 1;
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
   font-size: 1rem;
 }
 
@@ -5255,7 +5225,7 @@ select {
   border: 1px solid color-mix(in srgb, var(--ro3-tone-08) 38%, transparent);
   color: var(--ro3-tone-07);
   background: color-mix(in srgb, var(--ro3-tone-20) 75%, transparent);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   cursor: pointer;
 }
 
@@ -5328,7 +5298,7 @@ select {
 
 .card-filter-group button small {
   color: var(--ro3-tone-11);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .card-filter-group button:hover,
@@ -5414,16 +5384,16 @@ select {
   background: #c6d0bd url('./assets/native-ui/skill_bg_title_03.png') center / 100% 100%;
 }
 
-.card-tile-art span { color: var(--ro3-tone-06); font-family: 'Arkive Display', sans-serif; font-size: 1.5rem; }
+.card-tile-art span { color: var(--ro3-tone-06); font-size: 1.5rem; }
 .card-tile-art img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 .card-tile strong { overflow: hidden; font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
-.card-tile small { color: var(--ro3-tone-10); font-size: 0.6875rem; }
+.card-tile small { color: var(--ro3-tone-10); font-size: 0.75rem; }
 
-.card-tile-lock { position: absolute; top: 0.25rem; left: 0.35rem; color: #5a5b57; font-size: 0.8rem; }
+.card-tile-lock { position: absolute; top: 0.25rem; left: 0.35rem; color: #5a5b57; font-size: 0.75rem; }
 
 .card-weapon-emblem {
   position: absolute;
@@ -5450,7 +5420,7 @@ select {
   bottom: 0;
   left: 0;
   color: var(--ro3-tone-12);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   text-align: center;
 }
 
@@ -5505,18 +5475,17 @@ select {
 }
 
 .card-detail-heading h3 { margin: 0; color: var(--ro3-tone-05); font-size: 1rem; }
-.card-detail-heading span { color: var(--ro3-tone-10); font-size: 0.6875rem; }
+.card-detail-heading span { color: var(--ro3-tone-10); font-size: 0.75rem; }
 
 .card-detail-section-title {
   margin: 0 0 0.2rem;
   color: var(--ro3-tone-05);
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .card-detail-series { display: grid; gap: 0.25rem; padding-top: 0.45rem; border-top: 1px solid color-mix(in srgb, var(--ro3-tone-07) 30%, transparent); }
-.card-detail-series strong { color: var(--ro3-tone-05); font-size: 0.8rem; }
-.card-detail-series span { color: var(--ro3-tone-08); font-size: 0.6875rem; line-height: 1.5; }
+.card-detail-series strong { color: var(--ro3-tone-05); font-size: 0.75rem; }
+.card-detail-series span { color: var(--ro3-tone-08); font-size: 0.75rem; line-height: 1.5; }
 
 .card-detail-tiers {
   display: grid;
@@ -5539,7 +5508,7 @@ select {
 
 .card-detail-tiers header strong { color: var(--ro3-tone-05); font-size: 0.75rem; }
 .card-detail-tiers header span,
-.card-detail-tiers small { color: var(--ro3-tone-10); font-size: 0.6875rem; }
+.card-detail-tiers small { color: var(--ro3-tone-10); font-size: 0.75rem; }
 
 .card-detail-tiers section > div {
   display: flex;
@@ -5551,14 +5520,14 @@ select {
   padding: 0.1rem 0.3rem;
   color: var(--ro3-tone-05);
   background: color-mix(in srgb, var(--ro3-gold-08) 14%, transparent);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .card-detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: auto; }
 .card-detail-actions button { min-height: 2.3rem; border: 1px solid color-mix(in srgb, var(--ro3-tone-16) 48%, transparent); color: var(--ro3-tone-18); background: rgba(82, 96, 142, 0.76); font-weight: 750; }
 .card-detail-actions button:last-child { color: var(--ro3-tone-04); background: var(--ro3-accent-10); }
 .card-detail-actions button:disabled { cursor: not-allowed; opacity: 0.56; }
-.card-detail-empty { display: grid; min-height: 12rem; place-items: center; color: var(--ro3-tone-10); font-size: 0.8rem; }
+.card-detail-empty { display: grid; min-height: 12rem; place-items: center; color: var(--ro3-tone-10); font-size: 0.75rem; }
 
 .card-mobile-dialog-backdrop { display: none; }
 
@@ -5715,7 +5684,7 @@ select {
   z-index: 4;
   overflow: hidden;
   color: var(--ro3-tone-20);
-  font-size: clamp(0.6875rem, 9cqi, 0.75rem);
+  font-size: 0.75rem;
   line-height: 1.2;
   text-align: center;
   text-overflow: ellipsis;
@@ -5724,11 +5693,11 @@ select {
 }
 
 .card-game-frame > strong.is-long-name {
-  font-size: clamp(0.625rem, 8.1cqi, 0.75rem);
+  font-size: 0.75rem;
 }
 
 .card-game-frame > strong.is-extra-long-name {
-  font-size: clamp(0.5625rem, 7.3cqi, 0.75rem);
+  font-size: 0.75rem;
 }
 
 .card-game-frame:not(.is-collection) > strong {
@@ -5883,11 +5852,11 @@ select {
   }
 
   .ro3-identity h1 {
-    font-size: 2rem;
+    font-size: 1.875rem;
   }
 
   .ro3-identity p {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
   }
 
   .ro3-hero-actions {
@@ -5958,7 +5927,6 @@ select {
 .wiki-section-heading h2,
 .wiki-card-dialog-body h2,
 .wiki-skill-dialog-header h2 {
-  font-family: 'Arkive Display', 'Arkive Sans', 'Segoe UI', sans-serif;
 }
 
 .wiki-title-block h1 {
@@ -6216,7 +6184,7 @@ select {
 
 .wiki-skill-row-copy strong {
   overflow: hidden;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -6289,8 +6257,7 @@ select {
 }
 
 .wiki-card-art strong {
-  font-family: 'Arkive Display', 'Arkive Sans', sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
 }
 
 .wiki-card-copy {
@@ -6477,7 +6444,7 @@ select {
 }
 .game-build-panel > header > span {
   gap: .48rem;
-  font-size: .82rem;
+  font-size: 0.875rem;
 }
 .game-build-panel > header > span::after {
   content: '»';
@@ -6489,14 +6456,13 @@ select {
   border-radius: 50%;
   color: var(--ro3-tone-06);
   background: color-mix(in srgb, var(--ro3-tone-21) 62%, transparent);
-  font-family: Georgia, serif;
-  font-size: 1.08rem;
+  font-size: 1.125rem;
   line-height: 1;
 }
 .game-build-slots--skills { gap: .35rem; }
 .game-build-slots--equipment { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .game-build-slot.is-equipment .game-build-slot-frame { width: 100%; max-width: 4.5rem; }
-.game-build-slot.is-equipment strong { font-size: .7rem; }
+.game-build-slot.is-equipment strong { font-size: 0.75rem; }
 .game-card-fixed-group,
 .game-card-fixed-group.game-build-slots--cards { gap: 0; }
 .game-pet-roster {
@@ -6617,7 +6583,7 @@ select {
   border-radius: 50%;
   color: var(--ro3-tone-21);
   background: color-mix(in srgb, var(--ro3-tone-03) 82%, transparent);
-  font-size: .48rem;
+  font-size: 0.75rem;
   line-height: 1;
   text-shadow: 0 1px 1px rgba(0, 0, 0, .55);
 }

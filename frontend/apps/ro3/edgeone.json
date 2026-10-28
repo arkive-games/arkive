@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/overview", "destination": "/index.html" },
     { "source": "/overview*", "destination": "/index.html" },
+    { "source": "/skills", "destination": "/index.html" },
+    { "source": "/skills*", "destination": "/index.html" },
     { "source": "/builds", "destination": "/index.html" },
     { "source": "/builds*", "destination": "/index.html" },
     { "source": "/talents", "destination": "/index.html" },

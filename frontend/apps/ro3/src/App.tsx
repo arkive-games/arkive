@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, Check, SlidersHorizontal, Sparkles, X } from 'lucide-react'
+import { BookOpen, Check, SlidersHorizontal, Sparkles, Wrench, X } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
   Button,
@@ -33,6 +33,7 @@ import { loadDataVersion, resourceUrl } from './lib/urls'
 import {
   hrefFor,
   hrefForKey,
+  LEGACY_HOME_PATH,
   locationForKey,
   navigateOnClick,
   navKeyFor,
@@ -53,6 +54,14 @@ import cardFrame08 from './assets/native-ui/card_img_item_08_01.webp'
 import collectionNamePurple from './assets/native-ui/card_img_item_name_01.webp'
 import collectionNameYellow from './assets/native-ui/card_img_item_name_02.webp'
 import collectionNameRed from './assets/native-ui/card_img_item_name_03.webp'
+import homeSkills from './assets/home/skills.webp'
+import homeTalents from './assets/home/talents.webp'
+import homeCards from './assets/home/cards.webp'
+import homePets from './assets/home/pets.webp'
+import homeMonsters from './assets/home/monsters.webp'
+import homeEquipment from './assets/home/equipment.webp'
+import homeSouls from './assets/home/souls.webp'
+import homeBuilds from './assets/home/builds.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
 
@@ -96,16 +105,32 @@ const INITIAL_CARD_FILTERS: CardFilters = {
   primaryAttributes: [],
 }
 
-// The home page lists what exists and nothing else: the build manual and the
-// seven tables. A grid promising pages that are not built is worse than a
-// short honest list.
-const HOME_SECTIONS: Array<{ key: NavKey; title: string; body: string }> = [
-  { key: 'builds', title: content.builds.title, body: content.builds.homeDescription },
-  ...WIKI_VIEWS.map((view) => ({
-    key: `wiki-${view}` as NavKey,
-    title: content.wiki.tabs[view],
-    body: content.home.sections[view],
-  })),
+const HOME_ART: Record<WikiView | 'builds', string> = {
+  skills: homeSkills,
+  talents: homeTalents,
+  cards: homeCards,
+  pets: homePets,
+  monsters: homeMonsters,
+  equipment: homeEquipment,
+  souls: homeSouls,
+  builds: homeBuilds,
+}
+
+// The home page is the nav, laid out, as on the other games: the same two
+// sections the top bar carries, each entry a picture and a name.
+const HOME_GROUPS: Array<{ key: string; label: string; icon: typeof BookOpen; entries: Array<{ key: NavKey; label: string; art: string }> }> = [
+  {
+    key: 'wiki',
+    label: content.nav.wiki,
+    icon: BookOpen,
+    entries: WIKI_VIEWS.map((view) => ({ key: `wiki-${view}` as NavKey, label: content.wiki.tabs[view], art: HOME_ART[view] })),
+  },
+  {
+    key: 'tools',
+    label: content.home.tools,
+    icon: Wrench,
+    entries: [{ key: 'builds', label: content.builds.title, art: HOME_ART.builds }],
+  },
 ]
 
 function pageTitle({ page, view }: Location): string {
@@ -115,18 +140,29 @@ function pageTitle({ page, view }: Location): string {
   return content.pageTitle
 }
 
+/** The browser tab and search title: the page first, then the site brand. */
+function documentTitle(location: Location): string {
+  return location.page === 'overview'
+    ? content.documentTitle
+    : content.pageDocumentTitle.replace('{page}', pageTitle(location))
+}
+
 function App() {
   const [location, setLocation] = useState<Location>(readLocation)
   const [noticeId, setNoticeId] = useState(0)
   const active = navKeyFor(location)
 
+  // The home page moved from /overview to /; old links still land on it, under
+  // the one address it has now.
   useEffect(() => {
-    document.title = location.page === 'wiki'
-      ? content.wiki.documentTitle
-      : location.page === 'changelog'
-        ? content.changelog.documentTitle
-        : content.documentTitle
-  }, [location.page])
+    if (window.location.pathname.replace(/\/+$/, '') === LEGACY_HOME_PATH) {
+      window.history.replaceState(window.history.state, '', `/${window.location.search}${window.location.hash}`)
+    }
+  }, [])
+
+  useEffect(() => {
+    document.title = documentTitle(location)
+  }, [location])
 
   useEffect(() => {
     const handlePopState = () => {
@@ -205,30 +241,51 @@ function HomePage({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
   }, [])
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
+    <div className="flex flex-col gap-4">
+      {/* Desktop only: on a phone the mobile header already names the site. */}
+      <div className="hidden flex-wrap items-baseline gap-x-3 gap-y-1 md:flex">
         <h1 className="text-3xl font-bold">{content.home.title}</h1>
-        <p className="mt-1 text-muted-foreground">{content.home.tagline}</p>
+        <p className="text-sm text-muted-foreground">{content.home.tagline}</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {HOME_SECTIONS.map((section) => (
-          <a
-            key={section.key}
-            href={hrefForKey(section.key)}
-            onClick={navigateOnClick(section.key, onNavigate)}
-            className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 shadow-sm transition hover:border-primary/60"
-          >
-            <span className="font-semibold">{section.title}</span>
-            <span className="text-sm text-muted-foreground">{section.body}</span>
-          </a>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Button asChild>
-          <a href={hrefForKey('wiki-skills')} onClick={navigateOnClick('wiki-skills', onNavigate)}>{content.home.browse}</a>
-        </Button>
+      <div className="grid gap-4 lg:grid-cols-[7fr_2fr]">
+        {HOME_GROUPS.map((group) => {
+          const GroupIcon = group.icon
+          return (
+            <section
+              key={group.key}
+              aria-labelledby={`home-${group.key}`}
+              className="rounded-lg border border-border bg-card p-3 shadow-sm"
+            >
+              <h2 id={`home-${group.key}`} className="mb-2 flex items-center gap-1.5 px-1 text-base font-semibold">
+                <GroupIcon className="size-4 text-[color:var(--arkive-nav-active)]" strokeWidth={2} aria-hidden />
+                {group.label}
+              </h2>
+              {/* Columns follow the entry count on desktop, so each section is
+                  one row of tiles and the two end level. */}
+              <div
+                className="grid grid-cols-4 gap-1.5 sm:grid-cols-5 lg:[grid-template-columns:repeat(var(--home-cols),minmax(0,1fr))]"
+                style={{ ['--home-cols' as string]: group.entries.length }}
+              >
+                {group.entries.map((entry) => (
+                  <a
+                    key={entry.key}
+                    href={hrefForKey(entry.key)}
+                    onClick={navigateOnClick(entry.key, onNavigate)}
+                    className="group flex flex-col items-center gap-1.5 rounded-md px-1 py-2 text-center transition-colors hover:bg-accent"
+                  >
+                    <img
+                      src={entry.art}
+                      alt=""
+                      className="size-14 rounded-md object-contain transition-transform group-hover:scale-105"
+                    />
+                    <span className="line-clamp-2 text-xs font-medium leading-tight">{entry.label}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )
+        })}
       </div>
 
       {gameVersion ? (

@@ -51,6 +51,7 @@ export function ContentPage({ active, onNavigate, title, heading = false, wide =
       title={title}
       heading={heading}
       width={wide ? 'wide' : 'standard'}
+      backToTopLabel={content.backToTop}
       // The column scrolls, not the window, so a new page has to be brought
       // back to the top here -- the browser only does that for the document.
       resultsKey={active}

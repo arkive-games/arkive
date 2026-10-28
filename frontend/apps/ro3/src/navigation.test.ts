@@ -2,10 +2,10 @@
 import type { MouseEvent } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import edgeone from '../edgeone.json'
-import { hrefFor, hrefForKey, locationForKey, locationForPath, navigateOnClick, navKeyFor, readLocation, type NavKey } from './navigation'
+import { hrefFor, hrefForKey, LEGACY_HOME_PATH, locationForKey, locationForPath, navigateOnClick, navKeyFor, readLocation, type NavKey } from './navigation'
 
 const routes: Array<[NavKey, string]> = [
-  ['wiki-skills', '/'], ['overview', '/overview'], ['builds', '/builds'],
+  ['overview', '/'], ['wiki-skills', '/skills'], ['builds', '/builds'],
   ['wiki-talents', '/talents'], ['wiki-cards', '/cards'], ['wiki-pets', '/pets'],
   ['wiki-monsters', '/monsters'], ['wiki-equipment', '/equipment'], ['wiki-souls', '/souls'],
   ['changelog', '/changelog'],
@@ -27,18 +27,24 @@ describe('RO3 clean page paths', () => {
   })
 
   it('does not retain query routing or match arbitrary changelog suffixes', () => {
+    const home = { page: 'overview', view: 'skills' }
     window.history.replaceState({}, '', '/?view=builds&wiki=cards')
-    expect(readLocation()).toEqual({ page: 'wiki', view: 'skills' })
+    expect(readLocation()).toEqual(home)
     for (const path of ['/missing', '/nested/changelog', '/cards-other']) {
-      expect(locationForPath(path)).toEqual({ page: 'wiki', view: 'skills' })
+      expect(locationForPath(path)).toEqual(home)
     }
     expect(locationForKey('wiki')).toEqual({ page: 'wiki', view: 'skills' })
     expect(locationForKey('wiki-invalid')).toBeNull()
     expect(locationForKey('invalid')).toBeNull()
   })
 
+  it('opens the home page at its old address', () => {
+    expect(locationForPath(LEGACY_HOME_PATH)).toEqual({ page: 'overview', view: 'skills' })
+  })
+
   it('covers every non-root path and query-bearing request in EdgeOne', () => {
-    const expected = routes.flatMap(([, path]) => path === '/' ? [] : [path, `${path}*`])
+    const expected = [...routes.map(([, path]) => path), LEGACY_HOME_PATH]
+      .flatMap((path) => path === '/' ? [] : [path, `${path}*`])
     expect(edgeone.rewrites.map((rule) => rule.source).sort()).toEqual(expected.sort())
     expect(edgeone.rewrites.every((rule) => rule.destination === '/index.html')).toBe(true)
     expect(edgeone.rewrites.some((rule) => rule.source === '/*')).toBe(false)

@@ -1,5 +1,6 @@
 {
-  "documentTitle": "仙境传说 3 综合攻略 | 藏舟攻略",
+  "documentTitle": "仙境传说3资料库 | 藏舟 Arkive",
+  "pageDocumentTitle": "仙境传说3{page} | 藏舟 Arkive",
   "homeLabel": "返回藏舟攻略首页",
   "brandName": "藏舟游戏攻略网",
   "brandSlogan": "万千攻略，藏于一舟",
@@ -20,9 +21,9 @@
     "dark": "深色"
   },
   "login": "登录",
+  "backToTop": "回到顶部",
   "unavailable": "暂无功能",
   "changelog": {
-    "documentTitle": "仙境传说 3 更新日志 | 藏舟攻略",
     "title": "更新日志",
     "current": "当前版本",
     "empty": "暂无更新记录",
@@ -43,23 +44,13 @@
     "selected": "已选",
     "emptySearch": "没有匹配的选项，请尝试其他名称或编号。",
     "details": "查看详情",
-    "title": "流派手册",
-    "homeDescription": "按职业路线搭配技能、装备、宠物与灵魂残响，保存自己的流派方案。"
+    "title": "流派手册"
   },
   "home": {
-    "title": "仙境传说 3 资料库",
-    "tagline": "直接从客户端配置表整理的技能、卡片、装备与宠物资料，以及可自由搭配的职业流派手册。",
-    "browse": "浏览游戏百科",
-    "dataNote": "数据提取自客户端版本 {version}。",
-    "sections": {
-      "skills": "按职业系与转职阶段查看技能数值",
-      "talents": "季节天赋树与守护天赋矩阵",
-      "cards": "卡面、部位、阶级属性与特殊效果",
-      "pets": "品质、星级成长与完整技能说明",
-      "monsters": "等级、种族、属性与掉落数值",
-      "equipment": "部位、词条与特殊效果对照",
-      "souls": "灵魂属性、刻印与共鸣关系"
-    }
+    "title": "仙境传说3资料库",
+    "tagline": "技能、卡片、装备与宠物资料，以及流派手册。",
+    "tools": "工具",
+    "dataNote": "数据提取自客户端版本 {version}。"
   },
   "notice": {
     "title": "暂无功能",
@@ -67,7 +58,6 @@
   },
   "wiki": {
     "variant": "装备品质版本",
-    "documentTitle": "仙境传说 3 百科 | 藏舟攻略",
     "eyebrow": "玩家资料库",
     "title": "仙境传说 3 游戏百科",
     "description": "基于客户端 0.0.1.14 配置表整理的职业技能与卡片资料库。",

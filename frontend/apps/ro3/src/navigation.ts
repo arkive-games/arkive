@@ -25,18 +25,17 @@ function isWikiView(value: string | null): value is WikiView {
 }
 
 /**
- * Bare `/` opens the encyclopedia: the tables are the content, and a visitor
- * who typed the address wants them. The home page keeps an address of its own
- * so reloads and shared links land where they were.
+ * Bare `/` is the home page, as on every other game. The skills table, which
+ * used to sit there, has an address of its own.
  */
 const PAGE_PATHS = {
-  overview: '/overview',
+  overview: '/',
   builds: '/builds',
   changelog: '/changelog',
 } as const
 
 const WIKI_PATHS: Record<WikiView, string> = {
-  skills: '/',
+  skills: '/skills',
   talents: '/talents',
   cards: '/cards',
   pets: '/pets',
@@ -45,14 +44,23 @@ const WIKI_PATHS: Record<WikiView, string> = {
   souls: '/souls',
 }
 
-/** Only the pathname selects a page; legacy query-based routing is retired. */
+/**
+ * The home page's old address. Links and bookmarks to it still open the home
+ * page, and App swaps it for `/` so the page keeps a single URL.
+ */
+export const LEGACY_HOME_PATH = '/overview'
+
+/**
+ * Only the pathname selects a page; legacy query-based routing is retired. An
+ * unknown path falls back to the home page, the one page that leads everywhere.
+ */
 export function locationForPath(pathname: string): Location {
   const path = pathname.replace(/\/+$/, '') || '/'
   for (const page of ['overview', 'builds', 'changelog'] as const) {
     if (PAGE_PATHS[page] === path) return { page, view: 'skills' }
   }
-  const view = WIKI_VIEWS.find((candidate) => WIKI_PATHS[candidate] === path) ?? 'skills'
-  return { page: 'wiki', view }
+  const view = WIKI_VIEWS.find((candidate) => WIKI_PATHS[candidate] === path)
+  return view ? { page: 'wiki', view } : { page: 'overview', view: 'skills' }
 }
 
 export function readLocation(): Location {
