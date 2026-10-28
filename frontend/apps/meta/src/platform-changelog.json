@@ -36,6 +36,24 @@
     },
     {
       "date": "2026-10-29",
+      "commit": "c41e782e86fa2205253b7b10066ef9a433c264cc",
+      "targets": [
+        "palworld",
+        "ro3"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Long pages now have a back-to-top button on desktop as well as on phones",
+            "zh-CN": "长页面在电脑端也会出现「返回顶部」按钮",
+            "zh-TW": "長頁面在電腦端也會出現「返回頂部」按鈕"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-29",
       "commit": "100db25de7b2e987dffa734be5e39a91b9b88a32",
       "targets": [
         "aion2",
