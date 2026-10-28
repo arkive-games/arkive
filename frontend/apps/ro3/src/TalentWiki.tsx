@@ -222,12 +222,14 @@ export function TalentWiki() {
  * A board under its own tabs, with the picked node's panel beside it on wide
  * screens -- so the detail is in view on arrival -- and under it below `lg`.
  */
-function BoardCard({ tabs, tabsLabel, areaRef, board, detail }: {
+function BoardCard({ tabs, tabsLabel, areaRef, board, detail, needLevel }: {
   tabs: ReactNode
   tabsLabel: string
   areaRef: RefObject<HTMLDivElement | null>
   board: ReactNode
   detail: ReactNode
+  /** The tree's unlock level: a fact about the whole page, so it sits beside the panel rather than on the board. */
+  needLevel?: number
 }) {
   return (
     <section className="rounded-lg border border-border bg-card">
@@ -236,7 +238,16 @@ function BoardCard({ tabs, tabsLabel, areaRef, board, detail }: {
       </div>
       <div className="grid gap-2.5 p-2.5 md:p-3.5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-4">
         <div ref={areaRef} className="flex min-w-0 flex-col gap-2">{board}</div>
-        {detail}
+        <div className="flex min-w-0 flex-col gap-2">
+          {detail}
+          {needLevel ? (
+            // Above the panel on phones, where the panel sits under the board; in the room under it beside the board.
+            <p className="order-first flex items-center gap-1.5 px-1 text-xs text-muted-foreground lg:order-none">
+              <LockKeyhole aria-hidden="true" className="size-3.5" />
+              {text.requiredLevel.split('{level}').flatMap((part, index) => index === 0 ? [part] : [<b key={index} className="text-sm text-foreground tabular-nums">{needLevel}</b>, part])}
+            </p>
+          ) : null}
+        </div>
       </div>
     </section>
   )
@@ -387,19 +398,14 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, needLevel, jobClass, it
       tabs={tabs}
       tabsLabel={tabsLabel}
       areaRef={areaRef}
+      needLevel={needLevel}
       board={(
         <>
           <div
             ref={boardRef}
-            className="relative flex flex-col justify-center rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)] pt-7"
-            style={{ minHeight: `${boardRows * 5.5 + 1.75}rem` }}
+            className="flex flex-col justify-center rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
+            style={{ minHeight: `${boardRows * 5.5}rem` }}
           >
-            {needLevel ? (
-              <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-card/80 px-2 text-xs font-semibold leading-5 text-muted-foreground shadow-[0_0_0_1px_var(--border)]">
-                <LockKeyhole aria-hidden="true" className="size-3" />
-                {text.requiredLevel.replace('{level}', String(needLevel))}
-              </span>
-            ) : null}
             <div className="relative w-full" style={{ height: `${rowCount * 5.5}rem` }}>
               <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
                 {links.map(([from, to]) => {
