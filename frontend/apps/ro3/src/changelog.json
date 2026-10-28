@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.20.0",
+      "date": "2026-10-29",
+      "commit": "03ee9ba341b73f1ac35309d80e23635c78f3f24f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Rebuilt the card wiki: slot tabs, always-visible quality and attribute filters, and a detail panel that steps through each card's tiers; the top bar's Wiki entry now opens the wiki directly",
+            "zh-CN": "卡片图鉴改版：部位分页、常驻的品质与属性筛选，详情可逐阶查看卡片属性；顶栏「百科」改为直接进入",
+            "zh-TW": "卡片圖鑑改版：部位分頁、常駐的品質與屬性篩選，詳情可逐階查看卡片屬性；頂欄「百科」改為直接進入"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.19.0",
       "date": "2026-10-28",
       "commit": "ef397b6cb0d228d57da3aec4ab7ec6aa18be9218",
