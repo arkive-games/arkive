@@ -216,9 +216,9 @@ function EnhanceRanges({ stage, refine, maxStage, testIdPrefix, onStage, onRefin
 }
 
 /**
- * One whole-loadout set as a card: where the loadout stands and the score the
- * tier reached counts, the stats it grants, labelled by family, and what the
- * tier (or, with none reached, the first one) asks for.
+ * One whole-loadout set as a card: where the loadout stands, the score the tier
+ * reached counts (its tooltip says what the tier asks for), and the stats it
+ * grants, labelled by family.
  */
 function BonusTier({ equipment, tier, need, label, value, testId }: {
   equipment: Equipment
@@ -235,7 +235,10 @@ function BonusTier({ equipment, tier, need, label, value, testId }: {
       <div className="hd">
         <span>{label}</span>
         <b className="num">{value}</b>
-        <span className="s num">{tier ? `+${(tier.mark ?? 0).toLocaleString()}` : '—'}</span>
+        {/* What the tier asks for is the score's tooltip. */}
+        <TipOn title={label} content={need}>
+          <span className="s num gz-hov" tabIndex={0}>{tier ? (tier.mark ?? 0).toLocaleString() : '—'}</span>
+        </TipOn>
       </div>
       {tier && tier.stats.length > 0 ? (
         <div className="st">
@@ -244,7 +247,6 @@ function BonusTier({ equipment, tier, need, label, value, testId }: {
           ))}
         </div>
       ) : null}
-      <p className="need">{need}</p>
     </div>
   )
 }

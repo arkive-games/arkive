@@ -958,8 +958,6 @@ select.gz-select {
 .gz-wbc .st { display: flex; flex-wrap: wrap; gap: .25rem; }
 .gz-wbc .st span { padding: .0625rem .5rem; border-radius: 999px; background: var(--gz-well); font-size: .75rem; color: var(--gz-sub); }
 .gz-wbc .st b { color: var(--gz-ink); font-weight: 700; }
-.gz-wbc .need { margin: 0; font-size: .75rem; line-height: 1.5; }
-.gz-wbc .need { color: var(--gz-faint); }
 /* The chosen suit's effects under its choice, each piece count with its score. */
 .gz-suit .gz-suitfx { flex: 1 1 100%; display: grid; gap: .25rem; margin: 0; padding: .5rem 0 0; list-style: none; border-top: 1px solid var(--gz-line); }
 .gz-suitfx li { display: flex; align-items: baseline; gap: .5rem; font-size: .8125rem; color: var(--gz-faint); }
