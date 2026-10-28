@@ -40,7 +40,8 @@ describe("fillShell", () => {
     const html = fillShell(SHELL, page)
     expect(html).toContain("<title>Items &lt;All&gt;</title>")
     expect(html).toContain('<meta property="og:title" content="Items &lt;All&gt;" />')
-    expect(html).toContain('<html lang="zh-CN">')
+    // The apps fall back to <html lang> on a first visit; the render locale must not leak into it.
+    expect(html).toContain('<html lang="en-US">')
     expect(html).toContain('<link rel="canonical" href="https://a.example/items" />')
     expect(html).toContain('<div id="root" class="notranslate" translate="no"><main>Items</main></div>')
   })

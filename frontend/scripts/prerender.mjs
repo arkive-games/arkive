@@ -105,7 +105,6 @@ async function render(route) {
       const root = document.getElementById('root')
       return {
         title: document.title,
-        lang: document.documentElement.lang,
         rootHtml: root?.innerHTML ?? '',
         text: (root?.innerText ?? '').trim().length,
       }

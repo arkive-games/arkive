@@ -29,14 +29,17 @@ const escapeText = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 const escapeAttr = (text) => escapeText(text).replace(/"/g, '&quot;')
 
 /**
- * Fill the built shell with what the browser rendered: the page's title,
- * language and canonical URL in the head, and the root's markup in the body.
- * The head is otherwise left alone, so the entry script the deploy check looks
- * for stays exactly where the build put it. Scripts are stripped from the
- * captured markup: the entry script re-runs the app, and anything the app
- * injected (analytics) would otherwise run twice.
+ * Fill the built shell with what the browser rendered: the page's title and
+ * canonical URL in the head, and the root's markup in the body. The head is
+ * otherwise left alone, so the entry script the deploy check looks for stays
+ * exactly where the build put it. `<html lang>` is kept as built on purpose:
+ * the apps read it as a language fallback on a first visit, so stamping the
+ * render locale would switch unsupported-language visitors to Chinese on
+ * prerendered pages only. Scripts are stripped from the captured markup: the
+ * entry script re-runs the app, and anything the app injected (analytics)
+ * would otherwise run twice.
  */
-export function fillShell(shell, { title, lang, url, rootHtml }) {
+export function fillShell(shell, { title, url, rootHtml }) {
   const roots = shell.match(/<div id="root"[^>]*><\/div>/g) ?? []
   if (roots.length !== 1) throw new Error(`expected one empty #root in the shell, found ${roots.length}`)
   let html = shell
@@ -44,7 +47,6 @@ export function fillShell(shell, { title, lang, url, rootHtml }) {
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeText(title)}</title>`)
     html = html.replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${escapeAttr(title)}$2`)
   }
-  if (lang) html = html.replace(/<html lang="[^"]*"/, `<html lang="${escapeAttr(lang)}"`)
   html = html.replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${escapeAttr(url)}$2`)
   html = html.replace(/[ \t]*<link rel="canonical"[^>]*>\r?\n?/, '')
   html = html.replace('</head>', `  <link rel="canonical" href="${escapeAttr(url)}" />\n  </head>`)
