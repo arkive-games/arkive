@@ -35,6 +35,27 @@
       ]
     },
     {
+      "date": "2026-10-29",
+      "commit": "100db25de7b2e987dffa734be5e39a91b9b88a32",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Pages no longer shift sideways when a filter makes them shorter than the window",
+            "zh-CN": "筛选后内容变短时，页面不再左右跳动",
+            "zh-TW": "篩選後內容變短時，頁面不再左右跳動"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-28",
       "commit": "ee783ad27a3f21353040799bba6ca7a58b62c9ad",
       "targets": [
