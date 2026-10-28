@@ -453,14 +453,19 @@ function CardDetail({ card, data, collection, index, onIndex }: {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex min-h-9 items-center gap-1.5">
-        <Badge>
-          <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: QUALITY_COLORS[card.quality] }} />
-          {qualityLabel(card.quality)}
-        </Badge>
-        <Badge>{partLabel(card.part)}</Badge>
+      <div className="flex min-h-9 items-center gap-2">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h3 className="truncate text-base font-bold leading-tight">{localizedText(card.name)}</h3>
+          <div className="flex gap-1.5">
+            <Badge>
+              <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: QUALITY_COLORS[card.quality] }} />
+              {qualityLabel(card.quality)}
+            </Badge>
+            <Badge>{partLabel(card.part)}</Badge>
+          </div>
+        </div>
         {card.tiers.length > 1 ? (
-          <div className="ml-auto">
+          <div className="ml-auto shrink-0">
             <LevelStepper
               index={at}
               last={last}
