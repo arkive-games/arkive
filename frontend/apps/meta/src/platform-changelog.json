@@ -2,6 +2,27 @@
   "entries": [
     {
       "date": "2026-10-28",
+      "commit": "ee783ad27a3f21353040799bba6ca7a58b62c9ad",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "ro3",
+        "gmzz"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The footer's Update log link now sits level with the other footer links.",
+            "zh-CN": "页脚的「更新日志」与其他链接对齐，不再略高一截。",
+            "zh-TW": "頁尾的「更新日誌」與其他連結對齊，不再略高一截。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
       "commit": "b17397432ac52491dd86ad6676341646227f8224",
       "targets": [
         "aion2",
