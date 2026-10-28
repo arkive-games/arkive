@@ -63,7 +63,6 @@
    UI, drawn against its parchment; they keep that palette in both themes
    instead of following the site's surfaces. */
 .card-game-frame,
-.pet-roster-card,
 .monster-roster-card,
 .game-build-slot {
   --ro3-tone-01: #21160e;
@@ -147,7 +146,8 @@
 
 .profession-wiki,
 .talent-wiki,
-.card-wiki {
+.card-wiki,
+.pet-wiki {
   padding: 0.9rem 0 3rem;
   color: var(--ro3-tone-05);
 }
@@ -655,7 +655,8 @@
 
   .profession-wiki,
   .talent-wiki,
-  .card-wiki {
+  .card-wiki,
+  .pet-wiki {
     padding-top: 0.55rem;
   }
 
@@ -691,10 +692,6 @@
 
   .profession-skill-panel {
     grid-row: 2;
-  }
-
-  .pet-roster-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1826,7 +1823,6 @@ select {
   color: var(--muted-foreground);
   font-size: 0.75rem;
 }
-
 
 .wiki-masthead {
   border-bottom: 1px solid color-mix(in srgb, var(--arkive-nav-active) 28%, var(--border));
@@ -3466,7 +3462,6 @@ select {
   height: 0.9rem;
 }
 
-.pet-roster-grid,
 .monster-roster-grid {
   display: grid;
   max-height: min(48rem, calc(100dvh - 10rem));
@@ -3476,114 +3471,6 @@ select {
   padding: 0.2rem 0.25rem 0.75rem;
   overflow-y: auto;
   scrollbar-color: color-mix(in srgb, var(--ro3-tone-08) 55%, transparent) transparent;
-}
-
-.pet-roster-grid {
-  grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
-}
-
-.pet-roster-card {
-  position: relative;
-  display: grid;
-  min-width: 0;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  grid-template-rows: minmax(0, 1fr) 2rem;
-  padding: 0;
-  border: 1px solid color-mix(in srgb, var(--ro3-tone-06) 58%, transparent);
-  color: var(--ro3-tone-19);
-  background: #303c48;
-  box-shadow: inset 0 0 0 0.16rem color-mix(in srgb, var(--ro3-tone-17) 22%, transparent), 0 0.2rem 0.45rem color-mix(in srgb, var(--ro3-tone-03) 18%, transparent);
-  cursor: pointer;
-  isolation: isolate;
-}
-
-.pet-roster-card::after {
-  position: absolute;
-  z-index: 2;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 2rem;
-  background: linear-gradient(90deg, #283a35, #3f5947 50%, #283a35);
-  content: '';
-}
-
-.pet-roster-card.quality-4::after {
-  background: linear-gradient(90deg, #3e3157, #655181 50%, #3e3157);
-}
-
-.pet-roster-card.quality-5::after {
-  background: linear-gradient(90deg, var(--ro3-gold-02), var(--ro3-gold-06) 50%, var(--ro3-gold-02));
-}
-
-.pet-roster-card:hover,
-.pet-roster-card.is-active {
-  border-color: var(--ro3-gold-08);
-  box-shadow: inset 0 0 0 0.18rem color-mix(in srgb, var(--ro3-tone-16) 52%, transparent), 0 0 0 0.16rem color-mix(in srgb, var(--ro3-gold-06) 30%, transparent);
-}
-
-.pet-roster-art {
-  position: relative;
-  z-index: 0;
-  display: grid;
-  min-height: 0;
-  place-items: center;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 58%, color-mix(in srgb, var(--ro3-tone-21) 72%, transparent), transparent 58%),
-    var(--ro3-tone-17);
-}
-
-.pet-roster-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.pet-roster-card > strong {
-  position: relative;
-  z-index: 3;
-  align-self: center;
-  overflow: hidden;
-  padding-inline: 0.4rem;
-  font-size: 0.75rem;
-  line-height: 1.2;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pet-roster-quality,
-.pet-roster-king {
-  position: absolute;
-  z-index: 4;
-  top: 0.4rem;
-  display: inline-flex;
-  height: 1.4rem;
-  align-items: center;
-  justify-content: center;
-  color: var(--ro3-tone-18);
-  background: rgba(34, 40, 46, 0.8);
-}
-
-.pet-roster-quality {
-  left: 0.4rem;
-  gap: 0.15rem;
-  padding-inline: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.pet-roster-king {
-  right: 0.4rem;
-  width: 1.4rem;
-}
-
-.pet-roster-quality svg,
-.pet-roster-king svg {
-  width: 0.75rem;
-  height: 0.75rem;
 }
 
 .creature-database-detail {
@@ -3612,64 +3499,9 @@ select {
   text-align: center;
 }
 
-.pet-detail-content,
 .monster-detail-content {
   display: grid;
   align-content: start;
-}
-
-.pet-detail-content {
-  gap: 0.65rem;
-  padding-bottom: 1rem;
-}
-
-.pet-detail-hero {
-  position: relative;
-  height: 13rem;
-  overflow: hidden;
-  border-bottom: 0.18rem solid #44705c;
-  background: var(--ro3-tone-17);
-}
-
-.pet-detail-hero.quality-4 {
-  border-bottom-color: #6c5790;
-}
-
-.pet-detail-hero.quality-5 {
-  border-bottom-color: var(--ro3-gold-07);
-}
-
-.pet-detail-hero::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, rgba(30, 35, 40, 0.9), transparent 58%);
-  content: '';
-}
-
-.pet-detail-hero > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 68%;
-}
-
-.pet-detail-hero > div {
-  position: absolute;
-  z-index: 1;
-  right: 0.9rem;
-  bottom: 0.8rem;
-  left: 0.9rem;
-  color: var(--ro3-tone-19);
-}
-
-.pet-detail-hero span {
-  color: color-mix(in srgb, var(--ro3-tone-19) 78%, transparent);
-  font-size: 0.75rem;
-}
-
-.pet-detail-hero h3 {
-  margin: 0.15rem 0 0;
-  font-size: 1.25rem;
 }
 
 .pet-star-selector {
@@ -4201,7 +4033,6 @@ select {
 
 .creature-segmented button:focus-visible,
 .creature-king-filter:focus-visible,
-.pet-roster-card:focus-visible,
 .monster-roster-card:focus-visible,
 .pet-star-selector button:focus-visible,
 .creature-load-more button:focus-visible,
@@ -4213,10 +4044,6 @@ select {
 @media (max-width: 63.999rem) {
   .creature-wiki {
     grid-template-columns: minmax(0, 1fr) 18.5rem;
-  }
-
-  .pet-roster-grid {
-    grid-template-columns: repeat(auto-fill, minmax(7.75rem, 1fr));
   }
 
   .monster-roster-grid {
@@ -4272,14 +4099,9 @@ select {
     grid-column: 1 / -1;
   }
 
-  .pet-roster-grid,
-  .monster-roster-grid {
+    .monster-roster-grid {
     max-height: none;
     overflow: visible;
-  }
-
-  .pet-roster-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .monster-roster-grid {
@@ -4331,10 +4153,6 @@ select {
   .creature-mobile-close svg {
     width: 1rem;
     height: 1rem;
-  }
-
-  .pet-detail-hero {
-    height: 15rem;
   }
 }
 
@@ -4991,6 +4809,49 @@ select {
   --ro3-talent-plate: radial-gradient(circle at 50% 30%, #c87a4c, #7a3618 80%);
 }
 
+/* The pet page tints each block by the game's own quality colours:
+   gold for 5, purple for 4, green for 3. */
+.pet-wiki {
+  --ro3-skill-panel: #f2f6fb;
+  --ro3-stage: #b07a12;
+  --ro3-stage-solid: #c58a14;
+  --ro3-stage-soft: #fdf6e6;
+  --ro3-stage-mid: #f8e2ad;
+}
+
+.pet-wiki [data-quality="4"] {
+  --ro3-stage: #6b4fa0;
+  --ro3-stage-solid: #7b5bb4;
+  --ro3-stage-soft: #f5f1fb;
+  --ro3-stage-mid: #e2d7f3;
+}
+
+.pet-wiki [data-quality="3"] {
+  --ro3-stage: #3b7a52;
+  --ro3-stage-solid: #46885d;
+  --ro3-stage-soft: #eff7f1;
+  --ro3-stage-mid: #d3ead9;
+}
+
+.dark .pet-wiki {
+  --ro3-skill-panel: #18202c;
+  --ro3-stage: #f0c766;
+  --ro3-stage-soft: #221c10;
+  --ro3-stage-mid: #3a2f16;
+}
+
+.dark .pet-wiki [data-quality="4"] {
+  --ro3-stage: #c3a8f0;
+  --ro3-stage-soft: #1d1828;
+  --ro3-stage-mid: #322845;
+}
+
+.dark .pet-wiki [data-quality="3"] {
+  --ro3-stage: #8fd3a4;
+  --ro3-stage-soft: #141f18;
+  --ro3-stage-mid: #22362a;
+}
+
 /* The shared Arkive bar already carries the page identity; the native workspace
    owns the compact in-game title bar below it. */
 .wiki-masthead {
@@ -5438,88 +5299,6 @@ select {
   .wiki-card-art {
     min-height: 4.5rem;
   }
-}
-
-/* Package-extracted pet cards are complete transparent compositions, not portraits. */
-.pet-roster-card {
-  aspect-ratio: 4 / 5;
-  border-color: #6f805f;
-  background: #dce3c8;
-  box-shadow: inset 0 0 0 0.18rem color-mix(in srgb, var(--ro3-tone-21) 52%, transparent), 0 0.2rem 0.5rem color-mix(in srgb, var(--ro3-tone-03) 20%, transparent);
-}
-
-.pet-roster-card.quality-4 {
-  border-color: #76619a;
-  background: #ddd4e8;
-}
-
-.pet-roster-card.quality-5 {
-  border-color: var(--ro3-gold-07);
-  background: var(--ro3-tone-18);
-}
-
-.pet-roster-card::before {
-  position: absolute;
-  z-index: 3;
-  inset: 0.24rem;
-  border: 1px solid color-mix(in srgb, var(--ro3-tone-21) 72%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ro3-tone-04) 24%, transparent);
-  content: '';
-  pointer-events: none;
-}
-
-.pet-roster-art {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.48), transparent 42%),
-    repeating-conic-gradient(from 0deg at 50% 66%, color-mix(in srgb, var(--ro3-tone-21) 30%, transparent) 0deg 7deg, transparent 7deg 15deg),
-    #d7ddc3;
-}
-
-.quality-4 .pet-roster-art {
-  background-color: #d9d0e3;
-}
-
-.quality-5 .pet-roster-art {
-  background-color: var(--ro3-tone-17);
-}
-
-.pet-roster-art > span {
-  position: absolute;
-  width: 72%;
-  aspect-ratio: 1;
-  border: 1px solid color-mix(in srgb, var(--ro3-tone-21) 72%, transparent);
-  border-radius: 50%;
-  box-shadow: 0 0 0 0.35rem rgba(115, 143, 91, 0.18), inset 0 0 1.2rem color-mix(in srgb, var(--ro3-tone-21) 58%, transparent);
-}
-
-.quality-4 .pet-roster-art > span {
-  box-shadow: 0 0 0 0.35rem rgba(119, 93, 155, 0.16), inset 0 0 1.2rem color-mix(in srgb, var(--ro3-tone-21) 58%, transparent);
-}
-
-.quality-5 .pet-roster-art > span {
-  box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--ro3-gold-07) 18%, transparent), inset 0 0 1.2rem color-mix(in srgb, var(--ro3-tone-21) 58%, transparent);
-}
-
-.pet-roster-art img {
-  position: relative;
-  z-index: 1;
-  width: 108%;
-  height: 108%;
-  object-fit: contain;
-  object-position: center bottom;
-  filter: drop-shadow(0 0.3rem 0.25rem color-mix(in srgb, var(--ro3-tone-03) 24%, transparent));
-}
-
-.pet-detail-hero {
-  background:
-    repeating-conic-gradient(from 0deg at 50% 72%, color-mix(in srgb, var(--ro3-tone-21) 24%, transparent) 0deg 7deg, transparent 7deg 15deg),
-    #d7ddc3;
-}
-
-.pet-detail-hero > img {
-  object-fit: contain;
-  object-position: center bottom;
-  filter: drop-shadow(0 0.35rem 0.3rem color-mix(in srgb, var(--ro3-tone-03) 28%, transparent));
 }
 
 /* Final client-manual alignment pass: keep the native surfaces, then tune the

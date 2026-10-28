@@ -401,7 +401,18 @@
       "cooldown": "冷却 {seconds} 秒",
       "noDescription": "暂无技能说明",
       "noSkills": "当前星级暂无技能数据。",
-      "closeDetail": "关闭宠物详情"
+      "closeDetail": "关闭宠物详情",
+      "all": "全部",
+      "qualityLabel": "按品质筛选",
+      "kingToggle": "首领",
+      "searchToggle": "搜索宠物",
+      "groupCount": "{count} 只",
+      "rosterLabel": "品质 {quality} 宠物",
+      "starUnit": "星级",
+      "starPicker": "选择星级",
+      "starDown": "降低星级",
+      "starUp": "提高星级",
+      "attributeBonus": "属性加成"
     },
     "monsters": {
       "title": "魔物图鉴",
