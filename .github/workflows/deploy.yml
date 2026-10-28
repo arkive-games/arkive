@@ -224,6 +224,13 @@ jobs:
         # check proves three things: the upload landed, edgeone.json travelled with
         # it (otherwise the deep link 404s), and the deployed build is this one.
         #
+        # The smoke path is a sitemap page, so once prerendered it has a file of
+        # its own and would pass whichever rule served it; EdgeOne serves that
+        # file even with a query string appended. So when it was prerendered,
+        # its live #root must carry the snapshot, and the deep-link proof moves
+        # to a URL no file can answer: the first wildcard rule's prefix plus
+        # `deploy-check`, which must come back as the empty shell.
+        #
         # Inert until `domain` is filled in for the app, which happens once it has
         # actually been cut over to its direct-upload project.
         if: matrix.domain != ''
@@ -232,19 +239,45 @@ jobs:
           entry_of() {
             sed -n 's/.*<script[^>]*type="module"[^>]*src="\([^"]*\)".*/\1/p' | head -1
           }
-          built=$(entry_of < "apps/${{ matrix.app }}/dist/index.html")
+          dist="apps/${{ matrix.app }}/dist"
+          built=$(entry_of < "$dist/index.html")
           [ -n "$built" ] || { echo "::error::no module entry in the built index.html"; exit 1; }
           echo "built entry: $built"
 
-          url="https://${{ matrix.domain }}${{ matrix.smoke_path }}"
+          smoke="${{ matrix.smoke_path }}"
+          if [ "$smoke" = "/" ]; then snapshot="$dist/app-shell.html"; else snapshot="$dist${smoke%/}/index.html"; fi
+          if [ -f "$snapshot" ]; then prerendered=1; echo "$smoke was prerendered"; else prerendered=""; fi
+
+          empty_root() { grep -q '<div id="root"[^>]*></div>'; }
+          url="https://${{ matrix.domain }}$smoke"
+          shell_path=""
+          if [ -f "$dist/edgeone.json" ]; then
+            shell_path=$(node -e '
+              const rules = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).rewrites ?? []
+              const rule = rules.find((r) => r.source.endsWith("*"))
+              if (rule) console.log(rule.source.slice(0, -1) + "deploy-check")
+            ' "$dist/edgeone.json")
+          fi
+          shell_url="${shell_path:+https://${{ matrix.domain }}$shell_path}"
           for attempt in 1 2 3 4 5 6; do
-            live=$(curl -fsS --max-time 20 "$url" | entry_of) || live=""
-            if [ "$live" = "$built" ]; then
-              echo "$url serves $live"
+            ok=yes
+            page=$(curl -fsS --max-time 20 "$url") || page=""
+            live=$(printf '%s' "$page" | entry_of)
+            [ "$live" = "$built" ] || ok=""
+            if [ -n "$prerendered" ] && printf '%s' "$page" | empty_root; then ok=""; live="$live (empty #root)"; fi
+            shell_live="<not checked>"
+            if [ -n "$shell_url" ]; then
+              shell_page=$(curl -fsS --max-time 20 "$shell_url") || shell_page=""
+              shell_live=$(printf '%s' "$shell_page" | entry_of)
+              [ "$shell_live" = "$built" ] || ok=""
+              if ! printf '%s' "$shell_page" | empty_root; then ok=""; shell_live="$shell_live (not the shell)"; fi
+            fi
+            if [ -n "$ok" ]; then
+              echo "$url serves $built${prerendered:+ prerendered}; ${shell_url:-no wildcard rule} ${shell_url:+serves the shell}"
               exit 0
             fi
-            echo "attempt $attempt: live=${live:-<none>} expected=$built — waiting for propagation"
+            echo "attempt $attempt: live=${live:-<none>} shell=${shell_live:-<none>} expected=$built — waiting for propagation"
             sleep 20
           done
-          echo "::error::$url does not serve $built"
+          echo "::error::$url or ${shell_url:-the shell} does not serve this build as expected"
           exit 1

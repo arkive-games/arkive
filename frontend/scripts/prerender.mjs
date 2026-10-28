@@ -44,8 +44,11 @@ const MIME = {
 // while, so idle is waited for up to a bound rather than required.
 const CONCURRENCY = 4
 const IDLE_TIMEOUT_MS = 20_000
-// Below this much visible text the page is a loading or error state, not content.
+// Below this much text outside the site chrome (header, nav, footer) the page
+// is a loading or error state, not content. The chrome alone clears any small
+// bound, so it is left out of the count.
 const MIN_TEXT = 20
+const CHROME = 'header, nav, footer, [role="banner"], [role="navigation"], [role="contentinfo"]'
 
 const inCI = Boolean(process.env.GITHUB_ACTIONS)
 const warn = (message) => console.warn(inCI ? `::warning::prerender: ${message}` : `prerender: WARN ${message}`)
@@ -107,14 +110,17 @@ async function render(route) {
   try {
     await page.goto(origin + route, { waitUntil: 'load', timeout: 60_000 })
     await page.waitForLoadState('networkidle', { timeout: IDLE_TIMEOUT_MS }).catch(() => {})
-    const result = await page.evaluate(() => {
+    const result = await page.evaluate((chrome) => {
       const root = document.getElementById('root')
+      const body = root?.cloneNode(true)
+      body?.querySelectorAll(chrome).forEach((element) => element.remove())
       return {
         title: document.title,
+        lang: document.documentElement.lang,
         rootHtml: root?.innerHTML ?? '',
-        text: (root?.innerText ?? '').trim().length,
+        text: (body?.textContent ?? '').replace(/\s+/g, ' ').trim().length,
       }
-    })
+    }, CHROME)
     if (errors.length) return { route, skipped: `threw: ${errors[0]}` }
     if (result.text < MIN_TEXT) return { route, skipped: `rendered only ${result.text} characters` }
     return { route, ...result }
@@ -140,10 +146,16 @@ const rendered = results.filter((result) => !result.skipped)
 for (const { route, skipped } of results.filter((result) => result.skipped)) warn(`${app}${route} kept the plain shell (${skipped})`)
 if (!rendered.length) fail(`no page of ${app} rendered`)
 
+// Everything that can refuse runs before the first write, so a refusal leaves
+// dist as built; past this point only I/O can fail.
 for (const result of rendered) {
   const target = path.join(dist, outputFile(result.route))
   if (result.route !== '/' && fs.existsSync(target)) fail(`${target} already exists in the build`)
 }
+const configPath = path.join(dist, 'edgeone.json')
+const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {}
+let next
+try { next = prerenderedConfig(config, rendered.map((result) => result.route)) } catch (e) { fail(e.message) }
 fs.writeFileSync(path.join(dist, SHELL_FILE), shell)
 for (const result of rendered) {
   const target = path.join(dist, outputFile(result.route))
@@ -151,8 +163,5 @@ for (const result of rendered) {
   fs.writeFileSync(target, fillShell(shell, { ...result, url: locs.get(result.route) }))
   console.log(`prerender: ${app}${result.route} — ${result.text} characters, "${result.title}"`)
 }
-const configPath = path.join(dist, 'edgeone.json')
-const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {}
-const next = prerenderedConfig(config, rendered.map((result) => result.route))
 if (next !== config) fs.writeFileSync(configPath, `${JSON.stringify(next, null, 2)}\n`)
 console.log(`prerender: ${app} — ${rendered.length} of ${routes.length} pages prerendered`)

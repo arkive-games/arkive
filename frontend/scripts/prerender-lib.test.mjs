@@ -43,6 +43,11 @@ describe("fillShell", () => {
     // The apps fall back to <html lang> on a first visit; the render locale must not leak into it.
     expect(html).toContain('<html lang="en-US">')
     expect(html).toContain('<link rel="canonical" href="https://a.example/items" />')
+    expect(html).toContain('<div id="root" class="notranslate" translate="no"><div lang="zh-CN"><main>Items</main></div></div>')
+  })
+
+  it("leaves the markup unwrapped when the page reported no language", () => {
+    const html = fillShell(SHELL, { ...page, lang: "" })
     expect(html).toContain('<div id="root" class="notranslate" translate="no"><main>Items</main></div>')
   })
 

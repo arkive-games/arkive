@@ -35,11 +35,12 @@ const escapeAttr = (text) => escapeText(text).replace(/"/g, '&quot;')
  * exactly where the build put it. `<html lang>` is kept as built on purpose:
  * the apps read it as a language fallback on a first visit, so stamping the
  * render locale would switch unsupported-language visitors to Chinese on
- * prerendered pages only. Scripts are stripped from the captured markup: the
- * entry script re-runs the app, and anything the app injected (analytics)
- * would otherwise run twice.
+ * prerendered pages only. The snapshot's own language goes on a wrapper inside
+ * #root instead, which the app discards when it mounts. Scripts are stripped
+ * from the captured markup: the entry script re-runs the app, and anything the
+ * app injected (analytics) would otherwise run twice.
  */
-export function fillShell(shell, { title, url, rootHtml }) {
+export function fillShell(shell, { title, url, lang, rootHtml }) {
   const roots = shell.match(/<div id="root"[^>]*><\/div>/g) ?? []
   if (roots.length !== 1) throw new Error(`expected one empty #root in the shell, found ${roots.length}`)
   // Replacer functions throughout: a replacement string would expand `$&` or
@@ -52,7 +53,8 @@ export function fillShell(shell, { title, url, rootHtml }) {
   html = html.replace(/(<meta property="og:url" content=")[^"]*(")/, (_, open, close) => `${open}${escapeAttr(url)}${close}`)
   html = html.replace(/[ \t]*<link rel="canonical"[^>]*>\r?\n?/, '')
   html = html.replace('</head>', () => `  <link rel="canonical" href="${escapeAttr(url)}" />\n  </head>`)
-  const content = rootHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+  const markup = rootHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+  const content = lang ? `<div lang="${escapeAttr(lang)}">${markup}</div>` : markup
   return html.replace(/(<div id="root"[^>]*>)(<\/div>)/, (_, open, close) => `${open}${content}${close}`)
 }
 
