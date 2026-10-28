@@ -57,6 +57,7 @@ export function GroupSection({
   present,
   lead,
   after,
+  formula,
   children,
 }: {
   group: GenusResult
@@ -66,6 +67,8 @@ export function GroupSection({
   lead?: ReactNode
   /** Panels of the group's own layout, shown below the ledger instead of per-item cards. */
   after?: ReactNode
+  /** How an item's score is calculated, shown in a question mark on its ledger line. */
+  formula?: (item: SpeciesResult) => ReactNode
   /** A calculator behind every item of the group: the whole group becomes one card. */
   children?: ReactNode
 }) {
@@ -76,7 +79,7 @@ export function GroupSection({
     <section className="gz-sec" aria-label={group.genus.name} data-testid={`score-genus-${group.genus.id}`}>
       <div className="gz-items" style={{ '--n': group.items.length } as CSSProperties}>
         {group.items.map((item) => (
-          <ItemRow key={item.species.id} item={item} rating={rating} unsupported={!children && present(item).kind === 'unsupported'} />
+          <ItemRow key={item.species.id} item={item} rating={rating} unsupported={!children && present(item).kind === 'unsupported'} formula={formula?.(item)} />
         ))}
       </div>
       {lead}

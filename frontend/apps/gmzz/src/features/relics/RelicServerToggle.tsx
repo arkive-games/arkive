@@ -1,8 +1,8 @@
-import { IconInfoCircle } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
 import { useRelicServer } from '@/features/relics/useRelicServer'
 import type { RelicServer } from '@/features/relics/data'
+import { Tip } from '@/features/score/Tip'
 
 const SERVERS: RelicServer[] = ['local', 'cross']
 
@@ -20,9 +20,7 @@ export default function RelicServerToggle({ testId }: { testId: string }) {
     <div className="gz-field">
       <span className="flex items-center gap-1">
         {t('relic.server')}
-        <span className="gz-tip" tabIndex={0} role="img" data-tip={hint} aria-label={hint} data-testid={`${testId}-hint`}>
-          <IconInfoCircle stroke={1.8} aria-hidden />
-        </span>
+        <Tip kind="info" content={hint} title={t('relic.server')} testId={`${testId}-hint`} />
       </span>
       <div className="gz-seg full" role="group" aria-label={t('relic.server')}>
         {SERVERS.map((entry) => (

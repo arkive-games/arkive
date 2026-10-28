@@ -2,6 +2,10 @@ import i18n from 'i18next'
 import { secretPartnerMessages } from './features/secretpartners/messages'
 import { managedTradeMessages } from './features/managedtrade/messages'
 import { characterMessages } from './features/characters/messages'
+import { equipMessages } from './features/score/messages/equip'
+import { relicMessages } from './features/score/messages/relic'
+import { pathwayMessages } from './features/score/messages/pathway'
+import { bondsMessages } from './features/score/messages/bonds'
 import { initReactI18next } from 'react-i18next'
 import { createLanguagePreference, detectLanguagePreference } from '@gamemap/state-memory'
 import { bindArkiveDocumentLocale } from '@gamemap/map-shell'
@@ -2598,10 +2602,24 @@ export function applyLanguage(code: string) {
   return i18n.changeLanguage(code)
 }
 
+const SCORE_MESSAGES = [equipMessages, relicMessages, pathwayMessages, bondsMessages]
+
+/** The score page's per-area strings laid over a language's namespaces. */
+function withScoreMessages(base: Strings, lng: Language): Strings {
+  const out: Record<string, unknown> = { ...base }
+  for (const messages of SCORE_MESSAGES) {
+    const extra = messages[lng as keyof typeof messages] ?? {}
+    for (const [ns, keys] of Object.entries(extra)) {
+      out[ns] = { ...(out[ns] as Record<string, string> | undefined), ...keys }
+    }
+  }
+  return out as Strings
+}
+
 void i18n.use(initReactI18next).init({
   lng: detectLanguagePreference(LANGUAGES, 'en-US'),
   resources: Object.fromEntries(
-    LANGUAGES.map((lng) => [lng, { translation: { ...(UI[lng] ?? en), secretpartners: secretPartnerMessages[lng], managedtrade: managedTradeMessages[lng], characters: characterMessages[lng] } }]),
+    LANGUAGES.map((lng) => [lng, { translation: { ...withScoreMessages(UI[lng] ?? en, lng), secretpartners: secretPartnerMessages[lng], managedtrade: managedTradeMessages[lng], characters: characterMessages[lng] } }]),
   ),
   supportedLngs: [...LANGUAGES],
   fallbackLng: 'en-US',

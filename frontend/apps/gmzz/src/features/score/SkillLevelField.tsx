@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import { IconInfoCircle } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
 import { MAX_SKILL_LEVEL } from '@/features/score/bonds'
 import { Stepper } from '@/features/score/Stepper'
+import { Tip } from '@/features/score/Tip'
 
 /**
  * The shared skill level, as the pathway, puppet and connection details all
@@ -34,10 +34,7 @@ export function SkillLevelField({ value, cap, relicBonus, testId, note, onChange
       <span className="flex items-center gap-1">
         {t('bonds.skillLevel')}
         {cap !== null ? <em className="num" data-testid={`${testId}-cap`}>{t('bonds.skillLevelCapShort', { cap })}</em> : null}
-        <span className={`gz-tip end ${relicBonus > 0 ? 'on' : ''}`} tabIndex={0} role="img" data-tip={relicTip} aria-label={relicTip}
-          data-testid={`${testId}-relic`}>
-          <IconInfoCircle stroke={1.8} aria-hidden />
-        </span>
+        <Tip kind="info" content={relicTip} title={t('bonds.skillLevel')} on={relicBonus > 0} testId={`${testId}-relic`} />
         {note}
       </span>
       <Stepper value={Math.min(value, max)} min={1} max={max} onChange={onChange} label={t('bonds.skillLevel')} testId={testId} />

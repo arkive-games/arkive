@@ -135,22 +135,17 @@
 .gz-field > span:first-child { font-size: 1rem; line-height: 1.25; font-weight: 800; color: var(--gz-ink); white-space: nowrap; }
 .gz-field > span:first-child em { font-style: normal; font-size: .75rem; font-weight: 400; color: var(--gz-sub); }
 .gz-field .gz-select select, .gz-field .gz-step input { font-weight: 400; }
-.gz-tip { position: relative; display: inline-flex; flex: none; width: 1rem; height: 1rem; color: var(--gz-sub); cursor: help; border-radius: 999px; }
+/* The circled mark of Tip.tsx: its bubble is a portalled tooltip, never CSS. */
+.gz-tip {
+  display: inline-flex; flex: none; align-items: center; justify-content: center; width: 1rem; height: 1rem; padding: 0; border: 0;
+  background: none; color: var(--gz-sub); cursor: help; border-radius: 999px; vertical-align: middle;
+}
+.gz-tip:hover { color: var(--gz-ink); }
 .gz-tip.on { color: rgb(var(--b4, 230, 164, 23)); }
 .gz-tip svg { width: 1rem; height: 1rem; }
 .gz-tip:focus-visible { outline: 2px solid rgb(var(--c, 230, 164, 23)); outline-offset: 1px; }
-.gz-tip::after {
-  content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + .375rem); z-index: 60; width: max-content; max-width: 16rem;
-  padding: .375rem .625rem; border-radius: .5rem; background: var(--gz-card); box-shadow: 0 6px 20px rgba(0, 0, 0, .18), inset 0 0 0 1px var(--gz-line);
-  font-size: .75rem; font-weight: 400; line-height: 1.45; color: var(--gz-ink); white-space: normal; text-align: left;
-  transform: translateX(-50%); opacity: 0; pointer-events: none; transition: opacity .15s;
-}
-.gz-tip:hover::after, .gz-tip:focus-visible::after { opacity: 1; }
-/* A mark near the right edge (and every mark on a phone) grows its bubble leftwards. */
-.gz-tip.end::after { left: auto; right: -.5rem; transform: none; }
-@media (max-width: 760px) {
-  .gz-tip::after { left: auto; right: -.5rem; transform: none; max-width: min(16rem, calc(100vw - 2rem)); }
-}
+/* Text that opens a tooltip: dotted underline, so it reads as hoverable. */
+.gz-hov { cursor: help; text-decoration: underline dotted var(--gz-faint); text-underline-offset: .2em; }
 .gz-field small { font-size: .75rem; color: var(--gz-faint); line-height: 1.4; }
 .gz-field.off .gz-step { opacity: .5; }
 .gz-select { position: relative; }
@@ -255,7 +250,8 @@ select.gz-select {
 }
 .gz-item .top { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; min-width: 0; }
 .gz-item .name { min-width: 0; font-size: .875rem; font-weight: 700; color: var(--gz-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gz-item .val { font-size: 1rem; font-weight: 800; line-height: 1.2; text-align: right; white-space: nowrap; color: var(--gz-ink); }
+.gz-item .val { display: inline-flex; align-items: center; gap: .25rem;
+   font-size: 1rem; font-weight: 800; line-height: 1.2; text-align: right; white-space: nowrap; color: var(--gz-ink); }
 .gz-item .unsup { font-size: .75rem; color: var(--gz-faint); text-align: right; white-space: nowrap; }
 .gz-bar { position: relative; height: 1.125rem; border-radius: 999px; background: rgba(var(--b), .14); overflow: hidden; }
 .gz-bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: rgba(var(--b), .55); transition: width .6s var(--gz-soft); }
