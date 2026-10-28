@@ -40,6 +40,17 @@ What is not asserted: that the server rounds or caps anything beyond this.
 Levels sum to at most ``SequenceTalentPointMax[-1]`` (75 = 5 × 15), which the
 page enforces as the cap on the total rather than per node.
 
+**Stats.** A levelled node's ``PointPropReward`` lists, per level, the
+attributes the node grants at that level — each entry ``[prop, value]``, and
+each level the **total** at that level, not an increment: the talent pop-up
+(``Talent_Pop_Panel.refreshUpgradePreview``) previews an upgrade as
+``PointPropReward[lv]`` → ``PointPropReward[lv + 1]``, and a node at level 0
+as ``0`` → ``PointPropReward[1]``. They are emitted per node as one ladder per
+attribute, ``values[level - 1]``. The props are attribute groups (``Atk_N``,
+``Def_N``…); their names and display format come from ``FightPropModeSetData``
+and ``FightPropModeData``, which the client's ``GetPropModeShowInfoByName``
+reads. A core node grants no attributes: its effect is the skill change.
+
 ``TalentNodeDevData`` is the designers' working copy of the same table and is
 not read. ``TalentDefaultData`` names the tree a fresh character starts in, so
 the page can pick the right one for a pathway before the player touches it.
@@ -61,6 +72,8 @@ from .version import stamp_version
 TREE_TABLE = "TalentTreeData"
 NODE_TABLE = "TalentNodeData"
 DEFAULT_TABLE = "TalentDefaultData"
+PROP_MODE_TABLE = "FightPropModeData"
+PROP_GROUP_TABLE = "FightPropModeSetData"
 
 OUT_FILE = "score/talents.json"
 ICON_SUBDIR = "talents"
@@ -132,7 +145,62 @@ def locate_icons(raw: Path, names: list[str]) -> dict[str, Path]:
     return {name: found[name][0] for name in names}
 
 
-def build_trees(trees, nodes, defaults) -> list[dict]:
+def stat_names(modes, groups) -> dict[str, dict]:
+    """``{prop: {name, format}}`` for every attribute and attribute group.
+
+    A group (``Atk_N`` → ``pAtkMin_N``, ``pAtkMax_N``…) is named by its
+    ``Discription`` and formatted as its members are. Only the two formats the
+    page draws are kept (``ShowType`` 0 a number, 1 a percentage): a prop or
+    group in any other, or whose members disagree, is left out, so a node that
+    names it fails in :func:`node_stats` rather than rendering wrong.
+    """
+    formats = {0: "number", 1: "percent"}
+    by_mode = {row["PropMode"]: row for row in _rows(modes)}
+    out: dict[str, dict] = {}
+    for row in _rows(groups):
+        names = row.get("PropNameSet") or []
+        shows = {by_mode[name].get("ShowType", 0) for name in names if name in by_mode}
+        if not names or len(shows) != 1 or not all(name in by_mode for name in names):
+            continue
+        show = shows.pop()
+        if show in formats:
+            out[row["Prop"]] = {"name": row.get("Discription") or row["Prop"], "format": formats[show]}
+    for key, row in by_mode.items():
+        show = row.get("ShowType", 0)
+        if key not in out and show in formats:
+            out[key] = {"name": row.get("PropName") or key, "format": formats[show]}
+    return out
+
+
+def node_stats(row, max_level: int, names: dict[str, dict]) -> list[dict]:
+    """A levelled node's attributes, one ladder each: ``values[level - 1]`` is the total at that level.
+
+    Every level must name the same attributes in the same order, and no value
+    may fall as the level rises — either would mean the column is not the
+    per-level total this reads it as.
+    """
+    levels = _rows(row.get("PointPropReward") or [])
+    if len(levels) != max_level:
+        raise ValueError(f"{NODE_TABLE} node {row['Key']} has {len(levels)} stat levels for MaxLevel {max_level}")
+    keys = [_rows(entry)[0] for entry in _rows(levels[0])]
+    ladders: dict[str, list] = {key: [] for key in keys}
+    for at, level in enumerate(levels, 1):
+        entries = [_rows(entry) for entry in _rows(level)]
+        if any(len(entry) != 2 for entry in entries) or [entry[0] for entry in entries] != keys:
+            raise ValueError(f"{NODE_TABLE} node {row['Key']} level {at} names other stats than level 1")
+        for key, value in entries:
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise ValueError(f"{NODE_TABLE} node {row['Key']} level {at} has a non-numeric {key}")
+            if ladders[key] and value < ladders[key][-1]:
+                raise ValueError(f"{NODE_TABLE} node {row['Key']} level {at}: {key} falls")
+            ladders[key].append(value)
+    missing = [key for key in keys if key not in names]
+    if missing:
+        raise ValueError(f"{NODE_TABLE} node {row['Key']}: no display name for {missing}")
+    return [{"key": key, **names[key], "values": values} for key, values in ladders.items()]
+
+
+def build_trees(trees, nodes, defaults, names: dict[str, dict]) -> list[dict]:
     """Trees with their nodes, in tree order; a tree with no nodes is dropped.
 
     ``TalentTreeData`` carries two empty rows for a pathway that has no talents
@@ -153,6 +221,8 @@ def build_trees(trees, nodes, defaults) -> list[dict]:
             raise ValueError(f"{NODE_TABLE} node {row['Key']} is levelled but has MaxLevel {max_level}")
         if node_type == SPECIAL_NODE and max_level != 0:
             raise ValueError(f"{NODE_TABLE} node {row['Key']} is activate-only but has MaxLevel {max_level}")
+        if node_type == SPECIAL_NODE and _rows(row.get("PointPropReward") or []):
+            raise ValueError(f"{NODE_TABLE} node {row['Key']} is activate-only but grants stats")
         by_tree.setdefault(int(row["TreeID"]), []).append({
             "key": int(row["Key"]),
             "name": row["Name"],
@@ -163,6 +233,7 @@ def build_trees(trees, nodes, defaults) -> list[dict]:
             "position": int(row.get("Position") or 0),
             "description": _plain(row.get("PointDesc")),
             "icon": row.get("Icon") or None,
+            "stats": node_stats(row, max_level, names) if node_type == NORMAL_NODE else [],
         })
 
     out = []
@@ -209,6 +280,10 @@ def build(excel: Path, data_out: Path, raw: Path, res_out: Path) -> dict[str, in
         resolve_text(load_table(excel, TREE_TABLE), strings),
         resolve_text(load_table(excel, NODE_TABLE), strings),
         load_table(excel, DEFAULT_TABLE),
+        stat_names(
+            resolve_text(load_table(excel, PROP_MODE_TABLE), strings),
+            resolve_text(load_table(excel, PROP_GROUP_TABLE), strings),
+        ),
     )
     missing = unresolved_ids(trees)
     if missing:

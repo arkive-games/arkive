@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { IconBuildingCastle, IconChevronDown, IconChevronUp, IconSwords } from '@tabler/icons-react'
+import { IconBuildingCastle, IconChevronUp, IconSwords } from '@tabler/icons-react'
 import { GzSelect } from '@/components/GzSelect'
 import { IconTile } from '@/features/equipment/PickerModal'
 import { Tip, TipOn } from '@/features/score/Tip'
@@ -221,26 +221,33 @@ function EnhanceRanges({ stage, refine, maxStage, testIdPrefix, onStage, onRefin
  * score it counts; a set not reached shows a dash, and its tooltip what
  * reaching the first tier takes.
  */
-function BonusTier({ equipment, tier, need, children }: {
+function BonusTier({ equipment, tier, need, label, value, testId }: {
   equipment: Equipment
   tier: SuitTier | null
   /** What the reached tier (or, with none, the first one) asks for. */
   need: string
-  children: ReactNode
+  label: string
+  /** Where the loadout stands: the stage every piece has reached, or the average refinement. */
+  value: string
+  testId: string
 }) {
-  const { t } = useTranslation()
-  const content = tier
-    ? [
-        need,
-        ...tier.stats.map(([key, amount]) => t('equip.tierStat', { stat: statLabel(equipment, key), amount: amount.toLocaleString() })),
-        tier.effect || null,
-        t('equip.tierScore', { mark: (tier.mark ?? 0).toLocaleString() }),
-      ].filter(Boolean).join('\n')
-    : need
   return (
-    <TipOn content={content}>
-      <span className="gz-hov" tabIndex={0}>{children}</span>
-    </TipOn>
+    <div className={`gz-wbc ${tier ? 'on' : ''}`} data-testid={testId}>
+      <div className="hd">
+        <span>{label}</span>
+        <b className="num">{value}</b>
+        <span className="s num">{tier ? `+${(tier.mark ?? 0).toLocaleString()}` : '—'}</span>
+      </div>
+      {tier && tier.stats.length > 0 ? (
+        <div className="st">
+          {tier.stats.map(([key, amount]) => (
+            <span key={key}>{statLabel(equipment, key)} <b className="num">+{amount.toLocaleString()}</b></span>
+          ))}
+        </div>
+      ) : null}
+      {tier?.effect ? <p className="fx">{tier.effect}</p> : null}
+      <p className="need">{need}</p>
+    </div>
   )
 }
 
@@ -304,7 +311,6 @@ function AffixRow({
             <button type="button" className="v num" disabled={rungs.length === 0} aria-label={`${t('equip.affixValue')} ${current ? signed(current.rung[1]) : '—'}`}
               data-testid={`equip-affix-value-${slot}-${index}`}>
               {current ? signed(current.rung[1]) : '—'}
-              <IconChevronDown stroke={2} aria-hidden />
             </button>
           </PopoverTrigger>
           {/* Every rung at once, grouped by tier: chips in a grid, nothing to scroll. */}
@@ -360,11 +366,8 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
 }) {
   const { t } = useTranslation()
   const { item, state } = result
-  const tags = [
-    t('equip.refineTag', { value: clampRefine(state.refinePercent) }),
-    result.extraordinaryCount > 0 ? t('equip.extraordinaryTag', { n: result.extraordinaryCount }) : null,
-    result.grace?.name ?? null,
-  ].filter((tag): tag is string => tag !== null)
+  // One diamond per rolled affix: gold extraordinary, white normal, red contaminated.
+  const rolled = result.affixes.filter((affix) => affix.family !== '')
   const label = [slotName, item?.gearLevel != null ? t('equip.levelTag', { level: item.gearLevel }) : null].filter(Boolean).join(' · ')
   return (
     <button
@@ -380,12 +383,20 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
         <b>
           <span className="n">{item ? item.name : t('equip.emptySlot')}</span>
           {item ? <StageMark stage={state.enhanceStage} /> : null}
+          {item ? <span className="gz-rf num">({clampRefine(state.refinePercent)}%)</span> : null}
         </b>
       </span>
       <span className="s num" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
-      <span className="tags">
-        {tags.map((tag) => <span key={tag}>{tag}</span>)}
-      </span>
+      {item ? (
+        <span className="tags">
+          {rolled.length > 0 ? (
+            <span className="gz-dia" data-testid={`equip-slot-affixes-${state.slot}`}>
+              {rolled.map((affix, at) => <i key={at} className={affix.tier} aria-hidden>◆</i>)}
+            </span>
+          ) : null}
+          {result.grace ? <span className="gr">{result.grace.name}</span> : null}
+        </span>
+      ) : null}
     </button>
   )
 }
@@ -428,39 +439,21 @@ function ItemPicker({ equipment, slot, professionId, selectedId, onSelect, onCol
 
 /**
  * The effects a piece carries, each a heading (kind · name) over its text:
- * the 烙印 and the 神话词条 come with the item, and the 恩赐 below them follows
- * from the extraordinary affixes rolled. The healing form's reading, which the
- * card shows a healer instead, sits in an ⓘ beside the heading.
+ * first the 恩赐 the extraordinary affixes trigger, then the 神话词条 and the
+ * 烙印 that come with the item.
  */
 function PieceEffects({ result }: { result: PieceResult }) {
   const { t } = useTranslation()
   const slot = result.state.slot
   const myth = result.item?.myth
   const grace = result.grace
-  const healTip = (text: string | undefined, effect: string) =>
-    text && text !== effect ? <Tip kind="info" title={t('equip.healForm')} content={text} /> : null
   return (
     <>
-      {result.brand ? (
-        <div className="gz-fx" data-kind="brand" data-testid={`equip-brand-${slot}`}>
-          <div className="sub">{t('equip.brand')} · {result.brand.name}</div>
-          <p className="note">{result.brand.effect}</p>
-        </div>
-      ) : null}
-      {myth ? (
-        <div className="gz-fx" data-kind="myth" data-testid={`equip-myth-${slot}`}>
-          <div className="sub">{t('equip.myth')} · {myth.name}{healTip(myth.healEffect, myth.effect)}</div>
-          <p className="note">{myth.effect}</p>
-        </div>
-      ) : null}
       {grace ? (
         <div className="gz-fx" data-kind="grace" data-testid={`equip-grace-${slot}`}>
           <div className="sub">
             {t('equip.grace')} · {grace.name}
-            <TipOn content={t('equip.graceNeed', { n: grace.extraordinaryCount })}>
-              <span className="meta gz-pips gz-hov" tabIndex={0}>{'◆'.repeat(grace.extraordinaryCount)}</span>
-            </TipOn>
-            {healTip(grace.brief2, grace.brief1)}
+            <span className="meta gz-pips">{'◆'.repeat(grace.extraordinaryCount)}</span>
           </div>
           <p className="note">{grace.brief1}</p>
         </div>
@@ -468,6 +461,18 @@ function PieceEffects({ result }: { result: PieceResult }) {
         <div className="gz-fx" data-kind="grace" data-testid={`equip-grace-${slot}`}>
           <div className="sub">{t('equip.grace')}</div>
           <p className="note">{t('equip.noGrace')}</p>
+        </div>
+      ) : null}
+      {myth ? (
+        <div className="gz-fx" data-kind="myth" data-testid={`equip-myth-${slot}`}>
+          <div className="sub">{t('equip.myth')} · {myth.name}</div>
+          <p className="note">{myth.effect}</p>
+        </div>
+      ) : null}
+      {result.brand ? (
+        <div className="gz-fx" data-kind="brand" data-testid={`equip-brand-${slot}`}>
+          <div className="sub">{t('equip.brand')} · {result.brand.name}</div>
+          <p className="note">{result.brand.effect}</p>
         </div>
       ) : null}
     </>
@@ -615,23 +620,29 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
 function SuitEffects({ equipment, entry }: { equipment: Equipment; entry: SuitScore }) {
   const { t } = useTranslation()
   return (
-    <>
+    <ul className="gz-suitfx" data-testid={`equip-suit-effects-${entry.suit.id}`}>
       {entry.suit.pieceCounts.map((pieces, index) => {
         const effect = entry.effects.find((reached) => reached.pieces === pieces)
         const formula = equipment.suits.levelScores?.[String(index + 1)]
-        if (!effect) return <div key={pieces}>{t('equip.suitEffectOff', { pieces, count: entry.count })}</div>
         return (
-          <div key={pieces}>
-            {t('equip.suitEffectLine', { pieces, level: effect.gearLevel, text: suitEffectText(entry.suit, pieces, effect.gearLevel) })}
-            {formula ? (
-              <div>
-                {t('equip.suitEffectScoreLine', { perLevel: formula.perLevel, level: effect.gearLevel, origin: formula.origin, score: effect.score.toLocaleString() })}
-              </div>
-            ) : null}
-          </div>
+          <li key={pieces} className={effect ? 'on' : ''}>
+            <b>{t('equip.suitPieces', { pieces })}</b>
+            {effect ? (
+              <>
+                <span className="tx">{t('equip.suitAtLevel', { level: effect.gearLevel })} {suitEffectText(entry.suit, pieces, effect.gearLevel)}</span>
+                {formula ? (
+                  <TipOn content={t('equip.suitEffectScoreLine', { perLevel: formula.perLevel, level: effect.gearLevel, origin: formula.origin, score: effect.score.toLocaleString() })}>
+                    <span className="s num" tabIndex={0}>+{effect.score.toLocaleString()}</span>
+                  </TipOn>
+                ) : <span className="s num">+{effect.score.toLocaleString()}</span>}
+              </>
+            ) : (
+              <span className="tx">{t('equip.suitEffectOffShort', { count: entry.count })}</span>
+            )}
+          </li>
         )
       })}
-    </>
+    </ul>
   )
 }
 
@@ -789,20 +800,15 @@ export default function EquipmentSection({
       <div className="gz-eqfoot">
         {/* The two whole-loadout sets: what each reached, and in the tooltip
             what it asks for, the stats it grants and the score it counts. */}
-        <div className="gz-wb" data-testid="equip-body-tier">
-          <BonusTier equipment={equipment} tier={bodyTier}
-            need={bodyNeed ? t('equip.bodyTierNeed', { pieces: bodyNeed.requiredPieces ?? pieces.length, stage: bodyNeed.requiredStage ?? 0 }) : ''}>
-            {t('equip.bodyBonus')}&nbsp;
-            <b className="num">{bodyTier ? t('equip.bodyTier', { stage: bodyTier.requiredStage ?? 0, mark: n(bodyTier.mark ?? 0) }) : '—'}</b>
-          </BonusTier>
-          <BonusTier equipment={equipment} tier={refineTier}
-            need={refineNeed ? t('equip.refineTierNeed', { percent: refineNeed.requiredAveragePercent ?? 0 }) : ''}>
-            {refineTier ? (
-              <b className="num">{t('equip.suitTier', { percent, mark: n(refineTier.mark ?? 0) })}</b>
-            ) : (
-              <>{t('equip.refineAverage', { percent })}&nbsp;<b className="num">—</b></>
-            )}
-          </BonusTier>
+        <div className="gz-wb">
+          <BonusTier equipment={equipment} tier={bodyTier} testId="equip-body-tier"
+            label={t('equip.bodyBonus')}
+            value={bodyTier ? t('equip.stageOption', { stage: bodyTier.requiredStage ?? 0 }) : '—'}
+            need={bodyNeed ? t('equip.bodyTierNeed', { pieces: bodyNeed.requiredPieces ?? pieces.length, stage: bodyNeed.requiredStage ?? 0 }) : ''} />
+          <BonusTier equipment={equipment} tier={refineTier} testId="equip-refine-tier"
+            label={t('equip.refineLabel')}
+            value={`${percent}%`}
+            need={refineNeed ? t('equip.refineTierNeed', { percent: refineNeed.requiredAveragePercent ?? 0 }) : ''} />
         </div>
 
         <div className="gz-suit">
@@ -833,15 +839,13 @@ export default function EquipmentSection({
                       {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
                       <small className="num">{n(entry.total)}</small>
                     </button>
-                    <Tip kind="info" on={chosen} title={entry.suit.fullName || entry.suit.name} testId={`equip-suit-info-${entry.suit.id}`}
-                      content={<SuitEffects equipment={equipment} entry={entry} />} />
                   </span>
                 )
               })}
-              {suitScores.length > 1 ? <Tip kind="info" title={t('equip.suitChoose')} content={t('equip.suitChooseHint')} /> : null}
             </div>
           )}
           <span className="s num">{t('equip.suitScore', { score: n(suit) })}</span>
+          {chosenSuit ? <SuitEffects equipment={equipment} entry={chosenSuit} /> : null}
         </div>
       </div>
 

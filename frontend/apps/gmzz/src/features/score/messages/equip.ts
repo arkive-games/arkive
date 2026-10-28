@@ -6,6 +6,10 @@
 export const equipMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, Record<string, string>>> = {
   'en-US': {
     equip: {
+      refineLabel: 'Average refinement',
+      suitPieces: '{{pieces}}-piece',
+      suitAtLevel: '(gear level {{level}})',
+      suitEffectOffShort: 'Not active ({{count}} worn)',
       myth: 'Mythic affix',
       healForm: 'Healing form',
       graceNeed: 'Triggered by {{n}} extraordinary affixes, in the combination this grace names. It adds nothing to the score of its own.',
@@ -41,6 +45,10 @@ export const equipMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-CN': {
     equip: {
+      refineLabel: '平均精炼度',
+      suitPieces: '{{pieces}}件套',
+      suitAtLevel: '（{{level}}装等）',
+      suitEffectOffShort: '未激活（已穿 {{count}} 件）',
       myth: '神话词条',
       healForm: '治疗形态',
       graceNeed: '由 {{n}} 条非凡词条按该恩赐要求的组合触发。恩赐本身不计入评分。',
@@ -76,6 +84,10 @@ export const equipMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-TW': {
     equip: {
+      refineLabel: '平均精煉度',
+      suitPieces: '{{pieces}}件套',
+      suitAtLevel: '（{{level}}裝等）',
+      suitEffectOffShort: '未啟用（已穿 {{count}} 件）',
       myth: '神話詞條',
       healForm: '治療形態',
       graceNeed: '由 {{n}} 條非凡詞條按該恩賜要求的組合觸發。恩賜本身不計入評分。',

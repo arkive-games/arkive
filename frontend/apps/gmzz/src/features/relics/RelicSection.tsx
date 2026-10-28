@@ -1,6 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Dialog, DialogClose, DialogContent, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
-import { IconChevronDown } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 
 import { GzSelect } from '@/components/GzSelect'
@@ -54,6 +53,15 @@ const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagAr
  * An affix's kind pill (普通 / 稀有), its word type (凡 · 珍 · 稀 · 异) on the
  * tooltip. A row with nothing picked shows a blank pill.
  */
+/**
+ * A rare word's colour, as the game grades them: the rarest (愚者) orange, the
+ * words that also raise every skill level gold, the plain stat words purple.
+ */
+function rareGrade(affix: PoolAffix): 'orange' | 'gold' | 'purple' {
+  if (affix.rarest) return 'orange'
+  return (affix.skillLevelPlus ?? 0) > 0 ? 'gold' : 'purple'
+}
+
 function KindPip({ source }: { source: PoolAffix | undefined }) {
   const { t } = useTranslation()
   if (!source) return <span className="gz-pip" aria-hidden />
@@ -176,7 +184,6 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
             <button type="button" className="v num" disabled={byValue.length === 0} aria-label={t('relic.affixRung')}
               data-testid={`${testPrefix}-rung-${index}`}>
               {current ? shownValue(relics, current, k2) : '—'}
-              <IconChevronDown stroke={2} aria-hidden />
             </button>
           </PopoverTrigger>
           <PopoverContent side="bottom" align="center" collisionPadding={8} className="gz-valpop"
@@ -511,8 +518,8 @@ function RelicDetail({ relics, result, k1, k2 }: { relics: Relics; result: Relic
                 const rare = source && isRareAffix(source) ? source : null
                 const off = material.inactive[at]
                 return (
-                  <li key={at} className={`${rare ? 'rare' : ''} ${off ? 'off' : ''}`}>
-                    <span>{rare ? t('relic.rareName', { name: rare.name ?? '' }) : statName(relics, affix.stat)}</span>
+                  <li key={at} className={`${rare ? `rare ${rareGrade(rare)}` : ''} ${off ? 'off' : ''}`}>
+                    <span>{rare ? `${rare.name ?? ''}·${statName(relics, rare.stat)}` : statName(relics, affix.stat)}</span>
                     {off ? <small>{t('relic.affixOff')}</small> : null}
                     <b className="num">{shownValue(relics, affix, k2)}</b>
                   </li>

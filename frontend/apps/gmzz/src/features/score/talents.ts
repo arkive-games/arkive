@@ -16,6 +16,19 @@ import { dataUrl, RES_BASE } from '../../lib/urls'
 
 export type TalentNodeKind = 'normal' | 'special'
 
+/**
+ * One attribute a levelled node grants (`TalentNodeData.PointPropReward`):
+ * `values[level - 1]` is the node's total at that level, not an increment.
+ */
+export type TalentStat = {
+  /** The attribute group, e.g. `Atk_N`. */
+  key: string
+  /** Its display name in the game, e.g. 攻击. */
+  name: string
+  format: 'number' | 'percent'
+  values: number[]
+}
+
 export type TalentNode = {
   key: number
   name: string
@@ -31,6 +44,8 @@ export type TalentNode = {
    * stat glyph for a levelled node, the icon of the skill a core changes.
    */
   icon?: string | null
+  /** What a levelled node grants per level; empty for a core, whose effect is a skill change. */
+  stats?: TalentStat[]
 }
 
 export type TalentTree = {
@@ -276,4 +291,43 @@ export function carryTalents(talents: Talents, draft: TalentDraft, from: number 
     if (target) levels[String(target.key)] = draft.levels[String(node.key)] ?? 0
   })
   return { treeId: toTree.id, levels }
+}
+
+/** A stat's total at one level: what the node grants with that many levels in it. */
+export type TalentStatTotal = { key: string; name: string; format: TalentStat['format']; value: number }
+
+/** What one node grants at `level`: each stat's ladder read at that level, nothing at level 0. */
+export function nodeStatsAt(node: TalentNode, level: number): TalentStatTotal[] {
+  if (node.type !== 'normal' || level <= 0) return []
+  return (node.stats ?? []).flatMap((stat) => {
+    const value = stat.values[Math.min(level, stat.values.length) - 1]
+    return typeof value === 'number' ? [{ key: stat.key, name: stat.name, format: stat.format, value }] : []
+  })
+}
+
+/**
+ * Every attribute the scored tree grants, summed across its levelled nodes at
+ * the levels `evaluateTalents` settled on — so a locked node or an over-spent
+ * level adds nothing. In the order the stats first appear down the tree. Core
+ * nodes carry no stats; their effects are skill changes, not numbers.
+ */
+export function talentStats(result: TalentResult | null): TalentStatTotal[] {
+  const totals = new Map<string, TalentStatTotal>()
+  for (const entry of result?.nodes ?? []) {
+    for (const stat of nodeStatsAt(entry.node, entry.level)) {
+      const seen = totals.get(stat.key)
+      if (seen) seen.value += stat.value
+      else totals.set(stat.key, { ...stat })
+    }
+  }
+  return [...totals.values()]
+}
+
+/** A stat as the game writes a bonus: `+1,234`, or `+7.3%` for a percentage. */
+export function formatTalentStat(stat: Pick<TalentStatTotal, 'format' | 'value'>, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: stat.format === 'percent' ? 'percent' : 'decimal',
+    maximumFractionDigits: 2,
+    signDisplay: 'exceptZero',
+  }).format(stat.value)
 }

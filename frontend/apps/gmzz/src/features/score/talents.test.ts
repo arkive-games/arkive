@@ -6,6 +6,9 @@ import {
   clampLevel,
   talentLimits,
   evaluateTalents,
+  formatTalentStat,
+  nodeStatsAt,
+  talentStats,
   isTalentDraft,
   pointCap,
   treeFor,
@@ -198,5 +201,60 @@ describe('pathwayFormula', () => {
     const text = String(pathwayFormula(item(LEVEL_MODULE, 5000), { rating, talents: null, limits: null }, t))
     expect(text).toContain('"maxRole":70')
     expect(pathwayFormula(item('Other', 1), { rating, talents: null, limits: null }, t)).toBeNull()
+  })
+})
+
+describe('talent stats', () => {
+  const ladder = (key: string, name: string, per: number) =>
+    ({ key, name, format: 'number' as const, values: Array.from({ length: 15 }, (_, i) => per * (i + 1)) })
+  // Node i grants 攻击 (10 × (i + 1)) per level; the first also grants 防御.
+  const statTree = (): TalentTree => {
+    const base = tree(101, 1200001, true)
+    return {
+      ...base,
+      nodes: base.nodes.map((node, i) =>
+        node.type === 'normal'
+          ? { ...node, stats: [ladder('Atk_N', '攻击', 10 * (i + 1)), ...(i === 0 ? [ladder('Def_N', '防御', 7)] : [])] }
+          : { ...node, stats: [] },
+      ),
+    }
+  }
+
+  it('reads a node\'s ladder as the total at that level, and nothing at level 0', () => {
+    const node = statTree().nodes[0]
+    expect(nodeStatsAt(node, 0)).toEqual([])
+    expect(nodeStatsAt(node, 3)).toEqual([
+      { key: 'Atk_N', name: '攻击', format: 'number', value: 30 },
+      { key: 'Def_N', name: '防御', format: 'number', value: 21 },
+    ])
+  })
+
+  it('sums every levelled node at its scored level, in the order stats first appear', () => {
+    const t = statTree()
+    const result = evaluateTalents(t, { 10100: 2, 10101: 3 })
+    expect(talentStats(result)).toEqual([
+      { key: 'Atk_N', name: '攻击', format: 'number', value: 10 * 2 + 20 * 3 },
+      { key: 'Def_N', name: '防御', format: 'number', value: 7 * 2 },
+    ])
+  })
+
+  it('counts nothing a node cannot hold: locked nodes and over-cap levels drop out', () => {
+    const t = statTree()
+    // Node 2 is locked behind an empty node 1; node 0 is clamped to the limits' level cap.
+    const result = evaluateTalents(t, { 10100: 15, 10102: 5 }, { points: 40, nodes: 4, levelCap: 10 })
+    expect(talentStats(result)).toEqual([
+      { key: 'Atk_N', name: '攻击', format: 'number', value: 10 * 10 },
+      { key: 'Def_N', name: '防御', format: 'number', value: 7 * 10 },
+    ])
+  })
+
+  it('is empty with no tree, and for data without stat ladders', () => {
+    expect(talentStats(null)).toEqual([])
+    expect(talentStats(evaluateTalents(tree(101, 1200001), { 10100: 5 }))).toEqual([])
+  })
+
+  it('formats a bonus with its sign, a percentage as a percentage', () => {
+    expect(formatTalentStat({ format: 'number', value: 1234 }, 'en-US')).toBe('+1,234')
+    expect(formatTalentStat({ format: 'percent', value: 0.073 }, 'zh-CN')).toBe('+7.3%')
   })
 })

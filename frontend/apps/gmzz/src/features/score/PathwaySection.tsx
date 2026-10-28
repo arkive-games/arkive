@@ -9,9 +9,12 @@ import { Stepper } from '@/features/score/Stepper'
 import {
   autoAllocate,
   evaluateTalents,
+  formatTalentStat,
+  nodeStatsAt,
   normalNodes,
   talentIconUrl,
   talentLimits,
+  talentStats,
   treeFor,
   treesFor,
   type TalentDraft,
@@ -197,6 +200,27 @@ function TalentCalculator({
             onLevel={(level) => setLevel(entry.node.key, Math.min(entry.cap, Math.max(0, level)))} />
         ))}
       </ol>
+      <TalentStats result={result} />
+    </div>
+  )
+}
+
+/**
+ * What the allocated levels grant, summed over the levelled nodes: the
+ * attributes the game adds for the talents, under the cards. Cores add none —
+ * their effects are skill changes, which their own tooltips describe.
+ */
+function TalentStats({ result }: { result: TalentResult }) {
+  const { t, i18n } = useTranslation()
+  const stats = talentStats(result)
+  return (
+    <div className="gz-tstats" data-testid="talent-stats">
+      <span className="hd">{t('pathway.statsTitle')}</span>
+      {stats.length > 0 ? stats.map((stat) => (
+        <span key={stat.key} className="num" data-testid={`talent-stat-${stat.key}`}>
+          {stat.name} <b>{formatTalentStat(stat, i18n.language)}</b>
+        </span>
+      )) : <p className="note">{t('pathway.statsNone')}</p>}
     </div>
   )
 }
@@ -208,11 +232,22 @@ function TalentCard({ index, entry, core, onLevel }: {
   core: TalentNodeResult | null
   onLevel: (level: number) => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const cap = entry.cap
   const filled = cap > 0 ? Math.round((entry.level / cap) * 100) : 0
+  // The stats at the current level, and at the node's top level for what it
+  // grows into; a node at 0 shows its first level instead of nothing.
+  const statLine = (level: number) => {
+    const stats = nodeStatsAt(entry.node, level)
+    return stats.length > 0
+      ? t('pathway.nodeStats', { level, stats: stats.map((stat) => `${stat.name} ${formatTalentStat(stat, i18n.language)}`).join(' · ') })
+      : null
+  }
+  const shown = Math.max(1, entry.level)
   const nodeTip = [
     entry.node.description,
+    statLine(shown),
+    shown < entry.node.maxLevel ? statLine(entry.node.maxLevel) : null,
     t('pathway.nodeScore', { mark: entry.node.mark, level: entry.level, score: entry.score.toLocaleString() }),
   ].filter(Boolean).join('\n')
   return (
