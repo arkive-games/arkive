@@ -44,13 +44,13 @@ describe('talent catalog', () => {
     expect(classRow(head, levels, 2400)).toBeUndefined()
   })
 
-  it('walks the season path from its start and snakes it along four rows', () => {
+  it('walks the season path from its start and snakes it along rows of a given width', () => {
     const chain = [3, 1, 2, 4, 5, 6, 7, 8, 9].map((id) => node(id, 1, {
       iIsStartPoint: id === 1 ? 1 : undefined,
       kAfterids: id < 9 ? [id + 1] : [],
     }))
-    const cells = seasonPath(chain).map(({ node: entry, column, row }) => `${entry.iId}:${column}${row}`)
-    // Nine nodes over four rows take three columns; odd rows run back.
+    const cells = seasonPath(chain, 3).map(({ node: entry, column, row }) => `${entry.iId}:${column}${row}`)
+    // Odd rows run back, so each link joins neighbouring cells.
     expect(cells).toEqual(['1:00', '2:10', '3:20', '4:21', '5:11', '6:01', '7:02', '8:12', '9:22'])
   })
 

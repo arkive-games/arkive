@@ -25,15 +25,15 @@ export const TALENT_LINES: ReadonlyArray<{ lineId: string; classes: readonly Tal
   { lineId: 'merchant', classes: [{ stageId: 'blacksmith', jobId: 6400 }] },
 ]
 
-/** Rows a talent board is laid out in, so both boards stand the same height. */
+/** Nodes a season row holds before the board has been measured. */
 export const BOARD_ROWS = 4
 
 /**
  * The season tree is one path from its start node. It is walked in order and
- * laid out over BOARD_ROWS rows, left to right along one row and back along
- * the next, so every link joins neighbouring cells.
+ * laid out `columns` to a row, left to right along one row and back along the
+ * next, so every link joins neighbouring cells.
  */
-export function seasonPath<T extends { iId: number; iIsStartPoint?: number; kAfterids?: number[]; kPosition?: number[] }>(nodes: T[]): Array<{ node: T; column: number; row: number }> {
+export function seasonPath<T extends { iId: number; iIsStartPoint?: number; kAfterids?: number[]; kPosition?: number[] }>(nodes: T[], columns: number): Array<{ node: T; column: number; row: number }> {
   const byId = new Map(nodes.map((node) => [node.iId, node]))
   const ordered: T[] = []
   const seen = new Set<number>()
@@ -45,7 +45,6 @@ export function seasonPath<T extends { iId: number; iIsStartPoint?: number; kAft
   }
   // Anything off the path still shows, in the game's left-to-right order.
   ordered.push(...nodes.filter((node) => !seen.has(node.iId)).sort((a, b) => (a.kPosition?.[0] ?? 0) - (b.kPosition?.[0] ?? 0)))
-  const columns = Math.max(1, Math.ceil(ordered.length / BOARD_ROWS))
   return ordered.map((node, index) => {
     const row = Math.floor(index / columns)
     const step = index % columns

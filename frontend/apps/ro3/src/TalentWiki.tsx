@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
-import { GitFork, Heart, LockKeyhole, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
+import { ChevronRight, GitFork, Heart, LockKeyhole, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { Notice } from './components/wiki'
 import { HeaderAction, SidebarSub } from './components/SectionNav'
@@ -149,12 +149,14 @@ export function TalentWiki() {
                 'flex min-h-10 shrink-0 items-center gap-1.5 rounded-full py-0 pl-1 text-sm font-semibold transition-colors',
                 selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
               )
-              // A line with several classes opens its pill into them, rather than adding a row.
+              // A line with several classes grows a tray of them off its pill:
+              // smaller, lighter and behind a chevron, so they read as its children.
               if (selected && candidate.classes.length > 1) {
                 return (
-                  <div key={candidate.lineId} role="tab" aria-selected="true" className={cn(look, 'pr-1')}>
-                    {face}
-                    <span role="radiogroup" aria-label={text.classLabel} className="ml-1 flex gap-0.5 rounded-full bg-background/15 p-0.5">
+                  <div key={candidate.lineId} role="tab" aria-selected="true" className="flex shrink-0 items-center rounded-full bg-[color:var(--arkive-filter-active)] pr-1">
+                    <span className={cn(look, 'pr-3.5')}>{face}</span>
+                    <ChevronRight aria-hidden="true" className="mx-0.5 size-4 text-[color:var(--arkive-nav-active)] opacity-60" />
+                    <span role="radiogroup" aria-label={text.classLabel} className="flex gap-0.5">
                       {candidate.classes.map((option) => {
                         const checked = option.jobId === jobClass.jobId
                         return (
@@ -165,10 +167,13 @@ export function TalentWiki() {
                             aria-checked={checked}
                             onClick={() => setVariantId(option.jobId)}
                             className={cn(
-                              'h-8 rounded-full px-3 text-sm font-semibold transition-colors',
-                              checked ? 'bg-background text-foreground' : 'text-background/70 hover:text-background',
+                              'flex h-8 items-center gap-1 rounded-full py-0 pl-0.5 pr-2.5 text-xs font-semibold transition-colors',
+                              checked
+                                ? 'bg-card font-bold text-[color:var(--arkive-nav-active)] shadow-[0_1px_3px_rgba(13,116,206,0.18)]'
+                                : 'text-muted-foreground hover:text-foreground',
                             )}
                           >
+                            <img src={stageEmblem(option.stageId)} alt="" className="size-6 object-contain" />
                             {classLabel(option)}
                           </button>
                         )
@@ -234,7 +239,7 @@ function BoardCard({ tabs, tabsLabel, chip, areaRef, board, detail }: {
           <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-[color:var(--ro3-stage-solid)] px-2 text-xs font-bold leading-5 text-white">{chip}</span>
         ) : null}
       </div>
-      <div className="grid gap-2.5 p-2.5 md:p-3.5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-4">
+      <div className="grid gap-2.5 p-2.5 md:p-3.5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-4">
         <div ref={areaRef} className="flex min-w-0 flex-col gap-2">{board}</div>
         {detail}
       </div>
@@ -306,7 +311,7 @@ function DetailPanel({ panelRef, pointerRef, children }: {
   children: ReactNode
 }) {
   return (
-    <div ref={panelRef} className="relative rounded-lg bg-[color:var(--ro3-skill-panel)] px-2.5 py-2.5 md:px-3">
+    <div ref={panelRef} className="relative rounded-lg bg-[color:var(--ro3-skill-panel)] p-3 md:p-3.5">
       <span
         ref={pointerRef}
         aria-hidden="true"
@@ -315,6 +320,24 @@ function DetailPanel({ panelRef, pointerRef, children }: {
       {children}
     </div>
   )
+}
+
+/** How many cells of `cell` rem fit across the measured element; 0 until measured. */
+function useFit(cell: number) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [fit, setFit] = useState(0)
+  useLayoutEffect(() => {
+    const node = ref.current
+    if (!node) return
+    // The observer reports once on observe, so this also takes the first measure.
+    const observer = new ResizeObserver(() => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+      setFit(Math.max(1, Math.floor(node.clientWidth / (cell * rem))))
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [cell])
+  return [ref, fit] as const
 }
 
 /** The tree in unlock order, with one panel beside it for the picked node. */
@@ -341,12 +364,15 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, chip, jobClass, itemNam
     ?? placed.find((node) => node.iIsStartPoint) ?? placed[0]
   const { panelRef, areaRef, pointerRef } = usePointer(`${selected?.iId}`)
 
-  // Laid out in unlock order rather than the game's scatter, at the star board's height.
-  const cells = useMemo(() => seasonPath(placed), [placed])
-  const columns = Math.max(1, ...cells.map((cell) => cell.column + 1))
+  // Laid out in unlock order rather than the game's scatter, as many to a row
+  // as the width takes, with the rows evened out so the last is not a stub.
+  const [boardRef, fit] = useFit(5)
+  const rowCount = Math.max(1, Math.ceil(placed.length / Math.max(1, fit || BOARD_ROWS)))
+  const columns = Math.max(1, Math.ceil(placed.length / rowCount))
+  const cells = useMemo(() => seasonPath(placed, columns), [placed, columns])
   const pointById = new Map(cells.map(({ node, column, row }) => [node.iId, {
     x: (column + 0.5) / columns * 100,
-    y: (row + 0.5) / BOARD_ROWS * 100,
+    y: (row + 0.5) / rowCount * 100,
   }]))
   const links = placed.flatMap((node) => (node.kAfterids ?? []).filter((id) => pointById.has(id)).map((id) => [node, nodeById.get(id)!] as const))
 
@@ -358,10 +384,10 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, chip, jobClass, itemNam
       areaRef={areaRef}
       board={(
         <>
-          <div className="-mx-2.5 overflow-x-auto px-2.5 [scrollbar-width:thin] md:mx-0 md:px-0">
+          <div ref={boardRef}>
             <div
-              className="relative mx-auto w-full rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
-              style={{ height: `${BOARD_ROWS * 5.5}rem`, minWidth: `${columns * 4.25}rem`, maxWidth: `${columns * 10.5}rem` }}
+              className="relative w-full rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
+              style={{ height: `${rowCount * 5.5}rem` }}
             >
               <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
                 {links.map(([from, to]) => {
@@ -497,22 +523,36 @@ function StatDetail({ node, rows, attributes, itemNames, index, onIndex }: {
   const at = Math.min(index ?? last, last)
   const row = rows[at]
   const skillPoints = rows.slice(0, at + 1).reduce((sum, entry) => sum + (entry.iSkillPoint ?? 0), 0)
+  const costRows = (costs: Array<[number, number]>) => costs.map(([id, value]): [string, string] => [
+    itemNames.get(id) ?? text.item.replace('{id}', String(id)),
+    `×${value.toLocaleString('zh-CN')}`,
+  ])
   return (
-    <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-        <div className="flex min-h-8 flex-wrap items-center gap-1.5">
-          <Badge>{node.iType === 4 ? text.oathNode : text.statNode}</Badge>
-          {node.iIsStartPoint ? <span className="text-xs text-muted-foreground">{text.startNode}</span> : null}
-          <AttributeChips values={row.kAttrs ?? []} attributes={attributes} />
-        </div>
-        {rows.length > 1 ? (
-          <LevelStepper index={at} last={last} current={row.iLevel ?? at + 1} top={rows[last].iLevel ?? rows.length} onChange={onIndex} />
-        ) : null}
+    <div className="flex flex-col gap-3">
+      <DetailHead
+        label={node.iType === 4 ? text.oathNode : text.statNode}
+        start={!!node.iIsStartPoint}
+        stepper={rows.length > 1 ? <LevelStepper index={at} last={last} current={row.iLevel ?? at + 1} top={rows[last].iLevel ?? rows.length} onChange={onIndex} /> : null}
+      />
+      {row.kAttrs?.length ? <ValueList label={text.attributes} rows={attributeRows(row.kAttrs, attributes)} /> : <p className="text-sm text-muted-foreground">{text.noEffect}</p>}
+      <div className="grid grid-cols-2 gap-3 border-t border-dashed border-border pt-2.5">
+        <CostList label={text.cost} rows={costRows((row.kCosts ?? []).map(([id, value]) => [id, value]))} />
+        <CostList
+          label={text.totalCost}
+          rows={[...costRows(cumulativeCosts(rows, at)), ...(skillPoints ? [[text.skillPoints, `×${skillPoints}`] as [string, string]] : [])]}
+        />
       </div>
-      <dl className="grid gap-x-4 gap-y-1 text-xs md:grid-cols-2 lg:grid-cols-1">
-        <CostLine label={text.cost} costs={(row.kCosts ?? []).map(([id, value]) => [id, value] as [number, number])} itemNames={itemNames} />
-        <CostLine label={text.totalCost} costs={cumulativeCosts(rows, at)} itemNames={itemNames} extra={skillPoints ? text.skillPoint.replace('{value}', String(skillPoints)) : undefined} />
-      </dl>
+    </div>
+  )
+}
+
+/** The panel's first line: what kind of node it is, and its level stepper. */
+function DetailHead({ label, start, stepper }: { label: string; start?: boolean; stepper?: ReactNode }) {
+  return (
+    <div className="flex min-h-9 items-center gap-1.5">
+      <Badge>{label}</Badge>
+      {start ? <span className="text-xs text-muted-foreground">{text.startNode}</span> : null}
+      {stepper ? <div className="ml-auto">{stepper}</div> : null}
     </div>
   )
 }
@@ -525,49 +565,46 @@ function Badge({ children }: { children: ReactNode }) {
   )
 }
 
-function AttributeChips({ values, attributes }: { values: number[][]; attributes: TalentCatalogDocument['attributes'] }) {
-  if (values.length === 0) return null
-  return (
-    <>
-      {values.map(([id, value]) => {
-        const attribute = attributes.find((candidate) => candidate.iID === id)
-        return (
-          <span key={id} className="whitespace-nowrap rounded-md bg-card px-1.5 text-sm leading-6 shadow-[0_0_0_1px_var(--border)]">
-            <span className="text-muted-foreground">{attribute?.name?.['zh-CN'] ?? attribute?.kVariable ?? id}</span>{' '}
-            <b className="font-semibold text-[color:var(--ro3-stage)]">+{value}</b>
-          </span>
-        )
-      })}
-    </>
-  )
+function attributeRows(values: number[][], attributes: TalentCatalogDocument['attributes']): Array<[string, string]> {
+  return values.map(([id, value]) => {
+    const attribute = attributes.find((candidate) => candidate.iID === id)
+    return [attribute?.name?.['zh-CN'] ?? attribute?.kVariable ?? String(id), `+${value}`]
+  })
 }
 
-function CostLine({ label, costs, itemNames, extra }: {
-  label: string
-  costs: Array<[number, number]>
-  itemNames: Map<number, string>
-  extra?: string
-}) {
-  const parts = [
-    ...costs.map(([id, value]) => `${itemNames.get(id) ?? text.item.replace('{id}', String(id))} ×${value.toLocaleString('zh-CN')}`),
-    ...(extra ? [extra] : []),
-  ]
-  if (parts.length === 0) return null
+/** What a node adds, one attribute a line with its value set large on the right. */
+function ValueList({ label, rows }: { label: string; rows: Array<[string, string]> }) {
   return (
-    <div className="flex flex-wrap gap-x-1.5">
-      <dt className="font-semibold text-muted-foreground">{label}</dt>
-      <dd className="text-foreground/85">
-        {parts.map((part, index) => (
-          <Fragment key={part}>
-            {index > 0 ? <span aria-hidden="true" className="text-muted-foreground/50"> · </span> : null}
-            {part}
-          </Fragment>
+    <section className="flex flex-col gap-1">
+      <h4 className="text-xs font-semibold text-muted-foreground">{label}</h4>
+      <dl className="flex flex-col divide-y divide-border rounded-lg bg-card px-3 shadow-[0_0_0_1px_var(--border)]">
+        {rows.map(([name, value]) => (
+          <div key={name} className="flex items-baseline justify-between gap-3 py-1.5">
+            <dt className="text-sm text-foreground/80">{name}</dt>
+            <dd className="text-base font-bold tabular-nums text-[color:var(--ro3-stage)]">{value}</dd>
+          </div>
         ))}
-      </dd>
-    </div>
+      </dl>
+    </section>
   )
 }
 
+function CostList({ label, rows }: { label: string; rows: Array<[string, string]> }) {
+  if (rows.length === 0) return null
+  return (
+    <section className="flex min-w-0 flex-col gap-1">
+      <h4 className="text-xs font-semibold text-muted-foreground">{label}</h4>
+      <ul className="flex flex-col gap-0.5 text-sm">
+        {rows.map(([name, value]) => (
+          <li key={name} className="flex items-baseline justify-between gap-2">
+            <span className="truncate text-foreground/80">{name}</span>
+            <span className="shrink-0 font-semibold tabular-nums">{value}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
 /** What a gate opens for the picked class: three branches, each a head and its follow-ups. */
 function GateDetail({ gate, nodeById, levelById, effectById, jobClass }: {
   gate: TalentNodeRecord
@@ -721,20 +758,18 @@ function PatronDetail({ node, attrRows, count, attributes, index, onIndex }: {
   const last = count - 1
   const at = Math.min(index ?? last, last)
   const power = node.iSeasonPower?.[at]
+  const rows = [...attributeRows(attrRows[at] ?? [], attributes), ...(power ? [[text.power, `+${power}`] as [string, string]] : [])]
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-      <div className="flex min-h-8 flex-wrap items-center gap-1.5">
-        <Badge>{node.icon ? text.core : text.starNode}</Badge>
-        {node.iIsStartPoint ? <span className="text-xs text-muted-foreground">{text.startNode}</span> : null}
-        <AttributeChips values={attrRows[at] ?? []} attributes={attributes} />
-        {power ? <span className="text-xs font-semibold text-[color:var(--ro3-stage)]">{text.seasonPower.replace('{value}', String(power))}</span> : null}
-        {!attrRows[at]?.length && !power ? <span className="text-sm text-muted-foreground">{text.noEffect}</span> : null}
-      </div>
-      {count > 1 ? <LevelStepper index={at} last={last} current={at + 1} top={count} onChange={onIndex} /> : null}
+    <div className="flex flex-col gap-3">
+      <DetailHead
+        label={node.icon ? text.core : text.starNode}
+        start={!!node.iIsStartPoint}
+        stepper={count > 1 ? <LevelStepper index={at} last={last} current={at + 1} top={count} onChange={onIndex} /> : null}
+      />
+      {rows.length > 0 ? <ValueList label={text.attributes} rows={rows} /> : <p className="text-sm text-muted-foreground">{text.noEffect}</p>}
     </div>
   )
 }
-
 function classLabel(jobClass: TalentClass): string {
   return (content.wiki.professions.stages as Record<string, string>)[jobClass.stageId] ?? jobClass.stageId
 }

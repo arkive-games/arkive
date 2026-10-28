@@ -206,8 +206,9 @@
       "noDesc": "游戏未提供说明",
       "cost": "本级消耗",
       "totalCost": "累计消耗",
-      "skillPoint": "天赋点 {value}",
-      "seasonPower": "战力 +{value}",
+      "skillPoints": "天赋点",
+      "power": "战力",
+      "attributes": "属性加成",
       "item": "材料 {id}"
     },
     "sourceNote": "技能名称、说明、等级、数值和图标映射均来自客户端配置表。数据版本：",
