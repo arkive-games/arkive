@@ -29,7 +29,7 @@ import { EquipmentWiki } from './EquipmentWiki'
 import { SoulWiki } from './SoulWiki'
 import { BuildPlanner } from './BuildPlanner'
 import { ContentPage } from './components/ContentPage'
-import { loadDataVersion, resourceUrl } from './lib/urls'
+import { resourceUrl } from './lib/urls'
 import {
   hrefFor,
   hrefForKey,
@@ -200,7 +200,7 @@ function App() {
         active={active}
         onNavigate={navigate}
         title={pageTitle(location)}
-        // The home page carries its own heading, visible on phones as well.
+        // The home page carries its own, visually hidden, heading.
         heading={location.page !== 'overview'}
         wide={location.page === 'wiki' || location.page === 'builds'}
         version={SITE_VERSION}
@@ -230,23 +230,10 @@ function App() {
 }
 
 function HomePage({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
-  const [gameVersion, setGameVersion] = useState<string>()
-
-  useEffect(() => {
-    let active = true
-    loadDataVersion()
-      .then((version) => { if (active) setGameVersion(version.gameVersion) })
-      .catch(() => undefined)
-    return () => { active = false }
-  }, [])
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Desktop only: on a phone the mobile header already names the site. */}
-      <div className="hidden flex-wrap items-baseline gap-x-3 gap-y-1 md:flex">
-        <h1 className="text-3xl font-bold">{content.home.title}</h1>
-        <p className="text-sm text-muted-foreground">{content.home.tagline}</p>
-      </div>
+      {/* Named for assistive technology and search only; the bar already shows the game. */}
+      <h1 className="sr-only">{content.home.title}</h1>
 
       <div className="grid gap-4 lg:grid-cols-[7fr_2fr]">
         {HOME_GROUPS.map((group) => {
@@ -287,10 +274,6 @@ function HomePage({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
           )
         })}
       </div>
-
-      {gameVersion ? (
-        <p className="text-xs text-muted-foreground">{content.home.dataNote.replace('{version}', gameVersion)}</p>
-      ) : null}
     </div>
   )
 }

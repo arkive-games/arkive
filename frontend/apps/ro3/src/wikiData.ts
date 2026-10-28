@@ -18,6 +18,11 @@ export interface SkillLevelRow {
   iMaxLevel?: number
   iDistanceMax?: number
   iTargetMax?: number
+  /** Cooldown in milliseconds. */
+  iCD?: number
+  iEleType?: number
+  /** The first entry is the kind: 1000 active, 1001 passive. */
+  kSkillCategory?: number[]
   kCost?: unknown[]
   kDamageParam1?: unknown[]
   kDamageParam2?: unknown[]
@@ -394,6 +399,20 @@ export async function loadSoulWikiData(): Promise<{
   return { version, souls }
 }
 
+// A profession stage reads a dozen skills out of the same few shards, some of
+// them 400 KB, so each shard is fetched once per visit.
+const skillShards = new Map<string, Promise<SkillShardDocument>>()
+
+function loadSkillShard(path: string): Promise<SkillShardDocument> {
+  let pending = skillShards.get(path)
+  if (!pending) {
+    pending = fetchJson<SkillShardDocument>(path)
+    pending.catch(() => skillShards.delete(path))
+    skillShards.set(path, pending)
+  }
+  return pending
+}
+
 export async function loadSkillLevels(
   entry: SkillIndexEntry,
   shards: SkillShard[],
@@ -404,9 +423,15 @@ export async function loadSkillLevels(
     .sort((a, b) => b.idPrefix.length - a.idPrefix.length)[0]
   if (!shard) return []
 
-  const document = await fetchJson<SkillShardDocument>(shard.path)
+  const document = await loadSkillShard(shard.path)
   const levelIds = new Set(entry.levels)
-  return document.skills
-    .filter((row) => levelIds.has(row.iID))
-    .sort((a, b) => a.iLevel - b.iLevel)
+  // Some skills carry a second run of level rows (iSkillID * 100 + 11 on);
+  // the base run, the lowest id at each level, is the one players see.
+  const byLevel = new Map<number, SkillLevelRow>()
+  for (const row of document.skills) {
+    if (!levelIds.has(row.iID)) continue
+    const kept = byLevel.get(row.iLevel)
+    if (!kept || row.iID < kept.iID) byLevel.set(row.iLevel, row)
+  }
+  return [...byLevel.values()].sort((a, b) => a.iLevel - b.iLevel)
 }
