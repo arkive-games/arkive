@@ -35,6 +35,10 @@ describe('train-trade route data', () => {
     expect(profiles.map(({ id, stops }) => [id, stops])).toEqual([
       ['beginner', 7], ['normal', 7], ['advanced', 11], ['hard', 14], ['challenge', 15], ['frenzy', 15],
     ])
+    expect(profiles.map(({ mode, areas }) => [mode, areas])).toEqual([
+      ['area', [3, 4]], ['area', [3, 4]], ['area', [3, 4, 4]], ['area', [4, 5, 5]],
+      ['hint', [3, 4, 4, 4]], ['hint', [3, 4, 4, 4]],
+    ])
   })
 
   it('leaves out a route the dataset does not define yet, but not one it defines without maps', () => {

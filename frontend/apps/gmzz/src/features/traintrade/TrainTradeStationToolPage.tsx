@@ -47,12 +47,33 @@ const evenMix = (stops: number): StationTotals => {
   return { winery: base + (extra > 0 ? 1 : 0), food: base + (extra > 1 ? 1 : 0), trade: base };
 };
 
+/** An area's mix starts empty: the game shows it only on arrival, so there is nothing to guess from. */
+const EMPTY_MIX: StationTotals = { winery: 0, food: 0, trade: 0 };
+
+/**
+ * The span the solver works on. Up to Hard the game reveals the mix one area at
+ * a time, so it is the area holding the next stop (the last one once the route
+ * is done); `offset` is its first solver position. Challenge and Frenzy treat
+ * the whole route as one span.
+ */
+const solverSpan = (areas: readonly number[] | null, stops: number, confirmed: number) => {
+  if (!areas) return { areaIndex: 0, offset: 0, span: stops };
+  const position = Math.min(confirmed, stops - 1);
+  let offset = 0;
+  for (let index = 0; index < areas.length; index += 1) {
+    if (position < offset + areas[index] || index === areas.length - 1) return { areaIndex: index, offset, span: areas[index] };
+    offset += areas[index];
+  }
+  return { areaIndex: 0, offset: 0, span: 0 };
+};
+
 export default function TrainTradeStationToolPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [profiles, setProfiles] = useState<TrainTradeRouteProfile[] | null>(null);
   const [dataError, setDataError] = useState(false);
   const [difficulty, setDifficulty] = useState<TrainTradeDifficultyId | "">("");
-  const [mix, setMix] = useState<StationTotals | null>(null);
+  const [routeMix, setRouteMix] = useState<StationTotals | null>(null);
+  const [areaMixes, setAreaMixes] = useState<(StationTotals | undefined)[]>([]);
   const [originHint, setOriginHint] = useState<HintId | "">("");
   const [steps, setSteps] = useState<ConfirmedStep[]>([]);
   const [pendingCurrent, setPendingCurrent] = useState<StationType | "">("");
@@ -73,18 +94,28 @@ export default function TrainTradeStationToolPage() {
 
   const profile = profiles?.find((item) => item.id === difficulty);
   const stops = profile?.stops ?? 0;
-  const mixSum = mix ? STATION_TYPES.reduce((sum, type) => sum + mix[type], 0) : 0;
-  const totals = mix && mixSum === stops ? mix : null;
   const tileCount = profile ? stops + 1 : 0;
 
-  const routeModel = useMemo(
-    () => (totals ? createRouteModel(totals, stops, originHint, steps) : null),
-    [totals, stops, originHint, steps],
-  );
+  const isArea = profile?.mode === "area";
+  const { areaIndex, offset, span } = solverSpan(isArea ? profile.areas : null, stops, steps.length);
+  const areaName = profile && isArea
+    ? (i18n.language.startsWith("zh") && profile.areaNames[areaIndex]) || t(`${P}.areaNumber`, { n: areaIndex + 1 })
+    : "";
+  const mix = isArea ? areaMixes[areaIndex] ?? EMPTY_MIX : routeMix;
+  const mixSum = mix ? STATION_TYPES.reduce((sum, type) => sum + mix[type], 0) : 0;
+  const totals = mix && mixSum === span ? mix : null;
+  const lead = isArea && offset > 0 ? steps[offset - 1]?.currentType ?? "" : "";
+
+  const routeModel = useMemo(() => {
+    if (!totals) return null;
+    if (!isArea) return createRouteModel(totals, span, originHint, steps);
+    return createRouteModel(totals, span, "", steps.slice(offset), { distinct: true, lead });
+  }, [totals, isArea, span, offset, lead, originHint, steps]);
 
   const clearRoute = () => {
     setOriginHint("");
     setSteps([]);
+    setAreaMixes([]);
     setPendingCurrent("");
     setPendingHint("");
   };
@@ -92,13 +123,22 @@ export default function TrainTradeStationToolPage() {
   const changeDifficulty = (next: TrainTradeDifficultyId) => {
     const nextProfile = profiles?.find((item) => item.id === next);
     setDifficulty(next);
-    setMix(nextProfile ? evenMix(nextProfile.stops) : null);
+    setRouteMix(nextProfile ? evenMix(nextProfile.stops) : null);
     clearRoute();
   };
 
   const changeMix = (type: StationType, value: number) => {
     if (!mix || !Number.isFinite(value)) return;
-    setMix({ ...mix, [type]: Math.max(0, Math.min(stops, Math.round(value))) });
+    const next = { ...mix, [type]: Math.max(0, Math.min(span, Math.round(value))) };
+    if (isArea) {
+      // Correcting an area's mix keeps the stops already confirmed in it.
+      setAreaMixes((current) => Array.from({ length: Math.max(current.length, areaIndex + 1) }, (_, index) => (
+        index === areaIndex ? next : current[index]
+      )));
+      setPendingCurrent("");
+      return;
+    }
+    setRouteMix(next);
     clearRoute();
   };
 
@@ -110,11 +150,13 @@ export default function TrainTradeStationToolPage() {
   };
 
   // The decision in front of the player, and the model as it would be once confirmed.
-  const complete = Boolean(originHint) && steps.length >= stops;
-  const position = steps.length;
+  // Area routes have no origin hint, so they start at the first typed stop.
+  const started = isArea || Boolean(originHint);
+  const complete = started && steps.length >= stops;
+  const position = steps.length - offset;
   const decision = useMemo(() => {
     if (!routeModel || routeModel.count === 0 || complete) return null;
-    if (!originHint) {
+    if (!isArea && !originHint) {
       return {
         tile: 0,
         needsHint: true,
@@ -127,7 +169,7 @@ export default function TrainTradeStationToolPage() {
       };
     }
     const hintStart = position + 1;
-    const needsHint = position + 3 < routeModel.totalStops;
+    const needsHint = !isArea && position + 3 < routeModel.totalStops;
     const probability = probabilityFor(routeModel, position);
     const certain = STATION_TYPES.find((type) => probability[type] === 1);
     const current = certain ?? pendingCurrent;
@@ -138,11 +180,11 @@ export default function TrainTradeStationToolPage() {
       current,
       locked: Boolean(certain),
       availableCurrent: new Set(STATION_TYPES.filter((type) => prospectiveRouteCount(routeModel, position, type, hintStart, "") > 0)),
-      availableHints: getAvailableHints(routeModel, hintStart, position, current),
+      availableHints: needsHint ? getAvailableHints(routeModel, hintStart, position, current) : new Set<HintId>(),
       preview: refineRouteModel(routeModel, position, current, hintStart, hint),
       windowStart: steps.length + 2,
     };
-  }, [routeModel, complete, originHint, pendingHint, pendingCurrent, position, steps.length]);
+  }, [routeModel, complete, isArea, originHint, pendingHint, pendingCurrent, position, steps.length]);
 
   // On phones the track is a scrolling strip; keep the stop being decided in view.
   const trackRef = useRef<HTMLOListElement>(null);
@@ -174,15 +216,16 @@ export default function TrainTradeStationToolPage() {
   // The track reads the decision preview, so a pick shows its effect before it is confirmed.
   const shownModel = decision && decision.preview.count > 0 ? decision.preview : routeModel;
   const tiles = useMemo(() => Array.from({ length: tileCount }, (_, tile) => {
-    const at = tilePosition(tile);
-    const probability = shownModel && at >= 0 ? probabilityFor(shownModel, at) : null;
+    // Only stops inside the modelled span have odds; later areas are unknown until reached.
+    const at = tilePosition(tile) - offset;
+    const probability = shownModel && at >= 0 && at < shownModel.totalStops ? probabilityFor(shownModel, at) : null;
     const fixed = tile >= 1 && tile <= steps.length ? steps[tile - 1].currentType : undefined;
     const deduced = !fixed && probability ? STATION_TYPES.find((type) => probability[type] === 1) : undefined;
     return { tile, probability, fixed, deduced };
-  }), [tileCount, shownModel, steps]);
+  }), [tileCount, shownModel, steps, offset]);
 
   const remaining = totals ? { ...totals } : null;
-  if (remaining) steps.forEach(({ currentType }) => { remaining[currentType] = Math.max(0, remaining[currentType] - 1); });
+  if (remaining) steps.slice(offset).forEach(({ currentType }) => { remaining[currentType] = Math.max(0, remaining[currentType] - 1); });
 
   const historyEntries = useMemo(() => {
     const stopLabel = (tile: number) => t(`${P}.stationNumber`, { station: tile + 1 });
@@ -207,19 +250,21 @@ export default function TrainTradeStationToolPage() {
   if (dataError) return page(<p className="text-sm text-muted-foreground">{t("trainTrade.stationTool.loadError")}</p>);
   if (!profiles) return page(<p className="text-sm text-muted-foreground">{t("loading")}</p>);
 
-  const windowTiles = decision
+  const windowTiles = decision && !isArea
     ? Array.from({ length: 3 }, (_, index) => decision.windowStart + index).filter((tile) => tile < tileCount)
     : [];
   const oddsTiles = decision
-    ? Array.from({ length: ODDS_SPAN }, (_, index) => Math.max(decision.tile, 1) + index).filter((tile) => tile < tileCount)
+    ? Array.from({ length: ODDS_SPAN }, (_, index) => Math.max(decision.tile, 1) + index)
+      .filter((tile) => tile < tileCount && tilePosition(tile) - offset < span)
     : [];
+  const canUndo = isArea ? steps.length > 0 : Boolean(originHint);
 
   const actions = (
     <div className="st-actions">
-      <button type="button" className="st-btn" disabled={!originHint} onClick={undo} data-testid="planner-undo">
+      <button type="button" className="st-btn" disabled={!canUndo} onClick={undo} data-testid="planner-undo">
         <IconArrowBackUp aria-hidden stroke={1.8} />{t(`${P}.undo`)}
       </button>
-      <button type="button" className="st-btn" disabled={!originHint} onClick={clearRoute} data-testid="planner-restart">
+      <button type="button" className="st-btn" disabled={!canUndo && areaMixes.length === 0} onClick={clearRoute} data-testid="planner-restart">
         <IconRefresh aria-hidden stroke={1.8} />{t(`${P}.restart`)}
       </button>
       {decision && (
@@ -252,9 +297,14 @@ export default function TrainTradeStationToolPage() {
         {profile && mix && (
           <section className="st-mix" aria-labelledby="st-mix-title" data-testid="planner-mix">
             <div className="st-mtitle">
-              <h2 id="st-mix-title">{t(`${P}.stationMixHeading`)}</h2>
-              <span className="num" data-ok={mixSum === stops || undefined}>{t(`${P}.mixSum`, { sum: mixSum, total: stops })}</span>
+              <h2 id="st-mix-title">{t(isArea ? `${P}.areaMixHeading` : `${P}.stationMixHeading`)}</h2>
+              <span className="num" data-ok={mixSum === span || undefined}>{t(`${P}.mixSum`, { sum: mixSum, total: span })}</span>
             </div>
+            {isArea && (
+              <small className="st-area" data-testid="planner-area">
+                {t(`${P}.areaRange`, { area: areaName, start: offset + 2, end: offset + span + 1 })}
+              </small>
+            )}
             <div className="st-kv">
               {STATION_TYPES.map((type) => (
                 <div key={type} data-type={type}>
@@ -262,9 +312,9 @@ export default function TrainTradeStationToolPage() {
                   <div className="st-step">
                     <button type="button" aria-label={`${t(STATION_KEY[type])} ${t(`${P}.decrease`)}`} disabled={mix[type] <= 0}
                       onClick={() => changeMix(type, mix[type] - 1)}><IconMinus aria-hidden stroke={2.4} /></button>
-                    <input className="num" type="number" inputMode="numeric" min={0} max={stops} value={mix[type]}
+                    <input className="num" type="number" inputMode="numeric" min={0} max={span} value={mix[type]}
                       aria-label={t(STATION_KEY[type])} onChange={(event) => changeMix(type, event.target.valueAsNumber)} />
-                    <button type="button" aria-label={`${t(STATION_KEY[type])} ${t(`${P}.increase`)}`} disabled={mixSum >= stops}
+                    <button type="button" aria-label={`${t(STATION_KEY[type])} ${t(`${P}.increase`)}`} disabled={mixSum >= span}
                       onClick={() => changeMix(type, mix[type] + 1)}><IconPlus aria-hidden stroke={2.4} /></button>
                   </div>
                   <small className="num">{t(`${P}.stationRemaining`, { count: remaining ? remaining[type] : mix[type] })}</small>
@@ -278,13 +328,15 @@ export default function TrainTradeStationToolPage() {
       <section className="st-main" aria-live="polite">
         {!profile ? (
           <Empty title={t(`${P}.chooseDifficultyTitle`)} detail={t(`${P}.chooseDifficultyDetail`)} />
-        ) : !routeModel ? (
-          <Empty title={t(`${P}.configureTitle`)} detail={t(`${P}.configureDetail`, { total: stops })} />
+        ) : !routeModel && steps.length === 0 ? (
+          <Empty title={t(`${P}.configureTitle`)} detail={isArea
+            ? t(`${P}.configureAreaDetail`, { area: areaName, total: span })
+            : t(`${P}.configureDetail`, { total: stops })} />
         ) : (
           <>
             <header className="st-head">
               <h2>{t(`${P}.workspaceTitle`)}</h2>
-              <span className="num">{t(`${P}.progressReadout`, { current: originHint ? steps.length + 1 : 0, total: tileCount })}</span>
+              <span className="num">{t(`${P}.progressReadout`, { current: started ? steps.length + 1 : 0, total: tileCount })}</span>
             </header>
 
             <ol ref={trackRef} className="st-track" aria-label={t(`${P}.stationProgress`)} style={{ "--n": tileCount } as CSSProperties}>
@@ -309,6 +361,11 @@ export default function TrainTradeStationToolPage() {
             {complete ? (
               <div className="st-panel">
                 <p className="st-done">{t(`${P}.routeComplete`, { count: tileCount })}</p>
+                {actions}
+              </div>
+            ) : !routeModel ? (
+              <div className="st-panel">
+                <p className="st-note" data-testid="planner-area-needed">{t(`${P}.areaMixNeeded`, { area: areaName, total: span })}</p>
                 {actions}
               </div>
             ) : routeModel.count === 0 ? (
@@ -342,7 +399,7 @@ export default function TrainTradeStationToolPage() {
                           </div>
                         </div>
                       )}
-                      <div className="st-row">
+                      {!isArea && <div className="st-row">
                         <span>
                           {t(`${P}.futureHint`)}
                           {decision.needsHint && <em>{t(`${P}.historyRange`, { start: decision.windowStart + 1, end: decision.windowStart + 3 })}</em>}
@@ -360,7 +417,7 @@ export default function TrainTradeStationToolPage() {
                             })}
                           </div>
                         ) : <p className="st-note">{t(`${P}.noFutureHint`)}</p>}
-                      </div>
+                      </div>}
                       {decision.preview.count === 0 && <p className="st-warn">{t(`${P}.noRoute`)}</p>}
                     </div>
                   </div>
@@ -370,7 +427,8 @@ export default function TrainTradeStationToolPage() {
                 <div className="st-odds" aria-labelledby="st-odds-title">
                   <h3 id="st-odds-title">{t(`${P}.probabilityHeading`)}</h3>
                   {oddsTiles.map((tile) => (
-                    <Odds key={tile} tile={tile} model={decision.preview.count > 0 ? decision.preview : routeModel} current={tile === decision.tile} />
+                    <Odds key={tile} tile={tile} position={tilePosition(tile) - offset}
+                      model={decision.preview.count > 0 ? decision.preview : routeModel} current={tile === decision.tile} />
                   ))}
                 </div>
               </div>
@@ -411,9 +469,9 @@ function Bar({ probability }: { probability: StationTotals }) {
   );
 }
 
-function Odds({ tile, model, current }: { tile: number; model: RouteModel; current: boolean }) {
+function Odds({ tile, position, model, current }: { tile: number; position: number; model: RouteModel; current: boolean }) {
   const { t } = useTranslation();
-  const values = roundedProbabilities(probabilityFor(model, tilePosition(tile)));
+  const values = roundedProbabilities(probabilityFor(model, position));
   const leading = Math.max(...STATION_TYPES.map((type) => values[type]));
   return (
     <article className="st-odd" data-current={current || undefined}>

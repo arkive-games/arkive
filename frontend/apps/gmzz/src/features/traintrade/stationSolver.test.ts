@@ -47,4 +47,15 @@ describe('train-trade station solver', () => {
     expect(complete.count).toBe(1)
     expect(probabilityFor(complete, 2).trade).toBe(1)
   })
+
+  it('keeps neighbouring stops apart, across the area boundary too', () => {
+    const distinct = { distinct: true }
+    expect(createRouteModel({ winery: 2, food: 1, trade: 0 }, 3, '', []).count).toBe(3)
+    expect(createRouteModel({ winery: 2, food: 1, trade: 0 }, 3, '', [], distinct).count).toBe(1)
+    expect(createRouteModel({ winery: 2, food: 1, trade: 0 }, 3, '', [], { distinct: true, lead: 'winery' }).count).toBe(0)
+
+    const area = createRouteModel({ winery: 1, food: 1, trade: 1 }, 3, '', [], { distinct: true, lead: 'winery' })
+    expect(area.count).toBe(4)
+    expect(probabilityFor(area, 0).winery).toBe(0)
+  })
 })

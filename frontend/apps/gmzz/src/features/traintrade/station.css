@@ -64,6 +64,7 @@
 .st-mtitle h2 { font-size: 1.125rem; font-weight: 800; color: var(--st-ink); }
 .st-mtitle span { font-size: .875rem; font-weight: 800; color: #d14a3a; }
 .st-mtitle span[data-ok] { color: var(--st-sub); }
+.st-area { display: block; margin-top: -.25rem; font-size: .75rem; font-weight: 700; color: var(--st-sub); }
 .st-kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .375rem; }
 .st-kv > div { display: grid; justify-items: center; gap: .25rem; padding: .625rem .5rem; text-align: center; border-radius: .875rem; background: rgba(var(--t), .1); box-shadow: inset 0 0 0 1px rgba(var(--t), .2); }
 .st-kv span { display: block; font-size: .875rem; font-weight: 800; color: rgb(var(--t)); }

@@ -7,11 +7,19 @@ export type HintId = (typeof HINT_IDS)[number]
 export type StationTotals = Record<StationType, number>
 export type ConfirmedStep = { currentType: StationType; hintId: HintId | '' }
 
+/**
+ * Routes up to Hard never put two stops of the same type in a row. A model that
+ * covers one area of a longer route carries the stop before it as `lead`, so the
+ * rule also holds across the area boundary.
+ */
+export type AdjacencyRule = { distinct: boolean; lead?: StationType | '' }
+
 export type RouteModel = {
   totals: StationTotals
   totalStops: number
   fixed: ReadonlyMap<number, StationType>
   hints: ReadonlyMap<number, HintId>
+  adjacency?: AdjacencyRule
   count: number
 }
 
@@ -27,6 +35,7 @@ export function createRouteModel(
   totalStops: number,
   originHint: HintId | '',
   steps: ConfirmedStep[],
+  adjacency?: AdjacencyRule,
 ): RouteModel {
   const fixed = new Map<number, StationType>()
   const hints = new Map<number, HintId>()
@@ -35,7 +44,7 @@ export function createRouteModel(
     fixed.set(index, step.currentType)
     if (step.hintId) hints.set(index + 1, step.hintId)
   })
-  const model = { totals: { ...totals }, totalStops, fixed, hints, count: 0 }
+  const model = { totals: { ...totals }, totalStops, fixed, hints, adjacency, count: 0 }
   return { ...model, count: countRoutes(model) }
 }
 
@@ -150,6 +159,7 @@ function countRoutes(model: Omit<RouteModel, 'count'> | RouteModel, refinement: 
   if ([...hints.keys()].some((start) => start < 0 || start + 2 >= model.totalStops)) return 0
   if (STATION_TYPES.reduce((sum, type) => sum + model.totals[type], 0) !== model.totalStops) return 0
 
+  const distinct = model.adjacency?.distinct ?? false
   const remaining = STATION_TYPES.map((type) => model.totals[type])
   const memo = new Map<string, number>()
 
@@ -164,6 +174,7 @@ function countRoutes(model: Omit<RouteModel, 'count'> | RouteModel, refinement: 
     STATION_TYPES.forEach((type, typeIndex) => {
       if (required && required !== type) return
       if (remaining[typeIndex] === 0) return
+      if (distinct && type === previous) return
       const completedHint = hints.get(position - 2)
       if (completedHint && (!previousTwo || !previous || !matchesHint([previousTwo, previous, type], completedHint))) return
       remaining[typeIndex] -= 1
@@ -174,7 +185,8 @@ function countRoutes(model: Omit<RouteModel, 'count'> | RouteModel, refinement: 
     return total
   }
 
-  return visit(0, '', '')
+  // The lead only feeds the adjacency check; hints never look before position 0.
+  return visit(0, '', distinct ? model.adjacency?.lead ?? '' : '')
 }
 
 function mergeConstraints<T>(

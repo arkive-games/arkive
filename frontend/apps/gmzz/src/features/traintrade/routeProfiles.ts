@@ -6,7 +6,17 @@ export type TrainTradeDifficultyId = (typeof DIFFICULTY_IDS)[number]
 export type RawDifficulty = {
   ID: number
   AreaStationCounts: number[]
+  AreaNameTextIDs?: string[]
+  StationTipsType?: number
 }
+
+/**
+ * How the game tells the player what is ahead. `area`: on reaching each area
+ * it shows that area's station mix, and two stops in a row are never the same
+ * type. `hint`: it shows the whole route's mix once, then a "most of the next
+ * three" hint at every stop.
+ */
+export type TrainTradeTipsMode = 'area' | 'hint'
 
 export type RawMapGeneration = {
   ID: number
@@ -28,6 +38,11 @@ export type TrainTradeRouteProfile = {
    * the stops that follow, so the planner leaves it out.
    */
   stops: number
+  mode: TrainTradeTipsMode
+  /** Typed stops per area, the origin already taken off the first one. */
+  areas: number[]
+  /** Game-sourced area names, one per area when the dataset carries them. */
+  areaNames: string[]
 }
 
 export function parseTrainTradeRouteProfiles(
@@ -59,7 +74,11 @@ export function parseTrainTradeRouteProfiles(
       }
       route.StationPool.forEach((stationId) => stationTypeFromClient(stationTypes.get(stationId)))
     })
-    return { id, dataId, stops: declaredStops - 1 }
+    const areas = difficulty.AreaStationCounts.map((count, index) => (index === 0 ? count - 1 : count))
+    // Only Challenge and Frenzy use hints; an older dataset without the field is read that way too.
+    const mode: TrainTradeTipsMode = (difficulty.StationTipsType ?? (dataId >= 5 ? 3 : 1)) === 3 ? 'hint' : 'area'
+    const areaNames = (difficulty.AreaNameTextIDs ?? []).slice(0, areas.length)
+    return { id, dataId, stops: declaredStops - 1, mode, areas, areaNames }
   })
 }
 function stationTypeFromClient(value: string | undefined): StationType | null {
