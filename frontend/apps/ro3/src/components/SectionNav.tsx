@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@gamemap/ui'
@@ -33,6 +33,21 @@ export function HeaderAction({ children }: { children: ReactNode }) {
   return slot ? createPortal(children, slot) : null
 }
 
+/**
+ * The space under the sidebar's lit entry, where a page may list its own
+ * sub-pages (the talent page's two boards). Mirrors the header slot above.
+ */
+const SidebarSubSlot = createContext<HTMLElement | null>(null)
+export function SidebarSubProvider({ value, children }: { value: HTMLElement | null; children: ReactNode }) {
+  return <SidebarSubSlot.Provider value={value}>{children}</SidebarSubSlot.Provider>
+}
+
+/** Renders `children` under the sidebar's lit entry, when the sidebar is mounted. */
+export function SidebarSub({ children }: { children: ReactNode }) {
+  const slot = useContext(SidebarSubSlot)
+  return slot ? createPortal(children, slot) : null
+}
+
 /** The section's title: the page's subject, so it outranks every control below it. */
 function SectionTitle({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -48,15 +63,18 @@ function SectionTitle({ children, className }: { children: ReactNode; className?
  * straight on the page under a large title. It sticks while the page scrolls,
  * so the footer below still runs the full width.
  */
-export function SectionSidebar({ entries, active, onNavigate, label }: SectionNavProps) {
+export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot }: SectionNavProps & {
+  /** Receives the slot under the lit entry, for `SidebarSubProvider`. */
+  onSubSlot: (node: HTMLElement | null) => void
+}) {
   return (
     <nav aria-label={label} className="sticky top-4 hidden flex-col gap-1 self-start lg:flex">
       <SectionTitle className="mb-3 px-2 text-2xl">{label}</SectionTitle>
       {entries.map((entry) => {
         const current = entry.key === active
         return (
+          <Fragment key={entry.key}>
           <a
-            key={entry.key}
             href={hrefForKey(entry.key)}
             onClick={navigateOnClick(entry.key, onNavigate)}
             aria-current={current ? 'page' : undefined}
@@ -77,6 +95,8 @@ export function SectionSidebar({ entries, active, onNavigate, label }: SectionNa
             </span>
             <span className="truncate">{entry.label}</span>
           </a>
+          {current ? <div ref={onSubSlot} className="empty:hidden" /> : null}
+          </Fragment>
         )
       })}
     </nav>

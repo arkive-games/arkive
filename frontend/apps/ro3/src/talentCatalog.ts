@@ -30,8 +30,8 @@ export const BOARD_ROWS = 4
 
 /**
  * The season tree is one path from its start node. It is walked in order and
- * laid out in columns of BOARD_ROWS, running down one column and up the next,
- * so every link joins neighbouring cells and the path reads left to right.
+ * laid out over BOARD_ROWS rows, left to right along one row and back along
+ * the next, so every link joins neighbouring cells.
  */
 export function seasonPath<T extends { iId: number; iIsStartPoint?: number; kAfterids?: number[]; kPosition?: number[] }>(nodes: T[]): Array<{ node: T; column: number; row: number }> {
   const byId = new Map(nodes.map((node) => [node.iId, node]))
@@ -45,10 +45,11 @@ export function seasonPath<T extends { iId: number; iIsStartPoint?: number; kAft
   }
   // Anything off the path still shows, in the game's left-to-right order.
   ordered.push(...nodes.filter((node) => !seen.has(node.iId)).sort((a, b) => (a.kPosition?.[0] ?? 0) - (b.kPosition?.[0] ?? 0)))
+  const columns = Math.max(1, Math.ceil(ordered.length / BOARD_ROWS))
   return ordered.map((node, index) => {
-    const column = Math.floor(index / BOARD_ROWS)
-    const step = index % BOARD_ROWS
-    return { node, column, row: column % 2 === 0 ? step : BOARD_ROWS - 1 - step }
+    const row = Math.floor(index / columns)
+    const step = index % columns
+    return { node, column: row % 2 === 0 ? step : columns - 1 - step, row }
   })
 }
 

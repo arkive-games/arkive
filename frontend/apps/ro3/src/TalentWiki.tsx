@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type R
 import { GitFork, Heart, LockKeyhole, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { Notice } from './components/wiki'
-import { HeaderAction } from './components/SectionNav'
+import { HeaderAction, SidebarSub } from './components/SectionNav'
 import { GameText } from './components/GameText'
 import { LevelStepper } from './components/LevelStepper'
 import { stageEmblem } from './professionCatalog'
@@ -90,83 +90,109 @@ export function TalentWiki() {
     </div>
   )
 
-  return (
-    <div className="talent-wiki flex flex-col gap-4 md:gap-5">
-      <HeaderAction>{modeSwitch(true)}</HeaderAction>
+  // The two boards are the page's sub-pages, so they sit under its sidebar entry.
+  const systemList = (
+    <div role="tablist" aria-label={text.systemLabel} aria-orientation="vertical" className="my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">
+      {(['season', 'patron'] as const).map((candidate) => {
+        const selected = candidate === mode
+        const Icon = candidate === 'season' ? GitFork : Star
+        return (
+          <button
+            key={candidate}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            onClick={() => setMode(candidate)}
+            className={cn(
+              'flex h-9 items-center gap-2 rounded-lg px-2 text-sm transition-colors',
+              selected ? 'bg-[color:var(--arkive-filter-active)] font-bold text-[color:var(--arkive-nav-active)]' : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground',
+            )}
+          >
+            <Icon aria-hidden="true" className="size-4" />
+            {text[candidate]}
+          </button>
+        )
+      })}
+    </div>
+  )
 
-      <div className="flex flex-col gap-1.5 md:gap-3">
-        <div className="flex items-center gap-2">
-          {mode === 'season' ? (
-            // The class is the main choice: it decides every job talent behind the gates.
-            <div className="min-w-0 overflow-x-auto rounded-full bg-muted [scrollbar-width:none]">
-              <div role="tablist" aria-label={text.classLabel} className="flex w-max items-center gap-0.5 p-1">
-                {TALENT_LINES.map((candidate) => {
-                  const selected = candidate.lineId === line.lineId
-                  return (
-                    <button
-                      key={candidate.lineId}
-                      type="button"
-                      role="tab"
-                      aria-selected={selected}
-                      onClick={() => setLineId(candidate.lineId)}
-                      className={cn(
-                        'flex min-h-10 shrink-0 items-center gap-1.5 rounded-full py-0 pl-1 pr-4 text-sm font-semibold transition-colors',
-                        selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      <img src={stageEmblem(candidate.lineId)} alt="" className="size-8 object-contain" />
-                      {lineLabel(candidate.lineId)}
-                    </button>
-                  )
-                })}
-                {line.classes.length > 1 ? (
-                  // Swordsmen split in two; the pick rides at the end of the same track.
-                  <div role="radiogroup" aria-label={text.classLabel} className="ml-1 flex shrink-0 gap-0.5 rounded-full bg-card p-0.5 shadow-[0_0_0_1px_var(--border)]">
-                    {line.classes.map((candidate) => (
-                      <button
-                        key={candidate.jobId}
-                        type="button"
-                        role="radio"
-                        aria-checked={candidate.jobId === jobClass.jobId}
-                        onClick={() => setVariantId(candidate.jobId)}
-                        className={cn(
-                          'h-8 rounded-full px-3 text-sm font-semibold transition-colors',
-                          candidate.jobId === jobClass.jobId
-                            ? 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]'
-                            : 'text-muted-foreground hover:text-foreground',
-                        )}
-                      >
-                        {classLabel(candidate)}
-                      </button>
-                    ))}
+  const tabs = mode === 'season'
+    ? trees.map((candidate) => (
+      <UnderlineTab key={candidate.iId} selected={candidate.iId === tree?.iId} onClick={() => setTreeId(candidate.iId)}>
+        {treeLabel(candidate.name?.['zh-CN'] ?? String(candidate.iId))}
+      </UnderlineTab>
+    ))
+    : groups.map((candidate) => (
+      <UnderlineTab key={candidate.iID} selected={candidate.iID === group?.iID} onClick={() => setGroupId(candidate.iID)}>
+        {candidate.name?.['zh-CN'] ?? candidate.iID}
+      </UnderlineTab>
+    ))
+
+  return (
+    <div className="talent-wiki flex flex-col gap-3 md:gap-4">
+      <HeaderAction>{modeSwitch(true)}</HeaderAction>
+      <SidebarSub>{systemList}</SidebarSub>
+
+      {mode === 'season' ? (
+        // The class is the one choice above the board: it decides every job talent behind the gates.
+        <div className="w-full overflow-x-auto rounded-full bg-muted [scrollbar-width:none] md:w-fit md:max-w-full">
+          <div role="tablist" aria-label={text.classLabel} className="flex w-max items-center gap-0.5 p-1">
+            {TALENT_LINES.map((candidate) => {
+              const selected = candidate.lineId === line.lineId
+              const face = (
+                <>
+                  <img src={stageEmblem(candidate.lineId)} alt="" className="size-8 object-contain" />
+                  {lineLabel(candidate.lineId)}
+                </>
+              )
+              const look = cn(
+                'flex min-h-10 shrink-0 items-center gap-1.5 rounded-full py-0 pl-1 text-sm font-semibold transition-colors',
+                selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
+              )
+              // A line with several classes opens its pill into them, rather than adding a row.
+              if (selected && candidate.classes.length > 1) {
+                return (
+                  <div key={candidate.lineId} role="tab" aria-selected="true" className={cn(look, 'pr-1')}>
+                    {face}
+                    <span role="radiogroup" aria-label={text.classLabel} className="ml-1 flex gap-0.5 rounded-full bg-background/15 p-0.5">
+                      {candidate.classes.map((option) => {
+                        const checked = option.jobId === jobClass.jobId
+                        return (
+                          <button
+                            key={option.jobId}
+                            type="button"
+                            role="radio"
+                            aria-checked={checked}
+                            onClick={() => setVariantId(option.jobId)}
+                            className={cn(
+                              'h-8 rounded-full px-3 text-sm font-semibold transition-colors',
+                              checked ? 'bg-background text-foreground' : 'text-background/70 hover:text-background',
+                            )}
+                          >
+                            {classLabel(option)}
+                          </button>
+                        )
+                      })}
+                    </span>
                   </div>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-          <div className="ml-auto hidden shrink-0 lg:block">{modeSwitch(false)}</div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div role="group" aria-label={mode === 'season' ? text.treeLabel : text.groupLabel} className="-mx-2 flex min-w-0 overflow-x-auto [scrollbar-width:none] md:mx-0">
-            {mode === 'season'
-              ? trees.map((candidate) => (
-                <UnderlineTab key={candidate.iId} selected={candidate.iId === tree?.iId} onClick={() => setTreeId(candidate.iId)}>
-                  {treeLabel(candidate.name?.['zh-CN'] ?? String(candidate.iId))}
-                </UnderlineTab>
-              ))
-              : groups.map((candidate) => (
-                <UnderlineTab key={candidate.iID} selected={candidate.iID === group?.iID} onClick={() => setGroupId(candidate.iID)}>
-                  {candidate.name?.['zh-CN'] ?? candidate.iID}
-                </UnderlineTab>
-              ))}
+                )
+              }
+              return (
+                <button
+                  key={candidate.lineId}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setLineId(candidate.lineId)}
+                  className={cn(look, 'pr-4')}
+                >
+                  {face}
+                </button>
+              )
+            })}
           </div>
-          {mode === 'season' && tree?.iNeedLevel ? (
-            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-[color:var(--ro3-stage-solid)] px-2 text-xs font-bold leading-5 text-white">
-              {text.requiredLevel.replace('{level}', String(tree.iNeedLevel))}
-            </span>
-          ) : null}
         </div>
-      </div>
+      ) : null}
 
       {dataError ? <Notice>{content.wiki.dataError}</Notice> : !talents ? <Notice>{content.wiki.loading}</Notice> : mode === 'season' ? (
         tree ? (
@@ -174,17 +200,47 @@ export function TalentWiki() {
             key={tree.iId}
             talents={talents}
             treeId={tree.iId}
+            tabs={tabs}
+            tabsLabel={text.treeLabel}
+            chip={tree.iNeedLevel ? text.requiredLevel.replace('{level}', String(tree.iNeedLevel)) : undefined}
             jobClass={jobClass}
             itemNames={itemNames}
           />
         ) : null
       ) : group ? (
-        <PatronBoard key={group.iID} talents={talents} nodeIds={group.kTanlentPoints} />
+        <PatronBoard key={group.iID} talents={talents} nodeIds={group.kTanlentPoints} tabs={tabs} tabsLabel={text.groupLabel} />
       ) : null}
     </div>
   )
 }
 
+/**
+ * A board under its own tabs, with the picked node's panel beside it on wide
+ * screens -- so the detail is in view on arrival -- and under it below `lg`.
+ */
+function BoardCard({ tabs, tabsLabel, chip, areaRef, board, detail }: {
+  tabs: ReactNode
+  tabsLabel: string
+  chip?: string
+  areaRef: RefObject<HTMLDivElement | null>
+  board: ReactNode
+  detail: ReactNode
+}) {
+  return (
+    <section className="rounded-lg border border-border bg-card">
+      <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">
+        <div role="group" aria-label={tabsLabel} className="flex min-w-0 overflow-x-auto [scrollbar-width:none]">{tabs}</div>
+        {chip ? (
+          <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-[color:var(--ro3-stage-solid)] px-2 text-xs font-bold leading-5 text-white">{chip}</span>
+        ) : null}
+      </div>
+      <div className="grid gap-2.5 p-2.5 md:p-3.5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-4">
+        <div ref={areaRef} className="flex min-w-0 flex-col gap-2">{board}</div>
+        {detail}
+      </div>
+    </section>
+  )
+}
 function UnderlineTab({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
@@ -204,8 +260,10 @@ function UnderlineTab({ selected, onClick, children }: { selected: boolean; onCl
 }
 
 /**
- * Points a panel's rounded pointer at the pressed tile inside `area`. Written
- * straight to the pointer's style: it follows layout, not state.
+ * Points a panel's rounded pointer at the pressed tile inside `area`: from the
+ * panel's left edge when it stands beside the board, from its top when it
+ * sits below. Written straight to the pointer's style: it follows layout, not
+ * state.
  */
 function usePointer(key: string) {
   const panel = useRef<HTMLDivElement>(null)
@@ -220,12 +278,19 @@ function usePointer(key: string) {
       if (!tile || !pointer.current) return
       const outer = box.getBoundingClientRect()
       const inner = tile.getBoundingClientRect()
-      const x = Math.max(16, Math.min(outer.width - 16, inner.left + inner.width / 2 - outer.left))
-      pointer.current.style.left = `${x}px`
+      const style = pointer.current.style
+      if (outer.left >= inner.right) {
+        style.left = '0px'
+        style.top = `${Math.max(16, Math.min(outer.height - 16, inner.top + inner.height / 2 - outer.top))}px`
+      } else {
+        style.left = `${Math.max(16, Math.min(outer.width - 16, inner.left + inner.width / 2 - outer.left))}px`
+        style.top = '0px'
+      }
     }
     aim()
     const observer = new ResizeObserver(aim)
     observer.observe(box)
+    observer.observe(scope)
     scope.addEventListener('scroll', aim, { capture: true, passive: true })
     return () => {
       observer.disconnect()
@@ -245,17 +310,20 @@ function DetailPanel({ panelRef, pointerRef, children }: {
       <span
         ref={pointerRef}
         aria-hidden="true"
-        className="absolute -top-1.5 left-9 -ml-2 size-4 rotate-45 rounded-[0.3rem_0.2rem] bg-[color:var(--ro3-skill-panel)] transition-[left] duration-500 ease-[cubic-bezier(.34,1.4,.64,1)]"
+        className="absolute left-9 top-0 -ml-2 -mt-2 size-4 rotate-45 rounded-[0.3rem_0.2rem] bg-[color:var(--ro3-skill-panel)] transition-[left,top] duration-500 ease-[cubic-bezier(.34,1.4,.64,1)]"
       />
       {children}
     </div>
   )
 }
 
-/** The tree as the game lays it out, with one panel under it for the picked node. */
-function SeasonBoard({ talents, treeId, jobClass, itemNames }: {
+/** The tree in unlock order, with one panel beside it for the picked node. */
+function SeasonBoard({ talents, treeId, tabs, tabsLabel, chip, jobClass, itemNames }: {
   talents: TalentCatalogDocument
   treeId: number
+  tabs: ReactNode
+  tabsLabel: string
+  chip?: string
   jobClass: TalentClass
   itemNames: Map<number, string>
 }) {
@@ -283,49 +351,54 @@ function SeasonBoard({ talents, treeId, jobClass, itemNames }: {
   const links = placed.flatMap((node) => (node.kAfterids ?? []).filter((id) => pointById.has(id)).map((id) => [node, nodeById.get(id)!] as const))
 
   return (
-    <section className="flex flex-col gap-2.5 overflow-hidden rounded-lg border border-border bg-card p-2.5 md:p-3.5">
-      <div ref={areaRef} className="flex flex-col gap-2">
-        <div className="-mx-2.5 overflow-x-auto px-2.5 [scrollbar-width:thin] md:mx-0 md:px-0">
-          <div
-            className="relative mx-auto w-full rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
-            style={{ height: `${BOARD_ROWS * 5.5}rem`, minWidth: `${columns * 5}rem`, maxWidth: `${columns * 10.5}rem` }}
-          >
-            <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
-              {links.map(([from, to]) => {
-                const a = pointById.get(from.iId)!
-                const b = pointById.get(to.iId)!
+    <BoardCard
+      tabs={tabs}
+      tabsLabel={tabsLabel}
+      chip={chip}
+      areaRef={areaRef}
+      board={(
+        <>
+          <div className="-mx-2.5 overflow-x-auto px-2.5 [scrollbar-width:thin] md:mx-0 md:px-0">
+            <div
+              className="relative mx-auto w-full rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
+              style={{ height: `${BOARD_ROWS * 5.5}rem`, minWidth: `${columns * 4.25}rem`, maxWidth: `${columns * 10.5}rem` }}
+            >
+              <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
+                {links.map(([from, to]) => {
+                  const a = pointById.get(from.iId)!
+                  const b = pointById.get(to.iId)!
+                  return (
+                    <line
+                      key={`${from.iId}-${to.iId}`}
+                      x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                      vectorEffect="non-scaling-stroke"
+                      strokeLinecap="round"
+                      className="stroke-[color:var(--ro3-stage-mid)] [stroke-width:5]"
+                    />
+                  )
+                })}
+              </svg>
+              {placed.map((node) => {
+                const point = pointById.get(node.iId)!
                 return (
-                  <line
-                    key={`${from.iId}-${to.iId}`}
-                    x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                    vectorEffect="non-scaling-stroke"
-                    strokeLinecap="round"
-                    className="stroke-[color:var(--ro3-stage-mid)] [stroke-width:5]"
-                  />
+                  <div key={node.iId} className="absolute -translate-x-1/2 -translate-y-[1.4rem]" style={{ left: `${point.x}%`, top: `${point.y}%` }}>
+                    <SeasonTile node={node} levelById={levelById} selected={node.iId === selected?.iId} onSelect={() => setSelectedId(node.iId)} />
+                  </div>
                 )
               })}
-            </svg>
-            {placed.map((node) => {
-              const point = pointById.get(node.iId)!
-              return (
-                <div key={node.iId} className="absolute -translate-x-1/2 -translate-y-[1.4rem]" style={{ left: `${point.x}%`, top: `${point.y}%` }}>
-                  <SeasonTile node={node} levelById={levelById} selected={node.iId === selected?.iId} onSelect={() => setSelectedId(node.iId)} />
-                </div>
-              )
-            })}
+            </div>
           </div>
-        </div>
-        {loose.length > 0 ? (
-          <div className="flex items-center gap-2 border-t border-dashed border-border pt-2">
-            <span className="text-xs font-semibold text-muted-foreground">{text.extra}</span>
-            {loose.map((node) => (
-              <SeasonTile key={node.iId} node={node} levelById={levelById} selected={node.iId === selected?.iId} onSelect={() => setSelectedId(node.iId)} />
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {selected ? (
+          {loose.length > 0 ? (
+            <div className="flex items-center gap-2 border-t border-dashed border-border pt-2">
+              <span className="text-xs font-semibold text-muted-foreground">{text.extra}</span>
+              {loose.map((node) => (
+                <SeasonTile key={node.iId} node={node} levelById={levelById} selected={node.iId === selected?.iId} onSelect={() => setSelectedId(node.iId)} />
+              ))}
+            </div>
+          ) : null}
+        </>
+      )}
+      detail={selected ? (
         <DetailPanel panelRef={panelRef} pointerRef={pointerRef}>
           {selected.iType === GATE_TYPE ? (
             <GateDetail gate={selected} nodeById={nodeById} levelById={levelById} effectById={effectById} jobClass={jobClass} />
@@ -341,10 +414,9 @@ function SeasonBoard({ talents, treeId, jobClass, itemNames }: {
           )}
         </DetailPanel>
       ) : null}
-    </section>
+    />
   )
 }
-
 function SeasonTile({ node, levelById, selected, onSelect }: {
   node: TalentNodeRecord
   levelById: Map<number, TalentLevelRecord>
@@ -437,7 +509,7 @@ function StatDetail({ node, rows, attributes, itemNames, index, onIndex }: {
           <LevelStepper index={at} last={last} current={row.iLevel ?? at + 1} top={rows[last].iLevel ?? rows.length} onChange={onIndex} />
         ) : null}
       </div>
-      <dl className="grid gap-x-4 gap-y-1 text-xs md:grid-cols-2">
+      <dl className="grid gap-x-4 gap-y-1 text-xs md:grid-cols-2 lg:grid-cols-1">
         <CostLine label={text.cost} costs={(row.kCosts ?? []).map(([id, value]) => [id, value] as [number, number])} itemNames={itemNames} />
         <CostLine label={text.totalCost} costs={cumulativeCosts(rows, at)} itemNames={itemNames} extra={skillPoints ? text.skillPoint.replace('{value}', String(skillPoints)) : undefined} />
       </dl>
@@ -518,7 +590,7 @@ function GateDetail({ gate, nodeById, levelById, effectById, jobClass }: {
         <span className="text-sm font-semibold">{classLabel(jobClass)}</span>
       </div>
       {known.length === 0 ? <p className="text-sm text-muted-foreground">{text.noBranches}</p> : (
-        <div className="grid gap-2 md:grid-cols-3">
+        <div className="grid gap-2 md:grid-cols-3 lg:grid-cols-1">
           {branches.map((branch, index) => (
             <div key={branch.head?.iId ?? `empty-${index}`} className="flex flex-col gap-1.5 rounded-lg bg-card p-2 shadow-[0_0_0_1px_var(--border)]">
               {branch.head ? (
@@ -555,7 +627,7 @@ function JobTalent({ row, effectById, lead }: { row: TalentLevelRecord; effectBy
 }
 
 /** The star board: four columns, laid out by each node's iPos. */
-function PatronBoard({ talents, nodeIds }: { talents: TalentCatalogDocument; nodeIds: number[] }) {
+function PatronBoard({ talents, nodeIds, tabs, tabsLabel }: { talents: TalentCatalogDocument; nodeIds: number[]; tabs: ReactNode; tabsLabel: string }) {
   const nodes = useMemo(() => {
     const ids = new Set(nodeIds)
     return talents.patronTalents.nodes.filter((node) => ids.has(node.iID))
@@ -577,8 +649,11 @@ function PatronBoard({ talents, nodeIds }: { talents: TalentCatalogDocument; nod
   const levelCount = (node: PatronTalentNodeRecord) => Math.max(1, Math.min(node.iMaxLevel, node.kTalentAttrIds?.length || node.iSeasonPower?.length || 1))
 
   return (
-    <section className="flex flex-col gap-2.5 overflow-hidden rounded-lg border border-border bg-card p-2.5 md:p-3.5">
-      <div ref={areaRef}>
+    <BoardCard
+      tabs={tabs}
+      tabsLabel={tabsLabel}
+      areaRef={areaRef}
+      board={(
         <div className="relative mx-auto w-full max-w-2xl rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]" style={{ height: `${rows * 5.5}rem` }}>
           <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
             {links.map(([from, to]) => {
@@ -611,9 +686,8 @@ function PatronBoard({ talents, nodeIds }: { talents: TalentCatalogDocument; nod
             )
           })}
         </div>
-      </div>
-
-      {selected ? (
+      )}
+      detail={selected ? (
         <DetailPanel panelRef={panelRef} pointerRef={pointerRef}>
           <PatronDetail
             node={selected}
@@ -625,7 +699,7 @@ function PatronBoard({ talents, nodeIds }: { talents: TalentCatalogDocument; nod
           />
         </DetailPanel>
       ) : null}
-    </section>
+    />
   )
 }
 

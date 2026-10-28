@@ -29,7 +29,7 @@ import { EquipmentWiki } from './EquipmentWiki'
 import { SoulWiki } from './SoulWiki'
 import { BuildPlanner } from './BuildPlanner'
 import { ContentPage } from './components/ContentPage'
-import { HeaderActionProvider, SectionSidebar, SectionStrip, type SectionNavEntry } from './components/SectionNav'
+import { HeaderActionProvider, SectionSidebar, SectionStrip, SidebarSubProvider, type SectionNavEntry } from './components/SectionNav'
 import { resourceUrl } from './lib/urls'
 import {
   hrefFor,
@@ -187,6 +187,8 @@ function App() {
   const showUnavailable = () => setNoticeId((value) => value + 1)
   // The phone wiki header's action slot, handed down to whichever page wants it.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
+  // And the sidebar's, under the lit entry, for a page's own sub-pages.
+  const [sidebarSlot, setSidebarSlot] = useState<HTMLElement | null>(null)
 
   const navigate = (key: NavKey) => {
     const next = locationForKey(key)
@@ -214,11 +216,13 @@ function App() {
         {location.page === 'wiki' ? (
           <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
             <h1 className="sr-only">{pageTitle(location)}</h1>
-            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} />
+            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSubSlot={setSidebarSlot} />
             <div className="min-w-0">
               <SectionStrip entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>
-                <WikiPage view={location.view} />
+                <SidebarSubProvider value={sidebarSlot}>
+                  <WikiPage view={location.view} />
+                </SidebarSubProvider>
               </HeaderActionProvider>
             </div>
           </div>
