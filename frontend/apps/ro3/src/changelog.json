@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.19.0",
+      "date": "2026-10-28",
+      "commit": "13d2530e6f8e9fa9f667ab4c443ad9c30f3239ba",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Redesigned the talent page: pick a class to see its job talents behind each gate, browse season trees and the star matrix, and step through levels with attributes and cumulative costs",
+            "zh-CN": "天赋页面重做：顶部选职业即可查看每道关卡后的职业天赋，季节天赋与星辰矩阵一页切换，逐级查看属性与累计消耗",
+            "zh-TW": "天賦頁面重做：頂部選職業即可查看每道關卡後的職業天賦，季節天賦與星辰矩陣一頁切換，逐級查看屬性與累計消耗"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.18.0",
       "date": "2026-10-28",
       "commit": "fdf4beaea9e327f6ae47ac8979dd1c901a8a90f6",
