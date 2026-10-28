@@ -5905,6 +5905,22 @@ select {
   color: var(--ro3-ink);
 }
 
+/* The skill board's advancement plates and the panel under the skill row. */
+.profession-wiki {
+  --ro3-stage: #b4532a;
+  --ro3-stage-solid: #b4532a;
+  --ro3-stage-soft: #fdf1ea;
+  --ro3-stage-mid: #f9dcc9;
+  --ro3-skill-panel: #f2f6fb;
+}
+
+.dark .profession-wiki {
+  --ro3-stage: #f0a57e;
+  --ro3-stage-soft: #241914;
+  --ro3-stage-mid: #3a261c;
+  --ro3-skill-panel: #18202c;
+}
+
 /* The shared Arkive bar already carries the page identity; the native workspace
    owns the compact in-game title bar below it. */
 .wiki-masthead {

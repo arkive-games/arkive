@@ -1,8 +1,9 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
-import { Minus, Plus, Zap } from 'lucide-react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Minus, Plus, Search, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { buildProfessionStages, PROFESSION_LINES, type ProfessionSkillChoice, type ProfessionStageData } from './professionCatalog'
-import { Chip, Notice, SearchField } from './components/wiki'
+import { Notice } from './components/wiki'
+import { HeaderAction } from './components/SectionNav'
 import { loadProfessionWikiData, loadSkillLevels, type SkillLevelRow } from './wikiData'
 import { resourceUrl } from './lib/urls'
 import content from './locales/zh-CN.json'
@@ -46,9 +47,8 @@ const text = content.wiki.professions
 
 /**
  * A whole advancement route read top to bottom: pick a class and a branch, and
- * each stage from first job to third follows as a band of skill cards, in the
- * order a player unlocks them. Every card carries its own level stepper, so
- * the numbers can be read without leaving the page.
+ * each stage from first job to third follows as one block -- its skills in a
+ * row, and under them the one that is picked, at the level its stepper is on.
  */
 export function ProfessionWiki() {
   const [data, setData] = useState<ProfessionData | null>(null)
@@ -56,7 +56,10 @@ export function ProfessionWiki() {
   const [lineId, setLineId] = useState(PROFESSION_LINES[0].id)
   const [routeId, setRouteId] = useState(PROFESSION_LINES[0].routes[0].id)
   const [query, setQuery] = useState('')
-  // Level rows by skill, filled a route at a time; every card reads them.
+  // On phones the search field folds behind a button in the wiki header.
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchInput = useRef<HTMLInputElement>(null)
+  // Level rows by skill, filled a route at a time; every block reads them.
   const [levelRows, setLevelRows] = useState<Map<number, SkillLevelRow[]>>(() => new Map())
   const [levelError, setLevelError] = useState(false)
 
@@ -73,6 +76,10 @@ export function ProfessionWiki() {
       })
     return () => { active = false }
   }, [])
+
+  useEffect(() => {
+    if (searchOpen) searchInput.current?.focus()
+  }, [searchOpen])
 
   const line = PROFESSION_LINES.find((candidate) => candidate.id === lineId) ?? PROFESSION_LINES[0]
   const route = line.routes.find((candidate) => candidate.id === routeId) ?? line.routes[0]
@@ -108,60 +115,110 @@ export function ProfessionWiki() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2.5">
-        <div
-          role="tablist"
-          aria-label={text.lineLabel}
-          className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+    <div className="profession-wiki flex flex-col gap-4 md:gap-5">
+      <HeaderAction>
+        <button
+          type="button"
+          aria-label={text.searchToggle}
+          aria-expanded={searchOpen}
+          onClick={() => setSearchOpen((value) => !value)}
+          className={cn(
+            'grid size-9 place-items-center rounded-full transition-colors',
+            searchOpen
+              ? 'bg-foreground text-background'
+              : 'bg-[image:var(--arkive-warm-search)] text-[color:var(--arkive-warm-search-foreground)] shadow-[0_0.3rem_0.8rem_rgba(236,122,28,0.28)]',
+          )}
         >
-          {PROFESSION_LINES.map((candidate) => {
-            const selected = candidate.id === line.id
-            return (
-              <button
-                key={candidate.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => selectLine(candidate.id)}
-                className={cn(
-                  'flex shrink-0 items-center gap-1.5 rounded-full border py-1 pl-1 pr-3.5 text-sm font-semibold transition-colors',
-                  selected
-                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                    : 'border-border bg-card hover:border-primary/60',
-                )}
-              >
-                <img src={stageEmblem(candidate.routes[0].stages[0].stageId)} alt="" className="size-7 object-contain" />
-                {lineLabel(candidate.id)}
-              </button>
-            )
-          })}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div role="group" aria-label={text.routeLabel} className="flex flex-wrap gap-1.5">
-            {line.routes.map((candidate) => (
-              <Chip key={candidate.id} active={candidate.id === route.id} onClick={() => setRouteId(candidate.id)}>
-                {routeLabel(candidate.id)}
-              </Chip>
-            ))}
+          <Search aria-hidden="true" className="size-4" />
+        </button>
+      </HeaderAction>
+
+      <div className="flex flex-col gap-1.5 md:gap-3">
+        {/* The class is the page's main choice: a muted track whose lit pill is filled. */}
+        <div className="w-full overflow-x-auto rounded-full bg-muted [scrollbar-width:none] md:w-fit md:max-w-full">
+          <div role="tablist" aria-label={text.lineLabel} className="flex w-max gap-0.5 p-1">
+            {PROFESSION_LINES.map((candidate) => {
+              const selected = candidate.id === line.id
+              return (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => selectLine(candidate.id)}
+                  className={cn(
+                    'flex min-h-10 shrink-0 items-center gap-1.5 rounded-full py-0 pl-1 pr-4 text-sm font-semibold transition-colors',
+                    selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <img src={stageEmblem(candidate.routes[0].stages[0].stageId)} alt="" className="size-8 object-contain" />
+                  {lineLabel(candidate.id)}
+                </button>
+              )
+            })}
           </div>
-          <SearchField
-            className="sm:w-64"
-            value={query}
-            onChange={setQuery}
-            label={text.searchLabel}
-            placeholder={text.searchPlaceholder}
-          />
+        </div>
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          {/* The branch belongs to the class, so it reads lighter: plain tabs with an underline. */}
+          <div role="group" aria-label={text.routeLabel} className="-mx-2 flex overflow-x-auto [scrollbar-width:none] md:mx-0">
+            {line.routes.map((candidate) => {
+              const selected = candidate.id === route.id
+              return (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setRouteId(candidate.id)}
+                  className={cn(
+                    'relative h-10 shrink-0 px-2 text-sm transition-colors after:absolute after:inset-x-2 after:bottom-1 after:h-1 after:rounded-full md:px-3 md:after:inset-x-3',
+                    selected
+                      ? 'font-bold text-foreground after:bg-[color:var(--ro3-stage)]'
+                      : 'font-semibold text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {routeLabel(candidate.id)}
+                </button>
+              )
+            })}
+          </div>
+          <form
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault()
+              searchInput.current?.focus()
+            }}
+            className={cn(
+              'w-full items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-shadow focus-within:ring-2 focus-within:ring-ring/40 lg:flex lg:w-[23rem]',
+              searchOpen ? 'flex' : 'hidden',
+            )}
+          >
+            <input
+              ref={searchInput}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              aria-label={text.searchLabel}
+              placeholder={text.searchPlaceholder}
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            <button
+              type="submit"
+              aria-label={text.searchLabel}
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-[image:var(--arkive-warm-search)] text-[color:var(--arkive-warm-search-foreground)] shadow-[0_0.3rem_0.8rem_rgba(236,122,28,0.28)] transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:scale-105"
+            >
+              <Search aria-hidden="true" className="size-4" />
+            </button>
+          </form>
         </div>
       </div>
 
       {dataError ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : normalizedQuery && matchCount === 0 ? (
         <Notice>{text.empty}</Notice>
       ) : (
-        <ol aria-label={text.pathTitle} className="flex flex-col gap-6">
+        <ol aria-label={text.pathTitle} className="flex flex-col gap-3">
           {stages.map((stage, index) => (
-            <StageBand
-              key={`${stage.professionId}-${stage.rank}`}
+            <StageBlock
+              key={`${route.id}-${stage.professionId}-${stage.rank}`}
               stage={stage}
               index={index}
               matches={matches}
@@ -175,127 +232,258 @@ export function ProfessionWiki() {
   )
 }
 
-/** One advancement: a slim heading, then the skills it adds as cards, actives first. */
-function StageBand({ stage, index, matches, levelRows, levelError }: {
+/**
+ * One advancement: a plate naming it on the left (room for job art later), its
+ * skills in a row, and the picked one described underneath. A rounded pointer
+ * on the description's top edge sits under the picked skill.
+ */
+function StageBlock({ stage, index, matches, levelRows, levelError }: {
   stage: ProfessionStageData
   index: number
   matches: (choice: ProfessionSkillChoice) => boolean
   levelRows: Map<number, SkillLevelRow[]>
   levelError: boolean
 }) {
+  const [selectedId, setSelectedId] = useState<number>()
+  const [levelIndexes, setLevelIndexes] = useState<Record<number, number>>({})
+  const panel = useRef<HTMLDivElement>(null)
+  const tiles = useRef<HTMLDivElement>(null)
+  const pointer = useRef<HTMLSpanElement>(null)
+
   const fresh = stage.skills.filter((choice) => !choice.inherited && matches(choice))
   const kindOf = (choice: ProfessionSkillChoice) => levelRows.has(choice.skillId) ? skillKind(levelRows.get(choice.skillId)) : undefined
   // A stable sort: passives drop behind the actives, each kind keeping unlock order.
   const ordered = [...fresh].sort((a, b) => Number(kindOf(a) === 'passive') - Number(kindOf(b) === 'passive'))
-  if (ordered.length === 0) return null
+  const selected = ordered.find((choice) => choice.skillId === selectedId) ?? ordered[0]
+
+  // Written straight to the pointer's style: it follows layout, not state.
+  useLayoutEffect(() => {
+    const box = panel.current
+    const row = tiles.current
+    if (!box || !row) return
+    const aim = () => {
+      const tile = row.querySelector<HTMLElement>('[aria-pressed="true"]')
+      if (!tile || !pointer.current) return
+      const outer = box.getBoundingClientRect()
+      const inner = tile.getBoundingClientRect()
+      const x = Math.max(16, Math.min(outer.width - 16, inner.left + inner.width / 2 - outer.left))
+      pointer.current.style.left = `${x}px`
+    }
+    aim()
+    const observer = new ResizeObserver(aim)
+    observer.observe(box)
+    row.addEventListener('scroll', aim, { passive: true })
+    return () => {
+      observer.disconnect()
+      row.removeEventListener('scroll', aim)
+    }
+  }, [selected?.skillId, ordered.length])
+
+  if (!selected) return null
+
+  const levels = levelRows.get(selected.skillId)
+  const levelIndex = Math.min(levelIndexes[selected.skillId] ?? 0, (levels?.length ?? 1) - 1)
+  const setLevel = (next: number) => setLevelIndexes((previous) => ({ ...previous, [selected.skillId]: next }))
 
   return (
-    <li className="flex flex-col gap-3">
-      <header className="flex items-center gap-2.5">
-        <img src={stageEmblem(stage.stageId)} alt="" className="size-9 shrink-0 object-contain" />
-        <span className="rounded-md bg-[color:var(--arkive-filter-active)] px-1.5 py-0.5 text-xs font-semibold text-[color:var(--arkive-nav-active)]">
+    <li className="grid overflow-hidden rounded-lg border border-border bg-card md:grid-cols-[8.5rem_minmax(0,1fr)]">
+      <header className="flex items-center gap-2 border-b border-border bg-[linear-gradient(90deg,var(--ro3-stage-mid),var(--ro3-stage-soft)_70%)] px-3 py-2 md:flex-col md:justify-center md:gap-1.5 md:border-b-0 md:border-r md:bg-[linear-gradient(170deg,var(--ro3-stage-mid),var(--ro3-stage-soft)_75%)] md:px-2 md:py-3">
+        <img
+          src={stageEmblem(stage.stageId)}
+          alt=""
+          className="size-8 object-contain drop-shadow-[0_0.2rem_0.4rem_rgba(120,50,20,0.18)] md:size-[3.25rem]"
+        />
+        <span className="rounded-full bg-[color:var(--ro3-stage-solid)] px-2 text-xs font-bold leading-5 text-white">
           {advancementLabel(index)}
         </span>
-        <h3 className="text-lg font-bold">{stageLabel(stage.stageId)}</h3>
-        <span className="text-xs text-muted-foreground">{text.newSkills.replace('{count}', String(stage.newSkillCount))}</span>
-        <span aria-hidden="true" className="h-px flex-1 bg-border" />
+        <h3 className="text-base font-bold md:text-lg">{stageLabel(stage.stageId)}</h3>
       </header>
-      <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-        {ordered.map((choice) => (
-          <li key={choice.skillId} className="flex">
-            <SkillCard choice={choice} levels={levelRows.get(choice.skillId)} levelError={levelError} />
-          </li>
-        ))}
-      </ul>
+
+      <div className="flex min-w-0 flex-col gap-2.5 p-2.5 md:px-3.5 md:pb-3.5 md:pt-3">
+        <div ref={tiles} className="-mx-2.5 flex gap-1 overflow-x-auto px-2.5 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
+          {ordered.map((choice) => (
+            <SkillTile
+              key={choice.skillId}
+              choice={choice}
+              passive={kindOf(choice) === 'passive'}
+              selected={choice.skillId === selected.skillId}
+              onSelect={() => setSelectedId(choice.skillId)}
+            />
+          ))}
+        </div>
+
+        <div ref={panel} className="relative rounded-lg bg-[color:var(--ro3-skill-panel)] px-2.5 py-2.5 md:px-3">
+          <span
+            ref={pointer}
+            aria-hidden="true"
+            className="absolute -top-1.5 left-9 -ml-2 size-4 rotate-45 rounded-[0.3rem_0.2rem] bg-[color:var(--ro3-skill-panel)] transition-[left] duration-500 ease-[cubic-bezier(.34,1.4,.64,1)]"
+          />
+          <SkillDetail
+            choice={selected}
+            levels={levels}
+            levelIndex={levelIndex}
+            onLevel={setLevel}
+            levelError={levelError}
+          />
+        </div>
+      </div>
     </li>
   )
 }
 
+function SkillTile({ choice, passive, selected, onSelect }: {
+  choice: ProfessionSkillChoice
+  passive: boolean
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      title={skillName(choice)}
+      onClick={onSelect}
+      className={cn(
+        'group relative flex w-16 shrink-0 flex-col items-center gap-1 rounded-lg px-0.5 pb-1 pt-1.5 transition-colors md:w-[4.4rem]',
+        selected ? 'bg-[color:var(--arkive-filter-active)]' : 'hover:bg-muted',
+      )}
+    >
+      <span
+        className={cn(
+          'grid size-11 place-items-center overflow-hidden rounded-lg bg-muted transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-translate-y-0.5',
+          selected ? 'ring-2 ring-[color:var(--arkive-nav-active)]' : 'ring-1 ring-inset ring-black/5',
+        )}
+      >
+        {choice.skill?.icon ? (
+          <img src={resourceUrl(choice.skill.icon)} alt="" loading="lazy" className="size-full object-contain" />
+        ) : <Zap aria-hidden="true" className="size-5 text-muted-foreground" />}
+      </span>
+      <span
+        className={cn(
+          'max-w-full truncate text-xs',
+          selected ? 'font-bold text-[color:var(--arkive-nav-active)]' : 'text-muted-foreground',
+        )}
+      >
+        {skillName(choice)}
+      </span>
+      {passive ? (
+        <span
+          title={text.kindPassive}
+          className="absolute right-1 top-0.5 grid size-5 place-items-center rounded-full bg-card text-xs font-bold leading-none text-muted-foreground shadow-[0_0_0_1px_var(--border)]"
+        >
+          {text.passiveBadge}
+        </span>
+      ) : null}
+    </button>
+  )
+}
+
 /**
- * A skill read in place: its facts on one line, a level stepper, and the
- * description of the level the stepper is on.
+ * The picked skill, without repeating its icon or name: kind and facts on one
+ * line, the level stepper at its end, then the description at that level.
  */
-function SkillCard({ choice, levels, levelError }: {
+function SkillDetail({ choice, levels, levelIndex, onLevel, levelError }: {
   choice: ProfessionSkillChoice
   levels?: SkillLevelRow[]
+  levelIndex: number
+  onLevel: (index: number) => void
   levelError: boolean
 }) {
-  const [levelIndex, setLevelIndex] = useState(0)
-  const level = levels?.[Math.min(levelIndex, levels.length - 1)]
+  const level = levels?.[levelIndex]
   const kind = levels ? skillKind(levels) : undefined
   const first = levels?.[0]
-  const element = first?.iEleType ? (text.elements as Record<string, string>)[String(first.iEleType)] : undefined
-  const lastIndex = (levels?.length ?? 1) - 1
-  const facts = [
-    text.jobLevel.replace('{level}', String(choice.unlockLevel)),
-    ...(element ? [element] : []),
-    ...(level?.iDistanceMax ? [`${text.range} ${text.meters.replace('{value}', formatNumber(level.iDistanceMax / 100))}`] : []),
-    ...(level?.iCD ? [`${text.cooldown} ${text.seconds.replace('{value}', formatNumber(level.iCD / 1000))}`] : []),
+  const element = kind === 'active' && first?.iEleType ? (text.elements as Record<string, string>)[String(first.iEleType)] : undefined
+  const facts: Array<{ key: string; value: string; accent?: boolean }> = [
+    { key: 'unlock', value: text.jobLevel.replace('{level}', String(choice.unlockLevel)) },
+    ...(element ? [{ key: 'element', value: element, accent: true }] : []),
+    ...(level?.iDistanceMax ? [{ key: 'range', value: `${text.range} ${text.meters.replace('{value}', formatNumber(level.iDistanceMax / 100))}` }] : []),
+    ...(level?.iCD ? [{ key: 'cooldown', value: `${text.cooldown} ${text.seconds.replace('{value}', formatNumber(level.iCD / 1000))}` }] : []),
   ]
 
   return (
-    <article className="flex w-full flex-col gap-2.5 rounded-xl border border-border bg-card p-3">
-      <header className="flex items-start gap-2.5">
-        <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted">
-          {choice.skill?.icon ? (
-            <img src={resourceUrl(choice.skill.icon)} alt="" loading="lazy" className="size-full object-contain" />
-          ) : <Zap aria-hidden="true" className="size-5 text-muted-foreground" />}
-        </span>
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <div className="flex items-center gap-1.5">
-            <h4 className="truncate text-base font-semibold">{skillName(choice)}</h4>
-            {kind ? (
+    <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+        <div className="flex min-h-8 flex-wrap items-center gap-x-2.5 gap-y-1 md:gap-x-2">
+          {kind ? (
+            <span
+              className={cn(
+                'rounded-md px-1.5 text-xs font-bold leading-5',
+                kind === 'passive'
+                  ? 'bg-muted text-muted-foreground'
+                  : 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]',
+              )}
+            >
+              {kind === 'passive' ? text.kindPassive : text.kindActive}
+            </span>
+          ) : null}
+          {facts.map((fact, index) => (
+            <Fragment key={fact.key}>
+              {index > 0 ? <span aria-hidden="true" className="hidden text-xs text-muted-foreground/50 md:inline">·</span> : null}
               <span
                 className={cn(
-                  'shrink-0 rounded px-1 text-xs font-medium',
-                  kind === 'passive' ? 'bg-muted text-muted-foreground' : 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]',
+                  'whitespace-nowrap text-xs',
+                  fact.accent ? 'font-semibold text-[color:var(--ro3-stage)]' : 'text-muted-foreground',
                 )}
               >
-                {kind === 'passive' ? text.kindPassive : text.kindActive}
+                {fact.value}
               </span>
-            ) : null}
-          </div>
-          <p className="text-xs text-muted-foreground">{facts.join(' · ')}</p>
+            </Fragment>
+          ))}
         </div>
-        {levels && levels.length > 1 ? (
-          <div role="group" aria-label={text.levelPicker} className="flex shrink-0 items-center rounded-lg border border-border">
-            <button
-              type="button"
-              aria-label={text.levelDown}
-              disabled={levelIndex === 0}
-              onClick={() => setLevelIndex((value) => Math.max(0, value - 1))}
-              className="grid size-7 place-items-center rounded-l-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-            >
-              <Minus aria-hidden="true" className="size-3.5" />
-            </button>
-            <span aria-live="polite" className="min-w-14 text-center text-xs font-semibold tabular-nums">
-              Lv.{level?.iLevel}<span className="font-normal text-muted-foreground">/{levels[lastIndex].iLevel}</span>
-            </span>
-            <button
-              type="button"
-              aria-label={text.levelUp}
-              disabled={levelIndex >= lastIndex}
-              onClick={() => setLevelIndex((value) => Math.min(lastIndex, value + 1))}
-              className="grid size-7 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-            >
-              <Plus aria-hidden="true" className="size-3.5" />
-            </button>
-          </div>
-        ) : null}
-      </header>
-      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/85">
+        {levels && levels.length > 1 ? <LevelStepper levels={levels} index={levelIndex} onChange={onLevel} /> : null}
+      </div>
+      <p className="min-h-[3.3em] whitespace-pre-line text-sm leading-relaxed text-foreground/85">
         {levelError ? content.wiki.dataError : !levels ? content.wiki.loading : (
           <GameText value={level?.desc?.['zh-CN'] ?? content.wiki.skillDetail.unavailable} />
         )}
       </p>
-    </article>
+    </div>
+  )
+}
+
+/** A small capsule: − and + either side of the level, with a bar for how far up it is. */
+function LevelStepper({ levels, index, onChange }: {
+  levels: SkillLevelRow[]
+  index: number
+  onChange: (index: number) => void
+}) {
+  const last = levels.length - 1
+  const current = levels[index].iLevel
+  const top = levels[last].iLevel
+  const button = 'grid size-7 place-items-center rounded-full bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)] transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:bg-[color:var(--arkive-nav-active)] hover:text-white active:scale-90 disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground/50'
+
+  return (
+    <div
+      role="group"
+      aria-label={text.levelPicker}
+      className="flex items-center gap-0.5 rounded-full bg-card p-0.5 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_0_0_1px_var(--border)]"
+    >
+      <button type="button" aria-label={text.levelDown} disabled={index === 0} onClick={() => onChange(Math.max(0, index - 1))} className={button}>
+        <Minus aria-hidden="true" className="size-3.5" strokeWidth={2.8} />
+      </button>
+      <span aria-live="polite" className="relative flex min-w-14 items-baseline justify-center gap-0.5 pb-1 tabular-nums leading-tight">
+        <span className="text-xs font-semibold text-muted-foreground">Lv</span>
+        <b className="text-base font-extrabold">{current}</b>
+        <span className="text-xs font-semibold text-muted-foreground">/{top}</span>
+        <span aria-hidden="true" className="absolute inset-x-1.5 bottom-0 h-0.5 overflow-hidden rounded-full bg-muted">
+          <span
+            className="block h-full rounded-full bg-[image:var(--arkive-warm-search)] transition-[width] duration-300"
+            style={{ width: `${Math.round((current / top) * 100)}%` }}
+          />
+        </span>
+      </span>
+      <button type="button" aria-label={text.levelUp} disabled={index >= last} onClick={() => onChange(Math.min(last, index + 1))} className={button}>
+        <Plus aria-hidden="true" className="size-3.5" strokeWidth={2.8} />
+      </button>
+    </div>
   )
 }
 
 /**
  * The game's rich text: the values it colours are the ones that grow with the
  * level, so they keep an emphasis -- in the theme's accent rather than the
- * game's own hex, which is unreadable on a dark page.
+ * game's own hex, which is unreadable on a dark page. Bracketed status names
+ * take the class colour.
  */
 function GameText({ value }: { value: string }) {
   const plain = value
@@ -307,7 +495,18 @@ function GameText({ value }: { value: string }) {
     <>
       {parts.map((part, index) => index % 2 === 1 ? (
         <b key={index} className="font-semibold text-[color:var(--arkive-nav-active)]">{part}</b>
-      ) : <Fragment key={index}>{part.replace(/<\/?color(?:=[^>]*)?>/gi, '')}</Fragment>)}
+      ) : <Keywords key={index} value={part.replace(/<\/?color(?:=[^>]*)?>/gi, '')} />)}
+    </>
+  )
+}
+
+function Keywords({ value }: { value: string }) {
+  const parts = value.split(/(【[^】]+】)/)
+  return (
+    <>
+      {parts.map((part, index) => index % 2 === 1 ? (
+        <span key={index} className="font-semibold text-[color:var(--ro3-stage)]">{part}</span>
+      ) : <Fragment key={index}>{part}</Fragment>)}
     </>
   )
 }

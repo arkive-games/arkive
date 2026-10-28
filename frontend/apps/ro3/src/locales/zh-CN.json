@@ -111,6 +111,8 @@
       "levelUp": "提高等级",
       "kindActive": "主动",
       "kindPassive": "被动",
+      "passiveBadge": "被",
+      "searchToggle": "搜索技能",
       "range": "射程",
       "meters": "{value} 米",
       "cooldown": "冷却",
