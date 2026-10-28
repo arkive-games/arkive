@@ -7,12 +7,14 @@ import { GameText } from './components/GameText'
 import { LevelStepper } from './components/LevelStepper'
 import { stageEmblem } from './professionCatalog'
 import {
+  BOARD_ROWS,
   classRow,
   cumulativeCosts,
   gateBranches,
   GATE_TYPE,
   nodeLevelRows,
-  TALENT_CLASSES,
+  seasonPath,
+  TALENT_LINES,
   treeLabel,
   type TalentClass,
 } from './talentCatalog'
@@ -38,7 +40,10 @@ export function TalentWiki() {
   const [dataError, setDataError] = useState(false)
   const [itemNames, setItemNames] = useState<Map<number, string>>(() => new Map())
   const [mode, setMode] = useState<TalentMode>('season')
-  const [jobClass, setJobClass] = useState<TalentClass>(TALENT_CLASSES[0])
+  const [lineId, setLineId] = useState(TALENT_LINES[0].lineId)
+  const [variantId, setVariantId] = useState<number>()
+  const line = TALENT_LINES.find((candidate) => candidate.lineId === lineId) ?? TALENT_LINES[0]
+  const jobClass = line.classes.find((candidate) => candidate.jobId === variantId) ?? line.classes[0]
   const [treeId, setTreeId] = useState<number>()
   const [groupId, setGroupId] = useState<number>()
 
@@ -90,39 +95,63 @@ export function TalentWiki() {
       <HeaderAction>{modeSwitch(true)}</HeaderAction>
 
       <div className="flex flex-col gap-1.5 md:gap-3">
-        {mode === 'season' ? (
-          // The class is the main choice: it decides every job talent behind the gates.
-          <div className="w-full overflow-x-auto rounded-full bg-muted [scrollbar-width:none] md:w-fit md:max-w-full">
-            <div role="tablist" aria-label={text.classLabel} className="flex w-max gap-0.5 p-1">
-              {TALENT_CLASSES.map((candidate) => {
-                const selected = candidate.jobId === jobClass.jobId
-                return (
-                  <button
-                    key={candidate.jobId}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    onClick={() => setJobClass(candidate)}
-                    className={cn(
-                      'flex min-h-10 shrink-0 items-center gap-1.5 rounded-full py-0 pl-1 pr-4 text-sm font-semibold transition-colors',
-                      selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    <img src={stageEmblem(candidate.stageId)} alt="" className="size-8 object-contain" />
-                    {classLabel(candidate)}
-                  </button>
-                )
-              })}
+        <div className="flex items-center gap-2">
+          {mode === 'season' ? (
+            // The class is the main choice: it decides every job talent behind the gates.
+            <div className="min-w-0 overflow-x-auto rounded-full bg-muted [scrollbar-width:none]">
+              <div role="tablist" aria-label={text.classLabel} className="flex w-max items-center gap-0.5 p-1">
+                {TALENT_LINES.map((candidate) => {
+                  const selected = candidate.lineId === line.lineId
+                  return (
+                    <button
+                      key={candidate.lineId}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => setLineId(candidate.lineId)}
+                      className={cn(
+                        'flex min-h-10 shrink-0 items-center gap-1.5 rounded-full py-0 pl-1 pr-4 text-sm font-semibold transition-colors',
+                        selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      <img src={stageEmblem(candidate.lineId)} alt="" className="size-8 object-contain" />
+                      {lineLabel(candidate.lineId)}
+                    </button>
+                  )
+                })}
+                {line.classes.length > 1 ? (
+                  // Swordsmen split in two; the pick rides at the end of the same track.
+                  <div role="radiogroup" aria-label={text.classLabel} className="ml-1 flex shrink-0 gap-0.5 rounded-full bg-card p-0.5 shadow-[0_0_0_1px_var(--border)]">
+                    {line.classes.map((candidate) => (
+                      <button
+                        key={candidate.jobId}
+                        type="button"
+                        role="radio"
+                        aria-checked={candidate.jobId === jobClass.jobId}
+                        onClick={() => setVariantId(candidate.jobId)}
+                        className={cn(
+                          'h-8 rounded-full px-3 text-sm font-semibold transition-colors',
+                          candidate.jobId === jobClass.jobId
+                            ? 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {classLabel(candidate)}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ) : null}
-        <div className="flex items-center justify-between gap-3">
+          ) : null}
+          <div className="ml-auto hidden shrink-0 lg:block">{modeSwitch(false)}</div>
+        </div>
+        <div className="flex items-center gap-3">
           <div role="group" aria-label={mode === 'season' ? text.treeLabel : text.groupLabel} className="-mx-2 flex min-w-0 overflow-x-auto [scrollbar-width:none] md:mx-0">
             {mode === 'season'
               ? trees.map((candidate) => (
                 <UnderlineTab key={candidate.iId} selected={candidate.iId === tree?.iId} onClick={() => setTreeId(candidate.iId)}>
                   {treeLabel(candidate.name?.['zh-CN'] ?? String(candidate.iId))}
-                  {candidate.iNeedLevel ? <span className="ml-1 text-xs font-medium text-muted-foreground">Lv{candidate.iNeedLevel}</span> : null}
                 </UnderlineTab>
               ))
               : groups.map((candidate) => (
@@ -131,7 +160,11 @@ export function TalentWiki() {
                 </UnderlineTab>
               ))}
           </div>
-          <div className="hidden lg:block">{modeSwitch(false)}</div>
+          {mode === 'season' && tree?.iNeedLevel ? (
+            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-[color:var(--ro3-stage-solid)] px-2 text-xs font-bold leading-5 text-white">
+              {text.requiredLevel.replace('{level}', String(tree.iNeedLevel))}
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -141,7 +174,6 @@ export function TalentWiki() {
             key={tree.iId}
             talents={talents}
             treeId={tree.iId}
-            needLevel={tree.iNeedLevel}
             jobClass={jobClass}
             itemNames={itemNames}
           />
@@ -221,10 +253,9 @@ function DetailPanel({ panelRef, pointerRef, children }: {
 }
 
 /** The tree as the game lays it out, with one panel under it for the picked node. */
-function SeasonBoard({ talents, treeId, needLevel, jobClass, itemNames }: {
+function SeasonBoard({ talents, treeId, jobClass, itemNames }: {
   talents: TalentCatalogDocument
   treeId: number
-  needLevel?: number
   jobClass: TalentClass
   itemNames: Map<number, string>
 }) {
@@ -242,23 +273,27 @@ function SeasonBoard({ talents, treeId, needLevel, jobClass, itemNames }: {
     ?? placed.find((node) => node.iIsStartPoint) ?? placed[0]
   const { panelRef, areaRef, pointerRef } = usePointer(`${selected?.iId}`)
 
-  const placedIds = new Set(placed.map((node) => node.iId))
-  const links = placed.flatMap((node) => (node.kAfterids ?? []).filter((id) => placedIds.has(id)).map((id) => [node, nodeById.get(id)!] as const))
+  // Laid out in unlock order rather than the game's scatter, at the star board's height.
+  const cells = useMemo(() => seasonPath(placed), [placed])
+  const columns = Math.max(1, ...cells.map((cell) => cell.column + 1))
+  const pointById = new Map(cells.map(({ node, column, row }) => [node.iId, {
+    x: (column + 0.5) / columns * 100,
+    y: (row + 0.5) / BOARD_ROWS * 100,
+  }]))
+  const links = placed.flatMap((node) => (node.kAfterids ?? []).filter((id) => pointById.has(id)).map((id) => [node, nodeById.get(id)!] as const))
 
   return (
     <section className="flex flex-col gap-2.5 overflow-hidden rounded-lg border border-border bg-card p-2.5 md:p-3.5">
       <div ref={areaRef} className="flex flex-col gap-2">
         <div className="-mx-2.5 overflow-x-auto px-2.5 [scrollbar-width:thin] md:mx-0 md:px-0">
-          <div className="relative aspect-[31/15] min-w-[46rem] rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]">
-            {needLevel ? (
-              <span className="absolute left-2 top-2 rounded-full bg-[color:var(--ro3-stage-solid)] px-2 text-xs font-bold leading-5 text-white">
-                {text.requiredLevel.replace('{level}', String(needLevel))}
-              </span>
-            ) : null}
+          <div
+            className="relative mx-auto w-full rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
+            style={{ height: `${BOARD_ROWS * 5.5}rem`, minWidth: `${columns * 5}rem`, maxWidth: `${columns * 10.5}rem` }}
+          >
             <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
               {links.map(([from, to]) => {
-                const a = seasonPoint(from.kPosition!)
-                const b = seasonPoint(to.kPosition!)
+                const a = pointById.get(from.iId)!
+                const b = pointById.get(to.iId)!
                 return (
                   <line
                     key={`${from.iId}-${to.iId}`}
@@ -271,7 +306,7 @@ function SeasonBoard({ talents, treeId, needLevel, jobClass, itemNames }: {
               })}
             </svg>
             {placed.map((node) => {
-              const point = seasonPoint(node.kPosition!)
+              const point = pointById.get(node.iId)!
               return (
                 <div key={node.iId} className="absolute -translate-x-1/2 -translate-y-[1.4rem]" style={{ left: `${point.x}%`, top: `${point.y}%` }}>
                   <SeasonTile node={node} levelById={levelById} selected={node.iId === selected?.iId} onSelect={() => setSelectedId(node.iId)} />
@@ -329,7 +364,7 @@ function SeasonTile({ node, levelById, selected, onSelect }: {
         <span className="grid size-full place-items-center rounded-full bg-[image:var(--arkive-warm-search)] text-[color:var(--arkive-warm-search-foreground)]">
           <LockKeyhole aria-hidden="true" className="size-5" />
         </span>
-      ) : first?.icon ? <img src={resourceUrl(first.icon)} alt="" loading="lazy" className="size-full object-contain" /> : <Zap aria-hidden="true" className="size-5 text-muted-foreground" />}
+      ) : first?.icon ? <TalentArt icon={first.icon} /> :<Zap aria-hidden="true" className="size-5 text-muted-foreground" />}
       round={gate}
     />
   )
@@ -505,7 +540,7 @@ function JobTalent({ row, effectById, lead }: { row: TalentLevelRecord; effectBy
   return (
     <div className={cn('grid grid-cols-[auto_minmax(0,1fr)] gap-x-2', !lead && 'border-t border-dashed border-border pt-1.5')}>
       <span className={cn('grid place-items-center overflow-hidden rounded-lg bg-muted', lead ? 'size-9' : 'size-7')}>
-        {row.icon ? <img src={resourceUrl(row.icon)} alt="" loading="lazy" className="size-full object-contain" /> : <Sparkles aria-hidden="true" className="size-4 text-muted-foreground" />}
+        {row.icon ? <TalentArt icon={row.icon} /> :<Sparkles aria-hidden="true" className="size-4 text-muted-foreground" />}
       </span>
       <div className="flex min-w-0 flex-col">
         <b className={cn('font-bold', lead ? 'text-sm' : 'text-xs')}>{row.name?.['zh-CN'] ?? row.iId}</b>
@@ -570,7 +605,7 @@ function PatronBoard({ talents, nodeIds }: { talents: TalentCatalogDocument; nod
                   name={node.name?.['zh-CN'] ?? String(node.iID)}
                   badge={node.iMaxLevel > 1 ? node.iMaxLevel : undefined}
                   round={!node.icon}
-                  art={node.icon ? <img src={resourceUrl(node.icon)} alt="" loading="lazy" className="size-full object-contain" /> : <PatronGlyph values={attrRows(node)[0] ?? []} />}
+                  art={node.icon ? <TalentArt icon={node.icon} /> :<PatronGlyph values={attrRows(node)[0] ?? []} />}
                 />
               </div>
             )
@@ -630,10 +665,15 @@ function classLabel(jobClass: TalentClass): string {
   return (content.wiki.professions.stages as Record<string, string>)[jobClass.stageId] ?? jobClass.stageId
 }
 
-/** Board coordinates run 2..29 across and 1..14 down; a margin keeps edge tiles whole. */
-function seasonPoint(position: number[]): { x: number; y: number } {
-  return {
-    x: 5 + ((position[0] - 2) / 27) * 90,
-    y: 12 + ((position[1] - 1) / 13) * 74,
-  }
+function lineLabel(lineId: string): string {
+  return (content.wiki.professions.lines as Record<string, string>)[lineId] ?? lineId
+}
+
+/** Talent art is white glow drawn for the game's dark panels, so it sits on a dark plate. */
+function TalentArt({ icon }: { icon: string }) {
+  return (
+    <span className="grid size-full place-items-center bg-[image:var(--ro3-talent-plate)]">
+      <img src={resourceUrl(icon)} alt="" loading="lazy" className="size-[88%] object-contain" />
+    </span>
+  )
 }

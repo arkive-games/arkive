@@ -5,22 +5,52 @@ export const GATE_TYPE = 5
 export const BRANCH_HEAD_TYPE = 6
 export const BRANCH_CHILD_TYPE = 7
 
-/**
- * The classes job talents are written for. A row's iJobId lists one job id per
- * advancement (1400/1300/1200 for the knight line), so the class is matched by
- * the id of its top rank. Swordsmen split into knight and crusader here.
- */
-export const TALENT_CLASSES = [
-  { stageId: 'knight', jobId: 1400 },
-  { stageId: 'crusader', jobId: 1410 },
-  { stageId: 'wizard', jobId: 2400 },
-  { stageId: 'hunter', jobId: 3400 },
-  { stageId: 'priest', jobId: 4400 },
-  { stageId: 'assassin', jobId: 5400 },
-  { stageId: 'blacksmith', jobId: 6400 },
-] as const
+export interface TalentClass {
+  stageId: string
+  jobId: number
+}
 
-export type TalentClass = (typeof TALENT_CLASSES)[number]
+/**
+ * The classes job talents are written for, under the same six lines as the
+ * skill board. A row's iJobId lists one job id per advancement (1400/1300/1200
+ * for the knight), so a class is matched by the id of its top rank. Only the
+ * swordsman line splits, into knight and crusader.
+ */
+export const TALENT_LINES: ReadonlyArray<{ lineId: string; classes: readonly TalentClass[] }> = [
+  { lineId: 'swordman', classes: [{ stageId: 'knight', jobId: 1400 }, { stageId: 'crusader', jobId: 1410 }] },
+  { lineId: 'magician', classes: [{ stageId: 'wizard', jobId: 2400 }] },
+  { lineId: 'archer', classes: [{ stageId: 'hunter', jobId: 3400 }] },
+  { lineId: 'acolyte', classes: [{ stageId: 'priest', jobId: 4400 }] },
+  { lineId: 'thief', classes: [{ stageId: 'assassin', jobId: 5400 }] },
+  { lineId: 'merchant', classes: [{ stageId: 'blacksmith', jobId: 6400 }] },
+]
+
+/** Rows a talent board is laid out in, so both boards stand the same height. */
+export const BOARD_ROWS = 4
+
+/**
+ * The season tree is one path from its start node. It is walked in order and
+ * laid out in columns of BOARD_ROWS, running down one column and up the next,
+ * so every link joins neighbouring cells and the path reads left to right.
+ */
+export function seasonPath<T extends { iId: number; iIsStartPoint?: number; kAfterids?: number[]; kPosition?: number[] }>(nodes: T[]): Array<{ node: T; column: number; row: number }> {
+  const byId = new Map(nodes.map((node) => [node.iId, node]))
+  const ordered: T[] = []
+  const seen = new Set<number>()
+  let next = nodes.find((node) => node.iIsStartPoint) ?? nodes[0]
+  while (next && !seen.has(next.iId)) {
+    seen.add(next.iId)
+    ordered.push(next)
+    next = (next.kAfterids ?? []).map((id) => byId.get(id)).find((node): node is T => !!node && !seen.has(node.iId))!
+  }
+  // Anything off the path still shows, in the game's left-to-right order.
+  ordered.push(...nodes.filter((node) => !seen.has(node.iId)).sort((a, b) => (a.kPosition?.[0] ?? 0) - (b.kPosition?.[0] ?? 0)))
+  return ordered.map((node, index) => {
+    const column = Math.floor(index / BOARD_ROWS)
+    const step = index % BOARD_ROWS
+    return { node, column, row: column % 2 === 0 ? step : BOARD_ROWS - 1 - step }
+  })
+}
 
 /** `Ⅱ+-1` reads better as `Ⅱ+·1`. */
 export function treeLabel(name: string): string {

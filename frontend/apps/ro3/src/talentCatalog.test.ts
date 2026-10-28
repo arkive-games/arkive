@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classRow, cumulativeCosts, gateBranches, nodeLevelRows, treeLabel } from './talentCatalog'
+import { classRow, cumulativeCosts, gateBranches, nodeLevelRows, seasonPath, treeLabel } from './talentCatalog'
 import type { TalentLevelRecord, TalentNodeRecord } from './wikiData'
 
 const node = (iId: number, iType: number, extra: Partial<TalentNodeRecord> = {}): TalentNodeRecord => ({
@@ -42,6 +42,15 @@ describe('talent catalog', () => {
     const head = node(10, 6, { levels: [1, 2] })
     expect(classRow(head, levels, 1400)?.iId).toBe(2)
     expect(classRow(head, levels, 2400)).toBeUndefined()
+  })
+
+  it('walks the season path from its start and snakes it through four-row columns', () => {
+    const chain = [3, 1, 2, 4, 5, 6].map((id) => node(id, 1, {
+      iIsStartPoint: id === 1 ? 1 : undefined,
+      kAfterids: id < 6 ? [id + 1] : [],
+    }))
+    const cells = seasonPath(chain).map(({ node: entry, column, row }) => `${entry.iId}:${column}${row}`)
+    expect(cells).toEqual(['1:00', '2:01', '3:02', '4:03', '5:13', '6:12'])
   })
 
   it('opens a gate into released branch heads and their children', () => {

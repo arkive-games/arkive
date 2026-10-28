@@ -5597,6 +5597,7 @@ select {
   --ro3-stage-soft: #fdf1ea;
   --ro3-stage-mid: #f9dcc9;
   --ro3-skill-panel: #f2f6fb;
+  --ro3-talent-plate: radial-gradient(circle at 50% 35%, #3b5578, #1b2638 75%);
 }
 
 .dark .profession-wiki,
@@ -5605,6 +5606,7 @@ select {
   --ro3-stage-soft: #241914;
   --ro3-stage-mid: #3a261c;
   --ro3-skill-panel: #18202c;
+  --ro3-talent-plate: radial-gradient(circle at 50% 35%, #34496a, #111827 75%);
 }
 
 /* The shared Arkive bar already carries the page identity; the native workspace
