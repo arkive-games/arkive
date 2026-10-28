@@ -5338,39 +5338,33 @@ select {
   object-fit: fill;
 }
 
+/* The name is art on the plate, so it shrinks to the plate's width instead of
+   spilling past it: --card-name-chars is set from the name's length. */
 .card-game-frame > strong {
   position: absolute;
   overflow: hidden;
   color: var(--ro3-tone-20);
-  font-size: 0.75rem;
+  font-size: clamp(0.4375rem, calc(var(--card-name-room, 76cqi) / var(--card-name-chars, 6)), 0.75rem);
   line-height: 1.2;
   text-align: center;
-  text-overflow: ellipsis;
   text-shadow: 0 0.08rem 0.1rem color-mix(in srgb, var(--ro3-tone-01) 92%, transparent);
   white-space: nowrap;
 }
 
-.card-game-frame > strong.is-long-name {
-  font-size: 0.75rem;
-}
-
-.card-game-frame > strong.is-extra-long-name {
-  font-size: 0.75rem;
-}
-
 .card-game-frame:not(.is-collection) > strong {
-  right: 0;
+  right: 10%;
   bottom: 5%;
-  left: 0;
+  left: 10%;
   display: grid;
   height: 12%;
   place-items: center;
 }
 
 .card-game-frame.is-collection > strong {
-  right: 0;
+  --card-name-room: 70cqi;
+  right: 12%;
   bottom: 2.5%;
-  left: 0;
+  left: 12%;
   display: grid;
   height: 11.5%;
   place-items: center;
