@@ -1002,3 +1002,6 @@ select.gz-select {
 .gz-slot .nm { grid-column: 2; }
 .gz-slot .s { position: absolute; bottom: .5rem; right: .75rem; }
 .gz-slot .tags { grid-column: 2; }
+/* A talent's stats at its current level, under its level bar. */
+.gz-tnstats { display: flex; flex-wrap: wrap; gap: .125rem .5rem; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--gz-sub); }
+.gz-tnstats b { font-weight: 700; color: var(--gz-ink); }

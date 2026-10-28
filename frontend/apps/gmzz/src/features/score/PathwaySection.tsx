@@ -235,19 +235,10 @@ function TalentCard({ index, entry, core, onLevel }: {
   const { t, i18n } = useTranslation()
   const cap = entry.cap
   const filled = cap > 0 ? Math.round((entry.level / cap) * 100) : 0
-  // The stats at the current level, and at the node's top level for what it
-  // grows into; a node at 0 shows its first level instead of nothing.
-  const statLine = (level: number) => {
-    const stats = nodeStatsAt(entry.node, level)
-    return stats.length > 0
-      ? t('pathway.nodeStats', { level, stats: stats.map((stat) => `${stat.name} ${formatTalentStat(stat, i18n.language)}`).join(' · ') })
-      : null
-  }
-  const shown = Math.max(1, entry.level)
+  // What the node grants at its current level, listed under it; nothing at 0.
+  const stats = entry.level > 0 ? nodeStatsAt(entry.node, entry.level) : []
   const nodeTip = [
     entry.node.description,
-    statLine(shown),
-    shown < entry.node.maxLevel ? statLine(entry.node.maxLevel) : null,
     t('pathway.nodeScore', { mark: entry.node.mark, level: entry.level, score: entry.score.toLocaleString() }),
   ].filter(Boolean).join('\n')
   return (
@@ -266,6 +257,11 @@ function TalentCard({ index, entry, core, onLevel }: {
       <Stepper variant="mini" value={entry.level} min={0} max={cap} onChange={onLevel}
         label={t('pathway.nodeLevel', { name: entry.node.name })} testId={`talent-level-${entry.node.key}`} />
       <div className="gz-tl" aria-hidden><i style={{ width: `${filled}%` }} /></div>
+      {stats.length > 0 ? (
+        <ul className="gz-tnstats num" data-testid={`talent-node-stats-${entry.node.key}`}>
+          {stats.map((stat) => <li key={stat.key}>{stat.name} <b>{formatTalentStat(stat, i18n.language)}</b></li>)}
+        </ul>
+      ) : null}
       {core ? (
         // No choice here: a core switches on when the node above it is learnt.
         <div className="contents" data-testid={`talent-node-${core.node.key}`}>
