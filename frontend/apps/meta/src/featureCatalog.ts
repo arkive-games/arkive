@@ -43,6 +43,7 @@ const text = (en: string, zhCN: string, zhTW: string): LocalizedText => ({
 })
 
 export const FEATURES: readonly GameFeature[] = [
+  { id: 'oss-map', gameId: 'oss', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },
   // Palworld
   { id: 'palworld-map', gameId: 'palworld', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },
   {
