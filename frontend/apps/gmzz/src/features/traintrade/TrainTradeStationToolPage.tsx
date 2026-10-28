@@ -319,41 +319,51 @@ export default function TrainTradeStationToolPage() {
             ) : decision && (
               <div className="st-decide">
                 <div className="st-panel">
-                  <h3 className="st-ptitle">
-                    {decision.tile === 0 ? t(`${P}.startStation`) : t(`${P}.stationNumber`, { station: decision.tile + 1 })}
-                    {decision.locked && decision.tile > 0 && <em>{t(`${P}.lockedAt`)}</em>}
-                  </h3>
-                  <div className="st-fields">
-                    {decision.tile > 0 && (
-                      <div className="st-field">
-                        <div className="st-pills" role="group" aria-label={t(`${P}.currentStation`)} data-testid="planner-current-station">
-                          {STATION_TYPES.map((type) => (
-                            <button key={type} type="button" data-type={type} aria-pressed={decision.current === type}
-                              disabled={decision.locked || !decision.availableCurrent.has(type)} onClick={() => setPendingCurrent(type)}>
-                              {t(STATION_KEY[type])}
-                            </button>
-                          ))}
+                  <div className="st-stop">
+                    {/* The stop being decided, tinted with the station picked for it. */}
+                    <h3 className="st-badge" data-type={decision.current || undefined} data-origin={decision.tile === 0 || undefined}>
+                      <small>{decision.tile === 0 ? t(`${P}.startStation`) : t(`${P}.stationCurrent`)}</small>
+                      <b className="num">{decision.tile + 1}</b>
+                      {decision.tile > 0 && (
+                        <span>{decision.locked ? t(`${P}.lockedAt`) : decision.current ? t(STATION_KEY[decision.current]) : t(`${P}.stationPending`)}</span>
+                      )}
+                    </h3>
+                    <div className="st-rows">
+                      {decision.tile > 0 && (
+                        <div className="st-row">
+                          <span>{t(`${P}.stationKind`)}</span>
+                          <div className="st-pills" role="group" aria-label={t(`${P}.currentStation`)} data-testid="planner-current-station">
+                            {STATION_TYPES.map((type) => (
+                              <button key={type} type="button" data-type={type} aria-pressed={decision.current === type}
+                                disabled={decision.locked || !decision.availableCurrent.has(type)} onClick={() => setPendingCurrent(type)}>
+                                {t(STATION_KEY[type])}
+                              </button>
+                            ))}
+                          </div>
                         </div>
+                      )}
+                      <div className="st-row">
+                        <span>
+                          {t(`${P}.futureHint`)}
+                          {decision.needsHint && <em>{t(`${P}.historyRange`, { start: decision.windowStart + 1, end: decision.windowStart + 3 })}</em>}
+                        </span>
+                        {decision.needsHint ? (
+                          <div className="st-pills" role="group" aria-label={t(`${P}.futureHint`)} data-testid="planner-hint">
+                            {HINT_IDS.map((hint) => {
+                              const enabled = decision.availableHints.has(hint);
+                              return (
+                                <button key={hint} type="button" aria-pressed={pendingHint === hint} disabled={!enabled}
+                                  title={enabled ? undefined : t(`${P}.hintUnavailable`)} onClick={() => setPendingHint(hint)}>
+                                  {t(`${P}.hint.${hint}`)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : <p className="st-note">{t(`${P}.noFutureHint`)}</p>}
                       </div>
-                    )}
-                    <div className="st-field">
-                    <span>{t(`${P}.futureHint`)}{decision.needsHint && <em>{t(`${P}.historyRange`, { start: decision.windowStart + 1, end: decision.windowStart + 3 })}</em>}</span>
-                    {decision.needsHint ? (
-                      <div className="st-pills four" role="group" aria-label={t(`${P}.futureHint`)} data-testid="planner-hint">
-                        {HINT_IDS.map((hint) => {
-                          const enabled = decision.availableHints.has(hint);
-                          return (
-                            <button key={hint} type="button" aria-pressed={pendingHint === hint} disabled={!enabled}
-                              title={enabled ? undefined : t(`${P}.hintUnavailable`)} onClick={() => setPendingHint(hint)}>
-                              {t(`${P}.hint.${hint}`)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : <p className="st-note">{t(`${P}.noFutureHint`)}</p>}
+                      {decision.preview.count === 0 && <p className="st-warn">{t(`${P}.noRoute`)}</p>}
                     </div>
                   </div>
-                  {decision.preview.count === 0 && <p className="st-warn">{t(`${P}.noRoute`)}</p>}
                   {actions}
                 </div>
 

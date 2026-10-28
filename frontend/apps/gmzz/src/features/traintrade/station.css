@@ -57,8 +57,8 @@
 .st-diff button[aria-pressed='true'] {
   background: var(--st-card); color: var(--st-ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
 }
-.st-about { display: grid; gap: .25rem; padding: .625rem .875rem; border-radius: 1rem; background: color-mix(in srgb, var(--st-card) 70%, transparent); }
-.st-about small { font-size: .875rem; line-height: 1.5; font-weight: 600; color: var(--st-ink); }
+.st-about { display: grid; gap: .125rem; }
+.st-about small { font-size: .75rem; line-height: 1.5; font-weight: 500; color: var(--st-sub); }
 .st-mix { display: grid; gap: .625rem; padding-top: .875rem; border-top: 1px dashed rgba(var(--c), .35); }
 .st-mtitle { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
 .st-mtitle h2 { font-size: 1.125rem; font-weight: 800; color: var(--st-ink); }
@@ -124,18 +124,29 @@
 
 /* The decision panel, then the odds for the stops it touches in one row. */
 .st-decide { display: grid; gap: 1rem; }
-/* Title, then the station and hint choices side by side, then the action bar. */
-.st-panel { display: grid; gap: .875rem; padding: 1.125rem 1.25rem; border-radius: 1.25rem; background: var(--st-well); }
-.st-ptitle { display: flex; align-items: baseline; gap: .625rem; font-size: 1.25rem; line-height: 1.25; font-weight: 800; color: var(--st-ink); }
-.st-ptitle em { font-style: normal; font-size: .875rem; font-weight: 700; color: rgb(var(--st-go)); }
-.st-fields { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 4fr); align-items: end; gap: 1.25rem; }
-.st-fields > :only-child { grid-column: 1 / -1; }
-.st-field { display: grid; gap: .5rem; }
-.st-field > span { display: flex; align-items: baseline; justify-content: flex-start; gap: .5rem; text-align: left; font-size: .875rem; font-weight: 700; color: var(--st-sub); }
-.st-field > span em { font-style: normal; font-size: .75rem; font-weight: 600; color: var(--st-faint); }
-.st-pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .375rem; }
-.st-pills.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.st-pills:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
+/*
+ * The decision: a badge for the stop on the left, one labelled row per choice
+ * on the right, and the action bar along the bottom.
+ */
+.st-panel { display: grid; gap: 1rem; padding: 1.125rem; border-radius: 1.25rem; background: var(--st-well); }
+.st-stop { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 1.25rem; align-items: stretch; }
+.st-badge {
+  --t: var(--st-go); display: grid; place-content: center; justify-items: center; gap: .125rem; padding: .75rem .5rem;
+  border-radius: 1.125rem; background: var(--st-card); box-shadow: inset 0 0 0 2px rgba(var(--t), .55); text-align: center;
+  transition: box-shadow .2s var(--st-soft), background .2s var(--st-soft);
+}
+.st-badge[data-type] { background: rgba(var(--t), .1); box-shadow: inset 0 0 0 2px rgb(var(--t)); }
+.st-badge small { font-size: .75rem; font-weight: 700; color: var(--st-sub); }
+.st-badge b { font-size: 2.25rem; line-height: 1; font-weight: 800; color: rgb(var(--t)); }
+.st-badge span { font-size: .875rem; font-weight: 800; color: rgb(var(--t)); }
+.st-badge[data-origin] b { color: var(--st-ink); }
+.st-rows { display: grid; align-content: center; gap: .75rem; min-width: 0; }
+.st-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); align-items: center; gap: .75rem; }
+.st-row > span { display: grid; gap: .125rem; font-size: .875rem; font-weight: 800; color: var(--st-ink); }
+.st-row > span em { font-style: normal; font-size: .75rem; font-weight: 600; color: var(--st-sub); }
+.st-rows > .st-warn { padding-left: 6.25rem; }
+/* Both rows share four columns so their pills line up. */
+.st-pills { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
 .st-pills button {
   height: 2.375rem; padding: 0 .5rem; border-radius: 999px; background: var(--st-card);
   box-shadow: inset 0 0 0 1px var(--st-line); font-size: .875rem; font-weight: 700; color: var(--st-ink);
@@ -147,7 +158,7 @@
 .st-pills button[data-type='winery'][aria-pressed='true'] { --t: var(--st-winery); }
 .st-pills button[data-type='food'][aria-pressed='true'] { --t: var(--st-food); }
 .st-pills button[data-type='trade'][aria-pressed='true'] { --t: var(--st-trade); }
-.st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding-top: .875rem; border-top: 1px dashed var(--st-line); }
+.st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding-top: 1rem; border-top: 1px dashed var(--st-line); }
 .st-go {
   display: inline-flex; align-items: center; justify-content: center; gap: .375rem; height: 2.5rem; min-width: 8.5rem; margin-left: auto; padding: 0 1.25rem; border-radius: 999px;
   background: linear-gradient(135deg, #f5a04a, #e0703a); color: #fff; font-size: 1rem; font-weight: 800;
@@ -157,7 +168,7 @@
 .st-go:hover:not(:disabled) { filter: brightness(1.04); }
 .st-go:disabled { background: var(--st-line); color: var(--st-sub); box-shadow: none; cursor: not-allowed; }
 .st-warn { font-size: .875rem; font-weight: 700; color: #d14a3a; }
-.st-done { padding: .75rem 1rem; border-radius: 1rem; background: rgba(var(--c), .14); font-size: 1rem; font-weight: 800; color: var(--st-ink); }
+.st-done { padding: .75rem 1rem; text-align: center; border-radius: 1rem; background: rgba(var(--c), .14); font-size: 1rem; font-weight: 800; color: var(--st-ink); }
 
 .st-odds { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem; }
 .st-odds h3 { grid-column: 1 / -1; font-size: 1.125rem; font-weight: 800; color: var(--st-ink); }
@@ -182,7 +193,6 @@
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1279px) {
-  .st-fields { grid-template-columns: minmax(0, 1fr); gap: .875rem; }
   .st-odds { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
 }
 @media (max-width: 1023px) {
@@ -209,9 +219,17 @@
   .st-track::-webkit-scrollbar { display: none; }
   .st-tile { flex: 0 0 4rem; scroll-snap-align: start; padding: .5rem .25rem .625rem; }
   .st-panel { padding: .875rem; }
-  .st-ptitle { font-size: 1.125rem; }
   .st-go { flex: 1 0 100%; order: -1; margin-left: 0; }
-  .st-pills.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* The badge becomes a header strip; each row stacks its label over its pills. */
+  .st-stop { grid-template-columns: minmax(0, 1fr); gap: .875rem; }
+  .st-badge { grid-template-columns: auto auto 1fr; place-content: initial; align-items: baseline; justify-items: start; gap: .5rem; padding: .625rem .875rem; text-align: left; }
+  .st-badge b { order: -1; font-size: 1.5rem; }
+  .st-badge span { justify-self: end; }
+  .st-row { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+  .st-row > span { display: flex; align-items: baseline; gap: .5rem; }
+  .st-pills { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .st-pills[data-testid='planner-current-station'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .st-rows > .st-warn { padding-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .gz-st *, .gz-st *::before { transition: none !important; }
