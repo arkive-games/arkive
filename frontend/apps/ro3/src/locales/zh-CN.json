@@ -107,6 +107,8 @@
       "description": "技能说明",
       "levelDescription": "等级 {level} 说明",
       "levelPicker": "选择等级",
+      "levelDown": "降低等级",
+      "levelUp": "提高等级",
       "kindActive": "主动",
       "kindPassive": "被动",
       "range": "射程",

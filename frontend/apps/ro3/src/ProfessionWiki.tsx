@@ -1,8 +1,8 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ChevronRight, Swords, Zap } from 'lucide-react'
-import { cn, Dialog, DialogContent, DialogTitle } from '@gamemap/ui'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Minus, Plus, Zap } from 'lucide-react'
+import { cn } from '@gamemap/ui'
 import { buildProfessionStages, PROFESSION_LINES, type ProfessionSkillChoice, type ProfessionStageData } from './professionCatalog'
-import { Chip, DetailSection, Facts, Notice, SearchField } from './components/wiki'
+import { Chip, Notice, SearchField } from './components/wiki'
 import { loadProfessionWikiData, loadSkillLevels, type SkillLevelRow } from './wikiData'
 import { resourceUrl } from './lib/urls'
 import content from './locales/zh-CN.json'
@@ -44,15 +44,11 @@ type ProfessionData = Awaited<ReturnType<typeof loadProfessionWikiData>>
 type SkillKind = 'active' | 'passive'
 const text = content.wiki.professions
 
-interface Selection {
-  choice: ProfessionSkillChoice
-  stageId: string
-}
-
 /**
- * A whole advancement route on one board: pick a class and a branch, and every
- * stage from first job to third stands side by side with the skills it adds,
- * in the order a player unlocks them. A skill opens in a dialog.
+ * A whole advancement route read top to bottom: pick a class and a branch, and
+ * each stage from first job to third follows as a band of skill cards, in the
+ * order a player unlocks them. Every card carries its own level stepper, so
+ * the numbers can be read without leaving the page.
  */
 export function ProfessionWiki() {
   const [data, setData] = useState<ProfessionData | null>(null)
@@ -60,9 +56,7 @@ export function ProfessionWiki() {
   const [lineId, setLineId] = useState(PROFESSION_LINES[0].id)
   const [routeId, setRouteId] = useState(PROFESSION_LINES[0].routes[0].id)
   const [query, setQuery] = useState('')
-  const [selection, setSelection] = useState<Selection | null>(null)
-  // Level rows by skill, filled a route at a time; they decide active or
-  // passive on the board as well as feeding the dialog.
+  // Level rows by skill, filled a route at a time; every card reads them.
   const [levelRows, setLevelRows] = useState<Map<number, SkillLevelRow[]>>(() => new Map())
   const [levelError, setLevelError] = useState(false)
 
@@ -114,8 +108,8 @@ export function ProfessionWiki() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2.5">
         <div
           role="tablist"
           aria-label={text.lineLabel}
@@ -164,220 +158,138 @@ export function ProfessionWiki() {
       {dataError ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : normalizedQuery && matchCount === 0 ? (
         <Notice>{text.empty}</Notice>
       ) : (
-        <ol aria-label={text.pathTitle} className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <ol aria-label={text.pathTitle} className="flex flex-col gap-6">
           {stages.map((stage, index) => (
-            <StageColumn
+            <StageBand
               key={`${stage.professionId}-${stage.rank}`}
               stage={stage}
               index={index}
               matches={matches}
-              kindOf={(choice) => levelRows.has(choice.skillId) ? skillKind(levelRows.get(choice.skillId)) : undefined}
-              selectedId={selection?.choice.skillId}
-              onSelect={(choice) => setSelection({ choice, stageId: stage.stageId })}
+              levelRows={levelRows}
+              levelError={levelError}
             />
           ))}
         </ol>
       )}
-
-      <Dialog open={selection !== null} onOpenChange={(next) => { if (!next) setSelection(null) }}>
-        <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
-          <DialogTitle className="sr-only">{text.detailTitle}</DialogTitle>
-          <div className="flex flex-col gap-4">
-            {selection ? (
-              <SkillDetail
-                key={selection.choice.skillId}
-                choice={selection.choice}
-                stageName={stageLabel(selection.stageId)}
-                levels={levelRows.get(selection.choice.skillId)}
-                levelError={levelError}
-              />
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
 
-/** One advancement: its emblem and name on top, then the skills it adds in unlock order. */
-function StageColumn({ stage, index, matches, kindOf, selectedId, onSelect }: {
+/** One advancement: a slim heading, then the skills it adds as cards, actives first. */
+function StageBand({ stage, index, matches, levelRows, levelError }: {
   stage: ProfessionStageData
   index: number
   matches: (choice: ProfessionSkillChoice) => boolean
-  kindOf: (choice: ProfessionSkillChoice) => SkillKind | undefined
-  selectedId?: number
-  onSelect: (choice: ProfessionSkillChoice) => void
+  levelRows: Map<number, SkillLevelRow[]>
+  levelError: boolean
 }) {
   const fresh = stage.skills.filter((choice) => !choice.inherited && matches(choice))
-  const kindsKnown = fresh.every((choice) => kindOf(choice) || !choice.skill)
-  const groups: Array<{ key: string; title?: string; skills: ProfessionSkillChoice[] }> = kindsKnown
-    ? [
-        { key: 'active', title: text.activeSkills, skills: fresh.filter((choice) => kindOf(choice) !== 'passive') },
-        { key: 'passive', title: text.passiveSkills, skills: fresh.filter((choice) => kindOf(choice) === 'passive') },
-      ]
-    : [{ key: 'all', skills: fresh }]
+  const kindOf = (choice: ProfessionSkillChoice) => levelRows.has(choice.skillId) ? skillKind(levelRows.get(choice.skillId)) : undefined
+  // A stable sort: passives drop behind the actives, each kind keeping unlock order.
+  const ordered = [...fresh].sort((a, b) => Number(kindOf(a) === 'passive') - Number(kindOf(b) === 'passive'))
+  if (ordered.length === 0) return null
 
   return (
-    <li className="relative flex min-w-0 flex-col rounded-2xl bg-card shadow-sm ring-1 ring-border/70">
-      {index > 0 ? (
-        <ChevronRight aria-hidden="true" className="absolute -left-3 top-7 z-10 hidden size-5 rounded-full bg-background text-muted-foreground xl:block" />
-      ) : null}
-      <header className="flex items-center gap-3 px-4 pb-2 pt-4">
-        <img
-          src={stageEmblem(stage.stageId)}
-          alt=""
-          className="size-12 shrink-0 rounded-full bg-[color:var(--arkive-filter-active)] object-contain p-1"
-        />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="text-xs font-semibold text-[color:var(--arkive-nav-active)]">{advancementLabel(index)}</span>
-          <h3 className="truncate text-lg font-bold leading-tight">{stageLabel(stage.stageId)}</h3>
-        </div>
-        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-          {text.newSkills.replace('{count}', String(stage.newSkillCount))}
+    <li className="flex flex-col gap-3">
+      <header className="flex items-center gap-2.5">
+        <img src={stageEmblem(stage.stageId)} alt="" className="size-9 shrink-0 object-contain" />
+        <span className="rounded-md bg-[color:var(--arkive-filter-active)] px-1.5 py-0.5 text-xs font-semibold text-[color:var(--arkive-nav-active)]">
+          {advancementLabel(index)}
         </span>
+        <h3 className="text-lg font-bold">{stageLabel(stage.stageId)}</h3>
+        <span className="text-xs text-muted-foreground">{text.newSkills.replace('{count}', String(stage.newSkillCount))}</span>
+        <span aria-hidden="true" className="h-px flex-1 bg-border" />
       </header>
-      <div className="flex flex-col gap-2 px-2 pb-3">
-        {fresh.length === 0 ? <p className="py-2 text-center text-xs text-muted-foreground">{text.empty}</p> : null}
-        {groups.filter((group) => group.skills.length > 0).map((group) => (
-          <section key={group.key} className="flex flex-col">
-            {group.title ? (
-              <h4 className="px-2 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{group.title}</h4>
-            ) : null}
-            <ul className="flex flex-col">
-              {group.skills.map((choice) => (
-                <li key={choice.skillId}>
-                  <SkillRow
-                    choice={choice}
-                    kind={kindOf(choice)}
-                    active={selectedId === choice.skillId}
-                    onSelect={() => onSelect(choice)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
+      <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+        {ordered.map((choice) => (
+          <li key={choice.skillId} className="flex">
+            <SkillCard choice={choice} levels={levelRows.get(choice.skillId)} levelError={levelError} />
+          </li>
         ))}
-      </div>
+      </ul>
     </li>
   )
 }
 
-function SkillRow({ choice, kind, active, onSelect }: {
+/**
+ * A skill read in place: its facts on one line, a level stepper, and the
+ * description of the level the stepper is on.
+ */
+function SkillCard({ choice, levels, levelError }: {
   choice: ProfessionSkillChoice
-  kind?: SkillKind
-  active: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onSelect}
-      className={cn(
-        'group flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors',
-        active ? 'bg-[color:var(--arkive-filter-active)]' : 'hover:bg-accent',
-      )}
-    >
-      <SkillIcon choice={choice} kind={kind} className="size-10 transition-transform duration-200 group-hover:scale-105" />
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{skillName(choice)}</span>
-      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{text.unlockAt.replace('{level}', String(choice.unlockLevel))}</span>
-    </button>
-  )
-}
-
-/** Active skills sit in a square frame and passives in a round one, as in the game's own skill page. */
-function SkillIcon({ choice, kind, className }: { choice: ProfessionSkillChoice; kind?: SkillKind; className?: string }) {
-  return (
-    <span
-      className={cn(
-        'grid shrink-0 place-items-center overflow-hidden border border-border bg-muted',
-        kind === 'passive' ? 'rounded-full' : 'rounded-xl',
-        className,
-      )}
-    >
-      {choice.skill?.icon ? (
-        <img src={resourceUrl(choice.skill.icon)} alt="" loading="lazy" className="size-full object-contain" />
-      ) : <Zap aria-hidden="true" className="size-5 text-muted-foreground" />}
-    </span>
-  )
-}
-
-function SkillDetail({ choice, stageName, levels, levelError }: {
-  choice: ProfessionSkillChoice | null
-  stageName: string
   levels?: SkillLevelRow[]
   levelError: boolean
 }) {
   const [levelIndex, setLevelIndex] = useState(0)
-
-  if (!choice) return <Notice>{text.selectSkill}</Notice>
-
   const level = levels?.[Math.min(levelIndex, levels.length - 1)]
-  const first = levels?.[0]
   const kind = levels ? skillKind(levels) : undefined
+  const first = levels?.[0]
   const element = first?.iEleType ? (text.elements as Record<string, string>)[String(first.iEleType)] : undefined
+  const lastIndex = (levels?.length ?? 1) - 1
   const facts = [
-    { label: text.unlock, value: choice.inherited ? text.inherited : text.jobLevel.replace('{level}', String(choice.unlockLevel)) },
-    { label: text.levelCap, value: choice.skill?.iMaxLevel ?? content.wiki.skillDetail.unavailable },
-    ...(level?.iDistanceMax ? [{ label: text.range, value: text.meters.replace('{value}', formatNumber(level.iDistanceMax / 100)) }] : []),
-    ...(level?.iCD ? [{ label: text.cooldown, value: text.seconds.replace('{value}', formatNumber(level.iCD / 1000)) }] : []),
+    text.jobLevel.replace('{level}', String(choice.unlockLevel)),
+    ...(element ? [element] : []),
+    ...(level?.iDistanceMax ? [`${text.range} ${text.meters.replace('{value}', formatNumber(level.iDistanceMax / 100))}`] : []),
+    ...(level?.iCD ? [`${text.cooldown} ${text.seconds.replace('{value}', formatNumber(level.iCD / 1000))}`] : []),
   ]
 
   return (
-    <>
-      <header className="flex items-center gap-3 border-b border-border pb-3">
-        {choice.skill?.icon ? (
-          <SkillIcon choice={choice} kind={kind} className="size-12" />
-        ) : (
-          <span className="grid size-12 place-items-center rounded-xl bg-muted"><Swords aria-hidden="true" className="size-5 text-muted-foreground" /></span>
-        )}
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-xs text-[color:var(--arkive-nav-active)]">{stageName}</span>
-          <h3 className="text-lg font-semibold">{skillName(choice)}</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {kind ? <Badge>{kind === 'passive' ? text.kindPassive : text.kindActive}</Badge> : null}
-            {element ? <Badge>{element}</Badge> : null}
-          </div>
-        </div>
-      </header>
-
-      <Facts items={facts} />
-
-      {levels && levels.length > 1 ? (
-        <DetailSection title={text.levelPicker}>
-          <div role="radiogroup" aria-label={text.levelPicker} className="flex flex-wrap gap-1.5">
-            {levels.map((row, index) => (
-              <button
-                key={row.iID}
-                type="button"
-                role="radio"
-                aria-checked={index === levelIndex}
-                onClick={() => setLevelIndex(index)}
+    <article className="flex w-full flex-col gap-2.5 rounded-xl border border-border bg-card p-3">
+      <header className="flex items-start gap-2.5">
+        <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted">
+          {choice.skill?.icon ? (
+            <img src={resourceUrl(choice.skill.icon)} alt="" loading="lazy" className="size-full object-contain" />
+          ) : <Zap aria-hidden="true" className="size-5 text-muted-foreground" />}
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex items-center gap-1.5">
+            <h4 className="truncate text-base font-semibold">{skillName(choice)}</h4>
+            {kind ? (
+              <span
                 className={cn(
-                  'grid size-8 place-items-center rounded-md border text-xs font-semibold transition-colors',
-                  index === levelIndex ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/60',
+                  'shrink-0 rounded px-1 text-xs font-medium',
+                  kind === 'passive' ? 'bg-muted text-muted-foreground' : 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]',
                 )}
               >
-                {row.iLevel}
-              </button>
-            ))}
+                {kind === 'passive' ? text.kindPassive : text.kindActive}
+              </span>
+            ) : null}
           </div>
-        </DetailSection>
-      ) : null}
-
-      <DetailSection title={level ? text.levelDescription.replace('{level}', String(level.iLevel)) : text.description}>
-        <p className="whitespace-pre-line text-sm leading-relaxed">
-          {levelError ? content.wiki.dataError : !levels ? content.wiki.loading : (
-            <GameText value={level?.desc?.['zh-CN'] ?? content.wiki.skillDetail.unavailable} />
-          )}
-        </p>
-      </DetailSection>
-    </>
+          <p className="text-xs text-muted-foreground">{facts.join(' · ')}</p>
+        </div>
+        {levels && levels.length > 1 ? (
+          <div role="group" aria-label={text.levelPicker} className="flex shrink-0 items-center rounded-lg border border-border">
+            <button
+              type="button"
+              aria-label={text.levelDown}
+              disabled={levelIndex === 0}
+              onClick={() => setLevelIndex((value) => Math.max(0, value - 1))}
+              className="grid size-7 place-items-center rounded-l-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            >
+              <Minus aria-hidden="true" className="size-3.5" />
+            </button>
+            <span aria-live="polite" className="min-w-14 text-center text-xs font-semibold tabular-nums">
+              Lv.{level?.iLevel}<span className="font-normal text-muted-foreground">/{levels[lastIndex].iLevel}</span>
+            </span>
+            <button
+              type="button"
+              aria-label={text.levelUp}
+              disabled={levelIndex >= lastIndex}
+              onClick={() => setLevelIndex((value) => Math.min(lastIndex, value + 1))}
+              className="grid size-7 place-items-center rounded-r-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            >
+              <Plus aria-hidden="true" className="size-3.5" />
+            </button>
+          </div>
+        ) : null}
+      </header>
+      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/85">
+        {levelError ? content.wiki.dataError : !levels ? content.wiki.loading : (
+          <GameText value={level?.desc?.['zh-CN'] ?? content.wiki.skillDetail.unavailable} />
+        )}
+      </p>
+    </article>
   )
-}
-
-function Badge({ children }: { children: ReactNode }) {
-  return <span className="rounded bg-[color:var(--arkive-filter-active)] px-1.5 py-0.5 text-xs font-medium">{children}</span>
 }
 
 /**
