@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { IconBuildingCastle, IconChevronUp, IconSwords } from '@tabler/icons-react'
 import { GzSelect } from '@/components/GzSelect'
 import { IconTile } from '@/features/equipment/PickerModal'
-import { Tip, TipOn } from '@/features/score/Tip'
+import { TipOn } from '@/features/score/Tip'
 import { useCharacterReadOnly, useSection } from '@/features/characters/CharacterProvider'
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import type { TFunction } from 'i18next'
@@ -556,23 +556,23 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
         {/* The three scores the piece adds up to, each with how it is worked out. */}
         <div className="gz-kv gz-eqkv" data-testid={`equip-reforge-${slot}`}>
           <div>
-            <span className="lab">{t('equip.baseScore')}<Tip kind="info" title={t('equip.baseScore')} content={t('equip.baseHint')} /></span>
-            <b className="num" data-testid={`equip-base-score-${slot}`}>{n(result.baseScore)}</b>
+            <span className="lab">{t('equip.baseScore')}</span>
+            <TipOn title={t('equip.baseScore')} content={t('equip.baseHint')}>
+              <b className="num gz-hov" tabIndex={0} data-testid={`equip-base-score-${slot}`}>{n(result.baseScore)}</b>
+            </TipOn>
           </div>
           <div>
-            <span className="lab">
-              {t('equip.enhanceRefineShort')}
-              <Tip content={t('equip.enhanceHint', { per: REFINE_PER_STAGE, level: result.refineLevel, max: REFINE_LEVELS, score: n(result.enhanceScore) })} />
-            </span>
-            <b className="num" data-testid={`equip-${slot}-enhance-score`}>{n(result.enhanceScore)}</b>
+            <span className="lab">{t('equip.enhanceRefineShort')}</span>
+            <TipOn title={t('equip.enhanceRefineShort')} content={t('equip.enhanceHint', { per: REFINE_PER_STAGE, level: result.refineLevel, max: REFINE_LEVELS, score: n(result.enhanceScore) })}>
+              <b className="num gz-hov" tabIndex={0} data-testid={`equip-${slot}-enhance-score`}>{n(result.enhanceScore)}</b>
+            </TipOn>
             <small>{t('equip.stageOption', { stage: state.enhanceStage })} · {t('equip.refineTag', { value: clampRefine(state.refinePercent) })}</small>
           </div>
           <div>
-            <span className="lab">
-              {t('equip.reforgeScoreLabel')}
-              <Tip content={t('equip.reforgeHint', { mark: n(result.affixMark), bonus: n(result.extraordinaryBonus), score: n(result.reforgeScore), n: result.extraordinaryCount })} />
-            </span>
-            <b className="num">{n(result.reforgeScore)}</b>
+            <span className="lab">{t('equip.reforgeScoreLabel')}</span>
+            <TipOn title={t('equip.reforgeScoreLabel')} content={t('equip.reforgeHint', { mark: n(result.affixMark), bonus: n(result.extraordinaryBonus), score: n(result.reforgeScore), n: result.extraordinaryCount })}>
+              <b className="num gz-hov" tabIndex={0}>{n(result.reforgeScore)}</b>
+            </TipOn>
             <small>{t('equip.bonusIncluded', { n: n(result.extraordinaryBonus) })}</small>
           </div>
         </div>

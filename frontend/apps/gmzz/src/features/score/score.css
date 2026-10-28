@@ -1021,3 +1021,32 @@ select.gz-select {
 .gz-pip.t4 { background: #e06a1f; }
 .gz-pip.t1, .gz-pip.t2, .gz-pip.t3, .gz-pip.t4 { width: auto; min-width: 2.5rem; padding: 0 .5rem; }
 .gz-tcard .gz-tc { grid-column: 1 / -1; }
+/* The start card's placeholder as tall as a core, and the stats inset like the core's icon and score. */
+.gz-tc.none { min-height: 2.25rem; align-items: center; }
+.gz-tnstats { padding: 0 .625rem; }
+.gz-kv b.gz-hov { display: inline-block; }
+/* A core: its skill icon on the left, its name on the right. */
+.gz-tc.ic { grid-template-columns: 1.5rem minmax(0, 1fr); }
+.gz-tc.ic b { text-align: right; }
+.gz-tcard .th .gz-hov { flex: 0 1 auto; }
+.gz-barhov { cursor: help; }
+.gz-barhov:focus-visible { outline: 2px solid rgb(var(--c, 230, 164, 23)); outline-offset: 2px; }
+/* The footer as one row: the two whole-loadout sets a share each, the suit two. */
+.gz-eqfoot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr); align-items: stretch; }
+.gz-eqfoot > .gz-wb { display: contents; }
+.gz-eqfoot > .gz-suit { align-content: start; align-items: flex-start; }
+/* One stat per line: name left, value right. */
+.gz-wbc .st { display: grid; gap: .125rem; }
+.gz-wbc .st span { display: flex; justify-content: space-between; gap: .5rem; padding: 0; background: none; }
+@media (max-width: 760px) {
+  .gz-eqfoot { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .gz-eqfoot > .gz-suit { grid-column: 1 / -1; }
+}
+/* Name never yields to the stepper; when five cards leave no room for both on one
+   line, the stepper takes its own line under the name instead. */
+.gz-tcard .th .gz-hov, .gz-tcard .th b { flex: 0 0 auto; }
+.gz-tree { container-type: inline-size; }
+@container (max-width: 52rem) {
+  .gz-tcard .th { grid-column: 1 / -1; }
+  .gz-tcard .gz-mini { grid-column: 1 / -1; grid-row: 2; width: auto; }
+}

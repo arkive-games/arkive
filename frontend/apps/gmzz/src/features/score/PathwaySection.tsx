@@ -191,6 +191,10 @@ function TalentCalculator({
       <ol className="gz-tree">
         {normal.map((entry, index) => (
           <TalentCard key={entry.node.key} index={index} entry={entry} core={special[index]}
+            // No level past the points left, and no dropping to 0 while the next
+            // node is learnt: it is open only because this one is.
+            min={entry.level > 0 && (normal[index + 1]?.level ?? 0) > 0 ? 1 : 0}
+            max={Math.min(entry.cap, entry.level + Math.max(0, result.pointCap - result.pointsSpent))}
             onLevel={(level) => setLevel(entry.node.key, Math.min(entry.cap, Math.max(0, level)))} />
         ))}
       </ol>
@@ -223,10 +227,13 @@ function TalentStats({ result }: { result: TalentResult }) {
  * One levelled talent: name and level stepper on one line, the level bar, the
  * core its first level switches on, and then what it grants at its level.
  */
-function TalentCard({ index, entry, core, onLevel }: {
+function TalentCard({ index, entry, core, min, max, onLevel }: {
   index: number
   entry: TalentNodeResult
   core: TalentNodeResult | null
+  /** The lowest and highest level the stepper allows right now. */
+  min: number
+  max: number
   onLevel: (level: number) => void
 }) {
   const { t, i18n } = useTranslation()
@@ -243,9 +250,13 @@ function TalentCard({ index, entry, core, onLevel }: {
         ) : (
           <span className="gz-badge num" aria-hidden>{index + 1}</span>
         )}
-        <b data-testid={`talent-tip-${entry.node.key}`}>{entry.node.name}</b>
+        {entry.node.description ? (
+          <TipOn title={entry.node.name} content={entry.node.description}>
+            <b className="gz-hov" tabIndex={0} data-testid={`talent-tip-${entry.node.key}`}>{entry.node.name}</b>
+          </TipOn>
+        ) : <b data-testid={`talent-tip-${entry.node.key}`}>{entry.node.name}</b>}
       </div>
-      <Stepper variant="mini" value={entry.level} min={0} max={cap} onChange={onLevel}
+      <Stepper variant="mini" value={entry.level} min={min} max={max} onChange={onLevel}
         label={t('pathway.nodeLevel', { name: entry.node.name })} testId={`talent-level-${entry.node.key}`} />
       <div className="gz-tl" aria-hidden><i style={{ width: `${filled}%` }} /></div>
       {core ? (
@@ -254,13 +265,9 @@ function TalentCard({ index, entry, core, onLevel }: {
           <div className={`gz-tc ${core.node.icon ? 'ic' : ''}`} data-testid={`talent-special-${core.node.key}`}
             data-active={core.level > 0 || undefined}>
             {core.node.icon ? <img src={talentIconUrl(core.node.icon)} alt="" loading="lazy" /> : <i aria-hidden />}
-            <TipOn title={core.node.name} content={[
-              core.node.description,
-              t('pathway.coreScore', { parent: entry.node.name, mark: core.node.mark.toLocaleString() }),
-            ].filter(Boolean).join('\n')}>
+            <TipOn title={core.node.name} content={core.node.description}>
               <b className="gz-hov" tabIndex={0} data-testid={`talent-tip-${core.node.key}`}>{core.node.name}</b>
             </TipOn>
-            <em className="num">{core.level > 0 ? `+${core.node.mark.toLocaleString()}` : t('pathway.inactive')}</em>
           </div>
         </div>
       ) : (
