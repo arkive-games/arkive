@@ -377,7 +377,10 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
     >
       <IconTile quality={item?.quality ?? null} src={item ? equipmentIconUrl(item.icon) : undefined} alt={item?.name ?? ''} label="?" className="ic" />
       <span className="nm">
-        <span className="kind"><span className="lb">{slotName}</span><KindMark kind={kind} /></span>
+        <span className="kind">
+          <span className="lb">{[slotName, item?.gearLevel != null ? t('equip.levelTag', { level: item.gearLevel }) : null].filter(Boolean).join(' · ')}</span>
+          <KindMark kind={kind} />
+        </span>
         <b>
           <span className="n">{item ? item.name : t('equip.emptySlot')}</span>
           {item ? <StageMark stage={state.enhanceStage} /> : null}
@@ -387,7 +390,6 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
       <span className="s num" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
       {item ? (
         <span className="tags">
-          {item.gearLevel != null ? <span className="lv num">{t('equip.levelTag', { level: item.gearLevel })}</span> : null}
           {rolled.length > 0 ? (
             <span className="gz-dia" data-testid={`equip-slot-affixes-${state.slot}`}>
               {rolled.map((affix, at) => <i key={at} className={affix.tier} aria-hidden>◆</i>)}

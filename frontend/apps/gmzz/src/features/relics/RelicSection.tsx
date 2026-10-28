@@ -11,7 +11,7 @@ import { Tip, TipOn } from '@/features/score/Tip'
 import { useCharacterReadOnly, useSection } from '@/features/characters/CharacterProvider'
 import { toStoredMaterials } from '@/features/relics/memory'
 import { useRelicServer } from '@/features/relics/useRelicServer'
-import { EMPTY_RELIC_AFFIX, GROUP_IDS, SPEC_GROUP, affixFrom, knowledgeLevelOf, restoreSlots } from '@/features/relics/slots'
+import { EMPTY_RELIC_AFFIX, GROUP_IDS, SPEC_GROUP, affixFrom, knowledgeLevelOf, reachable, restoreSlots } from '@/features/relics/slots'
 import {
   MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason, effectiveAffixCap, effectiveGrade,
   evaluateRelicSlot, formatStat, gradeQuality, gradeOptions, gradeRung, isRareAffix, k1For, k2For,
@@ -100,7 +100,7 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
   )
   /** What the row scores, its Mark × k2 on the tooltip. */
   const score = (mark: number) => (
-    <TipOn content={t('relic.affixScoreOf', { score: decimal(mark * k2), mark: mark.toLocaleString() })}>
+    <TipOn content={t('relic.affixScoreOf', { score: decimal(mark * k2), mark: mark.toLocaleString(), k: Number(k2.toFixed(4)) })}>
       <span className="mk num gz-hov" tabIndex={0} data-testid={`${testPrefix}-score-${index}`}>{decimal(mark * k2)}</span>
     </TipOn>
   )
@@ -207,13 +207,16 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
 /** A knowledge coefficient as the game prints it: k 0.1 (level 0) reads 100%, k 0.88 reads 880%. */
 const percent = (k: number) => `${Number((k * 1000).toFixed(1))}%`
 
-function KnowledgeBar({ relics, level, k1, k2, season, readOnly, onChange }: {
-  relics: Relics; level: number; k1: number; k2: number; season: number | undefined; readOnly: boolean
+function KnowledgeBar({ relics, level, k1, k2, season, actingLevel, readOnly, onChange }: {
+  relics: Relics; level: number; k1: number; k2: number; season: number | undefined
+  /** Role plus divinity level: knowledge levels needing more stay out of reach. */
+  actingLevel: number | undefined
+  readOnly: boolean
   onChange: (level: number) => void
 }) {
   const { t } = useTranslation()
   const ladder = useMemo(() => knowledgeLadder(relics, season), [relics, season])
-  const levels = ladder.flatMap((r) => (r.level == null ? [] : [r.level]))
+  const levels = ladder.flatMap((r) => (r.level == null || !reachable(r.roleLevelRequired, actingLevel) ? [] : [r.level]))
   const min = levels[0] ?? 0
   const max = levels[levels.length - 1] ?? 0
   const role = ladder.find((r) => r.level === level)?.roleLevelRequired ?? null
@@ -568,8 +571,10 @@ function RelicFace({ relics, slot, result, k1, k2, onOpen }: {
   )
 }
 
-export default function RelicSection({ relics, onTotals }: {
+export default function RelicSection({ relics, actingLevel, onTotals }: {
   relics: Relics
+  /** 扮演等级 as the knowledge table reads it: role level, plus divinity once the role is capped. */
+  actingLevel?: number
   /** Reports the three subtotals whenever they change, for the page's rating rows. */
   onTotals?: (totals: RelicTotals) => void
 }) {
@@ -577,7 +582,10 @@ export default function RelicSection({ relics, onTotals }: {
   const season = useMemo(() => currentSeason(relics), [relics])
   const [draft, setDraft] = useSection('relics')
   const [server] = useRelicServer()
-  const knowledgeLevel = useMemo(() => knowledgeLevelOf(relics, draft.knowledgeLevel, season), [draft.knowledgeLevel, relics, season])
+  const knowledgeLevel = useMemo(
+    () => knowledgeLevelOf(relics, draft.knowledgeLevel, season, actingLevel),
+    [draft.knowledgeLevel, relics, season, actingLevel],
+  )
   const setKnowledgeLevel = (level: number) => setDraft((prev) => ({ ...prev, knowledgeLevel: level }))
   const slots = useMemo<RelicSlotState[]>(() => restoreSlots(relics, draft.slots), [draft.slots, relics])
   // Stored as ids only; the derived stat, value and Mark are re-read from the dataset.
@@ -648,7 +656,7 @@ export default function RelicSection({ relics, onTotals }: {
           faces stay clickable and the formula mark readable; only the inputs lock. */}
       <div className="gz-panel-head">
         <h3>{t('relic.title')}</h3>
-        <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} readOnly={readOnly}
+        <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} actingLevel={actingLevel} readOnly={readOnly}
           onChange={setKnowledgeLevel} />
       </div>
 

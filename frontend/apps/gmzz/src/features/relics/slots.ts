@@ -26,10 +26,23 @@ export function affixFrom(rung: PoolAffix): ChosenRelicAffix {
 }
 
 /** The stored knowledge level if the ladder has it, the ladder's first level otherwise. */
-export function knowledgeLevelOf(relics: Relics, stored: number | null, season: number | undefined): number {
-  const ladder = knowledgeLadder(relics, season)
-  const known = ladder.some((rung) => rung.level === stored)
-  return known ? (stored as number) : ladder.find((rung) => rung.level != null)?.level ?? 0
+export function knowledgeLevelOf(relics: Relics, stored: number | null, season: number | undefined, actingLevel?: number): number {
+  const open = knowledgeLadder(relics, season).filter((rung) => rung.level != null && reachable(rung.roleLevelRequired, actingLevel))
+  const known = open.some((rung) => rung.level === stored)
+  if (known) return stored as number
+  // A stored level above what the character can reach falls to the highest it can.
+  const levels = open.map((rung) => rung.level as number)
+  if (stored != null && levels.length > 0 && stored > levels[levels.length - 1]) return levels[levels.length - 1]
+  return levels[0] ?? 0
+}
+
+/**
+ * Whether a knowledge rung's 需扮演等级 is met. Past the role cap the game
+ * counts divinity on top — 需扮演等级 92 is role 70 + divinity 22 — so the
+ * page compares against role level plus divinity level (`actingLevel`).
+ */
+export function reachable(required: number | null, actingLevel: number | undefined): boolean {
+  return actingLevel === undefined || required == null || required <= actingLevel
 }
 
 /**

@@ -28,12 +28,12 @@ export type RelicFormulaContext = {
  * section reads them, for the formula hints of the page's ledger. Null until
  * the relic dataset has loaded.
  */
-export function useRelicFormulaContext(relics: Relics | null): RelicFormulaContext | null {
+export function useRelicFormulaContext(relics: Relics | null, actingLevel?: number): RelicFormulaContext | null {
   const [draft] = useSection('relics')
   return useMemo(() => {
     if (!relics) return null
     const season = currentSeason(relics)
-    const knowledgeLevel = knowledgeLevelOf(relics, draft.knowledgeLevel, season)
+    const knowledgeLevel = knowledgeLevelOf(relics, draft.knowledgeLevel, season, actingLevel)
     const server = draft.server ?? 'local'
     const results = restoreSlots(relics, draft.slots).map((slot) => evaluateRelicSlot(relics, slot, knowledgeLevel, season, server))
     return {
@@ -41,7 +41,7 @@ export function useRelicFormulaContext(relics: Relics | null): RelicFormulaConte
       k1: k1For(relics, knowledgeLevel, season),
       k2: k2For(relics, knowledgeLevel, season),
     }
-  }, [relics, draft])
+  }, [relics, draft, actingLevel])
 }
 
 /** A part to two decimals, as the relic cards show it; the floor comes once, on the sum. */

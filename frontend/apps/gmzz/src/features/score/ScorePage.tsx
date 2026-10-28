@@ -147,7 +147,6 @@ function ScoreView() {
   const [tab, setTab] = useState(PATHWAY_GENUS)
   const [equipment, setEquipment] = useState<{ equipment: Equipment; graces: Grace[] } | null>(null)
   const [relics, setRelics] = useState<Relics | null>(null)
-  const relicFormulaContext = useRelicFormulaContext(relics)
   const [talents, setTalents] = useState<Talents | null>(null)
   const [partners, setPartners] = useState<SecretPartner[] | null>(null)
   const [rawScoring, setScoring] = useState<PartnerScoring | null>(null)
@@ -265,6 +264,9 @@ function ScoreView() {
   // a higher cap cannot push a benchmark past the curve it is read from.
   const roleLevel = rating ? clamp(draft.roleLevel, 1, rating.maxRoleLevel) : draft.roleLevel
   const divinityLevel = rating ? clamp(draft.divinityLevel, 0, rating.maxDivinityLevel) : draft.divinityLevel
+  // 扮演等级 as the relic knowledge table reads it: role level, plus divinity once the role is capped.
+  const actingLevel = rating && roleLevel >= rating.maxRoleLevel ? roleLevel + divinityLevel : roleLevel
+  const relicFormulaContext = useRelicFormulaContext(relics, actingLevel)
   // Every item is derived from the inputs and graded by one `evaluate`, so
   // no group total needs a special case. An item the page cannot derive is
   // absent here and scores nothing.
@@ -446,7 +448,7 @@ function ScoreView() {
     [RELICS_GENUS]: section(RELICS_GENUS, (group) => (
       <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}
         formula={(item) => relicFormula(item.species.module, relicFormulaContext)}>
-        {relics ? <RelicSection relics={relics} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
+        {relics ? <RelicSection relics={relics} actingLevel={actingLevel} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
       </GroupSection>
     )),
     [BONDS_GENUS]: section(BONDS_GENUS, (group) => (

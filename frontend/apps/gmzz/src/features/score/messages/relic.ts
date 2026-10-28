@@ -18,7 +18,7 @@ export const relicMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
       formulaLineAffix: '{{group}}: ({{marks}}) × {{k}} = {{value}}',
       formulaSum: 'Total = floor({{sum}}) = {{total}}',
       resonanceNone: 'No affix in effect yet, so no resonance.',
-      affixScoreOf: 'Scores {{score}} (Mark {{mark}} × k2)',
+      affixScoreOf: 'Scores {{score}} = Mark {{mark}} × {{k}} (k2)',
     },
   },
   'zh-CN': {
@@ -35,7 +35,7 @@ export const relicMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
       formulaLineAffix: '{{group}}：({{marks}}) × {{k}} = {{value}}',
       formulaSum: '合计 = floor({{sum}}) = {{total}}',
       resonanceNone: '还没有生效的词条，暂无共鸣。',
-      affixScoreOf: '计 {{score}} 分（分值 {{mark}} × k2）',
+      affixScoreOf: '计 {{score}} 分 = 分值 {{mark}} × {{k}}（k2）',
     },
   },
   'zh-TW': {
@@ -52,7 +52,7 @@ export const relicMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
       formulaLineAffix: '{{group}}：({{marks}}) × {{k}} = {{value}}',
       formulaSum: '合計 = floor({{sum}}) = {{total}}',
       resonanceNone: '還沒有生效的詞條，暫無共鳴。',
-      affixScoreOf: '計 {{score}} 分（分值 {{mark}} × k2）',
+      affixScoreOf: '計 {{score}} 分 = 分值 {{mark}} × {{k}}（k2）',
     },
   },
 }

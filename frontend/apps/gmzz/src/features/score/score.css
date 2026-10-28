@@ -997,14 +997,13 @@ select.gz-select {
 }
 .gz-tstats b { font-weight: 700; color: var(--gz-ink); }
 .gz-tstats .note { margin: 0; font-size: .75rem; color: var(--gz-faint); }
-/* The score sits in the top-right corner, beside the slot's name only, so the
-   item name below gets the card's full width; the gear level moves to the tags. */
+/* The score sits in the top-right corner, beside the slot and gear level, so the
+   item name below gets the card's full width. */
 .gz-slot { position: relative; grid-template-columns: 3.25rem minmax(0, 1fr); }
 .gz-slot .nm { grid-column: 2; }
 .gz-slot .kind { min-height: 1.375rem; padding-right: 4.5rem; }
-.gz-slot .s { position: absolute; top: .5rem; right: .75rem; }
+.gz-slot .s { position: absolute; top: .3125rem; right: .75rem; line-height: 1.25; }
 .gz-slot .tags { grid-column: 2; align-items: center; }
-.gz-slot .tags .lv { padding: 0; background: none; color: var(--gz-faint); }
 /* A talent's stats at its current level, under its level bar. */
 .gz-tnstats { display: flex; flex-wrap: wrap; gap: .125rem .5rem; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--gz-sub); }
 .gz-tnstats b { font-weight: 700; color: var(--gz-ink); }
