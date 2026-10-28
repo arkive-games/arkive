@@ -138,7 +138,9 @@ export function ArkiveContentPage({
             </div>
           </div>
         ) : null}
-        <div ref={scrollRef} data-content-scroll className="relative min-h-0 flex-1 overflow-y-auto">
+        {/* The gutter stays reserved so a filter that shortens the page below the
+            viewport does not drop the scrollbar and shift the whole page sideways. */}
+        <div ref={scrollRef} data-content-scroll className="relative min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
           <div className="flex min-h-full flex-col">
             {hero}
             <main
