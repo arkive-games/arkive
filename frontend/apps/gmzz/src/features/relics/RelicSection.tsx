@@ -132,7 +132,6 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
         {/* A rare word has one value: read out, not picked. */}
         <span className="gz-val ro num" data-testid={`${testPrefix}-value-${index}`}>{shownValue(relics, rare, k2)}</span>
         {end(rare.mark)}
-        <span className="desc full" data-testid={`${testPrefix}-rung-${index}`}>{rareEffect(relics, rare, k2)}</span>
       </div>
     )
   }
@@ -433,6 +432,15 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
                 onChange={(next) => writeAffixes(affixes.map((entry, other) => (other === at ? next : entry)))}
                 onRemove={() => writeAffixes(affixes.filter((_, other) => other !== at))} />
             ))}
+            {/* A rare word's full effect, under every affix rather than inside the list. */}
+            {affixes.map((affix, at) => {
+              const source = pool.find((entry) => entry.id === affix.affixId)
+              return source && isRareAffix(source) ? (
+                <p key={`rare-${at}`} className={`gz-rarefx ${rareGrade(source)}`} data-testid={`${testPrefix}-rung-${at}`}>
+                  <b>{source.name}</b> {rareEffect(relics, source, k2)}
+                </p>
+              ) : null
+            })}
           </div>
           <div className="gz-addrow">
             <button type="button" className="gz-add" disabled={affixes.length >= max}
@@ -513,7 +521,11 @@ function RelicDetail({ relics, result, k1, k2 }: { relics: Relics; result: Relic
                 const off = material.inactive[at]
                 return (
                   <li key={at} className={`${rare ? `rare ${rareGrade(rare)}` : ''} ${off ? 'off' : ''}`}>
-                    <span>{rare ? `${rare.name ?? ''}·${statName(relics, rare.stat)}` : statName(relics, affix.stat)}</span>
+                    {rare ? (
+                      <TipOn title={rare.name ?? ''} content={rareEffect(relics, rare, k2)}>
+                        <span className="gz-hov" tabIndex={0}>{`${rare.name ?? ''}·${statName(relics, rare.stat)}`}</span>
+                      </TipOn>
+                    ) : <span>{statName(relics, affix.stat)}</span>}
                     {off ? <small>{t('relic.affixOff')}</small> : null}
                     <b className="num">{shownValue(relics, affix, k2)}</b>
                   </li>

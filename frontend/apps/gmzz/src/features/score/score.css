@@ -1068,3 +1068,10 @@ select.gz-select {
 .gz-suit .gz-suitfx { padding-top: 0; border-top: 0; }
 .gz-wbc .hd { align-items: center; min-height: 1.5rem; }
 .gz-wbc .hd, .gz-suit > .hd { height: 1.75rem; min-height: 0; line-height: 1.75rem; }
+/* A rare word's effect under the affix list, its name in the word's grade colour. */
+.gz-rarefx { margin: .25rem 0 0; font-size: .75rem; line-height: 1.5; color: var(--gz-sub); }
+.gz-rarefx b { font-weight: 800; }
+.gz-rarefx.purple b { color: #8b6be0; }
+.gz-rarefx.gold b { color: #c98d0c; }
+.gz-rarefx.orange b { color: #e06a1f; }
+.gz-rdet li.rare > .gz-hov { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
