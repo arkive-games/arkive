@@ -120,15 +120,15 @@ function tierMultiplier(tier: number): string {
 }
 
 /**
- * How each of the four items is calculated, with the draft's own figures put
- * through the same functions the page scores with, so the question mark on a
- * ledger line shows the arithmetic behind the number beside it.
+ * How each of the four items comes to its score, as one equation with the
+ * draft's own figures, named, put through the same functions the page scores
+ * with — the score's tooltip on its ledger line.
  */
 function useBondsFormula(data: BondsData, draft: BondsDraft): (item: SpeciesResult) => ReactNode {
   const { t } = useTranslation()
   const skillLevel = clampSkillLevel(draft.puppetSkillLevel)
-  const join = (...parts: (string | null)[]) => parts.filter(Boolean).join('\n\n')
 
+  const withRule = (equation: string | null, rule: string) => [equation, rule].filter(Boolean).join('\n\n')
   return (item) => {
     const { partners, scoring, ranks, fellows, relations } = data
     switch (item.species.module) {
@@ -137,59 +137,38 @@ function useBondsFormula(data: BondsData, draft: BondsDraft): (item: SpeciesResu
         const result = evaluatePuppets(draft.puppets, partners, scoring, draft.dominateSlots)
         const marks = (deployed: boolean) => result.rows.filter((row) => row.dominated === deployed).reduce((sum, row) => sum + row.mark, 0)
         const rates = { inRate: scoring.inDominateRate, outRate: scoring.nonDominateRate }
-        return join(
-          t('bonds.formula', rates),
-          t('bonds.formulaLive', {
-            ...rates,
-            deployed: fmt(marks(true)),
-            bench: fmt(marks(false)),
-            sum: fmt(result.rows.reduce((sum, row) => sum + row.score, 0)),
-            total: result.total.toLocaleString(),
-          }),
-        )
+        return withRule(t('bonds.eqGain', {
+          ...rates, deployed: fmt(marks(true)), bench: fmt(marks(false)), score: result.total.toLocaleString(),
+        }), t('bonds.formula', rates))
       }
       case PUPPET_SKILL_MODULE: {
         const carried = partners && scoring ? carriedPuppetSkill(draft.puppets, partners, scoring, draft.skillPartnerId, skillLevel) : null
         const base = carried ? puppetSkillBase(carried.partner.quality, skillLevel) : undefined
-        const live = carried && base !== undefined && carried.result.tier >= 1
-          ? t('bonds.skillFormulaLive', {
-              name: carried.partner.name,
-              tier: carried.result.tier,
-              level: skillLevel,
-              base: base.toLocaleString(),
-              mult: tierMultiplier(carried.result.tier),
-              score: carried.result.score.toLocaleString(),
-            })
-          : t('bonds.skillNone')
-        return join(t('bonds.skillFormula'), live, carried?.result.estimated ? t('bonds.skillEstimated') : null)
+        const equation = !carried || base === undefined || carried.result.tier < 1
+          ? t('bonds.skillNone')
+          : t('bonds.eqSkill', { base: base.toLocaleString(), tier: carried.result.tier, mult: tierMultiplier(carried.result.tier), score: carried.result.score.toLocaleString() })
+        return withRule(equation, t('bonds.skillFormula'))
       }
       case FELLOW_SKILL_MODULE: {
         const carried = fellows && relations
           ? carriedFellowSkill(draft.fellows ?? [], fellows, relations, draft.fellowSkillId, draft.fellowRelationId, skillLevel)
           : null
-        const live = carried
-          ? t('bonds.fellowFormulaLive', {
-              name: carried.fellow.shortName || carried.fellow.name,
-              star: carried.star,
+        const equation = carried
+          ? t('bonds.eqFellow', {
               base: fellowBase(carried.fellow.quality, skillLevel).toLocaleString(),
               // S is kept in twentieths; shown as the plain number the formula names.
               s: fmt(fellowS(carried.star, carried.relation?.quality ?? 0, carried.tier).scaled / 20),
               score: carried.score.toLocaleString(),
-              plain: carried.base.toLocaleString(),
-              added: (carried.score - carried.base).toLocaleString(),
             })
           : t('bonds.fellowNone')
-        return join(t('bonds.fellowFormula'), live, carried?.estimated ? t('bonds.fellowTipEstimated') : null)
+        return withRule(equation, t('bonds.fellowFormula'))
       }
       case HISTORY_MODULE: {
         if (!ranks || !relations) return t('bonds.historyFormula')
-        const points = relationResearchPoints(relations, starMap(draft.fellows ?? []))
-        const rank = historyRankFor(ranks, points)
-        return join(
+        const rank = historyRankFor(ranks, relationResearchPoints(relations, starMap(draft.fellows ?? [])))
+        return withRule(
+          rank ? t('bonds.eqHistory', { rank: rank.name, score: rank.mark.toLocaleString() }) : t('bonds.eqHistoryNone'),
           t('bonds.historyFormula'),
-          rank
-            ? t('bonds.historyFormulaLive', { points: points.toLocaleString(), rank: rank.name, mark: rank.mark.toLocaleString() })
-            : t('bonds.historyFormulaNone', { points: points.toLocaleString() }),
         )
       }
       default:
@@ -399,7 +378,6 @@ function PuppetLineup({
     <div className="gz-panel gz-tint" data-testid="bonds-puppets">
       <div className="gz-panel-head">
         <h3>{t('bonds.puppetsTitle')}</h3>
-        <ActiveAttributesTip totals={totals} scoring={scoring} />
         <span className="meta num" data-testid="bonds-dominated">{t('bonds.dominated', { used: result.dominated, slots: result.slots })}</span>
         <LevelCap scoring={scoring} />
         <div className="acts">
@@ -432,6 +410,7 @@ function PuppetLineup({
         <span>{t('bonds.skillPuppet')}</span>
         <CarryPicker options={carryOptions} auto={autoCarry} carried={carried?.partner ?? null} readOnly={readOnly}
           onPick={(partnerId) => setDraft((prev) => ({ ...prev, skillPartnerId: partnerId }))} />
+        <ActiveAttributesTip totals={totals} scoring={scoring} />
       </div>
 
       <ul className="gz-people pups">

@@ -6,6 +6,12 @@
 export const equipMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, Record<string, string>>> = {
   'en-US': {
     equip: {
+      eqBasic: 'Score = the base scores of the pieces worn = {{score}}',
+      eqWord: 'Score = {{mark}} (affix Marks) + {{bonus}} (extraordinary bonus) = {{score}}',
+      eqGrow: 'Score = {{pieces}} (pieces) + {{body}} (whole-body set) + {{refine}} (refinement set) = {{score}}',
+      eqSuit: 'Score = {{parts}} = {{score}}',
+      eqSuitPart: '{{score}} ({{pieces}}-piece)',
+      eqSuitNone: 'Score = 0 (no suit active)',
       refineLabel: 'Average refinement',
       suitPieces: '{{pieces}}-piece',
       suitAtLevel: '(gear level {{level}})',
@@ -39,6 +45,12 @@ export const equipMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-CN': {
     equip: {
+      eqBasic: '分数 = 已穿装备的基础评分之和 = {{score}}',
+      eqWord: '分数 = {{mark}}（词条分值）+ {{bonus}}（非凡加成）= {{score}}',
+      eqGrow: '分数 = {{pieces}}（各件强化）+ {{body}}（全身强化）+ {{refine}}（平均精炼）= {{score}}',
+      eqSuit: '分数 = {{parts}} = {{score}}',
+      eqSuitPart: '{{score}}（{{pieces}}件套）',
+      eqSuitNone: '分数 = 0（未激活套装）',
       refineLabel: '平均精炼度',
       suitPieces: '{{pieces}}件套',
       suitAtLevel: '（{{level}}装等）',
@@ -72,6 +84,12 @@ export const equipMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-TW': {
     equip: {
+      eqBasic: '分數 = 已穿裝備的基礎評分之和 = {{score}}',
+      eqWord: '分數 = {{mark}}（詞條分值）+ {{bonus}}（非凡加成）= {{score}}',
+      eqGrow: '分數 = {{pieces}}（各件強化）+ {{body}}（全身強化）+ {{refine}}（平均精煉）= {{score}}',
+      eqSuit: '分數 = {{parts}} = {{score}}',
+      eqSuitPart: '{{score}}（{{pieces}}件套）',
+      eqSuitNone: '分數 = 0（未啟用套裝）',
       refineLabel: '平均精煉度',
       suitPieces: '{{pieces}}件套',
       suitAtLevel: '（{{level}}裝等）',

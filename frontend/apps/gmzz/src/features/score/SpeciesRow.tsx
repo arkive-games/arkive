@@ -62,7 +62,7 @@ export function ItemRow({ item, rating, unsupported = false, formula }: {
         ) : (
           <span className="val num">
             {formula ? (
-              <TipOn content={formula} title={item.species.name}>
+              <TipOn title={item.species.name} content={<>{formula}<div className="mt-1.5">{t('score.percentOfMax', { percent })}</div></>}>
                 <b className="gz-hov" tabIndex={0} data-testid={`score-derived-${item.species.id}`}>{item.score.toLocaleString()}</b>
               </TipOn>
             ) : <b data-testid={`score-derived-${item.species.id}`}>{item.score.toLocaleString()}</b>}

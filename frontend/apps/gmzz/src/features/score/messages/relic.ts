@@ -6,6 +6,9 @@
 export const relicMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, Record<string, string>>> = {
   'en-US': {
     relic: {
+      eqAssembly: 'Score = {{marks}} (assembly Marks) × {{k}} (k2), rounded down = {{score}}',
+      eqResonance: 'Score = {{marks}} (resonance Marks) × {{k}} (k1), rounded down = {{score}}',
+      eqAffix: 'Score = {{marks}} (affix Marks in effect) × {{k}} (k2), rounded down = {{score}}',
       tagMarkLabel: 'Assembly',
       formulaAssembly: 'Score = each relic\'s assembly Mark at the grade it is scored at × k2, the three added up and then rounded down once.',
       formulaResonance: 'Score = each relic\'s resonance Mark × k1, the three added up and then rounded down once. The Mark is read off the resonance ladder of the relic\'s scored grade at the number of affixes in effect on its material; with two materials in effect, the one with more affixes counts.',
@@ -23,6 +26,9 @@ export const relicMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-CN': {
     relic: {
+      eqAssembly: '分数 = {{marks}}（装配分值）× {{k}}（k2），向下取整 = {{score}}',
+      eqResonance: '分数 = {{marks}}（共鸣分值）× {{k}}（k1），向下取整 = {{score}}',
+      eqAffix: '分数 = {{marks}}（生效词条分值）× {{k}}（k2），向下取整 = {{score}}',
       tagMarkLabel: '装配',
       formulaAssembly: '分数 = 每件封印物生效等级的装配分值 × k2，三件相加后向下取整一次。',
       formulaResonance: '分数 = 每件封印物的共鸣分值 × k1，三件相加后向下取整一次。共鸣分值按封印物生效等级的共鸣表、以其物质当前生效的词条数读取；两个物质同时生效时取生效词条更多的那个。',
@@ -40,6 +46,9 @@ export const relicMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-TW': {
     relic: {
+      eqAssembly: '分數 = {{marks}}（裝配分值）× {{k}}（k2），向下取整 = {{score}}',
+      eqResonance: '分數 = {{marks}}（共鳴分值）× {{k}}（k1），向下取整 = {{score}}',
+      eqAffix: '分數 = {{marks}}（生效詞條分值）× {{k}}（k2），向下取整 = {{score}}',
       tagMarkLabel: '裝配',
       formulaAssembly: '分數 = 每件封印物生效等級的裝配分值 × k2，三件相加後向下取整一次。',
       formulaResonance: '分數 = 每件封印物的共鳴分值 × k1，三件相加後向下取整一次。共鳴分值按封印物生效等級的共鳴表、以其物質當前生效的詞條數讀取；兩個物質同時生效時取生效詞條更多的那個。',

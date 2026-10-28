@@ -244,7 +244,6 @@ function BonusTier({ equipment, tier, need, label, value, testId }: {
           ))}
         </div>
       ) : null}
-      {tier?.effect ? <p className="fx">{tier.effect}</p> : null}
       <p className="need">{need}</p>
     </div>
   )

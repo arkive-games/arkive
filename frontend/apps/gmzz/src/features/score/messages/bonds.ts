@@ -6,6 +6,11 @@
 export const bondsMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, Record<string, string>>> = {
   'en-US': {
     bonds: {
+      eqGain: 'Score = {{deployed}} (deployed Marks) × {{inRate}} + {{bench}} (benched Marks) × {{outRate}}, rounded down = {{score}}',
+      eqSkill: 'Score = {{base}} (base) × {{mult}} (tier {{tier}}), rounded down = {{score}}',
+      eqFellow: 'Score = {{base}} (base) × {{s}} (S) ÷ 40, rounded down = {{score}}',
+      eqHistory: 'Score = the Mark of rank “{{rank}}” = {{score}}',
+      eqHistoryNone: 'Score = 0 (no rank reached)',
       // The panel truncates the sum (`panelFloor`); the old text said "rounded".
       formula: 'Same arithmetic as the game\'s deploy screen: each owned puppet\'s attribute-talent Marks at its level, summed, ×{{inRate}} while deployed and ×{{outRate}} otherwise; the total rounded down. Only attribute talents count; workshop and travel talents do not.',
       formulaLive: 'Deployed {{deployed}} × {{inRate}} + not deployed {{bench}} × {{outRate}} = {{sum}} → {{total}}',
@@ -36,6 +41,11 @@ export const bondsMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-CN': {
     bonds: {
+      eqGain: '分数 = {{deployed}}（上阵分值）× {{inRate}} + {{bench}}（未上阵分值）× {{outRate}}，向下取整 = {{score}}',
+      eqSkill: '分数 = {{base}}（基础分）× {{mult}}（{{tier}} 阶），向下取整 = {{score}}',
+      eqFellow: '分数 = {{base}}（基础分）× {{s}}（S）÷ 40，向下取整 = {{score}}',
+      eqHistory: '分数 = 段位「{{rank}}」的分值 = {{score}}',
+      eqHistoryNone: '分数 = 0（尚未达到段位）',
       formula: '算法与游戏上阵界面一致：每只已拥有秘偶在当前等级的属性天赋 Mark 之和，上阵的按 ×{{inRate}} 计，未上阵的按 ×{{outRate}} 计，总和向下取整。仅属性天赋计分，工坊与游历天赋不计。',
       formulaLive: '上阵 {{deployed}} × {{inRate}} + 未上阵 {{bench}} × {{outRate}} = {{sum}} → {{total}}',
       skillFormulaLive: '{{name}}（{{tier}} 阶，技能等级 {{level}}）：floor({{base}} × {{mult}}) = {{score}}',
@@ -65,6 +75,11 @@ export const bondsMessages: Record<'en-US' | 'zh-CN' | 'zh-TW', Record<string, R
   },
   'zh-TW': {
     bonds: {
+      eqGain: '分數 = {{deployed}}（上陣分值）× {{inRate}} + {{bench}}（未上陣分值）× {{outRate}}，向下取整 = {{score}}',
+      eqSkill: '分數 = {{base}}（基礎分）× {{mult}}（{{tier}} 階），向下取整 = {{score}}',
+      eqFellow: '分數 = {{base}}（基礎分）× {{s}}（S）÷ 40，向下取整 = {{score}}',
+      eqHistory: '分數 = 段位「{{rank}}」的分值 = {{score}}',
+      eqHistoryNone: '分數 = 0（尚未達到段位）',
       formula: '算法與遊戲上陣介面一致：每隻已擁有秘偶在目前等級的屬性天賦 Mark 之和，上陣的按 ×{{inRate}} 計，未上陣的按 ×{{outRate}} 計，總和向下取整。僅屬性天賦計分，工坊與遊歷天賦不計。',
       formulaLive: '上陣 {{deployed}} × {{inRate}} + 未上陣 {{bench}} × {{outRate}} = {{sum}} → {{total}}',
       skillFormulaLive: '{{name}}（{{tier}} 階，技能等級 {{level}}）：floor({{base}} × {{mult}}) = {{score}}',

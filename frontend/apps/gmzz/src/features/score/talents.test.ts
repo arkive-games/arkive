@@ -190,16 +190,17 @@ describe('pathwayFormula', () => {
 
   it('tells the fitted pathway-skill line from the curve value', () => {
     const live = String(pathwayFormula(item(SKILL_MODULE, 82 * 38 + 741), { rating, talents: null, limits: null }, t))
-    expect(live).toContain('pathway.skillFormulaLive')
+    expect(live).toContain('pathway.eqSkill')
     expect(live).toContain('"level":38')
     // 1394 is a curve value before every skill unlocks: never 741 modulo 82.
     const curve = String(pathwayFormula(item(SKILL_MODULE, 1394), { rating, talents: null, limits: null }, t))
-    expect(curve).toContain('pathway.skillFormulaCurve')
+    expect(curve).toContain('pathway.eqSkillCurve')
   })
 
-  it('states the level as its benchmark and the progression bounds', () => {
+  it('states the level as its benchmark', () => {
     const text = String(pathwayFormula(item(LEVEL_MODULE, 5000), { rating, talents: null, limits: null }, t))
-    expect(text).toContain('"maxRole":70')
+    expect(text).toContain('pathway.eqLevel')
+    expect(text).toContain('"score":"' + (5000).toLocaleString() + '"')
     expect(pathwayFormula(item('Other', 1), { rating, talents: null, limits: null }, t)).toBeNull()
   })
 })
