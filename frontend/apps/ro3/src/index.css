@@ -62,7 +62,6 @@
    node medallions and the build manual's slots are pictures of the game's own
    UI, drawn against its parchment; they keep that palette in both themes
    instead of following the site's surfaces. */
-.card-tile,
 .card-game-frame,
 .pet-roster-card,
 .monster-roster-card,
@@ -147,7 +146,8 @@
 }
 
 .profession-wiki,
-.talent-wiki {
+.talent-wiki,
+.card-wiki {
   padding: 0.9rem 0 3rem;
   color: var(--ro3-tone-05);
 }
@@ -654,7 +654,8 @@
   }
 
   .profession-wiki,
-  .talent-wiki {
+  .talent-wiki,
+  .card-wiki {
     padding-top: 0.55rem;
   }
 
@@ -5267,31 +5268,6 @@ select {
   .card-mobile-dialog .wiki-dialog-close { color: var(--ro3-tone-05); background: color-mix(in srgb, var(--ro3-tone-21) 78%, transparent); }
 }
 
-/* Card catalogue follows the Paldeck scanning pattern: a dense, responsive
-   image grid in the main column, with the selected record pinned in the detail
-   rail. The frames and palette remain RO3-native. */
-/* The page scrolls, as on every other game's catalogue, rather than a box
-   inside it; the class stays because the card-face rules below hang off it. */
-.card-catalog-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
-  align-content: start;
-  gap: 0.65rem;
-}
-
-.card-catalog-grid .card-tile {
-  width: 100%;
-  min-height: 0;
-  aspect-ratio: 162 / 224;
-  grid-column: auto;
-  grid-row: auto;
-  display: block;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  transform: none;
-}
-
 .card-game-frame {
   position: relative;
   display: block;
@@ -5301,9 +5277,11 @@ select {
   isolation: isolate;
 }
 
+/* The face's layers paint in source order (art, rarity frame, nameplate, name),
+   so none of them needs a z-index. */
+
 .card-game-frame-art {
   position: absolute;
-  z-index: 0;
   top: 2.8%;
   left: 7.4%;
   width: 85.2%;
@@ -5329,7 +5307,6 @@ select {
 
 .card-game-frame-rarity {
   position: absolute;
-  z-index: 1;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -5340,7 +5317,6 @@ select {
 .card-game-frame-nameplate,
 .card-game-frame-nameplate-fill {
   position: absolute;
-  z-index: 2;
   right: 10%;
   bottom: 2.5%;
   width: 80%;
@@ -5359,13 +5335,11 @@ select {
 }
 
 .card-game-frame-nameplate {
-  z-index: 3;
   object-fit: fill;
 }
 
 .card-game-frame > strong {
   position: absolute;
-  z-index: 4;
   overflow: hidden;
   color: var(--ro3-tone-20);
   font-size: 0.75rem;
@@ -5394,7 +5368,6 @@ select {
 }
 
 .card-game-frame.is-collection > strong {
-  z-index: 5;
   right: 0;
   bottom: 2.5%;
   left: 0;
@@ -5403,44 +5376,6 @@ select {
   place-items: center;
   color: #e4d4d3;
   font-weight: 700;
-}
-
-.card-catalog-grid .card-tile.is-active,
-.card-catalog-grid .card-tile:hover,
-.card-catalog-grid .card-tile:focus-visible {
-  border-color: transparent;
-  box-shadow: none;
-}
-
-.card-catalog-grid .card-tile.is-active .card-game-frame-rarity {
-  filter: drop-shadow(0 0 0.32rem color-mix(in srgb, var(--ro3-tone-17) 95%, transparent)) drop-shadow(0 0 0.75rem color-mix(in srgb, var(--ro3-gold-09) 55%, transparent));
-}
-
-.card-catalog-grid .card-tile:hover,
-.card-catalog-grid .card-tile:focus-visible {
-  transform: translateY(-0.16rem);
-}
-
-.card-catalog-grid .card-tile:hover .card-game-frame-rarity,
-.card-catalog-grid .card-tile:focus-visible .card-game-frame-rarity {
-  filter: drop-shadow(0 0 0.42rem color-mix(in srgb, var(--ro3-tone-18) 70%, transparent));
-}
-
-.card-catalog-grid .card-tile:focus-visible {
-  outline: 2px solid var(--ro3-gold-09);
-  outline-offset: 0.1rem;
-}
-
-@media (max-width: 47.999rem) {
-  .card-native-toolbar { width: 100%; }
-  .card-native-toolbar .wiki-search { flex: 1; }
-  .card-filter-panel {
-    top: 9.2rem;
-    right: 0.75rem;
-    width: calc(100% - 1.5rem);
-    max-height: min(31rem, calc(100dvh - 10rem));
-  }
-  .card-filter-group > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 39.999rem) {
@@ -5591,7 +5526,8 @@ select {
 
 /* The skill board's advancement plates and the panel under the skill row. */
 .profession-wiki,
-.talent-wiki {
+.talent-wiki,
+.card-wiki {
   --ro3-stage: #b4532a;
   --ro3-stage-solid: #b4532a;
   --ro3-stage-soft: #fdf1ea;
@@ -5601,7 +5537,8 @@ select {
 }
 
 .dark .profession-wiki,
-.dark .talent-wiki {
+.dark .talent-wiki,
+.dark .card-wiki {
   --ro3-stage: #f0a57e;
   --ro3-stage-soft: #241914;
   --ro3-stage-mid: #3a261c;

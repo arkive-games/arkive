@@ -27,6 +27,8 @@ export interface CardTier {
   specialEffects: number[]
   showLibrary: boolean
   open: boolean
+  /** The tier once the card is collected: more power and its own effects. Absent on cards with no collected form. */
+  flash?: { power: number; weight?: number; specialEffects: number[]; resource?: string | null } | null
 }
 
 export interface WikiCard {
@@ -53,6 +55,8 @@ export interface CardAttribute {
 export interface CardSpecialEffect {
   id: number
   description: LocalizedText | null
+  /** What the effect does: `[1, attribute id, value]` adds an attribute; other kinds grant skills or buffs. */
+  effects?: number[][]
 }
 
 export interface CardCatalogDocument {

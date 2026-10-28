@@ -3,27 +3,18 @@ import { ArkiveMapTopBar, type ShellNavItem } from '@gamemap/map-shell'
 import gameIcon from '../assets/ro3-icon.webp'
 import content from '../locales/zh-CN.json'
 import { HOME_URL, SETTINGS } from '../lib/brand'
-import { hrefForKey, navigateOnClick, WIKI_VIEWS, type NavKey, type NavigationProps } from '../navigation'
+import { hrefForKey, navigateOnClick, type NavKey, type NavigationProps } from '../navigation'
 
 /**
  * The desktop bar, in the shape every other game uses: the home page first,
- * then sections, with the seven encyclopedia tables folded into one dropdown
- * rather than a second row of tabs under the bar.
+ * then sections. The encyclopedia is one plain link to its first table; the
+ * wiki's own sidebar picks the rest, so the bar needs no dropdown.
  */
 export function TopNav({ active, onNavigate }: NavigationProps) {
 
   const items: ShellNavItem[] = [
     { key: 'overview', label: content.nav.home, active: active === 'overview' },
-    {
-      key: 'wiki',
-      label: content.nav.wiki,
-      active: active.startsWith('wiki-'),
-      children: WIKI_VIEWS.map((view) => ({
-        key: `wiki-${view}`,
-        label: content.wiki.tabs[view],
-        active: active === `wiki-${view}`,
-      })),
-    },
+    { key: 'wiki-skills', label: content.nav.wiki, active: active.startsWith('wiki-') },
     { key: 'builds', label: content.builds.title, active: active === 'builds' },
   ]
 
@@ -35,8 +26,6 @@ export function TopNav({ active, onNavigate }: NavigationProps) {
       game={{ name: content.pageTitle, icon: gameIcon }}
       nav={{
         items,
-        // Only leaves reach this: the shell renders a dropdown's trigger as its
-        // own button, so the group key 'wiki' never becomes a link.
         renderItem: (item, className, labelClassName) => (
           <a href={hrefForKey(item.key)} className={className} onClick={navigateOnClick(item.key as NavKey, onNavigate)}>
             {labelClassName ? (
