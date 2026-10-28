@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ChevronDown, Swords, Zap } from 'lucide-react'
+import { ChevronDown, ChevronRight, Swords, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { buildProfessionStages, PROFESSION_LINES, type ProfessionSkillChoice } from './professionCatalog'
 import { CatalogLayout, Chip, DetailSection, Facts, FilterRow, Notice, SearchField } from './components/wiki'
@@ -35,6 +35,17 @@ const STAGE_ICON_SLUGS: Record<string, string> = {
   blacksmith: 'blacksmith',
   whitesmith: 'mastersmith',
   mechanic: 'mechanic',
+}
+
+/** Rank-4 jobs without art of their own show the rank-3 job they grow from. */
+const STAGE_ART: Record<string, string> = {
+  lordKnight: 'knight',
+  paladin: 'crusader',
+  highWizard: 'wizard',
+  sniper: 'hunter',
+  highPriest: 'priest',
+  assassinCross: 'assassin',
+  whitesmith: 'blacksmith',
 }
 
 /** The skill table's own category code for a passive skill. */
@@ -153,43 +164,42 @@ export function ProfessionWiki() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* The six classes as portraits: one scrolling strip on a phone. */}
-      <div
-        role="tablist"
-        aria-label={text.lineLabel}
-        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0 sm:pb-0"
+      {/* One control deck: picking on the left, the stage's art on the right. */}
+      <section
+        aria-label={text.pathTitle}
+        className="grid overflow-hidden rounded-xl border border-border bg-card shadow-sm lg:grid-cols-[minmax(0,1fr)_24rem]"
       >
-        {PROFESSION_LINES.map((candidate) => {
-          const selected = candidate.id === line.id
-          return (
-            <button
-              key={candidate.id}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => selectLine(candidate.id)}
-              className={cn(
-                'flex min-w-24 shrink-0 flex-col items-center gap-1.5 rounded-xl border px-3 py-3 transition-colors',
-                selected
-                  ? 'border-primary bg-primary text-primary-foreground shadow-md'
-                  : 'border-border bg-card hover:border-primary/60',
-              )}
-            >
-              <span className={cn('grid size-14 place-items-center rounded-full', selected ? 'bg-primary-foreground/15' : 'bg-muted')}>
-                <img src={stageIcon(candidate.routes[0].stages[0].stageId)} alt="" className="size-11 object-contain" />
-              </span>
-              <span className="text-sm font-semibold">{lineLabel(candidate.id)}</span>
-              <span className={cn('text-xs', selected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-                {text.routeCount.replace('{count}', String(candidate.routes.length))}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+        {stage ? <StageArt stageId={stage.stageId} name={stageLabel(stage.stageId)} /> : null}
 
-      <section aria-label={text.pathTitle} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-lg font-semibold">{text.pathTitle}</h2>
+        <div className="flex min-w-0 flex-col gap-3 p-3 sm:p-4 lg:order-first">
+          <div
+            role="tablist"
+            aria-label={text.lineLabel}
+            className="-mx-3 flex gap-1.5 overflow-x-auto px-3 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0"
+          >
+            {PROFESSION_LINES.map((candidate) => {
+              const selected = candidate.id === line.id
+              return (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => selectLine(candidate.id)}
+                  className={cn(
+                    'flex shrink-0 items-center justify-center gap-1.5 rounded-full border py-1 pl-1 pr-3 text-sm font-semibold transition-colors',
+                    selected
+                      ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                      : 'border-border bg-background hover:border-primary/60',
+                  )}
+                >
+                  <img src={stageEmblem(candidate.routes[0].stages[0].stageId)} alt="" className="size-7 object-contain" />
+                  {lineLabel(candidate.id)}
+                </button>
+              )
+            })}
+          </div>
+
           <FilterRow label={text.routeLabel}>
             {line.routes.map((candidate) => (
               <Chip key={candidate.id} active={candidate.id === route.id} onClick={() => selectRoute(candidate.id)}>
@@ -197,46 +207,46 @@ export function ProfessionWiki() {
               </Chip>
             ))}
           </FilterRow>
-        </div>
 
-        {/* A track from first to last advancement, filled up to the stage on show. */}
-        <ol className="relative grid grid-cols-4" aria-label={text.pathTitle}>
-          <span aria-hidden="true" className="absolute left-[12.5%] right-[12.5%] top-8 h-1 -translate-y-1/2 rounded-full bg-border" />
-          <span
-            aria-hidden="true"
-            className="absolute left-[12.5%] top-8 h-1 -translate-y-1/2 rounded-full bg-primary transition-[width] duration-300"
-            style={{ width: `${(Math.min(stageIndex, stages.length - 1) / Math.max(stages.length - 1, 1)) * 75}%` }}
-          />
-          {stages.map((candidate, index) => {
-            const selected = index === stageIndex
-            const reached = index <= stageIndex
-            return (
-              <li key={`${candidate.professionId}-${candidate.rank}`} className="relative flex justify-center">
-                <button
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => {
-                    setStageIndex(index)
-                    resetSelection()
-                  }}
-                  className="group flex flex-col items-center gap-1 text-center"
-                >
-                  <span
+          {/* First to last advancement; the stage on show sets the art and the skills below. */}
+          <ol className="grid grid-cols-4 gap-1.5" aria-label={text.pathTitle}>
+            {stages.map((candidate, index) => {
+              const selected = index === stageIndex
+              return (
+                <li key={`${candidate.professionId}-${candidate.rank}`} className="relative min-w-0">
+                  {index > 0 ? (
+                    <ChevronRight aria-hidden="true" className="absolute -left-2.5 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
+                  ) : null}
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setStageIndex(index)
+                      resetSelection()
+                    }}
                     className={cn(
-                      'relative grid size-16 place-items-center rounded-full border-2 bg-card transition-transform',
-                      selected ? 'scale-110 border-primary ring-4 ring-primary/15' : reached ? 'border-primary/70' : 'border-border group-hover:border-primary/60',
+                      'flex w-full min-w-0 flex-col items-center gap-0.5 rounded-lg border px-1 py-1.5 text-center transition-colors sm:flex-row sm:gap-2 sm:px-2 sm:text-left',
+                      selected
+                        ? 'border-ring bg-[color:var(--arkive-filter-active)]'
+                        : 'border-border hover:border-primary/60',
                     )}
                   >
-                    <img src={stageIcon(candidate.stageId)} alt="" className="size-12 object-contain" />
-                  </span>
-                  <span className="mt-1 text-xs text-muted-foreground">{advancementLabel(index)}</span>
-                  <strong className={cn('text-sm font-semibold', selected && 'text-primary')}>{stageLabel(candidate.stageId)}</strong>
-                  <span className="text-xs text-muted-foreground">{text.newSkills.replace('{count}', String(candidate.newSkillCount))}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ol>
+                    <img src={stageEmblem(candidate.stageId)} alt="" className="size-9 shrink-0 object-contain sm:size-10" />
+                    <span className="flex min-w-0 flex-col">
+                      <span className="text-xs text-muted-foreground">{advancementLabel(index)}</span>
+                      <strong className={cn('truncate text-xs font-semibold sm:text-sm', selected && 'text-[color:var(--arkive-nav-active)]')}>
+                        {stageLabel(candidate.stageId)}
+                      </strong>
+                      <span className="hidden text-xs text-muted-foreground sm:block">
+                        {text.newSkills.replace('{count}', String(candidate.newSkillCount))}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
       </section>
 
       <CatalogLayout
@@ -274,7 +284,7 @@ export function ProfessionWiki() {
                       {text.inheritedTitle}
                       <span className="font-normal">{inherited.length}</span>
                     </summary>
-                    <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))]">
+                    <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-[repeat(auto-fill,minmax(9rem,1fr))]">
                       {inherited.map((choice) => tile(choice, true))}
                     </div>
                   </details>
@@ -297,6 +307,27 @@ export function ProfessionWiki() {
   )
 }
 
+/**
+ * The stage's key art, a pair of figures on a white sheet. The sheet is
+ * multiplied into a light panel so the figures sit on it rather than in a
+ * box; the panel stays light in the dark theme, which white artwork needs.
+ */
+function StageArt({ stageId, name }: { stageId: string; name: string }) {
+  return (
+    <figure className="relative h-36 bg-[#f7f4ee] sm:h-44 lg:h-auto lg:min-h-44 lg:border-l lg:border-border">
+      <img
+        key={stageId}
+        src={resourceUrl(`art/jobs/${STAGE_ART[stageId] ?? stageId}.webp`)}
+        alt={name}
+        className="absolute inset-0 size-full object-contain object-center mix-blend-multiply"
+      />
+      <figcaption className="absolute bottom-2 left-3 rounded-full bg-white/80 px-2.5 py-0.5 text-xs font-semibold text-neutral-800 shadow-sm backdrop-blur">
+        {name}
+      </figcaption>
+    </figure>
+  )
+}
+
 function SkillGroup({ title, count, children }: { title: string; count: number; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
@@ -305,7 +336,7 @@ function SkillGroup({ title, count, children }: { title: string; count: number; 
         <span className="font-normal">{count}</span>
         <span aria-hidden="true" className="h-px flex-1 bg-border" />
       </h3>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))]">{children}</div>
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]">{children}</div>
     </section>
   )
 }
@@ -323,23 +354,23 @@ function SkillTile({ choice, kind, compact, active, onSelect }: {
       aria-pressed={active}
       onClick={onSelect}
       className={cn(
-        'flex min-w-0 flex-col items-center gap-1.5 rounded-lg border bg-card text-center transition-colors',
-        compact ? 'p-2 opacity-85' : 'p-3',
+        'flex min-w-0 items-center gap-2 rounded-lg border bg-card p-1.5 text-left transition-colors',
+        compact && 'opacity-85',
         active ? 'border-ring bg-[color:var(--arkive-filter-active)] opacity-100' : 'border-border hover:border-primary/60',
       )}
     >
-      <span className="relative">
-        <SkillIcon choice={choice} kind={kind} className={compact ? 'size-11' : 'size-14'} />
-        {choice.skill?.iMaxLevel ? (
-          <span className="absolute -bottom-1 -right-1.5 rounded-full border border-card bg-foreground px-1.5 text-xs font-semibold leading-tight text-background">
-            {choice.skill.iMaxLevel}
-          </span>
-        ) : null}
+      <SkillIcon choice={choice} kind={kind} className={compact ? 'size-8' : 'size-10'} />
+      <span className="flex min-w-0 flex-1 flex-col">
+        <strong className="truncate text-sm font-semibold">{skillName(choice)}</strong>
+        {compact ? null : (
+          <span className="text-xs text-muted-foreground">{text.unlockShort.replace('{level}', String(choice.unlockLevel))}</span>
+        )}
       </span>
-      <strong className="w-full truncate text-sm font-semibold">{skillName(choice)}</strong>
-      {compact ? null : (
-        <span className="text-xs text-muted-foreground">{text.unlockShort.replace('{level}', String(choice.unlockLevel))}</span>
-      )}
+      {choice.skill?.iMaxLevel && !compact ? (
+        <span className="shrink-0 self-start rounded bg-muted px-1 text-xs font-semibold tabular-nums text-muted-foreground">
+          {choice.skill.iMaxLevel}
+        </span>
+      ) : null}
     </button>
   )
 }
@@ -384,15 +415,15 @@ function SkillDetail({ choice, stageName, levels, levelError }: {
 
   return (
     <>
-      <header className="flex items-center gap-4 border-b border-border pb-4">
+      <header className="flex items-center gap-3 border-b border-border pb-3">
         {choice.skill?.icon ? (
-          <SkillIcon choice={choice} kind={kind} className="size-16" />
+          <SkillIcon choice={choice} kind={kind} className="size-12" />
         ) : (
-          <span className="grid size-16 place-items-center rounded-xl bg-muted"><Swords aria-hidden="true" className="size-6 text-muted-foreground" /></span>
+          <span className="grid size-12 place-items-center rounded-xl bg-muted"><Swords aria-hidden="true" className="size-5 text-muted-foreground" /></span>
         )}
-        <div className="flex min-w-0 flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-0.5">
           <span className="text-xs text-[color:var(--arkive-nav-active)]">{stageName}</span>
-          <h3 className="text-xl font-semibold">{skillName(choice)}</h3>
+          <h3 className="text-lg font-semibold">{skillName(choice)}</h3>
           <div className="flex flex-wrap gap-1.5">
             {kind ? <Badge>{kind === 'passive' ? text.kindPassive : text.kindActive}</Badge> : null}
             {element ? <Badge>{element}</Badge> : null}
@@ -472,8 +503,8 @@ function formatNumber(value: number): string {
   return String(Math.round(value * 10) / 10)
 }
 
-function stageIcon(stageId: string): string {
-  return resourceUrl(`icons/jobs/icon_job_${STAGE_ICON_SLUGS[stageId] ?? 'null'}.webp`)
+function stageEmblem(stageId: string): string {
+  return resourceUrl(`icons/jobs/emblems/${STAGE_ICON_SLUGS[stageId] ?? 'novice'}.webp`)
 }
 
 function lineLabel(lineId: string): string {
