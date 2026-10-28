@@ -1005,8 +1005,14 @@ select.gz-select {
 .gz-slot .s { position: absolute; top: .3125rem; right: .75rem; line-height: 1.25; }
 .gz-slot .tags { grid-column: 2; align-items: center; }
 /* A talent's stats at its current level, under its level bar. */
-.gz-tnstats { display: flex; flex-wrap: wrap; gap: .125rem .5rem; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--gz-sub); }
-.gz-tnstats b { font-weight: 700; color: var(--gz-ink); }
+.gz-tnstats { display: grid; gap: .125rem; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--gz-sub); }
+.gz-tnstats li { display: flex; justify-content: space-between; gap: .5rem; }
+.gz-tnstats b { font-weight: 700; color: var(--gz-ink); text-align: right; }
+/* Name on the left, the level stepper right-aligned on the same line at a fixed width. */
+.gz-tcard { grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: .5rem; }
+.gz-tcard > :not(.th):not(.gz-mini) { grid-column: 1 / -1; }
+.gz-tcard .th { grid-column: 1; }
+.gz-tcard .gz-mini { grid-column: 2; grid-row: 1; width: 5.5rem; }
 .gz-suit .gz-seg .note { flex: 1 1 100%; font-size: .75rem; color: var(--gz-faint); }
 /* Relic word types 凡 · 珍 · 稀 · 异. */
 .gz-pip.t1 { background: #3d82c4; }
@@ -1014,3 +1020,4 @@ select.gz-select {
 .gz-pip.t3 { background: #d99a12; }
 .gz-pip.t4 { background: #e06a1f; }
 .gz-pip.t1, .gz-pip.t2, .gz-pip.t3, .gz-pip.t4 { width: auto; min-width: 2.5rem; padding: 0 .5rem; }
+.gz-tcard .gz-tc { grid-column: 1 / -1; }

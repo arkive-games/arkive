@@ -24,7 +24,7 @@ import {
   type Talents,
   type TalentTree,
 } from '@/features/score/talents'
-import { Tip, TipOn } from '@/features/score/Tip'
+import { TipOn } from '@/features/score/Tip'
 import { TYPE } from '@/lib/typography'
 
 export { LEVEL_MODULE, SKILL_MODULE, TALENT_MODULE } from '@/features/score/pathwayFormulas'
@@ -148,8 +148,7 @@ function TalentCalculator({
   const spentFull = result.pointsSpent >= result.pointCap
   const pointsText = t('pathway.points', { spent: result.pointsSpent, cap: result.pointCap })
   const points = (
-    <span className={`meta num ${spentFull ? 'font-bold text-foreground' : ''} ${limits ? 'gz-hov' : ''}`}
-      tabIndex={limits ? 0 : undefined} data-testid="talent-points">
+    <span className={`meta num ${spentFull ? 'font-bold text-foreground' : ''}`} data-testid="talent-points">
       {pointsText}
     </span>
   )
@@ -157,12 +156,7 @@ function TalentCalculator({
   return (
     <div className="gz-tpanel" data-testid="talent-calculator">
       <div className="gz-panel-head">
-        <h3 className="flex items-center gap-1">
-          {t('pathway.talents')}
-          {tree.description ? (
-            <Tip kind="info" content={tree.description} title={tree.name} label={t('pathway.treeInfo')} testId="talent-tree-info" />
-          ) : null}
-        </h3>
+        <h3>{t('pathway.talents')}</h3>
         <div className="gz-seg" role="tablist" aria-label={t('pathway.tree')}>
           {trees.map((entry) => (
             <button
@@ -175,16 +169,16 @@ function TalentCalculator({
               data-testid={`talent-tree-${entry.id}`}
             >
               {entry.icon ? <img className="gz-ttab" src={talentIconUrl(entry.icon)} alt="" loading="lazy" /> : null}
-              {entry.name}
+              {entry.description ? (
+                <TipOn title={entry.name} content={entry.description}>
+                  <span className="gz-hov" data-testid={`talent-tree-info-${entry.id}`}>{entry.name}</span>
+                </TipOn>
+              ) : entry.name}
               <small>{entry.tag}</small>
             </button>
           ))}
         </div>
-        {limits ? (
-          <TipOn title={pointsText} content={t('pathway.limitsTip', { points: limits.points, nodes: limits.nodes, level: limits.levelCap })}>
-            {points}
-          </TipOn>
-        ) : points}
+        {points}
         <div className="acts">
           <button type="button" className="gz-chip" onClick={() => fill(true)} data-testid="talent-fill">
             {t('pathway.fill')}
@@ -225,7 +219,10 @@ function TalentStats({ result }: { result: TalentResult }) {
   )
 }
 
-/** One levelled talent and, under it, the core its first level switches on. */
+/**
+ * One levelled talent: name and level stepper on one line, the level bar, the
+ * core its first level switches on, and then what it grants at its level.
+ */
 function TalentCard({ index, entry, core, onLevel }: {
   index: number
   entry: TalentNodeResult
@@ -237,10 +234,6 @@ function TalentCard({ index, entry, core, onLevel }: {
   const filled = cap > 0 ? Math.round((entry.level / cap) * 100) : 0
   // What the node grants at its current level, listed under it; nothing at 0.
   const stats = entry.level > 0 ? nodeStatsAt(entry.node, entry.level) : []
-  const nodeTip = [
-    entry.node.description,
-    t('pathway.nodeScore', { mark: entry.node.mark, level: entry.level, score: entry.score.toLocaleString() }),
-  ].filter(Boolean).join('\n')
   return (
     <li className={`gz-tcard ${entry.locked ? 'lock' : ''} ${entry.level > 0 ? '' : 'zero'}`}
       data-testid={`talent-node-${entry.node.key}`} data-locked={entry.locked || undefined}>
@@ -250,18 +243,11 @@ function TalentCard({ index, entry, core, onLevel }: {
         ) : (
           <span className="gz-badge num" aria-hidden>{index + 1}</span>
         )}
-        <TipOn title={entry.node.name} content={nodeTip}>
-          <b className="gz-hov" tabIndex={0} data-testid={`talent-tip-${entry.node.key}`}>{entry.node.name}</b>
-        </TipOn>
+        <b data-testid={`talent-tip-${entry.node.key}`}>{entry.node.name}</b>
       </div>
       <Stepper variant="mini" value={entry.level} min={0} max={cap} onChange={onLevel}
         label={t('pathway.nodeLevel', { name: entry.node.name })} testId={`talent-level-${entry.node.key}`} />
       <div className="gz-tl" aria-hidden><i style={{ width: `${filled}%` }} /></div>
-      {stats.length > 0 ? (
-        <ul className="gz-tnstats num" data-testid={`talent-node-stats-${entry.node.key}`}>
-          {stats.map((stat) => <li key={stat.key}>{stat.name} <b>{formatTalentStat(stat, i18n.language)}</b></li>)}
-        </ul>
-      ) : null}
       {core ? (
         // No choice here: a core switches on when the node above it is learnt.
         <div className="contents" data-testid={`talent-node-${core.node.key}`}>
@@ -280,6 +266,12 @@ function TalentCard({ index, entry, core, onLevel }: {
       ) : (
         <div className="gz-tc none">{t('pathway.startNode')}</div>
       )}
+      {/* One stat per line, name left and value right, so the cards line up. */}
+      {stats.length > 0 ? (
+        <ul className="gz-tnstats num" data-testid={`talent-node-stats-${entry.node.key}`}>
+          {stats.map((stat) => <li key={stat.key}><span>{stat.name}</span><b>{formatTalentStat(stat, i18n.language)}</b></li>)}
+        </ul>
+      ) : null}
     </li>
   )
 }
