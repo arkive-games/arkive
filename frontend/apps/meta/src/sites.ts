@@ -92,6 +92,7 @@ function resolveSiteUrl(envUrl: string | undefined, devUrl: string, productionUr
 export const SITES: SiteCard[] = [
   {
     id: 'oss',
+    kind: 'offline',
     comingSoon: !import.meta.env.DEV,
     url: import.meta.env.DEV ? 'http://localhost:15180' : undefined,
     bg: '/oss-preview.svg',
@@ -228,6 +229,7 @@ export const GAME_LOGOS: Record<string, string> = {
   vrising: vrisingLogo,
   sts2: sts2Logo,
   ro3: ro3Bg,
+  oss: '/oss-preview.svg',
 }
 
 /**
