@@ -14,6 +14,8 @@
   --gz-well: color-mix(in srgb, var(--foreground) 5%, transparent);
   --gz-btnh: color-mix(in srgb, var(--foreground) 10%, transparent);
   --gz-soft: cubic-bezier(.22, 1, .36, 1);
+  /* Talent glyphs are drawn light, so they sit on a dark disc in either theme. */
+  --gz-icon-disc: color-mix(in srgb, rgb(var(--b4)) 10%, rgb(0 0 0 / .86));
   /* The rating's four bands, worst to best. */
   --b1: 214, 90, 70;
   --b2: 72, 150, 160;
@@ -841,10 +843,12 @@ select.gz-select {
 
 /* ---- bonds ---- */
 /* The relation picker on a connection card: GzSelect at the old native select's compact size. */
+/* Only a card wide: trimmed padding and chevron so the relation name fits. */
 .gz-sel.gz-rel {
-  height: 1.5rem; margin-top: .125rem; padding: 0 .5rem; border-radius: .5rem; background: var(--gz-well);
-  font-size: .75rem; font-weight: 400;
+  height: 1.5rem; margin-top: .125rem; padding: 0 .25rem 0 .375rem; gap: .125rem; border-radius: .5rem; background: var(--gz-well);
+  font-size: .75rem; font-weight: 600;
 }
+.gz-sel.gz-rel svg { width: .75rem; height: .75rem; }
 .gz-sel.gz-rel:disabled { color: var(--gz-faint); }
 .gz-research .rank { display: inline-flex; align-items: center; gap: .25rem; }
 
@@ -912,9 +916,9 @@ select.gz-select {
  * art made for a dark panel, so they sit on a dark disc in either theme; a
  * core's skill icon is already a full-colour roundel.
  */
-.gz-ticon { width: 1.75rem; height: 1.75rem; flex: none; border-radius: 999px; background: #26221d; object-fit: contain; }
+.gz-ticon { width: 1.75rem; height: 1.75rem; flex: none; border-radius: 999px; background: var(--gz-icon-disc); object-fit: contain; }
 .gz-tcard.zero .gz-ticon { filter: grayscale(1); opacity: .7; }
-.gz-ttab { width: 1.25rem; height: 1.25rem; flex: none; padding: .125rem; border-radius: 999px; background: #26221d; object-fit: contain; }
+.gz-ttab { width: 1.25rem; height: 1.25rem; flex: none; padding: .125rem; border-radius: 999px; background: var(--gz-icon-disc); object-fit: contain; }
 .gz-tc.ic { grid-template-columns: 1.5rem minmax(0, 1fr) auto; }
 .gz-tc.ic > img { width: 1.5rem; height: 1.5rem; border-radius: 999px; object-fit: cover; filter: grayscale(1); opacity: .6; }
 .gz-tc.ic[data-active] > img { filter: none; opacity: 1; }
@@ -935,8 +939,3 @@ select.gz-select {
 .gz-eqtotal { display: inline-flex; align-items: baseline; gap: .25rem; margin-right: .5rem; font-size: .875rem; color: var(--gz-sub); white-space: nowrap; }
 .gz-eqtotal b { font-size: 1rem; font-weight: 800; color: var(--gz-ink); }
 .gz-suitopt { display: inline-flex; align-items: center; gap: .125rem; }
-
-/* ---- integration ---- */
-/* The fellow card's relation picker is only a card wide: trim the pill's padding and chevron so the name fits. */
-.gz-sel.gz-rel { height: 1.5rem; padding: 0 .25rem 0 .375rem; gap: .125rem; font-weight: 600; }
-.gz-sel.gz-rel svg { width: .75rem; height: .75rem; }

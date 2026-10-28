@@ -275,7 +275,7 @@ function LevelCap({ scoring }: { scoring: PartnerScoring }) {
   ].filter(Boolean).join('\n')
   return (
     <TipOn content={content} title={t('bonds.levelCap', { max: scoring.maxStar })}>
-      <span className="meta num gz-hov" data-testid="bonds-level-cap">{t('bonds.levelCap', { max: scoring.maxStar })}</span>
+      <span className="meta num gz-hov" tabIndex={0} data-testid="bonds-level-cap">{t('bonds.levelCap', { max: scoring.maxStar })}</span>
     </TipOn>
   )
 }
@@ -471,7 +471,7 @@ function PuppetLineup({
                 <span className="gz-carry" data-testid={`bonds-carried-${partner.id}`}>{t('bonds.skillCarried')}</span>
               ) : null}
               <TipOn title={partner.name} content={puppetTip(t, partner, level, scoring, skillLevel)}>
-                <b className="gz-hov" data-testid={`bonds-puppet-tip-${partner.id}`}>{partner.name}</b>
+                <b className="gz-hov" tabIndex={0} data-testid={`bonds-puppet-tip-${partner.id}`}>{partner.name}</b>
               </TipOn>
               <Stepper variant="mini" value={level} min={0} max={scoring.maxStar} label={t('bonds.levelFor', { name: partner.name })}
                 testId={`bonds-stage-${partner.id}`}

@@ -301,7 +301,7 @@ function AffixRow({
           data-testid={`equip-affix-value-${slot}-${index}-down`}>−</button>
         <Popover open={valueOpen} onOpenChange={setValueOpen}>
           <PopoverTrigger asChild>
-            <button type="button" className="v num" disabled={rungs.length === 0}
+            <button type="button" className="v num" disabled={rungs.length === 0} aria-label={`${t('equip.affixValue')} ${current ? signed(current.rung[1]) : '—'}`}
               data-testid={`equip-affix-value-${slot}-${index}`}>
               {current ? signed(current.rung[1]) : '—'}
               <IconChevronDown stroke={2} aria-hidden />
@@ -751,7 +751,7 @@ export default function EquipmentSection({
   const n = (value: number) => value.toLocaleString()
 
   return (
-    <section className="space-y-2.5" data-testid="equip-section">
+    <section className="space-y-2.5" aria-label={t('equip.title')} data-testid="equip-section">
       <div className="gz-panel-head">
         <h3>{t('equip.worn')}</h3>
         <span className="meta">{t('equip.slotHint')}</span>
@@ -816,7 +816,7 @@ export default function EquipmentSection({
             // chosen one is highlighted and scores; with a single live suit there
             // is nothing to choose and it is taken as is. Each one's effects, at
             // the gear level they run at, sit in the ⓘ after it.
-            <div className="gz-seg" role="group">
+            <div className="gz-seg" role="group" aria-label={t('equip.suitChoose')}>
               {suitScores.map((entry) => {
                 const chosen = entry.suit.id === chosenSuit?.suit.id
                 return (

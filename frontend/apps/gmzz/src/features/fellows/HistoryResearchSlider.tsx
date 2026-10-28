@@ -106,7 +106,7 @@ export function HistoryResearchSlider({
                     {formatResearchAttribute(attribute, locale)}
                     {previous && Math.abs(gain) > 1e-9 ? (
                       <TipOn content={t('fellows.researchGain')}>
-                        <span className="ml-1.5 cursor-help text-xs text-emerald-700 underline decoration-dotted underline-offset-2 dark:text-emerald-300">
+                        <span tabIndex={0} className="ml-1.5 cursor-help text-xs text-emerald-700 underline decoration-dotted underline-offset-2 dark:text-emerald-300">
                           ({formatResearchAttribute({ ...attribute, value: gain }, locale)})
                         </span>
                       </TipOn>

@@ -111,7 +111,7 @@ export default function FellowSkillCalculator({
               </button>
               {isCarried ? <span className="gz-carry" data-testid={`bonds-fellow-carried-${fellow.id}`}>{t('bonds.skillCarried')}</span> : null}
               <TipOn title={fellow.name} content={fellowTip(t, fellow, shown)}>
-                <b className="gz-hov" data-testid={`bonds-fellow-tip-${fellow.id}`}>{fellow.shortName || fellow.name}</b>
+                <b className="gz-hov" tabIndex={0} data-testid={`bonds-fellow-tip-${fellow.id}`}>{fellow.shortName || fellow.name}</b>
               </TipOn>
               <StarPicker star={star} name={fellow.name} testId={`bonds-fellow-star-${fellow.id}`} onChange={(next) => setStar(fellow.id, next)} />
               <GzSelect
