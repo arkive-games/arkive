@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.18.0",
+      "date": "2026-10-28",
+      "commit": "32e35a0bc019a4a56bacc1651ab98d9d1c29f3e2",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Redesigned the class skills page: class portraits, an advancement track, active and passive skills grouped apart, and a per-level description picker.",
+            "zh-CN": "职业技能页全新改版：职业头像选择、转职路线图、主动与被动技能分组，并可逐级查看技能说明。",
+            "zh-TW": "職業技能頁全新改版：職業頭像選擇、轉職路線圖、主動與被動技能分組，並可逐級查看技能說明。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "date": "2026-10-28",
       "commit": "070b96950f0b99fce24af290eb14aa219cfa8758",
