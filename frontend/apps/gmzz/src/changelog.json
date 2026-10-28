@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.27.1",
+      "date": "2026-10-28",
+      "commit": "c8159ca95de0ac35c6385dba6c34fec1244242a1",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Server age now turns over at 08:00 China time (UTC+8), matching the game, instead of at your local midnight; puppet level caps follow it.",
+            "zh-CN": "开服天数改为按北京时间上午 8 点跨天，与游戏一致，不再按本地零点计算；秘偶等级上限随之调整。",
+            "zh-TW": "開服天數改為按北京時間上午 8 點跨日，與遊戲一致，不再按本地零點計算；秘偶等級上限隨之調整。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.27.0",
       "date": "2026-10-28",
       "commit": "595b8ede399817f5b9f1c3119d2b74e47737dcc1",
