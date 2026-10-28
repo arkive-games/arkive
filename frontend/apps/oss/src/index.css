@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "@gamemap/map-shell/arkive-map-theme.css";
+@import "@gamemap/map-engine-gl/engine-gl.css";
+@source "../../../packages/ui/src";
+@source "../../../packages/map-shell/src";
+@custom-variant dark (&:is(.dark *));
+
+/* Game-owned void color matches the schematic tile background at every zoom. */
+.oss-map-workspace {
+  background-color: #182b39;
+  border-inline-start: 1px solid var(--arkive-divider);
+}
+
+.oss-map-workspace .gmgl-map-root {
+  background-color: #182b39;
+}
