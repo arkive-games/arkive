@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowUp } from "lucide-react"
-import { cn, FilterDisclosure, useIsMobile } from "@gamemap/ui"
+import { cn, FilterDisclosure } from "@gamemap/ui"
 
 export interface ArkiveContentPageProps {
   /** Desktop navigation (the app's `ArkiveMapTopBar`); hides itself on phones. */
@@ -36,7 +36,7 @@ export interface ArkiveContentPageProps {
    * scope or a new page, never an edit inside a card.
    */
   resultsKey?: unknown
-  /** Accessible name of the phone back-to-top button; omit for no button. */
+  /** Accessible name of the back-to-top button; omit for no button. */
   backToTopLabel?: string
   /** Keep the footer on desktop only (pages with their own phone pagination). */
   hideMobileFooter?: boolean
@@ -89,7 +89,6 @@ export function ArkiveContentPage({
   children,
 }: ArkiveContentPageProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const isMobile = useIsMobile()
   const [showBackToTop, setShowBackToTop] = useState(false)
   const contentWidth = WIDTH[width]
   const hasToolbar = toolbar != null || toolbarLead != null
@@ -99,7 +98,7 @@ export function ArkiveContentPage({
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }, [resultsKey])
 
-  const backToTop = backToTopLabel != null && isMobile
+  const backToTop = backToTopLabel != null
   useEffect(() => {
     const scroller = scrollRef.current
     if (!backToTop || !scroller) {
@@ -165,7 +164,7 @@ export function ArkiveContentPage({
           aria-label={backToTopLabel}
           title={backToTopLabel}
           onClick={scrollToTop}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-[var(--arkive-layer-map-control)] flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:hidden"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-[var(--arkive-layer-map-control)] flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-200 hover:-translate-y-0.5 md:bottom-6 md:right-6"
         >
           <ArrowUp className="size-5" />
         </button>

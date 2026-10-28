@@ -71,8 +71,8 @@ describe("ArkiveContentPage", () => {
     expect(scroller.scrollTop).toBe(0)
   })
 
-  it("offers back-to-top on phones once the column has scrolled", () => {
-    mobile = true
+  it.each([true, false])("offers back-to-top once the column has scrolled (phone: %s)", (phone) => {
+    mobile = phone
     const api = render(page({ backToTopLabel: "Back to top" }))
     const scroller = api.container.querySelector<HTMLDivElement>("[data-content-scroll]")!
     expect(api.queryByTestId("content-back-to-top")).toBeNull()
