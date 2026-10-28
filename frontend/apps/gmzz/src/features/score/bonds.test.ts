@@ -239,9 +239,9 @@ describe('puppetLevelCap', () => {
   const days = [0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87]
   const scoring = { ...SCORING, levelUnlockDays: days }
 
-  it('opens the levels whose day has come', () => {
-    expect(puppetLevelCap(scoring, 0)).toBe(2)
-    expect(puppetLevelCap(scoring, 67)).toBe(43)
+  it('opens the levels whose server day has come', () => {
+    expect(puppetLevelCap(scoring, 1)).toBe(2)
+    expect(puppetLevelCap(scoring, 68)).toBe(43)
     expect(puppetLevelCap(scoring, 69)).toBe(44)
     expect(puppetLevelCap(scoring, 500)).toBe(50)
   })

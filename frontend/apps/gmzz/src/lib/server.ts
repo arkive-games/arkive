@@ -19,8 +19,3 @@ export function serverDay(now: Date = new Date()): number {
   const launch = Date.UTC(SERVER_LAUNCH.year, SERVER_LAUNCH.month - 1, SERVER_LAUNCH.day)
   return Math.floor((now.getTime() - launch) / DAY_MS) + 1
 }
-
-/** Whole days elapsed since launch — 0 on launch day — the unit the client's unlock tables count in. */
-export function daysSinceLaunch(now: Date = new Date()): number {
-  return Math.max(0, serverDay(now) - 1)
-}

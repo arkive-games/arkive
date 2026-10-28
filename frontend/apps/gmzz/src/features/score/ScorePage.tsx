@@ -151,7 +151,7 @@ function ScoreView() {
   // The day of the server, read once per visit: puppet levels open on a schedule
   // counted from launch, so the scoring the page uses is the one capped for today.
   const day = useMemo(() => serverDay(), [])
-  const scoring = useMemo(() => (rawScoring ? scoringOnDay(rawScoring, Math.max(0, day - 1)) : null), [rawScoring, day])
+  const scoring = useMemo(() => (rawScoring ? scoringOnDay(rawScoring, day) : null), [rawScoring, day])
   const [ranks, setRanks] = useState<HistoryResearchRank[] | null>(null)
   const [fellows, setFellows] = useState<Fellow[] | null>(null)
   const [relations, setRelations] = useState<FellowRelation[] | null>(null)

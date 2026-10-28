@@ -48,7 +48,7 @@ export interface PartnerScoring {
   maxDominateSlots: number
   maxStar: number
   /**
-   * The day after launch each level opens, level 1 first
+   * The server day (launch day = day 1) each level opens, level 1 first
    * (`SecretPartnerStarUpData.SecretPartner_LevelUnlockTime`). Absent from
    * datasets built before it was emitted, where only `maxStar` caps.
    */

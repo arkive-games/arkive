@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { daysSinceLaunch, serverDay } from './server'
+import { serverDay } from './server'
 
 describe('serverDay', () => {
   it('counts launch day as day 1, rolling over at 08:00 UTC+8', () => {
@@ -9,8 +9,6 @@ describe('serverDay', () => {
     expect(serverDay(new Date('2026-08-22T08:00:00+08:00'))).toBe(2)
     expect(serverDay(new Date('2026-10-28T07:00:00+08:00'))).toBe(68)
     expect(serverDay(new Date('2026-10-28T08:00:00+08:00'))).toBe(69)
-    expect(daysSinceLaunch(new Date('2026-10-28T12:00:00+08:00'))).toBe(68)
-    expect(daysSinceLaunch(new Date('2026-08-01T12:00:00+08:00'))).toBe(0)
   })
 
   it('does not depend on the visitor time zone', () => {

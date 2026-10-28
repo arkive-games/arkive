@@ -110,12 +110,13 @@ def build_scoring(constants: dict) -> dict:
 
 
 def build_level_unlock_days(rows: dict | list, max_star: int) -> list[int]:
-    """The day after launch each puppet level opens, level 1 first.
+    """The server day each puppet level opens, level 1 first.
 
     ``SecretPartnerStarUpData`` is one row per level, ``ID`` the level, and
-    ``SecretPartner_LevelUnlockTime`` the days since the server opened before
-    a puppet may reach it (0 for levels 1-2, 87 for 50). That is the level cap:
-    on day 67 every puppet stops at 43, which is what live accounts show. A
+    ``SecretPartner_LevelUnlockTime`` the server day (launch day = day 1) from
+    which a puppet may reach it (0 for levels 1-2, 87 for 50). That is the
+    level cap: on day 68 every puppet stops at 43 and level 44 (69) opens on
+    day 69, which is what live accounts show. A
     gap or a schedule that runs backwards fails rather than capping wrongly.
     """
     # The packed reader hands back a list where the ids run 1..N, a dict otherwise.

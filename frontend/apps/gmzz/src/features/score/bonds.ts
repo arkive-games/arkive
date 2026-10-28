@@ -131,20 +131,21 @@ export function clampStage(stage: number, scoring: PartnerScoring): number {
 }
 
 /**
- * The highest puppet level open on a given day after launch: the last level
- * whose unlock day has come. Day 67 is level 43 (opened day 66; 44 waits for
- * day 69), which is what live accounts stop at.
+ * The highest puppet level open on a given server day (launch day = day 1, as
+ * `serverDay` counts): the last level whose unlock day has come. The table's
+ * days are server days, not days elapsed — level 44 (day 69) is capped at 43
+ * on day 68 and opens on day 69, as live accounts showed.
  */
-export function puppetLevelCap(scoring: PartnerScoring, daysSinceLaunch: number): number {
+export function puppetLevelCap(scoring: PartnerScoring, day: number): number {
   const days = scoring.levelUnlockDays
   if (!days || days.length === 0) return scoring.maxStar
-  const open = days.filter((day) => day <= daysSinceLaunch).length
+  const open = days.filter((unlock) => unlock <= day).length
   return Math.min(scoring.maxStar, open)
 }
 
 /** The scoring with `maxStar` narrowed to the day's cap, so every level clamp honours it. */
-export function scoringOnDay(scoring: PartnerScoring, daysSinceLaunch: number): PartnerScoring {
-  return { ...scoring, maxStar: puppetLevelCap(scoring, daysSinceLaunch) }
+export function scoringOnDay(scoring: PartnerScoring, day: number): PartnerScoring {
+  return { ...scoring, maxStar: puppetLevelCap(scoring, day) }
 }
 
 export function clampSlots(slots: number | null, scoring: PartnerScoring): number {
