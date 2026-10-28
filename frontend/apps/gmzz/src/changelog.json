@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.27.2",
+      "date": "2026-10-28",
+      "commit": "00ac4a2251d42bec3561e3d27d745e8c630776c4",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Puppet levels now open on the day the game opens them: level 44 is available from server day 69, not a day later.",
+            "zh-CN": "秘偶等级按游戏实际开放日解锁：44 级从开服第 69 天起即可选择，不再晚一天。",
+            "zh-TW": "秘偶等級按遊戲實際開放日解鎖：44 級從開服第 69 天起即可選擇，不再晚一天。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "On phones, connection stars are set with a −/+ stepper and connections and puppets show three per row, so every button is easy to tap.",
+            "zh-CN": "手机上人脉星级改为 −/+ 步进调整，人脉与秘偶每行显示三个，按钮更易点按。",
+            "zh-TW": "手機上人脈星級改為 −/+ 步進調整，人脈與秘偶每行顯示三個，按鈕更易點按。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.27.1",
       "date": "2026-10-28",
       "commit": "c8159ca95de0ac35c6385dba6c34fec1244242a1",
