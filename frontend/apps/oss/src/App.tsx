@@ -33,8 +33,22 @@ interface PreviewData {
   regions: Record<string, RegionInstance[]>
 }
 
-export function App() {
+const homeUrl = import.meta.env.VITE_ARKIVE_HOME_URL ?? (import.meta.env.DEV ? 'http://localhost:15172' : 'https://www.arkive.games')
+
+const navItems = [{ key: '/', label: text.map }, { key: '/changelog', label: text.changelog }]
+
+export function OssTopBar({ active }: { active: string }) {
   const { theme, setTheme } = useTheme()
+  return <ArkiveMapTopBar
+    homeUrl={homeUrl} homeLabel={text.home} brandName={text.brand}
+    nav={{ items: navItems.map(item => ({ ...item, active: item.key === active })), renderItem: (item, className, labelClassName) => <a href={item.key} className={className}><span data-slot="nav-item-label" className={labelClassName}>{item.label}</span></a> }}
+    languageSwitcher={{ languages: [{ code: 'zh-CN', label: '简体中文' }], current: 'zh-CN', onChange: () => {}, menuLabel: text.language }}
+    themeSwitcher={{ current: theme, onChange: setTheme, labels: { auto: text.auto, light: text.light, dark: text.dark }, menuLabel: text.theme }}
+    loginLabel={text.account} accountSlot={<a href={`${homeUrl}/#account`} className="text-sm">{text.account}</a>}
+  />
+}
+
+export function App() {
   const [data, setData] = useState<PreviewData | null>(null)
   const [failed, setFailed] = useState(false)
   const [collections, setCollections] = useState<Record<string, Collection[]>>({})
@@ -48,7 +62,6 @@ export function App() {
   const [visible, setVisible] = useState(() => new Set(defaultSubtypes))
   const [resultIds, setResultIds] = useState<string[]>([])
   const mapRef = useRef<GlMapRef | null>(null)
-  const home = import.meta.env.VITE_ARKIVE_HOME_URL ?? (import.meta.env.DEV ? 'http://localhost:15172' : 'https://www.arkive.games')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -111,13 +124,7 @@ export function App() {
     return next
   })
   return <ShellLayout
-    topBar={<ArkiveMapTopBar
-      homeUrl={home} homeLabel={text.home} brandName={text.brand} brandSlogan={text.slogan}
-      nav={{ items: [{ key: '/', label: text.map, active: true }], renderItem: (item, className, labelClassName) => <a href="/" className={className}><span data-slot="nav-item-label" className={labelClassName}>{item.label}</span></a> }}
-      languageSwitcher={{ languages: [{ code: 'zh-CN', label: '简体中文' }], current: 'zh-CN', onChange: () => {}, menuLabel: text.language }}
-      themeSwitcher={{ current: theme, onChange: setTheme, labels: { auto: text.auto, light: text.light, dark: text.dark }, menuLabel: text.theme }}
-      loginLabel={text.account} accountSlot={<a href={`${home}/#account`} className="text-sm">{text.account}</a>}
-    />}
+    topBar={<OssTopBar active="/" />}
     sidebar={<ShellSidebar width="20rem" label={text.map} collapseLabel={text.collapse} expandLabel={text.expand}
       classNames={{ collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm' }}
       headerSlot={<ShellGameHeader backgroundUrl={import.meta.env.VITE_OSS_HEADER_URL ?? '/images/game-header.webp'} backgroundPosition="center" logo={null} gameName={text.game} subtitle={text.map} />}

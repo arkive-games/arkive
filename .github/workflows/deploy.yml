@@ -37,7 +37,7 @@ jobs:
       # broken build must not hold back the others.
       fail-fast: false
       matrix:
-        app: [meta, aion2, palworld, vrising, ro3, gmzz, pbz]
+        app: [meta, aion2, palworld, vrising, ro3, gmzz, pbz, oss]
         include:
           # `project` is the EdgeOne project name. It is spelled out here rather
           # than derived from `app` because `deploy -n` CREATES a project when the
@@ -104,6 +104,15 @@ jobs:
             smoke_path: /changelog
             data_base_url: https://data-pbz.arkive.games
             resource_base_url: https://resource-pbz.arkive.games
+          # `domain` stays empty until oss.arkive.games is bound to the project,
+          # which keeps the post-deploy check (and scripts/seo.test.mjs) inert
+          # for oss until then. Fill it in as `oss.arkive.games` once bound.
+          - app: oss
+            project: arkive-oss
+            domain:
+            smoke_path: /changelog
+            data_base_url: https://data-oss.arkive.games
+            resource_base_url: https://resource-oss.arkive.games
 
     # Two pushes in quick succession must not race the same project. Queue rather
     # than cancel: an interrupted upload is a half-published site.

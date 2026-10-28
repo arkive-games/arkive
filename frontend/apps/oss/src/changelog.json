@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "version": "0.1.0",
+      "date": "2026-10-29",
+      "commit": "1d7109e80bc9b53ee85899f98afc44da3d0698e6",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Launched the Order of the Sinking Star interactive map: ground, upper and underground schematic layers with every level entrance, area and the starting position of each puzzle prop, filterable by level collection and searchable.",
+            "zh-CN": "上线沉星之序互动地图：地面、高处、地下三层示意地图，标出全部小关入口、区域和各类道具的初始位置，可按关卡合集筛选并搜索。",
+            "zh-TW": "上線沉星之序互動地圖：地面、高處、地下三層示意地圖，標出全部小關入口、區域和各類道具的初始位置，可按關卡合集篩選並搜尋。"
+          }
+        }
+      ]
+    }
+  ]
+}
