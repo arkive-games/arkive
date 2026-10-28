@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.27.0",
+      "date": "2026-10-28",
+      "commit": "595b8ede399817f5b9f1c3119d2b74e47737dcc1",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Score calculator redesign: equipment score sits on the stat line, affix values pick from a tiered menu, the carried puppet skill opens a picker, and one-tap level-all dialogs.",
+            "zh-CN": "非凡评分计算器改版：装备评分与基础属性同行，词条数值改为分档选择面板，携带秘偶技能改为弹窗选择，并新增一键设置等级弹窗。",
+            "zh-TW": "非凡評分計算器改版：裝備評分與基礎屬性同行，詞條數值改為分檔選擇面板，攜帶秘偶技能改為彈窗選擇，並新增一鍵設定等級彈窗。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.26.0",
       "date": "2026-10-28",
       "commit": "8c8a93a968a80dfa2d1874f91a9b37dfe7ec122f",
