@@ -1,4 +1,4 @@
-import { STATION_TYPES, type StationTotals, type StationType } from './stationSolver'
+import type { StationType } from './stationSolver'
 
 const DIFFICULTY_IDS = ['beginner', 'normal', 'advanced', 'hard', 'challenge', 'frenzy'] as const
 export type TrainTradeDifficultyId = (typeof DIFFICULTY_IDS)[number]
@@ -21,8 +21,13 @@ export type RawStationType = {
 export type TrainTradeRouteProfile = {
   id: TrainTradeDifficultyId
   dataId: number
+  /**
+   * Typed stops after the origin. The origin takes one slot of the map pool
+   * (a Start stop on the beginner route, a typed one elsewhere), but the game
+   * never asks the player about it and the station mix it shows counts only
+   * the stops that follow, so the planner leaves it out.
+   */
   stops: number
-  variants: StationTotals[]
 }
 
 export function parseTrainTradeRouteProfiles(
@@ -48,37 +53,15 @@ export function parseTrainTradeRouteProfiles(
     if (!difficulty || routeMaps.length === 0) throw new Error(`Missing Train Trade route ${dataId}`)
 
     const declaredStops = difficulty.AreaStationCounts.reduce((sum, count) => sum + count, 0)
-    const variants = routeMaps.map((route) => {
+    routeMaps.forEach((route) => {
       if (route.StationPool.length !== declaredStops) {
         throw new Error(`Train Trade route ${route.ID} has an invalid station count`)
       }
-      const totals: StationTotals = { winery: 0, food: 0, trade: 0 }
-      route.StationPool.forEach((stationId) => {
-        const type = stationTypeFromClient(stationTypes.get(stationId))
-        if (type) totals[type] += 1
-      })
-      return totals
+      route.StationPool.forEach((stationId) => stationTypeFromClient(stationTypes.get(stationId)))
     })
-    const uniqueVariants = variants.filter((variant, variantIndex) => (
-      variants.findIndex((candidate) => stationTotalsEqual(candidate, variant)) === variantIndex
-    ))
-    const stops = stationTotalsSum(uniqueVariants[0])
-    if (!uniqueVariants.every((variant) => stationTotalsSum(variant) === stops)) {
-      throw new Error(`Train Trade route ${dataId} mixes different stop counts`)
-    }
-    return { id, dataId, stops, variants: uniqueVariants }
+    return { id, dataId, stops: declaredStops - 1 }
   })
 }
-
-export function stationTotalsEqual(left: StationTotals, right: StationTotals): boolean {
-  return left.winery === right.winery && left.food === right.food && left.trade === right.trade
-}
-
-function stationTotalsSum(totals: StationTotals | undefined): number {
-  if (!totals) return 0
-  return STATION_TYPES.reduce((sum, type) => sum + totals[type], 0)
-}
-
 function stationTypeFromClient(value: string | undefined): StationType | null {
   if (value === 'Start') return null
   if (value === 'Wine_Station') return 'winery'

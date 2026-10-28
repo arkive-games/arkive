@@ -9,7 +9,7 @@ const stations = [
 ]
 
 describe('train-trade route data', () => {
-  it('derives station mixes from map pools and preserves distinct variants', () => {
+  it('counts the stops after the origin for every route', () => {
     const profiles = parseTrainTradeRouteProfiles(
       [
         { ID: 1, AreaStationCounts: [4, 4] },
@@ -31,12 +31,9 @@ describe('train-trade route data', () => {
       stations,
     )
 
-    expect(profiles.map(({ id, stops, variants }) => [id, stops, variants.length])).toEqual([
-      ['beginner', 7, 1], ['normal', 8, 2], ['advanced', 12, 1], ['hard', 15, 1], ['challenge', 16, 1], ['frenzy', 16, 1],
-    ])
-    expect(profiles[1]?.variants).toEqual([
-      { winery: 3, food: 2, trade: 3 },
-      { winery: 3, food: 3, trade: 2 },
+    // The origin takes one slot of every pool, so the planner counts the stops after it.
+    expect(profiles.map(({ id, stops }) => [id, stops])).toEqual([
+      ['beginner', 7], ['normal', 7], ['advanced', 11], ['hard', 14], ['challenge', 15], ['frenzy', 15],
     ])
   })
 
