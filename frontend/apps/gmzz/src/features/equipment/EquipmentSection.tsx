@@ -216,10 +216,9 @@ function EnhanceRanges({ stage, refine, maxStage, testIdPrefix, onStage, onRefin
 }
 
 /**
- * One whole-loadout set: what it is and the tier reached. The tooltip holds
- * what the tier asks for, the stats it grants, labelled by family, and the
- * score it counts; a set not reached shows a dash, and its tooltip what
- * reaching the first tier takes.
+ * One whole-loadout set as a card: where the loadout stands and the score the
+ * tier reached counts, the stats it grants, labelled by family, and what the
+ * tier (or, with none reached, the first one) asks for.
  */
 function BonusTier({ equipment, tier, need, label, value, testId }: {
   equipment: Equipment
@@ -798,8 +797,8 @@ export default function EquipmentSection({
       </div>
 
       <div className="gz-eqfoot">
-        {/* The two whole-loadout sets: what each reached, and in the tooltip
-            what it asks for, the stats it grants and the score it counts. */}
+        {/* The two whole-loadout sets: where each stands, the stats it grants
+            and the score it counts, and what it asks for. */}
         <div className="gz-wb">
           <BonusTier equipment={equipment} tier={bodyTier} testId="equip-body-tier"
             label={t('equip.bodyBonus')}
@@ -821,7 +820,8 @@ export default function EquipmentSection({
             // Only one suit can be in effect, so the live ones are a choice: the
             // chosen one is highlighted and scores; with a single live suit there
             // is nothing to choose and it is taken as is. Each one's effects, at
-            // the gear level they run at, sit in the ⓘ after it.
+            // the gear level they run at, are listed under the row; with two
+            // live, a note says why only the chosen one counts.
             <div className="gz-seg" role="group" aria-label={t('equip.suitChoose')}>
               {suitScores.map((entry) => {
                 const chosen = entry.suit.id === chosenSuit?.suit.id
@@ -842,6 +842,7 @@ export default function EquipmentSection({
                   </span>
                 )
               })}
+              {suitScores.length > 1 ? <span className="note">{t('equip.suitChooseHint')}</span> : null}
             </div>
           )}
           <span className="s num">{t('equip.suitScore', { score: n(suit) })}</span>

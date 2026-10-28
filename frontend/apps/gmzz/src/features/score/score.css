@@ -1005,3 +1005,4 @@ select.gz-select {
 /* A talent's stats at its current level, under its level bar. */
 .gz-tnstats { display: flex; flex-wrap: wrap; gap: .125rem .5rem; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--gz-sub); }
 .gz-tnstats b { font-weight: 700; color: var(--gz-ink); }
+.gz-suit .gz-seg .note { flex: 1 1 100%; font-size: .75rem; color: var(--gz-faint); }

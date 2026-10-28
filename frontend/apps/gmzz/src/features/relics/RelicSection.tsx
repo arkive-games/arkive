@@ -50,10 +50,6 @@ function shownValue(relics: Relics, affix: { stat: string; value: number; scaled
 const TAG_KEY: Record<number, string> = { 1: 'relic.tagDungeon', 2: 'relic.tagArena', 3: 'relic.tagGeneral' }
 
 /**
- * An affix's kind pill (普通 / 稀有), its word type (凡 · 珍 · 稀 · 异) on the
- * tooltip. A row with nothing picked shows a blank pill.
- */
-/**
  * A rare word's colour, as the game grades them: the rarest (愚者) orange, the
  * words that also raise every skill level gold, the plain stat words purple.
  */
@@ -61,6 +57,11 @@ function rareGrade(affix: PoolAffix): 'orange' | 'gold' | 'purple' {
   if (affix.rarest) return 'orange'
   return (affix.skillLevelPlus ?? 0) > 0 ? 'gold' : 'purple'
 }
+
+/**
+ * An affix's kind pill (普通 / 稀有), its word type (凡 · 珍 · 稀 · 异) on the
+ * tooltip. A row with nothing picked shows a blank pill.
+ */
 
 function KindPip({ source }: { source: PoolAffix | undefined }) {
   const { t } = useTranslation()
