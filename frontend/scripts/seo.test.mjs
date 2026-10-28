@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
+import { prerenderedConfig, sitemapPaths } from "./prerender-lib.mjs"
 
 // Every deployed site must be findable: a crawlable index.html carrying the
 // brand, a robots.txt pointing at its sitemap, and a sitemap listing only pages
@@ -53,6 +54,13 @@ describe("search engine discovery", () => {
           expect(url.host).toBe(domain)
           expect(servable(url.pathname, sources), loc).toBe(true)
         }
+      })
+
+      // The deploy prerenders every sitemap page and gives each its own rewrite;
+      // EdgeOne rejects the whole config once that pushes it past its limit.
+      it("stays within EdgeOne's rewrite limit once prerendered", () => {
+        const config = JSON.parse(read(app, "edgeone.json"))
+        expect(() => prerenderedConfig(config, sitemapPaths(read(app, "public/sitemap.xml")))).not.toThrow()
       })
     })
   }

@@ -11,6 +11,9 @@ importers:
       jsdom:
         specifier: ^30.0.1
         version: 30.0.1
+      playwright:
+        specifier: 1.62.1
+        version: 1.62.1
       vite:
         specifier: ^8.2.4
         version: 8.2.4(@types/node@26.1.2)(jiti@2.7.0)(yaml@2.9.0)

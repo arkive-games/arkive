@@ -179,6 +179,21 @@ jobs:
             echo "no $src — ${{ matrix.app }} needs no host rules"
           fi
 
+      - name: Prerender the sitemap pages
+        # Crawlers that run no JavaScript (Baidu, mostly) read an empty #root
+        # otherwise. Snapshots every sitemap page into dist and rewrites the
+        # copied edgeone.json to serve them, so it must follow the copy step
+        # (frontend/scripts/prerender.mjs).
+        #
+        # Never blocks the deploy: a failure leaves dist exactly as built, which
+        # is the site as it was before this step existed. Pages that could not
+        # be snapshotted surface as warnings on the run.
+        continue-on-error: true
+        working-directory: frontend
+        run: |
+          pnpm exec playwright install --with-deps --only-shell chromium
+          node scripts/prerender.mjs --app ${{ matrix.app }}
+
       # Run through `pnpm dlx`, never through npm. npm's arborist dies with
       # "Cannot read properties of null (reading 'edgesOut')" before the CLI is
       # ever downloaded, and it has now done so from both directions: `npx`

@@ -383,6 +383,13 @@ requests a deep link precisely to catch this.
   copies it into `dist/` at deploy time (EdgeOne reads it from the upload root), while
   `public/` would also copy it into the Toy bundle — which `scripts/toy-build.mjs`
   deliberately excludes it from as host config rather than content.
+- **The deploy prerenders every sitemap page** (`scripts/prerender.mjs`): it writes
+  `dist/<path>/index.html`, keeps the untouched entry as `dist/app-shell.html`, and
+  rewrites the copied `edgeone.json` — each prerendered path gets an exact rule to its
+  own file, placed first, and every `/index.html` destination becomes the shell. So
+  the committed file keeps pointing at `/index.html`; never hand-write the prerendered
+  rules. The sitemap is the list: a page missing from it is never prerendered, and
+  `scripts/seo.test.mjs` fails if the extra rules would pass EdgeOne's 100-rewrite cap.
 
 ## Production deploys (EdgeOne, built here)
 `.github/workflows/deploy.yml` builds `meta`, `aion2`, `palworld`, `vrising`, `ro3` and `gmzz` on
