@@ -903,9 +903,13 @@ button.home-slide {
   font-weight: 700;
 }
 
-/* Dialog triggers read as the sibling links but stay buttons. */
+/* Dialog triggers read as the sibling links but stay buttons. A button centres
+   its text in the min-height and a link does not, so both are flex-centred to
+   keep every label on one line. */
 .home-footer-links a,
 .home-footer-links button {
+  display: inline-flex;
+  align-items: center;
   min-height: 1.5rem;
   padding: 0;
   border: 0;
