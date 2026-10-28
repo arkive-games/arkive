@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.26.0",
+      "date": "2026-10-28",
+      "commit": "8c8a93a968a80dfa2d1874f91a9b37dfe7ec122f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned home page: a featured Extraordinary Rating banner, colour-coded tool cards, a Fool's Gambit card and a wiki column with one-line descriptions",
+            "zh-CN": "首页改版：顶部非凡评分横幅、分色工具卡、愚者棋局卡片，以及带简介的百科栏",
+            "zh-TW": "首頁改版：頂部非凡評分橫幅、分色工具卡、愚者棋局卡片，以及帶簡介的百科欄"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.25.1",
       "date": "2026-10-28",
       "commit": "f7d4548603e09488e6ceae9d0572483e8c6ec4a5",
