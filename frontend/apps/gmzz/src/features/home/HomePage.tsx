@@ -38,6 +38,7 @@ export default function HomePage() {
   const chess = group('autochess')
   const wiki = [...group('wiki')].sort((a, b) => WIKI_ORDER.indexOf(a.key) - WIKI_ORDER.indexOf(b.key))
 
+  // The banner sits on a fixed dark photo, so its colours stay the same in both themes on purpose.
   const banner = (
     <section
       aria-label={t('nav.score')}
@@ -79,17 +80,17 @@ export default function HomePage() {
                   key={entry.key}
                   to={entry.key}
                   style={tint(c)}
-                  className="group relative isolate flex flex-col items-center justify-end gap-1.5 overflow-hidden rounded-2xl bg-card px-1 pb-3 pt-2.5 text-center transition-transform duration-500 hover:-translate-y-0.5 md:min-h-33 md:flex-row md:items-end md:justify-start md:rounded-3xl md:px-5 md:pb-4.5 md:text-left"
+                  className="group relative isolate flex flex-col items-center justify-end gap-1.5 overflow-hidden rounded-2xl bg-card px-1 pb-3 pt-2.5 text-center transition-transform duration-500 hover:-translate-y-0.5 md:rounded-3xl md:px-3 lg:min-h-33 lg:flex-row lg:items-end lg:justify-start lg:px-5 lg:pb-4.5 lg:text-left"
                 >
                   <span
-                    className="grid size-14 place-items-center rounded-full md:absolute md:-top-1.5 md:-right-2.5 md:-z-10 md:size-28"
+                    className="grid size-14 place-items-center rounded-full md:size-18 lg:absolute lg:-top-1.5 lg:-right-2.5 lg:-z-10 lg:size-28"
                     style={{ background: `radial-gradient(closest-side, rgb(${c} / 0.35), transparent)` }}
                   >
-                    <img src={art(entry)} alt="" className="size-11 object-contain transition-transform duration-700 group-hover:-rotate-6 group-hover:scale-105 md:size-21" />
+                    <img src={art(entry)} alt="" className="size-11 object-contain transition-transform duration-700 group-hover:-rotate-6 group-hover:scale-105 md:size-14 lg:size-21" />
                   </span>
                   <span className="min-w-0">
-                    <strong className="block whitespace-nowrap text-xs font-extrabold leading-snug md:whitespace-normal md:text-base">{t(entry.labelKey)}</strong>
-                    {entry.descKey ? <small className="mt-0.5 hidden text-sm text-muted-foreground md:block">{t(entry.descKey)}</small> : null}
+                    <strong className="block text-balance text-xs font-extrabold leading-tight md:text-sm lg:text-base lg:leading-snug">{t(entry.labelKey)}</strong>
+                    {entry.descKey ? <small className="mt-0.5 hidden text-sm text-muted-foreground lg:block">{t(entry.descKey)}</small> : null}
                   </span>
                 </Link>
               )
@@ -100,17 +101,17 @@ export default function HomePage() {
           <Link
             to="/autochess"
             style={tint(CHESS_TINT)}
-            className="group mt-2 block rounded-2xl bg-card px-3 pb-3 pt-3.5 transition-transform duration-500 hover:-translate-y-0.5 md:mt-3.5 md:rounded-3xl md:px-6 md:pb-5 md:pt-5.5"
+            className="group mt-2 block rounded-2xl bg-card px-2.5 pb-3 pt-3.5 transition-transform duration-500 hover:-translate-y-0.5 md:mt-3.5 md:rounded-3xl md:px-6 md:pb-5 md:pt-5.5"
           >
             <span className="block px-1 md:px-0">
               <strong className="block text-lg font-extrabold leading-snug md:text-xl">{t('nav.autochess')}</strong>
               <small className="mt-0.5 block text-xs text-muted-foreground md:text-sm">{t('home.desc.autochess')}</small>
             </span>
-            <span className="mt-2.5 grid grid-cols-5 gap-1.5 md:mt-4 md:gap-2.5">
+            <span className="mt-2.5 grid grid-cols-5 gap-1 md:mt-4 md:gap-2 lg:gap-2.5">
               {chess.map((entry) => (
                 <span
                   key={entry.key}
-                  className="flex flex-col items-center gap-1 whitespace-nowrap rounded-xl bg-card px-0.5 pb-1.5 pt-2 text-xs font-bold md:gap-1.5 md:rounded-2xl md:px-1 md:pb-2.5 md:pt-3 md:text-sm"
+                  className="flex min-w-0 flex-col items-center gap-1 overflow-hidden rounded-xl bg-card pb-1.5 pt-2 text-center text-xs font-bold leading-tight tracking-tight hyphens-auto md:gap-1.5 md:tracking-normal md:rounded-2xl md:pb-2.5 md:pt-3 lg:text-sm"
                   style={{ boxShadow: `0 0 0 1px rgb(${CHESS_TINT} / 0.14)` }}
                 >
                   <img src={art(entry)} alt="" className="size-8 object-contain transition-transform duration-700 group-hover:-translate-y-0.5 md:size-12" />

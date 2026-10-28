@@ -219,7 +219,6 @@ const en = {
     close: 'Close',
   },
   home: {
-    "tagline": "Calculators, a wiki and the Fool's Gambit guide for Lord of Mysteries, built straight from the game files.",
     "dataNote": "Data extracted from game build {{version}}.",
     "bannerDesc": "Pick your traits and gear, and get the rating in one click.",
     "bannerCta": "Calculate",
@@ -1009,7 +1008,6 @@ const zhCN: Strings = {
     close: '关闭',
   },
   home: {
-    "tagline": "诡秘之主的计算工具、百科资料与愚者棋局攻略，全部直接取自游戏文件。",
     "dataNote": "数据提取自游戏版本 {{version}}。",
     "bannerDesc": "选好非凡特性与搭配，一键算出评分",
     "bannerCta": "去计算",
@@ -1801,7 +1799,6 @@ const zhTW: Strings = {
     close: '關閉',
   },
   home: {
-    "tagline": "詭秘之主的計算工具、百科資料與愚者棋局攻略，全部直接取自遊戲檔案。",
     "dataNote": "資料擷取自遊戲版本 {{version}}。",
     "bannerDesc": "選好非凡特性與搭配，一鍵算出評分",
     "bannerCta": "去計算",
