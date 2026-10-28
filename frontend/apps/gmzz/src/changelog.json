@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.28.1",
+      "date": "2026-10-29",
+      "commit": "b60b620da7f4921fbee04b94ab877a3fb78eb6e2",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Score calculator: talents list the stats they add; equipment cards show refinement beside the stage and one diamond per affix; whole-body and refinement sets and the chosen suit lay out their stats and scores; grace shows gold above the mythic affix; relic rare words read as name·stat in their grade's colour",
+            "zh-CN": "评分计算器：非凡天赋下方显示当前增加的属性；装备卡片在强化等级后显示精炼度，并用菱形表示词条；全身强化、平均精炼度和套装直接列出属性与分数；恩赐以金色显示在神话词条上方；封印物稀有词条显示为“名称·属性”并按稀有度着色",
+            "zh-TW": "評分計算器：非凡天賦下方顯示當前增加的屬性；裝備卡片在強化等級後顯示精煉度，並用菱形表示詞條；全身強化、平均精煉度和套裝直接列出屬性與分數；恩賜以金色顯示在神話詞條上方；封印物稀有詞條顯示為「名稱·屬性」並按稀有度著色"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.28.0",
       "date": "2026-10-28",
       "commit": "1a763097e55db65b659433ecdcac7971cb8d4c2b",
