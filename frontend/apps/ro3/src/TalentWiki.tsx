@@ -8,11 +8,14 @@ import { LevelStepper } from './components/LevelStepper'
 import { stageEmblem } from './professionCatalog'
 import {
   BOARD_COLUMNS,
+  BRANCH_CHILD_TYPE,
+  BRANCH_HEAD_TYPE,
   classRow,
   cumulativeCosts,
   gateBranches,
   GATE_TYPE,
   nodeLevelRows,
+  OATH_TYPE,
   seasonPath,
   TALENT_LINES,
   treeLabel,
@@ -136,7 +139,7 @@ export function TalentWiki() {
       {mode === 'season' ? (
         // The class is the one choice above the board: it decides every job talent behind the gates.
         <div className="w-full overflow-x-auto rounded-full bg-muted [scrollbar-width:none] md:w-fit md:max-w-full">
-          <div role="tablist" aria-label={text.classLabel} className="flex w-max items-center gap-0.5 p-1">
+          <div role="group" aria-label={text.classLabel} className="flex w-max items-center gap-0.5 p-1">
             {TALENT_LINES.map((candidate) => {
               const selected = candidate.lineId === line.lineId
               const face = (
@@ -153,8 +156,8 @@ export function TalentWiki() {
               // smaller, lighter and behind a chevron, so they read as its children.
               if (selected && candidate.classes.length > 1) {
                 return (
-                  <div key={candidate.lineId} role="tab" aria-selected="true" className="flex shrink-0 items-center rounded-full bg-[color:var(--arkive-filter-active)] pr-1">
-                    <span className={cn(look, 'pr-3.5')}>{face}</span>
+                  <div key={candidate.lineId} className="flex shrink-0 items-center rounded-full bg-[color:var(--arkive-filter-active)] pr-1">
+                    <button type="button" aria-pressed="true" className={cn(look, 'pr-3.5')}>{face}</button>
                     <ChevronRight aria-hidden="true" className="mx-0.5 size-4 text-[color:var(--arkive-nav-active)] opacity-60" />
                     <span role="radiogroup" aria-label={text.classLabel} className="flex gap-0.5">
                       {candidate.classes.map((option) => {
@@ -169,7 +172,7 @@ export function TalentWiki() {
                             className={cn(
                               'flex h-8 items-center gap-1 rounded-full py-0 pl-0.5 pr-2.5 text-xs font-semibold transition-colors',
                               checked
-                                ? 'bg-card font-bold text-[color:var(--arkive-nav-active)] shadow-[0_1px_3px_rgba(13,116,206,0.18)]'
+                                ? 'bg-card font-bold text-[color:var(--arkive-nav-active)] shadow-[0_1px_3px_color-mix(in_srgb,var(--arkive-nav-active)_18%,transparent)]'
                                 : 'text-muted-foreground hover:text-foreground',
                             )}
                           >
@@ -186,8 +189,7 @@ export function TalentWiki() {
                 <button
                   key={candidate.lineId}
                   type="button"
-                  role="tab"
-                  aria-selected={selected}
+                  aria-pressed={selected}
                   onClick={() => setLineId(candidate.lineId)}
                   className={cn(look, 'pr-4')}
                 >
@@ -362,7 +364,7 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, needLevel, jobClass, it
   const effectById = useMemo(() => new Map((talents.specialEffects ?? []).flatMap((effect) => effect.desc?.['zh-CN'] ? [[effect.iID, effect.desc['zh-CN']] as const] : [])), [talents])
   const placed = useMemo(() => nodes.filter((node) => node.iTalentTreeID === treeId && node.kPosition?.length === 2), [nodes, treeId])
   // Nodes with no place on the board (the battle oath) still level up, so they get a row of their own.
-  const loose = useMemo(() => nodes.filter((node) => node.iTalentTreeID === treeId && !node.kPosition && node.iType !== 6 && node.iType !== 7 && node.levels?.length), [nodes, treeId])
+  const loose = useMemo(() => nodes.filter((node) => node.iTalentTreeID === treeId && !node.kPosition && node.iType !== BRANCH_HEAD_TYPE && node.iType !== BRANCH_CHILD_TYPE && node.levels?.length), [nodes, treeId])
 
   // The board stays mounted across trees, so a pick only holds on the tree it was made on.
   const [picked, setPicked] = useState<{ treeId: number; nodeId: number }>()
@@ -385,11 +387,10 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, needLevel, jobClass, it
     return Math.max(0, ...counts.values())
   }, [nodes])
   const boardRows = columns === BOARD_COLUMNS ? Math.max(ownRows, Math.ceil(largest / columns)) : ownRows
-  const rowCount = ownRows
   const cells = useMemo(() => seasonPath(placed, columns), [placed, columns])
   const pointById = new Map(cells.map(({ node, column, row }) => [node.iId, {
     x: (column + 0.5) / columns * 100,
-    y: (row + 0.5) / rowCount * 100,
+    y: (row + 0.5) / ownRows * 100,
   }]))
   const links = placed.flatMap((node) => (node.kAfterids ?? []).filter((id) => pointById.has(id)).map((id) => [node, nodeById.get(id)!] as const))
 
@@ -406,7 +407,7 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, needLevel, jobClass, it
             className="flex flex-col justify-center rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
             style={{ minHeight: `${boardRows * 5.5}rem` }}
           >
-            <div className="relative w-full" style={{ height: `${rowCount * 5.5}rem` }}>
+            <div className="relative w-full" style={{ height: `${ownRows * 5.5}rem` }}>
               <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
                 {links.map(([from, to]) => {
                   const a = pointById.get(from.iId)!
@@ -548,7 +549,7 @@ function StatDetail({ node, rows, attributes, itemNames, index, onIndex }: {
   return (
     <div className="flex flex-col gap-3">
       <DetailHead
-        label={node.iType === 4 ? text.oathNode : text.statNode}
+        label={node.iType === OATH_TYPE ? text.oathNode : text.statNode}
         start={!!node.iIsStartPoint}
         stepper={rows.length > 1 ? <LevelStepper index={at} last={last} current={row.iLevel ?? at + 1} top={rows[last].iLevel ?? rows.length} onChange={onIndex} /> : null}
       />

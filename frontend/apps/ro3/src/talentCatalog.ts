@@ -4,6 +4,8 @@ import type { TalentLevelRecord, TalentNodeRecord } from './wikiData'
 export const GATE_TYPE = 5
 export const BRANCH_HEAD_TYPE = 6
 export const BRANCH_CHILD_TYPE = 7
+/** The battle oath: a stat node with no place on the board. */
+export const OATH_TYPE = 4
 
 export interface TalentClass {
   stageId: string
