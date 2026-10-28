@@ -792,3 +792,12 @@ select.gz-select {
 @media (prefers-reduced-motion: reduce) {
   .gz-score * { transition: none !important; }
 }
+
+/* ---------------------------------------------------------------- GzSelect */
+.gz-sel {
+  height: 2rem; width: 100%; min-width: 0; padding: 0 .75rem; border: 0; border-radius: 999px; background: var(--gz-card);
+  box-shadow: inset 0 0 0 1px var(--gz-line); font-size: .875rem; font-weight: 700; color: var(--gz-ink);
+}
+.gz-sel:hover { box-shadow: inset 0 0 0 1px var(--gz-sub); }
+.gz-sel[data-state=open] { box-shadow: inset 0 0 0 2px rgb(var(--c, 230, 164, 23)); }
+.gz-sel-menu { border-radius: .75rem; }
