@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.16.1",
+      "date": "2026-10-28",
+      "commit": "701fed8e5edd0014d29ce635022dbd9e11ca0aae",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The map loads again: since this morning's update the map page stayed blank and nothing on it responded.",
+            "zh-CN": "地图恢复加载：修复今早更新后地图页面一片空白、按钮无反应的问题。",
+            "zh-TW": "地圖恢復載入：修復今早更新後地圖頁面一片空白、按鈕無反應的問題。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.16.0",
       "date": "2026-08-12",
       "commit": "3ae952c2caea5d37cec69bae3f9028c9510d5c94",
