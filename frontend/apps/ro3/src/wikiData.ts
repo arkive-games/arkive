@@ -66,6 +66,10 @@ export interface TalentNodeRecord {
 export interface TalentLevelRecord {
   iId: number
   iLevel?: number
+  /** On a job talent: the job ids (one per advancement) the row is for. */
+  iJobId?: number[]
+  kProfessionID?: number[]
+  kSpecialEffectList?: number[]
   iSkillPoint?: number
   kAttrs?: number[][]
   kCosts?: number[][]
@@ -93,6 +97,8 @@ export interface PatronTalentNodeRecord {
   iType: number
   iIsStartPoint?: number
   iPostTalentID?: number[]
+  /** Season power granted at each level, first level first. */
+  iSeasonPower?: number[]
   kTalentAttrIds?: number[]
   name?: { 'zh-CN'?: string }
   icon?: string
@@ -122,6 +128,18 @@ export interface TalentCatalogDocument {
     nodes: PatronTalentNodeRecord[]
     attrLevels: PatronTalentAttrRecord[]
   }
+  /** What a job talent does, in the game's rich text. */
+  specialEffects?: TalentSpecialEffectRecord[]
+}
+
+export interface TalentSpecialEffectRecord {
+  iID: number
+  name?: { 'zh-CN'?: string }
+  desc?: { 'zh-CN'?: string }
+}
+
+interface ItemIndexDocument {
+  items: Array<{ iID: number; name?: { 'zh-CN'?: string } }>
 }
 
 interface SkillShard {
@@ -373,6 +391,19 @@ export async function loadTalentWikiData(): Promise<{
     fetchJson<TalentCatalogDocument>('talents.json'),
   ])
   return { version, talents }
+}
+
+let itemNames: Promise<Map<number, string>> | undefined
+
+/** Item names by id, from the 600 KB item index -- read once, and only when a page asks. */
+export function loadItemNames(): Promise<Map<number, string>> {
+  if (!itemNames) {
+    itemNames = fetchJson<ItemIndexDocument>('items.json').then((document) => new Map(
+      document.items.flatMap((item) => item.name?.['zh-CN'] ? [[item.iID, item.name['zh-CN']] as const] : []),
+    ))
+    itemNames.catch(() => { itemNames = undefined })
+  }
+  return itemNames
 }
 
 export async function loadEquipmentWikiData(): Promise<{

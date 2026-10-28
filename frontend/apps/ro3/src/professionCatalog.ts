@@ -1,4 +1,40 @@
 import type { JobSkillRow, SkillIndexEntry } from './wikiData'
+import { resourceUrl } from './lib/urls'
+
+/** Stage id to the file name of its emblem, where the two differ in spelling. */
+const STAGE_ICON_SLUGS: Record<string, string> = {
+  swordman: 'swordman',
+  knight: 'knight',
+  lordKnight: 'lordknight',
+  runeKnight: 'runeknight',
+  crusader: 'crusader',
+  paladin: 'paladin',
+  royalGuard: 'royalguard',
+  magician: 'magician',
+  wizard: 'wizard',
+  highWizard: 'highwizard',
+  warlock: 'warlock',
+  archer: 'archer',
+  hunter: 'hunter',
+  sniper: 'sniper',
+  ranger: 'ranger',
+  acolyte: 'acolyte',
+  priest: 'priest',
+  highPriest: 'highpriest',
+  archBishop: 'arcbeeshop',
+  thief: 'thief',
+  assassin: 'assassin',
+  assassinCross: 'assasincross',
+  guillotineCross: 'guillotinecross',
+  merchant: 'merchant',
+  blacksmith: 'blacksmith',
+  whitesmith: 'mastersmith',
+  mechanic: 'mechanic',
+}
+
+export function stageEmblem(stageId: string): string {
+  return resourceUrl(`icons/jobs/emblems/${STAGE_ICON_SLUGS[stageId] ?? 'novice'}.webp`)
+}
 
 export interface ProfessionStageSource {
   professionId: number

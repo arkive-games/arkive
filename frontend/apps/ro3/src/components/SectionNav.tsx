@@ -115,7 +115,7 @@ export function SectionStrip({ entries, active, onNavigate, label, onSlot }: Sec
       <button
         type="button"
         aria-expanded={open}
-        aria-controls="wiki-section-menu"
+        aria-controls={open ? 'wiki-section-menu' : undefined}
         onClick={() => setOpen((value) => !value)}
         className="flex h-9 min-w-0 items-center gap-1 rounded-full bg-[color:var(--arkive-filter-active)] py-0 pl-1 pr-2.5 text-sm font-bold text-[color:var(--arkive-nav-active)]"
       >

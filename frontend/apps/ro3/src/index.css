@@ -66,9 +66,6 @@
 .card-game-frame,
 .pet-roster-card,
 .monster-roster-card,
-.season-talent-canvas > button,
-.patron-talent-grid > button,
-.talent-medallion,
 .game-build-slot {
   --ro3-tone-01: #21160e;
   --ro3-tone-02: #2b251b;
@@ -156,12 +153,9 @@
 }
 
 .profession-toolbar,
-.talent-toolbar,
 .profession-route-panel,
 .profession-skill-panel,
-.profession-skill-detail,
-.talent-tree-panel,
-.talent-detail {
+.profession-skill-detail {
   border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 32%, transparent);
   background-color: var(--ro3-tone-19);
 
@@ -277,9 +271,7 @@
 }
 
 .profession-route-panel > header,
-.talent-tree-panel > header,
-.profession-skill-panel > header,
-.talent-toolbar {
+.profession-skill-panel > header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -287,8 +279,6 @@
 }
 
 .profession-route-panel > header > div:first-child > span,
-.talent-tree-panel > header > div:first-child > span,
-.talent-toolbar > div:first-child > span,
 .profession-skill-panel > header > div > span {
   display: inline-flex;
   align-items: center;
@@ -298,29 +288,23 @@
   font-weight: 750;
 }
 
-.profession-route-panel > header svg,
-.talent-toolbar > div:first-child svg {
+.profession-route-panel > header svg {
   width: 0.95rem;
   height: 0.95rem;
 }
 
 .profession-route-panel h2,
-.talent-toolbar h2,
-.talent-tree-panel h3,
 .profession-skill-panel h3 {
   margin: 0.15rem 0 0;
   color: var(--ro3-tone-04);
 }
 
-.profession-route-panel h2,
-.talent-toolbar h2 {
+.profession-route-panel h2 {
   font-size: 1.25rem;
 }
 
 .profession-route-tabs,
-.profession-scope-tabs,
-.talent-mode-tabs,
-.talent-tree-tabs {
+.profession-scope-tabs {
   display: flex;
   min-width: 0;
   overflow-x: auto;
@@ -329,9 +313,7 @@
 }
 
 .profession-route-tabs button,
-.profession-scope-tabs button,
-.talent-mode-tabs button,
-.talent-tree-tabs button {
+.profession-scope-tabs button {
   min-height: 2.2rem;
   padding-inline: 0.65rem;
   border: 0;
@@ -346,28 +328,20 @@
 }
 
 .profession-route-tabs button:last-child,
-.profession-scope-tabs button:last-child,
-.talent-mode-tabs button:last-child,
-.talent-tree-tabs button:last-child {
+.profession-scope-tabs button:last-child {
   border-right: 0;
 }
 
 .profession-route-tabs button:hover,
 .profession-route-tabs button.is-active,
 .profession-scope-tabs button:hover,
-.profession-scope-tabs button.is-active,
-.talent-mode-tabs button:hover,
-.talent-mode-tabs button.is-active,
-.talent-tree-tabs button:hover,
-.talent-tree-tabs button.is-active {
+.profession-scope-tabs button.is-active {
   color: var(--ro3-tone-04);
   background: color-mix(in srgb, var(--ro3-accent-08) 20%, transparent);
 }
 
 .profession-route-tabs button.is-active,
-.profession-scope-tabs button.is-active,
-.talent-mode-tabs button.is-active,
-.talent-tree-tabs button.is-active {
+.profession-scope-tabs button.is-active {
   box-shadow: inset 0 -0.16rem var(--ro3-accent-06);
 }
 
@@ -441,8 +415,7 @@
   white-space: nowrap;
 }
 
-.profession-data-layout,
-.talent-system-layout {
+.profession-data-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 19rem;
   align-items: start;
@@ -460,8 +433,7 @@
   border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-07) 28%, transparent);
 }
 
-.profession-skill-panel h3,
-.talent-tree-panel h3 {
+.profession-skill-panel h3 {
   font-size: 1rem;
 }
 
@@ -554,16 +526,14 @@
   white-space: nowrap;
 }
 
-.profession-skill-detail,
-.talent-detail {
+.profession-skill-detail {
   position: sticky;
   top: 7.75rem;
   min-height: 19rem;
   padding: 0.75rem;
 }
 
-.profession-skill-detail > header,
-.talent-detail > header {
+.profession-skill-detail > header {
   display: grid;
   grid-template-columns: 3.2rem minmax(0, 1fr);
   align-items: center;
@@ -572,13 +542,11 @@
   border-bottom: 0.18rem solid var(--ro3-accent-06);
 }
 
-.profession-skill-detail > header > div,
-.talent-detail > header > div {
+.profession-skill-detail > header > div {
   min-width: 0;
 }
 
-.profession-skill-detail h3,
-.talent-detail h3 {
+.profession-skill-detail h3 {
   overflow: hidden;
   margin: 0.1rem 0;
   color: var(--ro3-tone-04);
@@ -588,78 +556,61 @@
 }
 
 .profession-skill-detail header span,
-.profession-skill-detail header small,
-.talent-detail header small,
-.talent-detail header em {
+.profession-skill-detail header small {
   color: var(--ro3-tone-10);
   font-size: 0.75rem;
   font-style: normal;
 }
 
-.profession-skill-detail > dl,
-.talent-facts {
+.profession-skill-detail > dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0.65rem 0 0;
   border-block: 1px solid color-mix(in srgb, var(--ro3-tone-07) 22%, transparent);
 }
 
-.profession-skill-detail > dl > div,
-.talent-facts > div {
+.profession-skill-detail > dl > div {
   padding: 0.45rem 0.35rem;
   border-right: 1px solid color-mix(in srgb, var(--ro3-tone-07) 20%, transparent);
 }
 
-.talent-facts {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.profession-skill-detail dt,
-.talent-facts dt {
+.profession-skill-detail dt {
   color: var(--ro3-tone-10);
   font-size: 0.75rem;
 }
 
-.profession-skill-detail dd,
-.talent-facts dd {
+.profession-skill-detail dd {
   margin: 0.15rem 0 0;
   color: var(--ro3-tone-04);
   font-size: 0.875rem;
   font-weight: 750;
 }
 
-.profession-skill-detail > section,
-.talent-detail-section,
-.talent-level-strip {
+.profession-skill-detail > section {
   margin-top: 0.75rem;
 }
 
-.profession-skill-detail h4,
-.talent-detail h4 {
+.profession-skill-detail h4 {
   margin: 0 0 0.35rem;
   color: var(--ro3-tone-05);
   font-size: 0.875rem;
 }
 
-.profession-skill-detail p,
-.talent-detail-section p {
+.profession-skill-detail p {
   margin: 0;
   color: var(--ro3-tone-08);
   font-size: 0.75rem;
   line-height: 1.55;
 }
 
-.profession-level-preview,
-.talent-level-strip > div {
+.profession-level-preview {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
 }
 
 .profession-level-preview span,
-.profession-level-preview small,
-.talent-level-strip span,
-.talent-level-strip small {
+.profession-level-preview small {
   display: grid;
   min-width: 1.8rem;
   min-height: 1.7rem;
@@ -670,8 +621,7 @@
   font-size: 0.75rem;
 }
 
-.profession-empty,
-.talent-empty {
+.profession-empty {
   display: grid;
   min-height: 12rem;
   place-items: center;
@@ -681,255 +631,15 @@
   text-align: center;
 }
 
-.talent-toolbar {
-  padding: 0.75rem;
-}
-
-.talent-mode-tabs button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.talent-mode-tabs svg {
-  width: 0.95rem;
-  height: 0.95rem;
-}
-
-.talent-mode-tabs small {
-  color: var(--ro3-tone-11);
-  font-size: 0.75rem;
-}
-
-.talent-tree-panel {
-  min-width: 0;
-  padding: 0.75rem;
-}
-
-.talent-tree-panel > header {
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--ro3-tone-07) 28%, transparent);
-}
-
-.talent-tree-tabs {
-  max-width: min(44rem, 70vw);
-}
-
-.talent-tree-tabs button {
-  display: grid;
-  min-width: 5.75rem;
-  place-items: center;
-  gap: 0.1rem;
-}
-
-.talent-tree-tabs button small {
-  color: var(--ro3-tone-10);
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.talent-tree-tabs.is-groups button {
-  min-width: 7rem;
-}
-
-.season-talent-scroll {
-  min-width: 0;
-  overflow: auto;
-  border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 24%, transparent);
-  background:
-    linear-gradient(color-mix(in srgb, var(--ro3-tone-07) 9%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--ro3-tone-07) 9%, transparent) 1px, transparent 1px),
-    color-mix(in srgb, var(--ro3-tone-21) 36%, transparent);
-  background-size: 3rem 3rem;
-}
-
-.season-talent-canvas {
-  position: relative;
-  width: max(100%, 58rem);
-  height: 32rem;
-}
-
-.season-talent-links {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.season-talent-links line {
-  stroke: color-mix(in srgb, var(--ro3-tone-07) 54%, transparent);
-  stroke-width: 1.25;
-  vector-effect: non-scaling-stroke;
-}
-
-.season-talent-canvas > button {
-  position: absolute;
-  left: var(--talent-x);
-  top: var(--talent-y);
-  display: grid;
-  width: 5.5rem;
-  justify-items: center;
-  gap: 0.12rem;
-  transform: translate(-50%, -50%);
-  border: 0;
-  color: var(--ro3-tone-05);
-  background: transparent;
-  font: inherit;
-  text-align: center;
-  cursor: pointer;
-}
-
-.season-talent-canvas > button > span,
-.patron-talent-grid > button > span,
-.talent-medallion {
-  display: grid;
-  width: 3.2rem;
-  height: 3.2rem;
-  place-items: center;
-  overflow: hidden;
-  border: 0.15rem solid var(--ro3-tone-10);
-  border-radius: 50%;
-  background: var(--ro3-tone-16);
-  box-shadow: 0 0.2rem 0.55rem color-mix(in srgb, var(--ro3-tone-04) 22%, transparent);
-}
-
-.season-talent-canvas > button:hover > span,
-.season-talent-canvas > button.is-active > span,
-.patron-talent-grid > button:hover > span,
-.patron-talent-grid > button.is-active > span {
-  border-color: var(--ro3-gold-07);
-  box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--ro3-gold-07) 22%, transparent), 0 0.2rem 0.8rem color-mix(in srgb, var(--ro3-gold-02) 34%, transparent);
-}
-
-.season-talent-canvas > button.is-start > span,
-.patron-talent-grid > button.is-start > span {
-  border-color: #6c8f58;
-}
-
-.season-talent-canvas > button.is-gate > span {
-  border-radius: 0.25rem;
-  border-color: var(--ro3-gold-07);
-}
-
-.season-talent-canvas img,
-.patron-talent-grid img,
-.talent-medallion img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.season-talent-canvas svg,
-.patron-talent-grid svg,
-.talent-medallion > svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: var(--ro3-tone-08);
-}
-
 /* The labels under a medallion are page text, so they follow the theme even
    though the medallion's own palette is pinned. */
-.season-talent-canvas strong,
-.patron-talent-grid strong {
-  max-width: 100%;
-  overflow: hidden;
-  color: var(--foreground);
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.season-talent-canvas small,
-.patron-talent-grid small {
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-}
-
-.patron-talent-grid {
-  position: relative;
-  display: grid;
-  min-height: 32rem;
-  grid-template-columns: repeat(4, minmax(5rem, 1fr));
-  grid-template-rows: repeat(4, minmax(6rem, 1fr));
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 24%, transparent);
-  background:
-    linear-gradient(color-mix(in srgb, var(--ro3-tone-07) 9%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--ro3-tone-07) 9%, transparent) 1px, transparent 1px),
-    color-mix(in srgb, var(--ro3-tone-21) 36%, transparent);
-  background-size: 25% 25%;
-}
-
-.patron-talent-grid > .patron-talent-links {
-  position: absolute;
-  z-index: 0;
-  inset: 1rem;
-  width: calc(100% - 2rem);
-  height: calc(100% - 2rem);
-  overflow: visible;
-  pointer-events: none;
-}
-
-.patron-talent-links line {
-  stroke: color-mix(in srgb, var(--ro3-tone-07) 54%, transparent);
-  stroke-width: 1.25;
-  vector-effect: non-scaling-stroke;
-}
-
-.patron-talent-grid > button {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  align-self: center;
-  justify-items: center;
-  gap: 0.15rem;
-  border: 0;
-  color: var(--ro3-tone-05);
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-}
-
-.talent-medallion {
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: 0.2rem;
-}
-
-.talent-detail-section > div {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.talent-detail-section > div > span {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.35rem 0.45rem;
-  background: color-mix(in srgb, var(--ro3-tone-21) 42%, transparent);
-}
-
-.talent-detail-section small {
-  color: var(--ro3-tone-08);
-  font-size: 0.75rem;
-}
-
-.talent-detail-section strong {
-  color: var(--ro3-accent-05);
-  font-size: 0.875rem;
-}
 
 @media (max-width: 63.999rem) {
   .profession-toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .profession-data-layout,
-  .talent-system-layout {
+  .profession-data-layout {
     grid-template-columns: minmax(0, 1fr) 17rem;
   }
 
@@ -953,17 +663,13 @@
   }
 
   .profession-route-panel > header,
-  .talent-tree-panel > header,
-  .profession-skill-panel > header,
-  .talent-toolbar {
+  .profession-skill-panel > header {
     align-items: stretch;
     flex-direction: column;
   }
 
   .profession-route-tabs,
-  .profession-scope-tabs,
-  .talent-mode-tabs,
-  .talent-tree-tabs {
+  .profession-scope-tabs {
     width: 100%;
   }
 
@@ -973,39 +679,17 @@
     padding-bottom: 0.3rem;
   }
 
-  .profession-data-layout,
-  .talent-system-layout {
+  .profession-data-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .profession-skill-detail,
-  .talent-detail {
+  .profession-skill-detail {
     position: static;
     grid-row: 1;
   }
 
   .profession-skill-panel {
     grid-row: 2;
-  }
-
-  .talent-tree-panel {
-    grid-row: 2;
-  }
-
-  .talent-tree-tabs {
-    max-width: none;
-  }
-
-  .season-talent-canvas {
-    height: 28rem;
-  }
-
-  .patron-talent-grid {
-    min-width: 35rem;
-  }
-
-  .patron-tree-panel {
-    overflow-x: auto;
   }
 
   .pet-roster-grid {
@@ -5906,7 +5590,8 @@ select {
 }
 
 /* The skill board's advancement plates and the panel under the skill row. */
-.profession-wiki {
+.profession-wiki,
+.talent-wiki {
   --ro3-stage: #b4532a;
   --ro3-stage-solid: #b4532a;
   --ro3-stage-soft: #fdf1ea;
@@ -5914,7 +5599,8 @@ select {
   --ro3-skill-panel: #f2f6fb;
 }
 
-.dark .profession-wiki {
+.dark .profession-wiki,
+.dark .talent-wiki {
   --ro3-stage: #f0a57e;
   --ro3-stage-soft: #241914;
   --ro3-stage-mid: #3a261c;

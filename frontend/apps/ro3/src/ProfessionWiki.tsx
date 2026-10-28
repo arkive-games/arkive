@@ -1,42 +1,14 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Minus, Plus, Search, Zap } from 'lucide-react'
+import { Search, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
-import { buildProfessionStages, PROFESSION_LINES, type ProfessionSkillChoice, type ProfessionStageData } from './professionCatalog'
+import { buildProfessionStages, PROFESSION_LINES, stageEmblem, type ProfessionSkillChoice, type ProfessionStageData } from './professionCatalog'
 import { Notice } from './components/wiki'
+import { GameText } from './components/GameText'
+import { LevelStepper } from './components/LevelStepper'
 import { HeaderAction } from './components/SectionNav'
 import { loadProfessionWikiData, loadSkillLevels, type SkillLevelRow } from './wikiData'
 import { resourceUrl } from './lib/urls'
 import content from './locales/zh-CN.json'
-
-const STAGE_ICON_SLUGS: Record<string, string> = {
-  swordman: 'swordman',
-  knight: 'knight',
-  lordKnight: 'lordknight',
-  runeKnight: 'runeknight',
-  crusader: 'crusader',
-  paladin: 'paladin',
-  royalGuard: 'royalguard',
-  magician: 'magician',
-  wizard: 'wizard',
-  highWizard: 'highwizard',
-  warlock: 'warlock',
-  archer: 'archer',
-  hunter: 'hunter',
-  sniper: 'sniper',
-  ranger: 'ranger',
-  acolyte: 'acolyte',
-  priest: 'priest',
-  highPriest: 'highpriest',
-  archBishop: 'arcbeeshop',
-  thief: 'thief',
-  assassin: 'assassin',
-  assassinCross: 'assasincross',
-  guillotineCross: 'guillotinecross',
-  merchant: 'merchant',
-  blacksmith: 'blacksmith',
-  whitesmith: 'mastersmith',
-  mechanic: 'mechanic',
-}
 
 /** The skill table's own category code for a passive skill. */
 const PASSIVE_CATEGORY = 1001
@@ -61,7 +33,7 @@ export function ProfessionWiki() {
   const searchInput = useRef<HTMLInputElement>(null)
   // Level rows by skill, filled a route at a time; every block reads them.
   const [levelRows, setLevelRows] = useState<Map<number, SkillLevelRow[]>>(() => new Map())
-  const [levelError, setLevelError] = useState(false)
+  const [failedSkills, setFailedSkills] = useState<Set<number>>(() => new Set())
 
   useEffect(() => {
     let active = true
@@ -82,26 +54,39 @@ export function ProfessionWiki() {
   }, [searchOpen])
 
   const line = PROFESSION_LINES.find((candidate) => candidate.id === lineId) ?? PROFESSION_LINES[0]
-  const route = line.routes.find((candidate) => candidate.id === routeId) ?? line.routes[0]
+  const route = useMemo(() => line.routes.find((candidate) => candidate.id === routeId) ?? line.routes[0], [line, routeId])
   const skillIndex = useMemo(() => new Map(data?.skills.skills.map((skill) => [skill.iSkillID, skill]) ?? []), [data])
-  // Left to the React Compiler to memoise: the level effect below reruns on
-  // a new array, and only fetches what is still missing when it does.
-  const stages = buildProfessionStages(route, data?.jobSkills.jobSkills ?? [], skillIndex)
-  const routeSkills = stages.flatMap((stage) => stage.skills.filter((choice) => !choice.inherited))
+  const jobSkills = data?.jobSkills.jobSkills
+  const stages = useMemo(
+    () => buildProfessionStages(route, jobSkills ?? [], skillIndex),
+    [route, jobSkills, skillIndex],
+  )
+  const routeSkills = useMemo(
+    () => stages.flatMap((stage) => stage.skills.filter((choice) => !choice.inherited)),
+    [stages],
+  )
 
+  // Each skill settles on its own, so one unreadable shard costs only its own
+  // skills; those are remembered as failed rather than fetched again.
   useEffect(() => {
     if (!data) return
-    const missing = routeSkills.filter((choice) => choice.skill && !levelRows.has(choice.skillId))
+    const missing = routeSkills.filter((choice) => choice.skill && !levelRows.has(choice.skillId) && !failedSkills.has(choice.skillId))
     if (missing.length === 0) return
     let active = true
-    Promise.all(missing.map((choice) => loadSkillLevels(choice.skill!, data.skills.shards).then((rows) => [choice.skillId, rows] as const)))
-      .then((loaded) => {
+    Promise.allSettled(missing.map((choice) => loadSkillLevels(choice.skill!, data.skills.shards)))
+      .then((results) => {
         if (!active) return
-        setLevelRows((previous) => new Map([...previous, ...loaded]))
+        const loaded = new Map<number, SkillLevelRow[]>()
+        const failed: number[] = []
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') loaded.set(missing[index].skillId, result.value)
+          else failed.push(missing[index].skillId)
+        })
+        if (loaded.size > 0) setLevelRows((previous) => new Map([...previous, ...loaded]))
+        if (failed.length > 0) setFailedSkills((previous) => new Set([...previous, ...failed]))
       })
-      .catch(() => { if (active) setLevelError(true) })
     return () => { active = false }
-  }, [data, routeSkills, levelRows])
+  }, [data, routeSkills, levelRows, failedSkills])
 
   const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN')
   const matches = (choice: ProfessionSkillChoice) => !normalizedQuery
@@ -223,7 +208,7 @@ export function ProfessionWiki() {
               index={index}
               matches={matches}
               levelRows={levelRows}
-              levelError={levelError}
+              failedSkills={failedSkills}
             />
           ))}
         </ol>
@@ -237,12 +222,12 @@ export function ProfessionWiki() {
  * skills in a row, and the picked one described underneath. A rounded pointer
  * on the description's top edge sits under the picked skill.
  */
-function StageBlock({ stage, index, matches, levelRows, levelError }: {
+function StageBlock({ stage, index, matches, levelRows, failedSkills }: {
   stage: ProfessionStageData
   index: number
   matches: (choice: ProfessionSkillChoice) => boolean
   levelRows: Map<number, SkillLevelRow[]>
-  levelError: boolean
+  failedSkills: Set<number>
 }) {
   const [selectedId, setSelectedId] = useState<number>()
   const [levelIndexes, setLevelIndexes] = useState<Record<number, number>>({})
@@ -255,6 +240,8 @@ function StageBlock({ stage, index, matches, levelRows, levelError }: {
   // A stable sort: passives drop behind the actives, each kind keeping unlock order.
   const ordered = [...fresh].sort((a, b) => Number(kindOf(a) === 'passive') - Number(kindOf(b) === 'passive'))
   const selected = ordered.find((choice) => choice.skillId === selectedId) ?? ordered[0]
+
+  const tileOrder = ordered.map((choice) => choice.skillId).join()
 
   // Written straight to the pointer's style: it follows layout, not state.
   useLayoutEffect(() => {
@@ -277,7 +264,7 @@ function StageBlock({ stage, index, matches, levelRows, levelError }: {
       observer.disconnect()
       row.removeEventListener('scroll', aim)
     }
-  }, [selected?.skillId, ordered.length])
+  }, [selected?.skillId, tileOrder])
 
   if (!selected) return null
 
@@ -323,7 +310,7 @@ function StageBlock({ stage, index, matches, levelRows, levelError }: {
             levels={levels}
             levelIndex={levelIndex}
             onLevel={setLevel}
-            levelError={levelError}
+            levelError={failedSkills.has(selected.skillId)}
           />
         </div>
       </div>
@@ -430,7 +417,9 @@ function SkillDetail({ choice, levels, levelIndex, onLevel, levelError }: {
             </Fragment>
           ))}
         </div>
-        {levels && levels.length > 1 ? <LevelStepper levels={levels} index={levelIndex} onChange={onLevel} /> : null}
+        {levels && levels.length > 1 ? (
+          <LevelStepper index={levelIndex} last={levels.length - 1} current={levels[levelIndex].iLevel} top={levels[levels.length - 1].iLevel} onChange={onLevel} />
+        ) : null}
       </div>
       <p className="min-h-[3.3em] whitespace-pre-line text-sm leading-relaxed text-foreground/85">
         {levelError ? content.wiki.dataError : !levels ? content.wiki.loading : (
@@ -438,76 +427,6 @@ function SkillDetail({ choice, levels, levelIndex, onLevel, levelError }: {
         )}
       </p>
     </div>
-  )
-}
-
-/** A small capsule: − and + either side of the level, with a bar for how far up it is. */
-function LevelStepper({ levels, index, onChange }: {
-  levels: SkillLevelRow[]
-  index: number
-  onChange: (index: number) => void
-}) {
-  const last = levels.length - 1
-  const current = levels[index].iLevel
-  const top = levels[last].iLevel
-  const button = 'grid size-7 place-items-center rounded-full bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)] transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:bg-[color:var(--arkive-nav-active)] hover:text-white active:scale-90 disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground/50'
-
-  return (
-    <div
-      role="group"
-      aria-label={text.levelPicker}
-      className="flex items-center gap-0.5 rounded-full bg-card p-0.5 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_0_0_1px_var(--border)]"
-    >
-      <button type="button" aria-label={text.levelDown} disabled={index === 0} onClick={() => onChange(Math.max(0, index - 1))} className={button}>
-        <Minus aria-hidden="true" className="size-3.5" strokeWidth={2.8} />
-      </button>
-      <span aria-live="polite" className="relative flex min-w-14 items-baseline justify-center gap-0.5 pb-1 tabular-nums leading-tight">
-        <span className="text-xs font-semibold text-muted-foreground">Lv</span>
-        <b className="text-base font-extrabold">{current}</b>
-        <span className="text-xs font-semibold text-muted-foreground">/{top}</span>
-        <span aria-hidden="true" className="absolute inset-x-1.5 bottom-0 h-0.5 overflow-hidden rounded-full bg-muted">
-          <span
-            className="block h-full rounded-full bg-[image:var(--arkive-warm-search)] transition-[width] duration-300"
-            style={{ width: `${Math.round((current / top) * 100)}%` }}
-          />
-        </span>
-      </span>
-      <button type="button" aria-label={text.levelUp} disabled={index >= last} onClick={() => onChange(Math.min(last, index + 1))} className={button}>
-        <Plus aria-hidden="true" className="size-3.5" strokeWidth={2.8} />
-      </button>
-    </div>
-  )
-}
-
-/**
- * The game's rich text: the values it colours are the ones that grow with the
- * level, so they keep an emphasis -- in the theme's accent rather than the
- * game's own hex, which is unreadable on a dark page. Bracketed status names
- * take the class colour.
- */
-function GameText({ value }: { value: string }) {
-  const plain = value
-    .replace(/<link(?:=[^>]*)?>/gi, '')
-    .replace(/<\/link>/gi, '')
-    .replace(/<br\s*\/?>/gi, '\n')
-  const parts = plain.split(/<color(?:=[^>]*)?>([\s\S]*?)<\/color>/gi)
-  return (
-    <>
-      {parts.map((part, index) => index % 2 === 1 ? (
-        <b key={index} className="font-semibold text-[color:var(--arkive-nav-active)]">{part}</b>
-      ) : <Keywords key={index} value={part.replace(/<\/?color(?:=[^>]*)?>/gi, '')} />)}
-    </>
-  )
-}
-
-function Keywords({ value }: { value: string }) {
-  const parts = value.split(/(【[^】]+】)/)
-  return (
-    <>
-      {parts.map((part, index) => index % 2 === 1 ? (
-        <span key={index} className="font-semibold text-[color:var(--ro3-stage)]">{part}</span>
-      ) : <Fragment key={index}>{part}</Fragment>)}
-    </>
   )
 }
 
@@ -521,10 +440,6 @@ function skillName(choice: ProfessionSkillChoice): string {
 
 function formatNumber(value: number): string {
   return String(Math.round(value * 10) / 10)
-}
-
-function stageEmblem(stageId: string): string {
-  return resourceUrl(`icons/jobs/emblems/${STAGE_ICON_SLUGS[stageId] ?? 'novice'}.webp`)
 }
 
 function lineLabel(lineId: string): string {
