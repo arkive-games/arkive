@@ -29,6 +29,7 @@ import { EquipmentWiki } from './EquipmentWiki'
 import { SoulWiki } from './SoulWiki'
 import { BuildPlanner } from './BuildPlanner'
 import { ContentPage } from './components/ContentPage'
+import { SectionSidebar, SectionStrip, type SectionNavEntry } from './components/SectionNav'
 import { resourceUrl } from './lib/urls'
 import {
   hrefFor,
@@ -118,7 +119,7 @@ const HOME_ART: Record<WikiView | 'builds', string> = {
 
 // The home page is the nav, laid out, as on the other games: the same two
 // sections the top bar carries, each entry a picture and a name.
-const HOME_GROUPS: Array<{ key: string; label: string; icon: typeof BookOpen; entries: Array<{ key: NavKey; label: string; art: string }> }> = [
+const HOME_GROUPS: Array<{ key: string; label: string; icon: typeof BookOpen; entries: SectionNavEntry[] }> = [
   {
     key: 'wiki',
     label: content.nav.wiki,
@@ -132,6 +133,8 @@ const HOME_GROUPS: Array<{ key: string; label: string; icon: typeof BookOpen; en
     entries: [{ key: 'builds', label: content.builds.title, art: HOME_ART.builds }],
   },
 ]
+
+const WIKI_ENTRIES = HOME_GROUPS[0].entries
 
 function pageTitle({ page, view }: Location): string {
   if (page === 'wiki') return content.wiki.tabs[view]
@@ -200,13 +203,21 @@ function App() {
         active={active}
         onNavigate={navigate}
         title={pageTitle(location)}
-        // The home page carries its own, visually hidden, heading.
-        heading={location.page !== 'overview'}
+        // The home page carries its own, visually hidden, heading; the wiki's
+        // is the lit entry of its sidebar.
+        heading={location.page !== 'overview' && location.page !== 'wiki'}
         wide={location.page === 'wiki' || location.page === 'builds'}
         version={SITE_VERSION}
       >
         {location.page === 'wiki' ? (
-          <WikiPage view={location.view} />
+          <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-6">
+            <h1 className="sr-only">{pageTitle(location)}</h1>
+            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} />
+            <div className="min-w-0">
+              <SectionStrip entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} />
+              <WikiPage view={location.view} />
+            </div>
+          </div>
         ) : location.page === 'builds' ? (
           <BuildPlanner onUnavailable={showUnavailable} />
         ) : location.page === 'changelog' ? (

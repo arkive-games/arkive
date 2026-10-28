@@ -37,17 +37,6 @@ const STAGE_ICON_SLUGS: Record<string, string> = {
   mechanic: 'mechanic',
 }
 
-/** Rank-4 jobs without art of their own show the rank-3 job they grow from. */
-const STAGE_ART: Record<string, string> = {
-  lordKnight: 'knight',
-  paladin: 'crusader',
-  highWizard: 'wizard',
-  sniper: 'hunter',
-  highPriest: 'priest',
-  assassinCross: 'assassin',
-  whitesmith: 'blacksmith',
-}
-
 /** The skill table's own category code for a passive skill. */
 const PASSIVE_CATEGORY = 1001
 
@@ -115,7 +104,6 @@ export function ProfessionWiki() {
 
   const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN')
   const matches = (choice: ProfessionSkillChoice) => !normalizedQuery
-    || String(choice.skillId).includes(normalizedQuery)
     || skillName(choice).toLocaleLowerCase('zh-CN').includes(normalizedQuery)
   const matchCount = routeSkills.filter(matches).length
 
@@ -211,7 +199,7 @@ export function ProfessionWiki() {
   )
 }
 
-/** One advancement: its art and emblem on top, then the skills it adds. */
+/** One advancement: its emblem and name on top, then the skills it adds in unlock order. */
 function StageColumn({ stage, index, matches, kindOf, selectedId, onSelect }: {
   stage: ProfessionStageData
   index: number
@@ -228,51 +216,45 @@ function StageColumn({ stage, index, matches, kindOf, selectedId, onSelect }: {
         { key: 'passive', title: text.passiveSkills, skills: fresh.filter((choice) => kindOf(choice) === 'passive') },
       ]
     : [{ key: 'all', skills: fresh }]
-  const name = stageLabel(stage.stageId)
 
   return (
-    <li className="relative flex min-w-0 flex-col rounded-xl border border-border bg-card shadow-sm">
+    <li className="relative flex min-w-0 flex-col rounded-2xl bg-card shadow-sm ring-1 ring-border/70">
       {index > 0 ? (
-        <ChevronRight aria-hidden="true" className="absolute -left-3 top-14 z-20 hidden size-5 rounded-full bg-background text-muted-foreground xl:block" />
+        <ChevronRight aria-hidden="true" className="absolute -left-3 top-7 z-10 hidden size-5 rounded-full bg-background text-muted-foreground xl:block" />
       ) : null}
-      {/* White artwork multiplied into a light sheet: it stays light in the dark theme, which the art needs. */}
-      <div className="relative h-28 overflow-hidden rounded-t-xl bg-[#f7f4ee] sm:h-32">
+      <header className="flex items-center gap-3 px-4 pb-2 pt-4">
         <img
-          src={resourceUrl(`art/jobs/${STAGE_ART[stage.stageId] ?? stage.stageId}.webp`)}
-          alt={name}
-          loading="lazy"
-          className="absolute inset-0 size-full object-contain mix-blend-multiply"
+          src={stageEmblem(stage.stageId)}
+          alt=""
+          className="size-12 shrink-0 rounded-full bg-[color:var(--arkive-filter-active)] object-contain p-1"
         />
-        <span className="absolute left-2 top-2 rounded-full bg-neutral-900/75 px-2 py-0.5 text-xs font-semibold text-white">
-          {advancementLabel(index)}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="text-xs font-semibold text-[color:var(--arkive-nav-active)]">{advancementLabel(index)}</span>
+          <h3 className="truncate text-lg font-bold leading-tight">{stageLabel(stage.stageId)}</h3>
+        </div>
+        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          {text.newSkills.replace('{count}', String(stage.newSkillCount))}
         </span>
-      </div>
-      <header className="flex items-center gap-2 border-b border-border px-3 py-2">
-        <img src={stageEmblem(stage.stageId)} alt="" className="relative z-10 -mt-6 size-11 shrink-0 rounded-full bg-card object-contain p-0.5 shadow-sm ring-1 ring-border" />
-        <h3 className="min-w-0 flex-1 truncate text-base font-semibold">{name}</h3>
-        <span className="shrink-0 text-xs text-muted-foreground">{text.newSkills.replace('{count}', String(stage.newSkillCount))}</span>
       </header>
-      <div className="flex flex-col gap-3 p-3">
+      <div className="flex flex-col gap-2 px-2 pb-3">
         {fresh.length === 0 ? <p className="py-2 text-center text-xs text-muted-foreground">{text.empty}</p> : null}
         {groups.filter((group) => group.skills.length > 0).map((group) => (
-          <section key={group.key} className="flex flex-col gap-1.5">
+          <section key={group.key} className="flex flex-col">
             {group.title ? (
-              <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                {group.title}
-                <span aria-hidden="true" className="h-px flex-1 bg-border" />
-              </h4>
+              <h4 className="px-2 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{group.title}</h4>
             ) : null}
-            <div className="grid grid-cols-4 gap-1 sm:grid-cols-5 md:grid-cols-4">
+            <ul className="flex flex-col">
               {group.skills.map((choice) => (
-                <SkillTile
-                  key={choice.skillId}
-                  choice={choice}
-                  kind={kindOf(choice)}
-                  active={selectedId === choice.skillId}
-                  onSelect={() => onSelect(choice)}
-                />
+                <li key={choice.skillId}>
+                  <SkillRow
+                    choice={choice}
+                    kind={kindOf(choice)}
+                    active={selectedId === choice.skillId}
+                    onSelect={() => onSelect(choice)}
+                  />
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         ))}
       </div>
@@ -280,31 +262,25 @@ function StageColumn({ stage, index, matches, kindOf, selectedId, onSelect }: {
   )
 }
 
-function SkillTile({ choice, kind, active, onSelect }: {
+function SkillRow({ choice, kind, active, onSelect }: {
   choice: ProfessionSkillChoice
   kind?: SkillKind
   active: boolean
   onSelect: () => void
 }) {
-  const name = skillName(choice)
   return (
     <button
       type="button"
       aria-pressed={active}
       onClick={onSelect}
-      title={`${name} · ${text.unlockShort.replace('{level}', String(choice.unlockLevel))}`}
       className={cn(
-        'group flex min-w-0 flex-col items-center gap-1 rounded-lg p-1 text-center transition-colors',
-        active ? 'bg-[color:var(--arkive-filter-active)]' : 'hover:bg-muted',
+        'group flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors',
+        active ? 'bg-[color:var(--arkive-filter-active)]' : 'hover:bg-accent',
       )}
     >
-      <span className="relative">
-        <SkillIcon choice={choice} kind={kind} className="size-12 transition-transform group-hover:scale-105" />
-        <span className="absolute -bottom-1 -right-1 rounded-full border border-card bg-foreground px-1 text-xs font-semibold leading-tight text-background tabular-nums">
-          {choice.unlockLevel}
-        </span>
-      </span>
-      <span className="w-full truncate text-xs font-medium">{name}</span>
+      <SkillIcon choice={choice} kind={kind} className="size-10 transition-transform duration-200 group-hover:scale-105" />
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">{skillName(choice)}</span>
+      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{text.unlockAt.replace('{level}', String(choice.unlockLevel))}</span>
     </button>
   )
 }
@@ -361,7 +337,6 @@ function SkillDetail({ choice, stageName, levels, levelError }: {
           <div className="flex flex-wrap gap-1.5">
             {kind ? <Badge>{kind === 'passive' ? text.kindPassive : text.kindActive}</Badge> : null}
             {element ? <Badge>{element}</Badge> : null}
-            <span className="text-xs text-muted-foreground">{text.skillId.replace('{id}', String(choice.skillId))}</span>
           </div>
         </div>
       </header>
