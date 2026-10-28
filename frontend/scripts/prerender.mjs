@@ -12,6 +12,10 @@
 // or renders nothing keeps the plain shell and is reported, never shipped.
 // Nothing is written until every page has rendered, so a crash leaves dist as
 // the build produced it.
+//
+// Two deliberate trade-offs: the snapshot is rendered in Chinese, so a reader
+// in another language sees it until the bundle runs and switches; and it holds
+// the data as of the last frontend deploy, which only crawlers ever read.
 import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -70,9 +74,11 @@ const locs = new Map([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, loc])
 // Serves the build like EdgeOne does before this step: real files as they are,
 // every other path as the SPA entry.
 const server = http.createServer((req, res) => {
-  const url = decodeURIComponent((req.url ?? '/').split('?')[0])
-  const file = path.resolve(path.join(dist, url))
-  const isFile = file.startsWith(dist + path.sep) && fs.existsSync(file) && fs.statSync(file).isFile()
+  let url
+  // A path that cannot be decoded names no file, so it falls through to the shell.
+  try { url = decodeURIComponent((req.url ?? '/').split('?')[0]) } catch { url = null }
+  const file = url === null ? null : path.resolve(path.join(dist, url))
+  const isFile = file !== null && file.startsWith(dist + path.sep) && fs.existsSync(file) && fs.statSync(file).isFile()
   if (isFile) {
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream' })
     fs.createReadStream(file).pipe(res)

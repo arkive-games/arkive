@@ -52,6 +52,13 @@ describe("fillShell", () => {
     expect(html).toContain('<script type="module" crossorigin src="/assets/index-abc.js"></script>')
   })
 
+  it("writes a $ in the title or URL literally", () => {
+    const html = fillShell(SHELL, { ...page, title: "Cost $1 $&", url: "https://a.example/$1" })
+    expect(html).toContain("<title>Cost $1 $&amp;</title>")
+    expect(html).toContain('<meta property="og:title" content="Cost $1 $&amp;" />')
+    expect(html).toContain('<link rel="canonical" href="https://a.example/$1" />')
+  })
+
   it("replaces a canonical the shell already has", () => {
     const shell = SHELL.replace("</head>", '<link rel="canonical" href="https://a.example/" />\n  </head>')
     expect(fillShell(shell, page).match(/rel="canonical"/g)).toHaveLength(1)

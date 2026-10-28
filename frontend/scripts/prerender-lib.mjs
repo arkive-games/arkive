@@ -42,14 +42,16 @@ const escapeAttr = (text) => escapeText(text).replace(/"/g, '&quot;')
 export function fillShell(shell, { title, url, rootHtml }) {
   const roots = shell.match(/<div id="root"[^>]*><\/div>/g) ?? []
   if (roots.length !== 1) throw new Error(`expected one empty #root in the shell, found ${roots.length}`)
+  // Replacer functions throughout: a replacement string would expand `$&` or
+  // `$1` inside a title or URL as a substitution pattern.
   let html = shell
   if (title) {
-    html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeText(title)}</title>`)
-    html = html.replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${escapeAttr(title)}$2`)
+    html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${escapeText(title)}</title>`)
+    html = html.replace(/(<meta property="og:title" content=")[^"]*(")/, (_, open, close) => `${open}${escapeAttr(title)}${close}`)
   }
-  html = html.replace(/(<meta property="og:url" content=")[^"]*(")/, `$1${escapeAttr(url)}$2`)
+  html = html.replace(/(<meta property="og:url" content=")[^"]*(")/, (_, open, close) => `${open}${escapeAttr(url)}${close}`)
   html = html.replace(/[ \t]*<link rel="canonical"[^>]*>\r?\n?/, '')
-  html = html.replace('</head>', `  <link rel="canonical" href="${escapeAttr(url)}" />\n  </head>`)
+  html = html.replace('</head>', () => `  <link rel="canonical" href="${escapeAttr(url)}" />\n  </head>`)
   const content = rootHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
   return html.replace(/(<div id="root"[^>]*>)(<\/div>)/, (_, open, close) => `${open}${content}${close}`)
 }
