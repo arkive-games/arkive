@@ -1,0 +1,5 @@
+{
+  "zh-CN": { "name": "沉星之序", "desc": "查看区域、关卡入口与解锁关系", "feature": "互动地图 · 本地预览" },
+  "zh-TW": { "name": "沉星之序", "desc": "查看區域、關卡入口與解鎖關係", "feature": "互動地圖 · 本機預覽" },
+  "en-US": { "name": "Order of the Sinking Star", "desc": "Explore regions, puzzle entrances and prerequisites", "feature": "Interactive map · Local preview" }
+}

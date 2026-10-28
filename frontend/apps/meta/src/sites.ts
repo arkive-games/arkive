@@ -91,6 +91,15 @@ function resolveSiteUrl(envUrl: string | undefined, devUrl: string, productionUr
 
 export const SITES: SiteCard[] = [
   {
+    id: 'oss',
+    comingSoon: !import.meta.env.DEV,
+    url: import.meta.env.DEV ? 'http://localhost:15180' : undefined,
+    bg: '/oss-preview.svg',
+    nameKey: 'site.oss.name',
+    descKey: 'site.oss.desc',
+    featureKey: 'site.oss.feature',
+  },
+  {
     id: 'aion2',
     kind: 'online',
     menuTint: '#638bc8',
