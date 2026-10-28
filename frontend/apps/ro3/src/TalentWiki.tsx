@@ -7,7 +7,7 @@ import { GameText } from './components/GameText'
 import { LevelStepper } from './components/LevelStepper'
 import { stageEmblem } from './professionCatalog'
 import {
-  BOARD_ROWS,
+  BOARD_COLUMNS,
   classRow,
   cumulativeCosts,
   gateBranches,
@@ -202,12 +202,11 @@ export function TalentWiki() {
       {dataError ? <Notice>{content.wiki.dataError}</Notice> : !talents ? <Notice>{content.wiki.loading}</Notice> : mode === 'season' ? (
         tree ? (
           <SeasonBoard
-            key={tree.iId}
             talents={talents}
             treeId={tree.iId}
             tabs={tabs}
             tabsLabel={text.treeLabel}
-            chip={tree.iNeedLevel ? text.requiredLevel.replace('{level}', String(tree.iNeedLevel)) : undefined}
+            needLevel={tree.iNeedLevel}
             jobClass={jobClass}
             itemNames={itemNames}
           />
@@ -223,10 +222,9 @@ export function TalentWiki() {
  * A board under its own tabs, with the picked node's panel beside it on wide
  * screens -- so the detail is in view on arrival -- and under it below `lg`.
  */
-function BoardCard({ tabs, tabsLabel, chip, areaRef, board, detail }: {
+function BoardCard({ tabs, tabsLabel, areaRef, board, detail }: {
   tabs: ReactNode
   tabsLabel: string
-  chip?: string
   areaRef: RefObject<HTMLDivElement | null>
   board: ReactNode
   detail: ReactNode
@@ -235,9 +233,6 @@ function BoardCard({ tabs, tabsLabel, chip, areaRef, board, detail }: {
     <section className="rounded-lg border border-border bg-card">
       <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">
         <div role="group" aria-label={tabsLabel} className="flex min-w-0 overflow-x-auto [scrollbar-width:none]">{tabs}</div>
-        {chip ? (
-          <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-[color:var(--ro3-stage-solid)] px-2 text-xs font-bold leading-5 text-white">{chip}</span>
-        ) : null}
       </div>
       <div className="grid gap-2.5 p-2.5 md:p-3.5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-4">
         <div ref={areaRef} className="flex min-w-0 flex-col gap-2">{board}</div>
@@ -341,12 +336,12 @@ function useFit(cell: number) {
 }
 
 /** The tree in unlock order, with one panel beside it for the picked node. */
-function SeasonBoard({ talents, treeId, tabs, tabsLabel, chip, jobClass, itemNames }: {
+function SeasonBoard({ talents, treeId, tabs, tabsLabel, needLevel, jobClass, itemNames }: {
   talents: TalentCatalogDocument
   treeId: number
   tabs: ReactNode
   tabsLabel: string
-  chip?: string
+  needLevel?: number
   jobClass: TalentClass
   itemNames: Map<number, string>
 }) {
@@ -358,17 +353,28 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, chip, jobClass, itemNam
   // Nodes with no place on the board (the battle oath) still level up, so they get a row of their own.
   const loose = useMemo(() => nodes.filter((node) => node.iTalentTreeID === treeId && !node.kPosition && node.iType !== 6 && node.iType !== 7 && node.levels?.length), [nodes, treeId])
 
-  const [selectedId, setSelectedId] = useState<number>()
+  // The board stays mounted across trees, so a pick only holds on the tree it was made on.
+  const [picked, setPicked] = useState<{ treeId: number; nodeId: number }>()
+  const selectedId = picked?.treeId === treeId ? picked.nodeId : undefined
+  const setSelectedId = (nodeId: number) => setPicked({ treeId, nodeId })
   const [levelIndexes, setLevelIndexes] = useState<Record<number, number>>({})
   const selected = [...placed, ...loose].find((node) => node.iId === selectedId)
     ?? placed.find((node) => node.iIsStartPoint) ?? placed[0]
   const { panelRef, areaRef, pointerRef } = usePointer(`${selected?.iId}`)
 
-  // Laid out in unlock order rather than the game's scatter, as many to a row
-  // as the width takes, with the rows evened out so the last is not a stub.
+  // Laid out in unlock order rather than the game's scatter, the same number
+  // to a row on every tree. At full width the board is as tall as the largest
+  // tree, so switching trees does not move the page.
   const [boardRef, fit] = useFit(5)
-  const rowCount = Math.max(1, Math.ceil(placed.length / Math.max(1, fit || BOARD_ROWS)))
-  const columns = Math.max(1, Math.ceil(placed.length / rowCount))
+  const columns = Math.min(fit || BOARD_COLUMNS, BOARD_COLUMNS)
+  const ownRows = Math.max(1, Math.ceil(placed.length / columns))
+  const largest = useMemo(() => {
+    const counts = new Map<number | undefined, number>()
+    for (const node of nodes) if (node.kPosition?.length === 2) counts.set(node.iTalentTreeID, (counts.get(node.iTalentTreeID) ?? 0) + 1)
+    return Math.max(0, ...counts.values())
+  }, [nodes])
+  const boardRows = columns === BOARD_COLUMNS ? Math.max(ownRows, Math.ceil(largest / columns)) : ownRows
+  const rowCount = ownRows
   const cells = useMemo(() => seasonPath(placed, columns), [placed, columns])
   const pointById = new Map(cells.map(({ node, column, row }) => [node.iId, {
     x: (column + 0.5) / columns * 100,
@@ -380,15 +386,21 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, chip, jobClass, itemNam
     <BoardCard
       tabs={tabs}
       tabsLabel={tabsLabel}
-      chip={chip}
       areaRef={areaRef}
       board={(
         <>
-          <div ref={boardRef}>
-            <div
-              className="relative w-full rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)]"
-              style={{ height: `${rowCount * 5.5}rem` }}
-            >
+          <div
+            ref={boardRef}
+            className="relative flex flex-col justify-center rounded-lg bg-[linear-gradient(160deg,var(--ro3-stage-soft),transparent_60%)] pt-7"
+            style={{ minHeight: `${boardRows * 5.5 + 1.75}rem` }}
+          >
+            {needLevel ? (
+              <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-card/80 px-2 text-xs font-semibold leading-5 text-muted-foreground shadow-[0_0_0_1px_var(--border)]">
+                <LockKeyhole aria-hidden="true" className="size-3" />
+                {text.requiredLevel.replace('{level}', String(needLevel))}
+              </span>
+            ) : null}
+            <div className="relative w-full" style={{ height: `${rowCount * 5.5}rem` }}>
               <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 size-full">
                 {links.map(([from, to]) => {
                   const a = pointById.get(from.iId)!

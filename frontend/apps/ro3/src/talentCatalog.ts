@@ -25,8 +25,8 @@ export const TALENT_LINES: ReadonlyArray<{ lineId: string; classes: readonly Tal
   { lineId: 'merchant', classes: [{ stageId: 'blacksmith', jobId: 6400 }] },
 ]
 
-/** Nodes a season row holds before the board has been measured. */
-export const BOARD_ROWS = 4
+/** The most nodes a season row holds, the same on every tree. */
+export const BOARD_COLUMNS = 6
 
 /**
  * The season tree is one path from its start node. It is walked in order and
