@@ -26,20 +26,19 @@ initBaiduAnalytics({
 });
 router.subscribe("onResolved", () => trackPageview());
 
-const rootElement = document.getElementById("root")!;
-if (!rootElement.innerHTML) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      {/* Mounted unconditionally, with `enabled` doing the gating: mounting the
-          provider conditionally would change hook order between the Toy build
-          and the normal one. */}
-      <AuthProvider
-        baseUrl={AUTH_CONFIG.baseUrl}
-        transport={AUTH_CONFIG.transport}
-        enabled={AUTH_CONFIG.enabled}
-      >
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </React.StrictMode>,
-  );
-}
+// Always mount: a prerendered page arrives with #root already holding the
+// crawler snapshot, which the live app replaces.
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    {/* Mounted unconditionally, with `enabled` doing the gating: mounting the
+        provider conditionally would change hook order between the Toy build
+        and the normal one. */}
+    <AuthProvider
+      baseUrl={AUTH_CONFIG.baseUrl}
+      transport={AUTH_CONFIG.transport}
+      enabled={AUTH_CONFIG.enabled}
+    >
+      <RouterProvider router={router} />
+    </AuthProvider>
+  </React.StrictMode>,
+);

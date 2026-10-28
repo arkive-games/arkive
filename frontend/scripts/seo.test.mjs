@@ -62,6 +62,12 @@ describe("search engine discovery", () => {
         const config = JSON.parse(read(app, "edgeone.json"))
         expect(() => prerenderedConfig(config, sitemapPaths(read(app, "public/sitemap.xml")))).not.toThrow()
       })
+
+      // A prerendered page arrives with #root already filled, so an app that
+      // only mounts into an empty root never boots and is left as dead HTML.
+      it("mounts over a prerendered root", () => {
+        expect(read(app, "src/main.tsx")).not.toMatch(/if\s*\(\s*!\s*\w+\.innerHTML\s*\)/)
+      })
     })
   }
 })
