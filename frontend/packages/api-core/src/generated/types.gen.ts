@@ -145,7 +145,7 @@ export type CreatePostBody = {
     /**
      * Games this post is about
      */
-    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz'> | null;
+    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss'> | null;
     /**
      * Free-form tags
      */
@@ -1429,7 +1429,7 @@ export type UpdatePostBody = {
     /**
      * Replaces the whole list
      */
-    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz'>;
+    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss'>;
     /**
      * Replaces the whole list
      */
@@ -3893,7 +3893,7 @@ export type ListGameRolesData = {
         /**
          * The game whose staff to list
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
     };
     query?: never;
     url: '/roles/games/{game}';
@@ -3931,7 +3931,7 @@ export type RevokeGameRoleData = {
         /**
          * The game the role applies to
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
         /**
          * Public number of the account to remove
          */
@@ -3986,7 +3986,7 @@ export type GrantGameRoleData = {
         /**
          * The game the role applies to
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
         /**
          * Public number of the account to appoint
          */
