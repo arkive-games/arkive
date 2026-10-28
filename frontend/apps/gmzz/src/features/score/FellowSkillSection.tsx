@@ -36,7 +36,7 @@ export default function FellowSkillCalculator({
 }) {
   const { t } = useTranslation()
   const readOnly = useCharacterReadOnly()
-  const entries =useMemo(() => draft.fellows ?? [], [draft.fellows])
+  const entries = useMemo(() => draft.fellows ?? [], [draft.fellows])
   const stars = useMemo(() => starMap(entries), [entries])
   const skillLevel = clampSkillLevel(draft.puppetSkillLevel)
   const carried = carriedFellowSkill(entries, fellows, relations, draft.fellowSkillId, draft.fellowRelationId, skillLevel)
@@ -119,33 +119,45 @@ export default function FellowSkillCalculator({
 
 /**
  * A connection's stars: 有/无 toggles owned, then one click per star. Clicking
- * the lit top star steps it down one.
+ * the lit top star steps it down one. Phones get a −/+ stepper over the same
+ * scale instead (无, then 0-5★), since five 24px stars do not fit a card; CSS
+ * shows one or the other.
  */
 function StarPicker({ star, name, testId, onChange }: {
   star: number | undefined; name: string; testId: string; onChange: (star: number | null) => void
 }) {
   const { t } = useTranslation()
   const owned = star !== undefined
+  const label = t('bonds.fellowStarFor', { name })
   return (
-    <span className="gz-stars" role="group" aria-label={t('bonds.fellowStarFor', { name })} data-testid={testId}
-      data-star={owned ? star : 'none'}>
-      <button type="button" className={`own ${owned ? 'on' : ''}`} aria-pressed={owned}
-        aria-label={t(owned ? 'bonds.fellowSetUnowned' : 'bonds.fellowSetOwned', { name })}
-        onClick={() => onChange(owned ? null : 0)} data-testid={`${testId}-own`}>
-        {t(owned ? 'bonds.fellowOwned' : 'bonds.fellowUnowned')}
-      </button>
-      {Array.from({ length: MAX_FELLOW_STAR }, (_, index) => {
-        const value = index + 1
-        const lit = owned && value <= star
-        return (
-          <button key={value} type="button" className={lit ? 'on' : ''} aria-label={t('bonds.fellowStar', { star: value })}
-            aria-pressed={owned && star === value}
-            onClick={() => onChange(owned && star === value ? value - 1 : value)}
-            data-testid={`${testId}-${value}`}>
-            ★
-          </button>
-        )
-      })}
-    </span>
+    <>
+      <span className="gz-mini gz-starstep" role="group" aria-label={label} data-testid={`${testId}-step`}>
+        <button type="button" disabled={!owned} onClick={() => onChange(star ? star - 1 : null)}
+          aria-label={t('score.stepDown', { name: label })} data-testid={`${testId}-step-down`}>−</button>
+        <span className={owned ? 'on' : ''}>{owned ? t('bonds.fellowStar', { star }) : t('bonds.fellowUnowned')}</span>
+        <button type="button" disabled={owned && star >= MAX_FELLOW_STAR} onClick={() => onChange(owned ? star + 1 : 0)}
+          aria-label={t('score.stepUp', { name: label })} data-testid={`${testId}-step-up`}>+</button>
+      </span>
+      <span className="gz-stars" role="group" aria-label={label} data-testid={testId}
+        data-star={owned ? star : 'none'}>
+        <button type="button" className={`own ${owned ? 'on' : ''}`} aria-pressed={owned}
+          aria-label={t(owned ? 'bonds.fellowSetUnowned' : 'bonds.fellowSetOwned', { name })}
+          onClick={() => onChange(owned ? null : 0)} data-testid={`${testId}-own`}>
+          {t(owned ? 'bonds.fellowOwned' : 'bonds.fellowUnowned')}
+        </button>
+        {Array.from({ length: MAX_FELLOW_STAR }, (_, index) => {
+          const value = index + 1
+          const lit = owned && value <= star
+          return (
+            <button key={value} type="button" className={lit ? 'on' : ''} aria-label={t('bonds.fellowStar', { star: value })}
+              aria-pressed={owned && star === value}
+              onClick={() => onChange(owned && star === value ? value - 1 : value)}
+              data-testid={`${testId}-${value}`}>
+              ★
+            </button>
+          )
+        })}
+      </span>
+    </>
   )
 }
