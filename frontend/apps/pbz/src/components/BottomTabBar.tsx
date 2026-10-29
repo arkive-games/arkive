@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { History, Home, Menu } from 'lucide-react'
+import { History, Map as MapIcon, Menu } from 'lucide-react'
 import { ShellBottomNav } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SiteInfo } from './SiteInfo'
@@ -20,7 +20,7 @@ export function BottomTabBar() {
   const active = activeKey(pathname)
 
   const tabs = [
-    { key: '/', label: t('nav.home'), icon: <Home className="size-5" strokeWidth={1.8} /> },
+    { key: '/', label: t('nav.map'), icon: <MapIcon className="size-5" strokeWidth={1.8} /> },
   ]
 
   return (

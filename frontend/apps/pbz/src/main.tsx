@@ -2,16 +2,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
-import { createArkiveThemeStorage } from '@gamemap/ui'
 import { initBaiduAnalytics, ThemeProvider, trackPageview } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import './i18n'
-import HomePage from './features/home/HomePage'
+import MapPage from './features/map/MapPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { BottomTabBar } from './components/BottomTabBar'
-
-const themeStorage = createArkiveThemeStorage()
+import { initDataVersion } from './lib/urls'
+import { themeStorage } from './lib/storage'
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -22,10 +21,21 @@ const rootRoute = createRootRoute({
   ),
 })
 
-const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: HomePage })
+export interface MapSearch {
+  /** Prefill the marker search box. */
+  q?: string
+}
+const mapRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  validateSearch: (s: Record<string, unknown>): MapSearch => ({
+    q: typeof s.q === 'string' ? s.q : undefined,
+  }),
+  component: MapPage,
+})
 const changelogRoute = createRoute({ getParentRoute: () => rootRoute, path: '/changelog', component: ChangelogPage })
 
-const routeTree = rootRoute.addChildren([homeRoute, changelogRoute])
+const routeTree = rootRoute.addChildren([mapRoute, changelogRoute])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
 declare module '@tanstack/react-router' {
@@ -40,10 +50,10 @@ initBaiduAnalytics({
 })
 router.subscribe('onResolved', () => trackPageview())
 
-// No data artifact is fetched yet: data-pbz does not exist until the first
-// extraction lands. When it does, resolve its version.json before first render
-// the way the other games do (initDataVersion in their lib/urls.ts).
-createRoot(document.getElementById('root')!).render(
+// Resolve the data-artifact version before first render so every data fetch
+// carries its ?v= cache-buster (initDataVersion never rejects and times out
+// internally, so a slow data host can't block the app).
+void initDataVersion().then(() => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="auto" storage={themeStorage}>
       {/* Mounted unconditionally, with `enabled` doing the gating: mounting
@@ -58,4 +68,4 @@ createRoot(document.getElementById('root')!).render(
       </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
-)
+))

@@ -9,7 +9,7 @@ import { useSettingsConfig } from '../lib/settings'
 export type NavKey = '/' | '/changelog'
 
 const ITEMS: { key: NavKey; labelKey: string }[] = [
-  { key: '/', labelKey: 'nav.home' },
+  { key: '/', labelKey: 'nav.map' },
 ]
 
 export function TopNav({ active }: { active: NavKey }) {
