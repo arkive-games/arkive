@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..common import read_json, write_json
-from ..locres import read_locres
+from ..locres import read_culture
 from . import placements as placed
 from .projection import AnchorProjection, anchors_from_asset
 
@@ -190,7 +190,7 @@ def area_textures(raw: Path) -> dict[str, str]:
 def load_text(raw: Path) -> dict[str, dict[str, str]]:
     """``{site locale: {key: text}}`` from the game's ``Default`` namespace."""
     return {
-        lng: read_locres(raw / LOCALIZATION_DIR / culture / "Game.locres").get("Default", {})
+        lng: read_culture(raw / LOCALIZATION_DIR / culture).get("Default", {})
         for lng, culture in CULTURES.items()
     }
 

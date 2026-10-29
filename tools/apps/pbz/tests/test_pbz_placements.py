@@ -89,3 +89,11 @@ def test_scan_follows_root_components_and_attach_parents():
     assert scan_cell(exports) == [
         {"actor": "Jar", "type": "BP_Rubbish_C", "loc": [101.0, 202.0, 303.0], "loot": "Xigu.R_01017"},
     ]
+
+
+def test_culture_text_prefers_the_decoded_json(tmp_path):
+    import json
+
+    from pbz.locres import read_culture
+    (tmp_path / "Game.json").write_text(json.dumps({"Default": {"k": "文"}}, ensure_ascii=False), encoding="utf-8")
+    assert read_culture(tmp_path) == {"Default": {"k": "文"}}

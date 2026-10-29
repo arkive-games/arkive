@@ -1,6 +1,8 @@
 """Reader for Unreal ``.locres`` localization tables (versions 1-3).
 
-``uex export`` copies them raw, so this is the only decoder in the pipeline.
+Older ``uex export`` builds copied them raw; since uex 2682a36 the export
+writes the decoded table as ``Game.json`` instead. ``read_culture`` takes
+whichever of the two a raw root holds.
 Layout: a 16-byte magic, a version byte, the offset of a deduplicated string
 table, then namespaces -> keys -> string-table index. Versions 2+ carry a
 key hash and a string refcount, which are skipped; version 0 (no magic) is
@@ -9,6 +11,7 @@ not handled because nothing this game ships uses it.
 
 from __future__ import annotations
 
+import json
 import struct
 from pathlib import Path
 
@@ -69,3 +72,12 @@ def read_locres(path: Path) -> dict[str, dict[str, str]]:
             r.unpack("<I")  # source string hash
             table[key] = strings[r.unpack("<i")]
     return out
+
+
+def read_culture(culture_dir: Path, table: str = "Game") -> dict[str, dict[str, str]]:
+    """``{namespace: {key: text}}`` for one culture directory: uex's decoded
+    ``<table>.json`` when present, else the raw ``<table>.locres``."""
+    decoded = Path(culture_dir) / f"{table}.json"
+    if decoded.is_file():
+        return json.loads(decoded.read_text(encoding="utf-8"))
+    return read_locres(Path(culture_dir) / f"{table}.locres")
