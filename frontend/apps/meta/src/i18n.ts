@@ -645,6 +645,11 @@ const resources = {
           desc: '卡牌图鉴、角色资料与构筑知识',
           feature: '查看卡牌与角色，整理下一次登塔思路。',
         },
+        pbz: {
+          name: '影之刃零',
+          desc: '全区域互动地图',
+          feature: '找齐每个区域的铃铛、收集品、材料与首领。',
+        },
         gmzz: {
           name: '诡秘之主',
           desc: '乌托邦百科、互动地图与实用工具',
@@ -774,6 +779,7 @@ const resources = {
         vrising: { name: '夜族崛起', desc: '瓦爾多蘭互動地圖與區域資料', feature: '追蹤區域、資源與瓦爾多蘭的探索路線。' },
         ro3: { name: '仙境傳說3', desc: '仙境傳說3 技能、副本與職業資料', feature: '查詢技能、副本與職業資料。' },
         sts2: { name: '殺戮尖塔2', desc: '卡牌圖鑑、角色資料與構築知識', feature: '查看卡牌與角色，整理下一次登塔思路。' },
+        pbz: { name: '影之刃零', desc: '全區域互動地圖', feature: '找齊每個區域的鈴鐺、收集品、材料與首領。' },
         gmzz: { name: '詭秘之主', desc: '烏托邦百科、互動地圖與實用工具', feature: '從烏托邦劇院開始，整理每一層的記憶碎片。' },
       },
       comingSoon: {
@@ -888,6 +894,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: 'Vardoran interactive map and region guide', feature: 'Track regions, resources, and routes across Vardoran.' },
         ro3: { name: 'Ragnarok Online 3', desc: 'Skills, dungeons and jobs for Ragnarok Online 3', feature: 'Look up skills, dungeons and job data.' },
         sts2: { name: 'Slay the Spire 2', desc: 'Card library, characters, and deckbuilding knowledge', feature: 'Study cards and characters before your next climb.' },
+        pbz: { name: 'Phantom Blade Zero', desc: 'Interactive maps of every area', feature: 'Find every bell, collectible, material and boss in each area.' },
         gmzz: { name: 'Lord of Mysteries', desc: 'Utopia encyclopedia, interactive maps, and tools', feature: 'Start with Utopia Theater and collect every memory fragment.' },
       },
       comingSoon: {
@@ -998,6 +1005,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: 'ヴァルドランのインタラクティブマップと地域情報', feature: '地域、資源、探索ルートを確認できます。' },
         ro3: { name: 'ラグナロクオンライン3', desc: 'ラグナロクオンライン3 のスキル・ダンジョン・職業情報', feature: 'スキル、ダンジョン、職業データを確認できます。' },
         sts2: { name: 'Slay the Spire 2', desc: 'カード図鑑、キャラクター、デッキ構築情報', feature: '次の登頂に向けてカードとキャラクターを確認できます。' },
+        pbz: { name: 'ファントムブレード ゼロ', desc: '全エリアのインタラクティブマップ', feature: '各エリアの鐘、収集品、素材、ボスを探せます。' },
         gmzz: { name: 'Lord of Mysteries', desc: 'ユートピア百科、インタラクティブマップ、ツール', feature: 'ユートピア劇場から始め、各階の記憶の欠片を整理します。' },
       },
       comingSoon: { title: 'さらに多くのゲームを制作中', badge: '近日公開' },
@@ -1105,6 +1113,7 @@ const resources = {
         vrising: { name: 'V Rising', desc: '바르도란 인터랙티브 지도와 지역 정보', feature: '바르도란의 지역과 자원, 탐험 경로를 확인하세요.' },
         ro3: { name: '라그나로크 온라인 3', desc: '라그나로크 온라인 3 스킬, 던전, 직업 정보', feature: '스킬과 던전, 직업 데이터를 확인하세요.' },
         sts2: { name: 'Slay the Spire 2', desc: '카드 도감, 캐릭터, 덱 구성 정보', feature: '다음 등반을 위해 카드와 캐릭터를 살펴보세요.' },
+        pbz: { name: '팬텀 블레이드 제로', desc: '모든 지역의 인터랙티브 지도', feature: '지역마다 종, 수집품, 재료, 보스를 찾아보세요.' },
         gmzz: { name: 'Lord of Mysteries', desc: '유토피아 백과, 인터랙티브 지도와 도구', feature: '유토피아 극장에서 시작해 각 층의 기억 조각을 정리하세요.' },
       },
       comingSoon: { title: '더 많은 게임을 제작하고 있어요', badge: '출시 예정' },

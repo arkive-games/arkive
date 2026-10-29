@@ -16,6 +16,7 @@ const TARGET_KEYS: Record<PlatformTarget, string> = {
   aion2: 'site.aion2.name',
   gmzz: 'site.gmzz.name',
   palworld: 'site.palworld.name',
+  pbz: 'site.pbz.name',
   ro3: 'site.ro3.name',
   sts2: 'site.sts2.name',
   vrising: 'site.vrising.name',
