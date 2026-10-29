@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.29.2",
+      "date": "2026-10-29",
+      "commit": "b8d25e084e1b07000dbe095cd40fa71d89cb0083",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Score calculator: equipment cards show the game's own PVE and PVP marks and put each piece's score on its title line with a breakdown on hover; relic rare-word effects appear under the affixes; relic knowledge past the role cap counts as divinity; score tooltips read in plain Chinese",
+            "zh-CN": "评分计算器：装备卡片使用游戏自带的副本/竞技图标，分数与标题行对齐，悬停可查看基础、强化、重塑分；封印物稀有词条效果显示在词条下方；超过扮演等级上限的非凡知识按神性等级计算；评分提示改为纯中文表述",
+            "zh-TW": "評分計算器：裝備卡片使用遊戲自帶的副本/競技圖示，分數與標題行對齊，懸停可查看基礎、強化、重塑分；封印物稀有詞條效果顯示在詞條下方；超過扮演等級上限的非凡知識按神性等級計算；評分提示改為純中文表述"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.29.1",
       "date": "2026-10-29",
       "commit": "b0bdab2dc5851cfdd005aee618ab37ff35c3c2fa",
