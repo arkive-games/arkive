@@ -1305,7 +1305,7 @@ const zhCN: Strings = {
     "aggregateNote": "客户端只定义了单项百分比，分组与总体完成度因此由各单项取平均——某一项拉满不会替另一项补分。合计一栏只是各项推算分数的加总；游戏自己的非凡评分是另一个服务器数值，并没有说明它等于各项之和。",
     "derivedScore": "推算分数",
     "equipmentHint": "四项均由下方装备推算：填入当前穿戴的装备即得各项分数，与面板数字应逐一吻合。",
-    "relicsHint": "三项均由下方封印物推算：装配为等级 Mark × k2，共鸣为阶梯 Mark × k1，词条为词条 Mark × k2。",
+    "relicsHint": "三项均由下方封印物推算：装配为等级评分 × k2，共鸣为阶梯评分 × k1，词条为词条评分 × k2。",
     "sectionUnavailable": "该分组所需的数据暂未加载。"
   },
   pathway: {
@@ -1384,7 +1384,7 @@ const zhCN: Strings = {
     "slots": "上阵位数量",
     "dominated": "已上阵 {{used}}/{{slots}}",
     "dominate": "上阵",
-    "formula": "算法与游戏上阵界面的预览一致：每只秘偶的属性天赋 Mark 之和，上阵的按 ×{{inRate}} 计，未上阵的按 ×{{outRate}} 计，总和四舍五入。仅属性天赋计分，工坊与游历天赋不计。",
+    "formula": "算法与游戏上阵界面的预览一致：每只秘偶的属性天赋评分之和，上阵的按 ×{{inRate}} 计，未上阵的按 ×{{outRate}} 计，总和四舍五入。仅属性天赋计分，工坊与游历天赋不计。",
     "rank": "研究段位",
     "rankNextLabel": "下一段位",
     "rankNextPoints": "累计 {{points}} 点研究",
@@ -2104,7 +2104,7 @@ const zhTW: Strings = {
     "aggregateNote": "客戶端只定義了單項百分比，分組與總體完成度因此由各單項取平均——某一項拉滿不會替另一項補分。合計一欄只是各項推算分數的加總；遊戲自己的非凡評分是另一個伺服器數值，並沒有說明它等於各項之和。",
     "derivedScore": "推算分數",
     "equipmentHint": "四項均由下方裝備推算：填入目前穿戴的裝備即得各項分數，與面板數字應逐一吻合。",
-    "relicsHint": "三項均由下方封印物推算：裝配為等級 Mark × k2，共鳴為階梯 Mark × k1，詞條為詞條 Mark × k2。",
+    "relicsHint": "三項均由下方封印物推算：裝配為等級評分 × k2，共鳴為階梯評分 × k1，詞條為詞條評分 × k2。",
     "sectionUnavailable": "該分組所需的資料尚未載入。"
   },
   pathway: {
@@ -2183,7 +2183,7 @@ const zhTW: Strings = {
     "slots": "上陣位數量",
     "dominated": "已上陣 {{used}}/{{slots}}",
     "dominate": "上陣",
-    "formula": "演算法與遊戲上陣介面的預覽一致：每隻秘偶的屬性天賦 Mark 之和，上陣的按 ×{{inRate}} 計，未上陣的按 ×{{outRate}} 計，總和四捨五入。僅屬性天賦計分，工坊與遊歷天賦不計。",
+    "formula": "演算法與遊戲上陣介面的預覽一致：每隻秘偶的屬性天賦評分之和，上陣的按 ×{{inRate}} 計，未上陣的按 ×{{outRate}} 計，總和四捨五入。僅屬性天賦計分，工坊與遊歷天賦不計。",
     "rank": "研究段位",
     "rankNextLabel": "下一段位",
     "rankNextPoints": "累計 {{points}} 點研究",
