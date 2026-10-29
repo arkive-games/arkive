@@ -5,7 +5,7 @@ import { Notice } from './components/wiki'
 import { HeaderAction } from './components/SectionNav'
 import { GameText } from './components/GameText'
 import { LevelStepper } from './components/LevelStepper'
-import { Badge, DetailPanel, UnderlineTab } from './components/Board'
+import { Badge, CostList, DetailPanel, UnderlineTab, ValueList } from './components/Board'
 import { useFit, usePointer } from './components/boardHooks'
 import {
   cardFrameVariant,
@@ -454,13 +454,13 @@ function CardDetail({ card, data, collection, index, onIndex }: {
   const ownEffects = effects(tier.specialEffects)
   const flashEffects = effects(flash?.specialEffects ?? [])
 
-  // One order of weight, top down: the name, the power it adds, then the
-  // quieter detail, each block under the same small heading.
+  // The talent panel's pieces, in one order of weight: the name, the power on
+  // the white list card, the attributes on another, then the dashed-off rest.
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="flex flex-col gap-3">
       <div className="flex items-start gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h3 className="text-xl font-bold leading-tight">{localizedText(card.name)}</h3>
+          <h3 className="text-base font-bold leading-tight md:text-lg">{localizedText(card.name)}</h3>
           <div className="flex flex-wrap gap-1.5">
             <Badge>
               <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: QUALITY_COLORS[card.quality] }} />
@@ -484,39 +484,22 @@ function CardDetail({ card, data, collection, index, onIndex }: {
         ) : null}
       </div>
 
-      <dl className={cn('grid gap-px overflow-hidden rounded-lg bg-border shadow-[0_0_0_1px_var(--border)]', powers.length > 1 && 'grid-cols-2')}>
+      {/* Same white card and stage colour as the attribute list, only the number set larger. */}
+      <dl className={cn('grid divide-x divide-border rounded-lg bg-card shadow-[0_0_0_1px_var(--border)]', powers.length > 1 && 'grid-cols-2')}>
         {powers.map(([label, value]) => (
-          <div key={label} className="flex flex-col gap-0.5 bg-card px-3 py-2">
-            <dt className="text-xs font-semibold text-muted-foreground">{label}</dt>
-            <dd className="text-2xl font-extrabold leading-none tabular-nums text-[color:var(--ro3-stage)]">{value.toLocaleString('zh-CN')}</dd>
+          <div key={label} className="flex items-baseline justify-between gap-2 px-3 py-2">
+            <dt className="text-sm text-foreground/80">{label}</dt>
+            <dd className="text-xl font-bold tabular-nums text-[color:var(--ro3-stage)]">{value.toLocaleString('zh-CN')}</dd>
           </div>
         ))}
       </dl>
 
-      {attributes.length > 0 ? (
-        <DetailSection label={text.attributesTitle}>
-          <dl className="grid grid-cols-2 gap-1">
-            {attributes.map(([name, value]) => (
-              <div key={name} className="flex items-baseline justify-between gap-2 rounded-md bg-card/70 px-2.5 py-1.5">
-                <dt className="min-w-0 text-sm leading-snug text-foreground/75">{name}</dt>
-                <dd className="shrink-0 text-sm font-bold tabular-nums">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </DetailSection>
-      ) : null}
+      {attributes.length > 0 ? <ValueList label={text.attributesTitle} rows={attributes} /> : null}
 
       {at < last && needs.length > 0 ? (
-        <DetailSection label={text.nextTier}>
-          <ul className="flex flex-wrap gap-1">
-            {needs.map(([name, value]) => (
-              <li key={name} className="flex items-baseline gap-1.5 rounded-md bg-card/70 px-2.5 py-1.5 text-sm">
-                <span className="text-foreground/75">{name}</span>
-                <span className="font-bold tabular-nums">{value}</span>
-              </li>
-            ))}
-          </ul>
-        </DetailSection>
+        <div className="border-t border-dashed border-border pt-2.5">
+          <CostList label={text.nextTier} rows={needs} />
+        </div>
       ) : null}
 
       <EffectList label={text.specialEffects} effects={ownEffects} />
@@ -525,28 +508,15 @@ function CardDetail({ card, data, collection, index, onIndex }: {
   )
 }
 
-function DetailSection({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-1.5">
-      <h4 className="text-xs font-semibold text-muted-foreground">{label}</h4>
-      {children}
-    </section>
-  )
-}
-
 function EffectList({ label, effects }: { label: string; effects: ReadonlyArray<readonly [number, string]> }) {
   if (effects.length === 0) return null
   return (
-    <DetailSection label={label}>
+    <section className="flex flex-col gap-1 border-t border-dashed border-border pt-2.5">
+      <h4 className="text-xs font-semibold text-muted-foreground">{label}</h4>
       {effects.map(([id, description]) => (
-        <p
-          key={id}
-          className="whitespace-pre-line rounded-md bg-card/70 px-2.5 py-1.5 text-sm leading-relaxed text-foreground/85"
-        >
-          <GameText value={description} />
-        </p>
+        <p key={id} className="whitespace-pre-line text-sm leading-relaxed text-foreground/80"><GameText value={description} /></p>
       ))}
-    </DetailSection>
+    </section>
   )
 }
 
