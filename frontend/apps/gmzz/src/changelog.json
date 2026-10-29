@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.29.1",
+      "date": "2026-10-29",
+      "commit": "b0bdab2dc5851cfdd005aee618ab37ff35c3c2fa",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Station planner: Beginner to Hard now take each area's station mix as the game shows it, and rule out two stops of the same type in a row.",
+            "zh-CN": "铁路站点推演：新手至困难改为按区域填写站点构成，并排除相邻两站同类的情况。",
+            "zh-TW": "鐵路站點推演：新手至困難改為按區域填寫站點構成，並排除相鄰兩站同類的情況。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.29.0",
       "date": "2026-10-29",
       "commit": "ce6e18d67c2a52dae70e5263ff71f098a452477e",
