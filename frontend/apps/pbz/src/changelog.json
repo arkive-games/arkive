@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.3.0",
+      "date": "2026-10-30",
+      "commit": "4d90fee86e5aff9f0ab4252f2520e84a9309498f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Map: Phantom Edge barriers (with the edge each needs), locked and one-way doors, quest objectives, NPCs, area exits and Challenge Locations.",
+            "zh-CN": "地图新增：影之武装地形（标明所需影之武装）、上锁与反锁的门、任务目标、人物、区域出口与挑战地点。",
+            "zh-TW": "地圖新增：影之武裝地形（標明所需影之武裝）、上鎖與反鎖的門、任務目標、人物、區域出口與挑戰地點。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-10-30",
       "commit": "70102a43aba4e46f95decd2c28743f2ec826cdd2",

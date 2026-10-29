@@ -1,6 +1,23 @@
 {
   "entries": [
     {
+      "date": "2026-10-30",
+      "commit": "7d9acf45af77249aa51d66f6d9c3cf8576740e0f",
+      "targets": [
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "The Phantom Blade Zero guide is open: the homepage links straight to it.",
+            "zh-CN": "影之刃零攻略站已开放，首页可直接进入。",
+            "zh-TW": "影之刃零攻略站已開放，首頁可直接進入。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-28",
       "commit": "ee783ad27a3f21353040799bba6ca7a58b62c9ad",
       "targets": [
