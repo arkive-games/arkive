@@ -1,3 +1,19 @@
 {
-  "entries": []
+  "entries": [
+    {
+      "version": "0.1.0",
+      "date": "2026-10-29",
+      "commit": "dae2bb4e42f03bb68c378cdc00eb340110ababba",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Phantom Blade Zero site launched.",
+            "zh-CN": "影之刃零攻略站上线。",
+            "zh-TW": "影之刃零攻略站上線。"
+          }
+        }
+      ]
+    }
+  ]
 }
