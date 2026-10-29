@@ -48,7 +48,8 @@ export type SearchPanelProps = {
   onFlyTo: (pos: { x: number; y: number }) => void
   labels: SearchPanelLabels
   debounceMs?: number
-  classNames?: { root?: string }
+  /** `icon` styles each result's icon, e.g. a backdrop for white silhouettes. */
+  classNames?: { root?: string; icon?: string }
   /**
    * "floating" (default): the desktop right-side absolute overlay.
    * "inline": fills its container (used inside a mobile bottom sheet).
@@ -387,7 +388,7 @@ export function SearchPanel({
                           <img
                             src={item.iconUrl}
                             alt=""
-                            className="size-[18px] shrink-0 object-contain"
+                            className={cn("size-[18px] shrink-0 object-contain", classNames?.icon)}
                           />
                         )}
                         {item.idLabel && (
