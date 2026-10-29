@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.29.0",
+      "date": "2026-10-29",
+      "commit": "ce6e18d67c2a52dae70e5263ff71f098a452477e",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Redesigned the station planner: enter the route's station mix yourself (the origin isn't counted), pick each stop and the next-three hint in one panel, and see odds for the next five stops; the stop track scrolls on phones.",
+            "zh-CN": "重做站点推演：站点构成改为自行填写（不含始发站），每站的站点类型和「未来三站」提示在同一面板里选择，概率一次展示 5 站；手机上站点条可左右滑动。",
+            "zh-TW": "重做站點推演：站點構成改為自行填寫（不含始發站），每站的站點類型和「未來三站」提示在同一面板裡選擇，機率一次展示 5 站；手機上站點條可左右滑動。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.28.1",
       "date": "2026-10-29",
       "commit": "efbf376f2620198370dc85bafbff91258ed58888",
