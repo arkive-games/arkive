@@ -115,12 +115,13 @@ export function DialogHead({ title }: { title: string }) {
  * end unless the dialog shows it elsewhere. It stands in for a separate title
  * row, so it carries the dialog title.
  */
-export function ItemHead({ icon, title, sub, scoreLabel, score, scoreTestId, swapLabel, swapTestId, onSwap }: {
+export function ItemHead({ icon, title, sub, scoreLabel, score, scoreTip, scoreTestId, swapLabel, swapTestId, onSwap }: {
   icon: ReactNode
   title: ReactNode
   sub: ReactNode
   scoreLabel?: string
   score?: string
+  scoreTip?: ReactNode
   scoreTestId?: string
   swapLabel: string
   swapTestId: string
@@ -136,11 +137,18 @@ export function ItemHead({ icon, title, sub, scoreLabel, score, scoreTestId, swa
         <DialogTitle asChild><h3>{title}</h3></DialogTitle>
         <small>{sub}</small>
       </div>
-      {score === undefined ? null : (
+      {score === undefined ? null : scoreTip === undefined ? (
         <span className="s">
           <small>{scoreLabel}</small>
           <b className="num" data-testid={scoreTestId}>{score}</b>
         </span>
+      ) : (
+        <TipOn content={scoreTip}>
+          <span className="s" tabIndex={0}>
+            <small className="gz-hov">{scoreLabel}</small>
+            <b className="num" data-testid={scoreTestId}>{score}</b>
+          </span>
+        </TipOn>
       )}
     </div>
   )
@@ -388,7 +396,10 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
           {item ? <span className="gz-rf num">({clampRefine(state.refinePercent)}%)</span> : null}
         </b>
       </span>
-      <span className="s num" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
+      {/* Hover only: the card is itself the button that opens the dialog. */}
+      <TipOn content={t('equip.pieceBreakdown', { base: result.baseScore.toLocaleString(), enhance: result.enhanceScore.toLocaleString(), reforge: result.reforgeScore.toLocaleString(), total: result.total.toLocaleString() })}>
+        <span className="s num gz-hov" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
+      </TipOn>
       {item ? (
         <span className="tags">
           {rolled.length > 0 ? (
@@ -533,26 +544,21 @@ function PieceDialog({ equipment, graces, slotName, kind, result, readOnly, prof
           icon={<IconTile quality={item.quality} src={equipmentIconUrl(item.icon)} alt="" className="ic" />}
           title={<>{slotName} · {item.name} <StageMark stage={state.enhanceStage} /></>}
           sub={<>{t('equip.pickerDetail', { level: item.gearLevel ?? '—', quality: item.quality })}<KindMark kind={kind} withLabel /></>}
+          scoreLabel={t('equip.pieceScoreLabel')}
+          score={n(result.total)}
+          scoreTip={t('equip.pieceBreakdown', { base: n(result.baseScore), enhance: n(result.enhanceScore), reforge: n(result.reforgeScore), total: n(result.total) })}
+          scoreTestId={`equip-score-${slot}`}
           swapLabel={picking ? t('equip.collapse') : t('equip.swap')}
           swapTestId={`equip-open-picker-${slot}`}
           onSwap={() => setPicking((open) => !open)}
         />
-        {/* The base stats and the piece's score share one line, aligned at the foot. */}
-        <div className="gz-statrow">
-          <div className="gz-stats" data-testid={`equip-stats-${slot}`}>
-            {lines.map((line) => (
-              <span key={line.key}>
-                {line.label} <b className="num">{rangeText(line.base)}</b>
-                {line.gain.max > 0 ? ` +${rangeText(line.gain)}` : null}
-              </span>
-            ))}
-          </div>
-          <TipOn content={t('equip.pieceBreakdown', { base: n(result.baseScore), enhance: n(result.enhanceScore), reforge: n(result.reforgeScore), total: n(result.total) })}>
-            <span className="gz-escore" tabIndex={0}>
-              <small className="gz-hov">{t('equip.pieceScoreLabel')}</small>
-              <b className="num" data-testid={`equip-score-${slot}`}>{n(result.total)}</b>
+        <div className="gz-stats" data-testid={`equip-stats-${slot}`}>
+          {lines.map((line) => (
+            <span key={line.key}>
+              {line.label} <b className="num">{rangeText(line.base)}</b>
+              {line.gain.max > 0 ? ` +${rangeText(line.gain)}` : null}
             </span>
-          </TipOn>
+          ))}
         </div>
         {/* The three scores the piece adds up to, each with how it is worked out. */}
         <div className="gz-kv gz-eqkv" data-testid={`equip-reforge-${slot}`}>
@@ -653,9 +659,6 @@ function suitScoreLines(t: TFunction, equipment: Equipment, entry: SuitScore | n
     return `${t('equip.suitPieces', { pieces: effect.pieces })}：${line}`
   }).join('\n')
 }
-
-/** A suit's short name, its kind as the game tags it: 冒险 or 竞技. */
-const suitShort = (suit: SuitScore['suit']) => suit.tag?.replace(/套装$/, '') || suit.name
 
 /**
  * 统一强化: sets every piece's stage and refinement at once. The sliders are
@@ -781,12 +784,6 @@ export default function EquipmentSection({
         <h3>{t('equip.worn')}</h3>
         <span className="meta">{t('equip.slotHint')}</span>
         <div className="acts">
-          {/* The loadout's total, split into the game's four parts on hover. */}
-          <TipOn content={t('equip.totalBreakdown', { base: n(base), enhance: n(enhance), reforge: n(reforge), suit: n(suit) })}>
-            <span className="gz-eqtotal" tabIndex={0} data-testid="equip-totals">
-              <span className="gz-hov">{t('equip.totalScore')}</span> <b className="num">{n(total)}</b>
-            </span>
-          </TipOn>
           <Dialog>
             <DialogTrigger asChild>
               <button type="button" disabled={readOnly} className="gz-chip" data-testid="equip-batch-open">
@@ -853,10 +850,7 @@ export default function EquipmentSection({
                       data-testid={`equip-suit-${entry.suit.id}`}
                       data-chosen={chosen}
                     >
-                      {/* The kind and score; the suit's full name and pieces worn are the tooltip. */}
-                      <TipOn content={t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}>
-                        <span className="gz-hov">{suitShort(entry.suit)}</span>
-                      </TipOn>
+                      {t('equip.suitActive', { name: entry.suit.fullName || entry.suit.name, pieces: entry.count })}
                       <small className="num">{n(entry.total)}</small>
                     </button>
                   </span>

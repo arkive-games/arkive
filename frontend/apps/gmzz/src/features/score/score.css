@@ -464,10 +464,8 @@ select.gz-select {
 .gz-dlg .sub .r { margin-left: auto; }
 .gz-dlg .sub .gz-chip { height: 1.75rem; padding: 0 .75rem; }
 .gz-dlg .badge { padding: .125rem .5625rem; border-radius: 999px; background: var(--gz-well); font-size: .75rem; font-weight: 700; color: var(--gz-sub); white-space: nowrap; }
-/* The dialog's head: icon (更换 along its foot), slot · name, and the score on
-   the head's foot at its right edge, in line with the rows below. The shared
-   close button keeps the corner above the score; the title's right padding
-   keeps it clear of that button too. */
+/* The dialog's head: icon (更换 along its foot), slot · name, and the score in
+   the top-right corner, left of the shared close button. */
 .gz-ehead { display: flex; align-items: flex-end; gap: .875rem; min-width: 0; }
 .gz-eic { position: relative; flex: none; width: 4rem; height: 4rem; border-radius: .875rem; overflow: hidden; }
 .gz-eic .ic { width: 100%; height: 100%; border: 0; border-radius: 0; padding: .25rem .25rem 1rem; }
@@ -481,7 +479,8 @@ select.gz-select {
 .gz-ehead .t { flex: 1; min-width: 0; align-self: center; }
 .gz-ehead .t h3 { margin: 0; font-size: 1.125rem; line-height: 1.35; font-weight: 800; text-align: left; overflow-wrap: anywhere; }
 .gz-ehead .t small { display: flex; align-items: center; flex-wrap: wrap; gap: .375rem; margin-top: .125rem; font-size: .875rem; color: var(--gz-sub); }
-.gz-ehead .s { flex: none; display: flex; align-items: baseline; gap: .375rem; white-space: nowrap; }
+.gz-ehead .s { flex: none; align-self: flex-start; display: flex; align-items: baseline; gap: .375rem; margin: .125rem 2.75rem 0 0; white-space: nowrap; }
+.gz-ehead .s[tabindex] { cursor: help; }
 .gz-ehead .s small { font-size: .875rem; font-weight: 700; color: var(--gz-sub); }
 .gz-ehead .s b { font-size: 1.875rem; line-height: 1; font-weight: 800; color: rgb(var(--c)); }
 /* The PVE/PVP mark: a round badge, or a pill with its wording. */
@@ -491,11 +490,6 @@ select.gz-select {
 .gz-kind.pvp { background: #d14a3a; }
 .gz-kind svg { width: .8125rem; height: .8125rem; }
 .gz-kind.wide { width: auto; padding: 0 .4375rem 0 .3125rem; }
-.gz-statrow { display: flex; align-items: flex-end; gap: .75rem; margin-top: .75rem; }
-.gz-statrow .gz-stats { flex: 1; min-width: 0; margin-top: 0; }
-.gz-escore { flex: none; display: flex; align-items: baseline; gap: .375rem; white-space: nowrap; }
-.gz-escore small { font-size: .875rem; font-weight: 700; color: var(--gz-sub); }
-.gz-escore b { font-size: 1.875rem; line-height: 1; font-weight: 800; color: rgb(var(--c)); }
 .gz-stats { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .75rem; }
 .gz-stats span { padding: .125rem .5rem; border-radius: 999px; background: var(--gz-well); font-size: .75rem; color: var(--gz-sub); }
 .gz-stats b { color: var(--gz-ink); }
@@ -773,9 +767,7 @@ select.gz-select {
   .gz-ehead { gap: .625rem; }
   .gz-eic { width: 3.5rem; height: 3.5rem; }
   .gz-ehead .t h3 { font-size: 1rem; }
-  .gz-ehead .s b, .gz-escore b { font-size: 1.25rem; }
-  .gz-escore { gap: .25rem; }
-  .gz-escore small { font-size: .75rem; }
+  .gz-ehead .s b { font-size: 1.25rem; }
   .gz-picker { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .gz-aff select { padding: 0 .25rem 0 .375rem; font-size: .75rem; }
   .gz-pip { width: 2.5rem; }
@@ -928,13 +920,10 @@ select.gz-select {
 /* The piece's three scores: a label with its mark over the figure. */
 .gz-eqkv { margin-top: .75rem; }
 .gz-eqkv .lab { display: flex; align-items: center; gap: .125rem; }
-.gz-escore[tabindex] { cursor: help; }
 /* The effects a piece carries — 烙印, 神话词条, 恩赐 — one heading over its text each. */
 .gz-fx .sub { flex-wrap: wrap; gap: .25rem .375rem; }
 .gz-fx[data-kind=myth] .sub { color: #c8483a; }
 .gz-fx .gz-pips { color: #d99a12; letter-spacing: .05em; }
-.gz-eqtotal { display: inline-flex; align-items: baseline; gap: .25rem; margin-right: .5rem; font-size: .875rem; color: var(--gz-sub); white-space: nowrap; }
-.gz-eqtotal b { font-size: 1rem; font-weight: 800; color: var(--gz-ink); }
 .gz-suitopt { display: inline-flex; align-items: center; gap: .125rem; }
 
 /* ---- equipment footer and slot marks ---- */
@@ -1000,7 +989,7 @@ select.gz-select {
 .gz-slot { position: relative; grid-template-columns: 3.25rem minmax(0, 1fr); }
 .gz-slot .nm { grid-column: 2; }
 .gz-slot .kind { min-height: 1.375rem; padding-right: 4.5rem; }
-.gz-slot .s { position: absolute; top: .375rem; right: .75rem; line-height: 1; }
+.gz-slot .s { position: absolute; top: .125rem; right: .75rem; line-height: 1; }
 .gz-slot .tags { grid-column: 2; align-items: center; }
 /* A talent's stats at its current level, under its level bar. */
 .gz-tnstats { display: grid; gap: .125rem; margin: 0; padding: 0; list-style: none; font-size: .75rem; line-height: 1.4; color: var(--gz-sub); }
