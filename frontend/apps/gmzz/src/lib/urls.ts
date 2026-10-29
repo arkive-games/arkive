@@ -39,6 +39,11 @@ export function iconUrl(icon: string): string {
   return `${RES_BASE}/icons/${icon}.webp`
 }
 
+/** URL of one of the client's UI sprites shipped under `ui/` by its own name. */
+export function uiSpriteUrl(name: string): string {
+  return `${RES_BASE}/ui/${name}.webp`
+}
+
 /** The rarity plates the game draws under item icons run `ItemQuality01`..`07`. */
 export const QUALITY_PLATE_MAX = 7
 

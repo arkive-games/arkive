@@ -37,6 +37,23 @@ def _plate_png(path):
     img.save(path)
 
 
+#: A stand-in atlas: the wanted sprites side by side, each 8x6, at known
+#: rectangles inside a larger texture so a wrong crop shows in the size.
+SPRITE_SIZE = (8, 6)
+
+
+def _atlas(raw, sprites=mod.ATLAS_SPRITES):
+    source = raw / mod.ATLAS_SOURCE
+    source.mkdir(parents=True)
+    Image.new("RGBA", (64, 16), (0, 0, 0, 0)).save(source / f"Texture_{mod.ATLAS_NAME}.png")
+    entries = [
+        # Keyed both ways, as the client's atlas is: with the `_Sprite` suffix and without.
+        {"Key": f"{name}_Sprite" if i % 2 else name, "Value": {"StartUV": {"X": 1 + 10 * i, "Y": 2}, "Size": {"X": SPRITE_SIZE[0], "Y": SPRITE_SIZE[1]}}}
+        for i, name in enumerate(sprites)
+    ]
+    (source / f"{mod.ATLAS_NAME}.json").write_text(json.dumps([{"Properties": {"Sprites": entries}}]), encoding="utf-8")
+
+
 def _data_out(tmp_path, equipment=EQUIPMENT, relics=RELICS):
     data_out = tmp_path / "data"
     for rel, payload in ((mod.EQUIPMENT_FILE, equipment), (mod.RELICS_FILE, relics)):
@@ -48,7 +65,7 @@ def _data_out(tmp_path, equipment=EQUIPMENT, relics=RELICS):
     return data_out
 
 
-def _raw(tmp_path, pngs, plates=PLATES):
+def _raw(tmp_path, pngs, plates=PLATES, sprites=mod.ATLAS_SPRITES):
     raw = tmp_path / "raw"
     (raw / mod.ICON_SOURCE).mkdir(parents=True)
     for name in pngs:
@@ -56,6 +73,7 @@ def _raw(tmp_path, pngs, plates=PLATES):
     (raw / mod.PLATE_SOURCE).mkdir(parents=True)
     for name in plates:
         _plate_png(raw / mod.PLATE_SOURCE / f"{name}.png")
+    _atlas(raw, sprites)
     return raw
 
 
@@ -76,15 +94,25 @@ def test_writes_one_webp_per_distinct_icon_and_per_plate(tmp_path):
     data_out = _data_out(tmp_path)
     raw = _raw(tmp_path, DISTINCT)
     res_out = tmp_path / "res"
-    assert mod.build(raw, data_out, res_out) == (11, 11, 0)
+    assert mod.build(raw, data_out, res_out) == (13, 13, 0)
     assert sorted(p.name for p in (res_out / mod.OUT_SUBDIR).iterdir()) == [
         f"{icon}.webp" for icon in DISTINCT
     ]
-    # The plates keep the client's names, in their own directory: they are
-    # chrome rather than item art, and the page indexes them by quality.
-    assert sorted(p.name for p in (res_out / mod.PLATE_OUT_SUBDIR).iterdir()) == [
-        f"{plate}.webp" for plate in PLATES
-    ]
+    # The plates and the atlas sprites keep the client's names, in their own
+    # directory: they are chrome rather than item art.
+    assert sorted(p.name for p in (res_out / mod.PLATE_OUT_SUBDIR).iterdir()) == sorted(
+        [f"{plate}.webp" for plate in PLATES] + [f"{sprite}.webp" for sprite in mod.ATLAS_SPRITES]
+    )
+
+
+def test_atlas_sprites_are_cut_by_their_own_rectangles(tmp_path):
+    data_out = _data_out(tmp_path)
+    raw = _raw(tmp_path, DISTINCT)
+    res_out = tmp_path / "res"
+    mod.build(raw, data_out, res_out)
+    for sprite in mod.ATLAS_SPRITES:
+        with Image.open(res_out / mod.PLATE_OUT_SUBDIR / f"{sprite}.webp") as image:
+            assert image.size == SPRITE_SIZE
 
 
 def test_plates_are_cropped_to_the_plate(tmp_path):
@@ -100,7 +128,7 @@ def test_plates_are_cropped_to_the_plate(tmp_path):
         assert alpha.getextrema() == (255, 255), "no transparent margin survives"
 
 
-@pytest.mark.parametrize("missing", ["icon", "plate"])
+@pytest.mark.parametrize("missing", ["icon", "plate", "sprite"])
 def test_a_partial_export_writes_nothing_at_all(tmp_path, missing):
     # resource-gmzz is committed separately from data-gmzz, so converting the
     # icons that are present and then failing would ship a half-filled image
@@ -109,8 +137,10 @@ def test_a_partial_export_writes_nothing_at_all(tmp_path, missing):
     data_out = _data_out(tmp_path)
     if missing == "icon":
         raw = _raw(tmp_path, DISTINCT[:-1])
-    else:
+    elif missing == "plate":
         raw = _raw(tmp_path, DISTINCT, plates=PLATES[:-1])
+    else:
+        raw = _raw(tmp_path, DISTINCT, sprites=mod.ATLAS_SPRITES[:-1])
     res_out = tmp_path / "res"
     with pytest.raises(FileNotFoundError, match=f"{missing}.*partial export"):
         mod.build(raw, data_out, res_out)
@@ -123,13 +153,13 @@ def test_re_runs_skip_images_already_current(tmp_path):
     res_out = tmp_path / "res"
     mod.build(raw, data_out, res_out)
 
-    assert mod.build(raw, data_out, res_out) == (11, 0, 11)
+    assert mod.build(raw, data_out, res_out) == (13, 0, 13)
 
     # A source newer than its image is reconverted; the rest still are not.
     stale = raw / mod.ICON_SOURCE / f"{DISTINCT[0]}.png"
     webp = res_out / mod.OUT_SUBDIR / f"{DISTINCT[0]}.webp"
     os.utime(stale,(webp.stat().st_mtime + 10, webp.stat().st_mtime + 10))
-    assert mod.build(raw, data_out, res_out) == (11, 1, 10)
+    assert mod.build(raw, data_out, res_out) == (13, 1, 12)
 
 
 def test_re_runs_repair_empty_images_even_when_their_timestamp_is_newer(tmp_path):
@@ -139,6 +169,6 @@ def test_re_runs_repair_empty_images_even_when_their_timestamp_is_newer(tmp_path
     mod.build(raw, data_out, res_out)
     webp = res_out / mod.OUT_SUBDIR / f"{DISTINCT[0]}.webp"
     webp.write_bytes(b"")
-    assert mod.build(raw, data_out, res_out) == (11, 1, 10)
+    assert mod.build(raw, data_out, res_out) == (13, 1, 12)
     with Image.open(webp) as image:
         image.verify()

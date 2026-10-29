@@ -5,6 +5,7 @@ Run from ``tools/`` (after ``gmzz.equipment`` and ``gmzz.relics``)::
 
     uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Item/Large
     uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/ConfigIcon/ItemQuality
+    uex export --profile gmzz --only C7/Content/Arts/UI_2/Resource/Common_2/Atlas
     uv run python -m gmzz.equipicons
 
 The ids come from the **already-emitted** JSON rather than from the game tables
@@ -33,6 +34,14 @@ to red — and ``ItemNewData.quality`` is the ``0N`` in that name (the 橙 rows 
 quality 6, and 06 is the orange plate). They ship under ``ui/`` with the
 client's own names so the page can index them by quality rather than by a
 colour table we would otherwise have to keep in step by hand.
+
+**So are the 冒险/竞技 marks.** `UI_Com_Icon_Type_PVE` (a horned mask) and
+`UI_Com_Icon_Type_PVP` (crossed swords) are sprites in the shared
+`Atlas_Common_2`, which ships as one texture plus a table of rectangles rather
+than as files of their own, so they are cut out here by the atlas's own
+rectangles and shipped under `ui/` with their sprite names. Which widget draws
+them is not provable from the package — the item tips' blueprints are among the
+unnamed ones — so the pairing with `ItemNewData.Tag` rests on the names.
 """
 
 from __future__ import annotations
@@ -58,6 +67,11 @@ PLATE_QUALITIES = range(1, 8)
 #: shadow included, the coloured bar would sit a few pixels above the tile's
 #: edge with a translucent gap beneath it.
 PLATE_BOX = (9, 9, 129, 129)
+
+#: Sprites cut from the client's shared UI atlas, under their sprite names.
+ATLAS_SOURCE = "C7/Content/Arts/UI_2/Resource/Common_2/Atlas"
+ATLAS_NAME = "Atlas_Common_2"
+ATLAS_SPRITES = ("UI_Com_Icon_Type_PVE", "UI_Com_Icon_Type_PVP")
 
 #: Which module to run when one of the inputs is absent.
 _PRODUCER = {EQUIPMENT_FILE: "gmzz.equipment", RELICS_FILE: "gmzz.relics"}
@@ -141,10 +155,52 @@ def _convert(pngs: dict[str, Path], target: Path, box: tuple[int, int, int, int]
     return written
 
 
-def build(raw: Path, data_out: Path, res_out: Path) -> tuple[int, int, int]:
-    """Convert every equipment/relic icon and the rarity plates.
+def _atlas_boxes(raw: Path, names: tuple[str, ...]) -> tuple[Path, dict[str, tuple[int, int, int, int]]]:
+    """The atlas texture and ``{sprite: crop box}`` for every wanted sprite, or raise.
 
-    Returns (distinct, written, current) over both sets together.
+    The atlas JSON keys each sprite by its name, most with a ``_Sprite`` suffix
+    and some (the two marks among them) without, and gives its top-left
+    ``StartUV`` and ``Size`` in texture pixels.
+    """
+    source = Path(raw) / ATLAS_SOURCE
+    export_hint = f"run: uex export --profile gmzz --only {ATLAS_SOURCE}"
+    table = source / f"{ATLAS_NAME}.json"
+    texture = source / f"Texture_{ATLAS_NAME}.png"
+    if not table.is_file() or not texture.is_file():
+        raise FileNotFoundError(f"{ATLAS_NAME} not found under {source} — {export_hint}")
+    sprites = {entry["Key"]: entry["Value"] for entry in read_json(table)[0]["Properties"]["Sprites"]}
+    boxes: dict[str, tuple[int, int, int, int]] = {}
+    missing: list[str] = []
+    for name in names:
+        sprite = sprites.get(name) or sprites.get(f"{name}_Sprite")
+        if sprite is None:
+            missing.append(name)
+            continue
+        x, y = int(sprite["StartUV"]["X"]), int(sprite["StartUV"]["Y"])
+        boxes[name] = (x, y, x + int(sprite["Size"]["X"]), y + int(sprite["Size"]["Y"]))
+    if missing:
+        raise FileNotFoundError(
+            f"{len(missing)} sprite(s) absent from {ATLAS_NAME}, e.g. {missing[:5]} — a partial export? {export_hint}"
+        )
+    return texture, boxes
+
+
+def _cut(texture: Path, boxes: dict[str, tuple[int, int, int, int]], target: Path) -> int:
+    """Write one WebP per sprite into ``target``; returns how many were (re)written."""
+    stale = {name: box for name, box in boxes.items() if not _is_current(target / f"{name}.webp", texture)}
+    if not stale:
+        return 0
+    target.mkdir(parents=True, exist_ok=True)
+    with Image.open(texture) as atlas:
+        for name, box in stale.items():
+            atlas.crop(box).save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
+    return len(stale)
+
+
+def build(raw: Path, data_out: Path, res_out: Path) -> tuple[int, int, int]:
+    """Convert every equipment/relic icon, the rarity plates and the atlas sprites.
+
+    Returns (distinct, written, current) over all three sets together.
     """
     wanted = icon_ids(data_out)
     plates = [f"ItemQuality{quality:02d}" for quality in PLATE_QUALITIES]
@@ -153,15 +209,17 @@ def build(raw: Path, data_out: Path, res_out: Path) -> tuple[int, int, int]:
     # each is checked before its own conversion.
     icon_pngs = _sources(raw, ICON_SOURCE, wanted, "icon")
     plate_pngs = _sources(raw, PLATE_SOURCE, plates, "plate")
+    atlas, sprite_boxes = _atlas_boxes(raw, ATLAS_SPRITES)
 
     target = Path(res_out) / OUT_SUBDIR
     written = _convert(icon_pngs, target)
     written += _convert(plate_pngs, Path(res_out) / PLATE_OUT_SUBDIR, PLATE_BOX)
+    written += _cut(atlas, sprite_boxes, Path(res_out) / PLATE_OUT_SUBDIR)
 
-    total = len(wanted) + len(plates)
+    total = len(wanted) + len(plates) + len(sprite_boxes)
     current = total - written
     print(
-        f"equipicons: {len(wanted)} icons + {len(plates)} plates, "
+        f"equipicons: {len(wanted)} icons + {len(plates)} plates + {len(sprite_boxes)} sprites, "
         f"{written} written, {current} already current -> {target.parent}"
     )
     return total, written, current

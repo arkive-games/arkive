@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { IconBuildingCastle, IconChevronUp, IconSwords } from '@tabler/icons-react'
+import { IconChevronUp } from '@tabler/icons-react'
 import { GzSelect } from '@/components/GzSelect'
 import { IconTile } from '@/features/equipment/PickerModal'
 import { TipOn } from '@/features/score/Tip'
+import { uiSpriteUrl } from '@/lib/urls'
 import { useCharacterReadOnly, useSection } from '@/features/characters/CharacterProvider'
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger, Popover, PopoverContent, PopoverTrigger } from '@gamemap/ui'
 import type { TFunction } from 'i18next'
@@ -66,20 +67,22 @@ function kindOf(t: TFunction, equipment: Equipment, item: EquipItem | null): Sui
   return { mode: mark.mode, label: mark.mode ? t(KIND_KEY[mark.mode]) : mark.name }
 }
 
+/** The game's own 冒险/竞技 marks, sprites of its shared UI atlas. */
+const KIND_SPRITE: Record<'pve' | 'pvp', string> = { pve: 'UI_Com_Icon_Type_PVE', pvp: 'UI_Com_Icon_Type_PVP' }
+
 /**
- * The PVE/PVP mark: crossed swords for 竞技, a keep for 副本, each in its own
- * colour. The icon alone carries its wording in a tooltip; it sits inside the
+ * The PVE/PVP mark, in the game's art: a horned mask for 副本, crossed swords
+ * for 竞技. The icon alone carries its wording in a tooltip; it sits inside the
  * slot and picker buttons, so a tap on it opens the tooltip rather than the
  * button too. An unknown tag is shown as its text.
  */
 function KindMark({ kind, withLabel = false }: { kind: SuitKind | null; withLabel?: boolean }) {
   if (!kind) return null
   if (!kind.mode) return <span className="gz-kind">{kind.label}</span>
-  const Icon = kind.mode === 'pvp' ? IconSwords : IconBuildingCastle
   const mark = (
     <span className={`gz-kind ${kind.mode} ${withLabel ? 'wide' : ''}`} data-kind={kind.mode}
       onClick={withLabel ? undefined : (event) => event.stopPropagation()}>
-      <Icon stroke={2} aria-hidden />
+      <img src={uiSpriteUrl(KIND_SPRITE[kind.mode])} alt="" />
       {withLabel ? <span>{kind.label}</span> : null}
     </span>
   )
@@ -384,11 +387,14 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
       className={`gz-slot ${item ? '' : 'empty'}`}
       data-testid={`equip-open-${state.slot}`}
     >
-      <IconTile quality={item?.quality ?? null} src={item ? equipmentIconUrl(item.icon) : undefined} alt={item?.name ?? ''} label="?" className="ic" />
+      {/* The PVE/PVP mark rides the icon's corner, as in the picker, so the line beside it has the room. */}
+      <span className="icw">
+        <IconTile quality={item?.quality ?? null} src={item ? equipmentIconUrl(item.icon) : undefined} alt={item?.name ?? ''} label="?" className="ic" />
+        <KindMark kind={kind} />
+      </span>
       <span className="nm">
         <span className="kind">
           <span className="lb">{[slotName, item?.gearLevel != null ? t('equip.levelTag', { level: item.gearLevel }) : null].filter(Boolean).join(' · ')}</span>
-          <KindMark kind={kind} />
         </span>
         <b>
           <span className="n">{item ? item.name : t('equip.emptySlot')}</span>
