@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.4.0",
+      "date": "2026-10-30",
+      "commit": "ac880edd577d6859b0d36a31710ce201214a2b28",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Weapons, Phantom Edges, accessories, medicines, items, the enemy gallery and the ability tree, each with search, the game's own filters and a page per entry: moves, upgrade costs, Soul Tempering, book pages, and what each material upgrades.",
+            "zh-CN": "新增武器、影之武装、饰品、药瓶、道具、图鉴与心法页面，均可搜索并按游戏内分类筛选；每项都有详情页，列出招式、升级消耗、铸魂、书页内容以及各材料可用于升级的装备。",
+            "zh-TW": "新增武器、影之武裝、飾品、藥瓶、道具、圖鑑與心法頁面，均可搜尋並依遊戲內分類篩選；每項都有詳情頁，列出招式、升級消耗、鑄魂、書頁內容以及各材料可用於升級的裝備。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.3.0",
       "date": "2026-10-30",
       "commit": "4d90fee86e5aff9f0ab4252f2520e84a9309498f",
