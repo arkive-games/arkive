@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { IconChevronUp } from '@tabler/icons-react'
 import { GzSelect } from '@/components/GzSelect'
 import { IconTile } from '@/features/equipment/PickerModal'
@@ -394,7 +394,12 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
       </span>
       <span className="nm">
         <span className="kind">
-          <span className="lb">{[slotName, item?.gearLevel != null ? t('equip.levelTag', { level: item.gearLevel }) : null].filter(Boolean).join(' · ')}</span>
+          {/* Each part unbreakable, so a narrow card wraps only between them. */}
+          <span className="lb">{[slotName, item?.gearLevel != null ? t('equip.levelTag', { level: item.gearLevel }) : null].filter(Boolean).map((part, i) => <Fragment key={i}>{i > 0 ? ' ' : null}<span>{i > 0 ? `· ${part}` : part}</span></Fragment>)}</span>
+          {/* The score ends the title line. Hover only: the card is itself the button that opens the dialog. */}
+          <TipOn content={t('equip.pieceBreakdown', { base: result.baseScore.toLocaleString(), enhance: result.enhanceScore.toLocaleString(), reforge: result.reforgeScore.toLocaleString(), total: result.total.toLocaleString() })}>
+            <span className="s num gz-hov" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
+          </TipOn>
         </span>
         <b>
           <span className="n">{item ? item.name : t('equip.emptySlot')}</span>
@@ -402,10 +407,6 @@ function PieceSlot({ result, slotName, kind, onOpen }: {
           {item ? <span className="gz-rf num">({clampRefine(state.refinePercent)}%)</span> : null}
         </b>
       </span>
-      {/* Hover only: the card is itself the button that opens the dialog. */}
-      <TipOn content={t('equip.pieceBreakdown', { base: result.baseScore.toLocaleString(), enhance: result.enhanceScore.toLocaleString(), reforge: result.reforgeScore.toLocaleString(), total: result.total.toLocaleString() })}>
-        <span className="s num gz-hov" data-testid={`equip-slot-score-${state.slot}`}>{result.total.toLocaleString()}</span>
-      </TipOn>
       {item ? (
         <span className="tags">
           {rolled.length > 0 ? (
