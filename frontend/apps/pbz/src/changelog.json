@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.0",
+      "date": "2026-10-30",
+      "commit": "31cd9b53bce7bfd13504c7b6eb139db9fe47d53f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Interactive map of every area: bells, collectibles, equipment, notes, materials, Remnant Dust and bosses, with what each spot holds.",
+            "zh-CN": "全区域互动地图：铃铛、收集品、装备、文书、材料、意识尘埃与首领，并标明每个点位能获得的物品。",
+            "zh-TW": "全區域互動地圖：鈴鐺、收集品、裝備、文書、材料、意識塵埃與首領，並標明每個點位能獲得的物品。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-10-29",
       "commit": "dae2bb4e42f03bb68c378cdc00eb340110ababba",
