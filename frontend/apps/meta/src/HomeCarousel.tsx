@@ -89,11 +89,10 @@ function slotOf(index: number, current: number, length: number) {
  * with the pause button, hovered, focused, hidden, or the visitor prefers
  * reduced motion.
  */
-export function HomeCarousel({ sites, onOpenSite, onComingSoon }: {
+export function HomeCarousel({ sites, onOpenSite }: {
   sites: readonly SiteCard[]
   onOpenSite: (site: SiteCard) => void
   /** Opens the notice for Phantom Blade Zero, whose guide is not open yet. */
-  onComingSoon: () => void
 }) {
   const { t } = useTranslation()
   const [contactOpen, setContactOpen] = useState(false)
@@ -113,14 +112,15 @@ export function HomeCarousel({ sites, onOpenSite, onComingSoon }: {
     {
       key: UPCOMING_PBZ.key,
       name: t(UPCOMING_PBZ.nameKey),
-      desc: '',
-      go: t('landing.carousel.pbz.go'),
+      desc: t('site.pbz.desc'),
+      go: t('landing.carousel.enter'),
       banner: UPCOMING_PBZ.banner,
       phoneBanner: UPCOMING_PBZ.phoneBanner,
       poster: true,
       icon: UPCOMING_PBZ.icon,
       color: UPCOMING_PBZ.color,
-      open: onComingSoon,
+      href: UPCOMING_PBZ.url,
+      open: () => {},
     },
     ...CAROUSEL_GAMES.flatMap((id) => {
       const site = sites.find((candidate) => candidate.id === id)

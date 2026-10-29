@@ -11,7 +11,6 @@ import {
   IconSparkles,
   IconTool,
 } from '@tabler/icons-react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@gamemap/ui'
 
 import {
   FEATURES,
@@ -67,7 +66,6 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const [now] = useState(() => new Date())
-  const [soonOpen, setSoonOpen] = useState(false)
   const games = sites.filter((site) => siteHref(site))
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
     && games.some((site) => site.id === feature.gameId))
@@ -90,17 +88,17 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   return (
     <section className="home-directory" aria-labelledby="home-heading">
       <h1 id="home-heading" className="sr-only">{t('home.title')}</h1>
-      <HomeCarousel sites={games} onOpenSite={onOpenSite} onComingSoon={() => setSoonOpen(true)} />
+      <HomeCarousel sites={games} onOpenSite={onOpenSite} />
 
       <div className="home-shell">
         <nav className="home-quick" aria-label={t('landing.quick.label')}>
-          {/* Phantom Blade Zero leads before its guide opens, so it shows a notice instead of linking. */}
-          <button type="button" aria-haspopup="dialog" style={{ '--i': 0, '--qc': UPCOMING_PBZ.color } as CSSProperties} onClick={() => setSoonOpen(true)}>
+          {/* Phantom Blade Zero leads the row; it is not a SiteCard yet (see upcoming.ts). */}
+          <a href={UPCOMING_PBZ.url} style={{ '--i': 0, '--qc': UPCOMING_PBZ.color } as CSSProperties}>
             <span className="home-quick-tile">
               <span className="home-quick-icon is-game"><img src={UPCOMING_PBZ.icon} alt="" /></span>
             </span>
             <span>{t(UPCOMING_PBZ.nameKey)}</span>
-          </button>
+          </a>
           {games.map((site, index) => (
             <a key={site.id} href={siteHref(site)} style={{ '--i': index + 1, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
               <span className="home-quick-tile">
@@ -178,14 +176,6 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
           </section>
         )}
       </div>
-      <Dialog open={soonOpen} onOpenChange={setSoonOpen}>
-        <DialogContent className="footer-dialog sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="arkive-dialog-title">{t('landing.carousel.pbz.go')}</DialogTitle>
-            <DialogDescription>{t('landing.carousel.pbz.soon')}</DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
     </section>
   )
 }
