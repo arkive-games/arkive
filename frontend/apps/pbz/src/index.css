@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "@gamemap/map-shell/arkive-map-theme.css";
+@source "../../../packages/ui/src";
+@source "../../../packages/map-shell/src";
+@source "../../../packages/auth/src";
+
+@custom-variant dark (&:is(.dark *));

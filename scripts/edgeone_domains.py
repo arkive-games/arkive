@@ -42,6 +42,10 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 
 GAMES = ("aion2", "palworld", "vrising", "ro3", "gmzz")
+# Games launched after the 2026-10-27 cutover: no tc-imba.com host ever served
+# them, so they get no redirect project, and a data/resource host is added here
+# only once the game's artifact repository has an EdgeOne project to bind it to.
+NEW_GAMES = ("pbz",)
 
 # Static redirect projects: project name -> the host every request is sent to.
 # Each one is nothing but an edgeone.json of two redirect rules (see
@@ -61,7 +65,7 @@ HOSTS: dict[str, str] = {
     "www.arkive.games": "arkive-redirect-meta",
     "tc-imba.com": "arkive-redirect-meta",
     "www.tc-imba.com": "arkive-redirect-meta",
-    **{f"{game}.arkive.games": f"arkive-{game}" for game in GAMES},
+    **{f"{game}.arkive.games": f"arkive-{game}" for game in GAMES + NEW_GAMES},
     **{f"{game}.tc-imba.com": f"arkive-redirect-{game}" for game in GAMES},
     **{f"{kind}-{game}.{domain}": f"{kind}-{game}"
        for game in GAMES for kind in ("data", "resource") for domain in ("arkive.games", "tc-imba.com")},

@@ -37,7 +37,7 @@ jobs:
       # broken build must not hold back the others.
       fail-fast: false
       matrix:
-        app: [meta, aion2, palworld, vrising, ro3, gmzz]
+        app: [meta, aion2, palworld, vrising, ro3, gmzz, pbz]
         include:
           # `project` is the EdgeOne project name. It is spelled out here rather
           # than derived from `app` because `deploy -n` CREATES a project when the
@@ -95,6 +95,16 @@ jobs:
             smoke_path: /changelog
             data_base_url: https://data-gmzz.arkive.games
             resource_base_url: https://resource-gmzz.arkive.games
+          # Launched as a shell before its first extraction: nothing fetches
+          # from these hosts yet, and they are bound once the data-pbz and
+          # resource-pbz repositories exist. They are set now so the build
+          # variable guard holds and the first data page needs no workflow edit.
+          - app: pbz
+            project: arkive-pbz
+            domain: pbz.arkive.games
+            smoke_path: /changelog
+            data_base_url: https://data-pbz.arkive.games
+            resource_base_url: https://resource-pbz.arkive.games
 
     # Two pushes in quick succession must not race the same project. Queue rather
     # than cancel: an interrupted upload is a half-published site.
