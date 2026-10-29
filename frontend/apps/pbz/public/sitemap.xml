@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://pbz.arkive.games/</loc></url>
+  <url><loc>https://pbz.arkive.games/weapons</loc></url>
+  <url><loc>https://pbz.arkive.games/phantom-edges</loc></url>
+  <url><loc>https://pbz.arkive.games/accessories</loc></url>
+  <url><loc>https://pbz.arkive.games/medicines</loc></url>
+  <url><loc>https://pbz.arkive.games/items</loc></url>
+  <url><loc>https://pbz.arkive.games/enemies</loc></url>
+  <url><loc>https://pbz.arkive.games/skills</loc></url>
   <url><loc>https://pbz.arkive.games/changelog</loc></url>
 </urlset>

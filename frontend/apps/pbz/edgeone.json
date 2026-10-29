@@ -1,6 +1,92 @@
 {
   "rewrites": [
-    { "source": "/changelog", "destination": "/index.html" },
-    { "source": "/changelog*", "destination": "/index.html" }
+    {
+      "source": "/changelog",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/changelog*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/weapons",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/weapons*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/weapons/*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/phantom-edges",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/phantom-edges*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/phantom-edges/*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/accessories",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/accessories*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/accessories/*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/medicines",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/medicines*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/medicines/*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/items",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/items*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/items/*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/enemies",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/enemies*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/enemies/*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/skills",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/skills*",
+      "destination": "/index.html"
+    }
   ]
 }

@@ -6,10 +6,17 @@ import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } f
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
 
-export type NavKey = '/' | '/changelog'
+export type NavKey = '/' | '/changelog' | '/weapons' | '/phantom-edges' | '/accessories' | '/medicines' | '/items' | '/enemies' | '/skills'
 
 const ITEMS: { key: NavKey; labelKey: string }[] = [
   { key: '/', labelKey: 'nav.map' },
+  { key: '/weapons', labelKey: 'nav.weapons' },
+  { key: '/phantom-edges', labelKey: 'nav.phantomEdges' },
+  { key: '/accessories', labelKey: 'nav.accessories' },
+  { key: '/medicines', labelKey: 'nav.medicines' },
+  { key: '/items', labelKey: 'nav.items' },
+  { key: '/enemies', labelKey: 'nav.enemies' },
+  { key: '/skills', labelKey: 'nav.skills' },
 ]
 
 export function TopNav({ active }: { active: NavKey }) {

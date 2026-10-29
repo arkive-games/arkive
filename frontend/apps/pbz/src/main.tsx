@@ -7,6 +7,11 @@ import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import './i18n'
 import ChangelogPage from './features/changelog/ChangelogPage'
+import { WeaponDetailPage, WeaponListPage } from './features/wiki/WeaponPages'
+import { AccessoryDetailPage, AccessoryListPage, MedicineDetailPage, MedicineListPage } from './features/wiki/GearPages'
+import { ItemDetailPage, ItemListPage } from './features/wiki/ItemPages'
+import { EnemyDetailPage, EnemyListPage } from './features/wiki/GalleryPages'
+import SkillPage from './features/wiki/SkillPage'
 import { BottomTabBar } from './components/BottomTabBar'
 import { initDataVersion } from './lib/urls'
 import { themeStorage } from './lib/storage'
@@ -35,7 +40,24 @@ const mapRoute = createRoute({
 })
 const changelogRoute = createRoute({ getParentRoute: () => rootRoute, path: '/changelog', component: ChangelogPage })
 
-const routeTree = rootRoute.addChildren([mapRoute, changelogRoute])
+// The wiki pages, each spelled out: the router types its links from the literal paths.
+const wikiRoutes = [
+  createRoute({ getParentRoute: () => rootRoute, path: '/weapons', component: () => <WeaponListPage kind="weapons" /> }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/weapons/$id', component: () => <WeaponDetailPage kind="weapons" /> }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/phantom-edges', component: () => <WeaponListPage kind="phantomEdges" /> }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/phantom-edges/$id', component: () => <WeaponDetailPage kind="phantomEdges" /> }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/accessories', component: AccessoryListPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/accessories/$id', component: AccessoryDetailPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/medicines', component: MedicineListPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/medicines/$id', component: MedicineDetailPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/items', component: ItemListPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/items/$id', component: ItemDetailPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/enemies', component: EnemyListPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/enemies/$id', component: EnemyDetailPage }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/skills', component: SkillPage }),
+] as const
+
+const routeTree = rootRoute.addChildren([mapRoute, changelogRoute, ...wikiRoutes])
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
 declare module '@tanstack/react-router' {

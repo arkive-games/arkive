@@ -1,14 +1,18 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { History, Map as MapIcon, Menu } from 'lucide-react'
+import { FlaskConical, Gem, History, Map as MapIcon, Menu, Package, Skull, Sparkles, Sword, Swords } from 'lucide-react'
 import { ShellBottomNav } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { SiteInfo } from './SiteInfo'
 import { useSettingsConfig } from '../lib/settings'
 import type { NavKey } from './TopNav'
 
+const WIKI_PAGES = ['/weapons', '/phantom-edges', '/accessories', '/medicines', '/items', '/enemies', '/skills'] as const
+
 function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/changelog')) return '/changelog'
+  const wiki = WIKI_PAGES.find((p) => pathname === p || pathname.startsWith(`${p}/`))
+  if (wiki) return wiki
   return '/'
 }
 
@@ -21,6 +25,17 @@ export function BottomTabBar() {
 
   const tabs = [
     { key: '/', label: t('nav.map'), icon: <MapIcon className="size-5" strokeWidth={1.8} /> },
+    { key: '/weapons', label: t('nav.weapons'), icon: <Sword className="size-5" strokeWidth={1.8} /> },
+    { key: '/items', label: t('nav.items'), icon: <Package className="size-5" strokeWidth={1.8} /> },
+    { key: '/enemies', label: t('nav.enemies'), icon: <Skull className="size-5" strokeWidth={1.8} /> },
+  ]
+  // The rest live in the "More" sheet, beside the changelog.
+  const moreItems = [
+    { key: '/phantom-edges', label: t('nav.phantomEdges'), icon: <Swords className="size-5" strokeWidth={1.8} /> },
+    { key: '/accessories', label: t('nav.accessories'), icon: <Gem className="size-5" strokeWidth={1.8} /> },
+    { key: '/medicines', label: t('nav.medicines'), icon: <FlaskConical className="size-5" strokeWidth={1.8} /> },
+    { key: '/skills', label: t('nav.skills'), icon: <Sparkles className="size-5" strokeWidth={1.8} /> },
+    { key: '/changelog', label: t('nav.changelog'), icon: <History className="size-5" strokeWidth={1.8} /> },
   ]
 
   return (
@@ -35,16 +50,11 @@ export function BottomTabBar() {
       more={{
         label: t('more'),
         icon: <Menu className="size-5" strokeWidth={1.8} />,
-        active: active === '/changelog',
+        active: moreItems.some((item) => item.key === active),
         title: t('more'),
       }}
       grid={{
-        items: [{
-          key: '/changelog',
-          label: t('nav.changelog'),
-          icon: <History className="size-5" strokeWidth={1.8} />,
-          active: active === '/changelog',
-        }],
+        items: moreItems.map((item) => ({ ...item, active: active === item.key })),
         renderItem: (item, className) => (
           <Link to={item.key as NavKey} className={className}>
             {item.icon}<span className="text-center leading-tight">{item.label}</span>
