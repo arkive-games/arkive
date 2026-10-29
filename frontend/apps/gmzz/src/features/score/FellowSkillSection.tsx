@@ -96,22 +96,28 @@ export default function FellowSkillCalculator({
           const formed = results.filter((option) => option.relation !== null)
           const relationId = isCarried ? carried?.relation?.id : formed[0]?.relation?.id
           const shown = isCarried && carried ? carried : results[0]
+          const tip = fellowTip(t, fellow, shown)
           return (
             <li key={fellow.id} className={`gz-person ${isCarried ? 'on' : ''} ${star === undefined ? 'zero' : ''}`} data-testid={`bonds-fellow-${fellow.id}`}>
-              <button
-                type="button"
-                disabled={star === undefined}
-                aria-pressed={isCarried}
-                aria-label={t('bonds.fellowCarryToggle', { name: fellow.name })}
-                onClick={() => carry(isCarried && !autoCarry ? null : fellow.id)}
-                className="gz-face"
-                data-testid={`bonds-fellow-carry-${fellow.id}`}
-              >
-                <IconTile quality={fellow.quality} src={fellow.portrait ? fellowPortraitUrl(fellow.portrait) : undefined} alt={fellow.name} label={fellow.name.slice(0, 1)} className="size-14" />
-              </button>
+              {/* Portrait and name share one tooltip; a disabled button gets no hover, so it sits on a wrapper. */}
+              <TipOn title={fellow.name} content={tip}>
+                <span className="gz-facetip">
+                  <button
+                    type="button"
+                    disabled={star === undefined}
+                    aria-pressed={isCarried}
+                    aria-label={t('bonds.fellowCarryToggle', { name: fellow.name })}
+                    onClick={() => carry(isCarried && !autoCarry ? null : fellow.id)}
+                    className="gz-face"
+                    data-testid={`bonds-fellow-carry-${fellow.id}`}
+                  >
+                    <IconTile quality={fellow.quality} src={fellow.portrait ? fellowPortraitUrl(fellow.portrait) : undefined} alt={fellow.name} label={fellow.name.slice(0, 1)} className="size-14" />
+                  </button>
+                </span>
+              </TipOn>
               {isCarried ? <span className="gz-carry" data-testid={`bonds-fellow-carried-${fellow.id}`}>{t('bonds.skillCarried')}</span> : null}
-              <TipOn title={fellow.name} content={fellowTip(t, fellow, shown)}>
-                <b className="gz-hov" tabIndex={0} data-testid={`bonds-fellow-tip-${fellow.id}`}>{fellow.shortName || fellow.name}</b>
+              <TipOn title={fellow.name} content={tip}>
+                <b className="gz-tipnm" tabIndex={0} data-testid={`bonds-fellow-tip-${fellow.id}`}>{fellow.shortName || fellow.name}</b>
               </TipOn>
               <StarPicker star={star} name={fellow.name} testId={`bonds-fellow-star-${fellow.id}`} onChange={(next) => setStar(fellow.id, next)} />
               <GzSelect

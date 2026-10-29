@@ -425,32 +425,39 @@ function PuppetLineup({
           // mark can be cleared, rather than lurking until a slot frees up.
           const stored = entry?.dominated ?? false
           const canDeploy = !readOnly && level >= 1 && (stored || !slotsFull)
+          const tip = puppetTip(t, partner, level, scoring, skillLevel)
           return (
             // The whole card toggles the deploy, the stepper and the name's
             // tooltip aside. The portrait stays the keyboard's button; its
-            // click bubbles here like any other.
+            // click bubbles here like any other. Portrait and name share one
+            // tooltip; the portrait's sits on a wrapper, since a disabled
+            // button gets no hover.
             <li key={partner.id} className={`gz-person ${isDeployed ? 'on' : ''} ${level < 1 ? 'zero' : ''} ${canDeploy ? '' : 'fixed'}`}
               data-testid={`bonds-puppet-${partner.id}`}
               onClick={(event) => {
-                if (!canDeploy || (event.target as HTMLElement).closest('.gz-mini, .gz-hov')) return
+                if (!canDeploy || (event.target as HTMLElement).closest('.gz-mini, .gz-tipnm')) return
                 update(partner.id, { dominated: !stored })
               }}>
-              <button
-                type="button"
-                aria-pressed={stored}
-                disabled={!canDeploy}
-                aria-label={t(stored ? 'bonds.undeploy' : 'bonds.deployToggle', { name: partner.name })}
-                className="gz-face"
-                data-testid={`bonds-dominate-${partner.id}`}
-              >
-                <IconTile quality={partner.quality} src={partner.portrait ? portraitUrl(partner.portrait) : undefined} alt={partner.name} label={partner.name.slice(0, 1)} className="size-14" />
-              </button>
+              <TipOn title={partner.name} content={tip}>
+                <span className="gz-facetip">
+                  <button
+                    type="button"
+                    aria-pressed={stored}
+                    disabled={!canDeploy}
+                    aria-label={t(stored ? 'bonds.undeploy' : 'bonds.deployToggle', { name: partner.name })}
+                    className="gz-face"
+                    data-testid={`bonds-dominate-${partner.id}`}
+                  >
+                    <IconTile quality={partner.quality} src={partner.portrait ? portraitUrl(partner.portrait) : undefined} alt={partner.name} label={partner.name.slice(0, 1)} className="size-14" />
+                  </button>
+                </span>
+              </TipOn>
               {isDeployed ? <span className="gz-flag">{t('bonds.dominate')}</span> : null}
               {isCarried ? (
                 <span className="gz-carry" data-testid={`bonds-carried-${partner.id}`}>{t('bonds.skillCarried')}</span>
               ) : null}
-              <TipOn title={partner.name} content={puppetTip(t, partner, level, scoring, skillLevel)}>
-                <b className="gz-hov" tabIndex={0} data-testid={`bonds-puppet-tip-${partner.id}`}>{partner.name}</b>
+              <TipOn title={partner.name} content={tip}>
+                <b className="gz-tipnm" tabIndex={0} data-testid={`bonds-puppet-tip-${partner.id}`}>{partner.name}</b>
               </TipOn>
               <Stepper variant="mini" value={level} min={0} max={scoring.maxStar} label={t('bonds.levelFor', { name: partner.name })}
                 testId={`bonds-stage-${partner.id}`}

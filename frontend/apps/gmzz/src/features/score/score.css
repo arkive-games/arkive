@@ -402,6 +402,8 @@ select.gz-select {
 .gz-person .gz-mini input { width: 1.75rem; }
 .gz-chip.sm { height: 1.625rem; padding: 0 .625rem; font-size: .75rem; }
 .gz-hint { margin: 0; font-size: .75rem; color: var(--gz-sub); }
+.gz-facetip { display: inline-flex; }
+.gz-tipnm { cursor: help; }
 .gz-face { position: relative; border: 0; padding: 0; background: none; border-radius: 999px; cursor: pointer; }
 .gz-face:disabled { cursor: not-allowed; }
 .gz-face:focus-visible { outline: 2px solid rgb(var(--c)); outline-offset: 2px; }
