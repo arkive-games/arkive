@@ -13,7 +13,7 @@ import { toStoredMaterials } from '@/features/relics/memory'
 import { useRelicServer } from '@/features/relics/useRelicServer'
 import { EMPTY_RELIC_AFFIX, GROUP_IDS, SPEC_GROUP, affixFrom, knowledgeLevelOf, reachable, restoreSlots } from '@/features/relics/slots'
 import {
-  MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason, effectiveAffixCap, effectiveGrade,
+  MATERIAL_SLOTS, activeMaterialIndexes, affixValue, artifactsInGroup, currentSeason, effectiveAffixCap, effectiveGrade, efficiencyPercent,
   evaluateRelicSlot, formatStat, gradeQuality, gradeOptions, gradeRung, isRareAffix, k1For, k2For,
   knowledgeLadder, materialName, materialTypeAt, maxAffixes, poolRungs, poolStats, rareAffixes,
   rareEffect, relicTotals, specIndex, statName, typePool, usedGroups,
@@ -100,7 +100,7 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
   )
   /** What the row scores, its Mark × k2 on the tooltip. */
   const score = (mark: number) => (
-    <TipOn content={t('relic.affixScoreOf', { score: decimal(mark * k2), mark: mark.toLocaleString(), k: Number(k2.toFixed(4)) })}>
+    <TipOn content={t('relic.affixScoreOf', { score: decimal(mark * k2), mark: mark.toLocaleString(), pct: efficiencyPercent(k2) })}>
       <span className="mk num gz-hov" tabIndex={0} data-testid={`${testPrefix}-score-${index}`}>{decimal(mark * k2)}</span>
     </TipOn>
   )
@@ -203,13 +203,14 @@ function AffixRow({ relics, affix, others, index, inactive, cap, pool, k2, testP
   )
 }
 
-/** A knowledge coefficient as the game prints it: k 0.1 (level 0) reads 100%, k 0.88 reads 880%. */
-const percent = (k: number) => `${Number((k * 1000).toFixed(1))}%`
+const percent = efficiencyPercent
 
-function KnowledgeBar({ relics, level, k1, k2, season, actingLevel, readOnly, onChange }: {
+function KnowledgeBar({ relics, level, k1, k2, season, actingLevel, maxRoleLevel, readOnly, onChange }: {
   relics: Relics; level: number; k1: number; k2: number; season: number | undefined
   /** Role plus divinity level: knowledge levels needing more stay out of reach. */
   actingLevel: number | undefined
+  /** The role level cap; a requirement past it is divinity on top of the cap. */
+  maxRoleLevel: number | undefined
   readOnly: boolean
   onChange: (level: number) => void
 }) {
@@ -230,9 +231,11 @@ function KnowledgeBar({ relics, level, k1, k2, season, actingLevel, readOnly, on
         {t('relic.resonanceEfficiency')} <b className="num" data-testid="relic-k1">{percent(k1)}</b>
         {' · '}
         {t('relic.affixEfficiency')} <b className="num" data-testid="relic-k2">{percent(k2)}</b>
-        {role !== null ? <> · {t('relic.knowledgeRole', { level: role })}</> : null}
+        {role === null ? null : maxRoleLevel !== undefined && role > maxRoleLevel
+          ? <> · {t('relic.knowledgeDivinity', { level: role - maxRoleLevel })}</>
+          : <> · {t('relic.knowledgeRole', { level: role })}</>}
       </span>
-      <Tip content={t('relic.knowledgeHint', { min, max, k1, k2 })} title={t('relic.knowledge')} testId="relic-knowledge-formula" />
+      <Tip content={t('relic.knowledgeHint', { min, max, p1: percent(k1), p2: percent(k2) })} title={t('relic.knowledge')} testId="relic-knowledge-formula" />
     </div>
   )
 }
@@ -583,10 +586,11 @@ function RelicFace({ relics, slot, result, k1, k2, onOpen }: {
   )
 }
 
-export default function RelicSection({ relics, actingLevel, onTotals }: {
+export default function RelicSection({ relics, actingLevel, maxRoleLevel, onTotals }: {
   relics: Relics
   /** 扮演等级 as the knowledge table reads it: role level, plus divinity once the role is capped. */
   actingLevel?: number
+  maxRoleLevel?: number
   /** Reports the three subtotals whenever they change, for the page's rating rows. */
   onTotals?: (totals: RelicTotals) => void
 }) {
@@ -668,7 +672,7 @@ export default function RelicSection({ relics, actingLevel, onTotals }: {
           faces stay clickable and the formula mark readable; only the inputs lock. */}
       <div className="gz-panel-head">
         <h3>{t('relic.title')}</h3>
-        <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} actingLevel={actingLevel} readOnly={readOnly}
+        <KnowledgeBar relics={relics} level={knowledgeLevel} k1={k1} k2={k2} season={season} actingLevel={actingLevel} maxRoleLevel={maxRoleLevel} readOnly={readOnly}
           onChange={setKnowledgeLevel} />
       </div>
 

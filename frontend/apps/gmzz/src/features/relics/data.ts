@@ -161,6 +161,9 @@ export function k1For(relics: Relics, level: number, season?: number): number {
   return exact?.k1 ?? ladder[0]?.k1 ?? 0
 }
 
+/** A knowledge coefficient as the game prints it, an efficiency: k 0.1 reads 100%, k 0.88 reads 880%. */
+export const efficiencyPercent = (k: number) => `${Number((k * 1000).toFixed(1))}%`
+
 export function worthFor(relics: Relics, stat: string, season?: number): number {
   return forSeason(relics.worths, season)?.[stat] ?? 0
 }

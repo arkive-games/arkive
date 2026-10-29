@@ -448,7 +448,7 @@ function ScoreView() {
     [RELICS_GENUS]: section(RELICS_GENUS, (group) => (
       <GroupSection group={group} rating={rating} present={() => ({ kind: 'derived' })}
         formula={(item) => relicFormula(item.species.module, relicFormulaContext)}>
-        {relics ? <RelicSection relics={relics} actingLevel={actingLevel} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
+        {relics ? <RelicSection relics={relics} actingLevel={actingLevel} maxRoleLevel={rating?.maxRoleLevel} onTotals={onRelicTotals} /> : <p className={TYPE.body}>{t('score.sectionUnavailable')}</p>}
       </GroupSection>
     )),
     [BONDS_GENUS]: section(BONDS_GENUS, (group) => (

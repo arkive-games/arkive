@@ -5,7 +5,7 @@ import type { TFunction } from 'i18next'
 import { useSection } from '@/features/characters/CharacterProvider'
 import { knowledgeLevelOf, restoreSlots } from '@/features/relics/slots'
 import {
-  currentSeason, evaluateRelicSlot, gradeRung, k1For, k2For, relicTotals, resonanceLadder,
+  currentSeason, efficiencyPercent, evaluateRelicSlot, gradeRung, k1For, k2For, relicTotals, resonanceLadder,
   type Relics, type RelicServer, type RelicSlotResult,
 } from '@/features/relics/data'
 
@@ -44,9 +44,6 @@ export function useRelicFormulaContext(relics: Relics | null, actingLevel?: numb
   }, [relics, draft, actingLevel])
 }
 
-/** A coefficient without float noise (0.32, not 0.32000000000000006). */
-const coefficient = (k: number) => Number(k.toFixed(4))
-
 /**
  * One item's score as an equation: the Marks in effect summed over the three
  * relics, times the knowledge coefficient, rounded down once.
@@ -56,7 +53,7 @@ function relicEquation(module: RelicModule, ctx: RelicFormulaContext, t: TFuncti
   const totals = relicTotals(results)
   if (module === 'Relics_Basic') {
     const marks = results.reduce((acc, result) => acc + (gradeRung(relics, result.resonanceGrade)?.mark ?? 0), 0)
-    return t('relic.eqAssembly', { marks: marks.toLocaleString(), k: coefficient(k2), score: totals.assembly.toLocaleString() })
+    return t('relic.eqAssembly', { marks: marks.toLocaleString(), pct: efficiencyPercent(k2), score: totals.assembly.toLocaleString() })
   }
   if (module === 'Relics_Main') {
     const marks = results.reduce((acc, result) => {
@@ -64,13 +61,13 @@ function relicEquation(module: RelicModule, ctx: RelicFormulaContext, t: TFuncti
       const rung = resonanceLadder(relics, result.state.groupId, result.resonanceGrade, season).find((r) => r.affixCount === count)
       return acc + (rung?.mark ?? 0)
     }, 0)
-    return t('relic.eqResonance', { marks: marks.toLocaleString(), k: coefficient(k1), score: totals.resonance.toLocaleString() })
+    return t('relic.eqResonance', { marks: marks.toLocaleString(), pct: efficiencyPercent(k1), score: totals.resonance.toLocaleString() })
   }
   // The Marks that score: affixes in effect, on materials in effect.
   const marks = results.reduce((acc, result) => acc + result.materials.reduce((inner, material) => inner + (material.applies
     ? material.affixes.reduce((m, affix, at) => m + (material.inactive[at] || affix.stat === '' ? 0 : affix.mark), 0)
     : 0), 0), 0)
-  return t('relic.eqAffix', { marks: marks.toLocaleString(), k: coefficient(k2), score: totals.affix.toLocaleString() })
+  return t('relic.eqAffix', { marks: marks.toLocaleString(), pct: efficiencyPercent(k2), score: totals.affix.toLocaleString() })
 }
 
 const RULE: Record<RelicModule, string> = {
