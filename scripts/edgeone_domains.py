@@ -43,8 +43,9 @@ from tencentcloud.common.profile.http_profile import HttpProfile
 
 GAMES = ("aion2", "palworld", "vrising", "ro3", "gmzz")
 # Games launched after the 2026-10-27 cutover: no tc-imba.com host ever served
-# them, so they get no redirect project, and a data/resource host is added here
-# only once the game's artifact repository has an EdgeOne project to bind it to.
+# them, so they get no redirect project and their data/resource hosts exist
+# under arkive.games only. A game belongs here once its data-<game> and
+# resource-<game> repositories have Git-connected EdgeOne projects to bind to.
 NEW_GAMES = ("pbz",)
 
 # Static redirect projects: project name -> the host every request is sent to.
@@ -69,6 +70,7 @@ HOSTS: dict[str, str] = {
     **{f"{game}.tc-imba.com": f"arkive-redirect-{game}" for game in GAMES},
     **{f"{kind}-{game}.{domain}": f"{kind}-{game}"
        for game in GAMES for kind in ("data", "resource") for domain in ("arkive.games", "tc-imba.com")},
+    **{f"{kind}-{game}.arkive.games": f"{kind}-{game}" for game in NEW_GAMES for kind in ("data", "resource")},
 }
 
 ALIYUN_REGION = "cn-hangzhou"  # alidns is global; the CLI just needs some region.
