@@ -95,10 +95,9 @@ jobs:
             smoke_path: /changelog
             data_base_url: https://data-gmzz.arkive.games
             resource_base_url: https://resource-gmzz.arkive.games
-          # Launched as a shell before its first extraction: nothing fetches
-          # from these hosts yet, and they are bound once the data-pbz and
-          # resource-pbz repositories exist. They are set now so the build
-          # variable guard holds and the first data page needs no workflow edit.
+          # The map loads from data-pbz / resource-pbz, Git-connected EdgeOne
+          # projects bound by scripts/edgeone_domains.py (CORS from their own
+          # edgeone.json).
           - app: pbz
             project: arkive-pbz
             domain: pbz.arkive.games
