@@ -78,7 +78,9 @@ export default function MapPage() {
     return () => { cancelled = true }
   }, [lng, t])
 
-  useEffect(() => { writeVisibleSubtypes(visible) }, [visible])
+  // Not before the defaults are applied: the placeholder empty set written on a
+  // first visit would be restored next time as "show nothing".
+  useEffect(() => { if (visibleInitialized.current) writeVisibleSubtypes(visible) }, [visible])
   useEffect(() => { if (mapId) writeMapId(mapId) }, [mapId])
 
   const map = staticData?.maps.find((m) => m.id === mapId)

@@ -1,12 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Outlet, RouterProvider } from '@tanstack/react-router'
 import { AuthProvider } from '@gamemap/auth'
 import { initBaiduAnalytics, ThemeProvider, trackPageview } from '@gamemap/map-shell'
 import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import './i18n'
-import MapPage from './features/map/MapPage'
 import ChangelogPage from './features/changelog/ChangelogPage'
 import { BottomTabBar } from './components/BottomTabBar'
 import { initDataVersion } from './lib/urls'
@@ -31,7 +30,8 @@ const mapRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): MapSearch => ({
     q: typeof s.q === 'string' ? s.q : undefined,
   }),
-  component: MapPage,
+  // Lazy, so three.js and the map engine stay out of every other page's bundle.
+  component: lazyRouteComponent(() => import('./features/map/MapPage')),
 })
 const changelogRoute = createRoute({ getParentRoute: () => rootRoute, path: '/changelog', component: ChangelogPage })
 
