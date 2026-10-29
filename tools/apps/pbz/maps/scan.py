@@ -22,6 +22,10 @@ Kept per cell:
   its always-loaded actors.
 * **Spawners**: ``BP_AISpawner_C`` with the enemy class it spawns, so ``emit`` can
   pick the bosses out with ``DT_CodexEnemyDataTable``.
+* **Features**: blockers, doors, gates and NPC spawners (``FEATURE_TYPE_RE``) with
+  their plain-valued properties. A cooked actor stores only what it overrides, so
+  their blueprints' class defaults -- merged down each inheritance chain -- go to
+  ``<PBZ_RAW>/blueprint_defaults.json`` beside ``placements.json``.
 """
 
 from __future__ import annotations
@@ -41,7 +45,35 @@ CELLS = "/_Generated_/"
 WORKERS = 6
 LOOT_FIELDS = ("LootItemID", "Loot Item ID")
 SPAWNER_TYPES = {"BP_AISpawner_C"}
+FEATURE_TYPE_RE = re.compile(r"Blocker|Door|Gate|NPCSpawner")
 _ACTOR_RE = re.compile(r":PersistentLevel\.([^.']+)")
+_CLASS_RE = re.compile(r"^\w+'(/[^']+)'$")
+
+
+def plain_props(props: dict) -> dict:
+    """The properties that carry data rather than component or asset references:
+    scalars, text keys, string lists, tag containers and item maps."""
+    out = {}
+    for key, value in props.items():
+        if isinstance(value, (str, bool, int, float)):
+            out[key] = value
+        elif isinstance(value, dict) and "Key" in value and "Namespace" in value:
+            out[key] = {"Key": value["Key"]}  # FText: keep only its locres key
+        elif isinstance(value, dict) and value.get("AssetPathName"):
+            out[key] = value["AssetPathName"]  # a soft class/object reference
+        elif isinstance(value, list) and all(
+                isinstance(v, (str, int, float)) or (isinstance(v, dict) and "ObjectName" not in v
+                                                     and "AssetPathName" not in v) for v in value):
+            out[key] = value
+        elif isinstance(value, dict) and "GameplayTags" in value:
+            out[key] = [t.get("TagName") for t in value["GameplayTags"]]
+    return out
+
+
+def class_path(export: dict) -> str | None:
+    """``/Game/Dir/BP_X.BP_X_C`` from an export's ``Class`` reference, for blueprints."""
+    m = _CLASS_RE.match(export.get("Class") or "")
+    return m.group(1) if m and export["Class"].startswith("BlueprintGeneratedClass") else None
 
 
 def uex_exe() -> Path:
@@ -139,6 +171,12 @@ def scan_cell(exports: list[dict]) -> list[dict]:
     seen: set[str] = set()
     for x in exports:
         props = x.get("Properties") or {}
+        if FEATURE_TYPE_RE.search(x["Type"]) and _outer_name(x).endswith(":PersistentLevel'"):
+            loc = _location(x, by_owner)
+            if loc is not None:
+                out.append({"actor": x["Name"], "type": x["Type"], "loc": loc,
+                            "cls": class_path(x), "props": plain_props(props)})
+            continue
         loot = next((props[f] for f in LOOT_FIELDS if isinstance(props.get(f), str) and props[f]), None)
         if loot is None and x["Type"] not in SPAWNER_TYPES:
             continue
@@ -165,6 +203,41 @@ def scan_cell(exports: list[dict]) -> list[dict]:
         seen.add(actor["Name"])
         out.append(rec)
     return out
+
+
+def package_vpath(serve: "Serve", object_path: str) -> str | None:
+    """The pak path of the package holding ``/Mount/Dir/Name.Name_C``. ``/Game`` is
+    the project's Content; any other mount is a plugin, found by its tail."""
+    package = object_path.split(".", 1)[0]
+    mount, _, rest = package.lstrip("/").partition("/")
+    if mount == "Game":
+        return f"ProjectPBZ/Content/{rest}.uasset"
+    tail = f"/{mount}/Content/{rest}.uasset"
+    matches = serve.call("search", pattern=tail, limit=5)["matches"]
+    return next((m for m in matches if m.endswith(tail)), None)
+
+
+def class_defaults(serve: "Serve", object_path: str, cache: dict[str, dict]) -> dict:
+    """A blueprint class's plain default properties, its parents' merged underneath."""
+    if object_path in cache:
+        return cache[object_path]
+    cache[object_path] = {}  # cycle guard
+    vpath = package_vpath(serve, object_path)
+    if vpath is None:
+        return {}
+    exports = json.loads(serve.call("preview", asset=vpath, maxBytes=200_000_000))
+    class_name = object_path.rsplit(".", 1)[-1]
+    merged: dict = {}
+    cls = next((x for x in exports if x.get("Name") == class_name), None)
+    parent = (cls or {}).get("Super") or {}
+    parent_path = parent.get("ObjectPath", "")
+    m = re.match(r"\w+'([^']+)'", parent.get("ObjectName", ""))
+    if parent_path and not parent_path.startswith("/Script/") and m:
+        merged.update(class_defaults(serve, f"{parent_path.rsplit('.', 1)[0]}.{m.group(1)}", cache))
+    cdo = next((x for x in exports if x.get("Name") == f"Default__{class_name}"), None)
+    merged.update(plain_props((cdo or {}).get("Properties") or {}))
+    cache[object_path] = merged
+    return merged
 
 
 def _level_of(cell: str) -> str:
@@ -217,13 +290,18 @@ def run_scan(raw: Path, workers: int = WORKERS) -> dict:
                     # An actor streamed into two cells (or two variants of one level)
                     # is still one placement.
                     level.setdefault(f"{rec['actor']}|{rec.get('loot', '')}", rec)
+        out = {lvl: sorted(recs.values(), key=lambda r: r["actor"]) for lvl, recs in sorted(levels.items())}
+        cache: dict[str, dict] = {}
+        classes = sorted({r["cls"] for recs in out.values() for r in recs if r.get("cls")})
+        defaults = {c: class_defaults(lead, c, cache) for c in classes}
     finally:
         for s in pool:
             s.close()
 
-    out = {lvl: sorted(recs.values(), key=lambda r: r["actor"]) for lvl, recs in sorted(levels.items())}
     write_json(Path(raw) / "placements.json", out)
+    write_json(Path(raw) / "blueprint_defaults.json", defaults)
     for lvl, recs in out.items():
-        loot = sum(1 for r in recs if "loot" in r)
-        print(f"scan: {lvl}: {loot} loot, {len(recs) - loot} spawners")
+        kinds = {k: sum(1 for r in recs if k in r) for k in ("loot", "spawns", "cls")}
+        print(f"scan: {lvl}: {kinds['loot']} loot, {kinds['spawns']} spawners, {kinds['cls']} features")
+    print(f"scan: {len(defaults)} blueprint classes resolved")
     return out

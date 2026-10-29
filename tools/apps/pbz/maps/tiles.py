@@ -26,7 +26,8 @@ Image.MAX_IMAGE_PIXELS = None  # the paintings are up to 8192x8192
 
 ICON_DIRS = (
     PBZ / "UI/InGame/Map", PBZ / "UI/InGame/Map/Texture", PBZ / "UI/HUD/White/NeedItem",
-    PBZ / "UI/UINew/HUD", PBZ / "UI/Inventory/Icon",
+    PBZ / "UI/UINew/HUD", PBZ / "UI/Inventory/Icon", PBZ / "UI/InGame/Map/LockObj/Texture",
+    PBZ / "UI/InGame/Literature/Gallery",
 )
 PORTRAIT_DIR = PBZ / "UI/InGame/Literature/Gallery"
 ICON_EDGE = 128
@@ -102,6 +103,15 @@ def convert_icons(raw: Path, res_out: Path) -> None:
             raise RuntimeError(f"icon {st.icon} for {st.id} is missing from the export")
         with Image.open(src) as img:
             _save_webp(square_icon(img), Path(res_out) / "icons" / f"{st.icon}.webp", quality=92)
+    # A Phantom Edge barrier carries the icon of the edge that clears it.
+    shaqi = read_json(Path(raw) / RAW_FILES["phantomEdges"])[0]["Rows"].values()
+    need = sorted({(r.get("WeaponMapIcon") or {}).get("AssetPathName", "").rsplit(".", 1)[-1] for r in shaqi} - {""})
+    for name in need:
+        src = next((Path(raw) / d / f"{name}.png" for d in ICON_DIRS if (Path(raw) / d / f"{name}.png").is_file()), None)
+        if src is None:
+            raise RuntimeError(f"Phantom Edge map icon {name} is missing from the export")
+        with Image.open(src) as img:
+            _save_webp(square_icon(img), Path(res_out) / "icons" / f"{name}.webp", quality=92)
     # Portraits are opaque paintings: filling the ring is the point, so no margin.
     portraits = 0
     for name in sorted(boss_portraits(raw)):
@@ -113,7 +123,7 @@ def convert_icons(raw: Path, res_out: Path) -> None:
             img.thumbnail((ICON_EDGE, ICON_EDGE), Image.LANCZOS)
             _save_webp(img, Path(res_out) / "icons" / f"{name}.webp", quality=88)
             portraits += 1
-    print(f"tiles: {len(SUBTYPES)} icons, {portraits} boss portraits")
+    print(f"tiles: {len(SUBTYPES)} icons, {len(need)} Phantom Edge icons, {portraits} boss portraits")
 
 
 def run_tiles(raw: Path, res_out: Path, only: list[str] | None = None) -> None:

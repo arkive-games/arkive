@@ -97,3 +97,43 @@ def test_culture_text_prefers_the_decoded_json(tmp_path):
     from pbz.locres import read_culture
     (tmp_path / "Game.json").write_text(json.dumps({"Default": {"k": "文"}}, ensure_ascii=False), encoding="utf-8")
     assert read_culture(tmp_path) == {"Default": {"k": "文"}}
+
+
+def test_locks_come_from_blockers_and_doors():
+    from pbz.maps import features
+    shaqi = {"锁镰": {"BrokenBlockerTag": {"TagName": "GameplayEvent.BreakBlocker.Gap.Activate"},
+                      "WeaponName": {"Key": "PhantomEdges_014"},
+                      "WeaponMapIcon": {"AssetPathName": "/Game/UI/T_Map_Need_X.T_Map_Need_X"}}}
+    items = {"K_01004": item("K_01004", name="Item_Key_04")}
+    defaults = {"/Game/B/BP_GapBlocker.BP_GapBlocker_C": {
+        "NeedAbilityContainer": ["GameplayEvent.BreakBlocker.Gap.Activate"]}}
+    placements = {"L": [
+        {"actor": "gap", "type": "BP_GapBlocker_C", "loc": [0, 0, 0],
+         "cls": "/Game/B/BP_GapBlocker.BP_GapBlocker_C", "props": {}},
+        {"actor": "latch", "type": "BP_Block_Door_C", "loc": [1, 0, 0], "cls": None,
+         "props": {"DoorType": features.LATCH}},
+        {"actor": "lock", "type": "BP_Block_Gate_C", "loc": [2, 0, 0], "cls": None,
+         "props": {"DoorType": features.LOCK, "Check Items": [{"Key": "K_01004", "Value": 1}]}},
+        {"actor": "fog", "type": "BP_FogDoor_C", "loc": [3, 0, 0], "cls": None,
+         "props": {"DoorType": features.LATCH}},
+    ]}
+    got = features.lock_placements(placements, defaults, shaqi, items)
+    assert [(p.kind, p.name_key, p.icon, p.desc_template) for p in got] == [
+        ("phantomEdgeLock", "PhantomEdges_014", "T_Map_Need_X", "UI_Map_41"),
+        ("latchedDoor", "UI_Map_15", None, None),
+        ("lockedDoor", "Item_Key_04", None, "UI_Map_40"),
+    ]
+
+
+def test_npc_names_need_a_whole_name_and_a_clear_majority():
+    from pbz.maps.features import npc_name_key
+    speakers = {
+        "Dlg_A_LaoGenTou_1": "Character_Imp_16", "Dlg_A_LaoGenTou_2": "Character_Imp_16",
+        "Dlg_B_LuJieYuan_1": "Character_XSSL_1",
+        "Dlg_C_FeiZei_1": "Character_LJC_25", "Dlg_C_FeiZei_2": "Character_LJC_26",
+    }
+    assert npc_name_key("BP_NPC_LaoGenTou_C", speakers) == "Character_Imp_16"
+    assert npc_name_key("BP_NPC_LaoGenTou_WhiteFlower_01_C", speakers) == "Character_Imp_16"
+    assert npc_name_key("BP_NPC_LuJieYuan_Wife_C", speakers) is None  # not her husband
+    assert npc_name_key("BP_NPC_FeiZei_C", speakers) is None  # two thieves, no majority
+    assert npc_name_key("BP_NPC_Ending_LaoGenTou_C", speakers) is None

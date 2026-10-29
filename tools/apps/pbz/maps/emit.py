@@ -26,12 +26,14 @@ frontend could reproduce. ``z`` keeps the world height for the readout.
 from __future__ import annotations
 
 import hashlib
+import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..common import read_json, write_json
 from ..locres import read_culture
+from . import features
 from . import placements as placed
 from .projection import AnchorProjection, anchors_from_asset
 
@@ -49,8 +51,10 @@ RAW_FILES = {
     "medicines": PBZ / "DataTable/UI/DT_MedicineTable.json",
     "loot": PBZ / "DataTable/DT_LevelLootDataTable.json",
     "codex": PBZ / "DataTable/DT_CodexEnemyDataTable.json",
+    "locTable": PBZ / "DataTable/Localizaion/DT_LocTable.json",  # sic: the game's spelling
 }
 PLACEMENTS = Path("placements.json")
+BLUEPRINT_DEFAULTS = Path("blueprint_defaults.json")
 TEXTURE_DIR = PBZ / "UI/Texture/Map"
 LOCALIZATION_DIR = CONTENT / "Localization/Game"
 
@@ -81,9 +85,10 @@ class Subtype:
 # start hidden: they outnumber everything else on a map several times over.
 SUBTYPES = [
     Subtype("bell", "travel", "BellDatas", "T_Map_CollectionProgress_Bell", "UI_Map_26", "#C9A227"),
-    Subtype("longPillar", "travel", "LongZhu", "T_Longzhu_PH", "UI_Map_23", "#8FB8C9"),
-    Subtype("banyan", "travel", "RongShu", "T_Darongshu_PH", "UI_Map_24", "#7FA36B"),
-    Subtype("scarecrow", "travel", "DaoCaoRen", "T_Daocaoren_PH", "UI_Map_25", "#B08A5B"),
+    Subtype("areaExit", "travel", "", "T_Tzdd_PH", "AreaExit", "#B9B2A0"),
+    Subtype("longPillar", "challenges", "LongZhu", "T_Longzhu_PH", "UI_Map_23", "#8FB8C9"),
+    Subtype("banyan", "challenges", "RongShu", "T_Darongshu_PH", "UI_Map_24", "#7FA36B"),
+    Subtype("scarecrow", "challenges", "DaoCaoRen", "T_Daocaoren_PH", "UI_Map_25", "#B08A5B"),
     Subtype("memoryFlower", "collectibles", "MemoryFlowerData", "T_Map_CollectionProgress_MemoryFlower", "UI_Map_20", "#C45A7A"),
     Subtype("blackstoneShard", "collectibles", "HeiShiItemData", "T_Map_CollectionProgress_Heishisuipian", "UI_Map_02", "#5E6A78"),
     Subtype("amberShard", "collectibles", "HupoItemData", "T_Map_CollectionProgress_Shaqihupo", "UI_Map_01", "#C77B30"),
@@ -107,16 +112,28 @@ SUBTYPES = [
     Subtype("progression", "materials", "", "T_WIcon_ShaqiHexin", "UI_Inventory_28", "#D0603F", default_active=False),
     Subtype("consumable", "items", "", "T_WIcon_Return_Weapon_1", "Consumable", "#8C9BA8"),
     Subtype("dust", "items", "", "Yishichenai", "UI_SkillWidget_13", "#9AA3AD", default_active=False),
-    Subtype("boss", "enemies", "", "T_MapHun_Gold", "Boss", "#C23B3B"),
+    Subtype("boss", "enemies", "", "T_BP_Monster_MoTian_w", "Boss", "#C23B3B"),
+    Subtype("npc", "characters", "", "T_MapHun_Gold", "NPC", "#C8A971"),
+    Subtype("phantomEdgeLock", "obstacles", "", "T_MapWeapon_JinGua", "PhantomEdgeLock", "#9B6FD0"),
+    Subtype("lockedDoor", "obstacles", "", "T_MapLock_Normal", "LockedDoor", "#C9A227"),
+    Subtype("latchedDoor", "obstacles", "", "T_Map_Danxiangmen", "UI_Map_15", "#8C9BA8"),
+    Subtype("storyQuest", "quests", "", "T_MapMission", "UI_Quest_02", "#D8B25A"),
+    Subtype("mysteryQuest", "quests", "", "T_MapMission", "UI_Quest_03", "#7FA6C9"),
+    Subtype("taleQuest", "quests", "", "T_MapMission", "UI_Quest_04", "#B48AD0"),
+    Subtype("collectionQuest", "quests", "", "T_MapMission", "UI_Quest_05", "#7FB58A"),
 ]
 SUBTYPE_BY_ID = {st.id: st for st in SUBTYPES}
 CATEGORY_TEXT = {
     "travel": "category.travel",
+    "challenges": "UI_Map_29",
     "collectibles": "category.collectibles",
     "equipment": "category.equipment",
     "materials": "UI_Inventory_01",
     "items": "category.items",
     "enemies": "UI_Literature_29",
+    "characters": "category.characters",
+    "obstacles": "category.obstacles",
+    "quests": "UI_Quest_09",
 }
 
 # Names the game has no single string for. The legend pairs weapons with
@@ -133,6 +150,12 @@ SITE_TEXT = {
     "category.items": {"en-US": "Items", "zh-CN": "道具", "zh-TW": "道具"},
     "Consumable": {"en-US": "Consumables", "zh-CN": "消耗品", "zh-TW": "消耗品"},
     "Boss": {"en-US": "Bosses", "zh-CN": "首领", "zh-TW": "首領"},
+    "AreaExit": {"en-US": "Area Exits", "zh-CN": "区域出口", "zh-TW": "區域出口"},
+    "PhantomEdgeLock": {"en-US": "Phantom Edge Barriers", "zh-CN": "影之武装地形", "zh-TW": "影之武裝地形"},
+    "LockedDoor": {"en-US": "Locked Doors", "zh-CN": "上锁的门", "zh-TW": "上鎖的門"},
+    "category.obstacles": {"en-US": "Obstacles", "zh-CN": "阻碍", "zh-TW": "阻礙"},
+    "category.characters": {"en-US": "Characters", "zh-CN": "人物", "zh-TW": "人物"},
+    "NPC": {"en-US": "NPCs", "zh-CN": "人物", "zh-TW": "人物"},
 }
 # Legend entries the game leaves untranslated in zh-Hant; the zh-Hans text in
 # traditional characters.
@@ -144,6 +167,8 @@ ZH_TW_GAPS = {
     "UI_Map_25": "稻草人",
     "UI_Inventory_01": "材料",
     "UI_Literature_01": "文書",
+    "UI_Quest_03": "迷局",
+    "UI_Quest_09": "任務",
 }
 # How a marker's contents are listed in its description.
 LIST_SEPARATOR = {"en-US": ", ", "zh-CN": "、", "zh-TW": "、"}
@@ -173,6 +198,19 @@ def level_areas(raw: Path, projections: dict) -> dict[str, list[str]]:
         if anchor_key in projections and row["LevelName"] != "None":
             out[row["LevelName"]].append(anchor_key)
     return out
+
+
+def area_tables(raw: Path) -> tuple[dict[str, str], dict[str, str]]:
+    """``({area: level name}, {lower-cased area: map name key})``, under both an
+    area's row name and its MapID -- the quest and exit tables use either."""
+    levels, names = {}, {}
+    for key, row in read_json(raw / RAW_FILES["maps"])[0]["Rows"].items():
+        for alias in (key, row["MapID"]):
+            if row["LevelName"] != "None":
+                levels.setdefault(alias, row["LevelName"])
+            if row["MapName"]["Key"]:
+                names.setdefault(alias.lower(), row["MapName"]["Key"])
+    return levels, names
 
 
 def area_textures(raw: Path) -> dict[str, str]:
@@ -234,10 +272,13 @@ def site_maps(raw: Path, anchors: dict) -> tuple[list[dict], dict[str, str]]:
     return maps, area_map
 
 
-def marker_id(subtype: str, area: str, entry: dict) -> str:
+def marker_id(subtype: str, entry: dict) -> str:
+    """Stable per pickup, not per listing: the legend lists some pickups under two
+    areas, and those must collapse to one marker. Persisted in visitors' saved
+    views, so the seed must not change once published."""
     loc = entry["Location"]
     ident = entry.get("SaveGuidString") or entry.get("BellID") or ""
-    seed = f"{area}|{ident}|{loc['X']:.0f},{loc['Y']:.0f},{loc['Z']:.0f}"
+    seed = f"{ident}|{loc['X']:.0f},{loc['Y']:.0f},{loc['Z']:.0f}"
     return f"{subtype}-{hashlib.sha1(seed.encode()).hexdigest()[:10]}"
 
 
@@ -293,7 +334,7 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                     continue
                 map_id = area_map[home]
                 width, height = image_sizes[map_id]
-                mid = marker_id(st.id, area, entry)
+                mid = marker_id(st.id, entry)
                 if mid in seen:  # the same pickup listed under two areas
                     continue
                 seen.add(mid)
@@ -314,13 +355,35 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                     if key and all(text[lng].get(key) for lng in ("en-US", "zh-CN")):
                         labels[mid] = key
 
-    descriptions: dict[str, tuple[list[tuple[str, int]], tuple[int, int] | None]] = {}
+    descriptions: dict[str, tuple[list[tuple[str, int]], tuple[int, int] | None, str | None]] = {}
+    name_templates: dict[str, str] = {}
+
+    def fill(template: str, value: str, lng: str) -> str:
+        """``template`` (a game text key) with ``value`` in its ``{0}``, else after it."""
+        raw_text = SITE_TEXT[template][lng] if template in SITE_TEXT else (
+            text[lng].get(template) or (ZH_TW_GAPS.get(template) if lng == "zh-TW" else None) or legend(template, lng))
+        # The map breaks "Missing:" and its {0} onto two lines; one line wants a
+        # single space in English and no gap at all in Chinese.
+        t = re.sub(r"\s*\n\s*", " " if lng == "en-US" else "", raw_text).strip()
+        if "{0}" in t:
+            return t.replace("{0}", value)
+        return f"{t} {value}" if lng == "en-US" else f"{t}{value}"
+
     if (raw / PLACEMENTS).is_file():
         loot = read_json(raw / RAW_FILES["loot"])[0]["Rows"]
         codex = read_json(raw / RAW_FILES["codex"])[0]["Rows"]
         items = {r["ItemId"]: r for r in read_json(raw / RAW_FILES["inventory"])[0]["Rows"].values()
                  if r.get("ItemId")}
-        found = placed.collect(read_json(raw / PLACEMENTS), loot, items, codex, legend_points)
+        scanned = read_json(raw / PLACEMENTS)
+        found = placed.collect(scanned, loot, items, codex, legend_points)
+        area_levels, area_names = area_tables(raw)
+        if (raw / BLUEPRINT_DEFAULTS).is_file():
+            shaqi = read_json(raw / RAW_FILES["phantomEdges"])[0]["Rows"]
+            found += features.lock_placements(scanned, read_json(raw / BLUEPRINT_DEFAULTS), shaqi, items)
+        found += features.quest_placements(raw, area_levels)
+        if (raw / RAW_FILES["locTable"]).is_file():
+            found += features.npc_placements(scanned, read_json(raw / RAW_FILES["locTable"])[0]["Rows"])
+        found += features.portal_placements(raw, area_levels, area_names)
         candidates = level_areas(raw, projections)
         for p in found:
             home = placed.home_area(p, candidates.get(p.level, []), projections)
@@ -347,13 +410,16 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
             if p.icon:
                 marker["icon"] = p.icon
             markers[map_id].append(marker)
-            if p.name_key and all(text[lng].get(p.name_key) for lng in ("en-US", "zh-CN")):
+            if p.name_key and all(text[lng].get(p.name_key) or p.name_key in SITE_TEXT
+                                  for lng in ("en-US", "zh-CN")):
                 labels[mid] = p.name_key
+            if p.name_template:
+                name_templates[mid] = p.name_template
             if p.contents or p.dust:
-                descriptions[mid] = (p.contents, p.dust)
+                descriptions[mid] = (p.contents, p.dust, p.desc_template)
 
     def describe(mid: str, lng: str) -> str:
-        contents, dust = descriptions[mid]
+        contents, dust, template = descriptions[mid]
         parts = []
         for key, amount in contents:
             name = " ".join((text[lng].get(key) or text["zh-CN"].get(key) or "").split())
@@ -362,7 +428,8 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
         if dust:
             amount = str(dust[0]) if dust[0] == dust[1] else f"{dust[0]}–{dust[1]}"
             parts.append(f"{legend('UI_SkillWidget_13', lng)} {amount}")
-        return LIST_SEPARATOR[lng].join(parts)
+        listed = LIST_SEPARATOR[lng].join(parts)
+        return fill(template, listed, lng) if template else listed
 
     for lst in markers.values():
         lst.sort(key=lambda m: (m["subtype"], m["y"], m["x"]))
@@ -419,7 +486,9 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                 entry = {}
                 if mk["id"] in labels:
                     key = labels[mk["id"]]
-                    entry["name"] = " ".join((text[lng].get(key) or text["zh-CN"][key]).split())
+                    name = legend(key, lng) if key in SITE_TEXT else                         " ".join((text[lng].get(key) or text["zh-CN"][key]).split())
+                    template = name_templates.get(mk["id"])
+                    entry["name"] = fill(template, name, lng) if template else name
                 if mk["id"] in descriptions:
                     entry["description"] = describe(mk["id"], lng)
                 if entry:

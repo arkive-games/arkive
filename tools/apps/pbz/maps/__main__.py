@@ -1,4 +1,4 @@
-"""CLI: ``python -m pbz.maps <scan|emit|tiles|icons|all>``.
+r"""CLI: ``python -m pbz.maps <scan|emit|tiles|icons|all>``.
 
 Paths come from env vars / ``tools/.env`` (see ``pbz.env``):
   PBZ_RAW       uex export root
@@ -7,16 +7,22 @@ Paths come from env vars / ``tools/.env`` (see ``pbz.env``):
   PBZ_GAME      the Steam install, read only to stamp the game build (optional)
   UEX_EXE / UEX_HOME  the uex binary ``scan`` streams the level cells through
 
-The raw export these stages read is::
+The raw export these stages read::
 
-  uex export --profile pbz --only \\
-    ProjectPBZ/Content/PBZContent/DataTable/UI ProjectPBZ/Content/PBZContent/DataTable/Item \\
-    ProjectPBZ/Content/PBZContent/Maps/DT_MapItemData.uasset \\
-    ProjectPBZ/Content/PBZContent/Maps/GlobalMapAnchorData.uasset \\
-    ProjectPBZ/Content/PBZContent/UI/Texture/Map ProjectPBZ/Content/PBZContent/UI/InGame/Map \\
-    ProjectPBZ/Content/PBZContent/DataTable/DT_LevelLootDataTable.uasset \n    ProjectPBZ/Content/PBZContent/DataTable/DT_CodexEnemyDataTable.uasset \n    ProjectPBZ/Content/PBZContent/UI/InGame/Literature/Gallery \n    ProjectPBZ/Content/PBZContent/UI/UINew/items \n    ProjectPBZ/Content/Localization/Game
+  uex export --profile pbz --only \
+    ProjectPBZ/Content/PBZContent/DataTable \
+    ProjectPBZ/Content/PBZContent/Maps \
+    ProjectPBZ/Content/PBZContent/UI/Texture/Map \
+    ProjectPBZ/Content/PBZContent/UI/InGame/Map \
+    ProjectPBZ/Content/PBZContent/UI/InGame/Literature/Gallery \
+    ProjectPBZ/Content/PBZContent/UI/HUD/White/NeedItem \
+    ProjectPBZ/Content/PBZContent/UI/UINew/HUD \
+    ProjectPBZ/Content/PBZContent/UI/Inventory/Icon \
+    ProjectPBZ/Content/PBZstory/PBZQuest \
+    ProjectPBZ/Content/Localization/Game
 
-``scan`` adds ``placements.json`` to that root (not part of the export; see ``scan``).
+``scan`` then adds ``placements.json`` and ``blueprint_defaults.json`` to that
+root; they are derived, not exported (see ``scan``).
 """
 
 from __future__ import annotations

@@ -70,6 +70,10 @@ class Placement:
     contents: list[tuple[str, int]] = field(default_factory=list)  # (item name key, amount)
     dust: tuple[int, int] | None = None
     icon: str | None = None  # per-marker icon override (boss portraits)
+    # Game text keys the name / description are formatted into: "{0}" takes the
+    # name (or the listed contents); a template without one is prefixed.
+    name_template: str | None = None
+    desc_template: str | None = None
 
 
 def item_name_key(item: dict) -> str:
