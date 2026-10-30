@@ -30,10 +30,10 @@ on:
         description: "Which toy to publish"
         type: choice
         default: all
-        # Only these three have a toy.config.json and an already-published slug.
+        # Only these have a toy.config.json and an already-published slug.
         # sts2/vrising/lostark are absent on purpose: publishing them would mint a
         # NEW toy, and a slug can never be changed afterwards.
-        options: [all, meta, aion2, palworld]
+        options: [all, meta, aion2, palworld, pbz]
       submit:
         description: "Submit for review (leave off to only upload and get a preview)"
         type: boolean
@@ -53,7 +53,7 @@ jobs:
       matrix:
         # Kept on one line on purpose: a folded block scalar with more-indented
         # continuations preserves the newlines, which corrupts the expression.
-        app: ${{ fromJSON(inputs.app == 'all' && '["meta","aion2","palworld"]' || format('["{0}"]', inputs.app)) }}
+        app: ${{ fromJSON(inputs.app == 'all' && '["meta","aion2","palworld","pbz"]' || format('["{0}"]', inputs.app)) }}
 
     # Never let two runs upload to the same toy at once. `cancel-in-progress:
     # false` lets a running upload finish; GitHub still keeps only one job queued
@@ -123,7 +123,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${ARTIFACTS_TOKEN:-}" ]; then
-            echo "::error::ARTIFACTS_TOKEN is required for ${{ matrix.app }} because its bundle embeds the private artifact repos. Add a fine-grained PAT with Contents:Read on arkive-games/data-${{ matrix.app }} and arkive-games/resource-${{ matrix.app }}. (meta and aion2 need no such token.)"
+            echo "::error::ARTIFACTS_TOKEN is required for ${{ matrix.app }} because its bundle embeds the private artifact repos. Add a fine-grained PAT with Contents:Read on arkive-games/data-${{ matrix.app }} and arkive-games/resource-${{ matrix.app }}. (meta, aion2 and pbz need no such token.)"
             exit 1
           fi
 
