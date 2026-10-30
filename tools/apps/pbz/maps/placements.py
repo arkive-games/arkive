@@ -15,7 +15,9 @@ tracks; these are everything else in the levels:
   ``BOSS_MERGE_DISTANCE`` of each other collapse into the first phase.
 
 Loot the legend already shows -- equipment, keys, shards, memory flowers, and the
-major chests themselves -- is left out, so nothing is drawn twice.
+major chests themselves -- is left out, so nothing is drawn twice. A legend chest's
+own contents are read back through its actor (``chest_contents``), and a book page
+is written out in full (``reading``) rather than listed by title.
 """
 
 from __future__ import annotations
@@ -23,16 +25,11 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-import numpy as np
-from scipy.spatial import cKDTree
-
 from .projection import AnchorProjection
 
 # Contents the legend owns: a loot actor holding any of these is the legend's.
 LEGEND_ITEM_PREFIXES = ("K_", "Item_Piece_")
 LEGEND_ITEM_TYPES = {"EItemTypes::MemoryFlower"}
-# A loot actor this close (cm) to a legend entry is that entry -- a major chest.
-LEGEND_MERGE_DISTANCE = 300.0
 BOSS_MERGE_DISTANCE = 3000.0
 
 # Most notable first: a breakable holding a note and some dust is a note.
@@ -74,6 +71,51 @@ class Placement:
     # name (or the listed contents); a template without one is prefixed.
     name_template: str | None = None
     desc_template: str | None = None
+    # Book pages held, written out in full: (book name key, "page/pages", body key).
+    reading: list[tuple[str | None, str, str]] = field(default_factory=list)
+
+
+# Equipment a loot entry hands out, and the field naming each piece.
+EQUIPMENT_FIELDS = (("Weapons", "WeaponID"), ("Accessories", "AccessoryID"), ("Medicines", "MedicineID"))
+
+
+def book_pages(items: dict[str, dict]) -> dict[str, int]:
+    """``{book id: page count}``: how many pages make up each book."""
+    out: dict[str, int] = {}
+    for item in items.values():
+        if item["ItemType"] == "EItemTypes::BookPage" and item.get("IntegrationItemID") not in (None, "None"):
+            out[item["IntegrationItemID"]] = out.get(item["IntegrationItemID"], 0) + 1
+    return out
+
+
+def page_reading(item: dict, items: dict[str, dict], books: dict[str, int]) -> tuple[str | None, str, str]:
+    """A book page as ``(book name key, "page/pages", body key)``."""
+    book_id = item.get("IntegrationItemID")
+    book = items.get(book_id or "")
+    count = books.get(book_id or "", 0)
+    page = f"{item['SequentialIndex']}/{count}" if count else ""
+    return (book["ItemName"]["Key"] or None) if book else None, page, item["ItemDescription"]["Key"]
+
+
+def entry_contents(entry: dict, items: dict[str, dict],
+                   equipment: dict[str, str]) -> tuple[list[tuple[str, int]], tuple[int, int] | None]:
+    """Everything one loot entry holds, named: ``([(name key, amount)], dust range)``.
+    ``equipment`` maps a weapon, Phantom Edge, accessory or medicine id to its name key."""
+    contents = []
+    for fld, id_field in EQUIPMENT_FIELDS:
+        for e in entry[fld]:
+            key = equipment.get(e[id_field])
+            if key:
+                contents.append((key, 1))
+    for li in entry["LootItems"]:
+        item = items.get(li["ItemId"])
+        if item is not None and item_name_key(item):
+            contents.append((item_name_key(item), li["MinAmount"]))
+    dust = None
+    if entry["LootDusts"]:
+        d = entry["LootDusts"][0]
+        dust = (int(d["MinDust"]), int(d["MaxDust"]))
+    return contents, dust
 
 
 def item_name_key(item: dict) -> str:
@@ -106,20 +148,25 @@ def is_legend_loot(entry: dict, items: dict[str, dict]) -> bool:
     return False
 
 
-def loot_placement(rec: dict, level: str, loot: dict, items: dict[str, dict]) -> Placement | None:
+def loot_placement(rec: dict, level: str, loot: dict, items: dict[str, dict],
+                   books: dict[str, int] | None = None) -> Placement | None:
     row = loot.get(rec["loot"])
     if row is None or not row["EntryDatas"]:
         return None
     entry = row["EntryDatas"][0]
     if is_legend_loot(entry, items):
         return None
-    contents, kinds = [], []
+    contents, kinds, reading = [], [], []
     for li in entry["LootItems"]:
         item = items.get(li["ItemId"])
         if item is None:
             continue
         kinds.append((KIND_ORDER.index(item_kind(item)), item))
-        contents.append((item_name_key(item), li["MinAmount"]))
+        if item["ItemType"] == "EItemTypes::BookPage":
+            # Written out in full rather than listed: its title is the marker's name.
+            reading.append(page_reading(item, items, books if books is not None else book_pages(items)))
+        else:
+            contents.append((item_name_key(item), li["MinAmount"]))
     dust = None
     if entry["LootDusts"]:
         d = entry["LootDusts"][0]
@@ -132,7 +179,19 @@ def loot_placement(rec: dict, level: str, loot: dict, items: dict[str, dict]) ->
     else:
         kind, name_key = "dust", None
     return Placement(kind, tuple(rec["loc"]), level, f"{rec['actor']}|{rec['loot']}",
-                     name_key=name_key, contents=contents, dust=dust)
+                     name_key=name_key, contents=contents, dust=dust, reading=reading)
+
+
+def chest_contents(save_guid: str, actors: dict[str, dict], loot: dict, items: dict[str, dict],
+                   equipment: dict[str, str]) -> tuple[list[tuple[str, int]], tuple[int, int] | None] | None:
+    """What a legend chest holds. Its ``SaveGuidString`` (``<level>-<actor>``) names
+    the placed actor, whose ``LootItemID`` the loot table resolves; ``None`` when the
+    scan never saw that actor."""
+    rec = actors.get(legend_actor(save_guid))
+    row = loot.get(rec.get("loot", "")) if rec else None
+    if not row or not row["EntryDatas"]:
+        return None
+    return entry_contents(row["EntryDatas"][0], items, equipment)
 
 
 def boss_classes(codex: dict) -> dict[str, dict]:
@@ -169,17 +228,23 @@ def boss_placements(placements: dict[str, list[dict]], codex: dict) -> list[Plac
     return kept
 
 
+def legend_actor(save_guid: str) -> str:
+    """The placed actor a legend entry stands for: its ``SaveGuidString`` is
+    ``<level>-<actor>``."""
+    return save_guid.partition("-")[2]
+
+
 def collect(placements: dict[str, list[dict]], loot: dict, items: dict[str, dict],
-            codex: dict, legend_points: list[tuple[float, float, float]]) -> list[Placement]:
-    legend = cKDTree(np.array(legend_points)) if legend_points else None
+            codex: dict, legend_actors: set[str]) -> list[Placement]:
+    """``legend_actors`` are the actors the legend already draws. They are matched by
+    name, not distance: a breakable full of dust a metre from a shard is its own pickup."""
+    books = book_pages(items)
     out = []
     for level, recs in placements.items():
         for rec in recs:
-            if "loot" not in rec:
+            if "loot" not in rec or rec["actor"] in legend_actors:
                 continue
-            if legend is not None and legend.query(rec["loc"], k=1)[0] < LEGEND_MERGE_DISTANCE:
-                continue
-            p = loot_placement(rec, level, loot, items)
+            p = loot_placement(rec, level, loot, items, books)
             if p is not None:
                 out.append(p)
     return out + boss_placements(placements, codex)

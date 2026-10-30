@@ -3,15 +3,19 @@ from pbz.maps.scan import scan_cell
 
 
 def item(item_id, item_type="EItemTypes::Item", detail="EItemDetailType::None",
-         material="EItemMaterialType::None", name="", subhead=""):
+         material="EItemMaterialType::None", name="", subhead="", desc="", book=None, page=0):
     return {
         "ItemId": item_id, "ItemType": item_type, "ItemDetailType": detail, "MaterialType": material,
-        "ItemName": {"Key": name}, "Subhead": {"Key": subhead},
+        "ItemName": {"Key": name}, "Subhead": {"Key": subhead}, "ItemDescription": {"Key": desc},
+        "IntegrationItemID": book or "None", "SequentialIndex": page,
     }
 
 
 ITEMS = {
-    "R_01017": item("R_01017", "EItemTypes::BookPage", subhead="Reading_Xigu_Letter_017"),
+    "R_01017": item("R_01017", "EItemTypes::BookPage", subhead="Reading_Xigu_Letter_017",
+                    desc="Reading_Xigu_Letter_017_Body", book="Book_01", page=2),
+    "R_01018": item("R_01018", "EItemTypes::BookPage", book="Book_01", page=1),
+    "Book_01": item("Book_01", "EItemTypes::Book", name="Book_01_Name"),
     "Weapon_Material_04": item("Weapon_Material_04", detail="EItemDetailType::Material",
                                material="EItemMaterialType::WeaponUpgradeMaterial", name="WM_04"),
     "K_01001": item("K_01001", detail="EItemDetailType::NarrativeItem", name="Key_01"),
@@ -33,8 +37,34 @@ def test_the_most_notable_item_names_the_marker():
     assert p.kind == "notes"
     # Notes leave ItemName empty; their title is the Subhead.
     assert p.name_key == "Reading_Xigu_Letter_017"
-    assert p.contents == [("WM_04", 2), ("Reading_Xigu_Letter_017", 1)]
+    assert p.contents == [("WM_04", 2)]
     assert p.dust == (440, 440)
+    # The page itself is written out: its book, its place in it, and its text.
+    assert p.reading == [("Book_01_Name", "2/2", "Reading_Xigu_Letter_017_Body")]
+
+
+def test_a_legend_chest_lists_what_its_actor_holds():
+    loot = {"c": {"EntryDatas": [{
+        "LootItems": [{"ItemId": "Weapon_Material_04", "MinAmount": 3, "MaxAmount": 3}],
+        "LootDusts": [{"MinDust": 120, "MaxDust": 120}],
+        "Weapons": [{"WeaponID": "Double"}], "Medicines": [], "Accessories": [{"AccessoryID": "AC_Attack"}],
+    }]}}
+    actors = {"BP_Chest_C_UAID_1": {"actor": "BP_Chest_C_UAID_1", "loot": "c"}}
+    equipment = {"Double": "Weapon_Double", "AC_Attack": "Accessory_Attack"}
+    got = placed.chest_contents("PBZ_Xigu_WP-BP_Chest_C_UAID_1", actors, loot, ITEMS, equipment)
+    assert got == ([("Weapon_Double", 1), ("Accessory_Attack", 1), ("WM_04", 3)], (120, 120))
+    # An actor the scan never saw holds nothing we can name.
+    assert placed.chest_contents("PBZ_Xigu_WP-BP_Chest_C_UAID_2", actors, loot, ITEMS, equipment) is None
+
+
+def test_only_the_legend_s_own_actor_is_left_out_not_its_neighbours():
+    loot = {"d": loot_row(dust=300)}
+    placements = {"L": [
+        {"actor": "chest", "loc": [0, 0, 0], "loot": "d"},
+        {"actor": "jar", "loc": [50, 0, 0], "loot": "d"},  # half a metre away, its own pickup
+    ]}
+    found = placed.collect(placements, loot, ITEMS, {}, {"chest"})
+    assert [p.seed for p in found] == ["jar|d"]
 
 
 def test_dust_alone_is_a_dust_marker():

@@ -275,6 +275,16 @@ def site_maps(raw: Path, anchors: dict) -> tuple[list[dict], dict[str, str]]:
     return maps, area_map
 
 
+# The game's rich-text tags: book pages bold, centre and right-align their lines.
+# The popup shows plain text, so the tags go and their text stays.
+RICH_TAG = re.compile(r"</?[A-Za-z_][^<>]*>|</>")
+
+
+def plain(value: str) -> str:
+    """Game text with its rich-text tags stripped."""
+    return RICH_TAG.sub("", value).strip()
+
+
 def marker_id(subtype: str, entry: dict) -> str:
     """Stable per pickup, not per listing: the legend lists some pickups under two
     areas, and those must collapse to one marker. Persisted in visitors' saved
@@ -309,7 +319,19 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
     unplaced: Counter = Counter()
     rehomed: Counter = Counter()
     seen: set[str] = set()
-    legend_points: list[tuple[float, float, float]] = []
+    legend_actors: set[str] = set()  # the placed actors the legend draws
+    Reading = list[tuple[str | None, str, str]]
+    descriptions: dict[str, tuple[list[tuple[str, int]], tuple[int, int] | None, str | None, Reading]] = {}
+    name_templates: dict[str, str] = {}
+    has_scan = (raw / PLACEMENTS).is_file()
+    if has_scan:
+        loot = read_json(raw / RAW_FILES["loot"])[0]["Rows"]
+        items = {r["ItemId"]: r for r in read_json(raw / RAW_FILES["inventory"])[0]["Rows"].values()
+                 if r.get("ItemId")}
+        scanned = read_json(raw / PLACEMENTS)
+        actors = {rec["actor"]: rec for recs in scanned.values() for rec in recs if "loot" in rec}
+        # Chests name their equipment by its table id; weapons and Phantom Edges share a field.
+        equipment = {**names["phantomEdges"], **names["weapons"], **names["accessories"], **names["medicines"]}
     for area_entry in read_json(raw / RAW_FILES["items"])[0]["Properties"]["MapItemDatas"]:
         area = area_entry["Key"]
         if area in SKIPPED_AREAS:
@@ -323,7 +345,7 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                 if world == (0, 0, 0):  # declared in the legend but never placed
                     unplaced[st.id] += 1
                     continue
-                legend_points.append(world)
+                legend_actors.add(placed.legend_actor(entry.get("SaveGuidString") or ""))
                 home = area if area in projections else None
                 if home is None:
                     # An area with no anchors of its own (the Crimson Forest
@@ -352,14 +374,15 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                     "contributors": [],
                 }
                 markers[map_id].append(marker)
+                if has_scan and st.id == "majorChest":
+                    held = placed.chest_contents(entry.get("SaveGuidString") or "", actors, loot, items, equipment)
+                    if held and (held[0] or held[1]):
+                        descriptions[mid] = (held[0], held[1], None, [])
                 if st.source in NAME_SOURCES:
                     field, table, _ = NAME_SOURCES[st.source]
                     key = names[table].get(entry.get(field) or "")
                     if key and all(text[lng].get(key) for lng in ("en-US", "zh-CN")):
                         labels[mid] = key
-
-    descriptions: dict[str, tuple[list[tuple[str, int]], tuple[int, int] | None, str | None]] = {}
-    name_templates: dict[str, str] = {}
 
     def fill(template: str, value: str, lng: str) -> str:
         """``template`` (a game text key) with ``value`` in its ``{0}``, else after it."""
@@ -372,13 +395,9 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
             return t.replace("{0}", value)
         return f"{t} {value}" if lng == "en-US" else f"{t}{value}"
 
-    if (raw / PLACEMENTS).is_file():
-        loot = read_json(raw / RAW_FILES["loot"])[0]["Rows"]
+    if has_scan:
         codex = read_json(raw / RAW_FILES["codex"])[0]["Rows"]
-        items = {r["ItemId"]: r for r in read_json(raw / RAW_FILES["inventory"])[0]["Rows"].values()
-                 if r.get("ItemId")}
-        scanned = read_json(raw / PLACEMENTS)
-        found = placed.collect(scanned, loot, items, codex, legend_points)
+        found = placed.collect(scanned, loot, items, codex, legend_actors - {""})
         area_levels, area_names = area_tables(raw)
         if (raw / BLUEPRINT_DEFAULTS).is_file():
             shaqi = read_json(raw / RAW_FILES["phantomEdges"])[0]["Rows"]
@@ -418,11 +437,20 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                 labels[mid] = p.name_key
             if p.name_template:
                 name_templates[mid] = p.name_template
-            if p.contents or p.dust:
-                descriptions[mid] = (p.contents, p.dust, p.desc_template)
+            if p.contents or p.dust or p.reading:
+                descriptions[mid] = (p.contents, p.dust, p.desc_template, p.reading)
+
+    def local(key: str | None, lng: str) -> str:
+        return (text[lng].get(key or "") or text["zh-CN"].get(key or "") or "").replace("\r\n", "\n")
 
     def describe(mid: str, lng: str) -> str:
-        contents, dust, template = descriptions[mid]
+        contents, dust, template, reading = descriptions[mid]
+        blocks = []
+        for book, page, body in reading:
+            # The page's title is the marker's name; the book and page number head
+            # the text, the way the game's reader shows them.
+            head = " · ".join(x for x in (" ".join(local(book, lng).split()), page) if x)
+            blocks.append("\n".join(x for x in (head, plain(local(body, lng))) if x))
         parts = []
         for key, amount in contents:
             name = " ".join((text[lng].get(key) or text["zh-CN"].get(key) or "").split())
@@ -432,7 +460,9 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
             amount = str(dust[0]) if dust[0] == dust[1] else f"{dust[0]}–{dust[1]}"
             parts.append(f"{legend('UI_SkillWidget_13', lng)} {amount}")
         listed = LIST_SEPARATOR[lng].join(parts)
-        return fill(template, listed, lng) if template else listed
+        if listed:
+            blocks.append(fill(template, listed, lng) if template else listed)
+        return "\n\n".join(blocks)
 
     for lst in markers.values():
         lst.sort(key=lambda m: (m["subtype"], m["y"], m["x"]))
