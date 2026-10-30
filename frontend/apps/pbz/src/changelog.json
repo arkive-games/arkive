@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.8.0",
+      "date": "2026-10-31",
+      "commit": "15abf3eff33ad7ab9cec25b2dde78a3e20adf343",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The map now shows story items, treasures, merchants and the steps of collection quests, and locked doors are drawn as doors with the key they need.",
+            "zh-CN": "地图新增剧情道具、宝藏、商人与收集任务的各个目标点；上锁的门以门本身标出，并注明所需钥匙。",
+            "zh-TW": "地圖新增劇情道具、寶藏、商人與收集任務的各個目標點；上鎖的門以門本身標出，並註明所需鑰匙。"
+          }
+        },
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Added the reforge talismans as consumables and named many more characters, all read from the game's own data.",
+            "zh-CN": "补充了兵刃逆炼符与影之消退符等消耗品，并为更多人物标上名字，全部取自游戏数据。",
+            "zh-TW": "補充了兵刃逆煉符與影之消退符等消耗品，並為更多人物標上名字，全部取自遊戲資料。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.7.0",
       "date": "2026-10-31",
       "commit": "094b5fcb51fea2022e5af702ae2eab50190f2e04",
