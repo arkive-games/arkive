@@ -1,6 +1,23 @@
 {
   "entries": [
     {
+      "date": "2026-10-31",
+      "commit": "094b5fcb51fea2022e5af702ae2eab50190f2e04",
+      "targets": [
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Your account inbox now shows replies and likes on your map-marker comments, and each one opens the exact marker on the map.",
+            "zh-CN": "账户消息中心会显示你的点位留言收到的回复和点赞，点击即可在地图上打开对应点位。",
+            "zh-TW": "帳戶訊息中心會顯示你的點位留言收到的回覆和按讚，點擊即可在地圖上開啟對應點位。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-30",
       "commit": "7d9acf45af77249aa51d66f6d9c3cf8576740e0f",
       "targets": [

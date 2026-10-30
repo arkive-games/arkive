@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.8.1",
+      "date": "2026-10-31",
+      "commit": "d2d04161c788b615e51953fdeb34ee84eb27ed19",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "A marker's comments tab now says the comments are loading, instead of briefly claiming there are none.",
+            "zh-CN": "点位留言加载时会显示「正在加载留言」，不再短暂显示「暂无留言」。",
+            "zh-TW": "點位留言載入時會顯示「正在載入留言」，不再短暫顯示「暫無留言」。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.0",
       "date": "2026-10-31",
       "commit": "15abf3eff33ad7ab9cec25b2dde78a3e20adf343",
