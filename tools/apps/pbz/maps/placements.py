@@ -28,7 +28,10 @@ from dataclasses import dataclass, field
 from .projection import AnchorProjection
 
 # Contents the legend owns: a loot actor holding any of these is the legend's.
-LEGEND_ITEM_PREFIXES = ("K_", "Item_Piece_")
+# Shards are listed in the legend without an item id, so they go by prefix; keys
+# and other story items only when the legend lists that very item (``collect``'s
+# ``legend_items``) -- most keepsakes are story items the legend never tracks.
+LEGEND_ITEM_PREFIXES = ("Item_Piece_",)
 LEGEND_ITEM_TYPES = {"EItemTypes::MemoryFlower"}
 BOSS_MERGE_DISTANCE = 3000.0
 
@@ -64,6 +67,7 @@ class Placement:
     level: str
     seed: str  # stable identity for the marker id
     name_key: str | None = None  # Game.locres key of the marker name
+    name_text: str | None = None  # a name the game spells out in one language only (NPCDesc)
     contents: list[tuple[str, int]] = field(default_factory=list)  # (item name key, amount)
     dust: tuple[int, int] | None = None
     icon: str | None = None  # per-marker icon override (boss portraits)
@@ -131,6 +135,10 @@ def item_kind(item: dict) -> str:
         return "memoryPetal"
     if item["MaterialType"] in MATERIAL_KINDS:
         return MATERIAL_KINDS[item["MaterialType"]]
+    if item["ItemDetailType"] == "EItemDetailType::AddAttribute" and item.get("bCanSell"):
+        # The reforge talismans share the detail type of Blackstone and the cores,
+        # but are bought and sold like any consumable; the upgrades never are.
+        return "consumable"
     if item["ItemDetailType"] in DETAIL_KINDS:
         return DETAIL_KINDS[item["ItemDetailType"]]
     if item["ItemId"].startswith(("R_", "TU_")):  # stray notes and keepsakes
@@ -138,23 +146,36 @@ def item_kind(item: dict) -> str:
     return "consumable"
 
 
-def is_legend_loot(entry: dict, items: dict[str, dict]) -> bool:
+def is_legend_loot(entry: dict, items: dict[str, dict], legend_items: frozenset[str] = frozenset()) -> bool:
     if entry["Weapons"] or entry["Medicines"] or entry["Accessories"]:
         return True
     for li in entry["LootItems"]:
         item = items.get(li["ItemId"])
-        if li["ItemId"].startswith(LEGEND_ITEM_PREFIXES) or (item and item["ItemType"] in LEGEND_ITEM_TYPES):
+        if (li["ItemId"].startswith(LEGEND_ITEM_PREFIXES) or li["ItemId"] in legend_items
+                or (item and item["ItemType"] in LEGEND_ITEM_TYPES)):
             return True
     return False
 
 
+def actor_entry(rec: dict, loot: dict, flow_items: dict[str, list] | None = None) -> dict | None:
+    """What a placed actor holds, as a loot entry: its ``LootItemID``'s first entry,
+    or its own ``PickupMap`` -- or what its flow graph hands out -- in the same shape."""
+    if rec.get("loot"):
+        row = loot.get(rec["loot"])
+        return row["EntryDatas"][0] if row and row["EntryDatas"] else None
+    held = rec.get("pickups") or (flow_items or {}).get(rec.get("flow", ""))
+    if held:
+        return {"LootItems": [{"ItemId": i, "MinAmount": n, "MaxAmount": n} for i, n in held],
+                "LootDusts": [], "Weapons": [], "Medicines": [], "Accessories": []}
+    return None
+
+
 def loot_placement(rec: dict, level: str, loot: dict, items: dict[str, dict],
-                   books: dict[str, int] | None = None) -> Placement | None:
-    row = loot.get(rec["loot"])
-    if row is None or not row["EntryDatas"]:
-        return None
-    entry = row["EntryDatas"][0]
-    if is_legend_loot(entry, items):
+                   books: dict[str, int] | None = None,
+                   legend_items: frozenset[str] = frozenset(),
+                   flow_items: dict[str, list] | None = None) -> Placement | None:
+    entry = actor_entry(rec, loot, flow_items)
+    if entry is None or is_legend_loot(entry, items, legend_items):
         return None
     contents, kinds, reading = [], [], []
     for li in entry["LootItems"]:
@@ -178,20 +199,34 @@ def loot_placement(rec: dict, level: str, loot: dict, items: dict[str, dict],
         kind, name_key = item_kind(top), item_name_key(top) or None
     else:
         kind, name_key = "dust", None
-    return Placement(kind, tuple(rec["loc"]), level, f"{rec['actor']}|{rec['loot']}",
+    # The loot id keeps the seeds of markers already published; the others have none.
+    seed = f"{rec['actor']}|{rec.get('loot') or ('flow' if rec.get('flow') else 'pickups')}"
+    return Placement(kind, tuple(rec["loc"]), level, seed,
                      name_key=name_key, contents=contents, dust=dust, reading=reading)
+
+
+def legend_entry(save_guid: str, actors: dict[str, dict], loot: dict) -> dict | None:
+    """What the placed actor behind a legend entry holds. Its ``SaveGuidString``
+    (``<level>-<actor>``) names the actor; ``None`` when the scan never saw it."""
+    rec = actors.get(legend_actor(save_guid))
+    return actor_entry(rec, loot) if rec else None
 
 
 def chest_contents(save_guid: str, actors: dict[str, dict], loot: dict, items: dict[str, dict],
                    equipment: dict[str, str]) -> tuple[list[tuple[str, int]], tuple[int, int] | None] | None:
-    """What a legend chest holds. Its ``SaveGuidString`` (``<level>-<actor>``) names
-    the placed actor, whose ``LootItemID`` the loot table resolves; ``None`` when the
-    scan never saw that actor."""
-    rec = actors.get(legend_actor(save_guid))
-    row = loot.get(rec.get("loot", "")) if rec else None
-    if not row or not row["EntryDatas"]:
-        return None
-    return entry_contents(row["EntryDatas"][0], items, equipment)
+    """What a legend chest holds, named; ``None`` when the scan never saw its actor."""
+    entry = legend_entry(save_guid, actors, loot)
+    return entry_contents(entry, items, equipment) if entry else None
+
+
+def entry_treasure(entry: dict, items: dict[str, dict]) -> str | None:
+    """The name key of the first treasure an entry holds: the curio the game files
+    under its own Treasure tab, which is what such a chest is for."""
+    for li in entry["LootItems"]:
+        item = items.get(li["ItemId"])
+        if item is not None and item["ItemDetailType"] == "EItemDetailType::Treasures" and item_name_key(item):
+            return item_name_key(item)
+    return None
 
 
 def boss_classes(codex: dict) -> dict[str, dict]:
@@ -235,16 +270,19 @@ def legend_actor(save_guid: str) -> str:
 
 
 def collect(placements: dict[str, list[dict]], loot: dict, items: dict[str, dict],
-            codex: dict, legend_actors: set[str]) -> list[Placement]:
+            codex: dict, legend_actors: set[str],
+            legend_items: frozenset[str] = frozenset(),
+            flow_items: dict[str, list] | None = None) -> list[Placement]:
     """``legend_actors`` are the actors the legend already draws. They are matched by
-    name, not distance: a breakable full of dust a metre from a shard is its own pickup."""
+    name, not distance: a breakable full of dust a metre from a shard is its own pickup.
+    ``legend_items`` are the item ids the legend lists, wherever it places them."""
     books = book_pages(items)
     out = []
     for level, recs in placements.items():
         for rec in recs:
-            if "loot" not in rec or rec["actor"] in legend_actors:
+            if not (rec.get("loot") or rec.get("pickups") or rec.get("flow")) or rec["actor"] in legend_actors:
                 continue
-            p = loot_placement(rec, level, loot, items, books)
+            p = loot_placement(rec, level, loot, items, books, legend_items, flow_items)
             if p is not None:
                 out.append(p)
     return out + boss_placements(placements, codex)

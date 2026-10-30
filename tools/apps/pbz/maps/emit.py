@@ -55,6 +55,9 @@ RAW_FILES = {
 }
 PLACEMENTS = Path("placements.json")
 BLUEPRINT_DEFAULTS = Path("blueprint_defaults.json")
+FLOW_ITEMS = Path("flow_items.json")
+FLOW_SPEAKERS = Path("flow_speakers.json")
+SHOP_ITEMS = PBZ / "DataTable/UI/DT_ShopItemTable.json"
 TEXTURE_DIR = PBZ / "UI/Texture/Map"
 LOCALIZATION_DIR = CONTENT / "Localization/Game"
 
@@ -117,6 +120,7 @@ SUBTYPES = [
     Subtype("dust", "items", "", "Yishichenai", "UI_SkillWidget_13", "#9AA3AD", default_active=False),
     Subtype("boss", "enemies", "", "T_BP_Monster_MoTian_w", "Boss", "#C23B3B"),
     Subtype("npc", "characters", "", "T_MapHun_Gold", "NPC", "#C8A971", can_complete=False),
+    Subtype("merchant", "characters", "", "T_MapHun_Gold", "Merchant", "#5FA88C", can_complete=False),
     Subtype("phantomEdgeLock", "obstacles", "", "T_MapWeapon_JinGua", "PhantomEdgeLock", "#9B6FD0"),
     Subtype("lockedDoor", "obstacles", "", "T_MapLock_Normal", "LockedDoor", "#C9A227"),
     Subtype("latchedDoor", "obstacles", "", "T_Map_Danxiangmen", "UI_Map_15", "#8C9BA8"),
@@ -159,6 +163,7 @@ SITE_TEXT = {
     "category.obstacles": {"en-US": "Obstacles", "zh-CN": "阻碍", "zh-TW": "阻礙"},
     "category.characters": {"en-US": "Characters", "zh-CN": "人物", "zh-TW": "人物"},
     "NPC": {"en-US": "NPCs", "zh-CN": "人物", "zh-TW": "人物"},
+    "Merchant": {"en-US": "Merchants", "zh-CN": "商人", "zh-TW": "商人"},
 }
 # Legend entries the game leaves untranslated in zh-Hant; the zh-Hans text in
 # traditional characters.
@@ -324,6 +329,7 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
     descriptions: dict[str, tuple[list[tuple[str, int]], tuple[int, int] | None, str | None, Reading]] = {}
     name_templates: dict[str, str] = {}
     has_scan = (raw / PLACEMENTS).is_file()
+    legend_items: set[str] = set()  # item ids the legend lists, wherever it places them
     if has_scan:
         loot = read_json(raw / RAW_FILES["loot"])[0]["Rows"]
         items = {r["ItemId"]: r for r in read_json(raw / RAW_FILES["inventory"])[0]["Rows"].values()
@@ -332,6 +338,12 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
         actors = {rec["actor"]: rec for recs in scanned.values() for rec in recs if "loot" in rec}
         # Chests name their equipment by its table id; weapons and Phantom Edges share a field.
         equipment = {**names["phantomEdges"], **names["weapons"], **names["accessories"], **names["medicines"]}
+        flows = read_json(raw / FLOW_ITEMS) if (raw / FLOW_ITEMS).is_file() else {}
+        for area_entry in read_json(raw / RAW_FILES["items"])[0]["Properties"]["MapItemDatas"]:
+            for st in SUBTYPES:
+                for entry in (area_entry["Value"] or {}).get(st.source or "", []) if st.source else []:
+                    if entry.get("ItemId") not in (None, "None"):
+                        legend_items.add(entry["ItemId"])
     for area_entry in read_json(raw / RAW_FILES["items"])[0]["Properties"]["MapItemDatas"]:
         area = area_entry["Key"]
         if area in SKIPPED_AREAS:
@@ -373,12 +385,25 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                     "images": [],
                     "contributors": [],
                 }
-                markers[map_id].append(marker)
+                kind = st.id
                 if has_scan and st.id == "majorChest":
-                    held = placed.chest_contents(entry.get("SaveGuidString") or "", actors, loot, items, equipment)
-                    if held and (held[0] or held[1]):
-                        descriptions[mid] = (held[0], held[1], None, [])
-                if st.source in NAME_SOURCES:
+                    chest = placed.legend_entry(entry.get("SaveGuidString") or "", actors, loot)
+                    if chest is not None:
+                        held = placed.entry_contents(chest, items, equipment)
+                        if held and (held[0] or held[1]):
+                            descriptions[mid] = (held[0], held[1], None, [])
+                        # A chest holding a treasure is what the inventory calls a
+                        # Treasure: the marker goes under that tab, named for the
+                        # curio, rather than standing there as an anonymous chest.
+                        curio = placed.entry_treasure(chest, items)
+                        if curio:
+                            kind = "treasure"
+                            labels[mid] = curio
+                if kind != st.id:
+                    marker["subtype"] = kind
+                    marker["category"] = SUBTYPE_BY_ID[kind].category
+                markers[map_id].append(marker)
+                if st.source in NAME_SOURCES and mid not in labels:
                     field, table, _ = NAME_SOURCES[st.source]
                     key = names[table].get(entry.get(field) or "")
                     if key and all(text[lng].get(key) for lng in ("en-US", "zh-CN")):
@@ -397,14 +422,26 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
 
     if has_scan:
         codex = read_json(raw / RAW_FILES["codex"])[0]["Rows"]
-        found = placed.collect(scanned, loot, items, codex, legend_actors - {""})
+        found = placed.collect(scanned, loot, items, codex, legend_actors - {""},
+                               frozenset(legend_items), flows)
         area_levels, area_names = area_tables(raw)
         if (raw / BLUEPRINT_DEFAULTS).is_file():
             shaqi = read_json(raw / RAW_FILES["phantomEdges"])[0]["Rows"]
             found += features.lock_placements(scanned, read_json(raw / BLUEPRINT_DEFAULTS), shaqi, items)
         found += features.quest_placements(raw, area_levels)
         if (raw / RAW_FILES["locTable"]).is_file():
-            found += features.npc_placements(scanned, read_json(raw / RAW_FILES["locTable"])[0]["Rows"])
+            # An NPC's own label is plain text in the level; when the game also has
+            # the same string as a `Character_*` entry, that entry names it in every
+            # language, so prefer it there.
+            text_keys: dict[str, str] = {}
+            for key, value in text["zh-CN"].items():
+                if key.startswith("Character_"):
+                    text_keys.setdefault(value.strip(), key)
+            merchant_set = (features.shop_owners(read_json(raw / SHOP_ITEMS)[0]["Rows"])
+                            if (raw / SHOP_ITEMS).is_file() else set())
+            flow_speakers = read_json(raw / FLOW_SPEAKERS) if (raw / FLOW_SPEAKERS).is_file() else {}
+            found += features.npc_placements(scanned, read_json(raw / RAW_FILES["locTable"])[0]["Rows"],
+                                             text_keys, merchant_set, flow_speakers)
         found += features.portal_placements(raw, area_levels, area_names)
         candidates = level_areas(raw, projections)
         for p in found:
@@ -435,6 +472,8 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
             if p.name_key and all(text[lng].get(p.name_key) or p.name_key in SITE_TEXT
                                   for lng in ("en-US", "zh-CN")):
                 labels[mid] = p.name_key
+            elif p.name_text:  # spelled out in one language only; the game has no other
+                labels[mid] = p.name_text
             if p.name_template:
                 name_templates[mid] = p.name_template
             if p.contents or p.dust or p.reading:
@@ -484,7 +523,11 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
         "tileLevels": TILE_LEVELS,
         "isVisible": True,
     } for m in maps]}
-    categories = list(dict.fromkeys(st.category for st in SUBTYPES))
+    # A legend tab with nothing behind it is a promise the map does not keep, so a
+    # subtype no marker landed in is left out of the legend rather than shipped empty.
+    used = {m["subtype"] for lst in markers.values() for m in lst}
+    subtypes = [st for st in SUBTYPES if st.id in used]
+    categories = list(dict.fromkeys(st.category for st in subtypes))
     out["types.json"] = {"categories": [{
         "id": c,
         "name": c,
@@ -498,7 +541,7 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
             "color": st.color,
             "defaultActive": st.default_active,
             "canComplete": st.can_complete,
-        } for st in SUBTYPES if st.category == c],
+        } for st in subtypes if st.category == c],
     } for c in categories]}
     for m in maps:
         out[f"markers/{m['id']}.json"] = {"markers": markers[m["id"]]}
@@ -511,7 +554,7 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
         } for m in maps}
         out[f"locales/{lng}/types.json"] = {
             "categories": {c: {"name": legend(CATEGORY_TEXT[c], lng)} for c in categories},
-            "subtypes": {st.id: {"name": legend(st.text_key, lng)} for st in SUBTYPES},
+            "subtypes": {st.id: {"name": legend(st.text_key, lng)} for st in subtypes},
         }
         for m in maps:
             entries: dict[str, dict[str, str]] = {}
@@ -519,11 +562,14 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
                 entry = {}
                 if mk["id"] in labels:
                     key = labels[mk["id"]]
-                    name = legend(key, lng) if key in SITE_TEXT else                         " ".join((text[lng].get(key) or text["zh-CN"][key]).split())
+                    name = legend(key, lng) if key in SITE_TEXT else                         " ".join((text[lng].get(key) or text["zh-CN"].get(key) or key).split())
                     template = name_templates.get(mk["id"])
                     entry["name"] = fill(template, name, lng) if template else name
                 if mk["id"] in descriptions:
-                    entry["description"] = describe(mk["id"], lng)
+                    # Contents the game has no text for describe nothing.
+                    described = describe(mk["id"], lng)
+                    if described:
+                        entry["description"] = described
                 if entry:
                     entries[mk["id"]] = entry
             out[f"locales/{lng}/markers/{m['id']}.json"] = entries

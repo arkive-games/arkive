@@ -75,8 +75,35 @@ def test_dust_alone_is_a_dust_marker():
 
 def test_what_the_legend_tracks_is_left_to_it():
     rec = {"actor": "x", "loc": [0, 0, 0], "loot": "a"}
-    assert placed.loot_placement(rec, "L", {"a": loot_row([("K_01001", 1)])}, ITEMS) is None
+    keys = frozenset({"K_01001"})
+    assert placed.loot_placement(rec, "L", {"a": loot_row([("K_01001", 1)])}, ITEMS, legend_items=keys) is None
     assert placed.loot_placement(rec, "L", {"a": loot_row(weapons=[{"WeaponID": "W"}])}, ITEMS) is None
+
+
+def test_a_keepsake_the_legend_never_lists_is_a_story_item():
+    rec = {"actor": "x", "loc": [0, 0, 0], "loot": "a"}
+    p = placed.loot_placement(rec, "L", {"a": loot_row([("K_01001", 1)])}, ITEMS, legend_items=frozenset())
+    assert p.kind == "storyItem" and p.name_key == "Key_01"
+
+
+def test_inline_pickups_and_flow_grants_are_placed_like_loot():
+    pickups = {"actor": "jar", "loc": [0, 0, 0], "pickups": [["Weapon_Material_04", 3]]}
+    p = placed.loot_placement(pickups, "L", {}, ITEMS)
+    assert (p.kind, p.contents, p.seed) == ("weaponMaterial", [("WM_04", 3)], "jar|pickups")
+    flow = {"actor": "npc", "loc": [0, 0, 0], "flow": "/Game/Q/BPF_A"}
+    p = placed.loot_placement(flow, "L", {}, ITEMS, flow_items={"/Game/Q/BPF_A": [["K_01001", 1]]})
+    assert (p.kind, p.seed) == ("storyItem", "npc|flow")
+    # A flow that hands nothing out is no marker.
+    assert placed.loot_placement(flow, "L", {}, ITEMS, flow_items={}) is None
+
+
+def test_reforge_talismans_are_consumables_and_blackstone_is_not():
+    talisman = item("Return_Weapon_1", detail="EItemDetailType::AddAttribute")
+    talisman["bCanSell"] = True
+    blackstone = item("Item_001", detail="EItemDetailType::AddAttribute")
+    blackstone["bCanSell"] = False
+    assert placed.item_kind(talisman) == "consumable"
+    assert placed.item_kind(blackstone) == "progression"
 
 
 def codex_row(cls, order, aliases=(), boss=True):
@@ -151,8 +178,17 @@ def test_locks_come_from_blockers_and_doors():
     assert [(p.kind, p.name_key, p.icon, p.desc_template) for p in got] == [
         ("phantomEdgeLock", "PhantomEdges_014", "T_Map_Need_X", "UI_Map_41"),
         ("latchedDoor", "UI_Map_15", None, None),
-        ("lockedDoor", "Item_Key_04", None, "UI_Map_40"),
+        ("lockedDoor", "LockedDoor", None, "UI_Map_40"),
     ]
+    assert got[-1].contents == [("Item_Key_04", 1)]
+
+
+def test_a_lock_door_without_a_key_is_still_a_locked_door():
+    from pbz.maps import features
+    placements = {"L": [{"actor": "gate", "type": "BP_Block_Gate_C", "loc": [0, 0, 0], "cls": None,
+                         "props": {"DoorType": features.LOCK}}]}
+    [p] = features.lock_placements(placements, {}, {}, {})
+    assert (p.kind, p.name_key, p.contents, p.desc_template) == ("lockedDoor", "LockedDoor", [], None)
 
 
 def test_npc_names_need_a_whole_name_and_a_clear_majority():

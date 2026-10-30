@@ -1,4 +1,4 @@
-r"""CLI: ``python -m pbz.maps <scan|emit|tiles|icons|all>``.
+r"""CLI: ``python -m pbz.maps <scan|speakers|emit|tiles|icons|all>``.
 
 Paths come from env vars / ``tools/.env`` (see ``pbz.env``):
   PBZ_RAW       uex export root
@@ -21,7 +21,8 @@ The raw export these stages read::
     ProjectPBZ/Content/PBZstory/PBZQuest \
     ProjectPBZ/Content/Localization/Game
 
-``scan`` then adds ``placements.json`` and ``blueprint_defaults.json`` to that
+``scan`` then adds ``placements.json``, ``blueprint_defaults.json``, ``flow_items.json``
+and ``flow_speakers.json`` to that
 root; they are derived, not exported (see ``scan``).
 """
 
@@ -34,14 +35,16 @@ from ..env import require_dir
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="python -m pbz.maps")
-    ap.add_argument("stage", choices=["scan", "emit", "tiles", "icons", "all"])
+    ap.add_argument("stage", choices=["scan", "speakers", "emit", "tiles", "icons", "all"])
     ap.add_argument("--only", nargs="*", help="tiles: restrict to these map ids")
     args = ap.parse_args()
 
     raw = require_dir("PBZ_RAW")
-    if args.stage == "scan":
-        from .scan import run_scan
-        run_scan(raw)
+    if args.stage in ("scan", "speakers"):
+        from .scan import run_scan, run_speakers
+        if args.stage == "scan":
+            run_scan(raw)
+        run_speakers(raw)  # reads the placements the scan just wrote
         return
     if args.stage == "icons":
         from .tiles import convert_icons

@@ -68,13 +68,13 @@ def lock_placements(placements: dict[str, list[dict]], defaults: dict[str, dict]
                                      contents=[(weapon, 1)], icon=icon, desc_template="UI_Map_41"))
             elif props.get("DoorType") == LATCH:
                 out.append(Placement("latchedDoor", tuple(rec["loc"]), level, seed, name_key="UI_Map_15"))
-            elif props.get("DoorType") == LOCK and props.get("Check Items"):
-                item = items.get(props["Check Items"][0]["Key"])
-                if item is None or not item["ItemName"]["Key"]:
-                    continue
-                key = item["ItemName"]["Key"]
-                out.append(Placement("lockedDoor", tuple(rec["loc"]), level, seed, name_key=key,
-                                     contents=[(key, 1)], desc_template="UI_Map_40"))
+            elif props.get("DoorType") == LOCK:
+                # The marker is the door; what opens it -- a key, or nothing the
+                # player carries when a lever or the story does -- is its description.
+                needed = [items.get(c["Key"]) for c in props.get("Check Items") or []]
+                keys = [(i["ItemName"]["Key"], 1) for i in needed if i and i["ItemName"]["Key"]]
+                out.append(Placement("lockedDoor", tuple(rec["loc"]), level, seed, name_key="LockedDoor",
+                                     contents=keys, desc_template="UI_Map_40" if keys else None))
     return out
 
 
@@ -86,6 +86,25 @@ def target_points(raw: Path) -> dict[str, tuple[str, dict]]:
         for point in area["Value"]["TargetPointData"]:
             if point["TargetId"] != "None":
                 out.setdefault(point["TargetId"], (area["Key"], point))
+    return out
+
+
+def quest_steps(exports: list[dict]) -> list[tuple[str, dict]]:
+    """``[(target point id, its branch's properties)]`` in the quest's order. A branch
+    may name its target itself (``BranchTargetPointID``) or leave it to its tasks
+    (``TargetPointID``) -- every collection quest does the latter, one task per find."""
+    branches = {x["Name"]: x.get("Properties") or {} for x in exports if x.get("Type") == "PBZQuestBranch"}
+    out = []
+    for x in exports:
+        props = x.get("Properties") or {}
+        if x.get("Type") == "PBZQuestBranch":
+            target, branch = props.get("BranchTargetPointID"), props
+        else:
+            outer = (x.get("Outer") or {}).get("ObjectName", "") if isinstance(x.get("Outer"), dict) else ""
+            target = props.get("TargetPointID")
+            branch = branches.get(outer.rstrip("'").rsplit(".", 1)[-1], {})
+        if target and target != "None":
+            out.append((target, branch))
     return out
 
 
@@ -103,10 +122,8 @@ def quest_placements(raw: Path, area_levels: dict[str, str]) -> list[Placement]:
         name_key = (props.get("FlowLocTextQuestName") or {}).get("Key")
         if kind is None or not name_key:
             continue
-        for branch in (x for x in exports if x.get("Type") == "PBZQuestBranch"):
-            bp = branch.get("Properties") or {}
-            target = bp.get("BranchTargetPointID")
-            if not target or target not in points or (path.stem, target) in seen:
+        for target, bp in quest_steps(exports):
+            if target not in points or (path.stem, target) in seen:
                 continue
             seen.add((path.stem, target))
             area, point = points[target]
@@ -172,23 +189,53 @@ def npc_name_key(blueprint: str, speakers: dict[str, str]) -> str | None:
     return best if n / sum(counts.values()) >= NPC_MIN_SHARE else None
 
 
-def npc_placements(placements: dict[str, list[dict]], loc_rows: dict) -> list[Placement]:
+def shop_owners(shop_item_rows: dict) -> set[str]:
+    """The pinyin names of the NPCs who keep a shop, lower-cased. ``DT_ShopItemTable``
+    names each ware after its seller and area (``Huolang_Xigu_g``,
+    ``FJZL_XiaoZhang_Weapon_Material_01``); the seller is the token an NPC blueprint
+    is named for."""
+    return {t.lower() for r in shop_item_rows.values() for t in str(r.get("ShopItemID", "")).split("_")
+            if len(t) > 2 and not t.isupper()}
+
+
+def npc_placements(placements: dict[str, list[dict]], loc_rows: dict,
+                   text_keys: dict[str, str] | None = None,
+                   merchants: set[str] | None = None,
+                   flow_speakers: dict[str, str] | None = None) -> list[Placement]:
+    """``text_keys``: ``{zh-Hans text: key}`` for the names an instance spells out in
+    ``NPCDesc``, which is plain text; one the game also has as a string is named by
+    that string's key, so it reads in every language. ``merchants``: ``shop_owners``.
+    ``flow_speakers``: ``{flow graph: name key}`` (``scan.run_speakers``), for an NPC
+    whose blueprint name does not match its dialogue keys."""
     speakers = npc_speakers(loc_rows)
     cache: dict[str, str | None] = {}
     out: list[Placement] = []
     for level, recs in placements.items():
+        # The spawner's flow component is its own record, under the same actor name.
+        flow_of = {r["actor"]: r["flow"] for r in recs if "flow" in r}
         for rec in recs:
-            cls = (rec.get("props") or {}).get("NPCClass")
+            props = rec.get("props") or {}
+            cls = props.get("NPCClass")
             if rec["type"] != "BP_NPCSpawner_C" or not isinstance(cls, str):
                 continue
             blueprint = cls.rsplit(".", 1)[-1]
             if blueprint not in cache:
                 cache[blueprint] = npc_name_key(blueprint, speakers)
-            key = cache[blueprint]
-            if key is None:
+            # The instance's own label is the more specific: one thief blueprint
+            # is staged as the camp's lookout, its leader and its wounded.
+            desc = props.get("NPCDesc") if isinstance(props.get("NPCDesc"), str) else ""
+            desc = desc.strip()
+            key = (text_keys or {}).get(desc) if desc else None
+            text = desc if desc and key is None else None
+            if key is None and text is None:
+                key = cache[blueprint] or (flow_speakers or {}).get(flow_of.get(rec["actor"], ""))
+            if key is None and text is None:
                 continue
             world = tuple(rec["loc"])
-            if any(p.name_key == key and math.dist(world, p.world) < NPC_MERGE_DISTANCE for p in out):
+            if any((p.name_key, p.name_text) == (key, text) and math.dist(world, p.world) < NPC_MERGE_DISTANCE
+                   for p in out):
                 continue  # the same person staged again for a later scene
-            out.append(Placement("npc", world, level, f"{rec['actor']}|npc", name_key=key))
+            name = blueprint.removeprefix("BP_NPC_").split("_", 1)[0].lower()
+            kind = "merchant" if name in (merchants or set()) else "npc"
+            out.append(Placement(kind, world, level, f"{rec['actor']}|npc", name_key=key, name_text=text))
     return out
