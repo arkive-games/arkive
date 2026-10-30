@@ -48,10 +48,11 @@ func (q *Queries) CountUnreadNotifications(ctx context.Context, recipientID uuid
 }
 
 const createNotification = `-- name: CreateNotification :exec
-INSERT INTO core.notifications (id, recipient_id, kind, actor_id, post_id, comment_id, body)
+INSERT INTO core.notifications (id, recipient_id, kind, actor_id, post_id, comment_id, marker_comment_id, body)
 SELECT $1, $2, $3,
        $4::uuid, $5::uuid,
-       $6::uuid, $7::text
+       $6::uuid, $7::uuid,
+       $8::text
 WHERE COALESCE((
     SELECT CASE $3
         WHEN 'reply'        THEN p.reply
@@ -68,13 +69,14 @@ AND $4::uuid IS DISTINCT FROM $2
 `
 
 type CreateNotificationParams struct {
-	ID          uuid.UUID
-	RecipientID uuid.UUID
-	Kind        string
-	ActorID     *uuid.UUID
-	PostID      *uuid.UUID
-	CommentID   *uuid.UUID
-	Body        *string
+	ID              uuid.UUID
+	RecipientID     uuid.UUID
+	Kind            string
+	ActorID         *uuid.UUID
+	PostID          *uuid.UUID
+	CommentID       *uuid.UUID
+	MarkerCommentID *uuid.UUID
+	Body            *string
 }
 
 // Gated on the recipient's preference for this kind, in the statement rather than in Go:
@@ -90,6 +92,7 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		arg.ActorID,
 		arg.PostID,
 		arg.CommentID,
+		arg.MarkerCommentID,
 		arg.Body,
 	)
 	return err
@@ -163,7 +166,7 @@ func (q *Queries) GetNotificationPreferences(ctx context.Context, id uuid.UUID) 
 }
 
 const listNotifications = `-- name: ListNotifications :many
-SELECT id, recipient_id, kind, actor_id, post_id, comment_id, body, read_at, created_at FROM core.notifications
+SELECT id, recipient_id, kind, actor_id, post_id, comment_id, body, read_at, created_at, marker_comment_id FROM core.notifications
 WHERE recipient_id = $1
   AND (NOT $2::boolean OR read_at IS NULL)
   -- An inbox tab asks for the kinds it shows. Empty means every kind, so an
@@ -208,6 +211,7 @@ func (q *Queries) ListNotifications(ctx context.Context, arg ListNotificationsPa
 			&i.Body,
 			&i.ReadAt,
 			&i.CreatedAt,
+			&i.MarkerCommentID,
 		); err != nil {
 			return nil, err
 		}

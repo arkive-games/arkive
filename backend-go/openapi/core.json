@@ -197,6 +197,51 @@
         ],
         "type": "object"
       },
+      "CreateMarkerCommentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "Raw markdown",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "game": {
+            "description": "The game the marker belongs to",
+            "enum": [
+              "aion2",
+              "gmzz",
+              "palworld",
+              "vrising",
+              "sts2",
+              "ro3",
+              "pbz"
+            ],
+            "type": "string"
+          },
+          "map": {
+            "description": "The map the marker is on",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$",
+            "type": "string"
+          },
+          "marker": {
+            "description": "The marker to comment on",
+            "pattern": "^[A-Za-z0-9-]{1,40}$",
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Reply to this comment; omit for a top-level comment",
+            "type": "string"
+          }
+        },
+        "required": [
+          "game",
+          "map",
+          "marker",
+          "body"
+        ],
+        "type": "object"
+      },
       "CreatePostBody": {
         "additionalProperties": false,
         "properties": {
@@ -225,7 +270,8 @@
                 "palworld",
                 "vrising",
                 "sts2",
-                "ro3"
+                "ro3",
+                "pbz"
               ],
               "type": "string"
             },
@@ -696,6 +742,70 @@
         ],
         "type": "object"
       },
+      "EnvelopeListMarkerCommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListMarkerCommentRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeListMarkerHiddenRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListMarkerHiddenRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeListPostRead": {
         "additionalProperties": false,
         "properties": {
@@ -829,6 +939,38 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/MarkedCount",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeMarkerCommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MarkerCommentRead",
             "description": "The payload"
           },
           "errorCode": {
@@ -1412,6 +1554,56 @@
         ],
         "type": "object"
       },
+      "ListMarkerCommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/MarkerCommentRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
+      "ListMarkerHiddenRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/MarkerHiddenRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
       "ListPostRead": {
         "additionalProperties": false,
         "properties": {
@@ -1523,6 +1715,180 @@
         },
         "required": [
           "marked"
+        ],
+        "type": "object"
+      },
+      "MarkerCommentHideBody": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Why it is being hidden",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MarkerCommentLikeBody": {
+        "additionalProperties": false,
+        "properties": {
+          "liked": {
+            "description": "true to like, false to unlike. Both are idempotent.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "liked"
+        ],
+        "type": "object"
+      },
+      "MarkerCommentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/UserPublic",
+            "description": "Who wrote it"
+          },
+          "body": {
+            "description": "Raw markdown, exactly as written. Render it with raw HTML disabled.",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "When it was written",
+            "format": "date-time",
+            "type": "string"
+          },
+          "editedAt": {
+            "description": "When it was last edited, or null if never",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "game": {
+            "description": "The game the marker belongs to",
+            "type": "string"
+          },
+          "id": {
+            "description": "Identifier, used to edit, delete, like or report this comment",
+            "type": "string"
+          },
+          "likeCount": {
+            "description": "How many accounts have liked it",
+            "format": "int64",
+            "type": "integer"
+          },
+          "liked": {
+            "description": "Whether the current reader has liked it",
+            "type": "boolean"
+          },
+          "map": {
+            "description": "The map the marker is on",
+            "type": "string"
+          },
+          "marker": {
+            "description": "The marker this comment is attached to",
+            "type": "string"
+          },
+          "parentId": {
+            "description": "The comment this replies to, or null for a top-level comment",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "replyCount": {
+            "description": "How many visible replies it has",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "parentId",
+          "game",
+          "map",
+          "marker",
+          "author",
+          "body",
+          "likeCount",
+          "liked",
+          "replyCount",
+          "createdAt",
+          "editedAt"
+        ],
+        "type": "object"
+      },
+      "MarkerCommentReportBody": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "description": "Anything you want to add",
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "reason": {
+            "description": "Why you are reporting it",
+            "enum": [
+              "spam",
+              "abuse",
+              "offtopic",
+              "illegal",
+              "other"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "MarkerHiddenRead": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "What it said, so a moderator can judge a restore",
+            "type": "string"
+          },
+          "game": {
+            "description": "The game the marker belongs to",
+            "type": "string"
+          },
+          "hiddenAt": {
+            "description": "When it was hidden",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "description": "Comment identifier",
+            "type": "string"
+          },
+          "map": {
+            "description": "The map the marker is on",
+            "type": "string"
+          },
+          "marker": {
+            "description": "The marker the comment is attached to",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Why it was hidden, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "game",
+          "map",
+          "marker",
+          "body",
+          "reason",
+          "hiddenAt"
         ],
         "type": "object"
       },
@@ -1806,7 +2172,7 @@
             ]
           },
           "commentId": {
-            "description": "The comment it is about, or null",
+            "description": "The forum comment it is about, or null",
             "type": [
               "string",
               "null"
@@ -1832,6 +2198,13 @@
               "system"
             ],
             "type": "string"
+          },
+          "markerCommentId": {
+            "description": "The marker comment it is about, or null",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "postNo": {
             "description": "The post it is about, or null",
@@ -1866,6 +2239,7 @@
           "postNo",
           "postTitle",
           "commentId",
+          "markerCommentId",
           "body",
           "readAt",
           "createdAt"
@@ -1940,7 +2314,7 @@
         "additionalProperties": false,
         "properties": {
           "commentId": {
-            "description": "The reported comment, or null when a post was reported",
+            "description": "The reported forum comment, or the post a reported comment belongs to, or null",
             "type": [
               "string",
               "null"
@@ -1961,6 +2335,13 @@
           "id": {
             "description": "Report identifier",
             "type": "string"
+          },
+          "markerCommentId": {
+            "description": "The reported marker comment, or null",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "postNo": {
             "description": "The reported post, or the post a reported comment belongs to",
@@ -1995,6 +2376,7 @@
           "id",
           "postNo",
           "commentId",
+          "markerCommentId",
           "reason",
           "detail",
           "state",
@@ -2180,6 +2562,21 @@
         ],
         "type": "object"
       },
+      "UpdateMarkerCommentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "Raw markdown",
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
       "UpdatePostBody": {
         "additionalProperties": false,
         "properties": {
@@ -2199,7 +2596,8 @@
                 "palworld",
                 "vrising",
                 "sts2",
-                "ro3"
+                "ro3",
+                "pbz"
               ],
               "type": "string"
             },
@@ -5527,6 +5925,898 @@
         ]
       }
     },
+    "/map-markers/comments": {
+      "get": {
+        "description": "Public. Top-level comments only, newest first by default; each carries its reply count and whether the reader liked it. Replies are fetched from the comment's own endpoint, because a marker can carry a long thread and the drawer only expands one at a time.",
+        "operationId": "listMarkerComments",
+        "parameters": [
+          {
+            "description": "The game the marker belongs to",
+            "explode": false,
+            "in": "query",
+            "name": "game",
+            "required": true,
+            "schema": {
+              "description": "The game the marker belongs to",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The map the marker is on",
+            "explode": false,
+            "in": "query",
+            "name": "map",
+            "required": true,
+            "schema": {
+              "description": "The map the marker is on",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The marker whose thread to read",
+            "explode": false,
+            "in": "query",
+            "name": "marker",
+            "required": true,
+            "schema": {
+              "description": "The marker whose thread to read",
+              "pattern": "^[A-Za-z0-9-]{1,40}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "latest is newest first; popular is most-liked first",
+            "explode": false,
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "latest",
+              "description": "latest is newest first; popular is most-liked first",
+              "enum": [
+                "latest",
+                "popular"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Comments per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Comments per page",
+              "format": "int64",
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListMarkerCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Read a marker's comments",
+        "tags": [
+          "comments"
+        ]
+      },
+      "post": {
+        "description": "Signed in only. Published immediately: there is no pre-publication review, and moderation happens after the fact. The marker is checked against the game's data artifact, so a comment cannot be opened under a marker that does not exist — except when the artifact is unreachable, which accepts the comment rather than blaming the writer for it.",
+        "operationId": "createMarkerComment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMarkerCommentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkerCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Comment on a marker",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/map-markers/comments/{id}": {
+      "delete": {
+        "description": "The author's own comment. Deleting a top-level comment takes its replies with it, which is what the cascade says and what a reader expects: a thread hanging under a heading nobody can see is worse than losing it.",
+        "operationId": "deleteMarkerComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Delete your comment",
+        "tags": [
+          "comments"
+        ]
+      },
+      "patch": {
+        "description": "The author's own comment, and only theirs. A hidden comment answers 404 to its author too, rather than revealing that it exists but is withheld.",
+        "operationId": "updateMarkerComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMarkerCommentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkerCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Edit your comment",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/map-markers/comments/{id}/hidden": {
+      "delete": {
+        "description": "The counterpart to hide. Without it a hidden comment could be restored only by someone who already knew its id.",
+        "operationId": "unhideMarkerComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Restore a hidden comment",
+        "tags": [
+          "moderation"
+        ]
+      },
+      "put": {
+        "description": "Moderator action, reversible and attributed. Requires moderating the game the comment's marker belongs to. A hidden comment answers 404 to every reader, its author included.",
+        "operationId": "hideMarkerComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkerCommentHideBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Hide a comment",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
+    "/map-markers/comments/{id}/like": {
+      "put": {
+        "description": "Idempotent, so a double tap or a retried request means what it says. Returns the updated comment so a client can render the new count without a second round trip. The author is notified on the like and never on the unlike.",
+        "operationId": "likeMarkerComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkerCommentLikeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkerCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Like or unlike a comment",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/map-markers/comments/{id}/replies": {
+      "get": {
+        "description": "Public, oldest first: a reply reads in the order the conversation happened, unlike the top-level list where the best answer should float.",
+        "operationId": "listMarkerCommentReplies",
+        "parameters": [
+          {
+            "description": "The top-level comment whose replies to read",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The top-level comment whose replies to read",
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Replies per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Replies per page",
+              "format": "int64",
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListMarkerCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Read a comment's replies",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/map-markers/comments/{id}/report": {
+      "post": {
+        "description": "Any signed-in account may report. Reports land in the forum's own moderation queue, so a moderator watches one inbox. Reporting the same comment twice updates your report rather than filing a second.",
+        "operationId": "reportMarkerComment",
+        "parameters": [
+          {
+            "description": "Comment identifier",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Comment identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkerCommentReportBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkerCommentRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Report a comment",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/map-markers/moderation/hidden-comments": {
+      "get": {
+        "description": "Moderator only, scoped to the games you moderate. Most recently hidden first.",
+        "operationId": "listHiddenMarkerComments",
+        "parameters": [
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Rows per page",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListMarkerHiddenRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Hidden comments you may restore",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
     "/notifications": {
       "get": {
         "description": "Newest first. Nothing here is a rendered message: a notification carries its kind and its references, and the client turns that into words, so no display string is frozen into the database in one language.",
@@ -6011,7 +7301,8 @@
                 "palworld",
                 "vrising",
                 "sts2",
-                "ro3"
+                "ro3",
+                "pbz"
               ],
               "type": "string"
             }
@@ -6083,7 +7374,8 @@
                 "palworld",
                 "vrising",
                 "sts2",
-                "ro3"
+                "ro3",
+                "pbz"
               ],
               "type": "string"
             }
@@ -6200,7 +7492,8 @@
                 "palworld",
                 "vrising",
                 "sts2",
-                "ro3"
+                "ro3",
+                "pbz"
               ],
               "type": "string"
             }

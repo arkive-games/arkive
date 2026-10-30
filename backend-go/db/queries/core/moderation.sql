@@ -22,9 +22,15 @@ RETURNING *;
 -- reporter has already said this once, and a duplicate would only pad the queue.
 -- Re-reporting something already handled reopens it, because a second complaint about
 -- content a moderator let stand is new information.
-INSERT INTO core.forum_reports (id, reporter_id, post_id, comment_id, reason, detail)
-VALUES ($1, $2, $3, $4, $5, $6)
-ON CONFLICT (reporter_id, post_id, comment_id) DO UPDATE SET
+--
+-- The conflict target must name every column of forum_reports_once, marker_comment_id
+-- included even though this statement always passes NULL for it. The marker-comment
+-- insert has its own query, so the two never collide; the target is spelled out in
+-- full because a shorter one no longer matches the constraint and PostgreSQL refuses
+-- the statement outright rather than guessing.
+INSERT INTO core.forum_reports (id, reporter_id, post_id, comment_id, marker_comment_id, reason, detail)
+VALUES ($1, $2, $3, $4, NULL, $5, $6)
+ON CONFLICT (reporter_id, post_id, comment_id, marker_comment_id) DO UPDATE SET
     reason = excluded.reason,
     detail = excluded.detail,
     state = 'open',
@@ -53,9 +59,13 @@ SELECT r.* FROM core.forum_reports r
 LEFT JOIN core.forum_posts p        ON p.id = r.post_id
 LEFT JOIN core.forum_comments c     ON c.id = r.comment_id
 LEFT JOIN core.forum_posts cp       ON cp.id = c.post_id
+LEFT JOIN core.marker_comments mc   ON mc.id = r.marker_comment_id
 WHERE r.state = 'open'
   AND (sqlc.narg('games')::text[] IS NULL
-       OR COALESCE(p.game_ids, cp.game_ids) && sqlc.narg('games')::text[])
+       -- A post or forum comment inherits its games from the post it hangs on; a
+       -- marker comment carries its single game key itself, because there is no
+       -- post to inherit one from.
+       OR COALESCE(p.game_ids, cp.game_ids, ARRAY[mc.game_key]) && sqlc.narg('games')::text[])
 ORDER BY r.created_at, r.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 
@@ -64,9 +74,10 @@ SELECT count(*) FROM core.forum_reports r
 LEFT JOIN core.forum_posts p    ON p.id = r.post_id
 LEFT JOIN core.forum_comments c ON c.id = r.comment_id
 LEFT JOIN core.forum_posts cp   ON cp.id = c.post_id
+LEFT JOIN core.marker_comments mc ON mc.id = r.marker_comment_id
 WHERE r.state = 'open'
   AND (sqlc.narg('games')::text[] IS NULL
-       OR COALESCE(p.game_ids, cp.game_ids) && sqlc.narg('games')::text[]);
+       OR COALESCE(p.game_ids, cp.game_ids, ARRAY[mc.game_key]) && sqlc.narg('games')::text[]);
 
 -- name: ListHiddenForumPosts :many
 -- What a moderator can see that a reader cannot.

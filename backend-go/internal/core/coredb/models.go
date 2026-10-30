@@ -78,28 +78,54 @@ type CoreForumPostLike struct {
 }
 
 type CoreForumReport struct {
-	ID         uuid.UUID
-	ReporterID uuid.UUID
-	PostID     *uuid.UUID
-	CommentID  *uuid.UUID
-	Reason     string
-	Detail     *string
-	State      string
-	HandledBy  *uuid.UUID
-	HandledAt  pgtype.Timestamptz
-	CreatedAt  time.Time
+	ID              uuid.UUID
+	ReporterID      uuid.UUID
+	PostID          *uuid.UUID
+	CommentID       *uuid.UUID
+	Reason          string
+	Detail          *string
+	State           string
+	HandledBy       *uuid.UUID
+	HandledAt       pgtype.Timestamptz
+	CreatedAt       time.Time
+	MarkerCommentID *uuid.UUID
+}
+
+type CoreMarkerComment struct {
+	ID           uuid.UUID
+	GameKey      string
+	MapID        string
+	MarkerID     string
+	AuthorID     uuid.UUID
+	ParentID     *uuid.UUID
+	Body         string
+	Depth        int16
+	ParentDepth  *int16
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	EditedAt     pgtype.Timestamptz
+	HiddenAt     pgtype.Timestamptz
+	HiddenBy     *uuid.UUID
+	HiddenReason *string
+}
+
+type CoreMarkerCommentLike struct {
+	CommentID uuid.UUID
+	UserID    uuid.UUID
+	CreatedAt time.Time
 }
 
 type CoreNotification struct {
-	ID          uuid.UUID
-	RecipientID uuid.UUID
-	Kind        string
-	ActorID     *uuid.UUID
-	PostID      *uuid.UUID
-	CommentID   *uuid.UUID
-	Body        *string
-	ReadAt      pgtype.Timestamptz
-	CreatedAt   time.Time
+	ID              uuid.UUID
+	RecipientID     uuid.UUID
+	Kind            string
+	ActorID         *uuid.UUID
+	PostID          *uuid.UUID
+	CommentID       *uuid.UUID
+	Body            *string
+	ReadAt          pgtype.Timestamptz
+	CreatedAt       time.Time
+	MarkerCommentID *uuid.UUID
 }
 
 type CoreNotificationPreference struct {

@@ -86,10 +86,14 @@ type Read struct {
 	PostTitle *string `json:"postTitle" doc:"Title of the post it is about, or null"`
 	// nullable:"true" because huma drops the pointer for uuid fields; see the note
 	// on forum.CommentRead.ParentID.
-	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The comment it is about, or null"`
-	Body      *string    `json:"body" doc:"The message text, for system notifications only"`
-	ReadAt    *time.Time `json:"readAt" doc:"When it was read, or null"`
-	CreatedAt time.Time  `json:"createdAt" doc:"When it arrived"`
+	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The forum comment it is about, or null"`
+	// MarkerCommentID is the map-marker comment it is about, or null. The client
+	// renders the row from whichever of the two is set, and links a marker comment to
+	// its game, map and marker through this id.
+	MarkerCommentID *uuid.UUID `json:"markerCommentId" nullable:"true" doc:"The marker comment it is about, or null"`
+	Body            *string    `json:"body" doc:"The message text, for system notifications only"`
+	ReadAt          *time.Time `json:"readAt" doc:"When it was read, or null"`
+	CreatedAt       time.Time  `json:"createdAt" doc:"When it arrived"`
 }
 
 // Preferences is which kinds an account wants.
@@ -123,7 +127,14 @@ type Event struct {
 	Actor     *uuid.UUID
 	PostID    *uuid.UUID
 	CommentID *uuid.UUID
-	Body      *string
+
+	// MarkerCommentID is what a reply or a like under a map marker is about. It sits
+	// beside CommentID rather than sharing it because the two are different tables:
+	// a foreign key can only point at one, and the client renders the notification
+	// from whichever is set.
+	MarkerCommentID *uuid.UUID
+
+	Body *string
 }
 
 // AccountSource resolves accounts, so a mention can find the person it names and a
@@ -163,13 +174,14 @@ func NewService(q *coredb.Queries, accounts AccountSource, logger *slog.Logger) 
 // this is not an error.
 func (s *Service) Notify(ctx context.Context, e Event) error {
 	if err := s.q.CreateNotification(ctx, coredb.CreateNotificationParams{
-		ID:          uuid.New(),
-		RecipientID: e.Recipient,
-		Kind:        string(e.Kind),
-		ActorID:     e.Actor,
-		PostID:      e.PostID,
-		CommentID:   e.CommentID,
-		Body:        e.Body,
+		ID:              uuid.New(),
+		RecipientID:     e.Recipient,
+		Kind:            string(e.Kind),
+		ActorID:         e.Actor,
+		PostID:          e.PostID,
+		CommentID:       e.CommentID,
+		MarkerCommentID: e.MarkerCommentID,
+		Body:            e.Body,
 	}); err != nil {
 		return fmt.Errorf("write notification: %w", err)
 	}
@@ -307,11 +319,12 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, k
 	out := make([]Read, 0, len(rows))
 	for _, row := range rows {
 		read := Read{
-			ID:        row.ID,
-			Kind:      Kind(row.Kind),
-			CommentID: row.CommentID,
-			Body:      row.Body,
-			CreatedAt: row.CreatedAt,
+			ID:              row.ID,
+			Kind:            Kind(row.Kind),
+			CommentID:       row.CommentID,
+			MarkerCommentID: row.MarkerCommentID,
+			Body:            row.Body,
+			CreatedAt:       row.CreatedAt,
 		}
 		if row.ReadAt.Valid {
 			t := row.ReadAt.Time

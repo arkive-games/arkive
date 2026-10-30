@@ -56,11 +56,14 @@ type ReportRead struct {
 	PostNo *int64    `json:"postNo" doc:"The reported post, or the post a reported comment belongs to"`
 	// nullable:"true" because huma drops the pointer for uuid fields; see the note
 	// on CommentRead.ParentID.
-	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The reported comment, or null when a post was reported"`
-	Reason    string     `json:"reason" enum:"spam,abuse,offtopic,illegal,other" doc:"Why it was reported"`
-	Detail    *string    `json:"detail" doc:"What the reporter added, or null"`
-	State     string     `json:"state" enum:"open,upheld,rejected" doc:"open until a moderator answers it"`
-	CreatedAt time.Time  `json:"createdAt" doc:"When it was filed"`
+	CommentID *uuid.UUID `json:"commentId" nullable:"true" doc:"The reported forum comment, or the post a reported comment belongs to, or null"`
+	// MarkerCommentID is the reported marker comment, or null. Exactly one of the
+	// three target fields is set, which the queue constraint guarantees.
+	MarkerCommentID *uuid.UUID `json:"markerCommentId" nullable:"true" doc:"The reported marker comment, or null"`
+	Reason          string     `json:"reason" enum:"spam,abuse,offtopic,illegal,other" doc:"Why it was reported"`
+	Detail          *string    `json:"detail" doc:"What the reporter added, or null"`
+	State           string     `json:"state" enum:"open,upheld,rejected" doc:"open until a moderator answers it"`
+	CreatedAt       time.Time  `json:"createdAt" doc:"When it was filed"`
 }
 
 // HiddenRead is a hidden post as the moderation queue returns it.
@@ -436,12 +439,13 @@ func (s *Service) mayModerateReport(ctx context.Context, principal auth.Principa
 // post is an optimisation for the caller that already loaded it.
 func (s *Service) toReportRead(ctx context.Context, row coredb.CoreForumReport, post *coredb.CoreForumPost) (ReportRead, error) {
 	read := ReportRead{
-		ID:        row.ID,
-		CommentID: row.CommentID,
-		Reason:    row.Reason,
-		Detail:    row.Detail,
-		State:     row.State,
-		CreatedAt: row.CreatedAt,
+		ID:              row.ID,
+		CommentID:       row.CommentID,
+		MarkerCommentID: row.MarkerCommentID,
+		Reason:          row.Reason,
+		Detail:          row.Detail,
+		State:           row.State,
+		CreatedAt:       row.CreatedAt,
 	}
 
 	switch {

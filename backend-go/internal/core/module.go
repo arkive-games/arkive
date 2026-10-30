@@ -22,6 +22,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
+	"github.com/arkive-games/arkive/backend-go/internal/core/comments"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/httpapi"
@@ -189,6 +190,13 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	privacyService := privacy.NewService(queries, socialService, d.Logger)
 	forumService := forum.NewService(queries, service, rolesService, notifyService, newPostImageStore(blobs), d.Logger)
 
+	// The marker index is optional: with no artifact host for a game, comments there
+	// are validated on shape alone rather than refused. A game without an entry is
+	// the same state as an unreachable artifact, which is a deliberate way to run
+	// without the check.
+	markerIndex := comments.NewHTTPMarkerIndex(d.Config.Data.BaseURLs, d.Config.Data.Timeout, d.Logger)
+	commentsService := comments.NewService(queries, service, rolesService, notifyService, markerIndex, d.Logger)
+
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided
 	// per operation, where it is visible.
@@ -213,6 +221,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers := httpapi.NewHandlers(
 		service,
 		forumService,
+		commentsService,
 		rolesService,
 		socialService,
 		privacyService,
@@ -242,6 +251,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterPrivacyRoutes(a)
 	handlers.RegisterNotificationRoutes(a)
 	handlers.RegisterPostImageRoutes(a)
+	handlers.RegisterMarkerCommentRoutes(a)
 	return nil
 }
 

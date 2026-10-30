@@ -45,9 +45,10 @@ SELECT count(*) FROM core.forum_reports r
 LEFT JOIN core.forum_posts p    ON p.id = r.post_id
 LEFT JOIN core.forum_comments c ON c.id = r.comment_id
 LEFT JOIN core.forum_posts cp   ON cp.id = c.post_id
+LEFT JOIN core.marker_comments mc ON mc.id = r.marker_comment_id
 WHERE r.state = 'open'
   AND ($1::text[] IS NULL
-       OR COALESCE(p.game_ids, cp.game_ids) && $1::text[])
+       OR COALESCE(p.game_ids, cp.game_ids, ARRAY[mc.game_key]) && $1::text[])
 `
 
 func (q *Queries) CountOpenForumReports(ctx context.Context, games []string) (int64, error) {
@@ -58,15 +59,15 @@ func (q *Queries) CountOpenForumReports(ctx context.Context, games []string) (in
 }
 
 const createForumReport = `-- name: CreateForumReport :one
-INSERT INTO core.forum_reports (id, reporter_id, post_id, comment_id, reason, detail)
-VALUES ($1, $2, $3, $4, $5, $6)
-ON CONFLICT (reporter_id, post_id, comment_id) DO UPDATE SET
+INSERT INTO core.forum_reports (id, reporter_id, post_id, comment_id, marker_comment_id, reason, detail)
+VALUES ($1, $2, $3, $4, NULL, $5, $6)
+ON CONFLICT (reporter_id, post_id, comment_id, marker_comment_id) DO UPDATE SET
     reason = excluded.reason,
     detail = excluded.detail,
     state = 'open',
     handled_by = NULL,
     handled_at = NULL
-RETURNING id, reporter_id, post_id, comment_id, reason, detail, state, handled_by, handled_at, created_at
+RETURNING id, reporter_id, post_id, comment_id, reason, detail, state, handled_by, handled_at, created_at, marker_comment_id
 `
 
 type CreateForumReportParams struct {
@@ -82,6 +83,12 @@ type CreateForumReportParams struct {
 // reporter has already said this once, and a duplicate would only pad the queue.
 // Re-reporting something already handled reopens it, because a second complaint about
 // content a moderator let stand is new information.
+//
+// The conflict target must name every column of forum_reports_once, marker_comment_id
+// included even though this statement always passes NULL for it. The marker-comment
+// insert has its own query, so the two never collide; the target is spelled out in
+// full because a shorter one no longer matches the constraint and PostgreSQL refuses
+// the statement outright rather than guessing.
 func (q *Queries) CreateForumReport(ctx context.Context, arg CreateForumReportParams) (CoreForumReport, error) {
 	row := q.db.QueryRow(ctx, createForumReport,
 		arg.ID,
@@ -103,12 +110,13 @@ func (q *Queries) CreateForumReport(ctx context.Context, arg CreateForumReportPa
 		&i.HandledBy,
 		&i.HandledAt,
 		&i.CreatedAt,
+		&i.MarkerCommentID,
 	)
 	return i, err
 }
 
 const getForumReport = `-- name: GetForumReport :one
-SELECT id, reporter_id, post_id, comment_id, reason, detail, state, handled_by, handled_at, created_at FROM core.forum_reports WHERE id = $1
+SELECT id, reporter_id, post_id, comment_id, reason, detail, state, handled_by, handled_at, created_at, marker_comment_id FROM core.forum_reports WHERE id = $1
 `
 
 func (q *Queries) GetForumReport(ctx context.Context, id uuid.UUID) (CoreForumReport, error) {
@@ -125,6 +133,7 @@ func (q *Queries) GetForumReport(ctx context.Context, id uuid.UUID) (CoreForumRe
 		&i.HandledBy,
 		&i.HandledAt,
 		&i.CreatedAt,
+		&i.MarkerCommentID,
 	)
 	return i, err
 }
@@ -257,13 +266,17 @@ func (q *Queries) ListHiddenForumPosts(ctx context.Context, arg ListHiddenForumP
 }
 
 const listOpenForumReports = `-- name: ListOpenForumReports :many
-SELECT r.id, r.reporter_id, r.post_id, r.comment_id, r.reason, r.detail, r.state, r.handled_by, r.handled_at, r.created_at FROM core.forum_reports r
+SELECT r.id, r.reporter_id, r.post_id, r.comment_id, r.reason, r.detail, r.state, r.handled_by, r.handled_at, r.created_at, r.marker_comment_id FROM core.forum_reports r
 LEFT JOIN core.forum_posts p        ON p.id = r.post_id
 LEFT JOIN core.forum_comments c     ON c.id = r.comment_id
 LEFT JOIN core.forum_posts cp       ON cp.id = c.post_id
+LEFT JOIN core.marker_comments mc   ON mc.id = r.marker_comment_id
 WHERE r.state = 'open'
   AND ($1::text[] IS NULL
-       OR COALESCE(p.game_ids, cp.game_ids) && $1::text[])
+       -- A post or forum comment inherits its games from the post it hangs on; a
+       -- marker comment carries its single game key itself, because there is no
+       -- post to inherit one from.
+       OR COALESCE(p.game_ids, cp.game_ids, ARRAY[mc.game_key]) && $1::text[])
 ORDER BY r.created_at, r.id
 LIMIT $3 OFFSET $2
 `
@@ -299,6 +312,7 @@ func (q *Queries) ListOpenForumReports(ctx context.Context, arg ListOpenForumRep
 			&i.HandledBy,
 			&i.HandledAt,
 			&i.CreatedAt,
+			&i.MarkerCommentID,
 		); err != nil {
 			return nil, err
 		}
@@ -316,7 +330,7 @@ UPDATE core.forum_reports SET
     handled_by = $2::uuid,
     handled_at = now()
 WHERE id = $3 AND state = 'open'
-RETURNING id, reporter_id, post_id, comment_id, reason, detail, state, handled_by, handled_at, created_at
+RETURNING id, reporter_id, post_id, comment_id, reason, detail, state, handled_by, handled_at, created_at, marker_comment_id
 `
 
 type ResolveForumReportParams struct {
@@ -339,6 +353,7 @@ func (q *Queries) ResolveForumReport(ctx context.Context, arg ResolveForumReport
 		&i.HandledBy,
 		&i.HandledAt,
 		&i.CreatedAt,
+		&i.MarkerCommentID,
 	)
 	return i, err
 }

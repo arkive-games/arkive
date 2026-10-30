@@ -2,10 +2,11 @@
 -- Gated on the recipient's preference for this kind, in the statement rather than in Go:
 -- the check and the insert are then one round trip and cannot race a preference change.
 -- An absent preferences row means every default, which COALESCE supplies.
-INSERT INTO core.notifications (id, recipient_id, kind, actor_id, post_id, comment_id, body)
+INSERT INTO core.notifications (id, recipient_id, kind, actor_id, post_id, comment_id, marker_comment_id, body)
 SELECT sqlc.arg('id'), sqlc.arg('recipient_id'), sqlc.arg('kind'),
        sqlc.narg('actor_id')::uuid, sqlc.narg('post_id')::uuid,
-       sqlc.narg('comment_id')::uuid, sqlc.narg('body')::text
+       sqlc.narg('comment_id')::uuid, sqlc.narg('marker_comment_id')::uuid,
+       sqlc.narg('body')::text
 WHERE COALESCE((
     SELECT CASE sqlc.arg('kind')
         WHEN 'reply'        THEN p.reply

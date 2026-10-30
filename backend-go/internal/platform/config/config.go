@@ -31,6 +31,25 @@ type Config struct {
 	Auth     Auth
 	CORS     CORS
 	S3       S3
+	Data     Data
+}
+
+// Data locates the game artifact repositories.
+//
+// The backend owns dynamic data and the pipeline owns game content, so the only
+// thing the backend ever reads from those repositories is a marker index: whether
+// a marker a comment is being attached to actually exists. That check is a
+// courtesy to the writer, not an invariant, so an empty map disables it rather
+// than refusing to start.
+type Data struct {
+	// BaseURLs maps a game key to the root of its data artifact, which serves
+	// version.json and markers/<mapId>.json.
+	BaseURLs map[string]string
+
+	// Timeout bounds one fetch of version.json or a marker file. The check
+	// happens inside a comment POST, so it must not outlast the request's
+	// patience; a timeout falls back to format-only validation.
+	Timeout time.Duration
 }
 
 // Redis holds cache/counter settings.
@@ -300,6 +319,16 @@ func Load() (Config, error) {
 			AllowCredentials: envBool("ALLOW_CREDENTIALS", true),
 			PublicFallback:   envBool("CORS_PUBLIC_FALLBACK", false),
 		},
+		Data: Data{
+			BaseURLs: envGameURLs("DATA_BASE_URLS", map[string]string{
+				// The deployed artifact hosts, so a production build needs no
+				// environment at all. Every other game follows the same pattern:
+				// data-<key>.arkive.games, served by EdgeOne from a separate repo.
+				"pbz": "https://data-pbz.arkive.games",
+			}),
+			// Short on purpose: the check runs inside a comment POST.
+			Timeout: envDuration("DATA_INDEX_TIMEOUT", 2*time.Second),
+		},
 	}
 
 	if err := c.validate(); err != nil {
@@ -425,6 +454,40 @@ func envDuration(key string, def time.Duration) time.Duration {
 		}
 	}
 	return def
+}
+
+// envGameURLs reads a game-keyed URL map, "pbz=https://…,palworld=https://…".
+//
+// The defaults are merged rather than replaced, so an environment that overrides
+// one game's artifact host — a local mirror, a staging deploy — does not have to
+// restate every other game's. An entry with an empty URL removes the game from the
+// effective map, which is how a deployment turns the marker-existence check off.
+func envGameURLs(key string, def map[string]string) map[string]string {
+	out := make(map[string]string, len(def))
+	for k, v := range def {
+		out[k] = v
+	}
+	v, ok := os.LookupEnv(key)
+	if !ok || strings.TrimSpace(v) == "" {
+		return out
+	}
+	for _, pair := range strings.Split(v, ",") {
+		name, url, found := strings.Cut(pair, "=")
+		if name = strings.TrimSpace(name); name == "" {
+			continue
+		}
+		if !found {
+			// A bare key is a deliberate removal.
+			delete(out, name)
+			continue
+		}
+		if url = strings.TrimSpace(url); url == "" {
+			delete(out, name)
+			continue
+		}
+		out[name] = strings.TrimRight(url, "/")
+	}
+	return out
 }
 
 func envList(key string, def []string) []string {

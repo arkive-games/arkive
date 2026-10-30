@@ -14,6 +14,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
+	"github.com/arkive-games/arkive/backend-go/internal/core/comments"
 	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
 	"github.com/arkive-games/arkive/backend-go/internal/core/privacy"
@@ -52,6 +53,9 @@ type Handlers struct {
 	postLimiter    *auth.RateLimiter
 	commentLimiter *auth.RateLimiter
 
+	// markerComments shares commentLimiter rather than taking a budget of its own.
+	markerComments *comments.Service
+
 	roles   *roles.Service
 	social  *social.Service
 	privacy *privacy.Service
@@ -64,6 +68,7 @@ type Handlers struct {
 func NewHandlers(
 	svc *users.Service,
 	forumSvc *forum.Service,
+	markerCommentsSvc *comments.Service,
 	rolesSvc *roles.Service,
 	socialSvc *social.Service,
 	privacySvc *privacy.Service,
@@ -80,6 +85,7 @@ func NewHandlers(
 	return &Handlers{
 		users:          svc,
 		forum:          forumSvc,
+		markerComments: markerCommentsSvc,
 		roles:          rolesSvc,
 		social:         socialSvc,
 		privacy:        privacySvc,
