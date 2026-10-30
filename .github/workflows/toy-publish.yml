@@ -105,7 +105,9 @@ jobs:
           read -r slug bundles < <(node -e '
             import("./scripts/toy-lib.mjs").then(({ loadToyConfig, bundlesArtifacts }) => {
               const cfg = loadToyConfig(`apps/${process.argv[1]}`)
-              process.stdout.write(`${cfg.slug} ${bundlesArtifacts(cfg)}`)
+              // The newline matters: `read` returns 1 at an unterminated last line,
+              // which `set -e` turns into a failed step with no message.
+              process.stdout.write(`${cfg.slug} ${bundlesArtifacts(cfg)}\n`)
             }).catch((e) => { console.error(e.message); process.exit(1) })
           ' '${{ matrix.app }}')
           # Delimited, so a value containing a newline cannot forge other outputs.
