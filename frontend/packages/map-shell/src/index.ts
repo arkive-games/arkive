@@ -93,6 +93,7 @@ export {
 export type {
   MarkerComment,
   MarkerCommentAttachment,
+  MarkerCommentReportReason,
   MarkerCommentSort,
   MarkerCommentsConfig,
   MarkerDetailCompleteAction,

@@ -22,7 +22,10 @@ import {
   IconPhoto,
   IconPhotoPlus,
   IconMessageCircle,
+  IconFlag,
+  IconPencil,
   IconThumbUp,
+  IconTrash,
   IconX,
 } from "@tabler/icons-react"
 import { Button, cn } from "@gamemap/ui"
@@ -69,9 +72,18 @@ export type MarkerComment = {
   likeCount: number
   liked?: boolean
   replyCount: number
+  /** The signed-in reader wrote it, so it may be edited and deleted. */
+  mine?: boolean
+  /** It has been edited since it was written, so the timestamp says so. */
+  edited?: boolean
+  /** It answers another comment, so it is indented beneath it. */
+  reply?: boolean
 }
 
 export type MarkerCommentSort = "popular" | "latest"
+
+/** The reasons a report may carry, matching the API's enum. */
+export type MarkerCommentReportReason = "spam" | "abuse" | "offtopic" | "illegal" | "other"
 
 export type MarkerDetailLabels = {
   close: string
@@ -100,6 +112,28 @@ export type MarkerDetailLabels = {
   attachmentLimit: string
   removeImage?: string
   publish: string
+  /** Rewrite one of your own comments. */
+  edit: string
+  /** Shown beside an edited comment's timestamp. */
+  edited: string
+  /** Delete one of your own comments. */
+  delete: string
+  /** The confirmation before a delete, which cannot be undone. */
+  deleteConfirm: string
+  /** Report somebody else's comment. */
+  report: string
+  /** The label of the reason picker a report opens. */
+  reportReason: string
+  /** Cancels whichever inline control — the edit box or the reason picker — is open. */
+  cancel: string
+  /** One label per report reason, so the picker reads in the site's language. */
+  reportReasons: Record<MarkerCommentReportReason, string>
+  /** Refuses an empty edit before it reaches the network. */
+  emptyComment: string
+  /** Shown when writing, editing, deleting or reporting fails. */
+  commentFailed: string
+  /** The banner above the composer while it answers someone. */
+  replyingTo: (name: string) => string
   emptyDetails: string
   emptyComments: string
   guestAuthor: string
@@ -136,6 +170,29 @@ export type MarkerCommentsConfig = {
   onViewReplies?: (commentId: string) => void
   onSubmit?: (markerId: string, body: string, attachments: File[]) => void | Promise<void>
   submitting?: boolean
+
+  // The author's and the reporter's actions. Each is offered per comment — edit and
+  // delete only on one the reader wrote, report only on one they did not — and each
+  // closes over the id itself, so the host does not have to track which row is open.
+  // A rejected promise is shown by the drawer beside the control that failed.
+  onEdit?: (commentId: string, body: string) => Promise<void>
+  onDelete?: (commentId: string) => Promise<void>
+  onReport?: (commentId: string, reason: MarkerCommentReportReason) => Promise<void>
+
+  /**
+   * Whose comment the composer is answering, by display name, or undefined for a new
+   * top-level comment. The host owns this rather than the drawer because the
+   * submission has to carry the parent's id, which only the host sends.
+   */
+  replyingTo?: string
+  onCancelReply?: () => void
+
+  /**
+   * Whether the composer offers image attachments. Defaults to true. A host whose
+   * backend stores no comment images turns it off, so the button is absent rather
+   * than present and silently discarding what was attached.
+   */
+  allowAttachments?: boolean
 }
 
 export type MarkerDetailCompleteAction = {
@@ -348,6 +405,53 @@ function GallerySection({ config, labels }: { config: MarkerGalleryConfig; label
 }
 
 function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels: MarkerDetailLabels }) {
+  // One row is being edited or reported at a time, which is why the state is here
+  // rather than per article: two open editors is never what a reader meant, and a
+  // single id makes "is this the row I am acting on" a comparison rather than a map.
+  const [editing, setEditing] = useState<{ id: string; body: string } | null>(null)
+  const [reporting, setReporting] = useState<string | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const run = async (id: string, action: () => Promise<void> | void) => {
+    setBusy(id)
+    setError(null)
+    try {
+      await action()
+    } catch (failure) {
+      // A host that rejects carries its own message, which is more specific than
+      // anything the drawer could invent — "you are commenting too quickly" rather
+      // than "something went wrong".
+      setError(failure instanceof Error && failure.message ? failure.message : labels.commentFailed)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const saveEdit = (id: string) => {
+    const trimmed = editing?.body.trim() ?? ""
+    if (!trimmed) {
+      setError(labels.emptyComment)
+      return
+    }
+    void run(id, async () => {
+      await config.onEdit?.(id, trimmed)
+      setEditing(null)
+    })
+  }
+
+  const confirmDelete = (id: string) => {
+    if (typeof window !== "undefined" && !window.confirm(labels.deleteConfirm)) return
+    void run(id, async () => { await config.onDelete?.(id) })
+  }
+
+  const submitReport = (id: string, reason: MarkerCommentReportReason) => {
+    void run(id, async () => {
+      await config.onReport?.(id, reason)
+      setReporting(null)
+    })
+  }
+
   return (
     <div className="min-h-full bg-card" data-testid="marker-comments">
       <div className="flex min-h-10 items-center justify-between gap-2 border-b border-border px-3">
@@ -369,6 +473,9 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
           ))}
         </div>
       </div>
+      {error ? (
+        <p role="alert" data-testid="marker-comment-error" className="border-b border-border bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p>
+      ) : null}
       {!config.items.length ? (
         <div className="flex min-h-12 items-center justify-center gap-2 px-4 py-3 text-center text-muted-foreground" data-testid="marker-comments-empty">
           <IconMessageCircle className="size-5" stroke={1.8} />
@@ -376,13 +483,36 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
         </div>
       ) : null}
       {config.items.map((comment) => (
-        <article key={comment.id} className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2.5 border-b border-border p-3">
+        <article key={comment.id} data-reply={comment.reply ? "" : undefined} className={cn("grid grid-cols-[2rem_minmax(0,1fr)] gap-2.5 border-b border-border p-3", comment.reply && "pl-12")}>
           <span className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-bold text-primary-foreground">
             {comment.authorAvatarUrl ? <img src={comment.authorAvatarUrl} alt="" className="size-full object-cover" /> : comment.authorInitial ?? comment.authorName.slice(0, 1)}
           </span>
           <div className="min-w-0">
-            <div><strong className="block text-sm">{comment.authorName}</strong><span className="text-xs text-muted-foreground">{comment.createdLabel}</span></div>
-            <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed">{comment.body}</p>
+            <div>
+              <strong className="block text-sm">{comment.authorName}</strong>
+              <span className="text-xs text-muted-foreground">
+                {comment.createdLabel}
+                {comment.edited ? ` · ${labels.edited}` : ""}
+              </span>
+            </div>
+            {editing?.id === comment.id ? (
+              <div className="mt-1.5" data-testid="marker-comment-editor">
+                <textarea
+                  data-testid="marker-comment-edit-body"
+                  rows={3}
+                  value={editing.body}
+                  onChange={(event) => setEditing({ id: comment.id, body: event.currentTarget.value })}
+                  aria-label={labels.edit}
+                  className="block min-h-20 w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+                />
+                <div className="mt-2 flex items-center gap-2">
+                  <Button size="sm" disabled={busy === comment.id || !editing.body.trim()} onClick={() => saveEdit(comment.id)}>{labels.publish}</Button>
+                  <button type="button" onClick={() => { setEditing(null); setError(null) }} className="min-h-9 rounded-md px-2 text-xs font-semibold text-muted-foreground hover:bg-accent">{labels.cancel}</button>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed">{comment.body}</p>
+            )}
             {comment.attachments.length ? (
               <div className="mt-2 grid max-w-60 grid-cols-2 gap-2">
                 {comment.attachments.map((attachment) => (
@@ -390,7 +520,7 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
                 ))}
               </div>
             ) : null}
-            <div className="mt-1.5 flex items-center gap-1">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
               <button
                 type="button"
                 aria-label={labels.like}
@@ -409,7 +539,60 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
               >
                 <IconArrowBackUp className="size-4" stroke={1.8} />{labels.reply}
               </button>
+              {/* Edit and delete are offered only on what the reader wrote, report only
+                  on what they did not: showing all three everywhere would put a
+                  destructive control where a reader expects a correction. */}
+              {comment.mine && config.onEdit ? (
+                <button
+                  type="button"
+                  data-testid="marker-comment-edit"
+                  onClick={() => { setEditing({ id: comment.id, body: comment.body }); setReporting(null); setError(null) }}
+                  className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <IconPencil className="size-4" stroke={1.8} />{labels.edit}
+                </button>
+              ) : null}
+              {comment.mine && config.onDelete ? (
+                <button
+                  type="button"
+                  data-testid="marker-comment-delete"
+                  disabled={busy === comment.id}
+                  onClick={() => confirmDelete(comment.id)}
+                  className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-accent hover:text-destructive disabled:opacity-70"
+                >
+                  <IconTrash className="size-4" stroke={1.8} />{labels.delete}
+                </button>
+              ) : null}
+              {!comment.mine && config.onReport ? (
+                <button
+                  type="button"
+                  data-testid="marker-comment-report"
+                  aria-expanded={reporting === comment.id}
+                  onClick={() => { setReporting(reporting === comment.id ? null : comment.id); setEditing(null); setError(null) }}
+                  className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <IconFlag className="size-4" stroke={1.8} />{labels.report}
+                </button>
+              ) : null}
             </div>
+            {reporting === comment.id ? (
+              <div className="mt-1.5 rounded-lg border border-border bg-background p-2" data-testid="marker-comment-report-reasons">
+                <p className="text-xs font-semibold text-muted-foreground">{labels.reportReason}</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {(Object.keys(labels.reportReasons) as MarkerCommentReportReason[]).map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      disabled={busy === comment.id}
+                      onClick={() => submitReport(comment.id, reason)}
+                      className="min-h-8 rounded-md border border-border px-2 text-xs hover:bg-accent disabled:opacity-70"
+                    >
+                      {labels.reportReasons[reason]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {comment.replyCount ? (
               <button type="button" onClick={() => config.onViewReplies?.(comment.id)} disabled={!config.onViewReplies} className="mt-1 min-h-8 text-xs font-semibold text-primary disabled:opacity-70">
                 {labels.viewReplies(comment.replyCount)}
@@ -478,16 +661,42 @@ function CommentComposer({ config, labels }: { config: MarkerCommentsConfig; lab
     setAttachments((current) => current.filter((candidate) => candidate !== file))
   }
 
+  const [failure, setFailure] = useState<string | null>(null)
+
+  // Aiming the composer at a comment is a request to type, so focus follows it.
+  useEffect(() => {
+    if (config.replyingTo) bodyRef.current?.focus()
+  }, [config.replyingTo])
+
   const submit = async () => {
     const trimmed = body.trim()
     if (!trimmed || !config.onSubmit) return
-    await config.onSubmit(config.markerId, trimmed, attachments)
+    setFailure(null)
+    try {
+      await config.onSubmit(config.markerId, trimmed, attachments)
+    } catch (error) {
+      // The draft is kept: losing what someone typed because the network blinked
+      // is the one failure a comment box must not have.
+      setFailure(error instanceof Error && error.message ? error.message : labels.commentFailed)
+      return
+    }
     setBody("")
     setAttachments([])
   }
 
   return (
     <div data-testid="marker-comment-composer">
+      {config.replyingTo ? (
+        <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground" data-testid="marker-comment-replying">
+          <span className="truncate">{labels.replyingTo(config.replyingTo)}</span>
+          {config.onCancelReply ? (
+            <button type="button" aria-label={labels.cancel} title={labels.cancel} onClick={config.onCancelReply} className="inline-flex size-6 shrink-0 items-center justify-center rounded hover:bg-accent hover:text-foreground">
+              <IconX className="size-3.5" stroke={2} />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      {failure ? <p role="alert" data-testid="marker-comment-submit-error" className="mb-2 text-xs text-destructive">{failure}</p> : null}
       <textarea ref={bodyRef} rows={1} data-testid="marker-comment-body" value={body} onChange={(event) => setBody(event.currentTarget.value)} placeholder={labels.commentPlaceholder} className="block min-h-10 max-h-28 w-full resize-none overflow-y-auto rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30" />
       {previews.length ? (
         <div className="mt-2 flex flex-wrap gap-2" data-testid="marker-comment-previews">
@@ -508,11 +717,15 @@ function CommentComposer({ config, labels }: { config: MarkerCommentsConfig; lab
         </div>
       ) : null}
       <div className="mt-2 flex items-center gap-2">
-        <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-muted-foreground hover:bg-accent focus-within:ring-2 focus-within:ring-ring">
-          <IconPhoto className="size-4" stroke={1.8} />{labels.attachImages}
-          <input data-testid="marker-comment-attachment" className="sr-only" type="file" accept="image/*" multiple onChange={chooseAttachments} />
-        </label>
-        <span className="text-xs text-muted-foreground max-[350px]:hidden">{labels.attachmentLimit}</span>
+        {config.allowAttachments !== false ? (
+          <>
+            <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-muted-foreground hover:bg-accent focus-within:ring-2 focus-within:ring-ring">
+              <IconPhoto className="size-4" stroke={1.8} />{labels.attachImages}
+              <input data-testid="marker-comment-attachment" className="sr-only" type="file" accept="image/*" multiple onChange={chooseAttachments} />
+            </label>
+            <span className="text-xs text-muted-foreground max-[350px]:hidden">{labels.attachmentLimit}</span>
+          </>
+        ) : null}
         <Button size="sm" className="ml-auto" disabled={!body.trim() || config.submitting} onClick={() => void submit()}>{labels.publish}</Button>
       </div>
     </div>

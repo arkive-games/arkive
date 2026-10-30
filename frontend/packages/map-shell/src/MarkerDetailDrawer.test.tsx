@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MarkerDetailDrawer, type MarkerDetailLabels } from "./MarkerDetailDrawer"
 
@@ -41,6 +41,17 @@ const labels: MarkerDetailLabels = {
   guestAuthor: "Guest",
   justNow: "Just now",
   awaitingReview: "Awaiting review",
+  edit: "Edit",
+  edited: "Edited",
+  delete: "Delete",
+  deleteConfirm: "Delete this comment?",
+  report: "Report",
+  reportReason: "Why are you reporting it?",
+  cancel: "Cancel",
+  reportReasons: { spam: "Spam", abuse: "Abuse", offtopic: "Off topic", illegal: "Illegal", other: "Other" },
+  emptyComment: "Write something first.",
+  commentFailed: "That did not go through.",
+  replyingTo: (name) => `Replying to ${name}`,
 }
 
 const baseProps = {
@@ -281,6 +292,79 @@ describe("MarkerDetailDrawer", () => {
       expect(revokeObjectURL).toHaveBeenCalledWith(commentUrl)
     })
     unmount()
+  })
+
+  it("offers edit and delete on your own comment and report on somebody else's", async () => {
+    const onEdit = vi.fn(() => Promise.resolve())
+    const onDelete = vi.fn(() => Promise.resolve())
+    const onReport = vi.fn(() => Promise.resolve())
+    // jsdom does not implement confirm, and the drawer treats a missing answer as
+    // "cancel" — so the delete test has to install one that agrees.
+    vi.spyOn(window, "confirm").mockReturnValue(true)
+    const { getByRole, getByTestId, queryByTestId } = render(
+      <MarkerDetailDrawer
+        {...baseProps}
+        comments={{
+          markerId: "marker-1",
+          sort: "latest",
+          onSortChange: vi.fn(),
+          onEdit, onDelete, onReport,
+          items: [
+            { id: "mine", markerId: "marker-1", authorName: "Me", createdLabel: "Now", body: "Mine.", attachments: [], likeCount: 0, replyCount: 0, mine: true },
+            { id: "theirs", markerId: "marker-1", authorName: "Them", createdLabel: "Now", body: "Theirs.", attachments: [], likeCount: 0, replyCount: 0 },
+          ],
+        }}
+      />,
+    )
+    fireEvent.click(getByRole("tab", { name: /Comments/ }))
+
+    // Exactly one of each appears, on the row that owns it: an author is never
+    // offered "report" on their own words, and a reader is never offered "delete".
+    expect(getByTestId("marker-comment-edit")).not.toBeNull()
+    expect(getByTestId("marker-comment-delete")).not.toBeNull()
+    expect(getByTestId("marker-comment-report")).not.toBeNull()
+
+    // Edit opens in place on the comment's own body, and saves what was typed.
+    fireEvent.click(getByTestId("marker-comment-edit"))
+    const editor = getByTestId("marker-comment-edit-body") as HTMLTextAreaElement
+    expect(editor.value).toBe("Mine.")
+    fireEvent.change(editor, { target: { value: "Mine, corrected." } })
+    fireEvent.click(within(getByTestId("marker-comment-editor")).getByRole("button", { name: "Publish" }))
+    await waitFor(() => expect(onEdit).toHaveBeenCalledWith("mine", "Mine, corrected."))
+    await waitFor(() => expect(queryByTestId("marker-comment-edit-body")).toBeNull())
+
+    // Report asks for a reason, and the answer travels with the id.
+    fireEvent.click(getByTestId("marker-comment-report"))
+    fireEvent.click(getByRole("button", { name: "Spam" }))
+    await waitFor(() => expect(onReport).toHaveBeenCalledWith("theirs", "spam"))
+
+    // Delete confirms first, then deletes the one that was clicked.
+    fireEvent.click(getByTestId("marker-comment-delete"))
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith("mine"))
+  })
+
+  it("reports a failed edit rather than pretending it saved", async () => {
+    const onEdit = vi.fn(() => Promise.reject(new Error("you are commenting too quickly")))
+    const { getByRole, getByTestId } = render(
+      <MarkerDetailDrawer
+        {...baseProps}
+        comments={{
+          markerId: "marker-1",
+          sort: "latest",
+          onSortChange: vi.fn(),
+          onEdit,
+          items: [{ id: "mine", markerId: "marker-1", authorName: "Me", createdLabel: "Now", body: "Mine.", attachments: [], likeCount: 0, replyCount: 0, mine: true }],
+        }}
+      />,
+    )
+    fireEvent.click(getByRole("tab", { name: /Comments/ }))
+    fireEvent.click(getByTestId("marker-comment-edit"))
+    fireEvent.change(getByTestId("marker-comment-edit-body"), { target: { value: "Changed." } })
+    fireEvent.click(within(getByTestId("marker-comment-editor")).getByRole("button", { name: "Publish" }))
+    const alert = await waitFor(() => getByTestId("marker-comment-error"))
+    expect(alert.textContent).toContain("too quickly")
+    // The editor stays open: the text is still the author's to fix or discard.
+    expect(getByTestId("marker-comment-edit-body")).not.toBeNull()
   })
 
   it("shows compact horizontal empty states while keeping contribution actions usable", () => {

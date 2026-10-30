@@ -58,6 +58,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@gamemap/ui'
+import { markerSite, markerUrl } from './markerLinks'
 import { SITES, siteHref } from './sites'
 import { AVATAR_PRESETS, DEFAULT_AVATAR_SRC } from './avatarPresets'
 import { avatarUrl, publicProfileHref } from './userSystemData'
@@ -320,6 +321,14 @@ function NotificationInbox({
         // `readAll` is the "mark all read" button's local state; a row also knows
         // whether it was already read when it arrived.
         const read = readAll || item.readAt !== null
+        const markerHref = item.markerGame && item.markerMap && item.markerId
+          ? markerUrl(item.markerGame, item.markerMap, item.markerId)
+          : null
+        const site = item.markerGame ? markerSite(item.markerGame) : null
+        const markerSentence = t(
+          `userSystem.notifications.items.${item.kind === 'comment_like' ? 'markerLike' : 'markerReply'}`,
+          { site: site ? t(site.nameKey) : '' },
+        )
         return (
           <article key={item.id} className={read ? 'is-read' : undefined}>
             {item.actorAvatarUrl ? (
@@ -331,15 +340,24 @@ function NotificationInbox({
               <p>
                 <strong>{item.actorName ?? t('userSystem.notifications.systemSender')}</strong>
                 {' '}
-                {/* A follow has no subject at all, so its sentence takes no
+                {/* A reply or like on a map-marker comment is about no post, so it has a
+                    sentence of its own rather than falling through to "a deleted post".
+                    The link is absent when the comment has since been hidden: the
+                    backend withholds its location, and so does the row.
+
+                    A follow has no subject at all, so its sentence takes no
                     interpolation — passing one would have been how the "deleted
                     post" fallback crept in. Every other kind is about a post,
                     except a system message, whose text is its body. */}
-                {NOTIFICATION_COPY[item.kind] === 'follow'
-                  ? t('userSystem.notifications.items.follow')
-                  : t(`userSystem.notifications.items.${NOTIFICATION_COPY[item.kind]}`, {
-                      post: item.postTitle ?? item.body ?? t('userSystem.notifications.deletedPost'),
-                    })}
+                {item.markerCommentId
+                  ? markerHref
+                    ? <a href={markerHref} target="_blank" rel="noopener noreferrer">{markerSentence}</a>
+                    : markerSentence
+                  : NOTIFICATION_COPY[item.kind] === 'follow'
+                    ? t('userSystem.notifications.items.follow')
+                    : t(`userSystem.notifications.items.${NOTIFICATION_COPY[item.kind]}`, {
+                        post: item.postTitle ?? item.body ?? t('userSystem.notifications.deletedPost'),
+                      })}
               </p>
               <time dateTime={item.createdAt}>
                 <IconClock className="size-4" stroke={1.8} />

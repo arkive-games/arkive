@@ -4,16 +4,16 @@ import { useSearch } from '@tanstack/react-router'
 import type { EngineMarker, GameMapViewProps, GlMapRef } from '@gamemap/map-engine-gl'
 import { DEFAULT_MAP_THEME } from '@gamemap/map-engine-gl/theme'
 import {
-  ArkiveMobileMapControls, FilterPanel, MarkerPopupCard, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar,
-  formatCoords, readMapView, useMapViewMemory,
+  ArkiveMobileMapControls, FilterPanel, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar,
+  readMapView, useMapViewMemory,
   type FilterCategory, type SearchItem,
 } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype } from '@gamemap/data-contract'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, Button, cn, useIsMobile,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, useIsMobile,
 } from '@gamemap/ui'
-import { Check, Eraser } from 'lucide-react'
+import { Eraser } from 'lucide-react'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import {
@@ -26,6 +26,7 @@ import { ARKIVE_HOME_URL } from '../../lib/brand'
 import { useSettingsConfig } from '../../lib/settings'
 import { mapViewStore, readMapId, readVisibleSubtypes, writeMapId, writeVisibleSubtypes } from '../../lib/storage'
 import { TopNav } from '../../components/TopNav'
+import { PbzMarkerDetail } from './MarkerDetail'
 
 const labelsRecord = defineMemoryRecord({
   id: 'show-labels', namespace: 'pbz', surface: 'map',
@@ -47,12 +48,18 @@ export default function MapPage() {
 
   const [restoredVisible] = useState<Set<string> | null>(readVisibleSubtypes)
   const visibleInitialized = useRef(restoredVisible != null)
-  const { q: initialQuery } = useSearch({ from: '/' })
+  const { q: initialQuery, map: linkedMapId, marker: linkedMarkerId } = useSearch({ from: '/' })
+  // A deep link (from a notification, or a shared URL) names a marker once. It is
+  // consumed on first use so that choosing another map afterwards is not dragged
+  // back to the linked one by a search param still sitting in the address bar.
+  const pendingLink = useRef<{ mapId?: string; markerId?: string } | null>(
+    linkedMapId || linkedMarkerId ? { mapId: linkedMapId, markerId: linkedMarkerId } : null,
+  )
 
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
   } | null>(null)
-  const [mapId, setMapId] = useState<string>(readMapId)
+  const [mapId, setMapId] = useState<string>(() => linkedMapId ?? readMapId())
   const [markerData, setMarkerData] = useState<{ mapId: string; markers: MarkerRow[]; l10n: MarkerLocale } | null>(null)
   const [visible, setVisible] = useState<Set<string>>(() => restoredVisible ?? new Set())
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
@@ -103,6 +110,16 @@ export default function MapPage() {
       .then((d) => {
         if (cancelled) return
         setMarkerData({ mapId: map.id, ...d })
+        const link = pendingLink.current
+        if (link?.markerId && (!link.mapId || link.mapId === map.id)) {
+          pendingLink.current = null
+          // Flown to rather than restored silently: whoever followed the link has
+          // not seen this marker yet, so the camera should go and find it.
+          if (d.markers.some((m) => m.id === link.markerId)) {
+            setSelectedMarkerId(link.markerId)
+            return
+          }
+        }
         const stored = readMapView(mapViewStore, map.id).marker
         if (stored && d.markers.some((m) => m.id === stored)) {
           setRestoredMarkerId(stored)
@@ -265,42 +282,33 @@ export default function MapPage() {
     noDescription: t('map.noDescription'),
   }), [t])
 
-  const markerCard = useCallback((marker: EngineMarker) => {
+  const markerDetailFor = useCallback((marker: EngineMarker, anchored: boolean) => {
     if (!map) return null
     const icon = marker.icon || marker.subtypeMeta?.icon
-    const { text: coordText } = formatCoords(marker.x, marker.y)
     return (
-      <MarkerPopupCard
-        name={marker.localizedName || t('map.unnamed')}
-        icon={icon ? <img src={pbzAssets.markerIconUrl(icon, map)} alt="" className="size-8 rounded-full bg-neutral-900/80 object-cover" /> : undefined}
+      <PbzMarkerDetail
+        // Keyed by marker so a new selection starts a fresh thread rather than
+        // briefly showing the previous marker's comments while the next load runs.
+        key={marker.id}
+        marker={marker}
+        mapId={map.id}
         metaLine={[categoryName(marker.subtypeMeta?.category ?? marker.category), marker.subtypeLabel].filter(Boolean).join(' / ')}
-        positionLabel={t('map.position')}
-        positionValue={coordText}
-        positionCopy={{ value: coordText, copyLabel: t('map.copyPosition'), copiedLabel: t('map.copied'), failedLabel: t('map.copyFailed') }}
-        description={marker.localizedDescription}
-      >
-        {marker.subtypeMeta?.canComplete ? (
-          <Button
-            size="sm"
-            data-testid="marker-complete-toggle"
-            aria-pressed={Boolean(marker.completed)}
-            onClick={(event) => {
-              event.stopPropagation()
-              toggleCompleted(marker.id)
-            }}
-            className={cn('mt-3 self-start', marker.completed && 'bg-emerald-600 text-white hover:bg-emerald-600/90')}
-          >
-            <Check className="size-4" aria-hidden="true" />
-            {marker.completed ? t('map.completed') : t('map.markCompleted')}
-          </Button>
-        ) : null}
-      </MarkerPopupCard>
+        iconUrl={icon ? pbzAssets.markerIconUrl(icon, map) : undefined}
+        onClose={() => setSelectedMarkerId(null)}
+        anchored={anchored}
+        completeAction={marker.subtypeMeta?.canComplete ? {
+          completed: Boolean(marker.completed),
+          label: t('map.markCompleted'),
+          completedLabel: t('map.completed'),
+          onToggle: () => toggleCompleted(marker.id),
+        } : undefined}
+      />
     )
   }, [map, t, categoryName, toggleCompleted])
 
   const renderPopupContent = useCallback(
-    (marker: EngineMarker) => (isMobile || searchResultIds.length > 0 ? null : markerCard(marker)),
-    [isMobile, markerCard, searchResultIds.length],
+    (marker: EngineMarker) => (isMobile || searchResultIds.length > 0 ? null : markerDetailFor(marker, true)),
+    [isMobile, markerDetailFor, searchResultIds.length],
   )
 
   if (loadError) {
@@ -425,11 +433,7 @@ export default function MapPage() {
         <h1 className="sr-only">{t('map.title')}</h1>
         <main className="relative flex min-w-0 flex-1 overflow-hidden">
           {mapView}
-          {searchResultIds.length === 0 && selectedMarker ? (
-            <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-10 flex justify-center">
-              {markerCard(selectedMarker)}
-            </div>
-          ) : null}
+          {searchResultIds.length === 0 && selectedMarker ? markerDetailFor(selectedMarker, false) : null}
         </main>
         <ArkiveMobileMapControls
           account={<ArkiveAccountControl language={lng} variant="mobileHeader" homeUrl={ARKIVE_HOME_URL} settings={settings} />}

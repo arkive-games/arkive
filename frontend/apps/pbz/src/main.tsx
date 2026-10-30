@@ -28,12 +28,23 @@ const rootRoute = createRootRoute({
 export interface MapSearch {
   /** Prefill the marker search box. */
   q?: string
+  /** Open this map. Paired with `marker` by a notification or a shared link. */
+  map?: string
+  /** Select and fly to this marker once its map has loaded. */
+  marker?: string
 }
+
+// The same shapes the backend enforces on a marker comment's location, so a link
+// carrying anything else is ignored rather than handed to the engine.
+const MAP_ID = /^[A-Za-z0-9_-]{1,64}$/
+const MARKER_ID = /^[A-Za-z0-9-]{1,40}$/
 const mapRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   validateSearch: (s: Record<string, unknown>): MapSearch => ({
     q: typeof s.q === 'string' ? s.q : undefined,
+    map: typeof s.map === 'string' && MAP_ID.test(s.map) ? s.map : undefined,
+    marker: typeof s.marker === 'string' && MARKER_ID.test(s.marker) ? s.marker : undefined,
   }),
   // Lazy, so three.js and the map engine stay out of every other page's bundle.
   component: lazyRouteComponent(() => import('./features/map/MapPage')),

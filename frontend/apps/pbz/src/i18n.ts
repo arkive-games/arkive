@@ -70,6 +70,7 @@ const en = {
     noMapSelected: 'No map selected.', zoomIn: 'Zoom in', zoomOut: 'Zoom out',
     markCompleted: 'Mark as completed', completed: 'Completed', clearCompleted: 'Clear completed',
     clearCompletedBody: 'Unmark every completed marker on this map? This cannot be undone.', cancel: 'Cancel', confirm: 'Clear',
+    commentSignIn: 'Sign in to comment, like or report.', commentsLoadFailed: 'Comments could not be loaded.',
   },
   changelog: {
     title: 'Changelog',
@@ -134,6 +135,7 @@ const zhCN: Strings = {
     noMapSelected: '未选择地图。', zoomIn: '放大', zoomOut: '缩小',
     markCompleted: '标记为已完成', completed: '已完成', clearCompleted: '清除已完成',
     clearCompletedBody: '取消标记此地图上所有已完成的标记？此操作无法撤销。', cancel: '取消', confirm: '清除',
+    commentSignIn: '登录后即可留言、点赞或举报。', commentsLoadFailed: '留言加载失败。',
   },
   changelog: {
     title: '更新日志',
@@ -196,6 +198,7 @@ const zhTW: Strings = {
     noMapSelected: '未選擇地圖。', zoomIn: '放大', zoomOut: '縮小',
     markCompleted: '標記為已完成', completed: '已完成', clearCompleted: '清除已完成',
     clearCompletedBody: '取消標記此地圖上所有已完成的標記？此操作無法撤銷。', cancel: '取消', confirm: '清除',
+    commentSignIn: '登入後即可留言、按讚或檢舉。', commentsLoadFailed: '留言載入失敗。',
   },
   changelog: {
     title: '更新日誌',

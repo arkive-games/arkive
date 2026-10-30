@@ -1,10 +1,11 @@
 import type { MarkerDetailLabels } from "./MarkerDetailDrawer"
 
-type MarkerDetailLabelText = Omit<MarkerDetailLabels, "collapseSection" | "expandSection" | "commentCount" | "viewReplies"> & {
+type MarkerDetailLabelText = Omit<MarkerDetailLabels, "collapseSection" | "expandSection" | "commentCount" | "viewReplies" | "replyingTo"> & {
   collapseSection: string
   expandSection: string
   commentCount: string
   viewReplies: string
+  replyingTo: string
 }
 
 const en: MarkerDetailLabelText = {
@@ -39,6 +40,17 @@ const en: MarkerDetailLabelText = {
   guestAuthor: "Guest",
   justNow: "Just now",
   awaitingReview: "Awaiting review",
+  edit: "Edit",
+  edited: "Edited",
+  delete: "Delete",
+  deleteConfirm: "Delete this comment? Its replies go with it.",
+  report: "Report",
+  reportReason: "Why are you reporting it?",
+  cancel: "Cancel",
+  reportReasons: { spam: "Spam", abuse: "Abuse", offtopic: "Off topic", illegal: "Illegal", other: "Other" },
+  emptyComment: "Write something first.",
+  commentFailed: "That did not go through. Please try again.",
+  replyingTo: "Replying to {{name}}",
 }
 
 const texts: Record<string, MarkerDetailLabelText> = {
@@ -76,6 +88,17 @@ const texts: Record<string, MarkerDetailLabelText> = {
     guestAuthor: "访客",
     justNow: "刚刚",
     awaitingReview: "等待审核",
+    edit: "编辑",
+    edited: "已编辑",
+    delete: "删除",
+    deleteConfirm: "删除这条留言？它下面的回复会一起删除。",
+    report: "举报",
+    reportReason: "举报原因",
+    cancel: "取消",
+    reportReasons: { spam: "垃圾信息", abuse: "辱骂攻击", offtopic: "与主题无关", illegal: "违法内容", other: "其他" },
+    emptyComment: "请先写点内容。",
+    commentFailed: "操作没有成功，请重试。",
+    replyingTo: "回复 {{name}}",
   },
   "zh-TW": {
     ...en,
@@ -110,6 +133,17 @@ const texts: Record<string, MarkerDetailLabelText> = {
     guestAuthor: "訪客",
     justNow: "剛剛",
     awaitingReview: "等待審核",
+    edit: "編輯",
+    edited: "已編輯",
+    delete: "刪除",
+    deleteConfirm: "刪除這則留言？它底下的回覆會一併刪除。",
+    report: "檢舉",
+    reportReason: "檢舉原因",
+    cancel: "取消",
+    reportReasons: { spam: "垃圾訊息", abuse: "辱罵攻擊", offtopic: "與主題無關", illegal: "違法內容", other: "其他" },
+    emptyComment: "請先寫點內容。",
+    commentFailed: "操作沒有成功，請重試。",
+    replyingTo: "回覆 {{name}}",
   },
   "ko-KR": {
     ...en,
@@ -144,6 +178,17 @@ const texts: Record<string, MarkerDetailLabelText> = {
     guestAuthor: "손님",
     justNow: "방금",
     awaitingReview: "검토 대기 중",
+    edit: "수정",
+    edited: "수정됨",
+    delete: "삭제",
+    deleteConfirm: "이 댓글을 삭제할까요? 답글도 함께 삭제됩니다.",
+    report: "신고",
+    reportReason: "신고 사유",
+    cancel: "취소",
+    reportReasons: { spam: "스팸", abuse: "욕설", offtopic: "주제와 무관", illegal: "불법 콘텐츠", other: "기타" },
+    emptyComment: "먼저 내용을 작성하세요.",
+    commentFailed: "처리하지 못했습니다. 다시 시도해 주세요.",
+    replyingTo: "{{name}}님에게 답글",
   },
 }
 
@@ -159,5 +204,6 @@ export function markerDetailLabelsFor(language: string): MarkerDetailLabels {
     expandSection: (title) => interpolate(text.expandSection, "title", title),
     commentCount: (count) => interpolate(text.commentCount, "count", count),
     viewReplies: (count) => interpolate(text.viewReplies, "count", count),
+    replyingTo: (name) => interpolate(text.replyingTo, "name", name),
   }
 }

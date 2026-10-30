@@ -33,14 +33,17 @@ function isServed(gameId: string, path: string): boolean {
     : source === pathname)
 }
 
-const names = (site: SiteCard) => ({
+// Keyed loosely: a game the backend registers before the portal lists it (pbz) is a
+// valid id with no catalog names yet, which the fallback already handles.
+const SITE_NAMES: Partial<Record<string, string[]>> = {
   aion2: ['永恒之塔 2', 'AION 2'],
   palworld: ['幻兽帕鲁', 'Palworld'],
   gmzz: ['诡秘之主', 'Lord of Mysteries'],
   ro3: ['仙境传说3', 'Ragnarok Online 3'],
   vrising: ['夜族崛起', 'V Rising'],
   sts2: ['杀戮尖塔2'],
-}[site.id] ?? [])
+}
+const names = (site: SiteCard) => SITE_NAMES[site.id] ?? []
 
 describe('feature catalog', () => {
   it('has unique ids', () => {

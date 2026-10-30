@@ -110,6 +110,29 @@ export type CreateCommentBody = {
     parentId?: string;
 };
 
+export type CreateMarkerCommentBody = {
+    /**
+     * Raw markdown
+     */
+    body: string;
+    /**
+     * The game the marker belongs to
+     */
+    game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
+    /**
+     * The map the marker is on
+     */
+    map: string;
+    /**
+     * The marker to comment on
+     */
+    marker: string;
+    /**
+     * Reply to this comment; omit for a top-level comment
+     */
+    parentId?: string;
+};
+
 export type CreatePostBody = {
     /**
      * Raw markdown. Render it with raw HTML disabled.
@@ -122,7 +145,7 @@ export type CreatePostBody = {
     /**
      * Games this post is about
      */
-    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3'> | null;
+    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz'> | null;
     /**
      * Free-form tags
      */
@@ -391,6 +414,44 @@ export type EnvelopeListHiddenRead = {
     showType: number;
 };
 
+export type EnvelopeListMarkerCommentRead = {
+    /**
+     * The payload
+     */
+    data: ListMarkerCommentRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeListMarkerHiddenRead = {
+    /**
+     * The payload
+     */
+    data: ListMarkerHiddenRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListPostRead = {
     /**
      * The payload
@@ -472,6 +533,25 @@ export type EnvelopeMarkedCount = {
      * The payload
      */
     data: MarkedCount;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeMarkerCommentRead = {
+    /**
+     * The payload
+     */
+    data: MarkerCommentRead;
     /**
      * Always "Success" on a 2xx response
      */
@@ -795,6 +875,28 @@ export type ListHiddenRead = {
     results: Array<HiddenRead> | null;
 };
 
+export type ListMarkerCommentRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<MarkerCommentRead> | null;
+};
+
+export type ListMarkerHiddenRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<MarkerHiddenRead> | null;
+};
+
 export type ListPostRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -844,6 +946,113 @@ export type MarkedCount = {
      * How many were marked read
      */
     marked: number;
+};
+
+export type MarkerCommentHideBody = {
+    /**
+     * Why it is being hidden
+     */
+    reason?: string;
+};
+
+export type MarkerCommentLikeBody = {
+    /**
+     * true to like, false to unlike. Both are idempotent.
+     */
+    liked: boolean;
+};
+
+export type MarkerCommentRead = {
+    /**
+     * Who wrote it
+     */
+    author: UserPublic;
+    /**
+     * Raw markdown, exactly as written. Render it with raw HTML disabled.
+     */
+    body: string;
+    /**
+     * When it was written
+     */
+    createdAt: string;
+    /**
+     * When it was last edited, or null if never
+     */
+    editedAt: string | null;
+    /**
+     * The game the marker belongs to
+     */
+    game: string;
+    /**
+     * Identifier, used to edit, delete, like or report this comment
+     */
+    id: string;
+    /**
+     * How many accounts have liked it
+     */
+    likeCount: number;
+    /**
+     * Whether the current reader has liked it
+     */
+    liked: boolean;
+    /**
+     * The map the marker is on
+     */
+    map: string;
+    /**
+     * The marker this comment is attached to
+     */
+    marker: string;
+    /**
+     * The comment this replies to, or null for a top-level comment
+     */
+    parentId: string | null;
+    /**
+     * How many visible replies it has
+     */
+    replyCount: number;
+};
+
+export type MarkerCommentReportBody = {
+    /**
+     * Anything you want to add
+     */
+    detail?: string;
+    /**
+     * Why you are reporting it
+     */
+    reason: 'spam' | 'abuse' | 'offtopic' | 'illegal' | 'other';
+};
+
+export type MarkerHiddenRead = {
+    /**
+     * What it said, so a moderator can judge a restore
+     */
+    body: string;
+    /**
+     * The game the marker belongs to
+     */
+    game: string;
+    /**
+     * When it was hidden
+     */
+    hiddenAt: string;
+    /**
+     * Comment identifier
+     */
+    id: string;
+    /**
+     * The map the marker is on
+     */
+    map: string;
+    /**
+     * The marker the comment is attached to
+     */
+    marker: string;
+    /**
+     * Why it was hidden, or null
+     */
+    reason: string | null;
 };
 
 export type NotificationPreferencesBody = {
@@ -1008,7 +1217,7 @@ export type Read = {
      */
     body: string | null;
     /**
-     * The comment it is about, or null
+     * The forum comment it is about, or null
      */
     commentId: string | null;
     /**
@@ -1023,6 +1232,22 @@ export type Read = {
      * Why it exists
      */
     kind: 'reply' | 'mention' | 'post_like' | 'comment_like' | 'follow' | 'system';
+    /**
+     * The marker comment it is about, or null
+     */
+    markerCommentId: string | null;
+    /**
+     * The game of the marker the comment is on, or null
+     */
+    markerGame: string | null;
+    /**
+     * The marker the comment is on, or null
+     */
+    markerId: string | null;
+    /**
+     * The map of the marker the comment is on, or null
+     */
+    markerMap: string | null;
     /**
      * The post it is about, or null
      */
@@ -1073,7 +1298,7 @@ export type ReportBody = {
 
 export type ReportRead = {
     /**
-     * The reported comment, or null when a post was reported
+     * The reported forum comment, or the post a reported comment belongs to, or null
      */
     commentId: string | null;
     /**
@@ -1088,6 +1313,10 @@ export type ReportRead = {
      * Report identifier
      */
     id: string;
+    /**
+     * The reported marker comment, or null
+     */
+    markerCommentId: string | null;
     /**
      * The reported post, or the post a reported comment belongs to
      */
@@ -1185,6 +1414,13 @@ export type UpdateCommentBody = {
     body: string;
 };
 
+export type UpdateMarkerCommentBody = {
+    /**
+     * Raw markdown
+     */
+    body: string;
+};
+
 export type UpdatePostBody = {
     /**
      * New raw markdown body
@@ -1193,7 +1429,7 @@ export type UpdatePostBody = {
     /**
      * Replaces the whole list
      */
-    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3'>;
+    gameIds?: Array<'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz'>;
     /**
      * Replaces the whole list
      */
@@ -2929,6 +3165,458 @@ export type ResolveForumReportResponses = {
 
 export type ResolveForumReportResponse = ResolveForumReportResponses[keyof ResolveForumReportResponses];
 
+export type ListMarkerCommentsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The game the marker belongs to
+         */
+        game: string;
+        /**
+         * The map the marker is on
+         */
+        map: string;
+        /**
+         * The marker whose thread to read
+         */
+        marker: string;
+        /**
+         * latest is newest first; popular is most-liked first
+         */
+        sort?: 'latest' | 'popular';
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Comments per page
+         */
+        pageSize?: number;
+    };
+    url: '/map-markers/comments';
+};
+
+export type ListMarkerCommentsErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListMarkerCommentsError = ListMarkerCommentsErrors[keyof ListMarkerCommentsErrors];
+
+export type ListMarkerCommentsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListMarkerCommentRead;
+};
+
+export type ListMarkerCommentsResponse = ListMarkerCommentsResponses[keyof ListMarkerCommentsResponses];
+
+export type CreateMarkerCommentData = {
+    body: CreateMarkerCommentBody;
+    path?: never;
+    query?: never;
+    url: '/map-markers/comments';
+};
+
+export type CreateMarkerCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Too Many Requests
+     */
+    429: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type CreateMarkerCommentError = CreateMarkerCommentErrors[keyof CreateMarkerCommentErrors];
+
+export type CreateMarkerCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkerCommentRead;
+};
+
+export type CreateMarkerCommentResponse = CreateMarkerCommentResponses[keyof CreateMarkerCommentResponses];
+
+export type DeleteMarkerCommentData = {
+    body?: never;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map-markers/comments/{id}';
+};
+
+export type DeleteMarkerCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type DeleteMarkerCommentError = DeleteMarkerCommentErrors[keyof DeleteMarkerCommentErrors];
+
+export type DeleteMarkerCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeEmpty;
+};
+
+export type DeleteMarkerCommentResponse = DeleteMarkerCommentResponses[keyof DeleteMarkerCommentResponses];
+
+export type UpdateMarkerCommentData = {
+    body: UpdateMarkerCommentBody;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map-markers/comments/{id}';
+};
+
+export type UpdateMarkerCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type UpdateMarkerCommentError = UpdateMarkerCommentErrors[keyof UpdateMarkerCommentErrors];
+
+export type UpdateMarkerCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkerCommentRead;
+};
+
+export type UpdateMarkerCommentResponse = UpdateMarkerCommentResponses[keyof UpdateMarkerCommentResponses];
+
+export type UnhideMarkerCommentData = {
+    body?: never;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map-markers/comments/{id}/hidden';
+};
+
+export type UnhideMarkerCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type UnhideMarkerCommentError = UnhideMarkerCommentErrors[keyof UnhideMarkerCommentErrors];
+
+export type UnhideMarkerCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeEmpty;
+};
+
+export type UnhideMarkerCommentResponse = UnhideMarkerCommentResponses[keyof UnhideMarkerCommentResponses];
+
+export type HideMarkerCommentData = {
+    body?: MarkerCommentHideBody;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map-markers/comments/{id}/hidden';
+};
+
+export type HideMarkerCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type HideMarkerCommentError = HideMarkerCommentErrors[keyof HideMarkerCommentErrors];
+
+export type HideMarkerCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeEmpty;
+};
+
+export type HideMarkerCommentResponse = HideMarkerCommentResponses[keyof HideMarkerCommentResponses];
+
+export type LikeMarkerCommentData = {
+    body: MarkerCommentLikeBody;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map-markers/comments/{id}/like';
+};
+
+export type LikeMarkerCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type LikeMarkerCommentError = LikeMarkerCommentErrors[keyof LikeMarkerCommentErrors];
+
+export type LikeMarkerCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkerCommentRead;
+};
+
+export type LikeMarkerCommentResponse = LikeMarkerCommentResponses[keyof LikeMarkerCommentResponses];
+
+export type ListMarkerCommentRepliesData = {
+    body?: never;
+    path: {
+        /**
+         * The top-level comment whose replies to read
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Replies per page
+         */
+        pageSize?: number;
+    };
+    url: '/map-markers/comments/{id}/replies';
+};
+
+export type ListMarkerCommentRepliesErrors = {
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListMarkerCommentRepliesError = ListMarkerCommentRepliesErrors[keyof ListMarkerCommentRepliesErrors];
+
+export type ListMarkerCommentRepliesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListMarkerCommentRead;
+};
+
+export type ListMarkerCommentRepliesResponse = ListMarkerCommentRepliesResponses[keyof ListMarkerCommentRepliesResponses];
+
+export type ReportMarkerCommentData = {
+    body: MarkerCommentReportBody;
+    path: {
+        /**
+         * Comment identifier
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map-markers/comments/{id}/report';
+};
+
+export type ReportMarkerCommentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ReportMarkerCommentError = ReportMarkerCommentErrors[keyof ReportMarkerCommentErrors];
+
+export type ReportMarkerCommentResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkerCommentRead;
+};
+
+export type ReportMarkerCommentResponse = ReportMarkerCommentResponses[keyof ReportMarkerCommentResponses];
+
+export type ListHiddenMarkerCommentsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Rows per page
+         */
+        pageSize?: number;
+    };
+    url: '/map-markers/moderation/hidden-comments';
+};
+
+export type ListHiddenMarkerCommentsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListHiddenMarkerCommentsError = ListHiddenMarkerCommentsErrors[keyof ListHiddenMarkerCommentsErrors];
+
+export type ListHiddenMarkerCommentsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListMarkerHiddenRead;
+};
+
+export type ListHiddenMarkerCommentsResponse = ListHiddenMarkerCommentsResponses[keyof ListHiddenMarkerCommentsResponses];
+
 export type ListNotificationsData = {
     body?: never;
     path?: never;
@@ -3205,7 +3893,7 @@ export type ListGameRolesData = {
         /**
          * The game whose staff to list
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
     };
     query?: never;
     url: '/roles/games/{game}';
@@ -3243,7 +3931,7 @@ export type RevokeGameRoleData = {
         /**
          * The game the role applies to
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
         /**
          * Public number of the account to remove
          */
@@ -3298,7 +3986,7 @@ export type GrantGameRoleData = {
         /**
          * The game the role applies to
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
         /**
          * Public number of the account to appoint
          */

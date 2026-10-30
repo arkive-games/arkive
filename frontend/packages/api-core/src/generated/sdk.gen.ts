@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AttachForumPostImageData, AttachForumPostImageErrors, AttachForumPostImageResponses, BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, DetachForumPostImageData, DetachForumPostImageErrors, DetachForumPostImageResponses, FeatureForumPostData, FeatureForumPostErrors, FeatureForumPostResponses, FollowUserData, FollowUserErrors, FollowUserResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetFollowCountsData, GetFollowCountsErrors, GetFollowCountsResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetNotificationPreferencesData, GetNotificationPreferencesErrors, GetNotificationPreferencesResponses, GetOwnPrivacyData, GetOwnPrivacyErrors, GetOwnPrivacyResponses, GetUnreadNotificationCountData, GetUnreadNotificationCountErrors, GetUnreadNotificationCountResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, HideForumCommentData, HideForumCommentErrors, HideForumCommentResponses, HideForumPostData, HideForumPostErrors, HideForumPostResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListFollowersData, ListFollowersErrors, ListFollowersResponses, ListFollowingData, ListFollowingErrors, ListFollowingResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListHiddenForumCommentsData, ListHiddenForumCommentsErrors, ListHiddenForumCommentsResponses, ListHiddenForumPostsData, ListHiddenForumPostsErrors, ListHiddenForumPostsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListOpenForumReportsData, ListOpenForumReportsErrors, ListOpenForumReportsResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, MarkAllNotificationsReadData, MarkAllNotificationsReadErrors, MarkAllNotificationsReadResponses, MarkNotificationReadData, MarkNotificationReadErrors, MarkNotificationReadResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, ReportForumContentData, ReportForumContentErrors, ReportForumContentResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResolveForumReportData, ResolveForumReportErrors, ResolveForumReportResponses, RestoreForumCommentData, RestoreForumCommentErrors, RestoreForumCommentResponses, RestoreForumPostData, RestoreForumPostErrors, RestoreForumPostResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, SetNotificationPreferencesData, SetNotificationPreferencesErrors, SetNotificationPreferencesResponses, SetOwnPrivacyData, SetOwnPrivacyErrors, SetOwnPrivacyResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnfeatureForumPostData, UnfeatureForumPostErrors, UnfeatureForumPostResponses, UnfollowUserData, UnfollowUserErrors, UnfollowUserResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
+import type { AttachForumPostImageData, AttachForumPostImageErrors, AttachForumPostImageResponses, BecomeSuperuserData, BecomeSuperuserErrors, BecomeSuperuserResponses, BookmarkForumPostData, BookmarkForumPostErrors, BookmarkForumPostResponses, CreateForumCommentData, CreateForumCommentErrors, CreateForumCommentResponses, CreateForumPostData, CreateForumPostErrors, CreateForumPostResponses, CreateMarkerCommentData, CreateMarkerCommentErrors, CreateMarkerCommentResponses, DeactivateUserData, DeactivateUserErrors, DeactivateUserResponses, DeleteCurrentUserAvatarData, DeleteCurrentUserAvatarErrors, DeleteCurrentUserAvatarResponses, DeleteForumCommentData, DeleteForumCommentErrors, DeleteForumCommentResponses, DeleteForumPostData, DeleteForumPostErrors, DeleteForumPostResponses, DeleteMarkerCommentData, DeleteMarkerCommentErrors, DeleteMarkerCommentResponses, DeleteUserAvatarData, DeleteUserAvatarErrors, DeleteUserAvatarResponses, DetachForumPostImageData, DetachForumPostImageErrors, DetachForumPostImageResponses, FeatureForumPostData, FeatureForumPostErrors, FeatureForumPostResponses, FollowUserData, FollowUserErrors, FollowUserResponses, ForgotPasswordData, ForgotPasswordErrors, ForgotPasswordResponses, GetAltchaChallengeData, GetAltchaChallengeErrors, GetAltchaChallengeResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetFollowCountsData, GetFollowCountsErrors, GetFollowCountsResponses, GetForumPostData, GetForumPostErrors, GetForumPostResponses, GetNotificationPreferencesData, GetNotificationPreferencesErrors, GetNotificationPreferencesResponses, GetOwnPrivacyData, GetOwnPrivacyErrors, GetOwnPrivacyResponses, GetUnreadNotificationCountData, GetUnreadNotificationCountErrors, GetUnreadNotificationCountResponses, GetUserByUidData, GetUserByUidErrors, GetUserByUidResponses, GetUserData, GetUserErrors, GetUserResponses, GrantGameRoleData, GrantGameRoleErrors, GrantGameRoleResponses, HideForumCommentData, HideForumCommentErrors, HideForumCommentResponses, HideForumPostData, HideForumPostErrors, HideForumPostResponses, HideMarkerCommentData, HideMarkerCommentErrors, HideMarkerCommentResponses, LikeForumCommentData, LikeForumCommentErrors, LikeForumCommentResponses, LikeForumPostData, LikeForumPostErrors, LikeForumPostResponses, LikeMarkerCommentData, LikeMarkerCommentErrors, LikeMarkerCommentResponses, ListAvatarPresetsData, ListAvatarPresetsErrors, ListAvatarPresetsResponses, ListFollowersData, ListFollowersErrors, ListFollowersResponses, ListFollowingData, ListFollowingErrors, ListFollowingResponses, ListForumCommentsData, ListForumCommentsErrors, ListForumCommentsResponses, ListForumPostsData, ListForumPostsErrors, ListForumPostsResponses, ListGameRolesData, ListGameRolesErrors, ListGameRolesResponses, ListHiddenForumCommentsData, ListHiddenForumCommentsErrors, ListHiddenForumCommentsResponses, ListHiddenForumPostsData, ListHiddenForumPostsErrors, ListHiddenForumPostsResponses, ListHiddenMarkerCommentsData, ListHiddenMarkerCommentsErrors, ListHiddenMarkerCommentsResponses, ListMarkerCommentRepliesData, ListMarkerCommentRepliesErrors, ListMarkerCommentRepliesResponses, ListMarkerCommentsData, ListMarkerCommentsErrors, ListMarkerCommentsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListOpenForumReportsData, ListOpenForumReportsErrors, ListOpenForumReportsResponses, ListOwnRolesData, ListOwnRolesErrors, ListOwnRolesResponses, LoginCookieData, LoginCookieErrors, LoginCookieResponses, LoginJwtData, LoginJwtErrors, LoginJwtResponses, LogoutCookieData, LogoutCookieErrors, LogoutCookieResponses, LogoutJwtData, LogoutJwtErrors, LogoutJwtResponses, MarkAllNotificationsReadData, MarkAllNotificationsReadErrors, MarkAllNotificationsReadResponses, MarkNotificationReadData, MarkNotificationReadErrors, MarkNotificationReadResponses, ReactivateUserData, ReactivateUserErrors, ReactivateUserResponses, RegisterData, RegisterErrors, RegisterResponses, ReportForumContentData, ReportForumContentErrors, ReportForumContentResponses, ReportMarkerCommentData, ReportMarkerCommentErrors, ReportMarkerCommentResponses, RequestVerifyTokenData, RequestVerifyTokenErrors, RequestVerifyTokenResponses, ResetPasswordData, ResetPasswordErrors, ResetPasswordResponses, ResolveForumReportData, ResolveForumReportErrors, ResolveForumReportResponses, RestoreForumCommentData, RestoreForumCommentErrors, RestoreForumCommentResponses, RestoreForumPostData, RestoreForumPostErrors, RestoreForumPostResponses, RevokeGameRoleData, RevokeGameRoleErrors, RevokeGameRoleResponses, SearchUsersData, SearchUsersErrors, SearchUsersResponses, SetCurrentUserAvatarData, SetCurrentUserAvatarErrors, SetCurrentUserAvatarPresetData, SetCurrentUserAvatarPresetErrors, SetCurrentUserAvatarPresetResponses, SetCurrentUserAvatarResponses, SetNotificationPreferencesData, SetNotificationPreferencesErrors, SetNotificationPreferencesResponses, SetOwnPrivacyData, SetOwnPrivacyErrors, SetOwnPrivacyResponses, UnbookmarkForumPostData, UnbookmarkForumPostErrors, UnbookmarkForumPostResponses, UnfeatureForumPostData, UnfeatureForumPostErrors, UnfeatureForumPostResponses, UnfollowUserData, UnfollowUserErrors, UnfollowUserResponses, UnhideMarkerCommentData, UnhideMarkerCommentErrors, UnhideMarkerCommentResponses, UnlikeForumCommentData, UnlikeForumCommentErrors, UnlikeForumCommentResponses, UnlikeForumPostData, UnlikeForumPostErrors, UnlikeForumPostResponses, UpdateCurrentUserData, UpdateCurrentUserErrors, UpdateCurrentUserResponses, UpdateForumCommentData, UpdateForumCommentErrors, UpdateForumCommentResponses, UpdateForumPostData, UpdateForumPostErrors, UpdateForumPostResponses, UpdateMarkerCommentData, UpdateMarkerCommentErrors, UpdateMarkerCommentResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, VerifyUserData, VerifyUserErrors, VerifyUserResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -489,6 +489,136 @@ export const resolveForumReport = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Read a marker's comments
+ *
+ * Public. Top-level comments only, newest first by default; each carries its reply count and whether the reader liked it. Replies are fetched from the comment's own endpoint, because a marker can carry a long thread and the drawer only expands one at a time.
+ */
+export const listMarkerComments = <ThrowOnError extends boolean = false>(options: Options<ListMarkerCommentsData, ThrowOnError>): RequestResult<ListMarkerCommentsResponses, ListMarkerCommentsErrors, ThrowOnError> => (options.client ?? client).get<ListMarkerCommentsResponses, ListMarkerCommentsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments',
+    ...options
+});
+
+/**
+ * Comment on a marker
+ *
+ * Signed in only. Published immediately: there is no pre-publication review, and moderation happens after the fact. The marker is checked against the game's data artifact, so a comment cannot be opened under a marker that does not exist — except when the artifact is unreachable, which accepts the comment rather than blaming the writer for it.
+ */
+export const createMarkerComment = <ThrowOnError extends boolean = false>(options: Options<CreateMarkerCommentData, ThrowOnError>): RequestResult<CreateMarkerCommentResponses, CreateMarkerCommentErrors, ThrowOnError> => (options.client ?? client).post<CreateMarkerCommentResponses, CreateMarkerCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete your comment
+ *
+ * The author's own comment. Deleting a top-level comment takes its replies with it, which is what the cascade says and what a reader expects: a thread hanging under a heading nobody can see is worse than losing it.
+ */
+export const deleteMarkerComment = <ThrowOnError extends boolean = false>(options: Options<DeleteMarkerCommentData, ThrowOnError>): RequestResult<DeleteMarkerCommentResponses, DeleteMarkerCommentErrors, ThrowOnError> => (options.client ?? client).delete<DeleteMarkerCommentResponses, DeleteMarkerCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments/{id}',
+    ...options
+});
+
+/**
+ * Edit your comment
+ *
+ * The author's own comment, and only theirs. A hidden comment answers 404 to its author too, rather than revealing that it exists but is withheld.
+ */
+export const updateMarkerComment = <ThrowOnError extends boolean = false>(options: Options<UpdateMarkerCommentData, ThrowOnError>): RequestResult<UpdateMarkerCommentResponses, UpdateMarkerCommentErrors, ThrowOnError> => (options.client ?? client).patch<UpdateMarkerCommentResponses, UpdateMarkerCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Restore a hidden comment
+ *
+ * The counterpart to hide. Without it a hidden comment could be restored only by someone who already knew its id.
+ */
+export const unhideMarkerComment = <ThrowOnError extends boolean = false>(options: Options<UnhideMarkerCommentData, ThrowOnError>): RequestResult<UnhideMarkerCommentResponses, UnhideMarkerCommentErrors, ThrowOnError> => (options.client ?? client).delete<UnhideMarkerCommentResponses, UnhideMarkerCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments/{id}/hidden',
+    ...options
+});
+
+/**
+ * Hide a comment
+ *
+ * Moderator action, reversible and attributed. Requires moderating the game the comment's marker belongs to. A hidden comment answers 404 to every reader, its author included.
+ */
+export const hideMarkerComment = <ThrowOnError extends boolean = false>(options: Options<HideMarkerCommentData, ThrowOnError>): RequestResult<HideMarkerCommentResponses, HideMarkerCommentErrors, ThrowOnError> => (options.client ?? client).put<HideMarkerCommentResponses, HideMarkerCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments/{id}/hidden',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Like or unlike a comment
+ *
+ * Idempotent, so a double tap or a retried request means what it says. Returns the updated comment so a client can render the new count without a second round trip. The author is notified on the like and never on the unlike.
+ */
+export const likeMarkerComment = <ThrowOnError extends boolean = false>(options: Options<LikeMarkerCommentData, ThrowOnError>): RequestResult<LikeMarkerCommentResponses, LikeMarkerCommentErrors, ThrowOnError> => (options.client ?? client).put<LikeMarkerCommentResponses, LikeMarkerCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments/{id}/like',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Read a comment's replies
+ *
+ * Public, oldest first: a reply reads in the order the conversation happened, unlike the top-level list where the best answer should float.
+ */
+export const listMarkerCommentReplies = <ThrowOnError extends boolean = false>(options: Options<ListMarkerCommentRepliesData, ThrowOnError>): RequestResult<ListMarkerCommentRepliesResponses, ListMarkerCommentRepliesErrors, ThrowOnError> => (options.client ?? client).get<ListMarkerCommentRepliesResponses, ListMarkerCommentRepliesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments/{id}/replies',
+    ...options
+});
+
+/**
+ * Report a comment
+ *
+ * Any signed-in account may report. Reports land in the forum's own moderation queue, so a moderator watches one inbox. Reporting the same comment twice updates your report rather than filing a second.
+ */
+export const reportMarkerComment = <ThrowOnError extends boolean = false>(options: Options<ReportMarkerCommentData, ThrowOnError>): RequestResult<ReportMarkerCommentResponses, ReportMarkerCommentErrors, ThrowOnError> => (options.client ?? client).post<ReportMarkerCommentResponses, ReportMarkerCommentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/comments/{id}/report',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Hidden comments you may restore
+ *
+ * Moderator only, scoped to the games you moderate. Most recently hidden first.
+ */
+export const listHiddenMarkerComments = <ThrowOnError extends boolean = false>(options?: Options<ListHiddenMarkerCommentsData, ThrowOnError>): RequestResult<ListHiddenMarkerCommentsResponses, ListHiddenMarkerCommentsErrors, ThrowOnError> => (options?.client ?? client).get<ListHiddenMarkerCommentsResponses, ListHiddenMarkerCommentsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/map-markers/moderation/hidden-comments',
+    ...options
 });
 
 /**
