@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.0",
+      "date": "2026-10-30",
+      "commit": "05568870096b5aac50f9132c2279301feeeac35c",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Tick off map markers as completed from their popup: completed markers dim with a check, each kind shows its progress in the filter, and Clear completed resets the map.",
+            "zh-CN": "可在标记弹窗中将地图标记设为已完成：已完成的标记会变暗并显示对勾，筛选栏按种类显示进度，“清除已完成”可重置当前地图。",
+            "zh-TW": "可在標記彈窗中將地圖標記設為已完成：已完成的標記會變暗並顯示勾號，篩選欄依種類顯示進度，「清除已完成」可重置目前地圖。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "date": "2026-10-30",
       "commit": "ac880edd577d6859b0d36a31710ce201214a2b28",
