@@ -107,6 +107,7 @@ type CoreMarkerComment struct {
 	HiddenAt     pgtype.Timestamptz
 	HiddenBy     *uuid.UUID
 	HiddenReason *string
+	DeletedAt    pgtype.Timestamptz
 }
 
 type CoreMarkerCommentLike struct {

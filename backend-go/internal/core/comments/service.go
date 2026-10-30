@@ -120,7 +120,7 @@ func (s *Service) createReply(ctx context.Context, principal auth.Principal, tar
 	}
 	// A hidden parent is gone as far as a reader is concerned, so it cannot be
 	// replied to either — otherwise a thread grows under content nobody can see.
-	if parent.HiddenAt.Valid {
+	if withdrawn(parent) {
 		return MarkerCommentRead{}, apierr.New(apierr.NotFound, "no such comment to reply to")
 	}
 	if parent.ParentID != nil {
@@ -148,14 +148,12 @@ func (s *Service) createReply(ctx context.Context, principal auth.Principal, tar
 		return MarkerCommentRead{}, fmt.Errorf("create marker comment reply: %w", err)
 	}
 
-	if err := s.notifier.Notify(ctx, notify.Event{
+	s.notify(ctx, notify.Event{
 		Recipient:       parent.AuthorID,
 		Kind:            notify.Reply,
 		Actor:           &principal.ID,
 		MarkerCommentID: &comment.ID,
-	}); err != nil {
-		return MarkerCommentRead{}, err
-	}
+	})
 	return s.single(ctx, comment, &principal.ID)
 }
 
@@ -206,7 +204,7 @@ func (s *Service) Replies(ctx context.Context, parentID uuid.UUID, page, pageSiz
 		}
 		return nil, 0, fmt.Errorf("load comment: %w", err)
 	}
-	if parent.HiddenAt.Valid {
+	if withdrawn(parent) {
 		return nil, 0, apierr.New(apierr.NotFound, "no such comment")
 	}
 
@@ -248,7 +246,12 @@ func (s *Service) Update(ctx context.Context, principal auth.Principal, id uuid.
 	return s.single(ctx, updated, &principal.ID)
 }
 
-// Delete removes a comment and, by cascade, its replies. The author's own action.
+// Delete withdraws a comment, and with it its replies, from every reader. The
+// author's own action.
+//
+// The row is kept: a hard delete cascaded into the reports against it, so deleting
+// a reported comment erased the complaint along with it. Moderators still see the
+// report and can answer it.
 func (s *Service) Delete(ctx context.Context, principal auth.Principal, id uuid.UUID) error {
 	comment, err := s.owned(ctx, principal, id)
 	if err != nil {
@@ -280,14 +283,12 @@ func (s *Service) SetLike(ctx context.Context, principal auth.Principal, id uuid
 	// Notified on the like and never on the unlike: an inbox that reports someone
 	// changing their mind is noise. The mention of self is skipped inside notify.
 	if liked {
-		if err := s.notifier.Notify(ctx, notify.Event{
+		s.notify(ctx, notify.Event{
 			Recipient:       comment.AuthorID,
 			Kind:            notify.CommentLike,
 			Actor:           &principal.ID,
 			MarkerCommentID: &comment.ID,
-		}); err != nil {
-			return MarkerCommentRead{}, err
-		}
+		})
 	}
 	return s.single(ctx, comment, &principal.ID)
 }
@@ -310,6 +311,11 @@ func (s *Service) Report(ctx context.Context, principal auth.Principal, id uuid.
 			return apierr.New(apierr.NotFound, "no such comment")
 		}
 		return fmt.Errorf("load comment: %w", err)
+	}
+	// Deleted is gone for everyone; there is nothing left for a report to act on.
+	// Hidden is still reportable, as above.
+	if comment.DeletedAt.Valid {
+		return apierr.New(apierr.NotFound, "no such comment")
 	}
 
 	if detail != nil {
@@ -347,6 +353,10 @@ func (s *Service) SetHidden(ctx context.Context, principal auth.Principal, id uu
 			return apierr.New(apierr.NotFound, "no such comment")
 		}
 		return fmt.Errorf("load comment: %w", err)
+	}
+	// A moderator cannot resurrect what its author deleted.
+	if comment.DeletedAt.Valid {
+		return apierr.New(apierr.NotFound, "no such comment")
 	}
 	if err := s.mayModerate(ctx, principal, comment.GameKey); err != nil {
 		return err
@@ -484,10 +494,29 @@ func (s *Service) visible(ctx context.Context, id uuid.UUID) (coredb.CoreMarkerC
 		}
 		return coredb.CoreMarkerComment{}, fmt.Errorf("load comment: %w", err)
 	}
-	if comment.HiddenAt.Valid {
+	if withdrawn(comment) {
 		return coredb.CoreMarkerComment{}, apierr.New(apierr.NotFound, "no such comment")
 	}
 	return comment, nil
+}
+
+// withdrawn reports whether readers may no longer see a comment: a moderator hid it,
+// or its author deleted it.
+func withdrawn(c coredb.CoreMarkerComment) bool {
+	return c.HiddenAt.Valid || c.DeletedAt.Valid
+}
+
+// notify raises a notification without letting its failure fail the request.
+//
+// The comment or like it is about has already been written, outside any shared
+// transaction. Returning the error would tell the client the write failed, and a
+// retry would then write it twice — a duplicate comment is worse than a missed
+// inbox row.
+func (s *Service) notify(ctx context.Context, e notify.Event) {
+	if err := s.notifier.Notify(ctx, e); err != nil && s.logger != nil {
+		s.logger.WarnContext(ctx, "marker comment notification not written",
+			"kind", string(e.Kind), "error", err)
+	}
 }
 
 // owned loads a comment the caller wrote.
@@ -589,6 +618,7 @@ func commentRows(rows []coredb.ListMarkerCommentsRow) []markerCommentRow {
 				HiddenAt:     row.HiddenAt,
 				HiddenBy:     row.HiddenBy,
 				HiddenReason: row.HiddenReason,
+				DeletedAt:    row.DeletedAt,
 			},
 			LikeCount:  row.LikeCount,
 			Liked:      row.Liked,
@@ -620,6 +650,7 @@ func replyRows(rows []coredb.ListMarkerCommentRepliesRow) []markerCommentRow {
 				HiddenAt:     row.HiddenAt,
 				HiddenBy:     row.HiddenBy,
 				HiddenReason: row.HiddenReason,
+				DeletedAt:    row.DeletedAt,
 			},
 			LikeCount:  row.LikeCount,
 			Liked:      row.Liked,

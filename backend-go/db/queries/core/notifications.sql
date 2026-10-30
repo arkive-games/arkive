@@ -101,4 +101,4 @@ SELECT id, post_no, title FROM core.forum_posts WHERE id = ANY (sqlc.arg('ids'):
 -- Hidden comments are excluded: a notification about withheld content must not
 -- reveal where it was.
 SELECT id, game_key, map_id, marker_id FROM core.marker_comments
-WHERE id = ANY (sqlc.arg('ids')::uuid[]) AND hidden_at IS NULL;
+WHERE id = ANY (sqlc.arg('ids')::uuid[]) AND hidden_at IS NULL AND deleted_at IS NULL;

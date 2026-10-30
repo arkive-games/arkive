@@ -131,7 +131,7 @@ func (q *Queries) GetForumPostNosByIDs(ctx context.Context, ids []uuid.UUID) ([]
 
 const getMarkerCommentTargetsByIDs = `-- name: GetMarkerCommentTargetsByIDs :many
 SELECT id, game_key, map_id, marker_id FROM core.marker_comments
-WHERE id = ANY ($1::uuid[]) AND hidden_at IS NULL
+WHERE id = ANY ($1::uuid[]) AND hidden_at IS NULL AND deleted_at IS NULL
 `
 
 type GetMarkerCommentTargetsByIDsRow struct {

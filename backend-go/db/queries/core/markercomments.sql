@@ -28,7 +28,9 @@ WHERE id = sqlc.arg('id')
 RETURNING *;
 
 -- name: DeleteMarkerComment :execrows
-DELETE FROM core.marker_comments WHERE id = $1;
+-- A soft delete: the row stays so reports against it stay answerable. See the
+-- migration that added deleted_at.
+UPDATE core.marker_comments SET deleted_at = now() WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: SetMarkerCommentHidden :one
 -- All three columns move together, which marker_comments_hidden_together requires.
@@ -49,7 +51,7 @@ RETURNING *;
 SELECT
     c.*,
     (SELECT count(*) FROM core.marker_comments r
-        WHERE r.parent_id = c.id AND r.hidden_at IS NULL) AS reply_count,
+        WHERE r.parent_id = c.id AND r.hidden_at IS NULL AND r.deleted_at IS NULL) AS reply_count,
     (SELECT count(*) FROM core.marker_comment_likes l
         WHERE l.comment_id = c.id) AS like_count,
     EXISTS (
@@ -62,6 +64,7 @@ WHERE c.game_key = sqlc.arg('game_key')
   AND c.marker_id = sqlc.arg('marker_id')
   AND c.parent_id IS NULL
   AND c.hidden_at IS NULL
+  AND c.deleted_at IS NULL
 ORDER BY
     CASE WHEN sqlc.arg('sort')::text = 'popular'
         THEN (SELECT count(*) FROM core.marker_comment_likes l WHERE l.comment_id = c.id) END DESC NULLS LAST,
@@ -75,7 +78,8 @@ WHERE game_key = sqlc.arg('game_key')
   AND map_id = sqlc.arg('map_id')
   AND marker_id = sqlc.arg('marker_id')
   AND parent_id IS NULL
-  AND hidden_at IS NULL;
+  AND hidden_at IS NULL
+  AND deleted_at IS NULL;
 
 -- A single comment's replies, oldest first: a conversation reads in the order it
 -- happened, unlike the top-level list where the best answer should float.
@@ -83,7 +87,7 @@ WHERE game_key = sqlc.arg('game_key')
 SELECT
     c.*,
     (SELECT count(*) FROM core.marker_comments r
-        WHERE r.parent_id = c.id AND r.hidden_at IS NULL) AS reply_count,
+        WHERE r.parent_id = c.id AND r.hidden_at IS NULL AND r.deleted_at IS NULL) AS reply_count,
     (SELECT count(*) FROM core.marker_comment_likes l
         WHERE l.comment_id = c.id) AS like_count,
     EXISTS (
@@ -91,13 +95,13 @@ SELECT
         WHERE l.comment_id = c.id AND l.user_id = sqlc.narg('viewer_id')::uuid
     ) AS liked
 FROM core.marker_comments c
-WHERE c.parent_id = sqlc.arg('parent_id') AND c.hidden_at IS NULL
+WHERE c.parent_id = sqlc.arg('parent_id') AND c.hidden_at IS NULL AND c.deleted_at IS NULL
 ORDER BY c.created_at, c.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 
 -- name: CountMarkerCommentReplies :one
 SELECT count(*) FROM core.marker_comments
-WHERE parent_id = sqlc.arg('parent_id') AND hidden_at IS NULL;
+WHERE parent_id = sqlc.arg('parent_id') AND hidden_at IS NULL AND deleted_at IS NULL;
 
 -- One comment's like state, for the responses that return a single comment rather
 -- than a page of them.
@@ -135,12 +139,12 @@ RETURNING *;
 -- The counterpart to ListHiddenForumComments: without it a hidden marker comment
 -- could be restored only by someone who already knew its id.
 SELECT * FROM core.marker_comments
-WHERE hidden_at IS NOT NULL
+WHERE hidden_at IS NOT NULL AND deleted_at IS NULL
   AND (sqlc.narg('games')::text[] IS NULL OR game_key = ANY (sqlc.narg('games')::text[]))
 ORDER BY hidden_at DESC, id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 
 -- name: CountHiddenMarkerComments :one
 SELECT count(*) FROM core.marker_comments
-WHERE hidden_at IS NOT NULL
+WHERE hidden_at IS NOT NULL AND deleted_at IS NULL
   AND (sqlc.narg('games')::text[] IS NULL OR game_key = ANY (sqlc.narg('games')::text[]));

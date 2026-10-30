@@ -589,3 +589,61 @@ func TestReportingAHiddenCommentRevealsNothing(t *testing.T) {
 		t.Errorf("reporting a hidden comment revealed it: %s", res.body)
 	}
 }
+
+// TestDeletingAReportedCommentKeepsTheReport pins the soft delete. A hard delete
+// cascaded into forum_reports, so an author could make a pending complaint vanish
+// by deleting the comment it was about.
+func TestDeletingAReportedCommentKeepsTheReport(t *testing.T) {
+	h := newHarness(t)
+	site := h.registerAndLogin("dr-site", "dr-site@example.com", "hunter2hunter2")
+	h.promoteToSiteAdmin(site)
+	mod := h.registerAndLogin("dr-mod", "dr-mod@example.com", "hunter2hunter2")
+	if res := h.grantRole(site, "pbz", h.uidOf(mod), "game_moderator"); res.status != http.StatusOK {
+		t.Fatalf("seed pbz moderator = %d: %s", res.status, res.body)
+	}
+	author := h.registerAndLogin("dr-author", "dr-author@example.com", "hunter2hunter2")
+	reporter := h.registerAndLogin("dr-reporter", "dr-reporter@example.com", "hunter2hunter2")
+
+	comment := h.mustCommentOnMarker(author, withTarget(map[string]any{"body": "Abuse."}))
+	id, _ := comment["id"].(string)
+	h.mustCommentOnMarker(reporter, withTarget(map[string]any{"body": "Reply.", "parentId": id}))
+	if res := h.do(http.MethodPost, markerCommentPath("/"+id+"/report"),
+		map[string]any{"reason": "abuse"}, withBearer(reporter)); res.status != http.StatusOK {
+		t.Fatalf("report = %d: %s", res.status, res.body)
+	}
+
+	if res := h.do(http.MethodDelete, markerCommentPath("/"+id), nil, withBearer(author)); res.status != http.StatusOK {
+		t.Fatalf("author delete = %d: %s", res.status, res.body)
+	}
+
+	// Gone for readers, the reply with it.
+	res := h.do(http.MethodGet, markerCommentPath("?game=pbz&map=XiGu&marker=accessory-7a2266d67a"), nil)
+	if count, _ := res.data(t)["count"].(float64); count != 0 {
+		t.Errorf("a deleted comment is still listed: %s", res.body)
+	}
+	if res := h.do(http.MethodGet, markerCommentPath("/"+id+"/replies"), nil); res.status != http.StatusNotFound {
+		t.Errorf("replies of a deleted comment = %d, want 404", res.status)
+	}
+	// Deleted content cannot be reported again, deleted twice, or restored by a moderator.
+	if res := h.do(http.MethodPost, markerCommentPath("/"+id+"/report"), map[string]any{"reason": "spam"}, withBearer(reporter)); res.status != http.StatusNotFound {
+		t.Errorf("reporting a deleted comment = %d, want 404", res.status)
+	}
+	if res := h.do(http.MethodDelete, markerCommentPath("/"+id), nil, withBearer(author)); res.status != http.StatusNotFound {
+		t.Errorf("deleting twice = %d, want 404", res.status)
+	}
+	if res := h.do(http.MethodDelete, markerCommentPath("/"+id+"/hidden"), nil, withBearer(mod)); res.status != http.StatusNotFound {
+		t.Errorf("restoring a deleted comment = %d, want 404", res.status)
+	}
+
+	// The complaint survived, and its game's moderator can still answer it.
+	res = h.do(http.MethodGet, "/forum/moderation/reports", nil, withBearer(mod))
+	queue, _ := res.data(t)["results"].([]any)
+	if len(queue) != 1 {
+		t.Fatalf("the report did not survive the delete; queue holds %d: %s", len(queue), res.body)
+	}
+	reportID, _ := queue[0].(map[string]any)["id"].(string)
+	if res := h.do(http.MethodPost, "/forum/reports/"+reportID+"/resolution",
+		map[string]any{"state": "upheld"}, withBearer(mod)); res.status != http.StatusOK {
+		t.Fatalf("resolving a report on a deleted comment = %d: %s", res.status, res.body)
+	}
+}
