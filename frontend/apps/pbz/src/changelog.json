@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.6.0",
+      "date": "2026-10-30",
+      "commit": "5cb6c15b218f0bd7de74e57851456bddd7392869",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Major chest popups list what the chest holds, and every note's popup shows its book, page number and full text.",
+            "zh-CN": "重要宝箱的弹窗会列出宝箱内的物品；文书弹窗显示所属书名、页码与完整正文。",
+            "zh-TW": "重要寶箱的彈窗會列出寶箱內的物品；文書彈窗顯示所屬書名、頁碼與完整正文。"
+          }
+        },
+        {
+          "kind": "data",
+          "text": {
+            "en-US": "Restored dust, notes and materials that sat right beside a shard or chest and were missing from the map.",
+            "zh-CN": "补回了紧挨着碎片或宝箱、此前在地图上缺失的意识尘埃、文书与材料。",
+            "zh-TW": "補回了緊挨著碎片或寶箱、此前在地圖上缺失的意識塵埃、文書與材料。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.0",
       "date": "2026-10-30",
       "commit": "05568870096b5aac50f9132c2279301feeeac35c",
