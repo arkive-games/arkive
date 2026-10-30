@@ -264,9 +264,9 @@ function PetTile({ pet, selected, onSelect }: { pet: PetRecord; selected: boolea
 }
 
 /**
- * The picked pet in the side column: its full-body art on a quality glow with
- * its name, strengths and star stepper, then its attributes and its skills at
- * that star. Phones keep the art beside the name so the cards stay in reach.
+ * The picked pet in the side column: a compact header of its head icon, name,
+ * strengths and star stepper, so its attributes and skills at that star start
+ * near the top of the panel.
  */
 function PetDetail({ pet, data, starIndex, onStar }: {
   pet: PetRecord
@@ -295,15 +295,12 @@ function PetDetail({ pet, data, starIndex, onStar }: {
 
   return (
     <div data-quality={pet.quality} className="flex flex-col gap-3 rounded-lg bg-[color:var(--ro3-skill-panel)] p-2.5 md:p-3">
-      <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[10rem_minmax(0,1fr)] lg:grid-cols-1">
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-[radial-gradient(circle_at_50%_58%,var(--ro3-stage-mid),var(--ro3-stage-soft)_62%,transparent_80%)] lg:aspect-[5/4]">
-          <img
-            src={resourceUrl(pet.art.encyclopedia)}
-            alt={name}
-            className="absolute inset-0 size-full -translate-y-[9%] scale-[1.45] object-contain lg:-translate-y-[6%] lg:scale-[1.3]"
-          />
-        </div>
-        <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex items-start gap-3">
+        {/* The game's own head icon is 128px, so it stays small and sharp. */}
+        <span className="grid size-16 shrink-0 place-items-center rounded-full bg-[radial-gradient(circle_at_50%_55%,var(--ro3-stage-mid),var(--ro3-stage-soft)_70%)] shadow-[inset_0_0_0_2px_var(--ro3-stage-mid)]">
+          <img src={resourceUrl(pet.art.head)} alt="" className="size-14 object-contain" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <h3 className="truncate text-xl font-extrabold">{name}</h3>
             <span className="flex items-center gap-0.5 text-[color:var(--ro3-stage-solid)]" title={text.quality.replace('{quality}', String(pet.quality))}>
@@ -317,7 +314,7 @@ function PetDetail({ pet, data, starIndex, onStar }: {
               </span>
             ) : null}
           </div>
-          <dl className="flex flex-col gap-1 lg:flex-row lg:flex-wrap lg:gap-x-4">
+          <dl className="flex flex-wrap gap-x-3 gap-y-1">
             {strengths.map(({ key, label, value, Icon }) => (
               <div key={key} className="flex items-center gap-1.5">
                 <Icon aria-hidden="true" className="size-4 shrink-0 text-[color:var(--ro3-stage)]" />
