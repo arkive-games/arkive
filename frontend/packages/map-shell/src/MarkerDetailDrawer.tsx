@@ -23,6 +23,7 @@ import {
   IconPhotoPlus,
   IconMessageCircle,
   IconFlag,
+  IconLoader2,
   IconPencil,
   IconThumbUp,
   IconTrash,
@@ -136,6 +137,8 @@ export type MarkerDetailLabels = {
   replyingTo: (name: string) => string
   emptyDetails: string
   emptyComments: string
+  /** Shown in place of the empty state while the thread is still loading. */
+  loadingComments?: string
   guestAuthor: string
   justNow: string
   awaitingReview: string
@@ -170,6 +173,11 @@ export type MarkerCommentsConfig = {
   onViewReplies?: (commentId: string) => void
   onSubmit?: (markerId: string, body: string, attachments: File[]) => void | Promise<void>
   submitting?: boolean
+  /**
+   * The thread is still being read. Without it an unanswered request is
+   * indistinguishable from a marker nobody has commented on.
+   */
+  loading?: boolean
 
   // The author's and the reporter's actions. Each is offered per comment — edit and
   // delete only on one the reader wrote, report only on one they did not — and each
@@ -453,7 +461,7 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
   }
 
   return (
-    <div className="min-h-full bg-card" data-testid="marker-comments">
+    <div className="min-h-full bg-card" data-testid="marker-comments" aria-busy={config.loading || undefined}>
       <div className="flex min-h-10 items-center justify-between gap-2 border-b border-border px-3">
         <strong className="text-sm">{labels.commentCount(config.items.length)}</strong>
         <div className="flex" role="group" aria-label={labels.comments}>
@@ -476,7 +484,13 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
       {error ? (
         <p role="alert" data-testid="marker-comment-error" className="border-b border-border bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p>
       ) : null}
-      {!config.items.length ? (
+      {!config.items.length && config.loading ? (
+        <div role="status" className="flex min-h-12 items-center justify-center gap-2 px-4 py-3 text-center text-muted-foreground" data-testid="marker-comments-loading">
+          <IconLoader2 className="size-5 animate-spin" stroke={1.8} aria-hidden="true" />
+          <p className="text-sm">{labels.loadingComments ?? "…"}</p>
+        </div>
+      ) : null}
+      {!config.items.length && !config.loading ? (
         <div className="flex min-h-12 items-center justify-center gap-2 px-4 py-3 text-center text-muted-foreground" data-testid="marker-comments-empty">
           <IconMessageCircle className="size-5" stroke={1.8} />
           <p className="text-sm">{labels.emptyComments}</p>

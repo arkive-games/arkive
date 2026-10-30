@@ -71,7 +71,8 @@ just by the service.
 **Likes are a row, not a counter.** `ON CONFLICT DO NOTHING` makes a like idempotent, so a
 double tap or a retried request is harmless. The count is a `count(*)` over an index.
 
-**Hiding is not deleting**, as in the forum: the author hard-deletes, a moderator hides
+**Hiding is not deleting**, as in the forum: the author deletes (a soft delete since the follow-up, so reports against the
+comment survive), a moderator hides
 reversibly and attributably, every public read filters `hidden_at IS NULL`, and a hidden
 row answers 404 to everyone but the queue.
 

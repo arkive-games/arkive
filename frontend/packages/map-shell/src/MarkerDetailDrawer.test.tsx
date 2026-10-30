@@ -384,4 +384,19 @@ describe("MarkerDetailDrawer", () => {
     expect(getByTestId("marker-comments-empty").className).toContain("min-h-12")
     expect(getByTestId("marker-comments-empty").className).not.toContain("flex-col")
   })
+
+  it("shows a loading row instead of the empty state while the thread loads", () => {
+    const comments = { markerId: "marker-1", items: [], sort: "latest" as const, onSortChange: vi.fn() }
+    const { getByRole, getByTestId, queryByTestId, rerender } = render(
+      <MarkerDetailDrawer {...baseProps} labels={{ ...baseProps.labels, loadingComments: "Loading comments…" }} comments={{ ...comments, loading: true }} />,
+    )
+    fireEvent.click(getByRole("tab", { name: /Comments/ }))
+    expect(getByTestId("marker-comments-loading").textContent).toContain("Loading comments…")
+    expect(getByTestId("marker-comments").getAttribute("aria-busy")).toBe("true")
+    expect(queryByTestId("marker-comments-empty")).toBeNull()
+
+    rerender(<MarkerDetailDrawer {...baseProps} comments={comments} />)
+    expect(queryByTestId("marker-comments-loading")).toBeNull()
+    expect(getByTestId("marker-comments-empty")).not.toBeNull()
+  })
 })

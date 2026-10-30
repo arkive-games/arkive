@@ -8,7 +8,7 @@
  * reason. A second game wanting this is the signal to lift it into a shared
  * package, not a reason to put it there now.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   createMarkerComment,
@@ -76,9 +76,18 @@ export function useMarkerComments(options: MarkerCommentsOptions): MarkerComment
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  // The thread on screen belongs to this marker. A sort change keeps it visible
+  // while the reordered page loads; a different marker must not show it at all.
+  const shownFor = useRef('')
+
   useEffect(() => {
     setReplies({})
     setReplyingTo(null)
+    const target = `${mapId}/${markerId}`
+    if (shownFor.current !== target) {
+      shownFor.current = target
+      setComments([])
+    }
     if (!client) {
       setComments([])
       return
@@ -200,7 +209,7 @@ export function useMarkerComments(options: MarkerCommentsOptions): MarkerComment
         row.id === parent ? { ...row, replyCount: Math.max(0, row.replyCount - 1) } : row
       )))
     } else {
-      // Its replies cascade on the server, so they go from view with it.
+      // Its replies are withdrawn with it on the server, so they go from view too.
       setComments((current) => current.filter((row) => row.id !== id))
       setReplies((current) => Object.fromEntries(Object.entries(current).filter(([parent]) => parent !== id)))
     }
@@ -259,6 +268,7 @@ export function useMarkerComments(options: MarkerCommentsOptions): MarkerComment
     },
     onSubmit,
     submitting,
+    loading,
     onEdit,
     onDelete,
     onReport,
