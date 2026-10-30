@@ -68,6 +68,8 @@ const en = {
     collapse: 'Collapse', expand: 'Expand', resultsCount: '{{count}} results', unnamed: 'Unnamed', noDescription: 'No description.',
     position: 'Position', copyPosition: 'Copy position', copied: 'Copied', copyFailed: 'Copy failed',
     noMapSelected: 'No map selected.', zoomIn: 'Zoom in', zoomOut: 'Zoom out',
+    markCompleted: 'Mark as completed', completed: 'Completed', clearCompleted: 'Clear completed',
+    clearCompletedBody: 'Unmark every completed marker on this map? This cannot be undone.', cancel: 'Cancel', confirm: 'Clear',
   },
   changelog: {
     title: 'Changelog',
@@ -130,6 +132,8 @@ const zhCN: Strings = {
     collapse: '收起', expand: '展开', resultsCount: '{{count}} 个结果', unnamed: '未命名', noDescription: '暂无描述。',
     position: '坐标', copyPosition: '复制坐标', copied: '已复制', copyFailed: '复制失败',
     noMapSelected: '未选择地图。', zoomIn: '放大', zoomOut: '缩小',
+    markCompleted: '标记为已完成', completed: '已完成', clearCompleted: '清除已完成',
+    clearCompletedBody: '取消标记此地图上所有已完成的标记？此操作无法撤销。', cancel: '取消', confirm: '清除',
   },
   changelog: {
     title: '更新日志',
@@ -190,6 +194,8 @@ const zhTW: Strings = {
     collapse: '收合', expand: '展開', resultsCount: '{{count}} 個結果', unnamed: '未命名', noDescription: '暫無描述。',
     position: '座標', copyPosition: '複製座標', copied: '已複製', copyFailed: '複製失敗',
     noMapSelected: '未選擇地圖。', zoomIn: '放大', zoomOut: '縮小',
+    markCompleted: '標記為已完成', completed: '已完成', clearCompleted: '清除已完成',
+    clearCompletedBody: '取消標記此地圖上所有已完成的標記？此操作無法撤銷。', cancel: '取消', confirm: '清除',
   },
   changelog: {
     title: '更新日誌',

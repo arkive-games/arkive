@@ -9,7 +9,11 @@ import {
   type FilterCategory, type SearchItem,
 } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype } from '@gamemap/data-contract'
-import { useIsMobile } from '@gamemap/ui'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, Button, cn, useIsMobile,
+} from '@gamemap/ui'
+import { Check, Eraser } from 'lucide-react'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import {
@@ -17,6 +21,7 @@ import {
   type MapMeta, type MarkerLocale, type MarkerRow, type MapsLocale, type Taxonomy, type TypesLocale,
 } from '../../lib/data'
 import { pbzAssets } from '../../lib/assets'
+import { useCompletedMarkers } from '../../lib/completedMarkers'
 import { ARKIVE_HOME_URL } from '../../lib/brand'
 import { useSettingsConfig } from '../../lib/settings'
 import { mapViewStore, readMapId, readVisibleSubtypes, writeMapId, writeVisibleSubtypes } from '../../lib/storage'
@@ -56,6 +61,7 @@ export default function MapPage() {
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
   const [showLabels, setShowLabels] = useMemoryState(labelsRecord)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [clearCompletedOpen, setClearCompletedOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -85,6 +91,7 @@ export default function MapPage() {
 
   const map = staticData?.maps.find((m) => m.id === mapId)
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
+  const { completed, toggleCompleted, clearCompleted } = useCompletedMarkers(mapId)
 
   useEffect(() => {
     if (!map) return
@@ -143,9 +150,10 @@ export default function MapPage() {
         localizedDescription: currentMarkers.l10n[m.id]?.description,
         subtypeLabel: subLabel,
         subtypeMeta: subtypeMetaMap.get(m.subtype),
+        completed: completed.has(m.id),
       }
     })
-  }, [staticData, currentMarkers, subtypeMetaMap])
+  }, [staticData, currentMarkers, subtypeMetaMap, completed])
 
   const forceShowIds = useMemo(() => new Set(searchResultIds), [searchResultIds])
   const selectedMarker = useMemo(
@@ -181,6 +189,15 @@ export default function MapPage() {
     return counts
   }, [currentMarkers])
 
+  // Completed count per subtype on the current map (X in the X/N filter badge).
+  const completedBySubtype = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const m of currentMarkers?.markers ?? []) {
+      if (completed.has(m.id)) counts.set(m.subtype, (counts.get(m.subtype) ?? 0) + 1)
+    }
+    return counts
+  }, [currentMarkers, completed])
+
   const filterCategories: FilterCategory[] = useMemo(() => {
     if (!staticData) return []
     return staticData.types.categories
@@ -193,11 +210,15 @@ export default function MapPage() {
             id: s.id,
             label: staticData.typesL10n.subtypes[s.id]?.name ?? s.id,
             active: visible.has(s.id),
-            count: countBySubtype.get(s.id) ?? 0,
+            // Completable kinds show progress (X/N) instead of a plain count.
+            badge: s.canComplete
+              ? `${completedBySubtype.get(s.id) ?? 0}/${countBySubtype.get(s.id) ?? 0}`
+              : undefined,
+            count: s.canComplete ? undefined : (countBySubtype.get(s.id) ?? 0),
           })),
       }))
       .filter((cat) => cat.subtypes.length > 0)
-  }, [staticData, visible, countBySubtype, categoryName])
+  }, [staticData, visible, countBySubtype, completedBySubtype, categoryName])
 
   const onToggleSubtype = useCallback((id: string) => {
     setVisible((v) => {
@@ -257,9 +278,25 @@ export default function MapPage() {
         positionValue={coordText}
         positionCopy={{ value: coordText, copyLabel: t('map.copyPosition'), copiedLabel: t('map.copied'), failedLabel: t('map.copyFailed') }}
         description={marker.localizedDescription}
-      />
+      >
+        {marker.subtypeMeta?.canComplete ? (
+          <Button
+            size="sm"
+            data-testid="marker-complete-toggle"
+            aria-pressed={Boolean(marker.completed)}
+            onClick={(event) => {
+              event.stopPropagation()
+              toggleCompleted(marker.id)
+            }}
+            className={cn('mt-3 self-start', marker.completed && 'bg-emerald-600 text-white hover:bg-emerald-600/90')}
+          >
+            <Check className="size-4" aria-hidden="true" />
+            {marker.completed ? t('map.completed') : t('map.markCompleted')}
+          </Button>
+        ) : null}
+      </MarkerPopupCard>
     )
-  }, [map, t, categoryName])
+  }, [map, t, categoryName, toggleCompleted])
 
   const renderPopupContent = useCallback(
     (marker: EngineMarker) => (isMobile || searchResultIds.length > 0 ? null : markerCard(marker)),
@@ -291,6 +328,7 @@ export default function MapPage() {
   )
 
   const filterPanel = (
+    <>
     <FilterPanel
       categories={filterCategories}
       onToggleSubtype={onToggleSubtype}
@@ -300,6 +338,7 @@ export default function MapPage() {
         { id: 'show-all', label: t('map.showAll'), onClick: () => setVisible(new Set(staticData.types.subtypes.map((s) => s.id))) },
         { id: 'hide-all', label: t('map.hideAll'), onClick: () => setVisible(new Set()) },
         { id: 'show-tooltip', label: t('map.showLabels'), onClick: () => setShowLabels((v) => !v), active: showLabels },
+        { id: 'clear-completed', label: t('map.clearCompleted'), onClick: () => setClearCompletedOpen(true), testId: 'map-clear-completed' },
       ]}
       classNames={{
         root: 'px-3 pb-4',
@@ -314,6 +353,24 @@ export default function MapPage() {
         subtypeButtonActive: 'border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]',
       }}
     />
+    <AlertDialog open={clearCompletedOpen} onOpenChange={setClearCompletedOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogMedia className="bg-destructive/10 text-destructive">
+            <Eraser aria-hidden="true" />
+          </AlertDialogMedia>
+          <AlertDialogTitle>{t('map.clearCompleted')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('map.clearCompletedBody')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('map.cancel')}</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" data-testid="confirm-clear-completed" onClick={clearCompleted}>
+            {t('map.confirm')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 
   const searchPanel = (variant: 'floating' | 'inline') => (

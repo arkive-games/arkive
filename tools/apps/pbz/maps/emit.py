@@ -77,6 +77,9 @@ class Subtype:
     text_key: str  # its legend entry in Game.locres
     color: str
     default_active: bool = True
+    # Ticked off on the map once found, beaten or opened. Not the area exits,
+    # which only connect maps, nor the NPCs, who are people rather than tasks.
+    can_complete: bool = True
 
 
 # The in-game map legend, in its own order and with its own words, followed by
@@ -85,7 +88,7 @@ class Subtype:
 # start hidden: they outnumber everything else on a map several times over.
 SUBTYPES = [
     Subtype("bell", "travel", "BellDatas", "T_Map_CollectionProgress_Bell", "UI_Map_26", "#C9A227"),
-    Subtype("areaExit", "travel", "", "T_Tzdd_PH", "AreaExit", "#B9B2A0"),
+    Subtype("areaExit", "travel", "", "T_Tzdd_PH", "AreaExit", "#B9B2A0", can_complete=False),
     Subtype("longPillar", "challenges", "LongZhu", "T_Longzhu_PH", "UI_Map_23", "#8FB8C9"),
     Subtype("banyan", "challenges", "RongShu", "T_Darongshu_PH", "UI_Map_24", "#7FA36B"),
     Subtype("scarecrow", "challenges", "DaoCaoRen", "T_Daocaoren_PH", "UI_Map_25", "#B08A5B"),
@@ -113,7 +116,7 @@ SUBTYPES = [
     Subtype("consumable", "items", "", "T_WIcon_Return_Weapon_1", "Consumable", "#8C9BA8"),
     Subtype("dust", "items", "", "Yishichenai", "UI_SkillWidget_13", "#9AA3AD", default_active=False),
     Subtype("boss", "enemies", "", "T_BP_Monster_MoTian_w", "Boss", "#C23B3B"),
-    Subtype("npc", "characters", "", "T_MapHun_Gold", "NPC", "#C8A971"),
+    Subtype("npc", "characters", "", "T_MapHun_Gold", "NPC", "#C8A971", can_complete=False),
     Subtype("phantomEdgeLock", "obstacles", "", "T_MapWeapon_JinGua", "PhantomEdgeLock", "#9B6FD0"),
     Subtype("lockedDoor", "obstacles", "", "T_MapLock_Normal", "LockedDoor", "#C9A227"),
     Subtype("latchedDoor", "obstacles", "", "T_Map_Danxiangmen", "UI_Map_15", "#8C9BA8"),
@@ -464,7 +467,7 @@ def build_dataset(raw: Path, image_sizes: dict[str, tuple[int, int]]) -> dict:
             "icon": st.icon,
             "color": st.color,
             "defaultActive": st.default_active,
-            "canComplete": True,
+            "canComplete": st.can_complete,
         } for st in SUBTYPES if st.category == c],
     } for c in categories]}
     for m in maps:
