@@ -36,7 +36,7 @@
     },
     {
       "date": "2026-10-29",
-      "commit": "54bc82b2f408f80bb3d3d0211647920f35da60a1",
+      "commit": "1e36709dcae8aa94bbf55081e3f57d6fb387e11b",
       "targets": [
         "palworld",
         "ro3"
@@ -54,7 +54,7 @@
     },
     {
       "date": "2026-10-29",
-      "commit": "f2dba2f84cf438a82c593158f28509534ce4a8e3",
+      "commit": "1bc8d4e66f16aa8c1e4e4ff27ee4c221c9119129",
       "targets": [
         "aion2",
         "palworld",
