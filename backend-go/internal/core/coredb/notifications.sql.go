@@ -129,6 +129,47 @@ func (q *Queries) GetForumPostNosByIDs(ctx context.Context, ids []uuid.UUID) ([]
 	return items, nil
 }
 
+const getMarkerCommentTargetsByIDs = `-- name: GetMarkerCommentTargetsByIDs :many
+SELECT id, game_key, map_id, marker_id FROM core.marker_comments
+WHERE id = ANY ($1::uuid[]) AND hidden_at IS NULL
+`
+
+type GetMarkerCommentTargetsByIDsRow struct {
+	ID       uuid.UUID
+	GameKey  string
+	MapID    string
+	MarkerID string
+}
+
+// Where each marker comment in an inbox page lives, so a row can link to the marker.
+// One query for the page rather than one per row, matching GetForumPostNosByIDs.
+// Hidden comments are excluded: a notification about withheld content must not
+// reveal where it was.
+func (q *Queries) GetMarkerCommentTargetsByIDs(ctx context.Context, ids []uuid.UUID) ([]GetMarkerCommentTargetsByIDsRow, error) {
+	rows, err := q.db.Query(ctx, getMarkerCommentTargetsByIDs, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetMarkerCommentTargetsByIDsRow{}
+	for rows.Next() {
+		var i GetMarkerCommentTargetsByIDsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GameKey,
+			&i.MapID,
+			&i.MarkerID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getNotificationPreferences = `-- name: GetNotificationPreferences :one
 SELECT
     COALESCE(p.reply,        true) AS reply,

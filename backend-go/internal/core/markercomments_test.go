@@ -128,6 +128,13 @@ func TestMarkerCommentRoundTrip(t *testing.T) {
 	if got, _ := inboxData[0].(map[string]any)["markerCommentId"].(string); got != reply["id"] {
 		t.Errorf("notification points at %q, want the reply %v", got, reply["id"])
 	}
+	// The row carries where the comment lives, so the inbox can link to the marker
+	// without a request per row.
+	row, _ := inboxData[0].(map[string]any)
+	if row["markerGame"] != "pbz" || row["markerMap"] != "XiGu" || row["markerId"] != "accessory-7a2266d67a" {
+		t.Errorf("notification does not locate its marker: game=%v map=%v marker=%v",
+			row["markerGame"], row["markerMap"], row["markerId"])
+	}
 
 	// Editing is the author's; deleting is too, and it takes the reply with it.
 	res = h.do(http.MethodPatch, markerCommentPath("/"+commentID), map[string]any{"body": "Edited."}, withBearer(reader))

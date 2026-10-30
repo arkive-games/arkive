@@ -2206,6 +2206,27 @@
               "null"
             ]
           },
+          "markerGame": {
+            "description": "The game of the marker the comment is on, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "markerId": {
+            "description": "The marker the comment is on, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "markerMap": {
+            "description": "The map of the marker the comment is on, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "postNo": {
             "description": "The post it is about, or null",
             "format": "int64",
@@ -2240,6 +2261,9 @@
           "postTitle",
           "commentId",
           "markerCommentId",
+          "markerGame",
+          "markerMap",
+          "markerId",
           "body",
           "readAt",
           "createdAt"

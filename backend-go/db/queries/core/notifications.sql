@@ -94,3 +94,11 @@ RETURNING reply, mention, post_like, comment_like, follow, system;
 -- name: GetForumPostNosByIDs :many
 -- Post numbers for a page of notifications, in one query rather than one per row.
 SELECT id, post_no, title FROM core.forum_posts WHERE id = ANY (sqlc.arg('ids')::uuid[]);
+
+-- name: GetMarkerCommentTargetsByIDs :many
+-- Where each marker comment in an inbox page lives, so a row can link to the marker.
+-- One query for the page rather than one per row, matching GetForumPostNosByIDs.
+-- Hidden comments are excluded: a notification about withheld content must not
+-- reveal where it was.
+SELECT id, game_key, map_id, marker_id FROM core.marker_comments
+WHERE id = ANY (sqlc.arg('ids')::uuid[]) AND hidden_at IS NULL;

@@ -91,9 +91,17 @@ type Read struct {
 	// renders the row from whichever of the two is set, and links a marker comment to
 	// its game, map and marker through this id.
 	MarkerCommentID *uuid.UUID `json:"markerCommentId" nullable:"true" doc:"The marker comment it is about, or null"`
-	Body            *string    `json:"body" doc:"The message text, for system notifications only"`
-	ReadAt          *time.Time `json:"readAt" doc:"When it was read, or null"`
-	CreatedAt       time.Time  `json:"createdAt" doc:"When it arrived"`
+	// Where that marker comment lives, so the row can link to the marker without a
+	// request per row. Three flat fields for the reason the actor is flattened: a
+	// nullable object cannot be expressed in this schema. All three are null when
+	// the notification is not about a marker comment, or when that comment has been
+	// hidden — a notification must not reveal where withheld content was.
+	MarkerGame *string    `json:"markerGame" doc:"The game of the marker the comment is on, or null"`
+	MarkerMap  *string    `json:"markerMap" doc:"The map of the marker the comment is on, or null"`
+	MarkerID   *string    `json:"markerId" doc:"The marker the comment is on, or null"`
+	Body       *string    `json:"body" doc:"The message text, for system notifications only"`
+	ReadAt     *time.Time `json:"readAt" doc:"When it was read, or null"`
+	CreatedAt  time.Time  `json:"createdAt" doc:"When it arrived"`
 }
 
 // Preferences is which kinds an account wants.
@@ -294,12 +302,16 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, k
 	// this was up to two hundred sequential round trips to render one inbox.
 	actorIDs := make([]uuid.UUID, 0, len(rows))
 	postIDs := make([]uuid.UUID, 0, len(rows))
+	markerCommentIDs := make([]uuid.UUID, 0, len(rows))
 	for _, row := range rows {
 		if row.ActorID != nil {
 			actorIDs = append(actorIDs, *row.ActorID)
 		}
 		if row.PostID != nil {
 			postIDs = append(postIDs, *row.PostID)
+		}
+		if row.MarkerCommentID != nil {
+			markerCommentIDs = append(markerCommentIDs, *row.MarkerCommentID)
 		}
 	}
 
@@ -312,6 +324,10 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, k
 		return nil, 0, fmt.Errorf("load notification actor profiles: %w", err)
 	}
 	posts, err := s.postRefs(ctx, postIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+	markers, err := s.markerRefs(ctx, markerCommentIDs)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -354,6 +370,14 @@ func (s *Service) List(ctx context.Context, userID uuid.UUID, unreadOnly bool, k
 				title := ref.title
 				read.PostNo = &no
 				read.PostTitle = &title
+			}
+		}
+		if row.MarkerCommentID != nil {
+			if ref, ok := markers[*row.MarkerCommentID]; ok {
+				game, mapID, markerID := ref.GameKey, ref.MapID, ref.MarkerID
+				read.MarkerGame = &game
+				read.MarkerMap = &mapID
+				read.MarkerID = &markerID
 			}
 		}
 		out = append(out, read)
@@ -456,6 +480,22 @@ func (s *Service) postRefs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]
 	}
 	for _, row := range rows {
 		out[row.ID] = postRef{no: row.PostNo, title: row.Title}
+	}
+	return out, nil
+}
+
+// markerRefs resolves where each marker comment lives, in one query for the page.
+func (s *Service) markerRefs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]coredb.GetMarkerCommentTargetsByIDsRow, error) {
+	out := make(map[uuid.UUID]coredb.GetMarkerCommentTargetsByIDsRow, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := s.q.GetMarkerCommentTargetsByIDs(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("load notification marker comments: %w", err)
+	}
+	for _, row := range rows {
+		out[row.ID] = row
 	}
 	return out, nil
 }
