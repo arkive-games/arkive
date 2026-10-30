@@ -331,6 +331,7 @@
       "powerLabel": "战力",
       "collectionPower": "典藏战力",
       "searchToggle": "搜索卡片",
+      "separator": "，",
       "noAttributes": "这一阶不加属性。",
       "title": "卡片图鉴",
       "description": "客户端配置表共确认 242 张卡片，每张均有关联卡面和四阶属性。",

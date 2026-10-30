@@ -129,6 +129,21 @@ export function CardWiki() {
   const countBy = (key: 'part' | 'quality', value: number) => categoryCards.filter((card) => card[key] === value).length
   const facetCount = filters.qualities.length + filters.baseAttributes.length + filters.primaryAttributes.length
 
+  // A selection the new kind of card cannot offer would filter by a chip that is no longer shown.
+  const switchCategory = (previous: CardFilters, category: CardCategory): CardFilters => {
+    const pool = category === 'collection' ? allCards.filter((card) => collectionIds.has(card.id)) : allCards
+    const parts = new Set(pool.map((card) => card.part))
+    const qualities = new Set(pool.map((card) => card.quality))
+    const carried = new Set(pool.flatMap((card) => card.tiers.flatMap((tier) => tier.attributes.map(([id]) => id))))
+    return {
+      category,
+      parts: previous.parts.filter((part) => parts.has(part)),
+      qualities: previous.qualities.filter((quality) => qualities.has(quality)),
+      baseAttributes: previous.baseAttributes.filter((id) => carried.has(id)),
+      primaryAttributes: previous.primaryAttributes.filter((id) => carried.has(id)),
+    }
+  }
+
   const toggle = (key: 'qualities' | 'baseAttributes' | 'primaryAttributes', value: number) => setFilters((previous) => ({
     ...previous,
     [key]: previous[key].includes(value) ? previous[key].filter((candidate) => candidate !== value) : [...previous[key], value],
@@ -141,7 +156,11 @@ export function CardWiki() {
           type="button"
           aria-label={text.searchToggle}
           aria-expanded={searchOpen}
-          onClick={() => setSearchOpen((value) => !value)}
+          onClick={() => {
+            // A folded search box must not keep filtering out of sight.
+            if (searchOpen) setQuery('')
+            setSearchOpen(!searchOpen)
+          }}
           className={cn(
             'grid size-9 place-items-center rounded-full transition-colors',
             searchOpen
@@ -166,7 +185,7 @@ export function CardWiki() {
                 type="button"
                 role="tab"
                 aria-selected={selected}
-                onClick={() => setFilters((previous) => ({ ...previous, category }))}
+                onClick={() => setFilters((previous) => switchCategory(previous, category))}
                 className={cn(
                   'flex min-h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors',
                   selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
@@ -376,7 +395,7 @@ function CardTile({ card, collection, selected, onSelect }: { card: WikiCard; co
     <button
       type="button"
       aria-pressed={selected}
-      aria-label={`${localizedText(card.name)}，${qualityLabel(card.quality)}，${partLabel(card.part)}`}
+      aria-label={[localizedText(card.name), qualityLabel(card.quality), partLabel(card.part)].join(text.separator)}
       onClick={onSelect}
       className={cn(
         'group rounded-lg p-1 transition-colors md:p-1.5',
@@ -434,7 +453,7 @@ function CardDetail({ card, data, collection, index, onIndex }: {
     localizedText(effect.description) || (effect.effects ?? [])
       .filter(([kind]) => kind === ATTRIBUTE_EFFECT)
       .map(([, id, value]) => `${attributeLabel(id)} ${attributeValue(value)}`)
-      .join('，'),
+      .join(text.separator),
   ]))
   const flash = collection ? tier.flash ?? undefined : undefined
 

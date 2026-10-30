@@ -135,6 +135,7 @@ typography:
   rules:
     - "Use the Tailwind scale names; never hard-code a font size in component code."
     - "Body and interactive text never falls below text-xs."
+    - "Exemption: a label drawn onto a game-art face (a card's nameplate) is part of the art and may shrink below text-xs to fit its plate, provided the full text is also the item's accessible name and is shown at a readable size in its detail view."
     - "Do not scale type with viewport width."
     - "Use normal letter spacing. Uppercase tracking is reserved for game-authored source labels."
     - "Use tabular numbers for counts, coordinates, ids, prices, and version values."
