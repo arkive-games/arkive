@@ -108,7 +108,12 @@ func (m *HTTPMarkerIndex) Exists(ctx context.Context, t Target) (bool, error) {
 		return false, err
 	}
 
+	// Read under the lock: the fill below and refreshVersion both write g.maps, and
+	// an unlocked read racing either is a fatal runtime error, not a recoverable
+	// panic — it would take the whole process down, not one request.
+	m.mu.Lock()
 	set, ok := g.maps[t.MapID]
+	m.mu.Unlock()
 	if !ok {
 		ids, err := m.fetchMap(ctx, base, t.MapID)
 		if errors.Is(err, errNotFound) {

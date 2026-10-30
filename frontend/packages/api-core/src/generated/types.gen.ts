@@ -3566,7 +3566,7 @@ export type ReportMarkerCommentResponses = {
     /**
      * OK
      */
-    200: EnvelopeMarkerCommentRead;
+    200: EnvelopeEmpty;
 };
 
 export type ReportMarkerCommentResponse = ReportMarkerCommentResponses[keyof ReportMarkerCommentResponses];

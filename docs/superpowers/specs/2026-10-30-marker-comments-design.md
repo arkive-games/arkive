@@ -41,14 +41,20 @@ core.marker_comments
   map_id         text NOT NULL CHECK (map_id   ~ '^[A-Za-z0-9_-]{1,64}$')
   marker_id      text NOT NULL CHECK (marker_id ~ '^[A-Za-z0-9-]{1,40}$')
   author_id      uuid NOT NULL REFERENCES core.users (id) ON DELETE CASCADE
-  parent_id      uuid REFERENCES core.marker_comments (id) ON DELETE CASCADE
+  parent_id      uuid              -- see the composite key below
   body           text NOT NULL CHECK (char_length(btrim(body)) BETWEEN 1 AND 2000)
+  depth          smallint GENERATED (0 top level, 1 reply)
+  parent_depth   smallint GENERATED (NULL top level, 0 reply)
   created_at     timestamptz NOT NULL DEFAULT now()
+  updated_at     timestamptz NOT NULL DEFAULT now()
   edited_at      timestamptz
   hidden_at      timestamptz
   hidden_by      uuid REFERENCES core.users (id) ON DELETE SET NULL
   hidden_reason  text
   CHECK ((hidden_at IS NULL) = (hidden_by IS NULL))
+  UNIQUE (id, game_key, map_id, marker_id, depth)
+  FOREIGN KEY (parent_id, game_key, map_id, marker_id, parent_depth)
+      REFERENCES core.marker_comments (id, game_key, map_id, marker_id, depth) ON DELETE CASCADE
 
 core.marker_comment_likes
   comment_id uuid NOT NULL REFERENCES core.marker_comments (id) ON DELETE CASCADE
@@ -120,7 +126,7 @@ PATCH  /map-markers/comments/{id}                  {body}
 DELETE /map-markers/comments/{id}
 PUT    /map-markers/comments/{id}/like             idempotent, like
 DELETE /map-markers/comments/{id}/like             idempotent, unlike
-POST   /map-markers/comments/{id}/report           {reason, detail?}
+POST   /map-markers/comments/{id}/report           {reason, detail?}  -> empty, never the comment
 PUT    /map-markers/comments/{id}/hidden           {hidden, reason?}  (moderator)
 ```
 
@@ -141,7 +147,9 @@ stable within a page via the id tiebreak.
 - **`@gamemap/api-core`** regenerates from the committed OpenAPI document, so the new
   operations and types are typed without hand-writing them. `scripts/api-drift-check.mjs`
   fails CI if the committed spec and the server disagree.
-- **`@gamemap/map-shell` does not change.** It must stay free of storage, fetch and i18n
+- **`@gamemap/map-shell` gains UI, not data.** The drawer adds per-comment edit, delete
+  and report, a reply banner, indented replies, inline failure messages and an opt-out
+  for attachments. It must stay free of storage, fetch and i18n
   (`shared packages are storage-free`), so the fetch/state hook cannot live there. It
   lives in the app, `frontend/apps/pbz/src/lib/markerComments.ts`, exactly as the forum's
   lives in `apps/meta/src/useForum.ts`. A second game wanting it is the signal to lift it
@@ -150,9 +158,9 @@ stable within a page via the id tiebreak.
   aion2 and vrising use, with `comments` wired and `gallery` empty. It replaces
   `MarkerPopupCard` on both layouts: desktop floating, mobile pinned above the tab bar,
   which is how palworld already runs it (`anchored={!isMobile}`).
-- **Deep links.** The map route gains a `marker` search param so a notification can open
-  the exact marker. It is a query parameter on `/`, so `edgeone.json` needs no new rule,
-  but the route tree must be regenerated for `tsr`.
+- **Deep links.** The map route gains `map` and `marker` search params so a notification
+  can open the exact marker. They are query parameters on `/`, so `edgeone.json` needs no
+  new rule; PBZ's routes are code-based, so there is no route tree to regenerate.
 - **Strings** go in the app's existing `markerDetail.*` keys — PBZ's i18n is a copy of the
   shared drawer labels, so the section reads in the site's language.
 

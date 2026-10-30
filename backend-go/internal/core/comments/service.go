@@ -295,25 +295,27 @@ func (s *Service) SetLike(ctx context.Context, principal auth.Principal, id uuid
 // Report files a complaint about a comment.
 //
 // Anyone signed in may report, and reporting the same thing twice updates the row
-// rather than adding one — see CreateMarkerCommentReport.
-func (s *Service) Report(ctx context.Context, principal auth.Principal, id uuid.UUID, reason string, detail *string) (MarkerCommentRead, error) {
+// rather than adding one — see CreateMarkerCommentReport. It returns nothing but
+// success: the target may be hidden, and echoing it back would let anyone holding a
+// hidden comment's id read what a moderator withheld.
+func (s *Service) Report(ctx context.Context, principal auth.Principal, id uuid.UUID, reason string, detail *string) error {
 	if !isReportReason(reason) {
-		return MarkerCommentRead{}, apierr.New(apierr.Validation, fmt.Sprintf("%q is not a reason", reason))
+		return apierr.New(apierr.Validation, fmt.Sprintf("%q is not a reason", reason))
 	}
 	// Deliberately no hidden guard, matching the forum: a report filed a moment
 	// before a moderator hid the content should still land.
 	comment, err := s.q.GetMarkerCommentByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return MarkerCommentRead{}, apierr.New(apierr.NotFound, "no such comment")
+			return apierr.New(apierr.NotFound, "no such comment")
 		}
-		return MarkerCommentRead{}, fmt.Errorf("load comment: %w", err)
+		return fmt.Errorf("load comment: %w", err)
 	}
 
 	if detail != nil {
 		trimmedDetail := strings.TrimSpace(*detail)
 		if utf8.RuneCountInString(trimmedDetail) > 2000 {
-			return MarkerCommentRead{}, apierr.New(apierr.Validation, "detail may be at most 2000 characters")
+			return apierr.New(apierr.Validation, "detail may be at most 2000 characters")
 		}
 		if trimmedDetail == "" {
 			detail = nil
@@ -329,9 +331,9 @@ func (s *Service) Report(ctx context.Context, principal auth.Principal, id uuid.
 		Reason:          reason,
 		Detail:          detail,
 	}); err != nil {
-		return MarkerCommentRead{}, fmt.Errorf("file marker comment report: %w", err)
+		return fmt.Errorf("file marker comment report: %w", err)
 	}
-	return s.single(ctx, comment, &principal.ID)
+	return nil
 }
 
 // SetHidden hides or restores a comment, for a moderator of its game.

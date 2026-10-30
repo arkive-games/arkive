@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -340,19 +341,35 @@ func TestMarkerCommentReportReachesTheForumQueue(t *testing.T) {
 // markers file. It is what the index reads, so it is the third validation layer's
 // only input.
 type fakeArtifact struct {
+	// mu guards the two fields below, so a test can swap the artifact's version
+	// while the index is reading it without the fake itself being the race.
+	mu      sync.Mutex
 	version string
 	markers map[string][]string // map id -> marker ids
+}
+
+// publish replaces the artifact as a re-emit would.
+func (f *fakeArtifact) publish(version string, markers map[string][]string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.version = version
+	f.markers = markers
 }
 
 func (f *fakeArtifact) handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/version.json", func(w http.ResponseWriter, _ *http.Request) {
+		f.mu.Lock()
+		version := f.version
+		f.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"version":%q}`, f.version)
+		fmt.Fprintf(w, `{"version":%q}`, version)
 	})
 	mux.HandleFunc("/markers/", func(w http.ResponseWriter, r *http.Request) {
 		mapID := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/markers/"), ".json")
+		f.mu.Lock()
 		ids, ok := f.markers[mapID]
+		f.mu.Unlock()
 		if !ok {
 			http.NotFound(w, r)
 			return
@@ -445,8 +462,7 @@ func TestMarkerIndexCachesByVersion(t *testing.T) {
 
 	// A new marker in a new artifact version is visible without a restart, and the
 	// old one is gone.
-	artifact.version = "v2"
-	artifact.markers["XiGu"] = []string{"accessory-20c5225971"}
+	artifact.publish("v2", map[string][]string{"XiGu": {"accessory-20c5225971"}})
 	time.Sleep(20 * time.Millisecond)
 
 	if found, err := index.Exists(context.Background(), target); err != nil || found {
@@ -465,5 +481,111 @@ func TestMarkerIndexWithoutAnArtifact(t *testing.T) {
 	index := comments.NewHTTPMarkerIndex(map[string]string{}, time.Second, nil)
 	if _, err := index.Exists(context.Background(), comments.Target{GameKey: "pbz", MapID: "XiGu", MarkerID: "x"}); err != comments.ErrNoArtifact {
 		t.Fatalf("no artifact = %v, want ErrNoArtifact", err)
+	}
+}
+
+// TestMarkerIndexIsSafeUnderConcurrentUse is the regression for an unlocked read of
+// the per-map cache. Under -race it fails on the old code; without -race the same
+// race was a fatal "concurrent map read and map write" that no recover can catch, so
+// two people commenting while the artifact was re-emitted could stop the backend.
+func TestMarkerIndexIsSafeUnderConcurrentUse(t *testing.T) {
+	artifact := &fakeArtifact{
+		version: "v1",
+		markers: map[string][]string{"XiGu": {"a-1"}, "LuJiaCun": {"b-1"}},
+	}
+	server := httptest.NewServer(artifact.handler())
+	defer server.Close()
+
+	index := comments.NewHTTPMarkerIndex(map[string]string{"pbz": server.URL}, 2*time.Second, nil)
+	// Every call re-reads version.json, so the cache is invalidated as often as possible.
+	index.SetVersionTTLForTest(0)
+
+	var wg sync.WaitGroup
+	for worker := 0; worker < 16; worker++ {
+		wg.Add(1)
+		go func(worker int) {
+			defer wg.Done()
+			for i := 0; i < 40; i++ {
+				mapID, marker := "XiGu", "a-1"
+				if (worker+i)%2 == 1 {
+					mapID, marker = "LuJiaCun", "b-1"
+				}
+				if _, err := index.Exists(context.Background(), comments.Target{GameKey: "pbz", MapID: mapID, MarkerID: marker}); err != nil {
+					t.Errorf("exists: %v", err)
+					return
+				}
+			}
+		}(worker)
+	}
+	for i := 0; i < 40; i++ {
+		artifact.publish(fmt.Sprintf("v%d", i+2), map[string][]string{"XiGu": {"a-1"}, "LuJiaCun": {"b-1"}})
+	}
+	wg.Wait()
+}
+
+// TestMarkerCommentReportsAreResolvedByTheirGame pins that a marker-comment report is
+// answerable by the moderators who can see it. It was visible in a pbz moderator's
+// queue yet refused on resolve, because the scope check knew only posts and forum
+// comments, so only a site administrator could ever clear one.
+func TestMarkerCommentReportsAreResolvedByTheirGame(t *testing.T) {
+	h := newHarness(t)
+	site := h.registerAndLogin("rr-site", "rr-site@example.com", "hunter2hunter2")
+	h.promoteToSiteAdmin(site)
+	pbzMod := h.registerAndLogin("rr-pbz", "rr-pbz@example.com", "hunter2hunter2")
+	if res := h.grantRole(site, "pbz", h.uidOf(pbzMod), "game_moderator"); res.status != http.StatusOK {
+		t.Fatalf("seed pbz moderator = %d: %s", res.status, res.body)
+	}
+	aionMod := h.registerAndLogin("rr-aion", "rr-aion@example.com", "hunter2hunter2")
+	if res := h.grantRole(site, "aion2", h.uidOf(aionMod), "game_moderator"); res.status != http.StatusOK {
+		t.Fatalf("seed aion2 moderator = %d: %s", res.status, res.body)
+	}
+	author := h.registerAndLogin("rr-author", "rr-author@example.com", "hunter2hunter2")
+	reporter := h.registerAndLogin("rr-reporter", "rr-reporter@example.com", "hunter2hunter2")
+
+	comment := h.mustCommentOnMarker(author, withTarget(map[string]any{"body": "Spam."}))
+	id, _ := comment["id"].(string)
+	if res := h.do(http.MethodPost, markerCommentPath("/"+id+"/report"),
+		map[string]any{"reason": "spam"}, withBearer(reporter)); res.status != http.StatusOK {
+		t.Fatalf("report = %d: %s", res.status, res.body)
+	}
+
+	res := h.do(http.MethodGet, "/forum/moderation/reports", nil, withBearer(pbzMod))
+	queue, _ := res.data(t)["results"].([]any)
+	if len(queue) != 1 {
+		t.Fatalf("pbz queue holds %d, want 1: %s", len(queue), res.body)
+	}
+	reportID, _ := queue[0].(map[string]any)["id"].(string)
+	resolve := "/forum/reports/" + reportID + "/resolution"
+
+	if res := h.do(http.MethodPost, resolve, map[string]any{"state": "upheld"}, withBearer(aionMod)); res.status != http.StatusForbidden {
+		t.Errorf("aion2 moderator resolving a pbz report = %d, want 403: %s", res.status, res.body)
+	}
+	if res := h.do(http.MethodPost, resolve, map[string]any{"state": "upheld"}, withBearer(pbzMod)); res.status != http.StatusOK {
+		t.Fatalf("pbz moderator resolving a pbz report = %d, want 200: %s", res.status, res.body)
+	}
+}
+
+// TestReportingAHiddenCommentRevealsNothing pins that a report is an acknowledgement.
+// It used to return the comment, so anyone holding a hidden comment's id could read
+// what a moderator had withheld by reporting it.
+func TestReportingAHiddenCommentRevealsNothing(t *testing.T) {
+	h := newHarness(t)
+	site := h.registerAndLogin("hr-site", "hr-site@example.com", "hunter2hunter2")
+	h.promoteToSiteAdmin(site)
+	author := h.registerAndLogin("hr-author", "hr-author@example.com", "hunter2hunter2")
+	reader := h.registerAndLogin("hr-reader", "hr-reader@example.com", "hunter2hunter2")
+
+	comment := h.mustCommentOnMarker(author, withTarget(map[string]any{"body": "Withheld text."}))
+	id, _ := comment["id"].(string)
+	if res := h.do(http.MethodPut, markerCommentPath("/"+id+"/hidden"), nil, withBearer(site)); res.status != http.StatusOK {
+		t.Fatalf("hide = %d: %s", res.status, res.body)
+	}
+
+	res := h.do(http.MethodPost, markerCommentPath("/"+id+"/report"), map[string]any{"reason": "abuse"}, withBearer(reader))
+	if res.status != http.StatusOK {
+		t.Fatalf("report on a hidden comment = %d, want 200 (it still lands): %s", res.status, res.body)
+	}
+	if strings.Contains(string(res.body), "Withheld text.") || strings.Contains(string(res.body), "hr-author") {
+		t.Errorf("reporting a hidden comment revealed it: %s", res.body)
 	}
 }

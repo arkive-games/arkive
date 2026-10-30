@@ -251,16 +251,15 @@ func (h *Handlers) RegisterMarkerCommentRoutes(a huma.API) {
 			"twice updates your report rather than filing a second.",
 		Tags:   []string{"comments"},
 		Errors: []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusUnprocessableEntity},
-	}, func(ctx context.Context, in *reportMarkerCommentInput) (*api.Response[comments.MarkerCommentRead], error) {
+	}, func(ctx context.Context, in *reportMarkerCommentInput) (*api.Response[api.Empty], error) {
 		principal, err := auth.RequireUser(ctx)
 		if err != nil {
 			return nil, err
 		}
-		comment, err := h.markerComments.Report(ctx, principal, in.ID, in.Body.Reason, in.Body.Detail)
-		if err != nil {
+		if err := h.markerComments.Report(ctx, principal, in.ID, in.Body.Reason, in.Body.Detail); err != nil {
 			return nil, err
 		}
-		return api.OK(comment), nil
+		return api.OKEmpty(), nil
 	})
 
 	huma.Register(a, huma.Operation{

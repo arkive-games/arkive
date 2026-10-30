@@ -9,7 +9,7 @@ import { Link, useSearch } from '@tanstack/react-router'
 import type { EngineMarker, GameMapViewProps, GlMapRef } from '@gamemap/map-engine-gl'
 import { worldToPixel } from '@gamemap/map-engine-gl/coords'
 const GameMapView = lazy(() => import('./features/map/GlMapView'))
-import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
+import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, markerDetailLabelsFor, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -671,7 +671,10 @@ export default function App() {
     const lootKind = markerLootKind(marker.subtype)
     const iconName = marker.icon || marker.subtypeMeta?.icon || ''
     const iconUrl = iconName && map ? palworldAssets.markerIconUrl(iconName, map) : undefined
+    // Palworld's own catalogue covers the strings it renders; the shared set fills the
+    // comment-action labels (edit, report, …) that Palworld does not wire yet.
     const detailLabels: MarkerDetailLabels = {
+      ...markerDetailLabelsFor(lng),
       close: t('markerDetail.close'), position: t('position'), copyPosition: t('copyPosition'), copied: t('copied'), copyFailed: t('copyFailed'),
       details: t('markerDetail.details'), comments: t('markerDetail.comments'), scrollArea: t('markerDetail.scrollArea'),
       collapseSection: (title) => t('markerDetail.collapseSection', { title }), expandSection: (title) => t('markerDetail.expandSection', { title }),
@@ -769,7 +772,7 @@ export default function App() {
         {lootKind && marker.lootArea ? <MarkerLootSummary lootArea={marker.lootArea} kind={lootKind} /> : null}
       </MarkerDetailDrawer>
     )
-  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName, markerCommentSort, isMobile])
+  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName, markerCommentSort, isMobile, lng])
 
   if (loadError) {
     return (

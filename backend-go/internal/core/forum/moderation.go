@@ -423,6 +423,15 @@ func (s *Service) mayModerateReport(ctx context.Context, principal auth.Principa
 			return fmt.Errorf("load the reported comment's post: %w", err)
 		}
 		gameKeys = post.GameIDs
+	case report.MarkerCommentID != nil:
+		// A marker comment hangs on no post; its single game key is on the row,
+		// the same key the open-reports query scopes the queue by. Without this a
+		// game moderator could see the report but never resolve it.
+		comment, err := s.q.GetMarkerCommentByID(ctx, *report.MarkerCommentID)
+		if err != nil {
+			return fmt.Errorf("load the reported marker comment: %w", err)
+		}
+		gameKeys = []string{comment.GameKey}
 	}
 
 	allowed, err := s.authz.CanAny(ctx, principal, roles.HandleReport, gameKeys)

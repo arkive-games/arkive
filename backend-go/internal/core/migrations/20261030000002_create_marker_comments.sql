@@ -166,9 +166,9 @@ CREATE INDEX notifications_marker_comment_idx
 
 -- +goose Down
 -- Unwound in the reverse order of how it was wound, and each step is load-bearing:
--- the two foreign keys must go before the table they point at, and the reports and
--- notifications constraints must be restored to their two-target and six-kind forms
--- before that, or a rollback would leave a schema no application version can write to.
+-- the two foreign keys must go before the table they point at, and the reports
+-- constraints must be restored to their two-target form before that, or a rollback
+-- would leave a schema no application version can write to.
 -- +goose StatementBegin
 DROP INDEX IF EXISTS core.notifications_marker_comment_idx;
 ALTER TABLE core.notifications DROP COLUMN IF EXISTS marker_comment_id;
