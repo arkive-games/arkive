@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.7.0",
+      "date": "2026-10-31",
+      "commit": "094b5fcb51fea2022e5af702ae2eab50190f2e04",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Comment on map markers: open a marker to read and write comments, reply, like, edit or delete your own, and report others.",
+            "zh-CN": "地图点位支持留言：打开点位即可查看和发表留言，可回复、点赞，编辑或删除自己的留言，也可举报他人的留言。",
+            "zh-TW": "地圖點位支援留言：開啟點位即可查看與發表留言，可回覆、按讚，編輯或刪除自己的留言，也可檢舉他人的留言。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "date": "2026-10-30",
       "commit": "5cb6c15b218f0bd7de74e57851456bddd7392869",
