@@ -3,7 +3,7 @@ import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { cn, ScrollArea } from "@gamemap/ui"
 
 export interface ShellSidebarProps {
-  width?: number
+  width?: number | string
   /**
    * Which edge the sidebar sits on. Only the collapse toggle differs: it hangs
    * off the outward edge (32px, `w-8`) and its chevron points away from the
