@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.21.0",
+      "date": "2026-10-31",
+      "commit": "489fbe45d8b8dd7c9caaef20cdc67f9db81b920a",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The pet wiki is redesigned: pets are grouped by quality, and the picked pet's head icon, strengths, attributes and skills stay in view beside the cards, with a star stepper.",
+            "zh-CN": "宠物图鉴改版：按品质分组展示宠物卡片，点选后右侧常驻显示头像、战力、属性与技能，并可切换星级。",
+            "zh-TW": "寵物圖鑑改版：按品質分組展示寵物卡片，點選後右側常駐顯示頭像、戰力、屬性與技能，並可切換星級。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.20.1",
       "date": "2026-10-31",
       "commit": "603a144f27217389bfb6c086d262ec1f8a482670",
