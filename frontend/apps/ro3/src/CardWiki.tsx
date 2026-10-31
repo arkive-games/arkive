@@ -350,12 +350,13 @@ function CardBoard({ cards, data, collection }: { cards: WikiCard[]; data: WikiD
   const { panelRef, areaRef, pointerRef } = usePointer(`${active?.id}-${wide}-${columns}`)
   const rowEnd = Math.min(cards.length - 1, (Math.floor(activeIndex / columns) + 1) * columns - 1)
 
+  // Escape folds the phone panel away; on wide screens there is always a panel, so it does nothing.
   useEffect(() => {
-    if (selectedId === undefined) return
+    if (wide || selectedId === undefined) return
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelectedId(undefined) }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [selectedId])
+  }, [wide, selectedId])
 
   const select = (card: WikiCard) => setSelectedId(!wide && card.id === active?.id ? undefined : card.id)
 
