@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.22.0",
+      "date": "2026-10-31",
+      "commit": "cef9422013ef3be23597a0b13b7cd494891079e4",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "The build page is now a build manual: browse builds by class and branch, read a build in full, favourite it, and edit your own plans; card slots only offer cards",
+            "zh-CN": "流派手册上线：按职业和分支浏览流派，查看完整配置、收藏，并编辑自己的方案；卡槽只会列出卡片",
+            "zh-TW": "流派手冊上線：按職業和分支瀏覽流派，查看完整配置、收藏，並編輯自己的方案；卡槽只會列出卡片"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.21.0",
       "date": "2026-10-31",
       "commit": "489fbe45d8b8dd7c9caaef20cdc67f9db81b920a",
