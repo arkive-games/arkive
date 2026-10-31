@@ -1,12 +1,12 @@
-import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, LayoutGrid, PenTool, Search, Sparkles, X } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { Notice } from './components/wiki'
 import { HeaderAction } from './components/SectionNav'
 import { GameText } from './components/GameText'
 import { LevelStepper } from './components/LevelStepper'
-import { Badge, CostList, DetailPanel, UnderlineTab, ValueList } from './components/Board'
-import { useFit, usePointer } from './components/boardHooks'
+import { Badge, CostList, DetailPanel, Facet, FacetGroup, UnderlineTab, ValueList } from './components/Board'
+import { useFit, usePointer, useWide } from './components/boardHooks'
 import {
   cardFrameVariant,
   filterCards,
@@ -81,20 +81,6 @@ const BASE_TYPE = 1
 const PRIMARY_TYPE = 2
 // Special effect kind that adds an attribute: `[1, attribute id, value]`.
 const ATTRIBUTE_EFFECT = 1
-
-/** Matches the sidebar's breakpoint: beside the grid from `lg`, inside it below. */
-const WIDE_QUERY = '(min-width: 64rem)'
-function useWide() {
-  return useSyncExternalStore(
-    (onChange) => {
-      const query = window.matchMedia(WIDE_QUERY)
-      query.addEventListener('change', onChange)
-      return () => query.removeEventListener('change', onChange)
-    },
-    () => window.matchMedia(WIDE_QUERY).matches,
-    () => true,
-  )
-}
 
 export function CardWiki() {
   const [data, setData] = useState<WikiData | null>(null)
@@ -300,34 +286,6 @@ export function CardWiki() {
         )}
       </section>
     </div>
-  )
-}
-
-function FacetGroup({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div role="group" aria-label={label} className="flex shrink-0 items-center gap-1 md:shrink md:flex-wrap">
-      <span className="mr-0.5 shrink-0 text-xs font-semibold text-muted-foreground">{label}</span>
-      {children}
-    </div>
-  )
-}
-
-function Facet({ selected, disabled, onClick, children }: { selected: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        'flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors disabled:pointer-events-none disabled:opacity-40 md:h-8',
-        selected
-          ? 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--arkive-nav-active)_45%,transparent)]'
-          : 'bg-muted/70 text-foreground/75 hover:bg-muted hover:text-foreground',
-      )}
-    >
-      {children}
-    </button>
   )
 }
 

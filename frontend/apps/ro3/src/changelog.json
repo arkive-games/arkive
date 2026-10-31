@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.21.0",
+      "date": "2026-10-31",
+      "commit": "e43ef63f15366e4c48b1c199c39e62b66d0e8558",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Monsters, equipment and souls are redesigned to match the card wiki: tabs and filters up top, a tile grid with one detail panel; monsters page 96 at a time with MVP cards and drops, equipment picks a quality per item, and souls show stats by level with their mark slots and effects.",
+            "zh-CN": "魔物图鉴、装备、灵魂残响改版，与卡片图鉴统一：顶部分类和筛选，图标网格配一个详情面板；魔物每页 96 个并带 MVP 卡片与掉落，装备可切换品质，灵魂残响按等级显示属性、印记槽和印记效果。",
+            "zh-TW": "魔物圖鑑、裝備、靈魂殘響改版，與卡片圖鑑統一：頂部分類和篩選，圖示網格配一個詳情面板；魔物每頁 96 個並帶 MVP 卡片與掉落，裝備可切換品質，靈魂殘響按等級顯示屬性、印記槽和印記效果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.20.1",
       "date": "2026-10-31",
       "commit": "603a144f27217389bfb6c086d262ec1f8a482670",

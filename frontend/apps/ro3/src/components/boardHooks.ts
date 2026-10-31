@@ -1,4 +1,19 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+
+/** Matches the sidebar's breakpoint: a board's panel stands beside the grid from `lg`, inside it below. */
+const WIDE_QUERY = '(min-width: 64rem)'
+
+export function useWide() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia(WIDE_QUERY)
+      query.addEventListener('change', onChange)
+      return () => query.removeEventListener('change', onChange)
+    },
+    () => window.matchMedia(WIDE_QUERY).matches,
+    () => true,
+  )
+}
 
 /**
  * Points a panel's rounded pointer at the pressed tile inside `area`: from the
