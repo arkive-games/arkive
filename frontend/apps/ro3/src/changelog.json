@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.20.1",
+      "date": "2026-10-31",
+      "commit": "603a144f27217389bfb6c086d262ec1f8a482670",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "On wide screens, Escape no longer jumps the card detail back to the first card",
+            "zh-CN": "宽屏下按 Esc 不再让卡片详情跳回第一张",
+            "zh-TW": "寬螢幕下按 Esc 不再讓卡片詳情跳回第一張"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.20.0",
       "date": "2026-10-29",
       "commit": "5bfafacaae5cb3bae43f870261834db0c731c055",
