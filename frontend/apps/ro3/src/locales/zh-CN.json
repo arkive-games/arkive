@@ -45,6 +45,7 @@
       "mine": "我的方案",
       "fav": "我的收藏",
       "newBuild": "编辑新BD",
+      "confirmLeave": "当前方案还有未保存的修改，确定放弃并打开另一个方案吗？",
       "template": "以此为模板编辑",
       "edit": "编辑方案",
       "branch": "分支",

@@ -53,7 +53,7 @@ export function BuildDetail({ build, data, faved, section, onBack, onFav, onTemp
       <div className="bm-hbody">
         <div className="bm-hmain">
           <div className="bm-chips"><BuildChips build={build} data={data} /></div>
-          <h1>{build.title || t.unnamed}</h1>
+          <h2>{build.title || t.unnamed}</h2>
           {build.summary ? <p className="bm-intro">{build.summary}</p> : null}
         </div>
         <div className="bm-acts">

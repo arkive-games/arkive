@@ -60,6 +60,8 @@ export function BuildManual() {
   const [root, setRoot] = useState(0)
   const [branch, setBranch] = useState(0)
   const [query, setQuery] = useState('')
+  // Saved plans arrive with the data; editing waits for them so a save cannot overwrite storage with an empty list.
+  const [loaded, setLoaded] = useState(false)
   const malformed = useRef<string | null>(null)
 
   useEffect(() => {
@@ -81,6 +83,7 @@ export function BuildManual() {
         used.add(build.id)
         return build
       }))
+      setLoaded(true)
     })
     return () => { active = false }
   }, [])
@@ -106,13 +109,16 @@ export function BuildManual() {
   // Leaving the editor keeps an unsaved draft; 'new build' brings it back instead of starting over.
   const go = (next: Section) => { setSection(next); setView({ mode: 'list' }) }
   const startEdit = (base?: PlannerBuild, keepId = false) => {
+    if (!loaded) return
     if (!base && dirty) { setView({ mode: 'edit' }); return }
+    if (base && dirty && !window.confirm(m.confirmLeave)) return
     const fresh = emptyPlanner()
     setDraft(base ? { ...structuredClone(base), id: keepId ? base.id : fresh.id, recovery: keepId ? base.recovery : [] } : fresh)
     setDirty(false); setError(''); setView({ mode: 'edit' })
   }
   const patch = (next: Partial<PlannerBuild>) => { setDraft(current => ({ ...current, ...next })); setDirty(true); setError('') }
   const save = () => {
+    if (!loaded) return
     const build = malformed.current === null ? draft : { ...draft, recovery: [...draft.recovery, { raw: malformed.current }] }
     const next = plans.some(b => b.id === build.id) ? plans.map(b => b.id === build.id ? build : b) : [...plans, build]
     if (!savePlannerBuilds(next, window.localStorage)) { setError(content.builds.saveError); return }
@@ -139,7 +145,7 @@ export function BuildManual() {
       </div>
     </SidebarSub>
     <HeaderAction>
-      <button type="button" className="bm-pill warm sm" onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>
+      <button type="button" className="bm-pill warm sm" disabled={!loaded} onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>
     </HeaderAction>
   </>
 
@@ -182,12 +188,12 @@ export function BuildManual() {
         </div>
         <div className="bm-cright">
           <label className="bm-search"><input value={query} onChange={e => setQuery(e.target.value)} placeholder={m.searchPlaceholder} aria-label={m.searchPlaceholder} /><span><Search aria-hidden="true" /></span></label>
-          <button type="button" className="bm-pill warm hidden lg:inline-flex" onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>
+          <button type="button" className="bm-pill warm hidden lg:inline-flex" disabled={!loaded} onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>
         </div>
       </div>
     </div>
     {shown.length
       ? <div className="bm-rows">{shown.map(b => <BuildRow key={b.id} build={b} data={data} faved={favorites.includes(b.id)} onOpen={() => setView({ mode: 'detail', id: b.id })} />)}</div>
-      : <div className="bm-empty"><p>{emptyText}</p>{needle ? null : <button type="button" className="bm-pill warm" onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>}</div>}
+      : <div className="bm-empty"><p>{emptyText}</p>{needle ? null : <button type="button" className="bm-pill warm" disabled={!loaded} onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>}</div>}
   </div>
 }
