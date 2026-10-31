@@ -139,7 +139,12 @@ export interface TalentSpecialEffectRecord {
 }
 
 interface ItemIndexDocument {
-  items: Array<{ iID: number; name?: { 'zh-CN'?: string } }>
+  items: Array<{ iID: number; iQuality?: number; name?: { 'zh-CN'?: string } }>
+}
+
+export interface ItemSummary {
+  name: string
+  quality: number
 }
 
 interface SkillShard {
@@ -203,7 +208,9 @@ export interface EquipmentAttributeRecord {
   iID: number
   kVariable?: string
   iAttributeType?: number
+  iCalculateType?: number
   name?: { 'zh-CN'?: string }
+  nameEquip?: { 'zh-CN'?: string }
 }
 
 export interface EquipmentEntryRecord {
@@ -279,7 +286,7 @@ export interface SoulRecord {
   primaryAttributes?: SoulAttributeRecord[]
   primaryAttributeLevelUp?: SoulAttributeRecord[]
   initialMarks?: Array<{ threshold?: number; markId?: number; specialEffectIds?: number[] }>
-  marks?: Array<{ threshold?: number; markId?: number; effectId?: number; stage?: number; icon?: string; specialEffectIds?: number[] }>
+  marks?: Array<{ threshold?: number; markId?: number; effectId?: number; stage?: number; icon?: string; seasonPower?: number; specialEffectIds?: number[] }>
   subAttributes?: SoulAttributeRecord[]
 }
 
@@ -329,7 +336,7 @@ export interface SoulWikiDocument {
   souls: SoulRecord[]
   markEffects: SoulMarkEffectRecord[]
   subAttributeGroups: Array<{ iID: number; attributes?: SoulAttributeRecord[] }>
-  levels: SoulAttributeRecord[]
+  levels: Array<SoulAttributeRecord & { iLv?: number; iQuality?: number }>
   resonance: SoulResonanceRecord[]
   resonanceActivation: SoulResonanceActivationRecord[]
   resonanceRestraint: SoulResonanceRestraintRecord[]
@@ -393,17 +400,24 @@ export async function loadTalentWikiData(): Promise<{
   return { version, talents }
 }
 
-let itemNames: Promise<Map<number, string>> | undefined
+let itemIndex: Promise<Map<number, ItemSummary>> | undefined
 
-/** Item names by id, from the 600 KB item index -- read once, and only when a page asks. */
-export function loadItemNames(): Promise<Map<number, string>> {
-  if (!itemNames) {
-    itemNames = fetchJson<ItemIndexDocument>('items.json').then((document) => new Map(
-      document.items.flatMap((item) => item.name?.['zh-CN'] ? [[item.iID, item.name['zh-CN']] as const] : []),
+/** Named items by id with their quality, from the 600 KB item index -- read once, and only when a page asks. */
+export function loadItems(): Promise<Map<number, ItemSummary>> {
+  if (!itemIndex) {
+    itemIndex = fetchJson<ItemIndexDocument>('items.json').then((document) => new Map(
+      document.items.flatMap((item) => item.name?.['zh-CN']
+        ? [[item.iID, { name: item.name['zh-CN'], quality: item.iQuality ?? 1 }] as const]
+        : []),
     ))
-    itemNames.catch(() => { itemNames = undefined })
+    itemIndex.catch(() => { itemIndex = undefined })
   }
-  return itemNames
+  return itemIndex
+}
+
+/** Item names by id, off the same single read. */
+export function loadItemNames(): Promise<Map<number, string>> {
+  return loadItems().then((items) => new Map([...items].map(([id, item]) => [id, item.name])))
 }
 
 export async function loadEquipmentWikiData(): Promise<{

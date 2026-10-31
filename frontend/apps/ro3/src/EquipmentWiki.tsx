@@ -1,209 +1,293 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Shield } from 'lucide-react'
-import { resourceUrl } from './lib/urls'
-import { QUALITY_LABELS, qualityColor, qualityLabel } from './lib/quality'
-import { SELECT_CLASS } from './lib/styles'
-import { loadEquipmentWikiData, type EquipmentRecord } from './wikiData'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import { X } from 'lucide-react'
+import { cn } from '@gamemap/ui'
+import { Notice } from './components/wiki'
+import { HeaderAction } from './components/SectionNav'
+import { Badge, Chip, DetailBlock, DetailPanel, Facet, FacetGroup, PillTab, PillTrack, SearchBox, SearchToggle, UnderlineTab, ValueList } from './components/Board'
+import { useFit, usePointer, useWide } from './components/boardHooks'
+import { loadEquipmentWikiData, type EquipmentAttributeRecord, type EquipmentRecord } from './wikiData'
 import {
-  AttributeChips,
-  CatalogLayout,
-  DetailSection,
-  EffectList,
-  Notice,
-  RecordHeader,
-  RecordTile,
-  SearchField,
-} from './components/wiki'
+  attributeFormat,
+  attributeValue,
+  EQUIPMENT_SLOTS,
+  filterEquipmentGroups,
+  groupEquipment,
+  SPECIAL_LEVEL,
+  type EquipmentFilter,
+  type EquipmentGroup,
+} from './wikiBoards'
+import { qualityColor, qualityLabel } from './lib/quality'
+import { resourceUrl } from './lib/urls'
 import content from './locales/zh-CN.json'
+
+const text = content.wiki.equipment
 
 type EquipmentData = Awaited<ReturnType<typeof loadEquipmentWikiData>>
 
-const SLOT_LABELS: Record<string, string> = { weapon: '武器', offhand: '副手', armor: '铠甲', cloak: '披风', shoes: '鞋子', accessory: '饰品', headwear: '头饰' }
+const LEVELS = [1, 20, 30, 40, 50, 70, 90, SPECIAL_LEVEL]
+const QUALITIES = [2, 3, 4, 5, 6]
 
-function text(value: { 'zh-CN'?: string } | undefined, fallback: string) { return value?.['zh-CN'] || fallback }
-function rangeValue(row: number[]) { return row.length > 2 && row[1] !== row[2] ? `${row[1]}–${row[2]}` : String(row[1] ?? '-') }
-function isPlaceholderEquipment(record: EquipmentRecord) {
-  return record.icon === 'icons/equipment/item_null.webp' || record.item?.kIcon === 'item_null.png' || record.name?.['zh-CN'] === '待定'
-}
+const fill = (template: string, values: Record<string, string | number>) =>
+  template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''))
 
-interface EquipmentGroup {
-  key: string
-  records: EquipmentRecord[]
-}
-
-// One tile per item: the table repeats an item once for each quality it can
-// drop in, and a grid of identical icons differing only by quality helps no one.
-function groupEquipment(records: EquipmentRecord[]): EquipmentGroup[] {
-  const groups = new Map<string, EquipmentRecord[]>()
-  for (const record of records) {
-    const key = `${record.name?.['zh-CN'] ?? record.iID}|${record.slot ?? ''}|${record.icon ?? ''}`
-    const group = groups.get(key) ?? []
-    group.push(record)
-    groups.set(key, group)
-  }
-  const result: EquipmentGroup[] = []
-  for (const [key, group] of groups) {
-    result.push({ key, records: [...group].sort((a, b) => (a.item?.iQuality ?? 0) - (b.item?.iQuality ?? 0) || a.iID - b.iID) })
-  }
-  return result
-}
+const slotIcon = (slot: string) => resourceUrl(`icons/other/icon_equip_${slot}_02.webp`)
 
 export function EquipmentWiki() {
   const [data, setData] = useState<EquipmentData | null>(null)
-  const [error, setError] = useState(false)
-  const [query, setQuery] = useState('')
-  const [slot, setSlot] = useState('')
-  const [quality, setQuality] = useState('')
-  const [level, setLevel] = useState('')
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
+  const [dataError, setDataError] = useState(false)
+  const [filter, setFilter] = useState<EquipmentFilter>({ slot: 'all', level: null, quality: null, query: '' })
+  const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => {
     let active = true
-    loadEquipmentWikiData().then((next) => { if (active) { setData(next); setError(false) } }).catch(() => { if (active) setError(true) })
+    loadEquipmentWikiData()
+      .then((next) => { if (active) setData(next) })
+      .catch(() => { if (active) setDataError(true) })
     return () => { active = false }
   }, [])
 
-  const records = useMemo(() => {
-    const source = data?.equipment.equipment.filter((record) => record.item && record.name && !isPlaceholderEquipment(record)) ?? []
-    const normalized = query.trim().toLowerCase()
-    return source.filter((record) => {
-      const item = record.item!
-      if (slot && record.slot !== slot) return false
-      if (quality && String(item.iQuality ?? '') !== quality) return false
-      if (level && (item.iLevelNeed ?? 0) < Number(level)) return false
-      return !normalized || `${record.iID} ${text(record.name, '')}`.toLowerCase().includes(normalized)
-    })
-  }, [data, level, quality, query, slot])
-  const groups = useMemo(() => groupEquipment(records), [records])
-
-  const active = records.find((record) => record.iID === selectedId) ?? records[0] ?? null
-  const select = (id: number) => {
-    setSelectedId(id)
-    setMobileDetailOpen(true)
-  }
+  const groups = useMemo(() => groupEquipment(data?.equipment.equipment ?? []), [data])
+  const filtered = useMemo(() => filterEquipmentGroups(groups, filter), [groups, filter])
+  const change = (next: Partial<EquipmentFilter>) => setFilter((previous) => ({ ...previous, ...next }))
+  const slotCount = (slot: string) => groups.filter((group) => group.slot === slot).length
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">查阅装备基础属性与可用词条，为职业配置挑选合适的装备。</p>
-      <div className="flex flex-col gap-2 md:flex-row md:items-center">
-        <SearchField className="md:flex-1" value={query} onChange={setQuery} label="搜索装备" placeholder="搜索装备名称或编号" />
-        <div className="grid grid-cols-3 gap-2 md:flex">
-          <select className={SELECT_CLASS} aria-label="部位" value={slot} onChange={(event) => setSlot(event.target.value)}>
-            <option value="">全部部位</option>
-            {Object.entries(SLOT_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
-          </select>
-          <select className={SELECT_CLASS} aria-label="品质" value={quality} onChange={(event) => setQuality(event.target.value)}>
-            <option value="">全部品质</option>
-            {Object.entries(QUALITY_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
-          </select>
-          <select className={SELECT_CLASS} aria-label="最低等级" value={level} onChange={(event) => setLevel(event.target.value)}>
-            <option value="">等级不限</option>
-            {[1, 20, 40, 60, 80].map((value) => <option value={value} key={value}>{value} 级以上</option>)}
-          </select>
-        </div>
+    <div className="flex flex-col gap-3 md:gap-4">
+      <HeaderAction>
+        <SearchToggle
+          open={searchOpen}
+          label={text.searchToggle}
+          onToggle={() => {
+            // A folded search box must not keep filtering out of sight.
+            if (searchOpen) change({ query: '' })
+            setSearchOpen(!searchOpen)
+          }}
+        />
+      </HeaderAction>
+
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <PillTrack label={text.slotLabel}>
+          <PillTab selected={filter.slot === 'all'} onClick={() => change({ slot: 'all' })} count={data ? groups.length : undefined}>
+            {text.all}
+          </PillTab>
+          {EQUIPMENT_SLOTS.map((slot) => (
+            <PillTab key={slot} selected={filter.slot === slot} onClick={() => change({ slot })} count={data ? slotCount(slot) : undefined}>
+              <img src={slotIcon(slot)} alt="" className="hidden size-5 object-contain md:block" />
+              {text.slots[slot]}
+            </PillTab>
+          ))}
+        </PillTrack>
+        <SearchBox open={searchOpen} query={filter.query} onQuery={(query) => change({ query })} label={text.searchLabel} placeholder={text.searchPlaceholder} />
       </div>
 
-      <CatalogLayout
-        detailLabel={active ? text(active.name, `装备 ${active.iID}`) : content.wiki.tabs.equipment}
-        detail={(
-          <>
-            {active ? <select className={SELECT_CLASS} aria-label={content.wiki.variant} value={active.iID} onChange={(event) => setSelectedId(Number(event.target.value))}>
-              {(groups.find((group) => group.records.some((record) => record.iID === active.iID))?.records ?? []).map((record) => (
-                <option key={record.iID} value={record.iID}>{qualityLabel(record.item?.iQuality)} · {record.iID}</option>
-              ))}
-            </select> : null}
-            <EquipmentDetail record={active} data={data} />
-          </>
+      <section aria-label={text.title} className="rounded-lg border border-border bg-card">
+        <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">
+          <div role="group" aria-label={text.levelLabel} className="flex min-w-0 overflow-x-auto [scrollbar-width:none]">
+            <UnderlineTab selected={filter.level === null} onClick={() => change({ level: null })}>{text.levelAll}</UnderlineTab>
+            {LEVELS.map((level) => (
+              <UnderlineTab key={level} selected={filter.level === level} onClick={() => change({ level })}>
+                {level === SPECIAL_LEVEL ? text.special : fill(text.level, { level })}
+              </UnderlineTab>
+            ))}
+          </div>
+          {data ? (
+            <span aria-live="polite" className="ml-auto hidden shrink-0 text-xs tabular-nums text-muted-foreground md:block">
+              {fill(text.resultCount, { count: filtered.length })}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-x-3 gap-y-1.5 overflow-x-auto border-b border-dashed border-border px-2.5 py-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-3.5">
+          <FacetGroup label={text.qualityLabel}>
+            {QUALITIES.map((quality) => (
+              <Facet key={quality} selected={filter.quality === quality} onClick={() => change({ quality: filter.quality === quality ? null : quality })}>
+                <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(quality) }} />
+                {qualityLabel(quality)}
+              </Facet>
+            ))}
+          </FacetGroup>
+          {filter.quality !== null ? (
+            <button
+              type="button"
+              onClick={() => change({ quality: null })}
+              className="flex h-9 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold text-[color:var(--arkive-nav-active)] transition-colors hover:bg-[color:var(--arkive-filter-active)] md:h-8"
+            >
+              <X aria-hidden="true" className="size-3.5" />
+              {text.clear}
+            </button>
+          ) : null}
+        </div>
+
+        {dataError ? <div className="p-3"><Notice>{content.wiki.dataError}</Notice></div> : !data ? <div className="p-3"><Notice>{content.wiki.loading}</Notice></div> : (
+          <EquipmentBoard groups={filtered} data={data} quality={filter.quality} />
         )}
-        open={mobileDetailOpen}
-        onClose={() => setMobileDetailOpen(false)}
-        list={(
-          <>
-            <p className="text-sm text-muted-foreground">共 {data ? groups.length : '—'} 个图鉴条目</p>
-            {error ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : groups.length ? (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2.5" aria-label="装备列表">
-                {groups.map((group) => (
-                  <EquipmentTile key={group.key} records={group.records} active={group.records.some((record) => active?.iID === record.iID)} onSelect={select} />
-                ))}
-              </div>
-            ) : <Notice>没有匹配的装备。</Notice>}
-          </>
-        )}
-      />
+      </section>
     </div>
   )
 }
 
-function EquipmentTile({ records, active, onSelect }: { records: EquipmentRecord[]; active: boolean; onSelect: (id: number) => void }) {
-  const record = records[records.length - 1]
-  const quality = record.item?.iQuality
-  const qualities = [...new Set(records.map((variant) => variant.item?.iQuality).filter((value): value is number => value !== undefined))]
+function EquipmentBoard({ groups, data, quality }: { groups: EquipmentGroup[]; data: EquipmentData; quality: number | null }) {
+  const wide = useWide()
+  const [selected, setSelected] = useState<string>()
+  const [picked, setPicked] = useState<Record<string, number>>({})
+  const [gridRef, fit] = useFit(wide ? 6.75 : 5.25)
+  const columns = Math.max(3, Math.min(fit || 6, 10))
+  const selectedIndex = groups.findIndex((group) => group.key === selected)
+  const activeIndex = selectedIndex >= 0 ? selectedIndex : wide && groups.length > 0 ? 0 : -1
+  const active = activeIndex >= 0 ? groups[activeIndex] : undefined
+  const { panelRef, areaRef, pointerRef } = usePointer(`${active?.key}-${wide}-${columns}`)
+  const rowEnd = Math.min(groups.length - 1, (Math.floor(activeIndex / columns) + 1) * columns - 1)
+  const attributes = useMemo(() => {
+    const names = new Map<number, EquipmentAttributeRecord>(data.equipment.attributes.map((attribute) => [attribute.iID, attribute]))
+    for (const attribute of data.attrs.attributes) names.set(attribute.iID, { ...names.get(attribute.iID), ...attribute })
+    return names
+  }, [data])
+
+  useEffect(() => {
+    if (wide || selected === undefined) return
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(undefined) }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [wide, selected])
+
+  if (groups.length === 0) return <div className="p-3"><Notice>{text.empty}</Notice></div>
+
+  const select = (group: EquipmentGroup) => setSelected(!wide && group.key === active?.key ? undefined : group.key)
+  // The quality being filtered on, else the one a player last picked, else the best.
+  const qualityOf = (group: EquipmentGroup) =>
+    picked[group.key] ?? (quality !== null && group.qualities.includes(quality) ? quality : group.qualities[group.qualities.length - 1])
+
+  const panel = active ? (
+    <DetailPanel panelRef={panelRef} pointerRef={pointerRef}>
+      <EquipmentDetail
+        group={active}
+        data={data}
+        attributes={attributes}
+        quality={qualityOf(active)}
+        onQuality={(next) => setPicked((previous) => ({ ...previous, [active.key]: next }))}
+      />
+    </DetailPanel>
+  ) : null
+
   return (
-    <RecordTile
-      active={active}
-      onClick={() => onSelect(record.iID)}
-      accent={qualityColor(quality)}
-      icon={record.icon ? <img src={resourceUrl(record.icon)} alt="" loading="lazy" className="size-full object-contain" /> : <Shield aria-hidden="true" className="size-6 text-muted-foreground" />}
-      name={text(record.name, `装备 ${record.iID}`)}
-      meta={(
-        <>
-          {SLOT_LABELS[record.slot ?? ''] ?? record.slot ?? '未知部位'} ·{' '}
-          {qualities.length > 1 ? (
-            <span className="inline-flex gap-0.5" aria-label={`包含 ${qualities.length} 种品质`}>
-              {qualities.map((value) => <i key={value} className="size-2 rounded-full" style={{ background: qualityColor(value) }} />)}
-            </span>
-          ) : qualityLabel(quality)}
-        </>
-      )}
-    />
+    <div className="grid gap-2.5 p-2.5 md:p-3.5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-4">
+      <div ref={areaRef} className="min-w-0">
+        <div ref={gridRef} className="grid gap-1.5 md:gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+          {groups.map((group, index) => (
+            <Fragment key={group.key}>
+              <EquipmentTile group={group} selected={group.key === active?.key} onSelect={() => select(group)} />
+              {!wide && index === rowEnd ? <div className="col-span-full pb-1 pt-2">{panel}</div> : null}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+      {wide ? <div className="sticky top-4 min-w-0">{panel}</div> : null}
+    </div>
   )
 }
 
-function EquipmentDetail({ record, data }: { record: EquipmentRecord | null; data: EquipmentData | null }) {
-  if (!record || !data) return <Notice>选择一件装备查看详情</Notice>
-  const item = record.item
-  const attrMap = new Map((data.attrs.attributes.length ? data.attrs.attributes : data.equipment.attributes).map((attr) => [attr.iID, text(attr.name, attr.kVariable ?? `属性 ${attr.iID}`)]))
-  const entryRows = data.attrs.entryGroups.filter((entry) => entry.iGroup === record.iEntries)
-  const specialRows = (record.kSpecial ?? []).map(([id, weight]) => {
-    const group = data.attrs.specialGroups.find((candidate) => candidate.iID === id)
-    const effect = data.attrs.specialEffects.find((candidate) => candidate.iID === group?.iSpecialID || candidate.iID === id)
-    return { id, weight, label: text(effect?.desc ?? group?.desc ?? effect?.name ?? group?.name, `特殊词条 ${id}`) }
-  })
+function EquipmentTile({ group, selected, onSelect }: { group: EquipmentGroup; selected: boolean; onSelect: () => void }) {
+  const best = group.qualities[group.qualities.length - 1]
   return (
-    <>
-      <RecordHeader
-        icon={record.icon ? resourceUrl(record.icon) : undefined}
-        fallback={<Shield aria-hidden="true" className="size-6 text-muted-foreground" />}
-        kicker={`${qualityLabel(item?.iQuality)} · ${SLOT_LABELS[record.slot ?? ''] ?? '未知部位'}`}
-        kickerColor={qualityColor(item?.iQuality)}
-        name={text(record.name, `装备 ${record.iID}`)}
-        note={`装备编号 ${record.iID} · ${item?.iLevelNeed ?? 0} 级可用`}
-      />
-      <DetailSection title="基础属性">
-        <AttributeChips values={(record.kBasicAttribute ?? []).map((row) => ({ key: row[0], label: attrMap.get(row[0]) ?? `属性 ${row[0]}`, value: rangeValue(row) }))} />
-      </DetailSection>
-      {record.kFixedEntries?.length ? (
-        <DetailSection title="固定词条">
-          <AttributeChips values={record.kFixedEntries.map(([id, grade]) => ({ key: `${id}-${grade}`, label: attrMap.get(id) ?? `属性 ${id}`, value: `等级 ${grade}` }))} />
-        </DetailSection>
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={cn(
+        'group flex flex-col items-center gap-1 rounded-lg p-1.5 text-center transition-colors',
+        selected ? 'bg-[color:var(--arkive-filter-active)] ring-2 ring-[color:var(--arkive-nav-active)]' : 'hover:bg-muted',
+      )}
+    >
+      <span className="relative block aspect-square w-full max-w-20 overflow-hidden rounded-xl bg-muted transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-translate-y-0.5">
+        <img src={resourceUrl(group.icon)} alt="" loading="lazy" className="size-full object-contain p-1" />
+        <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1" style={{ backgroundColor: qualityColor(best) }} />
+      </span>
+      <span className="w-full truncate text-xs font-semibold md:text-sm">{group.name}</span>
+      <span aria-hidden="true" className="-mt-0.5 flex gap-0.5">
+        {group.qualities.map((quality) => <span key={quality} className="size-1.5 rounded-full" style={{ backgroundColor: qualityColor(quality) }} />)}
+      </span>
+    </button>
+  )
+}
+
+function EquipmentDetail({ group, data, attributes, quality, onQuality }: {
+  group: EquipmentGroup
+  data: EquipmentData
+  attributes: Map<number, EquipmentAttributeRecord>
+  quality: number
+  onQuality: (quality: number) => void
+}) {
+  const row: EquipmentRecord = group.variants.find((variant) => (variant.item?.iQuality ?? 1) === quality) ?? group.variants[group.variants.length - 1]
+  const shown = row.item?.iQuality ?? 1
+  const format = (id: number) => {
+    const known = attributes.get(id)
+    return known ? attributeFormat(known) : { label: fill(text.attributeId, { id }), percent: false }
+  }
+  const range = (id: number, min?: number, max?: number) => {
+    const { percent } = format(id)
+    if (min === undefined) return '-'
+    return max !== undefined && max !== min ? `${attributeValue(min, percent)}–${attributeValue(max, percent)}` : attributeValue(min, percent)
+  }
+  const basic: Array<[string, string]> = (row.kBasicAttribute ?? []).map(([id, min, max]) => [format(id).label, range(id, min, max)])
+  const pool = row.iEntries ? data.attrs.entryGroups.filter((entry) => entry.iGroup === row.iEntries && entry.iAttriID !== undefined) : []
+  const description = row.desc?.['zh-CN']
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start gap-2.5">
+        <img src={resourceUrl(group.icon)} alt="" className="size-12 shrink-0 rounded-xl bg-card object-contain p-1 shadow-[0_0_0_1px_var(--border)]" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <h3 className="text-base font-bold leading-tight md:text-lg" style={{ color: qualityColor(shown) }}>{group.name}</h3>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge>{text.slots[group.slot]}</Badge>
+            <Badge>{group.level === SPECIAL_LEVEL ? text.special : fill(text.usable, { level: group.level })}</Badge>
+          </div>
+        </div>
+      </div>
+
+      {group.qualities.length > 1 ? (
+        <div role="group" aria-label={text.qualityPicker} className="flex flex-wrap gap-1">
+          {group.qualities.map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={value === shown}
+              onClick={() => onQuality(value)}
+              className={cn(
+                'flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors',
+                value === shown ? 'bg-foreground text-background' : 'bg-card text-foreground/75 shadow-[0_0_0_1px_var(--border)] hover:text-foreground',
+              )}
+            >
+              <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: qualityColor(value) }} />
+              {qualityLabel(value)}
+            </button>
+          ))}
+        </div>
       ) : null}
-      <DetailSection title="普通词条池">
-        {entryRows.length ? (
-          <AttributeChips values={entryRows.map((entry) => ({ key: entry.iID, label: attrMap.get(entry.iAttriID ?? 0) ?? `属性 ${entry.iAttriID ?? entry.iID}`, value: `${entry.iMin ?? 0}–${entry.iMax ?? 0}` }))} />
-        ) : <p className="text-sm text-muted-foreground">暂无可解析词条</p>}
-      </DetailSection>
-      {specialRows.length || record.kFixedSpecialAttribute?.length ? (
-        <DetailSection title="特殊效果">
-          <EffectList rows={[
-            ...specialRows.map((row) => ({ key: row.id, title: row.label, note: `权重 ${row.weight / 1000}` })),
-            ...(record.kFixedSpecialAttribute ?? []).map((id) => ({ key: `fixed-${id}`, title: `特殊效果 ${id}`, note: '固定' })),
-          ]} />
-        </DetailSection>
+
+      {basic.length > 0 ? <ValueList label={text.basic} rows={basic} /> : null}
+
+      {row.kFixedEntries?.length ? (
+        <DetailBlock label={text.fixed}>
+          <div className="flex flex-wrap gap-1">
+            {row.kFixedEntries.map(([id, level]) => <Chip key={`${id}-${level}`} value={fill(text.fixedLevel, { level })}>{format(id).label}</Chip>)}
+          </div>
+        </DetailBlock>
       ) : null}
-      {record.desc?.['zh-CN'] ? (
-        <DetailSection title="装备说明"><p className="text-sm leading-relaxed text-muted-foreground">{record.desc['zh-CN']}</p></DetailSection>
+
+      {pool.length > 0 ? (
+        <DetailBlock label={text.randomPool} note={fill(text.poolCount, { count: pool.length })}>
+          <div className="flex flex-wrap gap-1">
+            {pool.map((entry) => <Chip key={entry.iID} value={range(entry.iAttriID!, entry.iMin, entry.iMax)}>{format(entry.iAttriID!).label}</Chip>)}
+          </div>
+        </DetailBlock>
       ) : null}
-    </>
+
+      {description ? (
+        <DetailBlock label={text.description}>
+          <p className="text-sm leading-relaxed text-foreground/75">{description}</p>
+        </DetailBlock>
+      ) : null}
+    </div>
   )
 }

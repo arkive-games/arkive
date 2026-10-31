@@ -7,8 +7,8 @@ import {
   VersionHistory,
   type ChangelogFile,
 } from '@gamemap/ui'
-import { MonsterWiki } from './CreatureWiki'
 import { PetWiki } from './PetWiki'
+import { MonsterWiki } from './MonsterWiki'
 import { ProfessionWiki } from './ProfessionWiki'
 import { TalentWiki } from './TalentWiki'
 import { CardWiki } from './CardWiki'
