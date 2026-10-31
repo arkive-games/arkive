@@ -44,6 +44,7 @@ arkive.memory.pbz.map.map-id	-	apps/pbz/src/lib/storage.ts
 arkive.memory.pbz.map.show-labels	-	apps/pbz/src/features/map/MapPage.tsx
 arkive.memory.pbz.map.view	-	apps/pbz/src/lib/storage.ts
 arkive.memory.pbz.map.visible-subtypes	-	apps/pbz/src/lib/storage.ts
+arkive.memory.ro3.builds.favorites	-	apps/ro3/src/lib/buildState.ts
 arkive.memory.site.account-editor.profile	account	apps/meta/src/UserSystemPages.tsx
 arkive.memory.site.games-catalog.category	-	apps/meta/src/AllGamesPage.tsx
 arkive.memory.site.games-catalog.page	-	apps/meta/src/AllGamesPage.tsx

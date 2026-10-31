@@ -1,6 +1,6 @@
 import type { EquipmentRecord } from '../wikiData'
 import { BUILD_SLOTS, type BuildSlotKey } from './buildRules'
-import { BUILD_STORAGE_KEY, clampAttribute } from './buildState'
+import { BUILD_STORAGE_KEY, clampStat } from './buildState'
 
 export interface PlannerEquipment {
   slot: BuildSlotKey
@@ -61,7 +61,7 @@ export function migratePlanner(value: unknown, equipment: EquipmentRecord[], att
   build.original = modern ? source.original : value
   build.recovery = Array.isArray(source.recovery) ? [...source.recovery] : []
   const sourceAttributes = modern && Array.isArray(source.attributes) ? source.attributes : attributeKeys.map(k => record(source.attributes)[k])
-  build.attributes = Array.from({ length: 6 }, (_, i) => clampAttribute(Number(sourceAttributes[i]) || 1))
+  build.attributes = Array.from({ length: 6 }, (_, i) => clampStat(Number(sourceAttributes[i]) || 1))
   const originalSkills = ids(modern ? source.skills : source.skillIds).filter(Boolean)
   build.skills = modern ? ids(source.skills).slice(0, 6) : [...new Set(originalSkills)].slice(0, 6)
   if (!modern && (originalSkills.length > 6 || originalSkills.length !== new Set(originalSkills).size)) build.recovery.push({ skills: originalSkills })

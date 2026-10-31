@@ -253,7 +253,7 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
           const soul = soulMap.get(config?.id ?? 0)
           if (!soul || !config || swapping) {
             const items = (data?.souls?.souls.souls ?? []).filter(s => s.name?.['zh-CN']).map(s => ({ id: s.iID, label: s.name?.['zh-CN'] ?? '', icon: s.icon, quality: s.quality }))
-            return <Picker what={m.soul} items={items} onPick={id => setSoul(i, { id, sub: [], marks: [] })} />
+            return <Picker what={m.soul} items={items} onPick={id => setSoul(i, id === config?.id ? config : { id, sub: [], marks: [] })} />
           }
           const subs = soulSubOptions(data, soul)
           return <>

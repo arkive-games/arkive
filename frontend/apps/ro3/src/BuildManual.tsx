@@ -51,7 +51,7 @@ function BuildRow({ build, data, faved, onOpen }: { build: PlannerBuild; data: M
 export function BuildManual() {
   const [data, setData] = useState<ManualData | null>(null)
   const [plans, setPlans] = useState<PlannerBuild[]>([])
-  const [favorites, setFavorites] = useState<string[]>(() => readFavorites(window.localStorage))
+  const [favorites, setFavorites] = useState<string[]>(() => readFavorites())
   const [section, setSection] = useState<Section>('rec')
   const [view, setView] = useState<View>({ mode: 'list' })
   const [draft, setDraft] = useState<PlannerBuild>(() => emptyPlanner())
@@ -59,7 +59,6 @@ export function BuildManual() {
   const [error, setError] = useState('')
   const [root, setRoot] = useState(0)
   const [branch, setBranch] = useState(0)
-  const [order, setOrder] = useState<'hot' | 'latest'>('hot')
   const [query, setQuery] = useState('')
   const malformed = useRef<string | null>(null)
 
@@ -95,7 +94,8 @@ export function BuildManual() {
 
   const rules = data?.rules?.shared
   const pool = section === 'rec' ? RECOMMENDED : section === 'mine' ? plans : [...RECOMMENDED, ...plans].filter(b => favorites.includes(b.id))
-  const ordered = order === 'latest' ? [...pool].reverse() : pool
+  // Newest first; a 'hot' order returns once builds carry likes.
+  const ordered = [...pool].reverse()
   const needle = query.trim().toLocaleLowerCase('zh-CN')
   const searched = needle ? ordered.filter(b => buildSearchText(b, ruleSet(data, b.rulesVariant)).includes(needle)) : ordered
   const inRoot = root ? searched.filter(b => careerRoot(b.jobId) === root) : searched
@@ -121,7 +121,7 @@ export function BuildManual() {
   }
   const toggleFav = (id: string) => {
     const next = favorites.includes(id) ? favorites.filter(v => v !== id) : [...favorites, id]
-    if (writeFavorites(next, window.localStorage)) setFavorites(next)
+    if (writeFavorites(next)) setFavorites(next)
   }
   const sectionLabel = SECTIONS.find(s => s.key === section)!.label
   const emptyText = needle ? m.emptySearch : section === 'mine' ? m.emptyMine : section === 'fav' ? m.emptyFav : m.emptyList
@@ -181,10 +181,6 @@ export function BuildManual() {
             : <button type="button" role="tab" aria-selected className="on">{m.allJobs}<small>{searched.length}</small></button>}
         </div>
         <div className="bm-cright">
-          <div className="bm-track sm"><div>
-            <button type="button" className={cn(order === 'hot' && 'on')} onClick={() => setOrder('hot')}>{m.hot}</button>
-            <button type="button" className={cn(order === 'latest' && 'on')} onClick={() => setOrder('latest')}>{m.latest}</button>
-          </div></div>
           <label className="bm-search"><input value={query} onChange={e => setQuery(e.target.value)} placeholder={m.searchPlaceholder} aria-label={m.searchPlaceholder} /><span><Search aria-hidden="true" /></span></label>
           <button type="button" className="bm-pill warm hidden lg:inline-flex" onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>
         </div>

@@ -629,6 +629,9 @@ importers:
       '@gamemap/map-shell':
         specifier: workspace:*
         version: link:../../packages/map-shell
+      '@gamemap/state-memory':
+        specifier: workspace:*
+        version: link:../../packages/state-memory
       '@gamemap/ui':
         specifier: workspace:*
         version: link:../../packages/ui

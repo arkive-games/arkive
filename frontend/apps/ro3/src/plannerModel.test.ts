@@ -68,7 +68,7 @@ describe('non-destructive migration', () => {
     const migrated = stored.records.map(v => migratePlanner(v, records, keys))
     expect(migrated[0].recovery).toEqual([null])
     expect(migrated[1].title).toBe('Custom')
-    expect(migrated[1].attributes[0]).toBe(500)
+    expect(migrated[1].attributes[0]).toBe(99)
   })
 })
 
