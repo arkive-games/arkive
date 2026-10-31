@@ -1,166 +1,329 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Gem } from 'lucide-react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import { cn } from '@gamemap/ui'
+import { Notice } from './components/wiki'
+import { HeaderAction } from './components/SectionNav'
+import { LevelStepper } from './components/LevelStepper'
+import { Badge, Chip, DetailBlock, DetailPanel, PillTab, PillTrack, SearchBox, SearchToggle, UnderlineTab } from './components/Board'
+import { useFit, usePointer, useWide } from './components/boardHooks'
+import { loadSoulWikiData, type EquipmentAttributeRecord, type SoulRecord } from './wikiData'
+import { attributeFormat, attributeValue, DEFAULT_SOUL_CAP, PLACEHOLDER_NAME, soulLevelCaps, soulPrimaryAt, soulSubPool } from './wikiBoards'
+import { qualityColor, qualityLabel } from './lib/quality'
 import { resourceUrl } from './lib/urls'
-import { QUALITY_LABELS, qualityColor, qualityLabel } from './lib/quality'
-import { SELECT_CLASS } from './lib/styles'
-import { loadSoulWikiData, type SoulRecord } from './wikiData'
-import {
-  AttributeChips,
-  CatalogLayout,
-  DetailSection,
-  EffectList,
-  Notice,
-  RecordHeader,
-  RecordTile,
-  SearchField,
-} from './components/wiki'
 import content from './locales/zh-CN.json'
 
-type SoulData = Awaited<ReturnType<typeof loadSoulWikiData>>
+const text = content.wiki.souls
 
-function text(value: { 'zh-CN'?: string } | undefined, fallback: string) { return value?.['zh-CN'] || fallback }
-function valueOf(attribute: { min?: number; max?: number; iMin?: number; iMax?: number }) {
-  const min = attribute.min ?? attribute.iMin
-  const max = attribute.max ?? attribute.iMax
-  return min === undefined ? '—' : max !== undefined && max !== min ? `${min}–${max}` : String(min)
-}
+type SoulData = Awaited<ReturnType<typeof loadSoulWikiData>>
+type SoulView = 'souls' | 'resonance'
+
+const QUALITIES = [3, 4, 5]
+
+const fill = (template: string, values: Record<string, string | number>) =>
+  template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''))
 
 export function SoulWiki() {
   const [data, setData] = useState<SoulData | null>(null)
-  const [error, setError] = useState(false)
+  const [dataError, setDataError] = useState(false)
+  const [quality, setQuality] = useState<number | null>(null)
+  const [view, setView] = useState<SoulView>('souls')
   const [query, setQuery] = useState('')
-  const [quality, setQuality] = useState('')
-  const [resonance, setResonance] = useState('')
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => {
     let active = true
-    loadSoulWikiData().then((next) => { if (active) { setData(next); setError(false) } }).catch(() => { if (active) setError(true) })
+    loadSoulWikiData()
+      .then((next) => { if (active) setData(next) })
+      .catch(() => { if (active) setDataError(true) })
     return () => { active = false }
   }, [])
 
-  const records = useMemo(() => {
-    const source = data?.souls.souls ?? []
-    const normalized = query.trim().toLowerCase()
-    return source.filter((record) => (!quality || String(record.quality ?? '') === quality) && (!normalized || `${record.iID} ${text(record.name, '')}`.toLowerCase().includes(normalized)))
-  }, [data, quality, query])
-  const active = records.find((record) => record.iID === selectedId) ?? records[0] ?? null
-  const select = (id: number) => {
-    setSelectedId(id)
-    setMobileDetailOpen(true)
-  }
+  const souls = useMemo(() => (data?.souls.souls ?? []).filter((soul) => soul.name?.['zh-CN'] && soul.icon), [data])
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    return souls.filter((soul) => (quality === null || soul.quality === quality) && (!needle || (soul.name?.['zh-CN'] ?? '').toLowerCase().includes(needle)))
+  }, [souls, quality, query])
+  const resonance = useMemo(() => (data?.souls.resonance ?? []).filter((row) => row.name?.['zh-CN']), [data])
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">查看残响属性、阶段印记与灵魂共振，整理可用于职业配置的完整资料。</p>
-      <div className="flex flex-col gap-2 md:flex-row md:items-center">
-        <SearchField className="md:flex-1" value={query} onChange={setQuery} label="搜索灵魂残响" placeholder="搜索残响名称或编号" />
-        <div className="grid grid-cols-2 gap-2 md:flex">
-          <select className={SELECT_CLASS} aria-label="品质" value={quality} onChange={(event) => setQuality(event.target.value)}>
-            <option value="">全部品质</option>
-            {Object.entries(QUALITY_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}
-          </select>
-          <select className={SELECT_CLASS} aria-label="共振" value={resonance} onChange={(event) => setResonance(event.target.value)}>
-            <option value="">全部共振</option>
-            {(data?.souls.resonance ?? []).map((row) => <option value={row.iID} key={row.iID}>{text(row.name, `共振 ${row.iID}`)}</option>)}
-          </select>
-        </div>
+    <div className="flex flex-col gap-3 md:gap-4">
+      <HeaderAction>
+        <SearchToggle
+          open={searchOpen}
+          label={text.searchToggle}
+          onToggle={() => {
+            // A folded search box must not keep filtering out of sight.
+            if (searchOpen) setQuery('')
+            setSearchOpen(!searchOpen)
+          }}
+        />
+      </HeaderAction>
+
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <PillTrack label={text.qualityTabsLabel}>
+          <PillTab selected={quality === null} onClick={() => setQuality(null)} count={data ? souls.length : undefined}>{text.all}</PillTab>
+          {QUALITIES.map((value) => (
+            <PillTab key={value} selected={quality === value} onClick={() => setQuality(value)} count={data ? souls.filter((soul) => soul.quality === value).length : undefined}>
+              <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(value) }} />
+              {qualityLabel(value)}
+            </PillTab>
+          ))}
+        </PillTrack>
+        <SearchBox open={searchOpen} query={query} onQuery={setQuery} label={text.searchLabel} placeholder={text.searchPlaceholder} />
       </div>
 
-      <CatalogLayout
-        detailLabel={active ? text(active.name, `残响 ${active.iID}`) : content.wiki.tabs.souls}
-        detail={<SoulDetail record={active} data={data} resonanceFilter={resonance} />}
-        open={mobileDetailOpen}
-        onClose={() => setMobileDetailOpen(false)}
-        list={(
-          <>
-            <p className="text-sm text-muted-foreground">共 {data ? records.length : '—'} 件残响</p>
-            {error ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : records.length ? (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2.5" aria-label="灵魂残响列表">
-                {records.map((record) => (
-                  <RecordTile
-                    key={record.iID}
-                    active={active?.iID === record.iID}
-                    onClick={() => select(record.iID)}
-                    accent={qualityColor(record.quality)}
-                    icon={record.icon ? <img src={resourceUrl(record.icon)} alt="" loading="lazy" className="size-full object-contain" /> : <Gem aria-hidden="true" className="size-6 text-muted-foreground" />}
-                    name={text(record.name, `残响 ${record.iID}`)}
-                    meta={`${qualityLabel(record.quality)} · 战力 ${record.seasonPower ?? 0}`}
-                  />
-                ))}
-              </div>
-            ) : <Notice>没有匹配的灵魂残响。</Notice>}
-          </>
+      <section aria-label={text.title} className="rounded-lg border border-border bg-card">
+        <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">
+          <div role="group" aria-label={text.viewLabel} className="flex min-w-0 overflow-x-auto [scrollbar-width:none]">
+            {(['souls', 'resonance'] as const).map((value) => (
+              <UnderlineTab key={value} selected={view === value} onClick={() => setView(value)}>{text.views[value]}</UnderlineTab>
+            ))}
+          </div>
+          {data ? (
+            <span aria-live="polite" className="ml-auto hidden shrink-0 text-xs tabular-nums text-muted-foreground md:block">
+              {fill(text.resultCount, { count: view === 'souls' ? filtered.length : resonance.length })}
+            </span>
+          ) : null}
+        </div>
+
+        {dataError ? <div className="p-3"><Notice>{content.wiki.dataError}</Notice></div> : !data ? <div className="p-3"><Notice>{content.wiki.loading}</Notice></div> : view === 'souls' ? (
+          <SoulBoard souls={filtered} data={data} />
+        ) : (
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-2 p-2.5 md:p-3.5">
+            {resonance.map((row) => (
+              <li key={row.iID} className="flex items-center gap-2.5 rounded-lg bg-muted/60 p-2">
+                {row.icon ? <img src={resourceUrl(row.icon)} alt="" loading="lazy" className="size-11 shrink-0 object-contain" /> : null}
+                <span className="flex min-w-0 flex-col">
+                  <b className="truncate text-sm font-bold">{row.name?.['zh-CN']}</b>
+                  {row.power != null ? (
+                    <span className="text-xs tabular-nums text-muted-foreground">{fill(text.resonancePower, { value: row.power.toLocaleString('zh-CN') })}</span>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
-      />
+      </section>
     </div>
   )
 }
 
-function SoulDetail({ record, data, resonanceFilter }: { record: SoulRecord | null; data: SoulData | null; resonanceFilter: string }) {
-  if (!record || !data) return <Notice>选择一件残响查看详情</Notice>
-  const doc = data.souls
-  const attrMap = new Map(doc.attributes.map((attr) => [attr.iID, text(attr.name, `属性 ${attr.iID}`)]))
-  const marks = [...(record.initialMarks ?? []), ...(record.marks ?? [])]
-  const resonanceRows = doc.resonanceActivation.filter((row) => !resonanceFilter || String(row.iJobResonanceId ?? row.iResonanceID ?? row.iId ?? row.iID) === resonanceFilter)
+function SoulBoard({ souls, data }: { souls: SoulRecord[]; data: SoulData }) {
+  const wide = useWide()
+  const [selected, setSelected] = useState<number>()
+  const [levels, setLevels] = useState<Record<number, number>>({})
+  const [gridRef, fit] = useFit(wide ? 6.75 : 5.25)
+  const columns = Math.max(3, Math.min(fit || 6, 10))
+  const selectedIndex = souls.findIndex((soul) => soul.iID === selected)
+  const activeIndex = selectedIndex >= 0 ? selectedIndex : wide && souls.length > 0 ? 0 : -1
+  const active = activeIndex >= 0 ? souls[activeIndex] : undefined
+  const { panelRef, areaRef, pointerRef } = usePointer(`${active?.iID}-${wide}-${columns}`)
+  const rowEnd = Math.min(souls.length - 1, (Math.floor(activeIndex / columns) + 1) * columns - 1)
+  const caps = useMemo(() => soulLevelCaps(data.souls.levels), [data])
+  const attributes = useMemo(() => new Map(data.souls.attributes.map((attribute) => [attribute.iID, attribute])), [data])
+
+  useEffect(() => {
+    if (wide || selected === undefined) return
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(undefined) }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [wide, selected])
+
+  if (souls.length === 0) return <div className="p-3"><Notice>{text.empty}</Notice></div>
+
+  const select = (soul: SoulRecord) => setSelected(!wide && soul.iID === active?.iID ? undefined : soul.iID)
+
+  let panel = null
+  if (active) {
+    const cap = caps.get(active.quality ?? 0) ?? DEFAULT_SOUL_CAP
+    panel = (
+      <DetailPanel panelRef={panelRef} pointerRef={pointerRef}>
+        <SoulDetail
+          soul={active}
+          data={data}
+          attributes={attributes}
+          cap={cap}
+          level={Math.min(levels[active.iID] ?? cap, cap)}
+          onLevel={(next) => setLevels((previous) => ({ ...previous, [active.iID]: next }))}
+        />
+      </DetailPanel>
+    )
+  }
+
   return (
-    <>
-      <RecordHeader
-        icon={record.icon ? resourceUrl(record.icon) : undefined}
-        fallback={<Gem aria-hidden="true" className="size-6 text-muted-foreground" />}
-        kicker={`${qualityLabel(record.quality)} · 战力 ${record.seasonPower ?? 0}`}
-        kickerColor={qualityColor(record.quality)}
-        name={text(record.name, `残响 ${record.iID}`)}
-        note={`残响编号 ${record.iID}`}
-      />
-      <DetailSection title="主属性"><SoulAttributes attributes={record.primaryAttributes ?? []} attrMap={attrMap} /></DetailSection>
-      <DetailSection title="升级属性"><SoulAttributes attributes={record.primaryAttributeLevelUp ?? []} attrMap={attrMap} /></DetailSection>
-      {marks.length ? (
-        <DetailSection title="阶段印记">
-          <EffectList rows={marks.flatMap((mark, index) => {
-            const effectIds = 'specialEffectIds' in mark ? mark.specialEffectIds ?? [] : []
-            return (effectIds.length ? effectIds : [0]).map((id) => {
-              const effect = doc.markEffects.find((candidate) => candidate.iID === id)
-              return {
-                key: `${index}-${id}`,
-                title: <><b className="font-semibold text-[color:var(--arkive-nav-active)]">{mark.threshold ?? '—'} 层</b>{'　'}{effect ? text(effect.desc ?? effect.name, `印记 ${id}`) : id ? `印记 ${id}` : mark.markId ? `印记 ${mark.markId}` : '暂无效果'}</>,
-              }
-            })
-          })} />
-        </DetailSection>
-      ) : null}
-      <DetailSection title="副属性池">
-        <AttributeChips values={(record.subAttributes ?? []).map((attribute, index) => ({
-          key: `${attribute.attributeId ?? attribute.iSubAttriID}-${index}`,
-          label: attrMap.get(attribute.attributeId ?? attribute.iSubAttriID ?? 0) ?? `属性 ${attribute.attributeId ?? attribute.iSubAttriID ?? '—'}`,
-          value: valueOf(attribute),
-        }))} />
-      </DetailSection>
-      <DetailSection title="灵魂共振">
-        <EffectList rows={resonanceRows.length ? resonanceRows.map((row, index) => ({
-          key: `${row.iId ?? row.iID}-${index}`,
-          title: row.iJobProfess ? `职业 ${row.iJobProfess}` : '阶段激活',
-          note: row.iJobResonanceSkills?.length ? `技能 ${row.iJobResonanceSkills.join('、')}` : text(row.desc ?? row.name, `规则 ${row.iId ?? row.iID}`),
-        })) : [{ key: 'none', title: '共振规则', note: '暂无匹配的激活规则' }]} />
-        <div className="flex flex-wrap gap-1.5">
-          {doc.resonance.map((row, index) => (
-            <span key={`${row.iID}-${index}`} className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-xs">
-              {row.icon ? <img src={resourceUrl(row.icon)} alt="" className="size-4 object-contain" /> : null}
-              {text(row.name, `共振 ${row.iID}`)}
-            </span>
+    <div className="grid gap-2.5 p-2.5 md:p-3.5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start lg:gap-4">
+      <div ref={areaRef} className="min-w-0">
+        <div ref={gridRef} className="grid gap-1.5 md:gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+          {souls.map((soul, index) => (
+            <Fragment key={soul.iID}>
+              <SoulTile soul={soul} selected={soul.iID === active?.iID} onSelect={() => select(soul)} />
+              {!wide && index === rowEnd ? <div className="col-span-full pb-1 pt-2">{panel}</div> : null}
+            </Fragment>
           ))}
         </div>
-      </DetailSection>
-    </>
+      </div>
+      {wide ? <div className="sticky top-4 min-w-0">{panel}</div> : null}
+    </div>
   )
 }
 
-function SoulAttributes({ attributes, attrMap }: { attributes: NonNullable<SoulRecord['primaryAttributes']>; attrMap: Map<number, string> }) {
+function SoulTile({ soul, selected, onSelect }: { soul: SoulRecord; selected: boolean; onSelect: () => void }) {
+  const color = qualityColor(soul.quality)
   return (
-    <AttributeChips values={attributes.map((attribute, index) => {
-      const id = attribute.attributeId ?? attribute.iAttributeID ?? attribute.iSubAttriID ?? 0
-      return { key: `${id}-${index}`, label: attrMap.get(id) ?? attribute.name?.['zh-CN'] ?? `属性 ${id}`, value: valueOf(attribute) }
-    })} />
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={cn(
+        'group flex flex-col items-center gap-1 rounded-lg p-1.5 text-center transition-colors',
+        selected ? 'bg-[color:var(--arkive-filter-active)] ring-2 ring-[color:var(--arkive-nav-active)]' : 'hover:bg-muted',
+      )}
+    >
+      <span
+        className="block aspect-square w-full max-w-20 rounded-full transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:-translate-y-0.5"
+        style={{ backgroundImage: `radial-gradient(circle at 50% 40%, color-mix(in srgb, ${color} 30%, transparent), color-mix(in srgb, ${color} 8%, var(--muted)) 70%)` }}
+      >
+        <img src={resourceUrl(soul.icon ?? '')} alt="" loading="lazy" className="size-full object-contain p-1" />
+      </span>
+      <span className="w-full truncate text-xs font-semibold md:text-sm">{soul.name?.['zh-CN']}</span>
+      <span className="-mt-1 text-xs font-bold tabular-nums" style={{ color }}>{qualityLabel(soul.quality)}</span>
+    </button>
+  )
+}
+
+function SoulDetail({ soul, data, attributes, cap, level, onLevel }: {
+  soul: SoulRecord
+  data: SoulData
+  attributes: Map<number, EquipmentAttributeRecord>
+  cap: number
+  level: number
+  onLevel: (level: number) => void
+}) {
+  const color = qualityColor(soul.quality)
+  const effects = useMemo(() => new Map(data.souls.markEffects.map((effect) => [effect.iID, effect.desc?.['zh-CN'] || effect.name?.['zh-CN'] || ''])), [data])
+  const format = (id: number) => {
+    const known = attributes.get(id)
+    return known ? attributeFormat(known) : { label: fill(text.attributeId, { id }), percent: false }
+  }
+  const primary = soulPrimaryAt(soul, level)
+  const slots = (soul.initialMarks ?? []).flatMap((mark) => mark.threshold !== undefined ? [mark.threshold] : [])
+  const marks = (soul.marks ?? []).map((mark) => ({
+    ...mark,
+    lines: [...new Set((mark.specialEffectIds ?? []).map((id) => effects.get(id) ?? '').filter((line) => line && !PLACEHOLDER_NAME.test(line)))],
+  }))
+  const pool = soulSubPool(soul)
+  const description = soul.desc?.['zh-CN']
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start gap-2.5">
+        <img
+          src={resourceUrl(soul.icon ?? '')}
+          alt=""
+          className="size-12 shrink-0 rounded-full object-contain p-0.5"
+          style={{ backgroundColor: `color-mix(in srgb, ${color} 18%, var(--card))` }}
+        />
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <h3 className="text-base font-bold leading-tight md:text-lg">{soul.name?.['zh-CN']}</h3>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge>
+              <span aria-hidden="true" className="size-2 rounded-full" style={{ backgroundColor: color }} />
+              {qualityLabel(soul.quality)}
+            </Badge>
+            {soul.seasonPower != null ? <Badge>{fill(text.seasonPower, { value: soul.seasonPower })}</Badge> : null}
+          </div>
+        </div>
+        {cap > 1 ? (
+          <LevelStepper
+            index={level - 1}
+            last={cap - 1}
+            current={level}
+            top={cap}
+            onChange={(index) => onLevel(index + 1)}
+            labels={{ group: text.levelPicker, down: text.levelDown, up: text.levelUp }}
+          />
+        ) : null}
+      </div>
+
+      {primary.length > 0 ? (
+        <section className="flex flex-col gap-1">
+          <h4 className="text-xs font-semibold text-muted-foreground">{text.primary}</h4>
+          <dl className="flex flex-col divide-y divide-border rounded-lg bg-card px-3 shadow-[0_0_0_1px_var(--border)]">
+            {primary.map(({ id, value, step }) => {
+              const { label, percent } = format(id)
+              return (
+                <div key={id} className="flex items-baseline justify-between gap-3 py-1.5">
+                  <dt className="text-sm text-foreground/80">{label}</dt>
+                  <dd className="flex items-baseline gap-1.5">
+                    <b className="text-base font-bold tabular-nums text-[color:var(--ro3-stage)]">{attributeValue(value, percent)}</b>
+                    {step ? <span className="text-xs tabular-nums text-muted-foreground">{fill(text.perLevel, { value: attributeValue(step, percent) })}</span> : null}
+                  </dd>
+                </div>
+              )
+            })}
+          </dl>
+        </section>
+      ) : null}
+
+      {slots.length > 0 ? (
+        <DetailBlock label={text.markSlots} note={text.markSlotsNote}>
+          <div className="flex flex-wrap gap-1.5">
+            {slots.map((threshold, index) => {
+              const open = level >= threshold
+              return (
+                <span
+                  key={`${threshold}-${index}`}
+                  className={cn(
+                    'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
+                    open ? 'bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]' : 'bg-muted text-muted-foreground',
+                  )}
+                >
+                  <span aria-hidden="true" className={cn('size-2 rounded-full', open ? 'bg-[color:var(--arkive-nav-active)]' : 'bg-muted-foreground/40')} />
+                  {fill(text.markSlot, { level: threshold })}
+                </span>
+              )
+            })}
+          </div>
+        </DetailBlock>
+      ) : null}
+
+      {marks.length > 0 ? (
+        <DetailBlock label={text.markEffects} note={text.markEffectsNote}>
+          <ul className="flex flex-col gap-2">
+            {marks.map((mark, index) => (
+              <li key={`${mark.markId}-${mark.threshold}-${index}`} className="flex gap-2">
+                {mark.icon ? <img src={resourceUrl(mark.icon)} alt="" className="size-8 shrink-0 object-contain" /> : null}
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="flex items-baseline gap-2 text-sm font-bold">
+                    {fill(text.markCollect, { count: mark.threshold ?? 0 })}
+                    {mark.seasonPower ? <span className="text-xs font-semibold tabular-nums text-[color:var(--ro3-stage)]">{fill(text.markPower, { value: mark.seasonPower })}</span> : null}
+                  </span>
+                  {mark.lines.map((line) => <p key={line} className="text-xs leading-relaxed text-foreground/75">{line}</p>)}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </DetailBlock>
+      ) : null}
+
+      {pool.length > 0 ? (
+        <DetailBlock label={text.subPool} note={fill(text.poolCount, { count: pool.length })}>
+          <div className="flex flex-wrap gap-1">
+            {pool.map(({ id, min, max }) => {
+              const { label, percent } = format(id)
+              const value = min === undefined ? undefined : max !== undefined && max !== min
+                ? `${attributeValue(min, percent)}–${attributeValue(max, percent)}`
+                : attributeValue(min, percent)
+              return <Chip key={id} value={value}>{label}</Chip>
+            })}
+          </div>
+        </DetailBlock>
+      ) : null}
+
+      {description ? (
+        <DetailBlock label={text.description}>
+          <p className="text-sm leading-relaxed text-foreground/75">{description}</p>
+        </DetailBlock>
+      ) : null}
+    </div>
   )
 }

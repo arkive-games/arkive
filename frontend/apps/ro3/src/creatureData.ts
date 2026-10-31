@@ -110,6 +110,54 @@ export interface MonsterRecord {
   skills?: number[]
   speed?: number
   attackRange?: number
+  /** Ids of the maps the creature is placed on. */
+  maps?: number[]
+  dropPool?: number
+  normalDropPools?: number[]
+}
+
+export interface MvpRecord {
+  id: number
+  npcId: number
+  name?: LocalizedText
+  level?: number
+  mapId?: number
+  respawnSeconds?: number
+  shortestKillSeconds?: number
+  awardPreviewItems?: number[]
+  headIcon?: string
+  background?: string
+}
+
+interface MvpDocument {
+  mvps: MvpRecord[]
+}
+
+interface MapIndexDocument {
+  maps: Array<{ iID: number; name?: LocalizedText }>
+}
+
+export interface DropSlot {
+  slot: number
+  /** The slot's own chance, 1 for a sure drop. */
+  chance: number
+  rolls: [number, number]
+  items: Array<{ item: number; weight: number }>
+}
+
+export interface DropPool {
+  id: number
+  slots: DropSlot[]
+}
+
+interface DropShard {
+  path: string
+  from: number
+  to: number
+}
+
+interface DropCatalogDocument {
+  shards: DropShard[]
 }
 
 export interface MonsterSkillRecord {
@@ -164,6 +212,8 @@ export interface MonsterWikiData {
   catalog: MonsterCatalogDocument
   monsters: MonsterRecord[]
   skills: MonsterSkillsDocument
+  mvps: MvpRecord[]
+  mapNames: Map<number, string>
 }
 
 async function fetchJson<T>(path: string): Promise<T> {
@@ -184,10 +234,34 @@ export async function loadPetWikiData(): Promise<PetWikiData> {
 
 export async function loadMonsterWikiData(): Promise<MonsterWikiData> {
   const version = await loadDataVersion()
-  const [catalog, skills] = await Promise.all([
+  const [catalog, skills, mvp, maps] = await Promise.all([
     fetchJson<MonsterCatalogDocument>('monsters.json'),
     fetchJson<MonsterSkillsDocument>('monsters-skills.json'),
+    fetchJson<MvpDocument>('mvp.json'),
+    fetchJson<MapIndexDocument>('maps.json'),
   ])
   const shards = await Promise.all(catalog.shards.map((shard) => fetchJson<MonsterShardDocument>(shard.path)))
-  return { version, catalog, monsters: shards.flatMap((shard) => shard.monsters), skills }
+  const mapNames = new Map(maps.maps.flatMap((map) => map.name?.['zh-CN'] ? [[map.iID, map.name['zh-CN']] as const] : []))
+  return { version, catalog, monsters: shards.flatMap((shard) => shard.monsters), skills, mvps: mvp.mvps, mapNames }
+}
+
+// The drop tables run to 3.5 MB over three shards, so a shard is read only
+// when a picked creature rolls a pool inside its id range, and once per visit.
+let dropCatalog: Promise<DropCatalogDocument> | undefined
+const dropShards = new Map<string, Promise<Map<number, DropPool>>>()
+
+export async function loadDropPool(id: number): Promise<DropPool | null> {
+  if (!dropCatalog) {
+    dropCatalog = fetchJson<DropCatalogDocument>('monsters-drops.json')
+    dropCatalog.catch(() => { dropCatalog = undefined })
+  }
+  const shard = (await dropCatalog).shards.find((candidate) => id >= candidate.from && id <= candidate.to)
+  if (!shard) return null
+  let pending = dropShards.get(shard.path)
+  if (!pending) {
+    pending = fetchJson<{ pools: DropPool[] }>(shard.path).then((document) => new Map(document.pools.map((pool) => [pool.id, pool])))
+    pending.catch(() => dropShards.delete(shard.path))
+    dropShards.set(shard.path, pending)
+  }
+  return (await pending).get(id) ?? null
 }
