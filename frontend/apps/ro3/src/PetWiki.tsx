@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { Crown, Search, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { localizedText } from './cardCatalog'
@@ -19,7 +19,7 @@ const numberFormatter = new Intl.NumberFormat('zh-CN')
 
 /**
  * Every pet, grouped by quality: the game's own cards on the left, and the
- * picked pet's full-body art, strengths, attributes and skills held beside
+ * picked pet's head icon, strengths, attributes and skills held beside
  * them at the star its stepper is on.
  */
 export function PetWiki() {
@@ -35,6 +35,7 @@ export function PetWiki() {
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInput = useRef<HTMLInputElement>(null)
   const detail = useRef<HTMLElement>(null)
+  useTwoWaySticky(detail, Boolean(data))
 
   useEffect(() => {
     let active = true
@@ -187,7 +188,7 @@ export function PetWiki() {
             <aside
               ref={detail}
               aria-label={localizedText(selected.name)}
-              className="order-1 scroll-mt-3 lg:sticky lg:top-4 lg:order-2 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:[scrollbar-width:thin]"
+              className="order-1 scroll-mt-3 lg:sticky lg:top-4 lg:order-2"
             >
               <PetDetail pet={selected} data={data} starIndex={starIndex} onStar={setStarIndex} />
             </aside>
@@ -198,6 +199,43 @@ export function PetWiki() {
   )
 }
 
+/**
+ * Lets a sticky column taller than its scroller ride along the way a feed's
+ * side column does: it scrolls with the page until its far edge shows, then
+ * holds, and reverses the same way, so one scrollbar reaches all of it.
+ */
+function useTwoWaySticky(ref: RefObject<HTMLElement | null>, ready: boolean, gap = 16) {
+  useEffect(() => {
+    const element = ref.current
+    if (!ready || !element) return
+    let scroller = element.parentElement
+    while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
+    const target: HTMLElement | Window = scroller ?? window
+    const scrollTop = () => (scroller ? scroller.scrollTop : window.scrollY)
+    const viewHeight = () => (scroller ? scroller.clientHeight : window.innerHeight)
+    let last = scrollTop()
+    let top = gap
+    const place = (delta: number) => {
+      const lowest = Math.min(gap, viewHeight() - element.offsetHeight - gap)
+      top = Math.min(gap, Math.max(lowest, top - delta))
+      element.style.top = `${top}px`
+    }
+    const onScroll = () => {
+      const now = scrollTop()
+      place(now - last)
+      last = now
+    }
+    // A pet with more skills changes the column's height, and so where it may rest.
+    const resize = new ResizeObserver(() => place(0))
+    resize.observe(element)
+    target.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      target.removeEventListener('scroll', onScroll)
+      resize.disconnect()
+      element.style.top = ''
+    }
+  }, [ref, ready, gap])
+}
 /** One quality: a small heading in its own colour, then its cards. */
 function QualityGroup({ quality, pets, selectedId, onSelect }: {
   quality: number
