@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, Sparkles, Wrench } from 'lucide-react'
+import { BookOpen, Wrench } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
   currentVersion,
@@ -14,7 +14,7 @@ import { TalentWiki } from './TalentWiki'
 import { CardWiki } from './CardWiki'
 import { EquipmentWiki } from './EquipmentWiki'
 import { SoulWiki } from './SoulWiki'
-import { BuildPlanner } from './BuildPlanner'
+import { BuildManual } from './BuildManual'
 import { ContentPage } from './components/ContentPage'
 import { HeaderActionProvider, SectionSidebar, SectionStrip, SidebarSubProvider, type SectionNavEntry } from './components/SectionNav'
 import {
@@ -73,6 +73,7 @@ const HOME_GROUPS: Array<{ key: string; label: string; icon: typeof BookOpen; en
 ]
 
 const WIKI_ENTRIES = HOME_GROUPS[0].entries
+const BUILD_ENTRIES = HOME_GROUPS[1].entries
 
 function pageTitle({ page, view }: Location): string {
   if (page === 'wiki') return content.wiki.tabs[view]
@@ -90,7 +91,6 @@ function documentTitle(location: Location): string {
 
 function App() {
   const [location, setLocation] = useState<Location>(readLocation)
-  const [noticeId, setNoticeId] = useState(0)
   const active = navKeyFor(location)
 
   // The home page moved from /overview to /; old links still land on it, under
@@ -116,13 +116,6 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  useEffect(() => {
-    if (!noticeId) return
-    const timeout = window.setTimeout(() => setNoticeId(0), 3600)
-    return () => window.clearTimeout(timeout)
-  }, [noticeId])
-
-  const showUnavailable = () => setNoticeId((value) => value + 1)
   // The phone wiki header's action slot, handed down to whichever page wants it.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
   // And the sidebar's, under the lit entry, for a page's own sub-pages.
@@ -140,14 +133,13 @@ function App() {
   }
 
   return (
-    <>
       <ContentPage
         active={active}
         onNavigate={navigate}
         title={pageTitle(location)}
         // The home page carries its own, visually hidden, heading; the wiki's
         // is the lit entry of its sidebar.
-        heading={location.page !== 'overview' && location.page !== 'wiki'}
+        heading={location.page !== 'overview' && location.page !== 'wiki' && location.page !== 'builds'}
         wide={location.page === 'wiki' || location.page === 'builds'}
         version={SITE_VERSION}
       >
@@ -165,24 +157,24 @@ function App() {
             </div>
           </div>
         ) : location.page === 'builds' ? (
-          <BuildPlanner onUnavailable={showUnavailable} />
+          <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
+            <h1 className="sr-only">{pageTitle(location)}</h1>
+            <SectionSidebar entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSubSlot={setSidebarSlot} />
+            <div className="min-w-0">
+              <SectionStrip entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSlot={setHeaderSlot} />
+              <HeaderActionProvider value={headerSlot}>
+                <SidebarSubProvider value={sidebarSlot}>
+                  <BuildManual />
+                </SidebarSubProvider>
+              </HeaderActionProvider>
+            </div>
+          </div>
         ) : location.page === 'changelog' ? (
           <ChangelogPage />
         ) : (
           <HomePage onNavigate={navigate} />
         )}
       </ContentPage>
-
-      {noticeId > 0 ? (
-        <div key={noticeId} className="ro3-toast" role="status" aria-live="polite">
-          <span><Sparkles aria-hidden="true" /></span>
-          <div>
-            <strong>{content.notice.title}</strong>
-            <small>{content.notice.description}</small>
-          </div>
-        </div>
-      ) : null}
-    </>
   )
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { BUILD_STORAGE_KEY, clampAttribute, persistBuilds, resolveMarkEffects, updateSocket } from './lib/buildState'
+import { BUILD_STORAGE_KEY, clampAttribute, clampStat, FAVORITES_STORAGE_KEY, persistBuilds, readFavorites, resolveMarkEffects, updateSocket, writeFavorites } from './lib/buildState'
 
 describe('build persistence', () => {
   it('preserves the existing storage key and serialized payload', () => {
@@ -37,4 +37,24 @@ it('expands legacy marks consistently and lets individual effects be removed', (
 
 it('enforces the advertised attribute range and integer values', () => {
   expect([-2, 0, 1, 25.8, 999, 1500, NaN, Infinity].map(clampAttribute)).toEqual([1, 1, 1, 25, 999, 999, 1, 1])
+})
+
+it('keeps manual stats whole numbers from 1 to 99', () => {
+  expect([-2, 0, 1, 25.8, 99, 150, NaN, Infinity].map(clampStat)).toEqual([1, 1, 1, 25, 99, 99, 1, 1])
+})
+
+describe('favorites', () => {
+  const store = (value: string | null) => ({ getItem: (key: string) => key === FAVORITES_STORAGE_KEY ? value : null })
+  it('reads only string ids and survives bad storage', () => {
+    expect(readFavorites(store('["a", 2, "b"]'))).toEqual(['a', 'b'])
+    expect(readFavorites(store(null))).toEqual([])
+    expect(readFavorites(store('{oops'))).toEqual([])
+    expect(readFavorites(store('{"a":1}'))).toEqual([])
+  })
+  it('writes ids and reports a failed write', () => {
+    const setItem = vi.fn()
+    expect(writeFavorites(['a'], { setItem })).toBe(true)
+    expect(setItem).toHaveBeenCalledWith(FAVORITES_STORAGE_KEY, '["a"]')
+    expect(writeFavorites(['a'], { setItem: () => { throw new Error('quota') } })).toBe(false)
+  })
 })
