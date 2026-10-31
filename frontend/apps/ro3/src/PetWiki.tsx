@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Crown, Search, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { localizedText } from './cardCatalog'
@@ -12,7 +12,6 @@ import { resourceUrl } from './lib/urls'
 import content from './locales/zh-CN.json'
 
 const text = content.wiki.pets
-const QUALITIES = [5, 4, 3]
 const STARS = [1, 2, 3, 4, 5, 6]
 const STEPPER_LABELS = { group: text.starPicker, down: text.starDown, up: text.starUp }
 const numberFormatter = new Intl.NumberFormat('zh-CN')
@@ -34,8 +33,9 @@ export function PetWiki() {
   // On phones the search field folds behind a button in the wiki header.
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInput = useRef<HTMLInputElement>(null)
-  const detail = useRef<HTMLElement>(null)
-  useTwoWaySticky(detail, Boolean(data))
+  // Held as state, not a ref: the column remounts after an empty result, and the new node needs the hook again.
+  const [detail, setDetail] = useState<HTMLElement | null>(null)
+  useTwoWaySticky(detail)
 
   useEffect(() => {
     let active = true
@@ -55,12 +55,15 @@ export function PetWiki() {
     if (searchOpen) searchInput.current?.focus()
   }, [searchOpen])
 
+  // Pets the game itself hides (`show: false`) stay out of the wiki too.
   const shown = useMemo(() => data?.catalog.pets.filter((pet) => pet.show) ?? [], [data])
+  // Highest quality first, taken from the data so a new tier is never dropped silently.
+  const qualities = useMemo(() => [...new Set(shown.map((pet) => pet.quality))].sort((a, b) => b - a), [shown])
   // The quality pills count what the other two filters leave, so a number never promises an empty block.
   const unranked = useMemo(() => filterPets(shown, query, 0, kingOnly), [shown, query, kingOnly])
   const pets = quality ? unranked.filter((pet) => pet.quality === quality) : unranked
   const selected = pets.find((pet) => pet.id === selectedId) ?? pets[0]
-  const groups = QUALITIES
+  const groups = qualities
     .map((value) => ({ quality: value, pets: pets.filter((pet) => pet.quality === value) }))
     .filter((group) => group.pets.length > 0)
 
@@ -68,13 +71,13 @@ export function PetWiki() {
     setSelectedId(pet.id)
     // Below lg the detail sits above the cards, so bring it back into view.
     if (!window.matchMedia('(min-width: 64rem)').matches) {
-      detail.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      detail?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
   const qualityOptions = [
     { value: 0, label: text.all, count: unranked.length },
-    ...QUALITIES.map((value) => ({ value, label: String(value), count: unranked.filter((pet) => pet.quality === value).length })),
+    ...qualities.map((value) => ({ value, label: String(value), count: unranked.filter((pet) => pet.quality === value).length })),
   ]
 
   return (
@@ -84,7 +87,11 @@ export function PetWiki() {
           type="button"
           aria-label={text.searchToggle}
           aria-expanded={searchOpen}
-          onClick={() => setSearchOpen((value) => !value)}
+          onClick={() => {
+            // A folded search box must not keep filtering out of sight.
+            if (searchOpen) setQuery('')
+            setSearchOpen(!searchOpen)
+          }}
           className={cn(
             'grid size-9 place-items-center rounded-full transition-colors',
             searchOpen
@@ -186,7 +193,7 @@ export function PetWiki() {
           </ol>
           {selected ? (
             <aside
-              ref={detail}
+              ref={setDetail}
               aria-label={localizedText(selected.name)}
               className="order-1 scroll-mt-3 lg:sticky lg:top-4 lg:order-2"
             >
@@ -204,10 +211,9 @@ export function PetWiki() {
  * side column does: it scrolls with the page until its far edge shows, then
  * holds, and reverses the same way, so one scrollbar reaches all of it.
  */
-function useTwoWaySticky(ref: RefObject<HTMLElement | null>, ready: boolean, gap = 16) {
+function useTwoWaySticky(element: HTMLElement | null, gap = 16) {
   useEffect(() => {
-    const element = ref.current
-    if (!ready || !element) return
+    if (!element) return
     let scroller = element.parentElement
     while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
     const target: HTMLElement | Window = scroller ?? window
@@ -234,8 +240,9 @@ function useTwoWaySticky(ref: RefObject<HTMLElement | null>, ready: boolean, gap
       resize.disconnect()
       element.style.top = ''
     }
-  }, [ref, ready, gap])
+  }, [element, gap])
 }
+
 /** One quality: a small heading in its own colour, then its cards. */
 function QualityGroup({ quality, pets, selectedId, onSelect }: {
   quality: number
@@ -411,6 +418,7 @@ function PetDetail({ pet, data, starIndex, onStar }: {
     </div>
   )
 }
+
 function petSkillRole(row: PetStarRecord | null, id: number): string {
   if (!row) return text.otherSkill
   if (row.activeSkills.includes(id)) return text.activeSkill

@@ -3504,44 +3504,6 @@ select {
   align-content: start;
 }
 
-.pet-star-selector {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  margin-inline: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--ro3-tone-07) 34%, transparent);
-}
-
-.pet-star-selector button {
-  display: inline-flex;
-  min-width: 0;
-  min-height: 2rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  padding: 0;
-  border: 0;
-  border-right: 1px solid color-mix(in srgb, var(--ro3-tone-07) 24%, transparent);
-  color: var(--ro3-tone-08);
-  background: color-mix(in srgb, var(--ro3-tone-21) 48%, transparent);
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.pet-star-selector button:last-child {
-  border-right: 0;
-}
-
-.pet-star-selector button:hover,
-.pet-star-selector button.is-active {
-  color: var(--ro3-gold-01);
-  background: color-mix(in srgb, var(--ro3-gold-08) 26%, transparent);
-}
-
-.pet-star-selector button svg {
-  width: 0.7rem;
-  height: 0.7rem;
-}
-
 .pet-strength-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4034,7 +3996,6 @@ select {
 .creature-segmented button:focus-visible,
 .creature-king-filter:focus-visible,
 .monster-roster-card:focus-visible,
-.pet-star-selector button:focus-visible,
 .creature-load-more button:focus-visible,
 .creature-mobile-close:focus-visible {
   outline: 0.15rem solid var(--ro3-gold-08);
@@ -4099,7 +4060,7 @@ select {
     grid-column: 1 / -1;
   }
 
-    .monster-roster-grid {
+  .monster-roster-grid {
     max-height: none;
     overflow: visible;
   }
