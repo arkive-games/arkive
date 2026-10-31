@@ -69,6 +69,7 @@ describe('non-destructive migration', () => {
     expect(migrated[0].recovery).toEqual([null])
     expect(migrated[1].title).toBe('Custom')
     expect(migrated[1].attributes[0]).toBe(99)
+    expect(migrated[1].recovery).toContainEqual({ attributes: [500, undefined, undefined, undefined, undefined, undefined] })
   })
 })
 

@@ -33,7 +33,7 @@ export function clampStat(value: number): number {
 
 export const favoritesRecord = defineMemoryRecord({
   id: 'favorites', namespace: 'ro3', surface: 'builds',
-  ...memoryPolicy.userPreference('clear-build-favorites'),
+  ...memoryPolicy.durableProgress('clear-build-favorites'),
   schemaVersion: '1.0.0', defaultValue: (): string[] => [], validate: (value: unknown): value is string[] => isStringArray(value),
 })
 

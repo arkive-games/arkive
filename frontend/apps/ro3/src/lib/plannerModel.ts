@@ -62,6 +62,8 @@ export function migratePlanner(value: unknown, equipment: EquipmentRecord[], att
   build.recovery = Array.isArray(source.recovery) ? [...source.recovery] : []
   const sourceAttributes = modern && Array.isArray(source.attributes) ? source.attributes : attributeKeys.map(k => record(source.attributes)[k])
   build.attributes = Array.from({ length: 6 }, (_, i) => clampStat(Number(sourceAttributes[i]) || 1))
+  // Stats above the editor's cap were valid in the old planner; keep the originals.
+  if (build.attributes.some((v, i) => v !== (Number(sourceAttributes[i]) || 1))) build.recovery.push({ attributes: sourceAttributes })
   const originalSkills = ids(modern ? source.skills : source.skillIds).filter(Boolean)
   build.skills = modern ? ids(source.skills).slice(0, 6) : [...new Set(originalSkills)].slice(0, 6)
   if (!modern && (originalSkills.length > 6 || originalSkills.length !== new Set(originalSkills).size)) build.recovery.push({ skills: originalSkills })
