@@ -71,11 +71,12 @@
 #                       will not mark the commits verified and fast-forward.yml
 #                       will refuse them.
 
-name: Claude review and land
+# Retained for reference only. PR comments no longer trigger automated reviews.
+# The preflight gate requires an issue_comment payload, so manual runs also skip.
+name: Claude review and land (disabled)
 
 on:
-  issue_comment:
-    types: [created]
+  workflow_dispatch:
 
 # The App token does the writing; these cover the fallback reads and this
 # workflow's own failure notice. A comment on a pull request goes through the
