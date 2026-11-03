@@ -259,7 +259,11 @@ export async function loadDropPool(id: number): Promise<DropPool | null> {
   if (!shard) return null
   let pending = dropShards.get(shard.path)
   if (!pending) {
-    pending = fetchJson<{ pools: DropPool[] }>(shard.path).then((document) => new Map(document.pools.map((pool) => [pool.id, pool])))
+    type ExportedPool = Omit<DropPool, 'slots'> & { slots: Array<Omit<DropSlot, 'rolls'> & { rolls?: [number, number] }> }
+    pending = fetchJson<{ pools: ExportedPool[] }>(shard.path).then((document) => new Map(document.pools.map((pool) => [pool.id, {
+      ...pool,
+      slots: pool.slots.map((slot) => ({ ...slot, rolls: slot.rolls ?? [1, 1] })),
+    }])))
     pending.catch(() => dropShards.delete(shard.path))
     dropShards.set(shard.path, pending)
   }

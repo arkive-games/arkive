@@ -35,6 +35,12 @@ describe('pageWindow', () => {
 })
 
 describe('groupMonsters', () => {
+  it('retains every distinct level for details and high-level filters', () => {
+    const groups = groupMonsters(Array.from({ length: 99 }, (_, index) => monster(index, 'Archer', index + 1)))
+    expect(groups[0].variants).toHaveLength(99)
+    expect(groups[0].maxLevel).toBe(99)
+    expect(filterMonsterGroups(groups, { rank: 'all', band: [90, 99], element: null, race: null, size: null, query: '' })).toHaveLength(1)
+  })
   it('merges spawns by name, keeps the highest rank and drops duplicates', () => {
     const groups = groupMonsters([
       monster(1, 'Poring', 5),
@@ -81,6 +87,11 @@ describe('drops and attributes', () => {
     expect(format).toEqual({ label: 'Crit', percent: true })
     expect(attributeValue(500, true)).toBe('5%')
     expect(attributeValue(1250, false)).toBe('1,250')
+  })
+  it('keeps percentage units when the equipment label omits the suffix', () => {
+    const format = attributeFormat({ iID: 212, name: { 'zh-CN': 'Reduction%' }, nameEquip: { 'zh-CN': 'Reduction' } })
+    expect(format).toEqual({ label: 'Reduction', percent: true })
+    expect(attributeValue(4227, format.percent)).toBe('42.27%')
   })
   it('strips the no-translation mark', () => {
     expect(stripPlaceholder(`\u3010${PLACEHOLDER}\u3011Bash`)).toBe('Bash')

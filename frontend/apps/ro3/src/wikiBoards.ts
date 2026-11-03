@@ -37,7 +37,6 @@ export function pageWindow(current: number, count: number): PageSlot[] {
 /* ---------- monsters ---------- */
 
 const RANK_ORDER: Record<MonsterRank, number> = { normal: 0, elite: 1, mvp: 2, boss: 3 }
-const MAX_VARIANTS = 24
 
 export interface MonsterGroup {
   name: string
@@ -81,7 +80,6 @@ export function groupMonsters(monsters: MonsterRecord[]): MonsterGroup[] {
         seen.add(key)
         return true
       })
-      .slice(0, MAX_VARIANTS)
     group.minLevel = group.variants[0].level ?? 0
     group.maxLevel = group.variants[group.variants.length - 1].level ?? 0
   }
@@ -135,7 +133,7 @@ export interface AttributeName {
  */
 export function attributeFormat(attribute: AttributeName | undefined): { label: string; percent: boolean } {
   const name = zh(attribute?.nameEquip) || zh(attribute?.name) || attribute?.kVariable || ''
-  const percent = name.endsWith('%') || attribute?.iCalculateType === 2
+  const percent = name.endsWith('%') || zh(attribute?.name).endsWith('%') || attribute?.iCalculateType === 2
   return { label: name.replace(/%$/, ''), percent }
 }
 
