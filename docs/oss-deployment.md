@@ -94,6 +94,25 @@ Remove the homepage's OSS `comingSoon` flag only after the map checks pass.
 
 - November 3, 2026: authenticated CLI access, Pages zone discovery, and Aliyun
   DNS read access verified. No OSS DNS record or Pages project existed.
-- Frontend upload, domain binding, and HTTPS results are recorded here after
-  execution. Artifact publication remains blocked until the contributor's
-  exported data and tiles are available.
+- Frontend upload succeeded using EdgeOne CLI 1.6.46, Tencent CLI
+  3.1.145.1, and Aliyun CLI 3.4.11. The uploaded source was merged commit
+  `eb7bfa086ca281a4a932dd17da19b360e40adf5a`.
+- Direct-upload project: `arkive-oss` (`makers-4ldl4flg7nfb`), global area;
+  deployment: `dppaqfoajhva`. The authenticated preset preview served the
+  changelog, including its About section and history links. No uncaught
+  browser errors were observed. The map displayed its load-error state
+  because the required artifact hosts are unavailable.
+- Tencent accepted the custom-domain binding for `oss.arkive.games` in
+  Pages zone `zone-3k1hxa0oacos`. Certificate request
+  `749078fc-9276-4f20-b5b5-5e5dcb69f890` was accepted. The domain remained
+  without an assigned CNAME even after its status changed from `process`
+  to `online`; HTTPS was still in `apply`.
+  Aliyun confirmed that no OSS DNS record exists; no target was guessed.
+  Rerun the scoped domain sync command above after provisioning completes,
+  then verify HTTPS before enabling the deployment matrix domain.
+- GitHub run `41660142159` also uploaded OSS successfully. Its overall
+  result was failure because the unrelated PBZ job received HTTP 522 from
+  `DescribePagesProjects`, then attempted to create its existing project.
+- Activation remains incomplete: custom-domain DNS/HTTPS is pending and
+  artifact publication is blocked until the contributor's exported data
+  and tiles are available. Keep the homepage card marked coming soon.

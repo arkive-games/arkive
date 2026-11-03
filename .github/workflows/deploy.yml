@@ -104,9 +104,8 @@ jobs:
             smoke_path: /changelog
             data_base_url: https://data-pbz.arkive.games
             resource_base_url: https://resource-pbz.arkive.games
-          # `domain` stays empty until oss.arkive.games is bound to the project,
-          # which keeps the post-deploy check (and scripts/seo.test.mjs) inert
-          # for oss until then. Fill it in as `oss.arkive.games` once bound.
+          # Domain provisioning and artifact publication are tracked in
+          # docs/oss-deployment.md. Enable smoke checks after HTTPS is verified.
           - app: oss
             project: arkive-oss
             domain:
