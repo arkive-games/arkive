@@ -3,19 +3,20 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import fs from 'node:fs'
+import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
 
 // Serve the sibling `data-oss` / `resource-oss` artifact repos in dev.
 // Walk ancestor directories until the sibling repo is found, so this keeps
 // working from a git worktree. Override with OSS_DATA_DIR / OSS_RES_DIR.
 // In prod the frontend reads VITE_DATA_BASE_URL / VITE_RESOURCE_BASE_URL instead.
 function siblingRepo(name: string): string {
-  let dir = __dirname
+  let dir = import.meta.dirname
   for (let i = 0; i < 8; i++) {
     const p = path.resolve(dir, name)
     if (fs.existsSync(p)) return p
     dir = path.dirname(dir)
   }
-  return path.resolve(__dirname, '../../../..', name)
+  return path.resolve(import.meta.dirname, '../../../..', name)
 }
 const DATA_DIR = process.env.OSS_DATA_DIR ?? siblingRepo('data-oss')
 const RES_DIR = process.env.OSS_RES_DIR ?? siblingRepo('resource-oss')
@@ -34,7 +35,7 @@ function staticDirPlugin(name: string, urlPrefix: string, rootDir: string): Plug
       server.middlewares.use(urlPrefix, (req, res, next) => {
         const rel = decodeURIComponent((req.url ?? '').split('?')[0])
         const file = path.resolve(path.join(root, rel))
-        if (!file.startsWith(root)) { res.statusCode = 403; res.end(); return }
+        if (!file.startsWith(root + path.sep)) { res.statusCode = 403; res.end(); return }
         if (!fs.existsSync(file) || !fs.statSync(file).isFile()) { next(); return }
         res.setHeader('Content-Type', MIME[path.extname(file)] ?? 'application/octet-stream')
         res.setHeader('Cache-Control', 'no-cache')
@@ -46,12 +47,13 @@ function staticDirPlugin(name: string, urlPrefix: string, rootDir: string): Plug
 
 export default defineConfig({
   plugins: [
+    arkiveFontAssets(),
     react(),
     tailwindcss(),
     staticDirPlugin('oss-data', '/data', DATA_DIR),
     staticDirPlugin('oss-res', '/ossres', RES_DIR),
   ],
-  server: { port: 15180, strictPort: true },
+  server: { port: 15181, strictPort: true },
   build: {
     rolldownOptions: {
       output: {

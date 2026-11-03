@@ -62,6 +62,7 @@ REDIRECTS: dict[str, str] = {
 # resource hosts keep serving from the data projects, so builds and Toy bundles
 # made before the move keep loading.
 HOSTS: dict[str, str] = {
+    "oss.arkive.games": "arkive-oss",
     "arkive.games": "arkive-meta",
     "www.arkive.games": "arkive-redirect-meta",
     "tc-imba.com": "arkive-redirect-meta",

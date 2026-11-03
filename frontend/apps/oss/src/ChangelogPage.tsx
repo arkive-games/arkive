@@ -2,6 +2,7 @@ import { VersionHistory, resolveChangelog, type ChangelogFile } from '@gamemap/u
 import { OssTopBar } from './App'
 import raw from './changelog.json'
 import text from './locales/zh-CN.json'
+import { SiteInfo } from './SiteChrome'
 
 const entries = resolveChangelog(raw as ChangelogFile, 'zh-CN')
 
@@ -14,6 +15,7 @@ export function ChangelogPage() {
         current: text.changelogCurrent,
         kinds: { feature: text.kindFeature, improvement: text.kindImprovement, fix: text.kindFix, data: text.kindData },
       }} />
+      <div className="mt-8 border-t border-border pt-6"><SiteInfo /></div>
     </main>
   </div>
 }

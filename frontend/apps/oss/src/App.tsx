@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, useTheme } from '@gamemap/map-shell'
 import { GameMapView, type EngineMarker, type GlMapRef } from '@gamemap/map-engine-gl'
 import type { GameMapMeta, RegionInstance } from '@gamemap/data-contract'
 import text from './locales/zh-CN.json'
+import { homeUrl, settings, SiteInfoDialog } from './SiteChrome'
+import { useIsMobile } from '@gamemap/ui'
 
 const DATA_BASE = import.meta.env.VITE_DATA_BASE_URL ?? '/data'
 const RES_BASE = import.meta.env.VITE_RESOURCE_BASE_URL ?? '/ossres'
@@ -33,7 +36,6 @@ interface PreviewData {
   regions: Record<string, RegionInstance[]>
 }
 
-const homeUrl = import.meta.env.VITE_ARKIVE_HOME_URL ?? (import.meta.env.DEV ? 'http://localhost:15172' : 'https://www.arkive.games')
 
 const navItems = [{ key: '/', label: text.map }, { key: '/changelog', label: text.changelog }]
 
@@ -44,11 +46,12 @@ export function OssTopBar({ active }: { active: string }) {
     nav={{ items: navItems.map(item => ({ ...item, active: item.key === active })), renderItem: (item, className, labelClassName) => <a href={item.key} className={className}><span data-slot="nav-item-label" className={labelClassName}>{item.label}</span></a> }}
     languageSwitcher={{ languages: [{ code: 'zh-CN', label: '简体中文' }], current: 'zh-CN', onChange: () => {}, menuLabel: text.language }}
     themeSwitcher={{ current: theme, onChange: setTheme, labels: { auto: text.auto, light: text.light, dark: text.dark }, menuLabel: text.theme }}
-    loginLabel={text.account} accountSlot={<a href={`${homeUrl}/#account`} className="text-sm">{text.account}</a>}
+    loginLabel={text.account} accountSlot={<ArkiveAccountControl language="zh-CN" homeUrl={homeUrl} settings={settings} />}
   />
 }
 
 export function App() {
+  const isMobile = useIsMobile()
   const [data, setData] = useState<PreviewData | null>(null)
   const [failed, setFailed] = useState(false)
   const [collections, setCollections] = useState<Record<string, Collection[]>>({})
@@ -125,7 +128,7 @@ export function App() {
   })
   return <ShellLayout
     topBar={<OssTopBar active="/" />}
-    sidebar={<ShellSidebar width="20rem" label={text.map} collapseLabel={text.collapse} expandLabel={text.expand}
+    sidebar={<ShellSidebar key={isMobile ? 'mobile' : 'desktop'} defaultCollapsed={isMobile} width="20rem" label={text.map} collapseLabel={text.collapse} expandLabel={text.expand}
       classNames={{ collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm' }}
       headerSlot={<ShellGameHeader backgroundUrl={import.meta.env.VITE_OSS_HEADER_URL ?? '/images/game-header.webp'} backgroundPosition="center" logo={null} gameName={text.game} subtitle={text.map} />}
       mapSelectorSlot={data ? <div className="px-3 py-3 max-md:pr-8"><ShellMapSelect
@@ -159,6 +162,7 @@ export function App() {
           subtypeButtonActive: 'border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]',
         }}
       />
+      <div className="px-3 py-2"><SiteInfoDialog /></div>
     </ShellSidebar>}>
     <div className="oss-map-workspace relative flex min-h-0 flex-1 flex-col">
     {data && <SearchPanel key={`search:${mapId}`} items={searchItems}

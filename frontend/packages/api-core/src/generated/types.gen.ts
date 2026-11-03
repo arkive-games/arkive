@@ -118,7 +118,7 @@ export type CreateMarkerCommentBody = {
     /**
      * The game the marker belongs to
      */
-    game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz';
+    game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
     /**
      * The map the marker is on
      */

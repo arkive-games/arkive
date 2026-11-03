@@ -15,6 +15,7 @@ const changelog = raw as PlatformChangelogFile
 const TARGET_KEYS: Record<PlatformTarget, string> = {
   aion2: 'site.aion2.name',
   gmzz: 'site.gmzz.name',
+  oss: 'site.oss.name',
   palworld: 'site.palworld.name',
   pbz: 'site.pbz.name',
   ro3: 'site.ro3.name',

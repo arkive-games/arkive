@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_STS2_URL?: string
   readonly VITE_VRISING_URL?: string
   readonly VITE_PBZ_URL?: string
+  readonly VITE_OSS_URL?: string
   readonly VITE_HOME_URL?: string
   readonly VITE_GITHUB_URL?: string
   readonly VITE_ICP_BEIAN?: string
