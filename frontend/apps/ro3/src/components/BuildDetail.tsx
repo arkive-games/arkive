@@ -105,12 +105,13 @@ export function BuildDetail({ build, data, faved, section, onBack, onFav, onTemp
         <div className="bm-items souls">{Array.from({ length: 5 }, (_, i) => {
           const config = build.souls[i]
           const soul = souls.find(s => s.iID === config?.id)
-          const subs = soul ? soulSubOptions(data, soul).filter(o => config?.sub.includes(o.id)) : []
+          const options = soul ? soulSubOptions(data, soul) : []
+          const subs = (config?.sub ?? []).map(id => options.find(o => o.id === id) ?? { id, label: `#${id} · ${t.unknown}`, value: m.valueUnknown })
           return <div key={i} className={cn('bm-item', !soul && 'none')} style={{ '--q': qualityColor(soul?.quality) } as CSSProperties}>
             <ItemIcon icon={soul?.icon} quality={soul?.quality} />
             <div className="bm-itx">
               <b>{soul?.name?.['zh-CN'] ?? m.emptySlot}</b>
-              {subs.length ? <div className="bm-attrs">{subs.map(o => <span key={o.id}>{o.label}</span>)}</div> : null}
+              {subs.length ? <div className="bm-attrs">{subs.map((o, index) => <span key={`${o.id}-${index}`}>{o.label} · {o.value}</span>)}</div> : null}
             </div>
           </div>
         })}</div>

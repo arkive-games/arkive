@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Minus, Plus, Search } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { cn, Dialog, DialogContent, DialogTitle, DialogTrigger } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 import { clampStat } from '../lib/buildState'
-import { qualityColor } from '../lib/quality'
+import { qualityColor, qualityLabel } from '../lib/quality'
 import { resourceUrl } from '../lib/urls'
 
 const m = content.builds.manual
@@ -41,14 +41,15 @@ function TileFace({ tile }: { tile: TileSpec }) {
 }
 
 /** Tiles with one shared detail panel; a sliding pointer marks the tile it belongs to. */
-export function TileBlock({ tiles, groups, readOnly, className, renderInfo }: {
+export function TileBlock({ tiles, groups, readOnly, className, renderInfo, initialIndex = -1 }: {
   tiles: TileSpec[]
   groups?: Array<{ label: string; from: number; to: number }>
   readOnly?: boolean
+  initialIndex?: number
   className?: string
   renderInfo?: (index: number, swapping: boolean, startSwap: () => void) => ReactNode
 }) {
-  const [cur, setCur] = useState(-1)
+  const [cur, setCur] = useState(initialIndex)
   const [swapping, setSwapping] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   const info = useRef<HTMLDivElement>(null)
@@ -94,24 +95,47 @@ function aim(root: HTMLElement | null, info: HTMLElement | null, index: number) 
   info.style.setProperty('--ax', `${x}px`)
 }
 
-export interface Candidate { id: number; label: string; icon?: string; quality?: number; disabled?: boolean }
+export interface Candidate { id: number; label: string; icon?: string; quality?: number; disabled?: boolean; detail?: string }
 
-const PICKER_LIMIT = 240
-
-/** An inline search over candidates; picking one calls back with its id. */
-export function Picker({ what, items, onPick, talent }: { what: string; items: Candidate[]; onPick: (id: number) => void; talent?: boolean }) {
+/** Search and pagination keep every candidate reachable without growing the page. */
+export function Picker({ what, items, onPick, talent, portrait }: { what: string; items: Candidate[]; onPick: (id: number) => void; talent?: boolean; portrait?: boolean }) {
   const [query, setQuery] = useState('')
+  const [page, setPage] = useState(0)
   const needle = query.trim().toLocaleLowerCase('zh-CN')
-  const shown = (needle ? items.filter(i => i.label.toLocaleLowerCase('zh-CN').includes(needle)) : items).slice(0, PICKER_LIMIT)
+  const matches = needle ? items.filter(i => `${i.label} ${i.detail ?? ''}`.toLocaleLowerCase('zh-CN').includes(needle)) : items
+  const pages = Math.max(1, Math.ceil(matches.length / 24))
+  const current = Math.min(page, pages - 1)
+  const shown = matches.slice(current * 24, (current + 1) * 24)
   const label = m.searchWhat.replace('{what}', what)
-  return <div className={cn('bm-picker', talent && 'bm-tal')}>
-    <label className="bm-search"><input value={query} onChange={e => setQuery(e.target.value)} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
+  const results = useRef<HTMLDivElement>(null)
+  const turn = (next: number) => { setPage(next); results.current?.scrollTo({ top: 0 }) }
+  return <div className={cn('bm-picker', talent && 'bm-tal', portrait && 'bm-portrait-picker')}>
+    <label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); turn(0) }} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
     {shown.length
-      ? <div className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-tile" disabled={item.disabled} title={item.label} onClick={() => onPick(item.id)}>
-        <ItemIcon icon={item.icon} quality={item.quality} /><span className="bm-nm">{item.label}</span>
+      ? <div ref={results} className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} title={item.label} onClick={() => onPick(item.id)}>
+        {item.icon ? <span className="bm-candidate-art"><img src={resourceUrl(item.icon)} alt="" loading="lazy" /></span> : null}
+        <span className="bm-candidate-copy"><b>{item.label}</b>{item.quality ? <small>{qualityLabel(item.quality)}</small> : null}{item.detail ? <small>{item.detail}</small> : null}</span>
       </button>)}</div>
       : <p className="bm-note">{m.noMatch}</p>}
+    <nav className="bm-pagination" aria-label={what}>
+      <button type="button" className="bm-chip" disabled={current === 0} onClick={() => turn(current - 1)}>{m.previousPage}</button>
+      <span aria-live="polite">{m.pageCount.replace('{count}', String(matches.length)).replace('{page}', String(current + 1)).replace('{pages}', String(pages))}</span>
+      <button type="button" className="bm-chip" disabled={current + 1 >= pages} onClick={() => turn(current + 1)}>{m.nextPage}</button>
+    </nav>
   </div>
+}
+
+export function PickerDialog({ what, items, onPick, portrait, children, disabled }: {
+  what: string; items: Candidate[]; onPick: (id: number) => void; portrait?: boolean; children?: ReactNode; disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  return <Dialog open={open} onOpenChange={setOpen}>
+    <DialogTrigger asChild><button type="button" className="bm-chip" disabled={disabled}>{children ?? m.choose.replace('{what}', what)}</button></DialogTrigger>
+    <DialogContent size="lg" className="bm-picker-dialog" aria-describedby={undefined} closeButtonProps={{ 'aria-label': m.closePicker }}>
+      <DialogTitle>{m.choose.replace('{what}', what)}</DialogTitle>
+      <Picker what={what} items={items} portrait={portrait} onPick={id => { onPick(id); setOpen(false) }} />
+    </DialogContent>
+  </Dialog>
 }
 
 /** The name row of a filled slot's panel, with change and remove. */
