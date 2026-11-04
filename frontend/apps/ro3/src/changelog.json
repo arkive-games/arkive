@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.22.1",
+      "date": "2026-11-04",
+      "commit": "4606a0fddaffa644086ae0b5ba663e5869a130d1",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Paginate equipment and card selection, keep card names readable, limit normal equipment affixes, and group soul attributes by roll value.",
+            "zh-CN": "装备与卡片选择支持分页，修复卡名遮挡；普通装备词条限制数量，残响属性按数值档位选择。",
+            "zh-TW": "裝備與卡片選擇支援分頁，修復卡名遮擋；普通裝備詞條限制數量，殘響屬性按數值檔位選擇。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.0",
       "date": "2026-11-03",
       "commit": "b2de432ebe1312e87c835e19486c98dc832f99a6",
