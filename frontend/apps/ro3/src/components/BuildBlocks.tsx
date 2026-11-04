@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { Minus, Plus, Search } from 'lucide-react'
+import { Minus, Plus, Search, X } from 'lucide-react'
 import { cn, Dialog, DialogContent, DialogTitle, DialogTrigger } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 import { clampStat } from '../lib/buildState'
@@ -8,9 +8,9 @@ import { resourceUrl } from '../lib/urls'
 
 const m = content.builds.manual
 
-export function Block({ icon, title, count, area, wide, children }: { icon: ReactNode; title: string; count?: string; area?: string; wide?: boolean; children: ReactNode }) {
+export function Block({ icon, title, area, wide, children, actions }: { icon: ReactNode; title: string; count?: string; area?: string; wide?: boolean; children: ReactNode; actions?: ReactNode }) {
   return <section className={cn('bm-blk', wide && 'wide')} style={area ? { gridArea: area } : undefined}>
-    <header className="bm-plate"><i>{icon}</i><div><h2>{title}</h2>{count ? <small>{count}</small> : null}</div></header>
+    <header className="bm-plate"><i>{icon}</i><h2>{title}</h2>{actions ? <div className="bm-block-actions">{actions}</div> : null}</header>
     <div className="bm-body">{children}</div>
   </section>
 }
@@ -28,6 +28,7 @@ export interface TileSpec {
   quality?: number
   empty?: boolean
   disabled?: boolean
+  onRemove?: () => void
   /** Card stubs under an equipment tile. */
   extra?: ReactNode
 }
@@ -72,9 +73,12 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
 
   const tile = (spec: TileSpec, index: number) => readOnly
     ? <div key={spec.key} className={cn('bm-tile', spec.empty && 'empty')} title={spec.label}><TileFace tile={spec} /></div>
-    : <button key={spec.key} type="button" data-tile={index} disabled={spec.disabled} aria-expanded={active === index}
-      className={cn('bm-tile', spec.empty && 'empty', active === index && 'sel')} title={spec.label}
-      onClick={() => { setSwapping(false); setCur(active === index ? -1 : index) }}><TileFace tile={spec} /></button>
+    : <div key={spec.key} className="bm-tile-wrap">
+      <button type="button" data-tile={index} disabled={spec.disabled} aria-expanded={active === index}
+        className={cn('bm-tile', spec.empty && 'empty', active === index && 'sel')} title={spec.label}
+        onClick={() => { setSwapping(false); setCur(active === index ? -1 : index) }}><TileFace tile={spec} /></button>
+      {spec.onRemove ? <button type="button" className="bm-icon-remove" aria-label={`${m.remove} ${spec.label}`} title={`${m.remove} ${spec.label}`} onClick={spec.onRemove}><X aria-hidden="true" /></button> : null}
+    </div>
   const panel = !readOnly && active >= 0 && renderInfo ? renderInfo(active, swapping, () => setSwapping(true)) : null
 
   return <div ref={root} className={cn('flex flex-col gap-2', className)}>
@@ -113,7 +117,7 @@ export function Picker({ what, items, onPick, talent, portrait }: { what: string
     <label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); turn(0) }} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
     {shown.length
       ? <div ref={results} className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} title={item.label} onClick={() => onPick(item.id)}>
-        {item.icon ? <span className="bm-candidate-art"><img src={resourceUrl(item.icon)} alt="" loading="lazy" /></span> : null}
+        {item.icon ? <span className="bm-candidate-art"><ItemIcon icon={item.icon} quality={item.quality} /></span> : null}
         <span className="bm-candidate-copy"><b>{item.label}</b>{item.quality ? <small>{qualityLabel(item.quality)}</small> : null}{item.detail ? <small>{item.detail}</small> : null}</span>
       </button>)}</div>
       : <p className="bm-note">{m.noMatch}</p>}

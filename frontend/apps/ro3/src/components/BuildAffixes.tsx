@@ -17,7 +17,6 @@ export function AffixEditor({ title, selected, options, limit, onChange }: {
       return <div className="bm-affix-row" key={`${id}-${index}`}><span>{option?.label ?? `#${id} · ${content.builds.editor.unknown}`}{option?.detail ? <small>{option.detail}</small> : null}</span>
         <button type="button" className="bm-chip" aria-label={`${m.remove} ${option?.label ?? id}`} onClick={() => onChange(selected.filter((_, i) => i !== index))}>{m.remove}</button></div>
     })}
-    {!selected.length ? <p className="bm-note">{m.noAffixes}</p> : null}
     <PickerDialog what={title} disabled={full || !options.length} items={options.map(o => ({ ...o, disabled: selected.includes(o.id) }))} onPick={id => {
       if (!full && !selected.includes(id) && options.some(o => o.id === id)) onChange([...selected, id])
     }}>{m.addAffix}</PickerDialog>
