@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.22.2",
+      "date": "2026-11-04",
+      "commit": "ffbc1899127f3d6b5d269f3b861bda169567f34d",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Compact build editing with aligned equipment columns, icon removal controls, a header reset action, and consistent talent backgrounds.",
+            "zh-CN": "流派编辑布局更紧凑对齐，移除改为图标角标，重置移至右上角，并统一天赋选择底色。",
+            "zh-TW": "流派編輯佈局更緊湊對齊，移除改為圖示角標，重置移至右上角，並統一天賦選擇底色。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.22.1",
       "date": "2026-11-04",
       "commit": "4606a0fddaffa644086ae0b5ba663e5869a130d1",
