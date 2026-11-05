@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.22.3",
+      "date": "2026-11-05",
+      "commit": "e6cd8af7264bc02be867400d53746142313dbe02",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Restore the profession and route when editing older saved builds without clearing their existing configuration.",
+            "zh-CN": "修复旧版方案编辑时职业与分支未恢复、技能变灰的问题，保留已有配置。",
+            "zh-TW": "修復舊版方案編輯時職業與分支未恢復、技能變灰的問題，保留既有配置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.22.2",
       "date": "2026-11-04",
       "commit": "ffbc1899127f3d6b5d269f3b861bda169567f34d",
