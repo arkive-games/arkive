@@ -76,7 +76,7 @@ export function BuildManual() {
       if (stored.malformed) malformed.current = stored.raw
       const used = new Set<string>()
       setPlans(stored.records.map((record, index) => {
-        const build = migratePlanner(record, next.equipment?.equipment.equipment ?? [], t.attributesList)
+        const build = migratePlanner(record, next.equipment?.equipment.equipment ?? [], t.attributesList, next.rules)
         const base = build.id
         let suffix = 0
         while (used.has(build.id)) build.id = `${base}-recovered-${index}-${suffix++}`

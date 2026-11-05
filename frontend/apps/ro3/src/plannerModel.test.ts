@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emptyPlanner, migratePlanner, readPlannerStorage, savePlannerBuilds } from './lib/plannerModel'
-import { BUILD_SLOTS, equipmentAllowed, slotAllows, type BuildJob } from './lib/buildRules'
+import { BUILD_SLOTS, equipmentAllowed, slotAllows, type BuildJob, type BuildRulesDocument } from './lib/buildRules'
 import { BUILD_STORAGE_KEY } from './lib/buildState'
 import type { EquipmentRecord } from './wikiData'
 
@@ -21,6 +21,41 @@ describe('canonical build mappings', () => {
     expect(slotAllows(records[1], 'off', { ...job, weaponForms: [3] })).toBe(true)
     expect(equipmentAllowed(records[1], job)).toBe(true)
     expect(equipmentAllowed(records[1], { ...job, id: 3400 })).toBe(false)
+  })
+})
+
+describe('legacy career migration', () => {
+  const rules: BuildRulesDocument = { schemaVersion: 1, variants: {}, shared: {
+    jobs: [{ ...job, id: 1300, rank: 4, branchIds: [121] }, job],
+    branches: [{ id: 121, name: 'Agile sword', professionId: 101, suggestedSkills: [] }, { id: 131, name: 'Dragon sword', professionId: 104, suggestedSkills: [] }],
+    recommendations: [],
+  } }
+  const legacy = { id: 'old', professionLineId: 'swordman', professionRouteId: 'blade', skillIds: [11, 22], talentIds: [33], attributes: { a: 12 }, equipment: [{ equipmentId: 11 }] }
+  it('restores the old route at its latest unambiguous matching stage without clearing selections', () => {
+    const build = migratePlanner(legacy, records, keys, rules)
+    expect([build.jobId, build.branchId]).toEqual([1300, 121])
+    expect(build.skills).toEqual([11, 22])
+    expect(build.talents).toEqual([33])
+    expect(build.attributes[0]).toBe(12)
+    expect(build.equipment[0].id).toBe(11)
+    expect(build.original).toEqual(legacy)
+    expect(migratePlanner(JSON.parse(JSON.stringify(build)), records, keys, rules)).toEqual(build)
+  })
+  it('recovers a previously migrated career from its preserved original', () => {
+    const broken = migratePlanner(legacy, records, keys)
+    expect(broken.jobId).toBe(0)
+    expect(migratePlanner(broken, records, keys, rules).jobId).toBe(1300)
+  })
+  it('never replaces an explicit modern career or guesses from a name', () => {
+    const modern = { ...emptyPlanner('modern'), jobId: 1400, branchId: 131, original: legacy }
+    expect(migratePlanner(modern, records, keys, rules).jobId).toBe(1400)
+    expect(migratePlanner({ title: 'Sword knight' }, records, keys, rules).jobId).toBe(0)
+    expect(migratePlanner({ ...legacy, professionRouteId: 'unknown' }, records, keys, rules).jobId).toBe(0)
+  })
+  it('uses the saved variant and leaves unavailable rule sets untouched', () => {
+    expect(migratePlanner({ ...legacy, rulesVariant: 'missing' }, records, keys, rules).jobId).toBe(0)
+    const variant = { ...rules, shared: { jobs: [], branches: [], recommendations: [] }, variants: { M102: rules.shared } }
+    expect(migratePlanner({ ...legacy, rulesVariant: 'M102' }, records, keys, variant).jobId).toBe(1300)
   })
 })
 
