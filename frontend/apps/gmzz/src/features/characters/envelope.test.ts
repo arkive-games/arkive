@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { emptyBuild } from '../builds/model'
 
 import {
   envelopeOf,
@@ -11,6 +12,15 @@ import {
 } from './envelope'
 
 describe('the character document', () => {
+  it('keeps shared build edits isolated from rating inputs and unknown sections', () => {
+    const data = { schemaVersion: 1, character: { roleLevel: 80, divinityLevel: 2, professionId: 1200002 }, futureSection: { keep: true } }
+    const builds = { ...emptyBuild(), professionId: 1200002, talentTreeId: 202, slots: { '1': 86021070 } }
+    const next = withSection(data, 'builds', builds)
+    expect(readSections(next).builds).toEqual(builds)
+    expect(next.character).toEqual(data.character)
+    expect(next.futureSection).toEqual(data.futureSection)
+    expect(readSections({ ...next, builds: { invalid: true } }).builds).toEqual(emptyBuild())
+  })
   it('holds every section and nothing derived', () => {
     const sections = readSections({ schemaVersion: 1 })
     const envelope = envelopeOf(sections)

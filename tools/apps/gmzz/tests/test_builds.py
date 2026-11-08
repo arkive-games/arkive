@@ -31,6 +31,31 @@ def test_unavailable_pathways_do_not_become_empty_picker_options():
     assert build_catalog(tables, skills)['professions'] == [{'id': 1200001, 'name': 'Sun'}]
 
 
+@pytest.mark.parametrize('tags,tree,role', [([1262, 1011], 201, 'basicAttack'),
+                                         ([1264], 201, None), ([1263, 1018], 202, 'finisher'),
+                                         ([1013], None, 'decontrol')])
+def test_gameplay_tags_gate_stances_and_identify_fixed_roles(tags, tree, role):
+    tables, skills = sample()
+    skills[86011040]['Tags'] = tags
+    skill = build_catalog(tables, skills)['skills'][0]
+    assert skill['stanceTalentTreeId'] == tree
+    assert skill['requiredTalentTreeId'] is None
+    assert skill['fixedRole'] == role
+
+
+def test_legacy_basic_attacks_use_the_unlock_type_without_specialized_tags():
+    tables, skills = sample()
+    tables['unlocks']['10']['SkillType'] = 1
+    assert build_catalog(tables, skills)['skills'][0]['fixedRole'] == 'basicAttack'
+
+
+def test_relic_actions_keep_the_client_action_identity_instead_of_a_carried_slot():
+    tables, skills = sample()
+    tables['relicActions'] = [{'ID': 1, 'Name': 'Bell', 'SealID': 2085001, 'Icon': 'ClientIcon'}]
+    assert build_catalog(tables, skills)['relicActions'] == [
+        {'id': 1, 'name': 'Bell', 'artifactId': 2085001, 'icon': 'ClientIcon'}]
+
+
 def test_fool_resource_uses_the_client_scale_and_buff_order_is_stable():
     tables, skills = sample()
     tables['resources'] = [{'ID': 1200003, 'ProfessionName': 'Cards', 'PropMaxValue': 100}]

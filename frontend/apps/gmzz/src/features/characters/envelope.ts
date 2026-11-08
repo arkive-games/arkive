@@ -4,6 +4,8 @@ import { emptyBondsDraft, isBondsDraft, type BondsDraft } from '../score/bonds'
 import { characterDraft, isCharacterDraft, type CharacterDraft, bondsDraft, talentDraft } from '../score/memory'
 import { emptyTalentDraft, isTalentDraft, type TalentDraft } from '../score/talents'
 import { isFiniteNumber, isRecord } from '../../lib/memory'
+import { buildDraft } from '../builds/memory'
+import { emptyBuild, isBuild, type BuildDraft } from '../builds/model'
 
 /**
  * The score page's inputs as one saved document.
@@ -30,6 +32,7 @@ import { isFiniteNumber, isRecord } from '../../lib/memory'
 export const SCHEMA_VERSION = 1
 
 export type Sections = {
+  builds: BuildDraft
   character: CharacterDraft
   talents: TalentDraft
   bonds: BondsDraft
@@ -61,6 +64,7 @@ function without<T extends object>(value: T, keys: string[]): T {
 }
 
 export const SECTIONS: { [K in SectionKey]: SectionSpec<K> } = {
+  builds: { default: emptyBuild, validate: isBuild },
   character: {
     default: () => characterDraft.record.defaultValue(),
     validate: isCharacterDraft,
@@ -96,6 +100,7 @@ export const SECTION_KEYS = Object.keys(SECTIONS) as SectionKey[]
 
 /** The local draft each section is kept in while no saved character is open. */
 export const LOCAL_RECORDS = {
+  builds: buildDraft,
   character: characterDraft,
   talents: talentDraft,
   bonds: bondsDraft,
@@ -117,7 +122,7 @@ export function readSections(envelope: Envelope): Sections {
 }
 
 /** A document holding the given sections. */
-export function envelopeOf(sections: Sections): Envelope {
+export function envelopeOf(sections: Partial<Sections>): Envelope {
   return { schemaVersion: SCHEMA_VERSION, ...sections }
 }
 

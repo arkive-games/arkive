@@ -92,20 +92,27 @@ export function importBuild(input: string, current: BuildDraft): BuildDraft {
   return next
 }
 
-export function exportBuild(draft: BuildDraft, onlyCombo = false, talentTree?: TalentTree | null): string {
+export function exportBuild(draft: BuildDraft, onlyCombo = false, talentTree?: TalentTree | null, author?: string): string {
   if (!isBuild(draft) || !draft.nodes.length) throw new Error('Invalid build')
   const wire = draft.original ? decodeShare(draft.original) : new Map<number, unknown>()
   // A new pathway cannot inherit another pathway's talent or equipment state.
   if (wire.get(2) !== undefined && wire.get(2) !== draft.professionId) wire.clear()
-  wire.set(1, wire.get(1) ?? 'Arkive')
+  wire.set(1, author || wire.get(1) || 'Arkive')
   wire.set(2, draft.professionId)
   wire.set(11, draft.name || 'Build')
-  wire.set(10, { n: draft.name || 'Build', d: draft.description, i: draft.iconId, c: draft.nodes })
+  const previousCombo = wire.get(10)
+  const combo = previousCombo instanceof Map ? new Map(previousCombo) : new Map<string, unknown>()
+  combo.set('n', draft.name || 'Build')
+  combo.set('d', draft.description)
+  combo.set('i', draft.iconId)
+  combo.set('c', draft.nodes.map(([action, groups]) => groups.length ? [action, groups] : [action]))
+  wire.set(10, combo)
   if (onlyCombo) {
     for (const key of [...wire.keys()]) if (![1, 2, 10, 11, 13].includes(key)) wire.delete(key)
   } else {
     wire.set(3, new Map(Object.entries(draft.slots).map(([slot, id]) => [id, Number(slot)])))
-    wire.set(4, new Map(Object.entries(draft.sealed).map(([slot, id]) => [Number(slot), id])))
+    const relics = Object.entries(draft.sealed).map(([slot, id]) => [Number(slot), id]).sort((a, b) => a[0] - b[0])
+    wire.set(4, relics.every(([slot], index) => slot === index + 1) ? relics.map(([, id]) => id) : new Map(relics.map(([slot, id]) => [slot, id])))
     if (talentTree) {
       if (talentTree.professionId !== draft.professionId) throw new Error('Talent pathway mismatch')
       wire.set(5, talentTree.id)
@@ -118,8 +125,14 @@ export function exportBuild(draft: BuildDraft, onlyCombo = false, talentTree?: T
   return encodeShare(wire)
 }
 
-export function availableSkill(skill: Skill, professionId: number, treeId?: number): boolean {
+function compatibleSkill(skill: Skill, professionId: number, treeId?: number): boolean {
   return (!skill.professionId || skill.professionId === professionId)
+    && (!skill.requiredTalentTreeId || skill.requiredTalentTreeId === treeId)
+    && (!skill.stanceTalentTreeId || skill.stanceTalentTreeId === treeId)
+}
+
+export function availableSkill(skill: Skill, professionId: number, treeId?: number): boolean {
+  return compatibleSkill(skill, professionId, treeId)
     && (skill.order >= 0 || (treeId !== undefined && skill.requiredTalentTreeId === treeId))
 }
 
@@ -135,10 +148,23 @@ export function rememberedTalentTreeId(draft: BuildDraft): number | undefined {
 
 export function changeTalent(draft: BuildDraft, treeId: number, skills: Skill[]): BuildDraft {
   const byId = new Map(skills.map((skill) => [skill.id, skill]))
-  return { ...draft, talentTreeId: treeId, slots: Object.fromEntries(Object.entries(draft.slots).map(([slot, id]) => {
+  return { ...draft, talentTreeId: treeId, slots: Object.fromEntries(Object.entries(draft.slots).flatMap(([slot, id]) => {
     const skill = byId.get(id)
-    return [slot, skill?.requiredTalentTreeId && skill.requiredTalentTreeId !== treeId ? skill.family : id]
+    if (!skill || availableSkill(skill, draft.professionId, treeId)) return [[slot, id]]
+    const base = byId.get(skill.family)
+    return base && availableSkill(base, draft.professionId, treeId) ? [[slot, base.id]] : []
   })) }
+}
+
+export function compatibleAction(node: ComboNode, draft: BuildDraft, skills: Skill[], treeId?: number): boolean {
+  const [action] = node
+  const id = action.ActionName === 1 ? action.ActionParam : action.ActionName === 2 ? draft.slots[String(action.ActionParam)] : undefined
+  if (action.ActionName === 2 && SKILL_SLOTS.some((slot) => slot === action.ActionParam) && !id) return false
+  const compatible = (skillId: number | undefined) => {
+    const skill = skills.find((item) => item.id === skillId)
+    return !skill || compatibleSkill(skill, draft.professionId, treeId)
+  }
+  return compatible(id) && node[1].every((group) => group.every(([condition, params]) => condition !== 8 || params[1] !== 1 || compatible(params[0])))
 }
 
 export function equipSkill(draft: BuildDraft, slot: number, id: number, familyOf: (id: number) => number): BuildDraft {

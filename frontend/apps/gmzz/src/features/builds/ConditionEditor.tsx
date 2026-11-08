@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@gamemap/ui'
 import type { Catalog } from './data'
 import type { ComboNode, Condition } from './model'
+import { availableSkill } from './model'
 import { buffOptions, conditionLimits, defaultCondition } from './rules'
 
 export const SELECT_CLASS = 'min-w-0 max-w-full rounded border border-input bg-background px-2 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring'
 
-export function ConditionEditor({ groups, catalog, professionId, onChange }: {
-  groups: ComboNode[1]; catalog: Catalog; professionId: number; onChange: (value: ComboNode[1]) => void
+export function ConditionEditor({ groups, catalog, professionId, treeId, onChange }: {
+  groups: ComboNode[1]; catalog: Catalog; professionId: number; treeId?: number; onChange: (value: ComboNode[1]) => void
 }) {
   const { t } = useTranslation()
   const tr = (key: string) => t('builds.' + key)
@@ -42,7 +43,7 @@ export function ConditionEditor({ groups, catalog, professionId, onChange }: {
               </select>
             }
             if (type === 7) {
-              const entries = [...catalog.skills.filter((skill) => skill.professionId === professionId && skill.autoCast && ![1, 10].includes(skill.type)).map((skill) => ({ id: skill.id, name: skill.name, slot: 1 })),
+              const entries = [...catalog.skills.filter((skill) => skill.professionId === professionId && availableSkill(skill, professionId, treeId) && skill.autoCast && ![1, 10].includes(skill.type)).map((skill) => ({ id: skill.id, name: skill.name, slot: 1 })),
                 { id: 17, name: tr('fellow'), slot: 2 }, { id: 20, name: tr('puppet'), slot: 2 }]
               return <select key={at} aria-label={tr('paramSlot')} className={SELECT_CLASS + ' w-40'} value={value} onChange={(event) => {
                 const entry = entries.find((item) => item.id === Number(event.target.value))!

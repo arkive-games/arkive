@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/tools/build", "destination": "/index.html" },
     { "source": "/tools/build*", "destination": "/index.html" },
+    { "source": "/tools/build/*", "destination": "/index.html" },
     { "source": "/secretpartners", "destination": "/index.html" },
     { "source": "/secretpartners*", "destination": "/index.html" },
     {

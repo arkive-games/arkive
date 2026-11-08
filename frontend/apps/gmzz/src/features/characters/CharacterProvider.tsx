@@ -111,7 +111,7 @@ function resolve<T>(action: SetStateAction<T>, previous: T): T {
   return typeof action === 'function' ? (action as (prev: T) => T)(previous) : action
 }
 
-export function CharacterProvider({ id, children }: { id: string | null; children: ReactNode }) {
+export function CharacterProvider({ id, surface = 'score', children }: { id: string | null; surface?: 'score' | 'build'; children: ReactNode }) {
   const auth = useOptionalAuth()
   const userId = auth?.user?.id ?? null
   const api = characterApi()
@@ -122,6 +122,7 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
   const [localBonds, setLocalBonds] = useMemory(LOCAL_RECORDS.bonds)
   const [localEquipment, setLocalEquipment] = useMemory(LOCAL_RECORDS.equipment)
   const [localRelics, setLocalRelics] = useMemory(LOCAL_RECORDS.relics)
+  const [localBuild, setLocalBuild] = useMemory(LOCAL_RECORDS.builds)
 
   const bound = useMemo(() => workingCopyOf(id ?? NO_CHARACTER), [id])
   const [copy] = useMemory(bound)
@@ -255,7 +256,7 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
         setStatus('newer')
         return
       }
-      setLast(loaded.id)
+      if (surface === 'score') setLast(loaded.id)
       if (working?.dirty) {
         if (working.revision === loaded.revision) {
           blocked.current = false
@@ -281,13 +282,14 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
     return () => {
       live = false
     }
-  }, [id, api, bound, userId, setLast])
+  }, [id, api, bound, userId, setLast, surface])
 
   /* --------------------------------------------------------------- values */
 
   const sections = useMemo<Sections>(() => {
     if (!id) {
       return {
+        builds: readSection('builds', localBuild),
         character: readSection('character', localCharacter),
         talents: readSection('talents', localTalents),
         bonds: readSection('bonds', localBonds),
@@ -297,13 +299,14 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
     }
     if (editable && copy) return readSections(copy.data)
     return readSections(server ? upgrade(server.data).envelope : { schemaVersion: 1 })
-  }, [id, editable, copy, server, localCharacter, localTalents, localBonds, localEquipment, localRelics])
+  }, [id, editable, copy, server, localCharacter, localTalents, localBonds, localEquipment, localRelics, localBuild])
 
   const readOnly = Boolean(id) && (!editable || status === 'conflict' || status === 'loading' || !copy)
 
   const setSection = useCallback(<K extends SectionKey>(key: K, action: SetStateAction<Sections[K]>) => {
     if (!id) {
       const setters: { [S in SectionKey]: (update: (prev: Sections[S]) => Sections[S]) => void } = {
+        builds: setLocalBuild,
         character: setLocalCharacter,
         talents: setLocalTalents,
         bonds: setLocalBonds,
@@ -322,7 +325,7 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
     bound.write({ data: withSection(working.data, key, next), revision: working.revision, dirty: true })
     setStatus((prev) => (prev === 'saving' ? prev : 'pending'))
     saverRef.current?.touch()
-  }, [id, readOnly, bound, setLocalCharacter, setLocalTalents, setLocalBonds, setLocalEquipment, setLocalRelics])
+  }, [id, readOnly, bound, setLocalCharacter, setLocalTalents, setLocalBonds, setLocalEquipment, setLocalRelics, setLocalBuild])
 
   /* -------------------------------------------------------------- actions */
 
@@ -390,7 +393,7 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
 
   const saveDraftAs = useCallback(async (name: string) => {
     if (!api) throw new Error('no API configured')
-    const local: Sections = {
+    const local: Partial<Sections> = surface === 'build' ? { builds: readSection('builds', localBuild) } : {
       character: readSection('character', localCharacter),
       talents: readSection('talents', localTalents),
       bonds: readSection('bonds', localBonds),
@@ -400,7 +403,7 @@ export function CharacterProvider({ id, children }: { id: string | null; childre
     const created = await api.create({ name, data: envelopeOf(local) })
     void refreshList()
     return created.id
-  }, [api, localCharacter, localTalents, localBonds, localEquipment, localRelics, refreshList])
+  }, [api, surface, localBuild, localCharacter, localTalents, localBonds, localEquipment, localRelics, refreshList])
 
   const copyCharacter = useCallback(async (source: string, name?: string) => {
     if (!api) throw new Error('no API configured')

@@ -43,13 +43,27 @@ def build_catalog(tables: dict, skills: dict[int, dict]) -> dict:
                                                          'name': node['Name'], 'description': skill_text(text)})
     records = []
     for row in sorted(unlocks.values(), key=lambda row: row['ID']):
-        skill = build_skill(skills[int(row['SkillID'])], tags)
+        source = skills[int(row['SkillID'])]
+        gameplay_tags = set(source.get('Tags') or [])
+        # The healing-only tag also covers Read Mind, which lacks tag 1262.
+        mode_tree = 201 if gameplay_tags & {1262, 1264} else 202 if 1263 in gameplay_tags else None
+        # These stance passives carry no gameplay tags in the client table.
+        mode_tree = {86025030: 201, 86025040: 202}.get(row['SkillID'], mode_tree)
+        role = ('basicAttack' if row['SkillType'] == 1 or 1011 in gameplay_tags
+                else 'decontrol' if 1013 in gameplay_tags
+                else 'finisher' if 1018 in gameplay_tags or 37 in (source.get('DesTags') or []) else None)
+        # Arbiter's older records have generic tags; its two special skills
+        # are Verdict Sword and Authority Release (labelled decontrol by Desc).
+        role = {86040010: 'finisher', 86040005: 'decontrol'}.get(row['SkillID'], role)
+        skill = build_skill(source, tags)
         skill.update({
             'autoCast': not bool(skills[int(row['SkillID'])].get('NoAutoCast')),
             'professionId': row.get('ClassID', 0),
             'type': row['SkillType'],
             'family': parents.get(int(row['ID']), row['SkillID']),
             'requiredTalentTreeId': branch_trees.get(int(row['ID'])),
+            'stanceTalentTreeId': mode_tree,
+            'fixedRole': role,
             'talentEffects': effects.get(parents.get(int(row['ID']), row['SkillID']), []),
             'order': row.get('DisplayOrder', 0),
             'unlock': tables['unlockConditions'].get(str(row.get('SkillUnlockCondition')), {}).get('Des', ''),
@@ -65,6 +79,8 @@ def build_catalog(tables: dict, skills: dict[int, dict]) -> dict:
                        'supported': row['PropMaxValue'] < 99999999}
                       for row in sorted(rows(tables['resources']), key=lambda row: row['ID'])],
         'types': rows(tables['types']),
+        'relicActions': [{'id': row['ID'], 'name': row['Name'], 'artifactId': row['SealID'], 'icon': row.get('Icon') or ''}
+                         for row in rows(tables.get('relicActions', []))],
         'conditions': rows(tables['conditions']),
         'params': rows(tables['params']),
         'buffs': [{'id': int(key), 'name': row['Name'], 'status': row.get('bIsStatus', False),
@@ -79,9 +95,10 @@ def build_catalog(tables: dict, skills: dict[int, dict]) -> dict:
 
 def export_icons(raw: Path, res_out: Path, catalog: dict, skills: dict) -> int:
     converted = 0
-    for skill in catalog['skills']:
-        row = skills[skill['id']]
-        asset = row.get('SkillIcon') or row.get('IconTexture') or ''
+    assets = [(skill, skills[skill['id']].get('SkillIcon') or skills[skill['id']].get('IconTexture') or '')
+              for skill in catalog['skills']]
+    assets.extend((action, action['icon']) for action in catalog['relicActions'])
+    for skill, asset in assets:
         source = raw / 'C7/Content' / (asset.removeprefix('/Game/').split('.')[0] + '.png')
         if not asset.startswith('/Game/') or not source.is_file():
             skill['icon'] = ''
@@ -110,6 +127,7 @@ def main():
              'presets': 'OneClickPresetData', 'constants': 'OneClickConstData'}
     names['resources'] = 'ProfessionSkillData'
     names['talentNodes'] = 'TalentNodeData'
+    names['relicActions'] = 'OneClickRelcsData'
     tables = {key: resolve_text(load_table(excel, name), strings) for key, name in names.items()}
     wanted = {int(row['SkillID']) for row in rows(tables['unlocks'])}
     skills = load_skills(excel, strings, wanted)

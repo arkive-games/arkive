@@ -9,6 +9,8 @@ export type Skill = {
   id: number; name: string; professionId: number; type: number; family: number; order: number; autoCast: boolean
   description: string; brief: string; icon: string; cooldown: number | null; tags: string[]; unlock: string
   requiredTalentTreeId: number | null
+  stanceTalentTreeId: number | null
+  fixedRole: 'basicAttack' | 'decontrol' | 'finisher' | null
   talentEffects: { nodeId: number; treeId: number; name: string; description: string }[]
 }
 export type ConditionMeta = {
@@ -17,6 +19,7 @@ export type ConditionMeta = {
 }
 export type Catalog = {
   skills: Skill[]; professions: { id: number; name: string }[]
+  relicActions: { id: number; name: string; artifactId: number; icon: string }[]
   conditions: ConditionMeta[]
   buffs: { id: number; name: string; status: boolean; professions: number[] }[]
   limits: { name: number; description: number; nodes: number }

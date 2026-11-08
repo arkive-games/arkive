@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { decodeShare, encodeShare, signBytes, fromBase62, toBase62 } from './codec'
-import { availableSkill, changeTalent, emptyBuild, equipSkill, exportBuild, importBuild, isBuild, normalizeNodes, rememberedTalentTreeId, type BuildDraft } from './model'
+import { availableSkill, changeTalent, compatibleAction, emptyBuild, equipSkill, exportBuild, importBuild, isBuild, normalizeNodes, rememberedTalentTreeId, type BuildDraft } from './model'
 import type { TalentTree } from '../score/talents'
 import type { Skill } from './data'
 
@@ -10,6 +10,54 @@ const draft = (): BuildDraft => ({ ...emptyBuild(), name: 'Test', slots: { '1': 
 const gameShare = '[[2jxYtI0000002Wh1xk3NWgz73UsJBw0Kmyt12T3e8O2hjHtm05uJVY0NcYoy2homg205t30w0KDNGC2hYHoE05ovzo03QRbC008kPV3ltVIW2ggO2p3orRHg3hNh9Y3l6m6v1RcVtW4PPN9Y2jpIKs4FR0g91Raw0w3l6mC72ggCFD0HgIcI4QpqLM2xGY0f1qFibL2pUuux1CF3Pd22WEU525rsJw37JDFc1viAP81mcRWc2fDHCj1ovACd21FbdK1mcYWD0azEba1CF3Pd22WELp20Cskr2OMVM328AruQ1TGQz320fl7w2hbDRx1ovACd21F3XB1qgNHu38Rbls1viAPA1mdoWz3lusax1o1Zel28AruQ1Qzdbx01mPJT1CF3Pd22WEU525rsJt37JDFc1viAP81mcRWc2fDHCj1ovACd21FbdK1mcYWD0azHGk1CF3Pd22WELp20Cskr2OMVM328AruQ1TGQz320fl7w2hoxtZ1ovACd21F3XB1qgNHu38Rbls1viAPA1mdoWz3lusap49MCFn28AruQ1Qzdbx01mPJT1CF3Pd22WEU525rsMw05ovzo37JDFc1viAP81mcRWb2fDHCj1ovACd21FbdK1mcYWD0ayA0Y1CF3Pd22WELp20Csl721bVph23gqpU3UNoKV3PFF8g2NNfM12rQfjs000000]]'
 
 describe('client one-click share codec', () => {
+  it('preserves unknown nested combo fields while updating known values', () => {
+    const wire = decodeShare(exportBuild(draft()))
+    const combo = wire.get(10) as Map<unknown, unknown>
+    combo.set('future', new Map([[7, ['preserved']]]))
+    combo.set(15, new Map([['nested', 42]]))
+    const current = importBuild(encodeShare(wire), emptyBuild())
+    current.name = 'Changed'
+    for (const onlyCombo of [false, true]) {
+      const exported = decodeShare(exportBuild(current, onlyCombo)).get(10) as Map<unknown, unknown>
+      expect(exported.get('future')).toEqual(combo.get('future'))
+      expect(exported.get(15)).toEqual(combo.get(15))
+      expect(exported.get('n')).toBe('Changed')
+    }
+  })
+  it('allows native follow-up casts without exposing hidden skills in the picker', () => {
+    const followUp = { id: 86050050, professionId: 1200005, order: -1, requiredTalentTreeId: null, stanceTalentTreeId: null } as Skill
+    const current = { ...emptyBuild(), professionId: 1200005 }
+    expect(availableSkill(followUp, current.professionId, 501)).toBe(false)
+    expect(compatibleAction([{ ActionName: 1, ActionParam: followUp.id }, []], current, [followUp], 501)).toBe(true)
+    const internal = { ...followUp, id: 86021102, professionId: 1200002, stanceTalentTreeId: 201 }
+    expect(availableSkill(internal, 1200002, 201)).toBe(false)
+    expect(compatibleAction([{ ActionName: 1, ActionParam: internal.id }, []], { ...current, professionId: 1200002 }, [internal], 202)).toBe(false)
+  })
+  it('exports the client tuple and relic list shapes and the chosen author', () => {
+    const current = draft()
+    const wire = decodeShare(exportBuild(current, false, null, 'Author'))
+    expect(wire.get(1)).toBe('Author')
+    const combo = wire.get(10) as Map<string, unknown>
+    expect((combo.get('c') as unknown[][])[1]).toHaveLength(1)
+    expect(wire.get(4)).toEqual([2085001])
+    current.sealed = { '3': 2085001 }
+    expect(decodeShare(exportBuild(current)).get(4)).toEqual(new Map([[3, 2085001]]))
+    expect(importBuild(exportBuild(current), emptyBuild()).sealed).toEqual(current.sealed)
+  })
+  it('gates visible stance skills and keeps incompatible imported actions reviewable', () => {
+    const healing = { id: 10, professionId: 1200002, order: 2, family: 10, requiredTalentTreeId: null, stanceTalentTreeId: 201 } as Skill
+    const damage = { ...healing, id: 20, family: 20, stanceTalentTreeId: 202 }
+    expect(availableSkill(healing, 1200002, 202)).toBe(false)
+    expect(availableSkill(damage, 1200002, 201)).toBe(false)
+    const current: BuildDraft = { ...emptyBuild(), professionId: 1200002, talentTreeId: 201, slots: { '1': 10, '17': 99 }, nodes: [[{ ActionName: 1, ActionParam: 10 }, []]] }
+    const next = changeTalent(current, 202, [healing, damage])
+    expect(next.slots).toEqual({ '17': 99 })
+    expect(next.nodes).toEqual(current.nodes)
+    expect(compatibleAction(next.nodes[0], next, [healing, damage], 202)).toBe(false)
+    expect(compatibleAction([{ ActionName: 2, ActionParam: 1 }, []], next, [healing, damage], 202)).toBe(false)
+    expect(compatibleAction([{ ActionName: 1, ActionParam: 20 }, [[[8, [10, 1]]]]], next, [healing, damage], 202)).toBe(false)
+    expect(compatibleAction([{ ActionName: 1, ActionParam: 999 }, []], next, [healing, damage], 202)).toBe(true)
+  })
   it('imports a game scheme with omitted unconditional groups and one-based relic arrays', () => {
     const imported = importBuild('Game message\n' + gameShare + '\nEnd', emptyBuild())
     expect(imported.professionId).toBe(1200002)
@@ -39,7 +87,7 @@ describe('client one-click share codec', () => {
     const map = decodeShare(code)
     expect(map.get(3)).toBeInstanceOf(Map)
     expect((map.get(3) as Map<number, number>).get(86011020)).toBe(1)
-    expect((map.get(4) as Map<number, number>).get(1)).toBe(2085001)
+    expect(map.get(4)).toEqual([2085001])
   })
   it('rejects modified, malformed and oversized codes without changing the draft', () => {
     const original = draft()

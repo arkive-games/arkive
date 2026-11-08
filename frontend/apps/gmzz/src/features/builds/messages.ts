@@ -1,4 +1,8 @@
 const en = {
+  artifactDetails: 'Relic details',
+  viewAction: 'View action {{n}}',
+  gameSchemeMessage: 'Copy this message, click [Import] in the lower right of Recommended Plans, and use the plan from [{{name}}].',
+  gameComboMessage: 'Copy this message, click [Import] in the lower right of One-click Assist, and use the plan from [{{name}}].',
   title: 'Build Simulator', description: 'Plan skills, puppets, connections, relics and one-click combos.',
   pathway: 'Pathway', name: 'Plan name', descriptionLabel: 'Description',
   talent: 'Pathway talent', maxTalent: 'Max level', talentEffect: 'Talent · {{name}}',
@@ -34,9 +38,17 @@ const en = {
   unknownCondition: 'Condition {{id}}', uncarried: 'This skill is not in the current loadout.',
   newPathway: 'New pathway', nameLimit: 'Use up to {{n}} characters.',
   invalidConditions: 'Check condition parameters and pathway requirements.',
+  decontrol: 'Decontrol', finisher: 'Finisher', otherSkills: 'Other skills',
+  timeline: 'Cast sequence', commands: 'Action list', editAction: 'Edit action {{n}}', saveAction: 'Save action',
+  conditionCount: '{{n}} conditions', unavailableAction: 'Check action and pathway talent',
+  talentChanged: 'Talent updated. Incompatible equipped skills were removed; check any highlighted combo actions.',
 }
 type Messages = { [K in keyof typeof en]: string }
 const zhCN: Messages = {
+  artifactDetails: '封印物详情',
+  viewAction: '查看动作 {{n}}',
+  gameSchemeMessage: '复制该消息，在推荐方案界面右下角点击【导入】，一键使用来自【{{name}}】的方案 。',
+  gameComboMessage: '复制该消息，在一键辅助界面右下角点击【导入】，一键使用来自【{{name}}】的方案 。',
   title: 'Build 模拟器', description: '搭配技能、秘偶、人脉与封印物，编排一键连招。',
   pathway: '途径', name: '方案名称', descriptionLabel: '方案描述',
   talent: '途径天赋', maxTalent: '满级', talentEffect: '天赋 · {{name}}',
@@ -72,9 +84,17 @@ const zhCN: Messages = {
   unknownCondition: '条件 {{id}}', uncarried: '此技能尚未在当前搭配中携带。',
   newPathway: '新途径', nameLimit: '最多 {{n}} 个字。',
   invalidConditions: '请检查条件参数范围及途径要求。',
+  decontrol: '解控', finisher: '终结', otherSkills: '其他技能',
+  timeline: '释放顺序', commands: '动作列表', editAction: '编辑动作 {{n}}', saveAction: '保存动作',
+  conditionCount: '{{n}} 个释放条件', unavailableAction: '请检查动作及途径天赋',
+  talentChanged: '天赋已更新，不适用的携带技能已移除，请检查连招中标记的动作。',
 }
 const zhTW: Messages = {
   ...zhCN, title: 'Build 模擬器', description: '搭配技能、秘偶、人脈與封印物，編排一鍵連招。',
+  artifactDetails: '封印物詳情',
+  viewAction: '查看動作 {{n}}',
+  gameSchemeMessage: '複製該訊息，在推薦方案介面右下角點擊【匯入】，一鍵使用來自【{{name}}】的方案 。',
+  gameComboMessage: '複製該訊息，在一鍵輔助介面右下角點擊【匯入】，一鍵使用來自【{{name}}】的方案 。',
   pathway: '途徑', descriptionLabel: '方案描述', loadout: '技能搭配', fellow: '人脈技能',
   talent: '途徑天賦', maxTalent: '滿級', talentEffect: '天賦 · {{name}}',
   fixedSkills: '固定技能', basicAttack: '普通攻擊', specialSkill: '特殊技能', tacticalSkill: '戰略技能',
@@ -104,5 +124,9 @@ const zhTW: Messages = {
   paramPresence: '是否存在', paramCard: '卡牌', unknownCondition: '條件 {{id}}',
   uncarried: '此技能尚未在目前搭配中攜帶。', newPathway: '新途徑', nameLimit: '最多 {{n}} 個字。',
   invalidConditions: '請檢查條件參數範圍及途徑要求。',
+  decontrol: '解控', finisher: '終結', otherSkills: '其他技能',
+  timeline: '釋放順序', commands: '動作列表', editAction: '編輯動作 {{n}}', saveAction: '儲存動作',
+  conditionCount: '{{n}} 個釋放條件', unavailableAction: '請檢查動作及途徑天賦',
+  talentChanged: '天賦已更新，不適用的攜帶技能已移除，請檢查連招中標記的動作。',
 }
 export const buildMessages = { 'en-US': en, 'zh-CN': zhCN, 'zh-TW': zhTW }

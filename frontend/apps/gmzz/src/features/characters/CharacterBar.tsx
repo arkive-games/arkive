@@ -14,9 +14,9 @@ import { TYPE } from '@/lib/typography'
 const LOCAL = ''
 
 /** The link a character is shared by: the page's own address for it. */
-export function characterUrl(id: string): string {
+export function characterUrl(id: string, surface: 'score' | 'build' = 'score'): string {
   const base = import.meta.env.BASE_URL.replace(/\/+$/, '')
-  return `${window.location.origin}${base}/score/c/${id}`
+  return window.location.origin + base + (surface === 'build' ? '/tools/build/c/' : '/score/c/') + encodeURIComponent(id)
 }
 
 const STATUS_KEY: Record<SyncStatus, string> = {
@@ -55,7 +55,7 @@ const STATUS_TONE: Partial<Record<SyncStatus, string>> = {
  * where no character API is configured, so the local draft and the way to sign
  * in are always visible.
  */
-export function CharacterBar() {
+export function CharacterBar({ surface = 'score' }: { surface?: 'score' | 'build' }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const ctx = useCharacter()
@@ -71,7 +71,10 @@ export function CharacterBar() {
 
   const owned = Boolean(character?.editable)
   const open = (target: string | null) => {
-    if (target === null) void navigate({ to: '/score', search: { draft: true } })
+    if (surface === 'build') {
+      if (target === null) void navigate({ to: '/tools/build' })
+      else void navigate({ to: '/tools/build/c/$id', params: { id: target } })
+    } else if (target === null) void navigate({ to: '/score', search: { draft: true } })
     else void navigate({ to: '/score/c/$id', params: { id: target } })
   }
   const full = (characters?.length ?? 0) >= MAX_CHARACTERS
@@ -92,11 +95,11 @@ export function CharacterBar() {
   const copyLink = async () => {
     if (!id) return
     try {
-      await navigator.clipboard.writeText(characterUrl(id))
+      await navigator.clipboard.writeText(characterUrl(id, surface))
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
-      window.prompt(t('characters.copyLink'), characterUrl(id))
+      window.prompt(t('characters.copyLink'), characterUrl(id, surface))
     }
   }
 
