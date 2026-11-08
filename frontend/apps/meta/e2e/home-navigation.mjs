@@ -33,6 +33,7 @@ try {
       checks++
     }
     await home()
+    assert.equal(await page.locator('a.home-slide .home-slide-go').count(), 0)
     const gameCount = await page.locator('.home-quick a:has(.is-game)').count()
     assert.ok(gameCount > 0)
     for (let index = 0; index < gameCount; index++) {

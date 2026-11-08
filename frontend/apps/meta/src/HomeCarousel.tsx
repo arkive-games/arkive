@@ -66,7 +66,7 @@ interface Slide {
   banner: string
   phoneBanner?: string
   bannerPosition?: string
-  /** The art carries its own title, so only the action pill is drawn over it. */
+  /** The art carries its own title, so the repeated icon and text are hidden. */
   poster?: boolean
   icon: string
   color?: string
@@ -296,7 +296,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
                     <b>{slide.name}</b>
                     <em>{slide.desc}</em>
                   </span>
-                  <span className="home-slide-go" aria-hidden="true">{slide.go} →</span>
+                  {!slide.href && <span className="home-slide-go" aria-hidden="true">{slide.go} →</span>}
                 </span>
               </>
             )
