@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "date": "2026-11-08",
+      "commit": "b323a0390e09de2ac516701896a2315b6fec319f",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Open homepage game banners and shortcuts with one click, without selecting a banner first or accidentally dragging an icon.",
+            "zh-CN": "首页游戏大图和方块单击即可进入，无需先选中大图，并避免图标误拖拽吞掉点击。",
+            "zh-TW": "首頁遊戲大圖與方塊單擊即可進入，無需先選中大圖，並避免圖示誤拖曳吞掉點擊。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-10-31",
       "commit": "094b5fcb51fea2022e5af702ae2eab50190f2e04",
       "targets": [
