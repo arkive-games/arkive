@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.30.0",
+      "date": "2026-11-08",
+      "commit": "ec02b7d01243407206df2ab69ff0b8d22b63de6d",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Build loadouts with pathway, puppet and connection skills and carried relics; edit conditions and import or export game one-click combos.",
+            "zh-CN": "新增 Build 模拟器，可搭配途径、秘偶、人脉技能与封印物，编辑释放条件并导入导出游戏一键连招。",
+            "zh-TW": "新增 Build 模擬器，可搭配途徑、秘偶、人脈技能與封印物，編輯釋放條件並匯入匯出遊戲一鍵連招。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.29.2",
       "date": "2026-10-29",
       "commit": "b8d25e084e1b07000dbe095cd40fa71d89cb0083",
