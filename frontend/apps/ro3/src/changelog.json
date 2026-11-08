@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.1",
+      "date": "2026-11-08",
+      "commit": "299d9d5d784dfa30e2912060820dce7db74f64cf",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Separate cards into larger square slots, unify inline selection grids, and simplify attribute and removal controls.",
+            "zh-CN": "卡片独立成板块并放大为方形框，候选统一页内网格，简化属性加点与移除操作。",
+            "zh-TW": "卡片獨立成板塊並放大為方形框，候選統一頁內網格，簡化屬性加點與移除操作。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.0",
       "date": "2026-11-08",
       "commit": "60b0911dd5b09fb40faf4cd83d3f9093987c8e6e",
