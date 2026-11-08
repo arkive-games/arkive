@@ -33,7 +33,13 @@ try {
       checks++
     }
     await home()
-    assert.equal(await page.locator('a.home-slide .home-slide-go').count(), 0)
+    assert.equal(await page.locator('.home-slide-go').count(), 0)
+    const recruit = page.locator('button.home-slide[data-d="0"]')
+    if (touch) await recruit.tap()
+    else await recruit.click()
+    await page.getByRole('dialog').waitFor({ state: 'visible' })
+    checks++
+    await home()
     const gameCount = await page.locator('.home-quick a:has(.is-game)').count()
     assert.ok(gameCount > 0)
     for (let index = 0; index < gameCount; index++) {

@@ -296,7 +296,6 @@ export function HomeCarousel({ sites, onOpenSite }: {
                     <b>{slide.name}</b>
                     <em>{slide.desc}</em>
                   </span>
-                  {!slide.href && <span className="home-slide-go" aria-hidden="true">{slide.go} →</span>}
                 </span>
               </>
             )
