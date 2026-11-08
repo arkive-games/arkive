@@ -93,16 +93,16 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
       <div className="home-shell">
         <nav className="home-quick" aria-label={t('landing.quick.label')}>
           {/* Phantom Blade Zero leads the row; it is not a SiteCard yet (see upcoming.ts). */}
-          <a href={UPCOMING_PBZ.url} style={{ '--i': 0, '--qc': UPCOMING_PBZ.color } as CSSProperties}>
+          <a href={UPCOMING_PBZ.url} draggable={false} style={{ '--i': 0, '--qc': UPCOMING_PBZ.color } as CSSProperties}>
             <span className="home-quick-tile">
-              <span className="home-quick-icon is-game"><img src={UPCOMING_PBZ.icon} alt="" /></span>
+              <span className="home-quick-icon is-game"><img src={UPCOMING_PBZ.icon} alt="" draggable={false} /></span>
             </span>
             <span>{t(UPCOMING_PBZ.nameKey)}</span>
           </a>
           {games.map((site, index) => (
-            <a key={site.id} href={siteHref(site)} style={{ '--i': index + 1, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
+            <a key={site.id} href={siteHref(site)} draggable={false} style={{ '--i': index + 1, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
               <span className="home-quick-tile">
-                <span className="home-quick-icon is-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" /></span>
+                <span className="home-quick-icon is-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" draggable={false} /></span>
                 {recentUpdateDays(updatedDates[site.id], now) !== undefined && <b>{badge}</b>}
               </span>
               <span>{t(site.nameKey)}</span>

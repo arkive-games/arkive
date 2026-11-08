@@ -83,9 +83,9 @@ function slotOf(index: number, current: number, length: number) {
 
 /**
  * A coverflow of five posters -- recruitment, Phantom Blade Zero, then the
- * games in `CAROUSEL_GAMES` -- the middle one flat and linked, its neighbours
- * turned away either side. A tap on a neighbour brings it to the middle rather
- * than opening it. Advances every five seconds unless stopped
+ * games in `CAROUSEL_GAMES` -- the middle one flat, its neighbours turned away
+ * either side. Every visible slide opens on one click; swipes, arrows and dots
+ * change the active slide. Advances every five seconds unless stopped
  * with the pause button, hovered, focused, hidden, or the visitor prefers
  * reduced motion.
  */
@@ -266,13 +266,8 @@ export function HomeCarousel({ sites, onOpenSite }: {
             const onClick = (event: MouseEvent<HTMLElement>) => {
               const moved = swipe.current?.moved
               swipe.current = null
-              if (moved || d !== 0) {
+              if (moved) {
                 event.preventDefault()
-                if (!moved && d !== 0) {
-                  // The tap focused this slide, which is about to be hidden.
-                  followFocus.current = true
-                  go(Math.sign(d))
-                }
                 return
               }
               slide.open()
@@ -282,10 +277,9 @@ export function HomeCarousel({ sites, onOpenSite }: {
               'data-d': d,
               draggable: false,
               'aria-label': slide.name,
-              // Only the middle slide opens; a tap on a neighbour just rotates,
-              // so assistive tech is pointed at the dots instead.
-              'aria-hidden': d !== 0 ? true : undefined,
-              tabIndex: d === 0 ? undefined : -1,
+              // Every visible slide opens directly, including the neighbours.
+              'aria-hidden': Math.abs(d) > 1 ? true : undefined,
+              tabIndex: Math.abs(d) <= 1 ? undefined : -1,
               onClick,
             }
             const content = (
