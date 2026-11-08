@@ -1,5 +1,6 @@
 import {
   IconChartBar,
+  IconSwords,
   IconDna2,
   IconGauge,
   IconRoute,
@@ -9,6 +10,7 @@ import {
 
 /** Keyed by feature id; a tool without an entry gets the generic wrench. */
 export const TOOL_ICONS: Record<string, Icon> = {
+  'gmzz-build': IconSwords,
   'palworld-breeding': IconDna2,
   'palworld-stat-simulator': IconChartBar,
   'gmzz-score': IconGauge,

@@ -1,4 +1,5 @@
 import i18n from 'i18next'
+import { buildMessages } from './features/builds/messages'
 import { secretPartnerMessages } from './features/secretpartners/messages'
 import { managedTradeMessages } from './features/managedtrade/messages'
 import { characterMessages } from './features/characters/messages'
@@ -2460,7 +2461,7 @@ function withScoreMessages(base: Strings, lng: Language): Strings {
 void i18n.use(initReactI18next).init({
   lng: detectLanguagePreference(LANGUAGES, 'en-US'),
   resources: Object.fromEntries(
-    LANGUAGES.map((lng) => [lng, { translation: { ...withScoreMessages(UI[lng] ?? en, lng), secretpartners: secretPartnerMessages[lng], managedtrade: managedTradeMessages[lng], characters: characterMessages[lng] } }]),
+    LANGUAGES.map((lng) => [lng, { translation: { ...withScoreMessages(UI[lng] ?? en, lng), builds: buildMessages[lng], secretpartners: secretPartnerMessages[lng], managedtrade: managedTradeMessages[lng], characters: characterMessages[lng] } }]),
   ),
   supportedLngs: [...LANGUAGES],
   fallbackLng: 'en-US',

@@ -75,6 +75,12 @@ export const FEATURES: readonly GameFeature[] = [
 
   // Lord of Mysteries
   {
+    id: 'gmzz-build', gameId: 'gmzz', kind: 'tool', path: '/tools/build',
+    name: text('Build Simulator', 'Build 模拟器', 'Build 模擬器'),
+    description: text('Plan a loadout and import or export game one-click combos.', '搭配技能、秘偶、人脉与封印物，导入导出游戏一键连招。', '搭配技能、秘偶、人脈與封印物，匯入匯出遊戲一鍵連招。'),
+    keywords: ['build', 'combo', '连招', '連招', '配装', '配裝'],
+  },
+  {
     id: 'gmzz-score', gameId: 'gmzz', kind: 'tool', path: '/score',
     name: text('Beyonder Rating Calculator', '非凡评分计算器', '非凡評分計算器'),
     description: text('Grade the 14 rating items against the benchmark for your level.', '填入 14 项评分，对照当前等级查看养成进度。', '填入 14 項評分，對照當前等級查看養成進度。'),

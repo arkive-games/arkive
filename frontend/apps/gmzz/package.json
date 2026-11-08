@@ -19,6 +19,7 @@
     "@tanstack/react-router": "^1.170.21",
     "i18next": "^26.3.6",
     "lucide-react": "^1.29.0",
+    "msgpackr": "1.11.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.11"

@@ -8,6 +8,7 @@ import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import './i18n'
 import HomePage from './features/home/HomePage'
+import BuildPage from './features/builds/BuildPage'
 import TrainTradeGoodsPage from './features/traintrade/TrainTradeGoodsPage'
 import TrainTradeStationToolPage from './features/traintrade/TrainTradeStationToolPage'
 import UtopiaPage from './features/utopia/UtopiaPage'
@@ -41,6 +42,7 @@ const rootRoute = createRootRoute({
 })
 
 const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: HomePage })
+const buildRoute = createRoute({ getParentRoute: () => rootRoute, path: '/tools/build', component: BuildPage })
 const trainTradeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/traintrade', component: TrainTradeGoodsPage })
 const stationToolRoute = createRoute({ getParentRoute: () => rootRoute, path: '/tools/traintrade-station', component: TrainTradeStationToolPage })
 const utopiaRoute = createRoute({ getParentRoute: () => rootRoute, path: '/utopia', component: UtopiaPage })
@@ -77,6 +79,7 @@ const fellowRelationsRoute = createRoute({ getParentRoute: () => rootRoute, path
 const managedTradeRoute = createRoute({ getParentRoute: () => rootRoute, path: '/managedtrade', validateSearch: managedTradeSearch, component: ManagedTradePage })
 
 const routeTree = rootRoute.addChildren([
+  buildRoute,
   homeRoute, trainTradeRoute, stationToolRoute, utopiaRoute, reforgeRoute, scoreRoute, savedScoreRoute, changelogRoute, leaguePointsRoute,
   autoChessRoute, autoChessPiecesRoute, autoChessBondsRoute, autoChessItemsRoute, autoChessTalentsRoute,
   fellowsRoute, fellowRelationsRoute, managedTradeRoute,

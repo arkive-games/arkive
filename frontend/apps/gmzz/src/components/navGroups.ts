@@ -20,6 +20,7 @@ import {
 
 export type NavKey =
   | '/'
+  | '/tools/build'
   | '/traintrade'
   | '/managedtrade'
   | '/tools/traintrade-station'
@@ -80,6 +81,7 @@ export const NAV_GROUPS: NavGroup[] = [
     labelKey: 'nav.tools',
     icon: Wrench,
     children: [
+      { key: '/tools/build', labelKey: 'builds.title', descKey: 'builds.description', art: 'builds/Bard_Skill_03', icon: Swords },
       // Goods art, since the planner is about what you carry between stations.
       { key: '/tools/traintrade-station', labelKey: 'nav.stationTool', descKey: 'home.desc.stationTool', art: 'icons/2000270', icon: Route },
       // Equipment, which is what the calculator scores.

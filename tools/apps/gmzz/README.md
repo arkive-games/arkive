@@ -646,6 +646,41 @@ client's `Manifest_UFSFiles_Win64.txt` but absent from what uex indexes
 (`ConfigIcon` resolves to one file, against 18130 manifest entries), so the
 asset name is emitted for a later run to resolve and the page is typographic.
 
+## Build simulator and one-click combos
+
+```bash
+uv run python -m gmzz.builds
+```
+
+Writes `builds/catalog.json` to `GMZZ_DATA_OUT`, converts available skill
+icons into `GMZZ_RES_OUT/builds/`, and stamps the data version. Optional
+`--data-out` and `--res-out` point at isolated artifact worktrees.
+Run the existing relic, fellow and secret-partner pipelines for the remaining
+picker data and artwork. The frontend route is `/tools/build`.
+
+`RoleSkillUnlockData` owns selectable skill IDs and branch families;
+`SkillDataNew` also contains internal attacks and is not a selectable roster.
+Slots 1-4 carry pathway skills, 17 a connection skill and 20 a puppet skill.
+Relic groups map directly to the three carried slots. Missing optional skill
+artwork yields an empty icon field rather than a broken resource URL.
+
+The share codec follows the local client's `SchemeUtils` and
+`SkillCustomSystem_SchemeRecommend`: MessagePack with numeric scheme keys,
+zero padding to eight bytes, six Base62 characters per big-endian uint32, and
+an FNV-1a checksum seeded by the three little-endian bytes of key 10745794.
+The wire skill dictionary maps skill ID to slot; the editor inverts it.
+Combo nodes contain an action and OR groups of AND conditions. Health uses
+fractions; cooldown checks distinguish skill (1) from slot (2); card colors
+are blue (0) and yellow (1). Limits come from the client's constant table.
+
+Import retains unedited equipment, talents, season and connection metadata;
+a combo-only import on the same pathway retains the current full scheme.
+Changing pathway discards pathway-specific imported metadata. Unknown client
+actions and conditions survive round trips. This is a loadout and combo
+editor, with no damage or combat simulation. Codec fixtures and a generated
+share were verified against the local client functions for build 2228458;
+import into a running game remains a separate manual compatibility check.
+
 ## Table-only refreshes
 
 `gmzz.equipment --reuse-assets` checks the resource checkout before emitting

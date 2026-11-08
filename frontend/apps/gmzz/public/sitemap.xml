@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://gmzz.arkive.games/</loc></url>
+  <url><loc>https://gmzz.arkive.games/tools/build</loc></url>
   <url><loc>https://gmzz.arkive.games/autochess</loc></url>
   <url><loc>https://gmzz.arkive.games/autochess/chess</loc></url>
   <url><loc>https://gmzz.arkive.games/autochess/bonds</loc></url>
