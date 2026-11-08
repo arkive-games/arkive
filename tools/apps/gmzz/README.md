@@ -675,6 +675,16 @@ are blue (0) and yellow (1). Limits come from the client's constant table.
 
 Import retains unedited equipment, talents, season and connection metadata;
 a combo-only import on the same pathway retains the current full scheme.
+The build editor selects a pathway talent tree at full level. Its complete
+export writes the tree ID and a numeric-keyed node map: key 1 lists activated
+special nodes, key 2 lists normal `[nodeId, maxLevel]` pairs. Combo-only exports
+omit both talent fields. Older drafts retain the tree in their original share,
+or fall back to the pathway's client-defined tree. Skill effects pair
+`RelatedRoleSkillID` with `SkillPointDesc` by index;
+`PointDesc` is the tree summary and sometimes differs from skill-panel text.
+Rows with `DisplayOrder = -1` remain available for imported IDs but stay out
+of pickers, except explicit talent-unlocked branches. Switching tree restores
+an unavailable branch to its base skill.
 Changing pathway discards pathway-specific imported metadata. Unknown client
 actions and conditions survive round trips. This is a loadout and combo
 editor, with no damage or combat simulation. Codec fixtures and a generated

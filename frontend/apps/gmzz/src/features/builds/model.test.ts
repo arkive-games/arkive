@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { decodeShare, encodeShare, signBytes, fromBase62, toBase62 } from './codec'
-import { emptyBuild, equipSkill, exportBuild, importBuild, isBuild, normalizeNodes, type BuildDraft } from './model'
+import { availableSkill, changeTalent, emptyBuild, equipSkill, exportBuild, importBuild, isBuild, normalizeNodes, rememberedTalentTreeId, type BuildDraft } from './model'
+import type { TalentTree } from '../score/talents'
+import type { Skill } from './data'
 
 const draft = (): BuildDraft => ({ ...emptyBuild(), name: 'Test', slots: { '1': 86011020, '17': 87001710, '20': 87303030 }, sealed: { '1': 2085001 },
   nodes: [[{ ActionName: 1, ActionParam: 86011020 }, [[[5, [0, 0.6]]], [[1, [12, 1]]]]], [{ ActionName: 2, ActionParam: 17 }, []]] })
@@ -83,5 +85,46 @@ describe('client one-click share codec', () => {
     expect(next.slots['1']).toBeUndefined()
     expect(next.slots['2']).toBe(86011048)
     expect(current.slots['1']).toBe(86011020)
+  })
+  it('exports the chosen full talent tree using the client special-list and normal-detail keys', () => {
+    const tree = { id: 102, professionId: 1200001, nodes: [
+      { key: 10200, type: 'normal', maxLevel: 15 }, { key: 10205, type: 'special', maxLevel: 0 },
+    ] } as TalentTree
+    const wire = decodeShare(exportBuild(draft(), false, tree))
+    expect(wire.get(5)).toBe(102)
+    expect(wire.get(6)).toEqual(new Map<number, unknown>([[1, [10205]], [2, [[10200, 15]]]]))
+    const imported = importBuild(encodeShare(wire), emptyBuild())
+    expect(imported.talentTreeId).toBe(102)
+    expect(importBuild(exportBuild(draft(), true), imported).talentTreeId).toBe(102)
+    const combo = decodeShare(exportBuild(imported, true, tree))
+    expect(combo.has(5)).toBe(false)
+    expect(combo.has(6)).toBe(false)
+    expect(() => exportBuild(draft(), false, { ...tree, professionId: 1200002 })).toThrow()
+  })
+  it('retains old drafts and treats an explicitly unset imported tree as unselected', () => {
+    expect(isBuild(draft())).toBe(true)
+    expect(isBuild({ ...draft(), talentTreeId: -1 })).toBe(false)
+    const wire = decodeShare(exportBuild(draft()))
+    wire.set(5, 0)
+    expect(importBuild(encodeShare(wire), emptyBuild()).talentTreeId).toBeUndefined()
+    wire.set(5, 102)
+    const legacy = { ...draft(), original: encodeShare(wire) }
+    expect(rememberedTalentTreeId(legacy)).toBe(102)
+    expect(rememberedTalentTreeId({ ...legacy, talentTreeId: 101 })).toBe(101)
+    expect(rememberedTalentTreeId({ ...legacy, professionId: 1200002 })).toBeUndefined()
+    expect(rememberedTalentTreeId({ ...legacy, original: 'damaged' })).toBeUndefined()
+  })
+  it('hides internal skills and gates playable branches to their talent tree', () => {
+    const base = { id: 86011040, professionId: 1200001, order: 6, family: 86011040, requiredTalentTreeId: null } as Skill
+    const branch = { ...base, id: 86011048, order: -1, requiredTalentTreeId: 101 }
+    const internal = { ...base, id: 86011025, order: -1 }
+    expect(availableSkill(base, 1200001, 102)).toBe(true)
+    expect(availableSkill(branch, 1200001, 101)).toBe(true)
+    expect(availableSkill(branch, 1200001, 102)).toBe(false)
+    expect(availableSkill(internal, 1200001, 101)).toBe(false)
+    expect(availableSkill(base, 1200002, 201)).toBe(false)
+    const current = { ...draft(), slots: { '1': branch.id, '17': 87001710 } }
+    expect(changeTalent(current, 102, [base, branch]).slots).toEqual({ '1': base.id, '17': 87001710 })
+    expect(current.slots['1']).toBe(branch.id)
   })
 })

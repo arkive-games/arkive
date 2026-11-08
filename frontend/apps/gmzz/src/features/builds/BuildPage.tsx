@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp, Check, Copy, Download, FilePlus, Plus, Trash2, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMemory } from '@gamemap/state-memory'
@@ -9,9 +9,10 @@ import { IconTile } from '../equipment/PickerModal'
 import { plainText } from '../fellows/data'
 import { iconUrl } from '../../lib/urls'
 import { useRemoteData } from '../../lib/useRemoteData'
+import { treeFor, treesFor } from '../score/talents'
 import { loadBuildData, skillIcon, type BuildData, type Skill } from './data'
 import { buildDraft } from './memory'
-import { emptyBuild, equipSkill, exportBuild, importBuild, normalizeNodes, SKILL_SLOTS, SEALED_SLOTS, type BuildDraft, type ComboNode } from './model'
+import { availableSkill, changeTalent, emptyBuild, equipSkill, exportBuild, importBuild, normalizeNodes, rememberedTalentTreeId, SKILL_SLOTS, SEALED_SLOTS, type BuildDraft, type ComboNode } from './model'
 import { ConditionEditor, SELECT_CLASS } from './ConditionEditor'
 import { validConditions } from './rules'
 
@@ -44,8 +45,11 @@ function BuildEditor({ data }: { data: BuildData }) {
   const [preset, setPreset] = useState(0)
   const [copied, setCopied] = useState(false)
   const { catalog } = data
+  const talentTrees = treesFor(data.talents, draft.professionId)
+  const talentTree = useMemo(() => treeFor(data.talents, draft.professionId, rememberedTalentTreeId(draft) ?? null), [data.talents, draft])
   const skillById = useMemo(() => new Map(catalog.skills.map((skill) => [skill.id, skill])), [catalog.skills])
-  const skills = catalog.skills.filter((skill) => skill.professionId === draft.professionId || !skill.professionId)
+  const skills = catalog.skills.filter((skill) => availableSkill(skill, draft.professionId, talentTree?.id))
+  const fixedSkills = skills.filter((skill) => [1, 3, 9].includes(skill.type)).sort((a, b) => a.order - b.order || a.id - b.id)
   const presets = catalog.presets[String(draft.professionId)] ?? []
   const skillName = (id: number) => skillById.get(id)?.name ?? t('builds.unknown', { id })
   const slotName = (slot: number) => slot === 17 ? tr('fellow') : slot === 20 ? tr('puppet') : t('builds.skillSlot', { n: slot })
@@ -59,8 +63,8 @@ function BuildEditor({ data }: { data: BuildData }) {
     && draft.nodes.every((node) => validConditions(node, catalog, draft.professionId))
   const exported = useMemo(() => {
     if (!canExport) return ''
-    try { return exportBuild(draft, onlyCombo) } catch { return '' }
-  }, [draft, onlyCombo, canExport])
+    try { return exportBuild(draft, onlyCombo, talentTree) } catch { return '' }
+  }, [draft, onlyCombo, canExport, talentTree])
   function changeProfession(id: number) {
     const run = () => {
       setDraft({ ...emptyBuild(), name: draft.name, description: draft.description, professionId: id,
@@ -74,10 +78,16 @@ function BuildEditor({ data }: { data: BuildData }) {
     return data.fellows.find((fellow) => fellow.skill.id === skill.id)?.name ?? data.partners.find((partner) => partner.skill.id === skill.id)?.name ?? ''
   }
   function SkillDetails({ skill }: { skill: Skill }) {
+    const effects = (skill.talentEffects ?? []).filter((effect) => effect.treeId === talentTree?.id)
     return <><div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
       {owner(skill) && <span>{owner(skill)}</span>}{skill.cooldown != null && <span>{t('builds.cooldown', { n: skill.cooldown })}</span>}
       {skill.tags.map((tag) => <span key={tag}>{tag}</span>)}
-    </div><p className="whitespace-pre-line text-sm leading-relaxed">{plainText(skill.brief || skill.description)}</p></>
+    </div><p className="whitespace-pre-line text-sm leading-relaxed">{plainText(skill.description || skill.brief)}</p>
+      {effects.map((effect) => <div key={effect.nodeId} className="space-y-1 border-l-2 border-primary/40 pl-3">
+        <p className="text-xs font-semibold text-primary">{t('builds.talentEffect', { name: effect.name })}</p>
+        <p className="whitespace-pre-line text-sm leading-relaxed">{plainText(effect.description)}</p>
+      </div>)}
+    </>
   }
   function slotTile(slot: number) {
     const id = draft.slots[String(slot)]
@@ -94,13 +104,12 @@ function BuildEditor({ data }: { data: BuildData }) {
     </div>
   }
   const selectedSkills = SKILL_SLOTS.flatMap((slot) => skillById.get(draft.slots[String(slot)]) ?? [])
-  let pickerRows: { id: number; name: string; description: string; icon?: string; quality: number | null; extra?: ReactNode }[] = []
+  let pickerRows: { id: number; name: string; description: string; icon?: string; quality: number | null }[] = []
   if (picker?.kind === 'skill') {
     const type = picker.slot === 17 ? 7 : picker.slot === 20 ? 8 : 2
-    pickerRows = catalog.skills.filter((skill) => skill.type === type && (type !== 2 || skill.professionId === draft.professionId))
+    pickerRows = catalog.skills.filter((skill) => skill.type === type && availableSkill(skill, draft.professionId, talentTree?.id))
       .sort((a, b) => a.order - b.order || a.id - b.id)
-      .map((skill) => ({ id: skill.id, name: [owner(skill), skill.name].filter(Boolean).join(' · '), description: plainText(skill.brief || skill.description), icon: skillIcon(skill.icon), quality: null,
-        extra: <SkillDetails skill={skill} /> }))
+      .map((skill) => ({ id: skill.id, name: skill.name, description: [owner(skill), plainText(skill.brief || skill.description)].filter(Boolean).join(' '), icon: skillIcon(skill.icon), quality: null }))
   } else if (picker) {
     pickerRows = data.relics.artifacts.filter((artifact) => artifact.groupId === picker.slot).map((artifact) => ({ id: artifact.id, name: artifact.name, description: plainText(artifact.description), icon: artifact.icon ? iconUrl(artifact.icon) : undefined, quality: artifact.quality }))
   }
@@ -115,6 +124,11 @@ function BuildEditor({ data }: { data: BuildData }) {
             {catalog.professions.map((profession) => <option key={profession.id} value={profession.id}>{profession.name}</option>)}
           </select>
         </label>
+        {talentTree && <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">{tr('talent')}
+          <select aria-label={tr('talent')} className={SELECT_CLASS} value={talentTree.id} onChange={(event) => setDraft(changeTalent(draft, Number(event.target.value), catalog.skills))}>
+            {talentTrees.map((tree) => <option key={tree.id} value={tree.id}>{tree.name} · {tr('maxTalent')}</option>)}
+          </select>
+        </label>}
         <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">{tr('name')}
           <Input className="w-48 max-w-full" value={draft.name} maxLength={catalog.limits.name} placeholder={tr('unnamed')} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
         </label>
@@ -131,6 +145,16 @@ function BuildEditor({ data }: { data: BuildData }) {
       {selectedSkills.length > 0 && <details className="border-b border-border pb-4"><summary className="cursor-pointer text-sm text-muted-foreground">{tr('details')}</summary>
         <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">{selectedSkills.map((skill) => <article key={skill.id} className="min-w-0 space-y-1"><h3 className="text-sm font-semibold">{skill.name}</h3><SkillDetails skill={skill} /></article>)}</div>
       </details>}
+    </section>
+    <section aria-label={tr('fixedSkills')} className="space-y-4 border-t border-border pt-5">
+      <h2 className="text-lg font-semibold">{tr('fixedSkills')}</h2>
+      <div className="grid gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3">{fixedSkills.map((skill) => <article key={skill.id} className="min-w-0 space-y-2" aria-label={skill.name}>
+        <div className="flex items-center gap-3">
+          <IconTile quality={null} src={skillIcon(skill.icon)} label={skill.name.slice(0, 1)} className="size-10" />
+          <div className="min-w-0"><h3 className="break-words text-sm font-semibold">{skill.name}</h3><p className="text-xs text-muted-foreground">{tr(skill.type === 1 ? 'basicAttack' : skill.type === 9 ? 'tacticalSkill' : 'specialSkill')}</p></div>
+        </div>
+        <SkillDetails skill={skill} />
+      </article>)}</div>
     </section>
     <section aria-label={tr('sealed')} className="space-y-3">
       <h2 className="text-lg font-semibold">{tr('sealed')}</h2>
@@ -188,15 +212,15 @@ function BuildEditor({ data }: { data: BuildData }) {
       <DialogContent className="flex max-h-[85dvh] flex-col sm:max-w-2xl" aria-describedby={undefined}>
         <DialogHeader><DialogTitle>{picker?.kind === 'skill' ? slotName(picker.slot) : tr('sealed')}</DialogTitle></DialogHeader>
         <SearchInput value={query} onChange={setQuery} placeholder={tr('search')} aria-label={tr('search')} />
-        <div className="min-h-0 overflow-y-auto overscroll-contain"><div className="divide-y divide-border">{filteredRows.map((row) => <button key={row.id} className="flex w-full items-start gap-3 p-3 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" onClick={() => {
+        <div className="min-h-0 overflow-y-auto overscroll-contain"><div className={picker?.kind === 'skill' ? 'grid grid-cols-2 gap-2 sm:grid-cols-4' : 'divide-y divide-border'}>{filteredRows.map((row) => <button key={row.id} className={'relative flex w-full items-center rounded hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring ' + (picker?.kind === 'skill' ? 'min-h-24 flex-col justify-center gap-2 p-2 text-center' : 'min-h-16 gap-3 p-3 text-left')} onClick={() => {
           if (!picker) return
           if (picker.kind === 'skill') setDraft(equipSkill(draft, picker.slot, row.id, familyOf))
           else setDraft({ ...draft, sealed: { ...draft.sealed, [picker.slot]: row.id } })
           setPicker(null)
         }} aria-label={t('builds.select', { name: row.name })}>
           <IconTile quality={row.quality} src={row.icon} label={row.name.slice(0, 1)} className="size-12" />
-          <div className="min-w-0 flex-1 space-y-1"><h3 className="text-sm font-semibold">{row.name}</h3>{row.extra ?? <p className="text-sm leading-relaxed text-muted-foreground">{row.description}</p>}</div>
-          {(picker?.kind === 'skill' ? draft.slots[String(picker.slot)] : draft.sealed[String(picker?.slot)]) === row.id && <Check className="size-4 shrink-0 text-primary" />}
+          <div className={'min-w-0 space-y-1 ' + (picker?.kind === 'skill' ? 'w-full' : 'flex-1')}><h3 className="break-words text-sm font-semibold">{row.name}</h3>{picker?.kind === 'sealed' && <p className="text-sm leading-relaxed text-muted-foreground">{row.description}</p>}</div>
+          {(picker?.kind === 'skill' ? draft.slots[String(picker.slot)] : draft.sealed[String(picker?.slot)]) === row.id && <Check className={'size-4 shrink-0 text-primary ' + (picker?.kind === 'skill' ? 'absolute right-2 top-2' : '')} />}
         </button>)}</div>{!filteredRows.length && <p className="p-8 text-center text-sm text-muted-foreground">{tr('noResults')}</p>}</div>
       </DialogContent>
     </Dialog>

@@ -1,6 +1,8 @@
 const en = {
   title: 'Build Simulator', description: 'Plan skills, puppets, connections, relics and one-click combos.',
   pathway: 'Pathway', name: 'Plan name', descriptionLabel: 'Description',
+  talent: 'Pathway talent', maxTalent: 'Max level', talentEffect: 'Talent · {{name}}',
+  fixedSkills: 'Fixed skills', basicAttack: 'Basic attack', specialSkill: 'Special skill', tacticalSkill: 'Tactical skill',
   loadout: 'Loadout', sequence: 'Sequence skills', puppet: 'Puppet skill', fellow: 'Connection skill',
   skillSlot: 'Skill {{n}}', sealedSlot: 'Relic {{n}}', sealed: 'Carried relics',
   empty: 'Select', clear: 'Remove', search: 'Search names, skills and effects', noResults: 'No matches',
@@ -37,6 +39,8 @@ type Messages = { [K in keyof typeof en]: string }
 const zhCN: Messages = {
   title: 'Build 模拟器', description: '搭配技能、秘偶、人脉与封印物，编排一键连招。',
   pathway: '途径', name: '方案名称', descriptionLabel: '方案描述',
+  talent: '途径天赋', maxTalent: '满级', talentEffect: '天赋 · {{name}}',
+  fixedSkills: '固定技能', basicAttack: '普通攻击', specialSkill: '特殊技能', tacticalSkill: '战略技能',
   loadout: '技能搭配', sequence: '序列技能', puppet: '秘偶技能', fellow: '人脉技能',
   skillSlot: '技能 {{n}}', sealedSlot: '封印物 {{n}}', sealed: '封印物携带',
   empty: '选择', clear: '移除', search: '搜索名称、技能和效果', noResults: '没有匹配结果',
@@ -72,6 +76,8 @@ const zhCN: Messages = {
 const zhTW: Messages = {
   ...zhCN, title: 'Build 模擬器', description: '搭配技能、秘偶、人脈與封印物，編排一鍵連招。',
   pathway: '途徑', descriptionLabel: '方案描述', loadout: '技能搭配', fellow: '人脈技能',
+  talent: '途徑天賦', maxTalent: '滿級', talentEffect: '天賦 · {{name}}',
+  fixedSkills: '固定技能', basicAttack: '普通攻擊', specialSkill: '特殊技能', tacticalSkill: '戰略技能',
   skillSlot: '技能 {{n}}', sealedSlot: '封印物 {{n}}', sealed: '封印物攜帶',
   empty: '選擇', clear: '移除', search: '搜尋名稱、技能和效果', noResults: '沒有符合的結果',
   cooldown: '冷卻 {{n}} 秒', select: '選擇{{name}}', unknown: '未知 ID {{id}}',

@@ -1,4 +1,6 @@
 import { decodeShare, encodeShare, extractCode, plain, MAX_CODE_LENGTH } from './codec'
+import type { TalentTree } from '../score/talents'
+import type { Skill } from './data'
 
 export type Condition = [number, number[]]
 export type ComboNode = [{ ActionName: number; ActionParam: number }, Condition[][]]
@@ -6,6 +8,7 @@ export type BuildDraft = {
   name: string
   description: string
   professionId: number
+  talentTreeId?: number
   slots: Record<string, number>
   sealed: Record<string, number>
   nodes: ComboNode[]
@@ -31,6 +34,7 @@ export function isNode(value: unknown): value is ComboNode {
 export function isBuild(value: unknown): value is BuildDraft {
   return record(value) && typeof value.name === 'string' && value.name.length <= 100
     && typeof value.description === 'string' && value.description.length <= 1000 && positive(value.professionId)
+    && (value.talentTreeId === undefined || positive(value.talentTreeId))
     && idDict(value.slots) && idDict(value.sealed) && Object.keys(value.slots).length <= 32 && Object.keys(value.sealed).length <= 16
     && Array.isArray(value.nodes) && value.nodes.length <= 50 && value.nodes.every(isNode)
     && positive(value.iconId) && typeof value.original === 'string' && value.original.length <= MAX_CODE_LENGTH
@@ -76,6 +80,7 @@ export function importBuild(input: string, current: BuildDraft): BuildDraft {
     name: record(combo) ? String(combo.n ?? wire.get(11) ?? '') : String(wire.get(11) ?? ''),
     description: record(combo) ? String(combo.d ?? '') : '',
     professionId: wire.get(2) as number,
+    talentTreeId: wire.has(5) ? wire.get(5) === 0 ? undefined : wire.get(5) as number : wire.get(2) === current.professionId ? current.talentTreeId : undefined,
     slots: wire.get(2) === current.professionId || hasSlots ? slots : {},
     sealed: record(sealed) ? sealed as Record<string, number> : {},
     nodes: record(combo) ? normalizeNodes(combo.c ?? []) : combo === undefined && wire.get(2) === current.professionId ? current.nodes : [],
@@ -86,7 +91,7 @@ export function importBuild(input: string, current: BuildDraft): BuildDraft {
   return next
 }
 
-export function exportBuild(draft: BuildDraft, onlyCombo = false): string {
+export function exportBuild(draft: BuildDraft, onlyCombo = false, talentTree?: TalentTree | null): string {
   if (!isBuild(draft) || !draft.nodes.length) throw new Error('Invalid build')
   const wire = draft.original ? decodeShare(draft.original) : new Map<number, unknown>()
   // A new pathway cannot inherit another pathway's talent or equipment state.
@@ -100,8 +105,39 @@ export function exportBuild(draft: BuildDraft, onlyCombo = false): string {
   } else {
     wire.set(3, new Map(Object.entries(draft.slots).map(([slot, id]) => [id, Number(slot)])))
     wire.set(4, new Map(Object.entries(draft.sealed).map(([slot, id]) => [Number(slot), id])))
+    if (talentTree) {
+      if (talentTree.professionId !== draft.professionId) throw new Error('Talent pathway mismatch')
+      wire.set(5, talentTree.id)
+      wire.set(6, new Map<number, unknown>([
+        [1, talentTree.nodes.filter((node) => node.type === 'special').map((node) => node.key)],
+        [2, talentTree.nodes.filter((node) => node.type === 'normal').map((node) => [node.key, node.maxLevel])],
+      ]))
+    }
   }
   return encodeShare(wire)
+}
+
+export function availableSkill(skill: Skill, professionId: number, treeId?: number): boolean {
+  return (!skill.professionId || skill.professionId === professionId)
+    && (skill.order >= 0 || (treeId !== undefined && skill.requiredTalentTreeId === treeId))
+}
+
+export function rememberedTalentTreeId(draft: BuildDraft): number | undefined {
+  if (draft.talentTreeId !== undefined) return draft.talentTreeId
+  // Drafts saved before the talent selector keep their tree in the original share.
+  try {
+    const wire = decodeShare(draft.original)
+    const id = wire.get(5)
+    return wire.get(2) === draft.professionId && positive(id) ? id : undefined
+  } catch { return undefined }
+}
+
+export function changeTalent(draft: BuildDraft, treeId: number, skills: Skill[]): BuildDraft {
+  const byId = new Map(skills.map((skill) => [skill.id, skill]))
+  return { ...draft, talentTreeId: treeId, slots: Object.fromEntries(Object.entries(draft.slots).map(([slot, id]) => {
+    const skill = byId.get(id)
+    return [slot, skill?.requiredTalentTreeId && skill.requiredTalentTreeId !== treeId ? skill.family : id]
+  })) }
 }
 
 export function equipSkill(draft: BuildDraft, slot: number, id: number, familyOf: (id: number) => number): BuildDraft {

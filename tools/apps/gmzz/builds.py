@@ -13,6 +13,7 @@ from PIL import Image
 from .common import write_json
 from .env import excel_dir, require_dir
 from .fellows import build_skill, load_skills
+from .skill_text import skill_text
 from .tables import load_strings, load_table, resolve_text, unresolved_ids
 from .version import stamp_version
 
@@ -26,6 +27,20 @@ def build_catalog(tables: dict, skills: dict[int, dict]) -> dict:
     tags = {int(row['ID']): row['Tag'] for row in rows(tables['tags'])}
     parents = {int(branch): row['SkillID'] for row in unlocks.values()
                for branch in row.get('BranchingSkills', [])}
+    talent_nodes = {int(row['Key']): row for row in rows(tables['talentNodes'])}
+    branch_trees = {int(branch): talent_nodes[int(node)]['TreeID'] for row in unlocks.values()
+                    for branch, node in zip(row.get('BranchingSkills') or [], row.get('BranchingSkillsUnlockTalent') or [])}
+    effects = {}
+    for node in sorted(talent_nodes.values(), key=lambda row: row['Key']):
+        related = node.get('RelatedRoleSkillID') or []
+        descriptions = node.get('SkillPointDesc') or []
+        if len(descriptions) < len(related) or any(descriptions[len(related):]):
+            raise ValueError(f"Talent node {node['Key']} has misaligned skill descriptions")
+        for role_id, text in zip(related, descriptions):
+            if text:
+                skill_id = unlocks[int(role_id)]['SkillID']
+                effects.setdefault(skill_id, []).append({'nodeId': node['Key'], 'treeId': node['TreeID'],
+                                                         'name': node['Name'], 'description': skill_text(text)})
     records = []
     for row in sorted(unlocks.values(), key=lambda row: row['ID']):
         skill = build_skill(skills[int(row['SkillID'])], tags)
@@ -34,6 +49,8 @@ def build_catalog(tables: dict, skills: dict[int, dict]) -> dict:
             'professionId': row.get('ClassID', 0),
             'type': row['SkillType'],
             'family': parents.get(int(row['ID']), row['SkillID']),
+            'requiredTalentTreeId': branch_trees.get(int(row['ID'])),
+            'talentEffects': effects.get(parents.get(int(row['ID']), row['SkillID']), []),
             'order': row.get('DisplayOrder', 0),
             'unlock': tables['unlockConditions'].get(str(row.get('SkillUnlockCondition')), {}).get('Des', ''),
         })
@@ -92,6 +109,7 @@ def main():
              'params': 'OneClickParamsData', 'buffs': 'OneClickBuffData',
              'presets': 'OneClickPresetData', 'constants': 'OneClickConstData'}
     names['resources'] = 'ProfessionSkillData'
+    names['talentNodes'] = 'TalentNodeData'
     tables = {key: resolve_text(load_table(excel, name), strings) for key, name in names.items()}
     wanted = {int(row['SkillID']) for row in rows(tables['unlocks'])}
     skills = load_skills(excel, strings, wanted)
