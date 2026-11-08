@@ -1,4 +1,5 @@
 import { createContext, useContext, useId, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Minus, Plus, Search, X } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
@@ -72,12 +73,40 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
   const [swapping, setSwapping] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   const info = useRef<HTMLDivElement>(null)
+  const [panelHost, setPanelHost] = useState<HTMLDivElement | null>(null)
   const active = (!scope || scope.active === owner) && cur >= 0 && cur < tiles.length ? cur : -1
   const close = () => {
     setCur(-1)
     scope?.setActive(null)
     root.current?.querySelector<HTMLButtonElement>(`[data-tile="${active}"]`)?.focus()
   }
+
+  // A portal host occupies its own grid row after the owner's complete row.
+  useLayoutEffect(() => {
+    if (active < 0) return
+    const block = root.current?.closest<HTMLElement>('.bm-blk')
+    const grid = block?.parentElement
+    if (!block || !grid?.classList.contains('bm-compact-editor')) return
+    const host = document.createElement('div')
+    host.className = 'bm-selection-row'
+    const place = () => {
+      const blocks = [...grid.children].filter((child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains('bm-blk'))
+      // Measure the original rows without the expanded panel affecting packing.
+      host.style.display = 'none'
+      const top = block.getBoundingClientRect().top
+      const row = blocks.filter(candidate => Math.abs(candidate.getBoundingClientRect().top - top) < 2)
+      const last = row.at(-1) ?? block
+      if (last.nextElementSibling !== host) last.after(host)
+      host.style.display = ''
+      aim(root.current, info.current, active)
+    }
+    place()
+    setPanelHost(host)
+    const observer = new ResizeObserver(place)
+    observer.observe(grid)
+    window.addEventListener('resize', place)
+    return () => { observer.disconnect(); window.removeEventListener('resize', place); host.remove(); setPanelHost(null) }
+  }, [active])
 
   // The pointer follows the tile's centre, so it re-aims after every render, resize and tile scroll.
   useLayoutEffect(() => aim(root.current, info.current, active))
@@ -104,11 +133,16 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
     </div>
   const panel = !readOnly && active >= 0 && renderInfo ? renderInfo(active, swapping, () => setSwapping(true)) : null
 
+  const content = panel ? <CloseSelectionContext.Provider value={close}><div key={active} ref={info} className="bm-info" onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); close() } }}>
+    {panelHost ? <div className="bm-selection-heading"><b>{m.choose.replace('{what}', tiles[active].label)}</b><button type="button" className="bm-chip" onClick={close}>{m.closePicker}</button></div> : null}
+    {panel}
+  </div></CloseSelectionContext.Provider> : null
+
   return <div ref={root} className={cn('flex flex-col gap-2', className)}>
     {groups
       ? <div className="bm-groups">{groups.map(g => <div key={g.label} className="bm-group"><span>{g.label}</span><div className="bm-tiles">{tiles.slice(g.from, g.to).map((spec, i) => tile(spec, g.from + i))}</div></div>)}</div>
       : <div className="bm-tiles">{tiles.map(tile)}</div>}
-    {panel ? <CloseSelectionContext.Provider value={close}><div key={active} ref={info} className="bm-info" onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); close() } }}>{panel}</div></CloseSelectionContext.Provider> : null}
+    {panelHost ? createPortal(content, panelHost) : content}
   </div>
 }
 
@@ -139,9 +173,9 @@ export function Picker({ what, items, onPick, talent }: { what: string; items: C
   return <div className={cn('bm-picker', talent && 'bm-tal')}>
     <label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); turn(0) }} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
     {shown.length
-      ? <div className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} title={[item.label, item.detail].filter(Boolean).join('\n')} onClick={() => { onPick(item.id); closeSelection?.() }}>
+      ? <div className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} aria-label={[item.label, item.quality ? qualityLabel(item.quality) : ''].filter(Boolean).join(' · ')} title={[item.label, item.quality ? qualityLabel(item.quality) : '', item.detail].filter(Boolean).join('\n')} onClick={() => { onPick(item.id); closeSelection?.() }}>
         {item.icon ? <span className="bm-candidate-art"><ItemIcon icon={item.icon} quality={item.quality} /></span> : null}
-        <span className="bm-candidate-copy"><b>{item.label}</b>{item.quality ? <small>{qualityLabel(item.quality)}</small> : null}</span>
+        <span className="bm-candidate-copy"><b>{item.label}</b></span>
       </button>)}</div>
       : <p className="bm-note">{m.noMatch}</p>}
     <nav className="bm-pagination" aria-label={what}>

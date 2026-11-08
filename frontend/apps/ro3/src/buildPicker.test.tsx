@@ -58,6 +58,19 @@ it('allows one open block and closes it after choosing, restoring focus', () => 
   expect(host.querySelector('.bm-info')).toBeNull()
   expect(document.activeElement).toBe(slots[1])
 })
+it('portals candidates outside slot blocks and removes the row after choosing', () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const host = mount(<SelectionScope><div className="bm-compact-editor">
+    <section className="bm-blk"><TileBlock tiles={[{ key: 'gear', label: 'Gear' }]} renderInfo={() => <Picker what="Gear" items={[{ id: 1, label: 'Sword' }]} onPick={vi.fn()} />} /></section>
+    <section className="bm-blk">Stats</section>
+  </div></SelectionScope>)
+  click(host.querySelector('[data-tile]'))
+  expect(host.querySelector('.bm-blk .bm-info')).toBeNull()
+  expect(host.querySelector('.bm-compact-editor > .bm-selection-row .bm-candidate')).not.toBeNull()
+  click(host.querySelector('.bm-candidate'))
+  expect(host.querySelector('.bm-selection-row')).toBeNull()
+  vi.unstubAllGlobals()
+})
 it('opens populated slots directly and keeps removal outside the selection button', () => {
   const remove = vi.fn()
   const host = mount(<TileBlock tiles={[{ key: 'one', label: 'Existing', onRemove: remove }]} renderInfo={() => <Picker what="Cards" items={[{ id: 2, label: 'Replacement' }]} onPick={vi.fn()} />} />)
