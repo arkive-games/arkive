@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.2",
+      "date": "2026-11-08",
+      "commit": "5c1510ddb6a56b6e6e28a3efe0cfcb1a9d110451",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Compact card slots and candidate grids, keep only one selection panel open, and close it immediately after choosing.",
+            "zh-CN": "缩紧卡片槽位与候选网格，同一时间只展开一个选择区，选中后立即收起。",
+            "zh-TW": "縮緊卡片槽位與候選網格，同一時間只展開一個選擇區，選中後立即收起。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.1",
       "date": "2026-11-08",
       "commit": "299d9d5d784dfa30e2912060820dce7db74f64cf",
