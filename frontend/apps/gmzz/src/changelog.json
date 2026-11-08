@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.32.0",
+      "date": "2026-11-09",
+      "commit": "8940cf9ba35abe47c92f9d1cb60c4ecda0612f65",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Share saved builds with editable cast sequences, native game exports, talent-aware skill selection, and skill and artifact detail cards.",
+            "zh-CN": "Build 模拟器支持方案分享、连招顺序与条件编辑、游戏原生格式导出，并完善天赋技能筛选和技能、封印物详情卡片。",
+            "zh-TW": "Build 模擬器支援方案分享、連招順序與條件編輯、遊戲原生格式匯出，並完善天賦技能篩選及技能、封印物詳情卡片。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.31.1",
       "date": "2026-11-09",
       "commit": "88245cabfcfa7945668a5335ff38c4b2cf9c4b47",
