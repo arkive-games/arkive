@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-11-08",
+      "commit": "5ae544037bb624ff29bc3fd2b39dc25d8081ce17",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Remove redundant entry buttons from homepage game banners; click anywhere on the image to open the game.",
+            "zh-CN": "移除首页游戏大图重复的进入按钮，点击图片即可进入游戏页。",
+            "zh-TW": "移除首頁遊戲大圖重複的進入按鈕，點擊圖片即可進入遊戲頁。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-08",
       "commit": "b323a0390e09de2ac516701896a2315b6fec319f",
       "targets": [
         "aion2",
