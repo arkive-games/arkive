@@ -41,6 +41,8 @@ import homeBuilds from './assets/home/builds.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
 
+import { canLeaveBuild } from './lib/buildNavigation'
+
 const CHANGELOG = changelogRaw as ChangelogFile
 const SITE_VERSION = currentVersion(CHANGELOG)
 
@@ -106,15 +108,18 @@ function App() {
   }, [location])
 
   useEffect(() => {
+    const currentUrl = window.location.href
     const handlePopState = () => {
+      if (!canLeaveBuild()) { window.history.pushState({}, '', currentUrl); return }
       setLocation(readLocation())
+      window.dispatchEvent(new Event('ro3:location-adopted'))
       // The browser has already swapped the URL by the time popstate fires, so
       // the default (read location) is the page the visitor just went back to.
       trackPageview()
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
+  }, [location])
 
   // The phone wiki header's action slot, handed down to whichever page wants it.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
@@ -123,13 +128,14 @@ function App() {
 
   const navigate = (key: NavKey) => {
     const next = locationForKey(key)
-    if (!next) return
+    if (!next || !canLeaveBuild()) return
     const href = hrefFor(next.page, next.view)
     if (href !== `${window.location.pathname}${window.location.search}`) {
       window.history.pushState({}, '', href)
       trackPageview()
     }
     setLocation(next)
+    window.dispatchEvent(new Event('ro3:location-adopted'))
   }
 
   return (

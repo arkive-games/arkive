@@ -267,6 +267,9 @@
 .bm-crd small { display: block; font-size: .75rem; line-height: 1.45; color: var(--muted-foreground); }
 .bm-crd.void { justify-content: center; padding: .4rem; font-size: .75rem; color: var(--muted-foreground); background: transparent; box-shadow: none; border: 1px dashed var(--border); }
 
+.bm-cloud-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; font-size: .875rem; }
+.bm-cloud-notice { margin-bottom: .75rem; }
+
 /* editor head */
 .bm-ehead { display: flex; flex-direction: column; gap: .55rem; margin-bottom: 1rem; padding: .65rem .8rem; border-radius: 1.25rem; background: linear-gradient(110deg, color-mix(in srgb, var(--tint) 16%, var(--bm-surface)), color-mix(in srgb, var(--tint) 4%, var(--bm-surface)) 60%, var(--bm-surface)); border: 1px solid color-mix(in srgb, var(--tint) 18%, var(--border)); }
 .bm-erow { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }

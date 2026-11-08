@@ -33,7 +33,7 @@ function Dropdown({ button, className, menuClass, children }: { button: (open: b
   </div>
 }
 
-export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave, onOpen, onBack, backLabel }: {
+export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave, onOpen, onBack, backLabel, busy = false, cloudStatus, onPublish, publishLabel }: {
   draft: PlannerBuild
   data: ManualData | null
   plans: PlannerBuild[]
@@ -44,6 +44,10 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
   onOpen: (build: PlannerBuild) => void
   onBack: () => void
   backLabel: string
+  busy?: boolean
+  cloudStatus?: string
+  onPublish?: () => void
+  publishLabel?: string
 }) {
   const rules = ruleSet(data, draft.rulesVariant)
   const root = careerRoot(draft.jobId)
@@ -186,13 +190,14 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
         </button>}>{close => branches.map(({ job: j, branch: b }) => <button key={`${j.id}-${b.id}`} type="button" className={cn(b.id === draft.branchId && j.id === draft.jobId && 'on')} onClick={() => { changeJob(j.id, b.id); close() }}>
           <img src={jobEmblem(j.id)} alt="" />{b.name}<small>{j.name}</small>
         </button>)}</Dropdown>
-        <span className={cn('bm-status', !dirty && 'saved')}><i />{dirty ? m.unsaved : m.saved}</span>
+        <span className={cn('bm-status', !dirty && 'saved')}><i />{cloudStatus ?? (dirty ? m.unsaved : m.saved)}</span>
         {plans.length ? <Dropdown className="bm-planpick" menuClass="one right" button={(open, toggleOpen) => <button type="button" className="bm-ddbtn nb" aria-expanded={open} onClick={toggleOpen}>
           {m.mine}<small>{m.plans.replace('{n}', String(plans.length))}</small><ChevronDown aria-hidden="true" />
         </button>}>{close => plans.map(p => <button key={p.id} type="button" className={cn(p.id === draft.id && 'on')} onClick={() => { onOpen(p); close() }}>
           <img src={jobEmblem(p.jobId)} alt="" />{p.title || t.unnamed}
         </button>)}</Dropdown> : null}
-        <button type="button" className="bm-pill warm" onClick={onSave}>{t.save}</button>
+        <button type="button" className="bm-pill" disabled={busy} onClick={onSave}>{busy ? content.builds.cloud.saving : t.save}</button>
+        {onPublish ? <button type="button" className="bm-pill warm" disabled={busy} onClick={onPublish}>{publishLabel ?? content.builds.cloud.publish}</button> : null}
       </div>
       <textarea className="bm-intro-ed" rows={2} value={draft.summary} placeholder={m.introPlaceholder} aria-label={m.introPlaceholder} onChange={e => onChange({ summary: e.target.value })} />
       {error ? <p className="bm-error" role="alert">{error}</p> : null}
