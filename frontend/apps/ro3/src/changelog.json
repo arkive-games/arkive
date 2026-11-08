@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.3",
+      "date": "2026-11-08",
+      "commit": "0f4b72ae0993fa48a28be5c8d6398f8ed498a4a8",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep equipment in place when opening choices and contain card art inside square frames without obscuring names.",
+            "zh-CN": "修复展开装备时整块换行的问题，卡图限制在方框内，名称不再被遮挡。",
+            "zh-TW": "修復展開裝備時整塊換行的問題，卡圖限制在方框內，名稱不再被遮擋。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.2",
       "date": "2026-11-08",
       "commit": "5c1510ddb6a56b6e6e28a3efe0cfcb1a9d110451",
