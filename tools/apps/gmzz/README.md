@@ -669,6 +669,9 @@ The share codec follows the local client's `SchemeUtils` and
 zero padding to eight bytes, six Base62 characters per big-endian uint32, and
 an FNV-1a checksum seeded by the three little-endian bytes of key 10745794.
 The wire skill dictionary maps skill ID to slot; the editor inverts it.
+Game shares may omit an unconditional node's condition list and encode carried
+relics as a one-based array rather than a map. The importer accepts both forms,
+and falls back to the scheme name when the embedded combo name is empty.
 Combo nodes contain an action and OR groups of AND conditions. Health uses
 fractions; cooldown checks distinguish skill (1) from slot (2); card colors
 are blue (0) and yellow (1). Limits come from the client's constant table.

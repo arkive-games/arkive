@@ -49,8 +49,8 @@ function list(value: unknown): unknown[] {
 export function normalizeNodes(value: unknown): ComboNode[] {
   const nodes = list(plain(value)).map((node) => {
     const tuple = list(node)
-    if (tuple.length !== 2) throw new Error('Invalid combo node')
-    const normalized = [tuple[0], list(tuple[1]).map((group) => list(group))]
+    if (tuple.length < 1 || tuple.length > 2) throw new Error('Invalid combo node')
+    const normalized = [tuple[0], tuple.length === 1 ? [] : list(tuple[1]).map((group) => list(group))]
     if (!isNode(normalized)) throw new Error('Invalid combo node')
     return normalized
   })
@@ -72,12 +72,13 @@ export function importBuild(input: string, current: BuildDraft): BuildDraft {
       slots[String(slot)] = id
     }
   }
-  const sealed = wire.has(4) ? plain(wire.get(4)) : current.sealed
+  const sealedValue = wire.has(4) ? plain(wire.get(4)) : current.sealed
+  const sealed = Array.isArray(sealedValue) ? Object.fromEntries(sealedValue.map((id, index) => [String(index + 1), id])) : sealedValue
   const preserved = current.original && wire.get(2) === current.professionId ? decodeShare(current.original) : new Map<number, unknown>()
   for (const [key, value] of wire) preserved.set(key, value)
   const next: BuildDraft = {
     ...current,
-    name: record(combo) ? String(combo.n ?? wire.get(11) ?? '') : String(wire.get(11) ?? ''),
+    name: record(combo) ? String(combo.n || wire.get(11) || '') : String(wire.get(11) ?? ''),
     description: record(combo) ? String(combo.d ?? '') : '',
     professionId: wire.get(2) as number,
     talentTreeId: wire.has(5) ? wire.get(5) === 0 ? undefined : wire.get(5) as number : wire.get(2) === current.professionId ? current.talentTreeId : undefined,

@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, Check, Copy, Download, FilePlus, Plus, Trash2, Upload, X } from 'lucide-react'
+import { useMemo, useState, type ReactElement } from 'react'
+import { ArrowDown, ArrowUp, Check, Clock3, Copy, Download, FilePlus, Plus, Sparkles, Trash2, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMemory } from '@gamemap/state-memory'
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Input, SearchInput, useDocumentTitle,
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Hint, HoverCard, HoverCardContent, HoverCardTrigger, Input, SearchInput, TooltipProvider, useDocumentTitle, useIsMobile,
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { IconTile } from '../equipment/PickerModal'
@@ -18,6 +18,48 @@ import { validConditions } from './rules'
 
 type Picker = { kind: 'skill' | 'sealed'; slot: number }
 type Confirm = { title: string; body: string; label: string; run: () => void }
+
+function SkillHint({ skill, treeId, owner, interactive = false, children }: {
+  skill: Skill; treeId?: number; owner: string; interactive?: boolean; children: ReactElement
+}) {
+  const { t } = useTranslation()
+  const mobile = useIsMobile()
+  const effects = (skill.talentEffects ?? []).filter((effect) => effect.treeId === treeId)
+  const content = <div className="text-sm text-foreground">
+    <div className="flex items-center gap-3 border-b border-border bg-muted/40 p-4 pr-14 md:pr-4">
+      <IconTile quality={null} src={skillIcon(skill.icon)} label={skill.name.slice(0, 1)} className="size-14" />
+      <div className="min-w-0 space-y-1">
+        <h3 className="break-words text-base font-semibold">{skill.name}</h3>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {owner && <span>{owner}</span>}
+          {skill.cooldown != null && <span className="inline-flex items-center gap-1"><Clock3 className="size-3.5" aria-hidden />{t('builds.cooldown', { n: skill.cooldown })}</span>}
+        </div>
+      </div>
+    </div>
+    <div className="space-y-3 p-4">
+      {skill.tags.length > 0 && <div className="flex flex-wrap gap-1.5">{skill.tags.map((tag) => <span key={tag} className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">{tag}</span>)}</div>}
+      <p className="whitespace-pre-line leading-relaxed">{plainText(skill.description || skill.brief)}</p>
+    </div>
+    {effects.length > 0 && <div className="space-y-3 border-t border-border bg-primary/5 p-4">
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-primary"><Sparkles className="size-3.5" aria-hidden />{t('builds.talent')} · {t('builds.maxTalent')}</p>
+      {effects.map((effect) => <div key={effect.nodeId} className="space-y-1">
+        <p className="font-medium">{effect.name}</p>
+        <p className="whitespace-pre-line leading-relaxed text-muted-foreground">{plainText(effect.description)}</p>
+      </div>)}
+    </div>}
+  </div>
+  if (!mobile) return <HoverCard openDelay={150} closeDelay={100}>
+    <HoverCardTrigger asChild>{children}</HoverCardTrigger>
+    <HoverCardContent side="top" align="center" className="w-96 p-0" role="dialog" aria-label={skill.name}>{content}</HoverCardContent>
+  </HoverCard>
+  return <div className="relative min-w-0 [&>span]:flex [&>span]:w-full">
+    <Hint srTitle={skill.name} mobileTrigger={interactive ? 'icon' : 'child'} iconLabel={t('builds.details') + ' · ' + skill.name}
+      iconClassName="absolute right-1 top-1 size-7 bg-background text-foreground"
+      sheetClassName="gap-0 p-0 [&>[data-slot=sheet-header]]:sr-only" bodyClassName="whitespace-normal" content={content}>
+      {children}
+    </Hint>
+  </div>
+}
 
 export default function BuildPage() {
   const { t } = useTranslation()
@@ -77,33 +119,21 @@ function BuildEditor({ data }: { data: BuildData }) {
   function owner(skill: Skill): string {
     return data.fellows.find((fellow) => fellow.skill.id === skill.id)?.name ?? data.partners.find((partner) => partner.skill.id === skill.id)?.name ?? ''
   }
-  function SkillDetails({ skill }: { skill: Skill }) {
-    const effects = (skill.talentEffects ?? []).filter((effect) => effect.treeId === talentTree?.id)
-    return <><div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-      {owner(skill) && <span>{owner(skill)}</span>}{skill.cooldown != null && <span>{t('builds.cooldown', { n: skill.cooldown })}</span>}
-      {skill.tags.map((tag) => <span key={tag}>{tag}</span>)}
-    </div><p className="whitespace-pre-line text-sm leading-relaxed">{plainText(skill.description || skill.brief)}</p>
-      {effects.map((effect) => <div key={effect.nodeId} className="space-y-1 border-l-2 border-primary/40 pl-3">
-        <p className="text-xs font-semibold text-primary">{t('builds.talentEffect', { name: effect.name })}</p>
-        <p className="whitespace-pre-line text-sm leading-relaxed">{plainText(effect.description)}</p>
-      </div>)}
-    </>
-  }
   function slotTile(slot: number) {
     const id = draft.slots[String(slot)]
     const skill = skillById.get(id)
+    const tile = <button type="button" aria-label={t('builds.select', { name: slotName(slot) })} onClick={() => picked('skill', slot)}
+      className="flex min-h-24 w-full flex-col items-center justify-center gap-2 rounded-md border border-border bg-background p-2 text-center hover:border-primary focus-visible:outline-2 focus-visible:outline-ring lg:min-h-20 lg:flex-row lg:justify-start lg:gap-3 lg:p-3 lg:text-left">
+      <IconTile quality={null} src={skill ? skillIcon(skill.icon) : undefined} label={id ? String(id) : '+'} className="size-12" />
+      <span className="min-w-0 break-words text-sm font-semibold">{id ? skillName(id) : tr('empty')}</span>
+    </button>
     return <div key={slot} className="min-w-0 space-y-2">
       <div className="flex h-7 items-center justify-between gap-2 text-xs font-medium text-muted-foreground"><span>{slotName(slot)}</span>
         {id && <button type="button" title={tr('clear')} aria-label={tr('clear') + ' ' + slotName(slot)} className="grid size-7 place-items-center rounded hover:bg-muted" onClick={() => setDraft(equipSkill(draft, slot, 0, familyOf))}><X className="size-3.5" /></button>}
       </div>
-      <button type="button" aria-label={t('builds.select', { name: slotName(slot) })} onClick={() => picked('skill', slot)}
-        className="flex min-h-20 w-full items-center gap-3 rounded-md border border-border bg-background p-3 text-left hover:border-primary focus-visible:outline-2 focus-visible:outline-ring">
-        <IconTile quality={null} src={skill ? skillIcon(skill.icon) : undefined} label={id ? String(id) : '+'} className="size-12" />
-        <span className="min-w-0 break-words text-sm font-semibold">{id ? skillName(id) : tr('empty')}</span>
-      </button>
+      {skill ? <SkillHint skill={skill} treeId={talentTree?.id} owner={owner(skill)} interactive>{tile}</SkillHint> : tile}
     </div>
   }
-  const selectedSkills = SKILL_SLOTS.flatMap((slot) => skillById.get(draft.slots[String(slot)]) ?? [])
   let pickerRows: { id: number; name: string; description: string; icon?: string; quality: number | null }[] = []
   if (picker?.kind === 'skill') {
     const type = picker.slot === 17 ? 7 : picker.slot === 20 ? 8 : 2
@@ -115,7 +145,7 @@ function BuildEditor({ data }: { data: BuildData }) {
   }
   const needle = query.trim().toLocaleLowerCase()
   const filteredRows = pickerRows.filter((row) => !needle || (row.name + ' ' + row.description).toLocaleLowerCase().includes(needle))
-  return <div className="space-y-7 pb-5">
+  return <TooltipProvider delayDuration={150}><div className="space-y-7 pb-5">
     <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
       <div className="flex min-w-0 flex-wrap gap-3">
         <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">{tr('pathway')}
@@ -142,19 +172,15 @@ function BuildEditor({ data }: { data: BuildData }) {
     <section aria-label={tr('loadout')} className="space-y-4">
       <h2 className="text-lg font-semibold">{tr('loadout')}</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">{SKILL_SLOTS.map(slotTile)}</div>
-      {selectedSkills.length > 0 && <details className="border-b border-border pb-4"><summary className="cursor-pointer text-sm text-muted-foreground">{tr('details')}</summary>
-        <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">{selectedSkills.map((skill) => <article key={skill.id} className="min-w-0 space-y-1"><h3 className="text-sm font-semibold">{skill.name}</h3><SkillDetails skill={skill} /></article>)}</div>
-      </details>}
     </section>
     <section aria-label={tr('fixedSkills')} className="space-y-4 border-t border-border pt-5">
       <h2 className="text-lg font-semibold">{tr('fixedSkills')}</h2>
-      <div className="grid gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3">{fixedSkills.map((skill) => <article key={skill.id} className="min-w-0 space-y-2" aria-label={skill.name}>
-        <div className="flex items-center gap-3">
-          <IconTile quality={null} src={skillIcon(skill.icon)} label={skill.name.slice(0, 1)} className="size-10" />
-          <div className="min-w-0"><h3 className="break-words text-sm font-semibold">{skill.name}</h3><p className="text-xs text-muted-foreground">{tr(skill.type === 1 ? 'basicAttack' : skill.type === 9 ? 'tacticalSkill' : 'specialSkill')}</p></div>
-        </div>
-        <SkillDetails skill={skill} />
-      </article>)}</div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">{fixedSkills.map((skill) => <SkillHint key={skill.id} skill={skill} treeId={talentTree?.id} owner={owner(skill)}>
+        <button type="button" aria-label={skill.name} className="flex min-h-24 w-full cursor-help flex-col items-center justify-center gap-2 rounded-md border border-border p-2 text-center hover:border-primary focus-visible:outline-2 focus-visible:outline-ring lg:min-h-20 lg:flex-row lg:justify-start lg:gap-3 lg:p-3 lg:text-left">
+          <IconTile quality={null} src={skillIcon(skill.icon)} label={skill.name.slice(0, 1)} className="size-12" />
+          <span className="min-w-0 break-words text-sm font-semibold">{skill.name}</span>
+        </button>
+      </SkillHint>)}</div>
     </section>
     <section aria-label={tr('sealed')} className="space-y-3">
       <h2 className="text-lg font-semibold">{tr('sealed')}</h2>
@@ -209,10 +235,12 @@ function BuildEditor({ data }: { data: BuildData }) {
     </section>
     <p role="status" className="text-xs text-muted-foreground">{notice || (status === 'failed' ? tr('saveError') : status === 'saved' ? tr('saved') : '')}</p>
     <Dialog open={picker !== null} onOpenChange={(open) => { if (!open) setPicker(null) }}>
-      <DialogContent className="flex max-h-[85dvh] flex-col sm:max-w-2xl" aria-describedby={undefined}>
+      <DialogContent className="flex max-h-[85dvh] flex-col sm:max-w-2xl" aria-describedby={undefined}
+        onEscapeKeyDown={(event) => { if (event.target instanceof Element && event.target.closest('[data-slot="sheet-content"]')) event.preventDefault() }}>
         <DialogHeader><DialogTitle>{picker?.kind === 'skill' ? slotName(picker.slot) : tr('sealed')}</DialogTitle></DialogHeader>
         <SearchInput value={query} onChange={setQuery} placeholder={tr('search')} aria-label={tr('search')} />
-        <div className="min-h-0 overflow-y-auto overscroll-contain"><div className={picker?.kind === 'skill' ? 'grid grid-cols-2 gap-2 sm:grid-cols-4' : 'divide-y divide-border'}>{filteredRows.map((row) => <button key={row.id} className={'relative flex w-full items-center rounded hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring ' + (picker?.kind === 'skill' ? 'min-h-24 flex-col justify-center gap-2 p-2 text-center' : 'min-h-16 gap-3 p-3 text-left')} onClick={() => {
+        <div className="min-h-0 overflow-y-auto overscroll-contain"><div className={picker?.kind === 'skill' ? 'grid grid-cols-2 gap-2 sm:grid-cols-4' : 'divide-y divide-border'}>{filteredRows.map((row) => {
+          const tile = <button key={row.id} className={'relative flex w-full items-center rounded hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring ' + (picker?.kind === 'skill' ? 'min-h-24 flex-col justify-center gap-2 p-2 text-center' : 'min-h-16 gap-3 p-3 text-left')} onClick={() => {
           if (!picker) return
           if (picker.kind === 'skill') setDraft(equipSkill(draft, picker.slot, row.id, familyOf))
           else setDraft({ ...draft, sealed: { ...draft.sealed, [picker.slot]: row.id } })
@@ -220,8 +248,11 @@ function BuildEditor({ data }: { data: BuildData }) {
         }} aria-label={t('builds.select', { name: row.name })}>
           <IconTile quality={row.quality} src={row.icon} label={row.name.slice(0, 1)} className="size-12" />
           <div className={'min-w-0 space-y-1 ' + (picker?.kind === 'skill' ? 'w-full' : 'flex-1')}><h3 className="break-words text-sm font-semibold">{row.name}</h3>{picker?.kind === 'sealed' && <p className="text-sm leading-relaxed text-muted-foreground">{row.description}</p>}</div>
-          {(picker?.kind === 'skill' ? draft.slots[String(picker.slot)] : draft.sealed[String(picker?.slot)]) === row.id && <Check className={'size-4 shrink-0 text-primary ' + (picker?.kind === 'skill' ? 'absolute right-2 top-2' : '')} />}
-        </button>)}</div>{!filteredRows.length && <p className="p-8 text-center text-sm text-muted-foreground">{tr('noResults')}</p>}</div>
+          {(picker?.kind === 'skill' ? draft.slots[String(picker.slot)] : draft.sealed[String(picker?.slot)]) === row.id && <Check className={'size-4 shrink-0 text-primary ' + (picker?.kind === 'skill' ? 'absolute left-2 top-2' : '')} />}
+        </button>
+          const skill = picker?.kind === 'skill' ? skillById.get(row.id) : undefined
+          return skill ? <SkillHint key={row.id} skill={skill} treeId={talentTree?.id} owner={owner(skill)} interactive>{tile}</SkillHint> : tile
+        })}</div>{!filteredRows.length && <p className="p-8 text-center text-sm text-muted-foreground">{tr('noResults')}</p>}</div>
       </DialogContent>
     </Dialog>
     <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null) }}>
@@ -242,5 +273,5 @@ function BuildEditor({ data }: { data: BuildData }) {
       </DialogContent>
     </Dialog>
     <AlertDialog open={confirm !== null} onOpenChange={(open) => { if (!open) setConfirm(null) }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{confirm?.title}</AlertDialogTitle><AlertDialogDescription>{confirm?.body}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>{tr('cancel')}</AlertDialogCancel><AlertDialogAction onClick={() => confirm?.run()}>{confirm?.label}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-  </div>
+  </div></TooltipProvider>
 }

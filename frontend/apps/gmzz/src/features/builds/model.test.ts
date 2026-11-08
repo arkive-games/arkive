@@ -7,7 +7,22 @@ import type { Skill } from './data'
 const draft = (): BuildDraft => ({ ...emptyBuild(), name: 'Test', slots: { '1': 86011020, '17': 87001710, '20': 87303030 }, sealed: { '1': 2085001 },
   nodes: [[{ ActionName: 1, ActionParam: 86011020 }, [[[5, [0, 0.6]]], [[1, [12, 1]]]]], [{ ActionName: 2, ActionParam: 17 }, []]] })
 
+const gameShare = '[[2jxYtI0000002Wh1xk3NWgz73UsJBw0Kmyt12T3e8O2hjHtm05uJVY0NcYoy2homg205t30w0KDNGC2hYHoE05ovzo03QRbC008kPV3ltVIW2ggO2p3orRHg3hNh9Y3l6m6v1RcVtW4PPN9Y2jpIKs4FR0g91Raw0w3l6mC72ggCFD0HgIcI4QpqLM2xGY0f1qFibL2pUuux1CF3Pd22WEU525rsJw37JDFc1viAP81mcRWc2fDHCj1ovACd21FbdK1mcYWD0azEba1CF3Pd22WELp20Cskr2OMVM328AruQ1TGQz320fl7w2hbDRx1ovACd21F3XB1qgNHu38Rbls1viAPA1mdoWz3lusax1o1Zel28AruQ1Qzdbx01mPJT1CF3Pd22WEU525rsJt37JDFc1viAP81mcRWc2fDHCj1ovACd21FbdK1mcYWD0azHGk1CF3Pd22WELp20Cskr2OMVM328AruQ1TGQz320fl7w2hoxtZ1ovACd21F3XB1qgNHu38Rbls1viAPA1mdoWz3lusap49MCFn28AruQ1Qzdbx01mPJT1CF3Pd22WEU525rsMw05ovzo37JDFc1viAP81mcRWb2fDHCj1ovACd21FbdK1mcYWD0ayA0Y1CF3Pd22WELp20Csl721bVph23gqpU3UNoKV3PFF8g2NNfM12rQfjs000000]]'
+
 describe('client one-click share codec', () => {
+  it('imports a game scheme with omitted unconditional groups and one-based relic arrays', () => {
+    const imported = importBuild('Game message\n' + gameShare + '\nEnd', emptyBuild())
+    expect(imported.professionId).toBe(1200002)
+    expect(imported.talentTreeId).toBe(202)
+    expect(imported.name).toBe(decodeShare(gameShare).get(11))
+    expect(imported.slots).toEqual({ '1': 86021070, '2': 86021010, '3': 86021020, '4': 86021050, '17': 87001310, '20': 87303040 })
+    expect(imported.sealed).toEqual({ '1': 2085029, '2': 2085010, '3': 2085021 })
+    expect(imported.nodes.map(([action]) => action.ActionParam)).toEqual([20, 86021010, 86021020, 86023010, 17, 86021050, 86021070, 86021090, 86021020, 86020010])
+    expect(imported.nodes.every(([, groups]) => groups.length === 0)).toBe(true)
+    const exported = exportBuild(imported)
+    expect(importBuild(exported, emptyBuild())).toMatchObject({ ...imported, original: expect.any(String) })
+    for (const key of [6, 13, 14]) expect(decodeShare(exported).get(key)).toEqual(decodeShare(gameShare).get(key))
+  })
   it('matches the shipped SchemeUtils signing function including padding', () => {
     expect(signBytes(new TextEncoder().encode('abc'))).toBe('4W5I8J0000001mZPqy000000')
   })
