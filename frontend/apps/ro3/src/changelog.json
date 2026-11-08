@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.0",
+      "date": "2026-11-08",
+      "commit": "60b0911dd5b09fb40faf4cd83d3f9093987c8e6e",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Prepare account save and publish controls, remove browser-only plans, and clearly show when the account build service is not connected.",
+            "zh-CN": "新增账号保存与发布操作界面，移除浏览器本机方案；服务尚未接通时明确提示，不显示虚假成功。",
+            "zh-TW": "新增帳號儲存與發佈操作介面，移除瀏覽器本機方案；服務尚未接通時明確提示，不顯示虛假成功。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.22.3",
       "date": "2026-11-05",
       "commit": "e6cd8af7264bc02be867400d53746142313dbe02",
