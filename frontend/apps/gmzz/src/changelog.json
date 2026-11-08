@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.31.1",
+      "date": "2026-11-09",
+      "commit": "88245cabfcfa7945668a5335ff38c4b2cf9c4b47",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Import game schemes with unconditional combo actions and carried relics correctly; skill tiles now show only icons and names, with detailed hover cards and mobile detail panels.",
+            "zh-CN": "修复游戏方案分享码中无条件连招和封印物的导入；技能统一仅显示图标和名称，悬停展示技能与天赋详情卡片，手机端支持点按查看。",
+            "zh-TW": "修復遊戲方案分享碼中無條件連招和封印物的匯入；技能統一僅顯示圖示和名稱，懸停展示技能與天賦詳情卡片，手機端支援點按查看。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.31.0",
       "date": "2026-11-09",
       "commit": "b76b877a5f8dda4584774db2e212a3dcd0bf518f",
