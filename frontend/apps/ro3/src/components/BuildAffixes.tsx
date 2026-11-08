@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import content from '../locales/zh-CN.json'
 import type { SoulSubOption } from '../lib/buildView'
-import { PickerDialog, type Candidate } from './BuildBlocks'
+import { InlinePicker, type Candidate } from './BuildBlocks'
 
 const m = content.builds.manual
 
@@ -17,9 +17,9 @@ export function AffixEditor({ title, selected, options, limit, onChange }: {
       return <div className="bm-affix-row" key={`${id}-${index}`}><span>{option?.label ?? `#${id} · ${content.builds.editor.unknown}`}{option?.detail ? <small>{option.detail}</small> : null}</span>
         <button type="button" className="bm-chip" aria-label={`${m.remove} ${option?.label ?? id}`} onClick={() => onChange(selected.filter((_, i) => i !== index))}>{m.remove}</button></div>
     })}
-    <PickerDialog what={title} disabled={full || !options.length} items={options.map(o => ({ ...o, disabled: selected.includes(o.id) }))} onPick={id => {
+    <InlinePicker what={title} disabled={full || !options.length} items={options.map(o => ({ ...o, disabled: selected.includes(o.id) }))} onPick={id => {
       if (!full && !selected.includes(id) && options.some(o => o.id === id)) onChange([...selected, id])
-    }}>{m.addAffix}</PickerDialog>
+    }}>{m.addAffix}</InlinePicker>
   </section>
 }
 
@@ -37,7 +37,7 @@ export function SoulAffixEditor({ selected, options, onChange }: { selected: num
     })}
     {!selected.length ? <p className="bm-note">{m.noAffixes}</p> : null}
     <div className="bm-affix-add">
-      <PickerDialog what={content.builds.editor.sub} items={groups} onPick={setAttribute}>{m.addAffix}</PickerDialog>
+      <InlinePicker what={content.builds.editor.sub} items={groups} onPick={setAttribute}>{m.addAffix}</InlinePicker>
       {rolls.length ? <label>{groups.find(g => g.id === attribute)?.label}<select aria-label={m.roll} value="" onChange={event => {
         const id = Number(event.target.value)
         if (!selected.includes(id) && rolls.some(o => o.id === id)) { onChange([...selected, id]); setAttribute(0) }

@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { BarChart3, ChevronDown, ChevronLeft, Flame, PawPrint, Shield, Star, X, Zap } from 'lucide-react'
+import { BarChart3, ChevronDown, ChevronLeft, Flame, Layers, PawPrint, Shield, Star, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 import { localizedText } from '../cardCatalog'
 import { BUILD_SLOTS, careerJobs, careerRoot, careerTalentEffects, equipmentAllowed, slotAllows, type BuildSlotKey } from '../lib/buildRules'
 import { affixOptions, allowedEquipment, cardEffect, jobEmblem, rootBranches, rootEmblem, rootTint, ROOTS, ruleSet, skillPool, socketCount, soulSubOptions, normalAffixLimit, talentChoices, talentInfo, type ManualData } from '../lib/buildView'
 import type { PlannerBuild, PlannerEquipment } from '../lib/plannerModel'
-import { qualityColor, qualityLabel } from '../lib/quality'
-import { resourceUrl } from '../lib/urls'
-import { Block, InfoHead, Picker, PickerDialog, Stats, TileBlock, type TileSpec } from './BuildBlocks'
+import { qualityLabel } from '../lib/quality'
+import { Block, InfoHead, Picker, Stats, TileBlock, type TileSpec } from './BuildBlocks'
 import { AffixEditor, SoulAffixEditor } from './BuildAffixes'
 
 const m = content.builds.manual
@@ -33,7 +32,7 @@ function Dropdown({ button, className, menuClass, children }: { button: (open: b
   </div>
 }
 
-export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave, onOpen, onBack, backLabel, busy = false, cloudStatus, onPublish, publishLabel }: {
+export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpen, onBack, backLabel, busy = false, onPublish, publishLabel }: {
   draft: PlannerBuild
   data: ManualData | null
   plans: PlannerBuild[]
@@ -143,8 +142,6 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
   ]
   const gearTiles: TileSpec[] = BUILD_SLOTS.map(slot => {
     const record = equipmentMap.get(slotConfig(slot.key).id)
-    const sockets = socketCount(data, slot.key)
-    const ids = draft.cardSlots[slot.key] ?? []
     return {
       key: slot.key,
       label: record?.name?.['zh-CN'] ?? t.slots[slot.label],
@@ -153,10 +150,6 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
       empty: !record,
       onRemove: slotConfig(slot.key).id ? () => chooseEquipment(slot.key, 0) : undefined,
       disabled: !job || slot.key === 'off' && twoHanded,
-      extra: sockets ? <span className="bm-cards">{Array.from({ length: sockets }, (_, i) => {
-        const card = cardMap.get(ids[i])
-        return card ? <img key={i} src={resourceUrl(card.icon)} alt="" style={{ '--q': qualityColor(card.quality) } as CSSProperties} /> : <i key={i} />
-      })}</span> : null,
     }
   })
   const soulTiles: TileSpec[] = Array.from({ length: 5 }, (_, i) => {
@@ -190,7 +183,6 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
         </button>}>{close => branches.map(({ job: j, branch: b }) => <button key={`${j.id}-${b.id}`} type="button" className={cn(b.id === draft.branchId && j.id === draft.jobId && 'on')} onClick={() => { changeJob(j.id, b.id); close() }}>
           <img src={jobEmblem(j.id)} alt="" />{b.name}<small>{j.name}</small>
         </button>)}</Dropdown>
-        <span className={cn('bm-status', !dirty && 'saved')}><i />{cloudStatus ?? (dirty ? m.unsaved : m.saved)}</span>
         {plans.length ? <Dropdown className="bm-planpick" menuClass="one right" button={(open, toggleOpen) => <button type="button" className="bm-ddbtn nb" aria-expanded={open} onClick={toggleOpen}>
           {m.mine}<small>{m.plans.replace('{n}', String(plans.length))}</small><ChevronDown aria-hidden="true" />
         </button>}>{close => plans.map(p => <button key={p.id} type="button" className={cn(p.id === draft.id && 'on')} onClick={() => { onOpen(p); close() }}>
@@ -206,9 +198,7 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
 
     <div className="bm-blocks">
       <Block icon={<Zap />} title={t.skills} count={m.items.replace('{n}', String(draft.skills.filter(Boolean).length))}>
-        <TileBlock tiles={skillTiles} renderInfo={(i, swapping, swap) => {
-          const skill = skillMap.get(draft.skills[i] ?? 0)
-          if (skill && !swapping) return <InfoHead name={skill.name?.['zh-CN'] || t.unknown} onSwap={swap} />
+        <TileBlock tiles={skillTiles} renderInfo={i => {
           const items = data?.profession?.skills.skills.filter(s => pool.has(s.iSkillID)).map(s => ({ id: s.iSkillID, label: s.name?.['zh-CN'] || t.unknown, icon: s.icon, disabled: draft.skills.some((id, k) => k !== i && id === s.iSkillID) })) ?? []
           return <Picker what={m.skill} items={items} onPick={id => setSkill(i, id)} />
         }} />
@@ -216,40 +206,45 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
       <Block icon={<BarChart3 />} title={t.attributes} actions={<><span>{m.total.replace('{n}', String(total))}</span><button type="button" className="bm-chip" onClick={() => onChange({ attributes: draft.attributes.map(() => 1) })}>{m.reset}</button></>}>
         <Stats values={draft.attributes} onChange={(i, v) => onChange({ attributes: draft.attributes.map((x, k) => k === i ? v : x) })} />
       </Block>
-      <Block wide icon={<Shield />} title={m.gear} count={m.gearCount}>
-        <TileBlock className="bm-gear-tiles" key={draft.id} tiles={gearTiles} initialIndex={gearTiles.findIndex(tile => !tile.empty && !tile.disabled)} renderInfo={i => {
+      <Block wide icon={<Shield />} title={m.equipment}>
+        <TileBlock className="bm-gear-tiles" key={draft.id} tiles={gearTiles} renderInfo={i => {
           const slot = BUILD_SLOTS[i]
           const config = slotConfig(slot.key)
           const record = equipmentMap.get(config.id)
           const items = allowedEquipment(equipment, lineage, slot.key).map(e => ({ id: e.iID, label: `${e.name?.['zh-CN'] ?? ''} T${e.iRank ?? '-'}`, icon: e.icon, quality: e.item?.iQuality }))
-          if (!record) return <PickerDialog key={`${draft.id}-${slot.key}`} what={t.slots[slot.label]} items={items} onPick={id => chooseEquipment(slot.key, id)} />
-          const affixes = affixOptions(data, record)
-          const ids = draft.cardSlots[slot.key] ?? []
-          const sockets = Math.max(socketCount(data, slot.key), ids.length)
+          const affixes = record ? affixOptions(data, record) : { normal: [], special: [] }
           return <div key={`${draft.id}-${slot.key}`} className="bm-gear-editor">
-            <div className="bm-editor-heading"><InfoHead name={record.name?.['zh-CN'] ?? t.unknown} quality={record.item?.iQuality} tag={`${qualityLabel(record.item?.iQuality)}${record.iRank ? ` T${record.iRank}` : ''}`} />
-              <PickerDialog what={t.slots[slot.label]} items={items} onPick={id => chooseEquipment(slot.key, id)}>{t.replace}</PickerDialog></div>
-            <div className={cn('bm-equipment-columns', !affixes.normal.length && !affixes.special.length && !config.normal.length && !config.special.length && 'cards-only')}><div className="bm-equipment-affixes">
-              {(['normal', 'special'] as const).map(kind => affixes[kind].length || config[kind].length ? <AffixEditor key={`${config.id}-${kind}`} title={t[kind]} selected={config[kind]} options={affixes[kind]} limit={kind === 'normal' ? normalAffixLimit(data, record) : undefined} onChange={ids => setSlot(slot.key, { [kind]: ids })} /> : null)}
-            </div><section className="bm-equipment-cards">
-            <header><b>{m.card}</b><span>{ids.filter(Boolean).length}/{socketCount(data, slot.key)}</span></header>
-            {ids.length > socketCount(data, slot.key) ? <p className="bm-error">{m.overLimit}</p> : null}
-            {sockets ? <div className="bm-crds">{Array.from({ length: sockets }, (_, k) => {
-              const card = cardMap.get(ids[k])
-              return card
-                ? <div key={k} className="bm-crd" style={{ '--q': qualityColor(card.quality) } as CSSProperties}><span className="bm-card-art"><img src={resourceUrl(card.icon)} alt="" /><button type="button" className="bm-icon-remove" aria-label={`${m.removeCard} ${localizedText(card.name)}`} onClick={() => setCard(slot.key, k, 0)}><X aria-hidden="true" /></button></span><div><b>{localizedText(card.name) || t.unknown}</b><small>{cardEffect(data, card)}</small></div></div>
-                : ids[k] ? <div key={k} className="bm-affix-row"><span>#{ids[k]} · {t.unknown}</span><button type="button" className="bm-chip" onClick={() => setCard(slot.key, k, 0)}>{m.remove}</button></div>
-                : k < socketCount(data, slot.key) ? <PickerDialog key={k} portrait what={m.socketNumber.replace('{n}', String(k + 1))} items={(data?.cards?.cards ?? []).filter(c => c.part === slot.cardPart).map(c => ({ id: c.id, label: localizedText(c.name) || t.unknown, icon: c.icon, quality: c.quality, detail: cardEffect(data, c) }))} onPick={id => setCard(slot.key, k, id)}>{m.socketNumber.replace('{n}', String(k + 1))} · {m.addCard}</PickerDialog> : null
-            })}</div> : null}
-            </section></div>
+            {record ? <>
+              <InfoHead name={record.name?.['zh-CN'] ?? t.unknown} quality={record.item?.iQuality} tag={`${qualityLabel(record.item?.iQuality)}${record.iRank ? ` T${record.iRank}` : ''}`} />
+              <div className="bm-affix-columns">{(['normal', 'special'] as const).map(kind => affixes[kind].length || config[kind].length ? <AffixEditor key={`${config.id}-${kind}`} title={t[kind]} selected={config[kind]} options={affixes[kind]} limit={kind === 'normal' ? normalAffixLimit(data, record) : undefined} onChange={ids => setSlot(slot.key, { [kind]: ids })} /> : null)}</div>
+            </> : null}
+            <Picker what={t.slots[slot.label]} items={items} onPick={id => chooseEquipment(slot.key, id)} />
           </div>
         }} />
+      </Block>
+      <Block wide icon={<Layers />} title={m.card}>
+        <div className="bm-card-sections">{BUILD_SLOTS.map(slot => {
+          const ids = draft.cardSlots[slot.key] ?? []
+          const capacity = socketCount(data, slot.key)
+          const count = Math.max(capacity, ids.length)
+          if (!count) return null
+          const tiles: TileSpec[] = Array.from({ length: count }, (_, index) => {
+            const card = cardMap.get(ids[index])
+            return { key: `${slot.key}-${index}`, label: card ? localizedText(card.name) : ids[index] ? t.unknown : m.socketNumber.replace('{n}', String(index + 1)), icon: card?.icon, quality: card?.quality, empty: !ids[index], onRemove: ids[index] ? () => setCard(slot.key, index, 0) : undefined }
+          })
+          return <section key={slot.key} className="bm-card-section"><h3>{t.slots[slot.label]}</h3>
+            {ids.length > capacity ? <p className="bm-note">{m.overLimit}</p> : null}
+            <TileBlock className="bm-card-tiles" tiles={tiles} renderInfo={index => <>
+              {cardMap.get(ids[index]) ? <p className="bm-note">{cardEffect(data, cardMap.get(ids[index])!)}</p> : null}
+              <Picker key={`${slot.key}-${index}`} what={m.card} items={index < capacity ? (data?.cards?.cards ?? []).filter(card => card.part === slot.cardPart).map(card => ({ id: card.id, label: localizedText(card.name), icon: card.icon, quality: card.quality, detail: cardEffect(data, card) })) : []} onPick={id => setCard(slot.key, index, id)} />
+            </>} />
+          </section>
+        })}</div>
       </Block>
       <Block icon={<Star />} title={t.talents} count={m.items.replace('{n}', String(draft.talents.length))}>
         <TileBlock className="bm-tal" tiles={talentTiles} renderInfo={i => {
           const id = draft.talents[i]
-          if (id !== undefined) return <InfoHead name={talentInfo(data, rules, draft.jobId, id).label || t.unknown} />
-          return <Picker talent what={m.talent} items={tal.filter(c => !draft.talents.includes(c.id)).map(c => ({ ...c, label: c.label || t.unknown }))} onPick={pick => onChange({ talents: [...draft.talents, pick] })} />
+          return <Picker key={i} talent what={m.talent} items={tal.filter(c => c.id === id || !draft.talents.includes(c.id)).map(c => ({ ...c, label: c.label || t.unknown }))} onPick={pick => onChange({ talents: id === undefined ? [...draft.talents, pick] : draft.talents.map((value, index) => index === i ? pick : value) })} />
         }} />
       </Block>
       <Block icon={<Flame />} title={t.souls} count={m.soulCount}>
@@ -257,19 +252,18 @@ export function BuildEditor({ draft, data, plans, dirty, error, onChange, onSave
           const config = draft.souls[i]
           const soul = soulMap.get(config?.id ?? 0)
           const items = (data?.souls?.souls.souls ?? []).filter(s => s.name?.['zh-CN']).map(s => ({ id: s.iID, label: s.name?.['zh-CN'] ?? '', icon: s.icon, quality: s.quality }))
-          const picker = <PickerDialog key={`${draft.id}-${i}`} what={m.soul} items={items} onPick={id => setSoul(i, id === config?.id ? config : { id, sub: [], marks: [] })}>{soul ? t.replace : m.choose.replace('{what}', m.soul)}</PickerDialog>
-          if (!soul || !config) return picker
-          return <div key={`${draft.id}-${i}-${config.id}`} className="bm-gear-editor">
-            <div className="bm-editor-heading"><InfoHead name={soul.name?.['zh-CN'] ?? t.unknown} quality={soul.quality} tag={qualityLabel(soul.quality)} />{picker}</div>
-            <SoulAffixEditor selected={config.sub} options={soulSubOptions(data, soul)} onChange={sub => setSoul(i, { ...config, sub })} />
+          return <div key={`${draft.id}-${i}`} className="bm-gear-editor">
+            {soul && config ? <>
+              <InfoHead name={soul.name?.['zh-CN'] ?? t.unknown} quality={soul.quality} tag={qualityLabel(soul.quality)} />
+              <SoulAffixEditor key={config.id} selected={config.sub} options={soulSubOptions(data, soul)} onChange={sub => setSoul(i, { ...config, sub })} />
+            </> : null}
+            <Picker what={m.soul} items={items} onPick={id => setSoul(i, id === config?.id ? config : { id, sub: [], marks: [] })} />
           </div>
         }} />
       </Block>
       <Block icon={<PawPrint />} title={t.pets} count={m.petCount}>
-        <TileBlock tiles={petTiles} groups={[{ label: t.combat, from: 0, to: 4 }, { label: t.assist, from: 4, to: 9 }]} renderInfo={(i, swapping, swap) => {
+        <TileBlock tiles={petTiles} groups={[{ label: t.combat, from: 0, to: 4 }, { label: t.assist, from: 4, to: 9 }]} renderInfo={i => {
           const [field, index] = petSlots[i]
-          const pet = petMap.get(draft[field][index] ?? 0)
-          if (pet && !swapping) return <InfoHead name={localizedText(pet.name) || t.unknown} quality={pet.quality} tag={qualityLabel(pet.quality)} onSwap={swap} />
           const items = (data?.pets?.catalog.pets ?? []).filter(p => p.show).map(p => ({ id: p.id, label: localizedText(p.name) || t.unknown, icon: p.art.head, quality: p.quality, disabled: draft[field].some((id, k) => k !== index && id === p.id) }))
           return <Picker what={m.pet} items={items} onPick={id => setPet(field, index, id)} />
         }} />

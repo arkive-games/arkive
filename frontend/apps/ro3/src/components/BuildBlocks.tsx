@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Minus, Plus, Search, X } from 'lucide-react'
-import { cn, Dialog, DialogContent, DialogTitle, DialogTrigger } from '@gamemap/ui'
+import { cn } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 import { clampStat } from '../lib/buildState'
 import { qualityColor, qualityLabel } from '../lib/quality'
@@ -102,7 +102,7 @@ function aim(root: HTMLElement | null, info: HTMLElement | null, index: number) 
 export interface Candidate { id: number; label: string; icon?: string; quality?: number; disabled?: boolean; detail?: string }
 
 /** Search and pagination keep every candidate reachable without growing the page. */
-export function Picker({ what, items, onPick, talent, portrait }: { what: string; items: Candidate[]; onPick: (id: number) => void; talent?: boolean; portrait?: boolean }) {
+export function Picker({ what, items, onPick, talent }: { what: string; items: Candidate[]; onPick: (id: number) => void; talent?: boolean }) {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
   const needle = query.trim().toLocaleLowerCase('zh-CN')
@@ -111,14 +111,13 @@ export function Picker({ what, items, onPick, talent, portrait }: { what: string
   const current = Math.min(page, pages - 1)
   const shown = matches.slice(current * 24, (current + 1) * 24)
   const label = m.searchWhat.replace('{what}', what)
-  const results = useRef<HTMLDivElement>(null)
-  const turn = (next: number) => { setPage(next); results.current?.scrollTo({ top: 0 }) }
-  return <div className={cn('bm-picker', talent && 'bm-tal', portrait && 'bm-portrait-picker')}>
+  const turn = (next: number) => setPage(next)
+  return <div className={cn('bm-picker', talent && 'bm-tal')}>
     <label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); turn(0) }} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
     {shown.length
-      ? <div ref={results} className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} title={item.label} onClick={() => onPick(item.id)}>
+      ? <div className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} title={[item.label, item.detail].filter(Boolean).join('\n')} onClick={() => onPick(item.id)}>
         {item.icon ? <span className="bm-candidate-art"><ItemIcon icon={item.icon} quality={item.quality} /></span> : null}
-        <span className="bm-candidate-copy"><b>{item.label}</b>{item.quality ? <small>{qualityLabel(item.quality)}</small> : null}{item.detail ? <small>{item.detail}</small> : null}</span>
+        <span className="bm-candidate-copy"><b>{item.label}</b>{item.quality ? <small>{qualityLabel(item.quality)}</small> : null}</span>
       </button>)}</div>
       : <p className="bm-note">{m.noMatch}</p>}
     <nav className="bm-pagination" aria-label={what}>
@@ -129,17 +128,14 @@ export function Picker({ what, items, onPick, talent, portrait }: { what: string
   </div>
 }
 
-export function PickerDialog({ what, items, onPick, portrait, children, disabled }: {
-  what: string; items: Candidate[]; onPick: (id: number) => void; portrait?: boolean; children?: ReactNode; disabled?: boolean
+export function InlinePicker({ what, items, onPick, children, disabled }: {
+  what: string; items: Candidate[]; onPick: (id: number) => void; children?: ReactNode; disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
-  return <Dialog open={open} onOpenChange={setOpen}>
-    <DialogTrigger asChild><button type="button" className="bm-chip" disabled={disabled}>{children ?? m.choose.replace('{what}', what)}</button></DialogTrigger>
-    <DialogContent size="lg" className="bm-picker-dialog" aria-describedby={undefined} closeButtonProps={{ 'aria-label': m.closePicker }}>
-      <DialogTitle>{m.choose.replace('{what}', what)}</DialogTitle>
-      <Picker what={what} items={items} portrait={portrait} onPick={id => { onPick(id); setOpen(false) }} />
-    </DialogContent>
-  </Dialog>
+  return <div className="bm-inline-picker">
+    <button type="button" className="bm-chip" aria-expanded={open} disabled={disabled} onClick={() => setOpen(value => !value)}>{open ? m.closePicker : children ?? m.choose.replace('{what}', what)}</button>
+    {open ? <Picker what={what} items={items} onPick={id => { onPick(id); setOpen(false) }} /> : null}
+  </div>
 }
 
 /** The name row of a filled slot's panel, with change and remove. */
@@ -166,10 +162,8 @@ function StatStep({ label, value, onChange }: { label: string; value: number; on
 /** Six stats as bars; with `onChange` each gets a stepper. */
 export function Stats({ values, onChange }: { values: number[]; onChange?: (index: number, value: number) => void }) {
   const labels = content.builds.editor.attributesList
-  const top = Math.max(99, ...values)
   return <div className="bm-stats">{labels.map((label, i) => <div key={label} className="bm-stat">
     <span>{label}</span>
-    <span className="bm-bar"><i style={{ '--w': `${Math.round(values[i] / top * 100)}%` } as CSSProperties} /></span>
     {onChange ? <StatStep label={label} value={values[i]} onChange={v => onChange(i, v)} /> : <b>{values[i]}</b>}
   </div>)}</div>
 }
