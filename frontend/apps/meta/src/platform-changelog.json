@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-11-08",
+      "commit": "dd279895ef17b670a966419a61f95d9cfd0e49b1",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Remove the redundant contact label from the recruitment banner while keeping the whole image clickable.",
+            "zh-CN": "移除招募大图重复的联系我们按钮，点击整张图片仍可打开联系窗口。",
+            "zh-TW": "移除招募大圖重複的聯絡我們按鈕，點擊整張圖片仍可開啟聯絡視窗。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-08",
       "commit": "5ae544037bb624ff29bc3fd2b39dc25d8081ce17",
       "targets": [
         "aion2",
