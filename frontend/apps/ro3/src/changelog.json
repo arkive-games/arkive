@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.4",
+      "date": "2026-11-08",
+      "commit": "3201b333f3a1f06ce8ba6a16e6fd8ee8e8161a40",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Open compact choices across the row below fixed slots, with aligned skill slots and immediate dismissal after selection.",
+            "zh-CN": "候选区在槽位所在行下方横向展开，槽位保持原位，技能槽整齐对齐，选中后立即收起。",
+            "zh-TW": "候選區在槽位所在行下方橫向展開，槽位保持原位，技能槽整齊對齊，選中後立即收起。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.3",
       "date": "2026-11-08",
       "commit": "0f4b72ae0993fa48a28be5c8d6398f8ed498a4a8",
