@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createContext, useContext, useId, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Minus, Plus, Search, X } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
@@ -7,6 +7,22 @@ import { qualityColor, qualityLabel } from '../lib/quality'
 import { resourceUrl } from '../lib/urls'
 
 const m = content.builds.manual
+const SelectionContext = createContext<{ active: string | null; setActive: (id: string | null) => void } | null>(null)
+const CloseSelectionContext = createContext<(() => void) | null>(null)
+
+/** Only one editor block owns an expanded selection panel at a time. */
+export function SelectionScope({ children }: { children: ReactNode }) {
+  const [active, setActive] = useState<string | null>(null)
+  return <SelectionContext.Provider value={{ active, setActive }}>{children}</SelectionContext.Provider>
+}
+
+export function SelectionPanel({ choices, children }: { choices: ReactNode; children?: ReactNode }) {
+  const [editing, setEditing] = useState(false)
+  return <>
+    {children ? <button type="button" className="bm-chip bm-edit-affixes" aria-expanded={editing} onClick={() => setEditing(value => !value)}>{editing ? m.back : m.editAffixes}</button> : null}
+    {editing ? children : choices}
+  </>
+}
 
 export function Block({ icon, title, area, wide, children, actions }: { icon: ReactNode; title: string; count?: string; area?: string; wide?: boolean; children: ReactNode; actions?: ReactNode }) {
   return <section className={cn('bm-blk', wide && 'wide')} style={area ? { gridArea: area } : undefined}>
@@ -50,11 +66,18 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
   className?: string
   renderInfo?: (index: number, swapping: boolean, startSwap: () => void) => ReactNode
 }) {
+  const scope = useContext(SelectionContext)
+  const owner = useId()
   const [cur, setCur] = useState(initialIndex)
   const [swapping, setSwapping] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   const info = useRef<HTMLDivElement>(null)
-  const active = cur >= 0 && cur < tiles.length ? cur : -1
+  const active = (!scope || scope.active === owner) && cur >= 0 && cur < tiles.length ? cur : -1
+  const close = () => {
+    setCur(-1)
+    scope?.setActive(null)
+    root.current?.querySelector<HTMLButtonElement>(`[data-tile="${active}"]`)?.focus()
+  }
 
   // The pointer follows the tile's centre, so it re-aims after every render, resize and tile scroll.
   useLayoutEffect(() => aim(root.current, info.current, active))
@@ -76,7 +99,7 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
     : <div key={spec.key} className="bm-tile-wrap">
       <button type="button" data-tile={index} disabled={spec.disabled} aria-expanded={active === index}
         className={cn('bm-tile', spec.empty && 'empty', active === index && 'sel')} title={spec.label}
-        onClick={() => { setSwapping(false); setCur(active === index ? -1 : index) }}><TileFace tile={spec} /></button>
+        onClick={() => { setSwapping(false); setCur(active === index ? -1 : index); scope?.setActive(active === index ? null : owner) }}><TileFace tile={spec} /></button>
       {spec.onRemove ? <button type="button" className="bm-icon-remove" aria-label={`${m.remove} ${spec.label}`} title={`${m.remove} ${spec.label}`} onClick={spec.onRemove}><X aria-hidden="true" /></button> : null}
     </div>
   const panel = !readOnly && active >= 0 && renderInfo ? renderInfo(active, swapping, () => setSwapping(true)) : null
@@ -85,7 +108,7 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
     {groups
       ? <div className="bm-groups">{groups.map(g => <div key={g.label} className="bm-group"><span>{g.label}</span><div className="bm-tiles">{tiles.slice(g.from, g.to).map((spec, i) => tile(spec, g.from + i))}</div></div>)}</div>
       : <div className="bm-tiles">{tiles.map(tile)}</div>}
-    {panel ? <div ref={info} className="bm-info">{panel}</div> : null}
+    {panel ? <CloseSelectionContext.Provider value={close}><div key={active} ref={info} className="bm-info" onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); close() } }}>{panel}</div></CloseSelectionContext.Provider> : null}
   </div>
 }
 
@@ -103,19 +126,20 @@ export interface Candidate { id: number; label: string; icon?: string; quality?:
 
 /** Search and pagination keep every candidate reachable without growing the page. */
 export function Picker({ what, items, onPick, talent }: { what: string; items: Candidate[]; onPick: (id: number) => void; talent?: boolean }) {
+  const closeSelection = useContext(CloseSelectionContext)
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
   const needle = query.trim().toLocaleLowerCase('zh-CN')
   const matches = needle ? items.filter(i => `${i.label} ${i.detail ?? ''}`.toLocaleLowerCase('zh-CN').includes(needle)) : items
-  const pages = Math.max(1, Math.ceil(matches.length / 24))
+  const pages = Math.max(1, Math.ceil(matches.length / 12))
   const current = Math.min(page, pages - 1)
-  const shown = matches.slice(current * 24, (current + 1) * 24)
+  const shown = matches.slice(current * 12, (current + 1) * 12)
   const label = m.searchWhat.replace('{what}', what)
   const turn = (next: number) => setPage(next)
   return <div className={cn('bm-picker', talent && 'bm-tal')}>
     <label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); turn(0) }} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
     {shown.length
-      ? <div className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} title={[item.label, item.detail].filter(Boolean).join('\n')} onClick={() => onPick(item.id)}>
+      ? <div className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} title={[item.label, item.detail].filter(Boolean).join('\n')} onClick={() => { onPick(item.id); closeSelection?.() }}>
         {item.icon ? <span className="bm-candidate-art"><ItemIcon icon={item.icon} quality={item.quality} /></span> : null}
         <span className="bm-candidate-copy"><b>{item.label}</b>{item.quality ? <small>{qualityLabel(item.quality)}</small> : null}</span>
       </button>)}</div>
@@ -134,7 +158,7 @@ export function InlinePicker({ what, items, onPick, children, disabled }: {
   const [open, setOpen] = useState(false)
   return <div className="bm-inline-picker">
     <button type="button" className="bm-chip" aria-expanded={open} disabled={disabled} onClick={() => setOpen(value => !value)}>{open ? m.closePicker : children ?? m.choose.replace('{what}', what)}</button>
-    {open ? <Picker what={what} items={items} onPick={id => { onPick(id); setOpen(false) }} /> : null}
+    {open ? <CloseSelectionContext.Provider value={null}><Picker what={what} items={items} onPick={id => { onPick(id); setOpen(false) }} /></CloseSelectionContext.Provider> : null}
   </div>
 }
 

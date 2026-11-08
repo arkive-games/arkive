@@ -7,7 +7,7 @@ import { BUILD_SLOTS, careerJobs, careerRoot, careerTalentEffects, equipmentAllo
 import { affixOptions, allowedEquipment, cardEffect, jobEmblem, rootBranches, rootEmblem, rootTint, ROOTS, ruleSet, skillPool, socketCount, soulSubOptions, normalAffixLimit, talentChoices, talentInfo, type ManualData } from '../lib/buildView'
 import type { PlannerBuild, PlannerEquipment } from '../lib/plannerModel'
 import { qualityLabel } from '../lib/quality'
-import { Block, InfoHead, Picker, Stats, TileBlock, type TileSpec } from './BuildBlocks'
+import { Block, InfoHead, Picker, SelectionPanel, SelectionScope, Stats, TileBlock, type TileSpec } from './BuildBlocks'
 import { AffixEditor, SoulAffixEditor } from './BuildAffixes'
 
 const m = content.builds.manual
@@ -196,7 +196,7 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
       {missing ? <p className="bm-note">{m.loadError}</p> : null}
     </header>
 
-    <div className="bm-blocks">
+    <SelectionScope key={draft.id}><div className="bm-blocks bm-compact-editor">
       <Block icon={<Zap />} title={t.skills} count={m.items.replace('{n}', String(draft.skills.filter(Boolean).length))}>
         <TileBlock tiles={skillTiles} renderInfo={i => {
           const items = data?.profession?.skills.skills.filter(s => pool.has(s.iSkillID)).map(s => ({ id: s.iSkillID, label: s.name?.['zh-CN'] || t.unknown, icon: s.icon, disabled: draft.skills.some((id, k) => k !== i && id === s.iSkillID) })) ?? []
@@ -213,13 +213,12 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           const record = equipmentMap.get(config.id)
           const items = allowedEquipment(equipment, lineage, slot.key).map(e => ({ id: e.iID, label: `${e.name?.['zh-CN'] ?? ''} T${e.iRank ?? '-'}`, icon: e.icon, quality: e.item?.iQuality }))
           const affixes = record ? affixOptions(data, record) : { normal: [], special: [] }
-          return <div key={`${draft.id}-${slot.key}`} className="bm-gear-editor">
+          return <SelectionPanel key={`${draft.id}-${slot.key}`} choices={<Picker what={t.slots[slot.label]} items={items} onPick={id => chooseEquipment(slot.key, id)} />}>
             {record ? <>
               <InfoHead name={record.name?.['zh-CN'] ?? t.unknown} quality={record.item?.iQuality} tag={`${qualityLabel(record.item?.iQuality)}${record.iRank ? ` T${record.iRank}` : ''}`} />
               <div className="bm-affix-columns">{(['normal', 'special'] as const).map(kind => affixes[kind].length || config[kind].length ? <AffixEditor key={`${config.id}-${kind}`} title={t[kind]} selected={config[kind]} options={affixes[kind]} limit={kind === 'normal' ? normalAffixLimit(data, record) : undefined} onChange={ids => setSlot(slot.key, { [kind]: ids })} /> : null)}</div>
             </> : null}
-            <Picker what={t.slots[slot.label]} items={items} onPick={id => chooseEquipment(slot.key, id)} />
-          </div>
+          </SelectionPanel>
         }} />
       </Block>
       <Block wide icon={<Layers />} title={m.card}>
@@ -252,13 +251,12 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           const config = draft.souls[i]
           const soul = soulMap.get(config?.id ?? 0)
           const items = (data?.souls?.souls.souls ?? []).filter(s => s.name?.['zh-CN']).map(s => ({ id: s.iID, label: s.name?.['zh-CN'] ?? '', icon: s.icon, quality: s.quality }))
-          return <div key={`${draft.id}-${i}`} className="bm-gear-editor">
+          return <SelectionPanel key={`${draft.id}-${i}`} choices={<Picker what={m.soul} items={items} onPick={id => setSoul(i, id === config?.id ? config : { id, sub: [], marks: [] })} />}>
             {soul && config ? <>
               <InfoHead name={soul.name?.['zh-CN'] ?? t.unknown} quality={soul.quality} tag={qualityLabel(soul.quality)} />
               <SoulAffixEditor key={config.id} selected={config.sub} options={soulSubOptions(data, soul)} onChange={sub => setSoul(i, { ...config, sub })} />
             </> : null}
-            <Picker what={m.soul} items={items} onPick={id => setSoul(i, id === config?.id ? config : { id, sub: [], marks: [] })} />
-          </div>
+          </SelectionPanel>
         }} />
       </Block>
       <Block icon={<PawPrint />} title={t.pets} count={m.petCount}>
@@ -268,6 +266,6 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           return <Picker what={m.pet} items={items} onPick={id => setPet(field, index, id)} />
         }} />
       </Block>
-    </div>
+    </div></SelectionScope>
   </div>
 }

@@ -168,29 +168,47 @@
 /* pickers */
 .bm-picker { display: flex; flex-direction: column; gap: .5rem; }
 .bm-picker .bm-search { width: 100%; }
-.bm-cands { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 5.5rem), 1fr)); align-content: start; align-items: start; gap: .75rem .5rem; }
+.bm-cands { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 4rem), 1fr)); align-content: start; align-items: start; gap: .3rem; }
 .bm-candidate { display: flex; flex-direction: column; align-items: center; gap: .4rem; padding: .4rem; min-width: 0; text-align: center; border-radius: var(--arkive-radius-standard); color: var(--foreground); }
 .bm-candidate:hover { background: var(--accent); }
 .bm-candidate:disabled { opacity: .45; cursor: not-allowed; }
-.bm-candidate-art { display: block; width: 4.5rem; height: 4.5rem; flex: none; max-width: 100%; aspect-ratio: 1; }
+.bm-candidate-art { display: block; width: 2.75rem; height: 2.75rem; flex: none; max-width: 100%; aspect-ratio: 1; }
 .bm-inline-picker { display: flex; flex-direction: column; align-items: stretch; gap: .5rem; width: 100%; }
 .bm-inline-picker > button { align-self: flex-start; }
 .bm-affix-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1rem; }
-.bm-card-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1rem; align-items: start; }
+.bm-card-sections { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: flex-start; }
+.bm-card-section:has(.bm-info) { flex-basis: 100%; }
+.bm-edit-affixes { align-self: flex-start; }
+@container (min-width: 1000px) {
+  .bm-compact-editor { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bm-compact-editor > .bm-blk:nth-child(3) { grid-column: auto; }
+  .bm-compact-editor > .bm-blk:has(.bm-info) { grid-column: 1 / -1; }
+}
+.bm-compact-editor .bm-body { padding: .5rem .65rem; }
+.bm-compact-editor .bm-tiles { gap: .15rem; }
+.bm-compact-editor .bm-tile { width: 3.5rem; }
+.bm-compact-editor .bm-ico { width: 2.5rem; height: 2.5rem; }
+.bm-compact-editor .bm-groups { gap: .4rem; }
+.bm-compact-editor .bm-group { gap: .25rem; }
+.bm-compact-editor .bm-gear-tiles > .bm-tiles { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .15rem; }
+.bm-compact-editor .bm-gear-tiles .bm-ico { width: 2.5rem; height: 2.5rem; }
+@container (max-width: 500px) {
+  .bm-compact-editor .bm-gear-tiles > .bm-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 .bm-card-section { min-width: 0; }
 .bm-card-section:has(.bm-info) { grid-column: 1 / -1; }
 .bm-card-section h3 { margin: 0 0 .5rem; font-size: .875rem; font-weight: 700; }
-.bm-card-tiles .bm-tile { width: 5.5rem; }
-.bm-card-tiles .bm-tile .bm-ico { width: 4.5rem; height: 4.5rem; }
+.bm-card-tiles .bm-tile { width: 3.25rem; }
+.bm-card-tiles .bm-tile .bm-ico { width: 2.75rem; height: 2.75rem; }
 .bm-card-tiles .bm-ico img { object-fit: contain; }
-.bm-card-tiles .bm-nm { white-space: normal; min-height: 2.7em; }
-.bm-card-tiles .bm-tiles { gap: .5rem; }
+.bm-card-tiles .bm-nm { white-space: nowrap; min-height: 1.35em; }
+.bm-card-tiles .bm-tiles { gap: .15rem; }
 .bm-card-tiles .bm-icon-remove { right: .1rem; }
 .bm-candidate-art .bm-ico { width: 100%; height: 100%; }
 .bm-candidate-art img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .bm-tal .bm-candidate-art .bm-ico { background: var(--ro3-talent-plate, radial-gradient(circle at 50% 30%, #f5b183, #c8622f 80%)); }
 .bm-candidate-copy { display: flex; flex-direction: column; gap: .25rem; min-width: 0; overflow-wrap: anywhere; }
-.bm-candidate-copy b { font-size: .875rem; line-height: 1.4; }
+.bm-candidate-copy b { font-size: .75rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .bm-candidate-copy small { font-size: .75rem; line-height: 1.5; color: var(--muted-foreground); }
 .bm-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font-size: .75rem; }
 .bm-gear-editor { display: flex; flex-direction: column; align-items: stretch; gap: .75rem; }
