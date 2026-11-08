@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.31.0",
+      "date": "2026-11-09",
+      "commit": "b76b877a5f8dda4584774db2e212a3dcd0bf518f",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Choose pathway talents at max level and view their effects in skill details; pick normal skills by icon and name, with basic attacks and special skills always visible.",
+            "zh-CN": "新增满级途径天赋选择，技能详情同步显示天赋效果；普通技能按图标和名称选择，普攻、解控及终极等固定技能常驻展示。",
+            "zh-TW": "新增滿級途徑天賦選擇，技能詳情同步顯示天賦效果；普通技能按圖示和名稱選擇，普攻、解控及終極等固定技能常駐展示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.30.0",
       "date": "2026-11-08",
       "commit": "ec02b7d01243407206df2ab69ff0b8d22b63de6d",
