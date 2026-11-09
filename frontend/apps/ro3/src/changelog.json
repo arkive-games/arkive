@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.8",
+      "date": "2026-11-09",
+      "commit": "cfaa9a052ddaf95583132f9f533bdf7b6047e1f5",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Show equipment affixes beside rank-filtered choices, use native quality plates and T badges, and simplify collapsed navigation.",
+            "zh-CN": "装备选择右侧直接编辑词条，支持T阶级筛选与高阶优先，采用游戏品质底板和角标，简化折叠导航。",
+            "zh-TW": "裝備選擇右側直接編輯詞條，支援T階級篩選與高階優先，採用遊戲品質底板和角標，簡化折疊導覽。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.7",
       "date": "2026-11-09",
       "commit": "6c4d6af62faece34b6d541534657b7321d7573e1",
