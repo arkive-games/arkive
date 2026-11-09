@@ -1,6 +1,6 @@
 import { createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { ChevronDown, PanelLeft } from 'lucide-react'
 import content from '../locales/zh-CN.json'
 import { cn } from '@gamemap/ui'
 import { hrefForKey, navigateOnClick, type NavKey } from '../navigation'
@@ -75,7 +75,7 @@ export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot, 
       <div className={cn('mb-3 flex min-h-9 items-center gap-1', collapsed && 'justify-center')}>
         {!collapsed ? <SectionTitle className="px-2 text-2xl">{label}</SectionTitle> : null}
         {onToggle ? <button type="button" onClick={onToggle} aria-expanded={!collapsed} aria-label={collapsed ? content.nav.expandSidebar : content.nav.collapseSidebar} title={collapsed ? content.nav.expandSidebar : content.nav.collapseSidebar} className={cn('grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring', !collapsed && 'ml-auto')}>
-          {collapsed ? <PanelLeftOpen className="size-5" aria-hidden="true" /> : <PanelLeftClose className="size-5" aria-hidden="true" />}
+          <PanelLeft className="size-4" strokeWidth={1.6} aria-hidden="true" />
         </button> : null}
       </div>
       {entries.map((entry) => {

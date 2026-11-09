@@ -67,6 +67,12 @@ it('portals candidates outside slot blocks and removes the row after choosing', 
   click(host.querySelector('[data-tile]'))
   expect(host.querySelector('.bm-blk .bm-info')).toBeNull()
   expect(host.querySelector('.bm-compact-editor > .bm-selection-row .bm-candidate')).not.toBeNull()
+  expect(host.querySelector('.bm-selection-heading')).toBeNull()
+  const pagination = host.querySelector('.bm-pagination')!
+  expect(pagination.lastElementChild?.classList.contains('bm-picker-close')).toBe(true)
+  click(pagination.lastElementChild)
+  expect(host.querySelector('.bm-selection-row')).toBeNull()
+  click(host.querySelector('[data-tile]'))
   click(host.querySelector('.bm-candidate'))
   expect(host.querySelector('.bm-selection-row')).toBeNull()
   vi.unstubAllGlobals()

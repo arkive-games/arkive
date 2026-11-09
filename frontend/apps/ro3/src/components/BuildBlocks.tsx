@@ -6,6 +6,7 @@ import content from '../locales/zh-CN.json'
 import { clampStat } from '../lib/buildState'
 import { qualityColor, qualityLabel } from '../lib/quality'
 import { resourceUrl } from '../lib/urls'
+import { buildCardArt } from '../lib/buildCardArt'
 
 const m = content.builds.manual
 const SelectionContext = createContext<{ active: string | null; setActive: (id: string | null) => void } | null>(null)
@@ -34,7 +35,10 @@ export function Block({ icon, title, area, wide, children, actions }: { icon: Re
 
 export function ItemIcon({ icon, quality, empty }: { icon?: string; quality?: number; empty?: boolean }) {
   return <span className="bm-ico" style={quality ? { '--q': qualityColor(quality) } as CSSProperties : undefined}>
-    {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" /> : empty ? <Plus aria-hidden="true" /> : null}
+    {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" onError={event => {
+      const original = icon.replace('/adventure_', '/card_')
+      if (original !== icon && buildCardArt(original) === icon && event.currentTarget.getAttribute('src') !== resourceUrl(original)) event.currentTarget.src = resourceUrl(original)
+    }} /> : empty ? <Plus aria-hidden="true" /> : null}
   </span>
 }
 
@@ -134,7 +138,6 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
   const panel = !readOnly && active >= 0 && renderInfo ? renderInfo(active, swapping, () => setSwapping(true)) : null
 
   const content = panel ? <CloseSelectionContext.Provider value={close}><div key={active} ref={info} className="bm-info" onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); close() } }}>
-    {panelHost ? <div className="bm-selection-heading"><b>{m.choose.replace('{what}', tiles[active].label)}</b><button type="button" className="bm-chip" onClick={close}>{m.closePicker}</button></div> : null}
     {panel}
   </div></CloseSelectionContext.Provider> : null
 
@@ -182,6 +185,7 @@ export function Picker({ what, items, onPick, talent }: { what: string; items: C
       <button type="button" className="bm-chip" disabled={current === 0} onClick={() => turn(current - 1)}>{m.previousPage}</button>
       <span aria-live="polite">{m.pageCount.replace('{count}', String(matches.length)).replace('{page}', String(current + 1)).replace('{pages}', String(pages))}</span>
       <button type="button" className="bm-chip" disabled={current + 1 >= pages} onClick={() => turn(current + 1)}>{m.nextPage}</button>
+      {closeSelection ? <button type="button" className="bm-chip bm-picker-close" onClick={closeSelection}>{m.close}</button> : null}
     </nav>
   </div>
 }
@@ -192,7 +196,7 @@ export function InlinePicker({ what, items, onPick, children, disabled }: {
   const [open, setOpen] = useState(false)
   return <div className="bm-inline-picker">
     <button type="button" className="bm-chip" aria-expanded={open} disabled={disabled} onClick={() => setOpen(value => !value)}>{open ? m.closePicker : children ?? m.choose.replace('{what}', what)}</button>
-    {open ? <CloseSelectionContext.Provider value={null}><Picker what={what} items={items} onPick={id => { onPick(id); setOpen(false) }} /></CloseSelectionContext.Provider> : null}
+    {open ? <CloseSelectionContext.Provider value={() => setOpen(false)}><Picker what={what} items={items} onPick={id => { onPick(id); setOpen(false) }} /></CloseSelectionContext.Provider> : null}
   </div>
 }
 

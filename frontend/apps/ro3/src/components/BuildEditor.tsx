@@ -3,6 +3,7 @@ import { BarChart3, ChevronDown, ChevronLeft, Flame, Layers, PawPrint, Shield, S
 import { cn } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 import { localizedText } from '../cardCatalog'
+import { buildCardArt } from '../lib/buildCardArt'
 import { BUILD_SLOTS, careerJobs, careerRoot, careerTalentEffects, equipmentAllowed, slotAllows, type BuildSlotKey } from '../lib/buildRules'
 import { affixOptions, allowedEquipment, cardEffect, jobEmblem, rootBranches, rootEmblem, rootTint, ROOTS, ruleSet, skillPool, socketCount, soulSubOptions, normalAffixLimit, talentChoices, talentInfo, type ManualData } from '../lib/buildView'
 import type { PlannerBuild, PlannerEquipment } from '../lib/plannerModel'
@@ -229,13 +230,13 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           if (!count) return null
           const tiles: TileSpec[] = Array.from({ length: count }, (_, index) => {
             const card = cardMap.get(ids[index])
-            return { key: `${slot.key}-${index}`, label: card ? localizedText(card.name) : ids[index] ? t.unknown : m.socketNumber.replace('{n}', String(index + 1)), icon: card?.icon, quality: card?.quality, empty: !ids[index], onRemove: ids[index] ? () => setCard(slot.key, index, 0) : undefined }
+            return { key: `${slot.key}-${index}`, label: card ? localizedText(card.name) : ids[index] ? t.unknown : m.socketNumber.replace('{n}', String(index + 1)), icon: card ? buildCardArt(card.icon) : undefined, quality: card?.quality, empty: !ids[index], onRemove: ids[index] ? () => setCard(slot.key, index, 0) : undefined }
           })
           return <section key={slot.key} className="bm-card-section"><h3>{t.slots[slot.label]}</h3>
             {ids.length > capacity ? <p className="bm-note">{m.overLimit}</p> : null}
             <TileBlock className="bm-card-tiles" tiles={tiles} renderInfo={index => <>
               {cardMap.get(ids[index]) ? <p className="bm-note">{cardEffect(data, cardMap.get(ids[index])!)}</p> : null}
-              <Picker key={`${slot.key}-${index}`} what={m.card} items={index < capacity ? (data?.cards?.cards ?? []).filter(card => card.part === slot.cardPart).map(card => ({ id: card.id, label: localizedText(card.name), icon: card.icon, quality: card.quality, detail: cardEffect(data, card) })) : []} onPick={id => setCard(slot.key, index, id)} />
+              <Picker key={`${slot.key}-${index}`} what={m.card} items={index < capacity ? (data?.cards?.cards ?? []).filter(card => card.part === slot.cardPart).map(card => ({ id: card.id, label: localizedText(card.name), icon: buildCardArt(card.icon), quality: card.quality, detail: cardEffect(data, card) })) : []} onPick={id => setCard(slot.key, index, id)} />
             </>} />
           </section>
         })}</div>
