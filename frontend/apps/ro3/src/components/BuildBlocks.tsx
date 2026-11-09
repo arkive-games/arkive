@@ -6,7 +6,6 @@ import content from '../locales/zh-CN.json'
 import { clampStat } from '../lib/buildState'
 import { qualityColor, qualityLabel } from '../lib/quality'
 import { resourceUrl } from '../lib/urls'
-import { buildCardArt } from '../lib/buildCardArt'
 
 const m = content.builds.manual
 const SelectionContext = createContext<{ active: string | null; setActive: (id: string | null) => void } | null>(null)
@@ -35,10 +34,7 @@ export function Block({ icon, title, area, wide, children, actions }: { icon: Re
 
 export function ItemIcon({ icon, quality, empty }: { icon?: string; quality?: number; empty?: boolean }) {
   return <span className="bm-ico" style={quality ? { '--q': qualityColor(quality) } as CSSProperties : undefined}>
-    {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" onError={event => {
-      const original = icon.replace('/adventure_', '/card_')
-      if (original !== icon && buildCardArt(original) === icon && event.currentTarget.getAttribute('src') !== resourceUrl(original)) event.currentTarget.src = resourceUrl(original)
-    }} /> : empty ? <Plus aria-hidden="true" /> : null}
+    {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" /> : empty ? <Plus aria-hidden="true" /> : null}
   </span>
 }
 
