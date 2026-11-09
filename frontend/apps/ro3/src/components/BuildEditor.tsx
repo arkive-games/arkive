@@ -148,6 +148,8 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
       label: record?.name?.['zh-CN'] ?? t.slots[slot.label],
       icon: record?.icon,
       quality: record?.item?.iQuality,
+      rank: record?.iRank,
+      framed: true,
       empty: !record,
       onRemove: slotConfig(slot.key).id ? () => chooseEquipment(slot.key, 0) : undefined,
       disabled: !job || slot.key === 'off' && twoHanded,
@@ -212,14 +214,19 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           const slot = BUILD_SLOTS[i]
           const config = slotConfig(slot.key)
           const record = equipmentMap.get(config.id)
-          const items = allowedEquipment(equipment, lineage, slot.key).map(e => ({ id: e.iID, label: `${e.name?.['zh-CN'] ?? ''} T${e.iRank ?? '-'}`, icon: e.icon, quality: e.item?.iQuality }))
+          const items = allowedEquipment(equipment, lineage, slot.key).map(e => ({ id: e.iID, label: `${e.name?.['zh-CN'] ?? ''} T${e.iRank ?? '-'}`, icon: e.icon, quality: e.item?.iQuality, rank: e.iRank, framed: true }))
           const affixes = record ? affixOptions(data, record) : { normal: [], special: [] }
-          return <SelectionPanel key={`${draft.id}-${slot.key}`} choices={<Picker what={t.slots[slot.label]} items={items} onPick={id => chooseEquipment(slot.key, id)} />}>
-            {record ? <>
-              <InfoHead name={record.name?.['zh-CN'] ?? t.unknown} quality={record.item?.iQuality} tag={`${qualityLabel(record.item?.iQuality)}${record.iRank ? ` T${record.iRank}` : ''}`} />
-              <div className="bm-affix-columns">{(['normal', 'special'] as const).map(kind => affixes[kind].length || config[kind].length ? <AffixEditor key={`${config.id}-${kind}`} title={t[kind]} selected={config[kind]} options={affixes[kind]} limit={kind === 'normal' ? normalAffixLimit(data, record) : undefined} onChange={ids => setSlot(slot.key, { [kind]: ids })} /> : null)}</div>
-            </> : null}
-          </SelectionPanel>
+          return <div key={`${draft.id}-${slot.key}`} className="bm-equip-workspace">
+            <Picker what={t.slots[slot.label]} items={items} onPick={id => chooseEquipment(slot.key, id)} />
+            <aside className="bm-equipped-affixes" aria-label={m.affixPanel}>
+              <h3>{m.affixPanel}</h3>
+              {record ? <>
+                <InfoHead name={record.name?.['zh-CN'] ?? t.unknown} quality={record.item?.iQuality} tag={`${qualityLabel(record.item?.iQuality)}${record.iRank ? ` T${record.iRank}` : ''}`} />
+                {(['normal', 'special'] as const).map(kind => affixes[kind].length || config[kind].length ? <AffixEditor key={`${config.id}-${kind}`} title={t[kind]} selected={config[kind]} options={affixes[kind]} limit={kind === 'normal' ? normalAffixLimit(data, record) : undefined} onChange={ids => setSlot(slot.key, { [kind]: ids })} /> : null)}
+                {!affixes.normal.length && !affixes.special.length ? <p className="bm-note">{m.noEditableAffixes}</p> : null}
+              </> : <p className="bm-note">{m.selectEquipmentFirst}</p>}
+            </aside>
+          </div>
         }} />
       </Block>
       <Block wide icon={<Layers />} title={m.card}>
@@ -230,13 +237,13 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           if (!count) return null
           const tiles: TileSpec[] = Array.from({ length: count }, (_, index) => {
             const card = cardMap.get(ids[index])
-            return { key: `${slot.key}-${index}`, label: card ? localizedText(card.name) : ids[index] ? t.unknown : m.socketNumber.replace('{n}', String(index + 1)), icon: card ? buildCardArt(card.icon) : undefined, quality: card?.quality, empty: !ids[index], onRemove: ids[index] ? () => setCard(slot.key, index, 0) : undefined }
+            return { key: `${slot.key}-${index}`, label: card ? localizedText(card.name) : ids[index] ? t.unknown : m.socketNumber.replace('{n}', String(index + 1)), icon: card ? buildCardArt(card.icon) : undefined, quality: card?.quality, framed: true, part: card?.part, empty: !ids[index], onRemove: ids[index] ? () => setCard(slot.key, index, 0) : undefined }
           })
           return <section key={slot.key} className="bm-card-section"><h3>{t.slots[slot.label]}</h3>
             {ids.length > capacity ? <p className="bm-note">{m.overLimit}</p> : null}
             <TileBlock className="bm-card-tiles" tiles={tiles} renderInfo={index => <>
               {cardMap.get(ids[index]) ? <p className="bm-note">{cardEffect(data, cardMap.get(ids[index])!)}</p> : null}
-              <Picker key={`${slot.key}-${index}`} what={m.card} items={index < capacity ? (data?.cards?.cards ?? []).filter(card => card.part === slot.cardPart).map(card => ({ id: card.id, label: localizedText(card.name), icon: buildCardArt(card.icon), quality: card.quality, detail: cardEffect(data, card) })) : []} onPick={id => setCard(slot.key, index, id)} />
+              <Picker key={`${slot.key}-${index}`} what={m.card} items={index < capacity ? (data?.cards?.cards ?? []).filter(card => card.part === slot.cardPart).map(card => ({ id: card.id, label: localizedText(card.name), icon: buildCardArt(card.icon), quality: card.quality, framed: true, part: card.part, detail: cardEffect(data, card) })) : []} onPick={id => setCard(slot.key, index, id)} />
             </>} />
           </section>
         })}</div>

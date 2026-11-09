@@ -33,6 +33,15 @@ it('keeps later candidates reachable in an inline paginated grid', () => {
   click(host.querySelector('.bm-candidate'))
   expect(pick).toHaveBeenCalledWith(24)
 })
+it('sorts equipment ranks descending and filters the selected rank', () => {
+  const host = mount(<Picker what="Equipment" items={[{ id: 1, label: 'Low', rank: 1 }, { id: 2, label: 'High', rank: 7 }, { id: 3, label: 'Middle', rank: 4 }]} onPick={vi.fn()} />)
+  expect([...host.querySelectorAll('.bm-candidate')].map(node => node.textContent)).toEqual(['High', 'Middle', 'Low'])
+  const select = host.querySelector('select')!
+  expect([...select.options].map(option => option.value)).toEqual(['0', '7', '4', '1'])
+  act(() => { select.value = '4'; select.dispatchEvent(new Event('change', { bubbles: true })) })
+  expect(host.querySelectorAll('.bm-candidate')).toHaveLength(1)
+  expect(host.querySelector('.bm-candidate')?.textContent).toBe('Middle')
+})
 it('opens affix choices inline and closes them after selecting', () => {
   const pick = vi.fn()
   const host = mount(<InlinePicker what="Affixes" items={[{ id: 1, label: 'Strength' }]} onPick={pick} />)

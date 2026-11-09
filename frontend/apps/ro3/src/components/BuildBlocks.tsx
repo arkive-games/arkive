@@ -6,6 +6,7 @@ import content from '../locales/zh-CN.json'
 import { clampStat } from '../lib/buildState'
 import { qualityColor, qualityLabel } from '../lib/quality'
 import { resourceUrl } from '../lib/urls'
+import { itemQualityFrame, itemRankGlyphs, itemPartArt } from '../lib/buildItemArt'
 
 const m = content.builds.manual
 const SelectionContext = createContext<{ active: string | null; setActive: (id: string | null) => void } | null>(null)
@@ -32,9 +33,13 @@ export function Block({ icon, title, area, wide, children, actions }: { icon: Re
   </section>
 }
 
-export function ItemIcon({ icon, quality, empty }: { icon?: string; quality?: number; empty?: boolean }) {
-  return <span className="bm-ico" style={quality ? { '--q': qualityColor(quality) } as CSSProperties : undefined}>
-    {icon ? <img src={resourceUrl(icon)} alt="" loading="lazy" /> : empty ? <Plus aria-hidden="true" /> : null}
+export function ItemIcon({ icon, quality, empty, rank, framed, part }: { icon?: string; quality?: number; empty?: boolean; rank?: number; framed?: boolean; part?: number }) {
+  const frame = framed && !empty ? itemQualityFrame(quality) : undefined
+  const rankArt = rank ? itemRankGlyphs(rank) : []
+  return <span className={cn('bm-ico', frame && 'bm-native-item')} style={{ ...(quality ? { '--q': qualityColor(quality) } : {}), ...(frame ? { backgroundImage: `url("${frame}")` } : {}) } as CSSProperties}>
+    {icon ? <img className="bm-item-image" src={resourceUrl(icon)} alt="" loading="lazy" /> : empty ? <Plus aria-hidden="true" /> : null}
+    {rankArt.length ? <span className="bm-rank" aria-label={`T${rank}`}>{rankArt.map((src, index) => <img key={index} src={src} alt="" />)}</span> : null}
+    {itemPartArt(part) ? <span className="bm-item-part" aria-hidden="true"><img src={itemPartArt(part)} alt="" /></span> : null}
   </span>
 }
 
@@ -43,6 +48,9 @@ export interface TileSpec {
   label: string
   icon?: string
   quality?: number
+  rank?: number
+  framed?: boolean
+  part?: number
   empty?: boolean
   disabled?: boolean
   onRemove?: () => void
@@ -52,7 +60,7 @@ export interface TileSpec {
 
 function TileFace({ tile }: { tile: TileSpec }) {
   return <>
-    <ItemIcon icon={tile.icon} quality={tile.quality} empty={tile.empty} />
+    <ItemIcon icon={tile.icon} quality={tile.quality} empty={tile.empty} rank={tile.rank} framed={tile.framed} part={tile.part} />
     <span className="bm-nm">{tile.label}</span>
     {tile.extra}
   </>
@@ -155,25 +163,30 @@ function aim(root: HTMLElement | null, info: HTMLElement | null, index: number) 
   info.style.setProperty('--ax', `${x}px`)
 }
 
-export interface Candidate { id: number; label: string; icon?: string; quality?: number; disabled?: boolean; detail?: string }
+export interface Candidate { id: number; label: string; icon?: string; quality?: number; disabled?: boolean; detail?: string; rank?: number; framed?: boolean; part?: number }
 
 /** Search and pagination keep every candidate reachable without growing the page. */
 export function Picker({ what, items, onPick, talent }: { what: string; items: Candidate[]; onPick: (id: number) => void; talent?: boolean }) {
   const closeSelection = useContext(CloseSelectionContext)
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
+  const [rank, setRank] = useState(0)
+  const ranks = [...new Set(items.flatMap(item => item.rank ? [item.rank] : []))].sort((a, b) => b - a)
   const needle = query.trim().toLocaleLowerCase('zh-CN')
-  const matches = needle ? items.filter(i => `${i.label} ${i.detail ?? ''}`.toLocaleLowerCase('zh-CN').includes(needle)) : items
+  const matches = items.filter(item => (!rank || item.rank === rank) && (!needle || `${item.label} ${item.detail ?? ''}`.toLocaleLowerCase('zh-CN').includes(needle)))
+    .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0))
   const pages = Math.max(1, Math.ceil(matches.length / 12))
   const current = Math.min(page, pages - 1)
   const shown = matches.slice(current * 12, (current + 1) * 12)
   const label = m.searchWhat.replace('{what}', what)
   const turn = (next: number) => setPage(next)
   return <div className={cn('bm-picker', talent && 'bm-tal')}>
-    <label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); turn(0) }} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
+    <div className="bm-picker-tools"><label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); turn(0) }} placeholder={label} aria-label={label} /><span><Search aria-hidden="true" /></span></label>
+      {ranks.length ? <select className="bm-rank-filter" aria-label={m.rankFilter} value={rank} onChange={event => { setRank(Number(event.target.value)); turn(0) }}><option value={0}>{m.allRanks}</option>{ranks.map(value => <option key={value} value={value}>T{value}</option>)}</select> : null}
+    </div>
     {shown.length
       ? <div className="bm-cands">{shown.map(item => <button key={item.id} type="button" className="bm-candidate" disabled={item.disabled} aria-label={[item.label, item.quality ? qualityLabel(item.quality) : ''].filter(Boolean).join(' · ')} title={[item.label, item.quality ? qualityLabel(item.quality) : '', item.detail].filter(Boolean).join('\n')} onClick={() => { onPick(item.id); closeSelection?.() }}>
-        {item.icon ? <span className="bm-candidate-art"><ItemIcon icon={item.icon} quality={item.quality} /></span> : null}
+        {item.icon ? <span className="bm-candidate-art"><ItemIcon icon={item.icon} quality={item.quality} rank={item.rank} framed={item.framed} part={item.part} /></span> : null}
         <span className="bm-candidate-copy"><b>{item.label}</b></span>
       </button>)}</div>
       : <p className="bm-note">{m.noMatch}</p>}

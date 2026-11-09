@@ -7,11 +7,10 @@
 @media (min-width: 64rem) {
   .ro3-section-sidebar.is-collapsed > a { box-shadow: none; background: transparent; }
   .ro3-section-sidebar.is-collapsed > a > span:first-child { background: var(--muted); }
-  .ro3-section-sidebar.is-collapsed .ro3-build-subnav { position: relative; margin: .65rem .3rem 0; padding: .6rem .3rem; border: 1px solid var(--border); border-radius: 999px; background: color-mix(in srgb, var(--muted) 55%, var(--background)); gap: .35rem; }
-  .ro3-section-sidebar.is-collapsed .ro3-build-subnav::before { content: ''; position: absolute; width: 1px; height: .65rem; background: var(--border); left: 50%; top: -.65rem; }
-  .ro3-section-sidebar.is-collapsed .ro3-build-subnav button { position: relative; justify-content: center; height: 2.25rem; padding: 0; border-radius: 50%; }
-  .ro3-section-sidebar.is-collapsed .ro3-build-subnav button[aria-selected=true] { color: var(--arkive-nav-active); background: var(--background); box-shadow: 0 .15rem .4rem color-mix(in srgb, var(--foreground) 8%, transparent); }
-  .ro3-section-sidebar.is-collapsed .ro3-build-subnav button[aria-selected=true]::after { content: ''; position: absolute; left: -.65rem; top: 50%; width: .2rem; height: .8rem; border-radius: 999px; background: var(--arkive-nav-active); transform: translateY(-50%); }
+  .ro3-section-sidebar.is-collapsed .ro3-build-subnav { position: relative; margin: .8rem .3rem 0; padding: .65rem 0 0; border: 0; background: transparent; gap: .35rem; }
+  .ro3-section-sidebar.is-collapsed .ro3-build-subnav::before { content: ''; position: absolute; width: 1.25rem; height: 1px; background: var(--border); left: 50%; top: 0; transform: translateX(-50%); }
+  .ro3-section-sidebar.is-collapsed .ro3-build-subnav button { position: relative; justify-content: center; height: 2.5rem; padding: 0; border-radius: .7rem; }
+  .ro3-section-sidebar.is-collapsed .ro3-build-subnav button[aria-selected=true] { color: var(--arkive-nav-active); background: var(--arkive-filter-active); box-shadow: none; }
   .ro3-section-sidebar.is-collapsed .ro3-build-subnav svg { width: 1rem; height: 1rem; flex-shrink: 0; }
   .ro3-section-sidebar.is-collapsed .ro3-sidebar-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
