@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.5",
+      "date": "2026-11-09",
+      "commit": "9e6aae0e2ebff65884290618dfafbfa855a16874",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Collapse the desktop sidebar into icon navigation to free editing space without resetting the current build.",
+            "zh-CN": "桌面左侧栏可收起为图标导航，扩大编辑空间，切换不重置当前方案。",
+            "zh-TW": "桌面左側欄可收起為圖示導覽，擴大編輯空間，切換不重置目前方案。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.4",
       "date": "2026-11-08",
       "commit": "3201b333f3a1f06ce8ba6a16e6fd8ee8e8161a40",
