@@ -4,6 +4,13 @@
 @source "../../../packages/map-shell/src";
 @source "../../../packages/auth/src";
 
+@media (min-width: 64rem) {
+  .ro3-section-sidebar.is-collapsed .ro3-build-subnav { margin-left: 0; padding-left: 0; border-left: 0; gap: .35rem; }
+  .ro3-section-sidebar.is-collapsed .ro3-build-subnav button { justify-content: center; height: 2.75rem; padding-inline: .5rem; }
+  .ro3-section-sidebar.is-collapsed .ro3-build-subnav svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+  .ro3-section-sidebar.is-collapsed .ro3-sidebar-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
 :root {
 
   /* The encyclopedia and the build manual were painted as a parchment copy of

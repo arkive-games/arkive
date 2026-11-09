@@ -133,12 +133,12 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
   const nav = <>
     <AccountDialog open={cloud.loginOpen} onOpenChange={cloud.setLoginOpen} strings={authStringsFor('zh-CN')} />
     <SidebarSub>
-      <div role="tablist" aria-orientation="vertical" className="my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">
+      <div role="tablist" aria-orientation="vertical" className="ro3-build-subnav my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">
         {SECTIONS.map(({ key, label, icon: Icon }) => {
           const selected = section === key
-          return <button key={key} type="button" role="tab" aria-selected={selected} onClick={() => go(key)}
+          return <button key={key} type="button" role="tab" aria-selected={selected} aria-label={label} title={label} onClick={() => go(key)}
             className={cn('flex h-9 items-center gap-2 rounded-lg px-2 text-sm transition-colors', selected ? 'bg-[color:var(--arkive-filter-active)] font-bold text-[color:var(--arkive-nav-active)]' : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground')}>
-            <Icon className="size-4" aria-hidden="true" />{label}
+            <Icon className="size-4 shrink-0" aria-hidden="true" /><span className="ro3-sidebar-label">{label}</span>
           </button>
         })}
       </div>

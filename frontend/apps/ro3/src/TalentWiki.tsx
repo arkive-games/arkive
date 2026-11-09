@@ -97,7 +97,7 @@ export function TalentWiki() {
 
   // The two boards are the page's sub-pages, so they sit under its sidebar entry.
   const systemList = (
-    <div role="tablist" aria-label={text.systemLabel} aria-orientation="vertical" className="my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">
+    <div role="tablist" aria-label={text.systemLabel} aria-orientation="vertical" className="ro3-build-subnav my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">
       {(['season', 'patron'] as const).map((candidate) => {
         const selected = candidate === mode
         const Icon = candidate === 'season' ? GitFork : Star
@@ -107,6 +107,8 @@ export function TalentWiki() {
             type="button"
             role="tab"
             aria-selected={selected}
+            aria-label={text[candidate]}
+            title={text[candidate]}
             onClick={() => setMode(candidate)}
             className={cn(
               'flex h-9 items-center gap-2 rounded-lg px-2 text-sm transition-colors',
@@ -114,7 +116,7 @@ export function TalentWiki() {
             )}
           >
             <Icon aria-hidden="true" className="size-4" />
-            {text[candidate]}
+            <span className="ro3-sidebar-label">{text[candidate]}</span>
           </button>
         )
       })}

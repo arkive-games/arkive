@@ -9,7 +9,9 @@
     "home": "首页",
     "wiki": "百科",
     "more": "更多",
-    "back": "返回"
+    "back": "返回",
+    "expandSidebar": "展开侧栏",
+    "collapseSidebar": "收起侧栏"
   },
   "language": "简体中文",
   "languageMenu": "语言",

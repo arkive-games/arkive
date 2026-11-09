@@ -125,6 +125,7 @@ function App() {
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
   // And the sidebar's, under the lit entry, for a page's own sub-pages.
   const [sidebarSlot, setSidebarSlot] = useState<HTMLElement | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const navigate = (key: NavKey) => {
     const next = locationForKey(key)
@@ -150,9 +151,9 @@ function App() {
         version={SITE_VERSION}
       >
         {location.page === 'wiki' ? (
-          <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
+          <div className={sidebarCollapsed ? 'ro3-sidebar-layout lg:grid lg:grid-cols-[3.5rem_minmax(0,1fr)] lg:gap-4' : 'ro3-sidebar-layout lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8'}>
             <h1 className="sr-only">{pageTitle(location)}</h1>
-            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSubSlot={setSidebarSlot} />
+            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSubSlot={setSidebarSlot} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />
             <div className="min-w-0">
               <SectionStrip entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>
@@ -163,9 +164,9 @@ function App() {
             </div>
           </div>
         ) : location.page === 'builds' ? (
-          <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
+          <div className={sidebarCollapsed ? 'ro3-sidebar-layout lg:grid lg:grid-cols-[3.5rem_minmax(0,1fr)] lg:gap-4' : 'ro3-sidebar-layout lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8'}>
             <h1 className="sr-only">{pageTitle(location)}</h1>
-            <SectionSidebar entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSubSlot={setSidebarSlot} />
+            <SectionSidebar entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSubSlot={setSidebarSlot} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />
             <div className="min-w-0">
               <SectionStrip entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>

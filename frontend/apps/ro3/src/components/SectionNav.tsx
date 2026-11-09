@@ -1,6 +1,7 @@
 import { createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import content from '../locales/zh-CN.json'
 import { cn } from '@gamemap/ui'
 import { hrefForKey, navigateOnClick, type NavKey } from '../navigation'
 
@@ -63,13 +64,20 @@ function SectionTitle({ children, className }: { children: ReactNode; className?
  * straight on the page under a large title. It sticks while the page scrolls,
  * so the footer below still runs the full width.
  */
-export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot }: SectionNavProps & {
+export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot, collapsed = false, onToggle }: SectionNavProps & {
+  collapsed?: boolean
+  onToggle?: () => void
   /** Receives the slot under the lit entry, for `SidebarSubProvider`. */
   onSubSlot: (node: HTMLElement | null) => void
 }) {
   return (
-    <nav aria-label={label} className="sticky top-4 hidden flex-col gap-1 self-start lg:flex">
-      <SectionTitle className="mb-3 px-2 text-2xl">{label}</SectionTitle>
+    <nav aria-label={label} className={cn('ro3-section-sidebar sticky top-4 hidden flex-col gap-1 self-start lg:flex', collapsed && 'is-collapsed')}>
+      <div className={cn('mb-3 flex min-h-9 items-center gap-1', collapsed && 'justify-center')}>
+        {!collapsed ? <SectionTitle className="px-2 text-2xl">{label}</SectionTitle> : null}
+        {onToggle ? <button type="button" onClick={onToggle} aria-expanded={!collapsed} aria-label={collapsed ? content.nav.expandSidebar : content.nav.collapseSidebar} title={collapsed ? content.nav.expandSidebar : content.nav.collapseSidebar} className={cn('grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring', !collapsed && 'ml-auto')}>
+          {collapsed ? <PanelLeftOpen className="size-5" aria-hidden="true" /> : <PanelLeftClose className="size-5" aria-hidden="true" />}
+        </button> : null}
+      </div>
       {entries.map((entry) => {
         const current = entry.key === active
         return (
@@ -78,7 +86,10 @@ export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot }
             href={hrefForKey(entry.key)}
             onClick={navigateOnClick(entry.key, onNavigate)}
             aria-current={current ? 'page' : undefined}
+            aria-label={entry.label}
+            title={collapsed ? entry.label : undefined}
             className={cn(
+              collapsed && 'justify-center',
               'group flex h-12 items-center gap-3 rounded-xl px-2 text-sm font-semibold transition-[background-color,color,box-shadow]',
               current
                 ? 'bg-card text-[color:var(--arkive-nav-active)] shadow-[0_0.25rem_0.9rem_rgba(13,116,206,0.1),0_0_0_1px_var(--border)]'
@@ -93,7 +104,7 @@ export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot }
             >
               <img src={entry.art} alt="" className="size-7 object-contain" />
             </span>
-            <span className="truncate">{entry.label}</span>
+            <span className={collapsed ? 'sr-only' : 'truncate'}>{entry.label}</span>
           </a>
           {current ? <div ref={onSubSlot} className="empty:hidden" /> : null}
           </Fragment>
