@@ -8,7 +8,7 @@ import { BUILD_SLOTS, careerJobs, careerRoot, careerTalentEffects, equipmentAllo
 import { affixOptions, allowedEquipment, cardEffect, jobEmblem, rootBranches, rootEmblem, rootTint, ROOTS, ruleSet, skillPool, socketCount, soulSubOptions, normalAffixLimit, talentChoices, talentInfo, type ManualData } from '../lib/buildView'
 import type { PlannerBuild, PlannerEquipment } from '../lib/plannerModel'
 import { qualityLabel } from '../lib/quality'
-import { Block, InfoHead, Picker, SelectionPanel, SelectionScope, Stats, TileBlock, type TileSpec } from './BuildBlocks'
+import { Block, InfoHead, Picker, SelectionScope, Stats, TileBlock, type TileSpec } from './BuildBlocks'
 import { AffixEditor, SoulAffixEditor } from './BuildAffixes'
 
 const m = content.builds.manual
@@ -259,12 +259,16 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           const config = draft.souls[i]
           const soul = soulMap.get(config?.id ?? 0)
           const items = (data?.souls?.souls.souls ?? []).filter(s => s.name?.['zh-CN']).map(s => ({ id: s.iID, label: s.name?.['zh-CN'] ?? '', icon: s.icon, quality: s.quality }))
-          return <SelectionPanel key={`${draft.id}-${i}`} choices={<Picker what={m.soul} items={items} onPick={id => setSoul(i, id === config?.id ? config : { id, sub: [], marks: [] })} />}>
-            {soul && config ? <>
-              <InfoHead name={soul.name?.['zh-CN'] ?? t.unknown} quality={soul.quality} tag={qualityLabel(soul.quality)} />
-              <SoulAffixEditor key={config.id} selected={config.sub} options={soulSubOptions(data, soul)} onChange={sub => setSoul(i, { ...config, sub })} />
-            </> : null}
-          </SelectionPanel>
+          return <div key={`${draft.id}-${i}`} className="bm-equip-workspace bm-soul-workspace">
+            <Picker what={m.soul} items={items} onPick={id => setSoul(i, id === config?.id ? config : { id, sub: [], marks: [] })} />
+            <aside className="bm-equipped-affixes" aria-label={m.soulAffixPanel}>
+              <h3>{m.soulAffixPanel}</h3>
+              {soul && config ? <>
+                <InfoHead name={soul.name?.['zh-CN'] ?? t.unknown} quality={soul.quality} tag={qualityLabel(soul.quality)} />
+                <SoulAffixEditor key={config.id} selected={config.sub} options={soulSubOptions(data, soul)} onChange={sub => setSoul(i, { ...config, sub })} />
+              </> : <p className="bm-note">{m.selectSoulFirst}</p>}
+            </aside>
+          </div>
         }} />
       </Block>
       <Block icon={<PawPrint />} title={t.pets} count={m.petCount}>
