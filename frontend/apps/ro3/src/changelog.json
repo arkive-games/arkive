@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.6",
+      "date": "2026-11-09",
+      "commit": "62d70f290f9a2e2feb7249bc57a2f65322f9199f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Simplify selection toolbars, align skill and attribute panels, refine the sidebar toggle, and use verified square card portraits where available.",
+            "zh-CN": "简化候选工具栏并后置关闭按钮，技能与属性板块等高，精修侧栏图标，部分卡片改用游戏方形头像。",
+            "zh-TW": "簡化候選工具列並後置關閉按鈕，技能與屬性板塊等高，精修側欄圖示，部分卡片改用遊戲方形頭像。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.5",
       "date": "2026-11-09",
       "commit": "9e6aae0e2ebff65884290618dfafbfa855a16874",
