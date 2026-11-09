@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.7",
+      "date": "2026-11-09",
+      "commit": "6c4d6af62faece34b6d541534657b7321d7573e1",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Use native inventory icons for all 242 cards and distinguish parent and child navigation in the collapsed sidebar.",
+            "zh-CN": "全部242张卡片改用游戏原生物品小图，优化折叠侧栏的主栏目与子入口层级。",
+            "zh-TW": "全部242張卡片改用遊戲原生物品小圖，優化折疊側欄的主欄目與子入口層級。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.6",
       "date": "2026-11-09",
       "commit": "62d70f290f9a2e2feb7249bc57a2f65322f9199f",
