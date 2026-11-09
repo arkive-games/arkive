@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-11-08",
-      "commit": "dd279895ef17b670a966419a61f95d9cfd0e49b1",
+      "commit": "191cc334aac0abe6317f624bdb81a41d358bed97",
       "targets": [
         "aion2",
         "gmzz",
@@ -22,7 +22,7 @@
     },
     {
       "date": "2026-11-08",
-      "commit": "5ae544037bb624ff29bc3fd2b39dc25d8081ce17",
+      "commit": "f434263d8ce0c49b96d264fdd748c4dddaafd9eb",
       "targets": [
         "aion2",
         "gmzz",
@@ -42,7 +42,7 @@
     },
     {
       "date": "2026-11-08",
-      "commit": "b323a0390e09de2ac516701896a2315b6fec319f",
+      "commit": "07ff99f865ad817b814ffc387d2829438c60135b",
       "targets": [
         "aion2",
         "gmzz",
