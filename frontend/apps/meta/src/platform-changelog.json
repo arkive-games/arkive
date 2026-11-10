@@ -1,6 +1,23 @@
 {
   "entries": [
     {
+      "date": "2026-11-11",
+      "commit": "cfc20d3b8542374547fb0caf9f75ada7978f960e",
+      "targets": [
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Add Phantom Blade Zero to the all-games catalog with its interactive map.",
+            "zh-CN": "将影之刃零加入全部游戏目录，并提供互动地图入口。",
+            "zh-TW": "將影之刃零加入全部遊戲目錄，並提供互動地圖入口。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-08",
       "commit": "191cc334aac0abe6317f624bdb81a41d358bed97",
       "targets": [
