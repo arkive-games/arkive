@@ -19,6 +19,7 @@ import gmzzIcon from './assets/gmzz-icon.webp'
 import palworldIcon from './assets/palworld-icon.webp'
 import vrisingIcon from './assets/vrising-icon.webp'
 import ro3Icon from './assets/ro3-icon.webp'
+import { PBZ_ARTWORK } from './upcoming'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
 const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1604030/library_600x900_2x.jpg'
@@ -206,6 +207,23 @@ export const SITES: SiteCard[] = [
     descKey: 'site.sts2.desc',
     featureKey: 'site.sts2.feature',
   },
+  {
+    id: 'pbz',
+    kind: 'offline',
+    menuTint: '#c98a3e',
+    url: resolveSiteUrl(
+      import.meta.env.VITE_PBZ_URL,
+      'http://localhost:15180',
+      'https://pbz.arkive.games',
+    ),
+    bg: PBZ_ARTWORK.banner,
+    banner: PBZ_ARTWORK.banner,
+    icon: PBZ_ARTWORK.icon,
+    color: '#c98a3e',
+    nameKey: 'site.pbz.name',
+    descKey: 'site.pbz.desc',
+    featureKey: 'site.pbz.feature',
+  },
 ]
 
 /**
@@ -229,6 +247,7 @@ export const GAME_LOGOS: Record<string, string> = {
   vrising: vrisingLogo,
   sts2: sts2Logo,
   ro3: ro3Bg,
+  pbz: PBZ_ARTWORK.icon,
   oss: '/oss-preview.svg',
 }
 

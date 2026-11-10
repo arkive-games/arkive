@@ -1,5 +1,4 @@
 import { SITES } from './sites'
-import { UPCOMING_PBZ } from './upcoming'
 
 /** Where a game's site lives and what to call it, for a link out of the inbox. */
 export interface MarkerSite {
@@ -7,15 +6,8 @@ export interface MarkerSite {
   nameKey: string
 }
 
-/**
- * Resolves a game key to its site.
- *
- * PBZ is looked up separately because it is promoted on the homepage but is not a
- * `SiteCard` yet (see `upcoming.ts`); a marker comment there is the first thing
- * that needs to link to it from meta.
- */
+/** Resolves a game key to its site. */
 export function markerSite(game: string): MarkerSite | null {
-  if (game === UPCOMING_PBZ.key) return { url: UPCOMING_PBZ.url, nameKey: UPCOMING_PBZ.nameKey }
   const site = SITES.find((candidate) => candidate.id === game)
   // A card without a URL (a game listed but not yet live) has nowhere to link to.
   return site?.url ? { url: site.url, nameKey: site.nameKey } : null

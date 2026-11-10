@@ -117,6 +117,9 @@ export const FEATURES: readonly GameFeature[] = [
   { id: 'ro3-equipment', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=equipment', name: text('Equipment', '装备图鉴', '裝備圖鑑') },
   { id: 'ro3-souls', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=souls', name: text('Soul Echoes', '灵魂残响', '靈魂殘響') },
 
+  // Phantom Blade Zero
+  { id: 'pbz-map', gameId: 'pbz', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },
+
   // V Rising
   { id: 'vrising-map', gameId: 'vrising', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },
   { id: 'vrising-vblood', gameId: 'vrising', kind: 'wiki', path: '/vblood', name: text('V Blood Bosses', 'V 型血首领', 'V 型血首領'), keywords: ['boss'] },

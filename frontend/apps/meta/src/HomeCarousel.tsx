@@ -3,16 +3,16 @@ import { useTranslation } from 'react-i18next'
 import { IconChevronLeft, IconChevronRight, IconPlayerPauseFilled, IconPlayerPlayFilled } from '@tabler/icons-react'
 import { ContactDialog } from './HomeFooter'
 import { GAME_LOGOS, siteHref, type GameId, type SiteCard } from './sites'
+import { PBZ_ARTWORK } from './upcoming'
 import recruitBanner from './assets/recruit-banner.webp'
 import recruitBannerPhone from './assets/recruit-banner-phone.webp'
-import { UPCOMING_PBZ } from './upcoming'
 import gmzzPoster from './assets/gmzz-poster.webp'
 import gmzzPosterPhone from './assets/gmzz-poster-phone.webp'
 import palworldPoster from './assets/palworld-poster.webp'
 import palworldPosterPhone from './assets/palworld-poster-phone.webp'
 
 /** The games given a slide, in order; the carousel holds five slides in all. */
-const CAROUSEL_GAMES: readonly GameId[] = ['aion2', 'palworld', 'gmzz']
+const CAROUSEL_GAMES: readonly GameId[] = ['aion2', 'palworld', 'gmzz', 'pbz']
 
 /**
  * Titled carousel art that replaces a game's `banner` here only: the all-games
@@ -54,9 +54,8 @@ function carouselSize(): CSSProperties {
 }
 
 /**
- * One slide: a game's banner, or one of the site's own posters (recruitment,
- * an upcoming game), which have separate desktop and phone art and open a
- * dialog instead of linking.
+ * One slide: a game's banner, or one of the site's own recruitment posters,
+ * which has separate desktop and phone art and opens a dialog instead of linking.
  */
 interface Slide {
   key: string
@@ -82,8 +81,8 @@ function slotOf(index: number, current: number, length: number) {
 }
 
 /**
- * A coverflow of five posters -- recruitment, Phantom Blade Zero, then the
- * games in `CAROUSEL_GAMES` -- the middle one flat, its neighbours turned away
+ * A coverflow of the recruitment poster followed by the games in
+ * `CAROUSEL_GAMES` -- the middle one flat, its neighbours turned away
  * either side. Every visible slide opens on one click; swipes, arrows and dots
  * change the active slide. Advances every five seconds unless stopped
  * with the pause button, hovered, focused, hidden, or the visitor prefers
@@ -109,19 +108,6 @@ export function HomeCarousel({ sites, onOpenSite }: {
       color: RECRUIT_COLOR,
       open: () => setContactOpen(true),
     },
-    {
-      key: UPCOMING_PBZ.key,
-      name: t(UPCOMING_PBZ.nameKey),
-      desc: t('site.pbz.desc'),
-      go: t('landing.carousel.enter'),
-      banner: UPCOMING_PBZ.banner,
-      phoneBanner: UPCOMING_PBZ.phoneBanner,
-      poster: true,
-      icon: UPCOMING_PBZ.icon,
-      color: UPCOMING_PBZ.color,
-      href: UPCOMING_PBZ.url,
-      open: () => {},
-    },
     ...CAROUSEL_GAMES.flatMap((id) => {
       const site = sites.find((candidate) => candidate.id === id)
       const href = site && siteHref(site)
@@ -133,8 +119,8 @@ export function HomeCarousel({ sites, onOpenSite }: {
         desc: t(site.descKey),
         go: t('landing.carousel.enter'),
         banner: poster?.banner ?? site.banner,
-        phoneBanner: poster?.phoneBanner,
         bannerPosition: poster ? undefined : site.bannerPosition,
+        phoneBanner: id === 'pbz' ? PBZ_ARTWORK.phoneBanner : poster?.phoneBanner,
         poster: Boolean(poster),
         icon: site.icon ?? GAME_LOGOS[site.id],
         color: site.color,
