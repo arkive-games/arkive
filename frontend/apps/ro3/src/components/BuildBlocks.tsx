@@ -6,7 +6,7 @@ import content from '../locales/zh-CN.json'
 import { clampStat } from '../lib/buildState'
 import { qualityColor, qualityLabel } from '../lib/quality'
 import { resourceUrl } from '../lib/urls'
-import { itemQualityFrame, itemRankGlyphs, itemPartArt } from '../lib/buildItemArt'
+import { itemQualityFrame, itemRankLabel, itemPartArt } from '../lib/buildItemArt'
 
 const m = content.builds.manual
 const SelectionContext = createContext<{ active: string | null; setActive: (id: string | null) => void } | null>(null)
@@ -35,10 +35,10 @@ export function Block({ icon, title, area, wide, children, actions }: { icon: Re
 
 export function ItemIcon({ icon, quality, empty, rank, framed, part }: { icon?: string; quality?: number; empty?: boolean; rank?: number; framed?: boolean; part?: number }) {
   const frame = framed && !empty ? itemQualityFrame(quality) : undefined
-  const rankArt = rank ? itemRankGlyphs(rank) : []
+  const rankLabel = rank ? itemRankLabel(rank) : undefined
   return <span className={cn('bm-ico', frame && 'bm-native-item')} style={{ ...(quality ? { '--q': qualityColor(quality) } : {}), ...(frame ? { backgroundImage: `url("${frame}")` } : {}) } as CSSProperties}>
     {icon ? <img className="bm-item-image" src={resourceUrl(icon)} alt="" loading="lazy" /> : empty ? <Plus aria-hidden="true" /> : null}
-    {rankArt.length ? <span className="bm-rank" aria-label={`T${rank}`}>{rankArt.map((src, index) => <img key={index} src={src} alt="" />)}</span> : null}
+    {rankLabel ? <span className="bm-rank">{rankLabel}</span> : null}
     {itemPartArt(part) ? <span className="bm-item-part" aria-hidden="true"><img src={itemPartArt(part)} alt="" /></span> : null}
   </span>
 }
@@ -82,6 +82,7 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
   const root = useRef<HTMLDivElement>(null)
   const info = useRef<HTMLDivElement>(null)
   const [panelHost, setPanelHost] = useState<HTMLDivElement | null>(null)
+  const [legacyLayout, setLegacyLayout] = useState(false)
   const active = (!scope || scope.active === owner) && cur >= 0 && cur < tiles.length ? cur : -1
   const close = () => {
     setCur(-1)
@@ -94,18 +95,17 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
     if (active < 0) return
     const block = root.current?.closest<HTMLElement>('.bm-blk')
     const grid = block?.parentElement
-    if (!block || !grid?.classList.contains('bm-compact-editor')) return
+    if (!block || !grid) return
+    const row = grid.closest<HTMLElement>('.bm-editor-row') ?? grid
+    if (!row.classList.contains('bm-editor-row') && !grid.classList.contains('bm-compact-editor')) { setLegacyLayout(true); return }
     const host = document.createElement('div')
     host.className = 'bm-selection-row'
     const place = () => {
-      const blocks = [...grid.children].filter((child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains('bm-blk'))
-      // Measure the original rows without the expanded panel affecting packing.
-      host.style.display = 'none'
-      const top = block.getBoundingClientRect().top
-      const row = blocks.filter(candidate => Math.abs(candidate.getBoundingClientRect().top - top) < 2)
-      const last = row.at(-1) ?? block
-      if (last.nextElementSibling !== host) last.after(host)
-      host.style.display = ''
+      const parent = row.parentElement
+      if (!parent) return
+      if (!parent) return
+if (legacyLayout) return
+      if (row.nextElementSibling !== host) parent.insertBefore(host, row.nextElementSibling)
       aim(root.current, info.current, active)
     }
     place()
@@ -114,7 +114,7 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
     observer.observe(grid)
     window.addEventListener('resize', place)
     return () => { observer.disconnect(); window.removeEventListener('resize', place); host.remove(); setPanelHost(null) }
-  }, [active])
+  }, [active, legacyLayout])
 
   // The pointer follows the tile's centre, so it re-aims after every render, resize and tile scroll.
   useLayoutEffect(() => aim(root.current, info.current, active))
@@ -149,7 +149,7 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
     {groups
       ? <div className="bm-groups">{groups.map(g => <div key={g.label} className="bm-group"><span>{g.label}</span><div className="bm-tiles">{tiles.slice(g.from, g.to).map((spec, i) => tile(spec, g.from + i))}</div></div>)}</div>
       : <div className="bm-tiles">{tiles.map(tile)}</div>}
-    {panelHost ? createPortal(content, panelHost) : content}
+    {legacyLayout || !panelHost ? content : createPortal(content, panelHost)}
   </div>
 }
 

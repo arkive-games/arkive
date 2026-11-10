@@ -8,7 +8,6 @@ export function itemPartArt(part?: number): string | undefined {
   const name = ['weapon', 'offhand', 'armor', 'cloak', 'shoes', 'accessory'][(part ?? 0) - 1]
   return name ? art[`../assets/native-ui/item-frames/part_${name}.webp`] : undefined
 }
-export function itemRankGlyphs(rank: number): string[] {
-  if (!Number.isSafeInteger(rank) || rank < 1) return []
-  return ['t', ...String(rank)].map(glyph => art[`../assets/native-ui/item-frames/common_equip_num_${glyph}.webp`]).filter(Boolean)
+export function itemRankLabel(rank: number): string | undefined {
+  return Number.isSafeInteger(rank) && rank > 0 ? `T${rank}` : undefined
 }

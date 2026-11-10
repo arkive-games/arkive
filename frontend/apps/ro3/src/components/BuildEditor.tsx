@@ -200,6 +200,7 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
     </header>
 
     <SelectionScope key={draft.id}><div className="bm-blocks bm-compact-editor">
+      <div className="bm-editor-row bm-row-primary">
       <Block icon={<Zap />} title={t.skills} count={m.items.replace('{n}', String(draft.skills.filter(Boolean).length))}>
         <TileBlock tiles={skillTiles} renderInfo={i => {
           const items = data?.profession?.skills.skills.filter(s => pool.has(s.iSkillID)).map(s => ({ id: s.iSkillID, label: s.name?.['zh-CN'] || t.unknown, icon: s.icon, disabled: draft.skills.some((id, k) => k !== i && id === s.iSkillID) })) ?? []
@@ -209,7 +210,9 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
       <Block icon={<BarChart3 />} title={t.attributes} actions={<><span>{m.total.replace('{n}', String(total))}</span><button type="button" className="bm-chip" onClick={() => onChange({ attributes: draft.attributes.map(() => 1) })}>{m.reset}</button></>}>
         <Stats values={draft.attributes} onChange={(i, v) => onChange({ attributes: draft.attributes.map((x, k) => k === i ? v : x) })} />
       </Block>
-      <Block wide icon={<Shield />} title={m.equipment}>
+      </div>
+      <div className="bm-editor-row bm-row-items">
+      <Block icon={<Shield />} title={m.equipment}>
         <TileBlock className="bm-gear-tiles" key={draft.id} tiles={gearTiles} renderInfo={i => {
           const slot = BUILD_SLOTS[i]
           const config = slotConfig(slot.key)
@@ -229,7 +232,7 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           </div>
         }} />
       </Block>
-      <Block wide icon={<Layers />} title={m.card}>
+      <Block icon={<Layers />} title={m.card}>
         <div className="bm-card-sections">{BUILD_SLOTS.map(slot => {
           const ids = draft.cardSlots[slot.key] ?? []
           const capacity = socketCount(data, slot.key)
@@ -248,10 +251,21 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           </section>
         })}</div>
       </Block>
+      <div className="bm-editor-row bm-row-primary">
       <Block icon={<Star />} title={t.talents} count={m.items.replace('{n}', String(draft.talents.length))}>
         <TileBlock className="bm-tal" tiles={talentTiles} renderInfo={i => {
           const id = draft.talents[i]
           return <Picker key={i} talent what={m.talent} items={tal.filter(c => c.id === id || !draft.talents.includes(c.id)).map(c => ({ ...c, label: c.label || t.unknown }))} onPick={pick => onChange({ talents: id === undefined ? [...draft.talents, pick] : draft.talents.map((value, index) => index === i ? pick : value) })} />
+        }} />
+      </Block>
+      </div>
+      </div>
+      <div className="bm-editor-row bm-row-secondary">
+      <Block icon={<PawPrint />} title={t.pets} count={m.petCount}>
+        <TileBlock tiles={petTiles} groups={[{ label: t.combat, from: 0, to: 4 }, { label: t.assist, from: 4, to: 9 }]} renderInfo={i => {
+          const [field, index] = petSlots[i]
+          const items = (data?.pets?.catalog.pets ?? []).filter(p => p.show).map(p => ({ id: p.id, label: localizedText(p.name) || t.unknown, icon: p.art.head, quality: p.quality, disabled: draft[field].some((id, k) => k !== index && id === p.id) }))
+          return <Picker what={m.pet} items={items} onPick={id => setPet(field, index, id)} />
         }} />
       </Block>
       <Block icon={<Flame />} title={t.souls} count={m.soulCount}>
@@ -271,13 +285,7 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           </div>
         }} />
       </Block>
-      <Block icon={<PawPrint />} title={t.pets} count={m.petCount}>
-        <TileBlock tiles={petTiles} groups={[{ label: t.combat, from: 0, to: 4 }, { label: t.assist, from: 4, to: 9 }]} renderInfo={i => {
-          const [field, index] = petSlots[i]
-          const items = (data?.pets?.catalog.pets ?? []).filter(p => p.show).map(p => ({ id: p.id, label: localizedText(p.name) || t.unknown, icon: p.art.head, quality: p.quality, disabled: draft[field].some((id, k) => k !== index && id === p.id) }))
-          return <Picker what={m.pet} items={items} onPick={id => setPet(field, index, id)} />
-        }} />
-      </Block>
+      </div>
     </div></SelectionScope>
   </div>
 }

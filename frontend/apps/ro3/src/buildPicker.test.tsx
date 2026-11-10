@@ -69,13 +69,13 @@ it('allows one open block and closes it after choosing, restoring focus', () => 
 })
 it('portals candidates outside slot blocks and removes the row after choosing', () => {
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
-  const host = mount(<SelectionScope><div className="bm-compact-editor">
+  const host = mount(<SelectionScope><div className="bm-compact-editor"><div className="bm-editor-row bm-row-items">
     <section className="bm-blk"><TileBlock tiles={[{ key: 'gear', label: 'Gear' }]} renderInfo={() => <Picker what="Gear" items={[{ id: 1, label: 'Sword' }]} onPick={vi.fn()} />} /></section>
-    <section className="bm-blk">Stats</section>
+    <section className="bm-blk">Stats</section></div>
   </div></SelectionScope>)
   click(host.querySelector('[data-tile]'))
   expect(host.querySelector('.bm-blk .bm-info')).toBeNull()
-  expect(host.querySelector('.bm-compact-editor > .bm-selection-row .bm-candidate')).not.toBeNull()
+  expect(host.querySelector('.bm-compact-editor .bm-selection-row .bm-candidate')).not.toBeNull()
   expect(host.querySelector('.bm-selection-heading')).toBeNull()
   const pagination = host.querySelector('.bm-pagination')!
   expect(pagination.lastElementChild?.classList.contains('bm-picker-close')).toBe(true)
