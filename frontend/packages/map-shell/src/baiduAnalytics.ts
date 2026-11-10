@@ -12,7 +12,7 @@
  * One site id across every subdomain, so all Arkive traffic lands in a single
  * report; the per-site split comes from the URLs recorded under it.
  */
-export const ARKIVE_BAIDU_SITE_ID = "5f5baeddf1f242f225a5a1f6df269088"
+export const ARKIVE_BAIDU_SITE_ID = "ef745f57aeef58c27f864a1ac74b20d9"
 
 const SCRIPT_ID = "baidu-hm"
 
