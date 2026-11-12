@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.11",
+      "date": "2026-11-12",
+      "commit": "4c9fc76013182d9b945e63440d0749ac15a82814",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep skill choices attached to the primary editor row and align its three panels at a shared height.",
+            "zh-CN": "修复技能候选区跑到页面底部的问题，并统一首排三个板块的高度和顺序。",
+            "zh-TW": "修復技能候選區跑到頁面底部的問題，並統一首排三個板塊的高度與順序。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.10",
       "date": "2026-11-10",
       "commit": "431d2b4a6a44674637ee1f6a8ccab978f86d3460",
