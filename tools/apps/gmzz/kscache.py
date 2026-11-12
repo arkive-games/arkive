@@ -571,6 +571,20 @@ def build(game: Path, out: Path, key: bytes) -> Report:
     live = Manifest.read(live_manifest_path)
     local = read_local_cache(kscache / "local.cache")
     base_by_id = {r.chunk_id: r for r in base_manifest.records}
+
+    def needs_patch(record: Record) -> bool:
+        """Whether the live record is newer than the installed base copy.
+
+        A live manifest is cumulative and its record version is the build that
+        last changed that chunk, not necessarily the base build number. A
+        current install can therefore contain a chunk whose live version is
+        lower than ``report.base`` (the global container in build 2306710 is
+        one example). Comparing against the base record avoids dropping such a
+        chunk merely because its historical version differs from the base
+        build stamp.
+        """
+        base = base_by_id.get(record.chunk_id)
+        return base is None or record.version > base.version
     # Every chunk's blocks are described with one of these two methods, and the
     # patch pak's method table is written to match; a third one would otherwise
     # be labelled Oodle and decompress to garbage rather than fail.
@@ -590,7 +604,20 @@ def build(game: Path, out: Path, key: bytes) -> Report:
     for src in (content / "Paks").iterdir():
         if src.is_file():
             hard_link(src, paks_out / src.name, report)
-    hard_link(content / "Manifest_UFSFiles_Win64.txt", out_content / "Manifest_UFSFiles_Win64.txt", report)
+    # New launcher installs no longer carry the legacy UFS manifest beside
+    # package.manifest.  The file is a stable name list used by the provider,
+    # and the previous assembled view already has the exact copy needed for
+    # the base containers.  Reuse it when the installer omitted it rather
+    # than failing before the current patch can be assembled.
+    ufs_manifest = content / "Manifest_UFSFiles_Win64.txt"
+    if not ufs_manifest.is_file():
+        ufs_manifest = out_content / "Manifest_UFSFiles_Win64.txt"
+    if not ufs_manifest.is_file():
+        raise RuntimeError(
+            f"{content / 'Manifest_UFSFiles_Win64.txt'} is missing and no prior "
+            "assembled UFS manifest is available"
+        )
+    hard_link(ufs_manifest, out_content / "Manifest_UFSFiles_Win64.txt", report)
 
     def chunk_bytes(record: Record) -> bytes | None:
         where = local.get(record.chunk_id)
@@ -624,7 +651,7 @@ def build(game: Path, out: Path, key: bytes) -> Report:
             pak_files.append((BUILD_MARKER, PakEntry(0, len(marker), len(marker), 0, False, []), marker))
             marker_written = True
         for record in live.records:
-            if record.owner != owner or record.version == report.base:
+            if record.owner != owner or not needs_patch(record):
                 continue
             old = base_by_id.get(record.chunk_id)
             named = by_data_offset.get(old.offset) if old else None
@@ -672,7 +699,7 @@ def build(game: Path, out: Path, key: bytes) -> Report:
     pack_partitions: dict[tuple[str, str], int] = {}  # (container base, kscache pack) -> owner
     bucketed: dict[str, list[tuple[Record, LocalChunk]]] = collections.defaultdict(list)
     for record in live.records:
-        if record.version == report.base or record.owner in pak_owners:
+        if not needs_patch(record) or record.owner in pak_owners:
             continue
         owner_name = live.names[record.owner]
         if not owner_name.endswith(".ucas"):
