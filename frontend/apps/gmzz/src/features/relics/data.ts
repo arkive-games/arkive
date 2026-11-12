@@ -211,6 +211,17 @@ export function effectiveAffixCap(relics: Relics, grade: number): number {
   return 6
 }
 
+/**
+ * The strategic server's second ordinary material is capped at four active
+ * attributes, regardless of the sealed item's grade. The first material keeps
+ * the normal grade cap; 特化 still has one equipped material rather than a
+ * strategic fill-two slot.
+ */
+export function materialAffixCap(relics: Relics, grade: number, server: RelicServer, groupId: number, index: number): number {
+  const gradeCap = effectiveAffixCap(relics, grade)
+  return server === 'cross' && (groupId === 1 || groupId === 2) && index === 1 ? Math.min(4, gradeCap) : gradeCap
+}
+
 /* -------------------------------------------------------------------- score */
 
 /** A stat key's display name, falling back to the key for a dataset that lacks it. */
@@ -343,6 +354,8 @@ export type MaterialResult = {
   /** Per affix: switched off for being past the cap. */
   inactive: boolean[]
   activeCount: number
+  /** The cap for this material, including the strategic fill-two override. */
+  cap: number
   /** Whether this position counts on the chosen server at all. */
   applies: boolean
   /** floor(k2 × Σ mark of the active affixes); 0 when the position does not apply. */
@@ -448,7 +461,8 @@ export function evaluateRelicSlot(
     const affixes = state.materials[index] ?? []
     const type = materialTypeAt(state.groupId, index)
     const pool = typePool(relics, type)
-    const inactive = inactiveAffixes(affixes, cap, (affix) => {
+    const materialCap = materialAffixCap(relics, resonanceGrade, server, state.groupId, index)
+    const inactive = inactiveAffixes(affixes, materialCap, (affix) => {
       const source = pool.find((entry) => entry.id === affix.affixId)
       return source !== undefined && isRareAffix(source)
     })
@@ -461,6 +475,7 @@ export function evaluateRelicSlot(
       affixes,
       inactive,
       activeCount: effective.length,
+      cap: materialCap,
       applies,
       affixScore: applies ? k2 * effective.reduce((sum, affix) => sum + affix.mark, 0) : 0,
       fullAffixScore: k2 * affixes.reduce((sum, affix) => sum + affix.mark, 0),

@@ -389,6 +389,15 @@ describe('evaluateRelicSlot', () => {
     expect(cross.assemblyScore).toBeCloseTo(4500 * 0.32)
   })
 
+  it('caps the strategic fill-two material at four attributes at every grade', () => {
+    const six = Array.from({ length: 6 }, () => at(1284))
+    const cross = evaluateRelicSlot(RELICS, { ...base, grade: 1, materials: [[], six] }, 11, 103, 'cross')
+    expect(cross.materials[1].cap).toBe(4)
+    expect(cross.materials[1].activeCount).toBe(4)
+    expect(cross.materials[1].inactive).toEqual([false, false, false, false, true, true])
+    expect(cross.affixScore).toBeCloseTo(0.32 * 1284 * 4)
+  })
+
   it('matches the game at knowledge 39: grade 3 assembles 440, grade 2 2200', () => {
     const k = (grade: number) => evaluateRelicSlot(RELICS, { ...base, grade, materials: [[], []] }, 39, 103).assemblyScore
     const withLevel: Relics = { ...RELICS, knowledge: { '103': [...RELICS.knowledge['103'], { level: 39, k1: 0.88, k2: 0.88, roleLevelRequired: 1 }] } }

@@ -212,7 +212,12 @@ def build(raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) 
         if reuse_assets:
             name = str(record['id'])
             if not is_nonempty_file(output / f'{name}.webp'):
-                raise FileNotFoundError(f'Missing existing puppet portrait {name} in {output}')
+                # Some new/event puppets have a config row before their portrait
+                # enters the exported icon set. Keep the record usable and let
+                # the frontend render its name and skill without a broken image.
+                missing.append(record['id'])
+                record['portrait'] = ''
+                continue
             record['portrait'] = name
             continue
         row = sources[record['id']]

@@ -332,6 +332,7 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
   const materialNotes = [
     t(spec ? 'relic.materialSpecHint' : 'relic.materialSlotsHint'),
     material && !material.applies ? t('relic.fillTwoNote') : null,
+    server === 'cross' && (groupId === 1 || groupId === 2) && index === 1 ? t('relic.fillTwoCapNote') : null,
     swapping ? t('relic.swapHint') : null,
   ].filter((line): line is string => line !== null)
 
@@ -430,7 +431,7 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
           <div className="gz-affs" data-testid={`relic-material-${groupId}-${index}`}>
             {affixes.map((affix, at) => (
               <AffixRow key={at} relics={relics} affix={affix} index={at} inactive={material?.inactive[at] ?? false}
-                cap={result.cap}
+                cap={material?.cap ?? result.cap}
                 others={affixes.filter((_, other) => other !== at)} pool={pool} k2={k2} testPrefix={testPrefix}
                 onChange={(next) => writeAffixes(affixes.map((entry, other) => (other === at ? next : entry)))}
                 onRemove={() => writeAffixes(affixes.filter((_, other) => other !== at))} />
@@ -449,7 +450,7 @@ function RelicCard({ relics, slot, result, k1, k2, server, swapFrom, canSwapFrom
             <button type="button" className="gz-add" disabled={affixes.length >= max}
               onClick={() => writeAffixes([...affixes, EMPTY_RELIC_AFFIX])} data-testid={`${testPrefix}-add`}>
               {/* `used` rather than `count`, which i18next reads as a plural selector. */}
-              {t('relic.addAffix', { used: affixes.length, max: result.cap })}
+              {t('relic.addAffix', { used: affixes.length, max: material?.cap ?? result.cap })}
             </button>
             <button type="button" className="gz-add" disabled={affixes.length >= max || !nextRare}
               onClick={() => { if (nextRare) writeAffixes([...affixes, affixFrom(nextRare)]) }} data-testid={`${testPrefix}-add-rare`}>
