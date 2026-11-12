@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.33.0",
+      "date": "2026-11-13",
+      "commit": "c95de99d474c4dea64d29b9a5248c78b3ff4beed",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Add strategic-server Fate Tributary progression, costs, caps, and server effects to Connections.",
+            "zh-CN": "在人脉关系中加入战略服命运支流的进度、消耗、上限和服务器属性效果。",
+            "zh-TW": "在人脈關係中加入戰略服命運支流的進度、消耗、上限與伺服器屬性效果。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.32.0",
       "date": "2026-11-09",
       "commit": "8940cf9ba35abe47c92f9d1cb60c4ecda0612f65",
