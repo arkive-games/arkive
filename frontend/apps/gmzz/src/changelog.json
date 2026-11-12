@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.34.0",
+      "date": "2026-11-13",
+      "commit": "58a2ee88c29ff1d819d027267dcef02f5487bf71",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Add the Contaminated Will puppet and apply the strategic-server Fill 2 four-attribute cap.",
+            "zh-CN": "加入污染意志秘偶，并应用战略服填充二最多生效4条属性的规则。",
+            "zh-TW": "加入污染意志秘偶，並套用戰略服填充二最多生效4條屬性的規則。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.33.0",
       "date": "2026-11-13",
       "commit": "5265d35fff67255bf2b0514e18bd9f34e431b837",
