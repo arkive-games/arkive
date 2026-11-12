@@ -47,6 +47,8 @@ Stories do state when they open: ``FellowStoryData`` carries ``UnlockLevel``.
 from __future__ import annotations
 
 import argparse
+import re
+from bisect import bisect_right
 from pathlib import Path
 
 from PIL import Image
@@ -62,8 +64,10 @@ OUT_DIR = "fellows"
 ICON_SUBDIR = "fellows"
 WEBP_QUALITY = 90
 
-#: Asserted against the client rather than assumed.
-FELLOW_COUNT = 15
+#: Asserted against the client rather than assumed. Build 2307645 adds Frank
+#: (41000606) to the roster; keeping this explicit makes a future roster change
+#: fail the extraction instead of silently publishing a partial catalogue.
+FELLOW_COUNT = 16
 UPGRADE_COUNT = 5
 GRADE_COUNT = 6
 
@@ -344,17 +348,89 @@ def build_levels(tables: dict) -> list[dict]:
     return ladders
 
 
+def build_fate_tributary(tables: dict) -> dict:
+    """Build the strategic-server 人脉 awakening track from client tables."""
+    awake = sorted(_rows(tables["FellowRelationAwake"]), key=lambda row: int(row["ID"]))
+    echo = sorted(_rows(tables["FellowEcho"]), key=lambda row: int(row["Score"]))
+    props = _rows(tables["FellowEchoProp"])
+    if len(awake) != 9:
+        raise RuntimeError(f"FellowRelationAwakeData has {len(awake)} rows, expected 9")
+    if not echo or len(props) != len(echo):
+        raise RuntimeError("FellowEchoData and FellowEchoPropData are missing or out of sync")
+
+    thresholds = [int(row["Score"]) for row in echo]
+    # Prop rows are a positional Lua list; FellowEchoData carries the explicit
+    # PropID that joins them.
+    prop_by_id = {index: row for index, row in enumerate(props, start=1)}
+    milestones = []
+    for row in awake:
+        points = int(row["EchoPoint"])
+        index = max(0, bisect_right(thresholds, points) - 1)
+        echo_row = echo[index]
+        prop = prop_by_id[int(echo_row["PropID"])]
+        milestones.append({
+            "id": int(row["ID"]),
+            "relationLevelCap": int(row["Limit"]),
+            "itemId": int(row["ItemId"]),
+            "itemCount": int(row["ItemNum"]),
+            "echoGain": int(row["AddEchoPoint"]),
+            "echoPoints": points,
+            "awakePoints": int(row["AwakePoints"]),
+            "echoPropId": int(echo_row["PropID"]),
+            "score": int(echo_row["Score"]),
+            "mark": int(echo_row["Mark"]),
+            "attributes": {key: value for key, value in prop.items() if key != "PropID"},
+        })
+
+    caps = []
+    for row in _rows(tables["Military"]):
+        content = "\n".join(str(value) for value in row.get("UnlockContent") or [])
+        if "命运支流" not in content:
+            continue
+        match = re.search(r"至\s*(\d+)\s*级", content)
+        if not match:
+            continue
+        caps.append({
+            "level": int(match.group(1)),
+            "unlockTime": row.get("UnlockTime"),
+            "lockText": row.get("lockText", ""),
+            "militaryId": int(row["ID"]),
+            "content": content,
+        })
+    caps.sort(key=lambda row: (row["level"], row["militaryId"]))
+    if [row["level"] for row in caps] != [3, 6, 9]:
+        raise RuntimeError(f"expected strategic fate caps 3/6/9, got {[row['level'] for row in caps]}")
+
+    return {
+        "strategicOnly": True,
+        "milestoneCount": len(milestones),
+        "milestones": milestones,
+        "capUnlocks": caps,
+        "echoTable": [
+            {
+                "propId": int(row["PropID"]),
+                "score": int(row["Score"]),
+                "mark": int(row["Mark"]),
+                "attributes": {key: value for key, value in prop_by_id[int(row["PropID"])].items() if key != "PropID"},
+            }
+            for row in echo
+        ],
+    }
+
+
 def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict], reuse_assets: bool = False) -> dict[str, int]:
     """One portrait per fellow, preferring the large art the game's own panel uses."""
     target = Path(res_out) / ICON_SUBDIR
     target.mkdir(parents=True, exist_ok=True)
-    used = {"large": 0, "medium": 0, "circle": 0, "reused": 0}
+    used = {"large": 0, "medium": 0, "circle": 0, "reused": 0, "missing": 0}
     for fellow in fellows:
         candidates = fellow.pop("_iconCandidates")
         if reuse_assets:
             name = next((name for name in candidates if name and is_nonempty_file(target / f"{name}.webp")), None)
             if name is None:
-                raise FileNotFoundError(f"No existing portrait for fellow {fellow['id']} in {target}")
+                fellow["portrait"] = ""
+                used["missing"] += 1
+                continue
             fellow["portrait"] = name
             used["reused"] += 1
             continue
@@ -369,11 +445,9 @@ def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict], reuse_asse
             if chosen:
                 break
         if chosen is None:
-            raise FileNotFoundError(
-                f"fellow {fellow['id']} ({fellow['name']}) has no portrait in either "
-                f"{PORTRAIT_DIRS} — run: uex export --profile gmzz --only "
-                "C7/Content/Arts/UI_2/Resource/ConfigIcon/Partners"
-            )
+            fellow["portrait"] = ""
+            used["missing"] += 1
+            continue
         name, png, size = chosen
         with Image.open(png) as img:
             img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
@@ -383,7 +457,7 @@ def _convert_portraits(raw: Path, res_out: Path, fellows: list[dict], reuse_asse
 
 
 def _convert_skill_icons(raw: Path, res_out: Path, fellows: list[dict], reuse_assets: bool = False) -> tuple[int, list[str]]:
-    """Eleven of the fourteen skill icons; the other three do not exist to export.
+    """Convert the fellow skill icons, recording any client-side omissions.
 
     ``Follow_Skill_01``, ``_05`` and ``_08`` — 邓恩, 佛尔思 and 梅丽莎 — are absent
     from the pak index itself, not merely from the last export: ``uex search
@@ -434,6 +508,10 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path, reuse_assets: b
         "HistoryResearchProp": "HistoryResearchPropData",
         "FightPropMode": "FightPropModeData",
         "FightPropModeSet": "FightPropModeSetData",
+        "FellowRelationAwake": "FellowRelationAwakeData",
+        "FellowEcho": "FellowEchoData",
+        "FellowEchoProp": "FellowEchoPropData",
+        "Military": "MilitaryData",
     }
     tables = {key: resolve_text(load_table(excel, table), strings) for key, table in names.items()}
     tags = {int(row["ID"]): row["Tag"] for row in _rows(tables["SkillTag"])}
@@ -446,6 +524,7 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path, reuse_assets: b
     fellows = build_fellows(tables, skills, tags)
     relations = build_relations(tables, fellows, effects)
     levels = build_levels(tables)
+    fate = build_fate_tributary(tables)
     history = build_history_research(
         tables["HistoryResearch"], tables["HistoryResearchProp"],
         tables["FightPropMode"], tables["FightPropModeSet"],
@@ -458,7 +537,7 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path, reuse_assets: b
 
     payloads = {
         "fellows": fellows, "relations": relations, "effects": effects,
-        "levels": levels, "history-research": history,
+        "levels": levels, "history-research": history, "fate-tributary": fate,
     }
     missing = unresolved_ids(payloads)
     if missing:
@@ -476,7 +555,7 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path, reuse_assets: b
     formulas = sum(1 for fellow in fellows if fellow["skill"]["hasFormula"])
     print(
         f"fellows: {len(fellows)} fellows, {len(relations)} relations, {len(effects)} effect sets "
-        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium + {used['circle']} circle + {used['reused']} reused portraits + "
+        f"-> {OUT_DIR}/, {used['large']} large + {used['medium']} medium + {used['circle']} circle + {used['reused']} reused portraits + {used['missing']} missing portraits + "
         f"{skill_icons} skill icons -> {res_out}/{ICON_SUBDIR}"
     )
     if iconless:

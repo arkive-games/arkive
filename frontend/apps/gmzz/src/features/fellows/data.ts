@@ -59,7 +59,7 @@ export type Fellow = {
   upgrades: FellowUpgrade[]
   stories: FellowStory[]
   relationIds: number[]
-  /** Basename under `resource-gmzz/fellows/`. Every fellow has one. */
+  /** Basename under `resource-gmzz/fellows/`; empty when the export has no portrait. */
   portrait: string
 }
 
@@ -119,6 +119,37 @@ export type AffinityLadder = {
   levels: { level: number; name: string; exp: number | null; interactCount: number | null }[]
 }
 
+export type FateAttributeMap = Record<string, number>
+
+export type FateMilestone = {
+  id: number
+  relationLevelCap: number
+  itemId: number
+  itemCount: number
+  echoGain: number
+  echoPoints: number
+  awakePoints: number
+  echoPropId: number
+  score: number
+  mark: number
+  attributes: FateAttributeMap
+}
+
+export type FateCapUnlock = {
+  level: number
+  unlockTime: number | null
+  lockText: string
+  militaryId: number
+  content: string
+}
+
+export type FateTributary = {
+  strategicOnly: boolean
+  milestoneCount: number
+  milestones: FateMilestone[]
+  capUnlocks: FateCapUnlock[]
+}
+
 async function load<T>(file: string, what: string): Promise<T> {
   const response = await fetch(dataUrl(`fellows/${file}.json`))
   if (!response.ok) throw new Error(`Unable to load ${what} (${response.status})`)
@@ -130,6 +161,7 @@ export const loadFellowRelations = () => load<FellowRelation[]>('relations', 're
 export const loadRelationEffects = () => load<RelationEffect[]>('effects', 'relation effects')
 export const loadAffinityLadders = () => load<AffinityLadder[]>('levels', 'affinity levels')
 export const loadHistoryResearch = () => load<HistoryResearchRank[]>('history-research', 'history research')
+export const loadFateTributary = () => load<FateTributary>('fate-tributary', 'fate tributary')
 
 export function fellowPortraitUrl(portrait: string): string {
   return `${RES_BASE}/fellows/${portrait}.webp`

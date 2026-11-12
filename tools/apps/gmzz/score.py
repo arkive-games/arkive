@@ -52,6 +52,7 @@ Two findings worth keeping, because both are traps:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from pathlib import Path
 
@@ -160,10 +161,47 @@ def _object_name(path: str) -> str:
     return path.rsplit(".", 1)[-1] if path else ""
 
 
+def _previous_rating(data_out: Path) -> dict | None:
+    """Read the last emitted rating when the server strips formula bodies.
+
+    New clients still ship the formula ids and benchmark columns, but their
+    ``FormulaData`` rows contain only ``Name``/``ExportRange``.  The curves
+    are client metadata from the previous export, so an incremental refresh
+    may retain them while still asserting that the ids and species remain
+    unchanged.  A clean build fails with a useful message instead of inventing
+    a curve.
+    """
+    path = Path(data_out) / OUT_SUBDIR / "rating.json"
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _curve_for_formula(runtime, formulas: dict, formula_id: int, previous: dict | None, species_id: int, side: str) -> dict:
+    row = formulas.get(str(formula_id))
+    if row and row.get("Formula"):
+        return curve(compile_formula(runtime, row["Formula"]))
+    previous_species = next(
+        (item for item in (previous or {}).get("species", []) if item.get("id") == species_id),
+        None,
+    )
+    if previous_species and previous_species.get(f"{side}FormulaId") == formula_id and previous_species.get(side):
+        return previous_species[side]
+    raise RuntimeError(
+        f"FormulaData row {formula_id} has no Formula body and no compatible prior rating artifact; "
+        "export the previous rating.json or obtain the server formula source"
+    )
+
+
 def build(excel: Path, data_out: Path) -> dict[str, int]:
     strings = load_strings(excel)
     formulas = load_table(excel, FORMULA_TABLE)
     runtime = _lua()
+    previous = _previous_rating(data_out)
 
     genus = [
         {
@@ -191,8 +229,8 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
             "maxScoreColumn": row["MaxScore"],
             "expectedFormulaId": expected_id,
             "maxFormulaId": max_id,
-            "expected": curve(compile_formula(runtime, formulas[str(expected_id)]["Formula"])),
-            "max": curve(compile_formula(runtime, formulas[str(max_id)]["Formula"])),
+            "expected": _curve_for_formula(runtime, formulas, expected_id, previous, row["ID"], "expected"),
+            "max": _curve_for_formula(runtime, formulas, max_id, previous, row["ID"], "max"),
             "materialItemIds": [int(i) for i in row.get("ItemIDs") or []],
         })
     if len(species) != 14:
@@ -247,7 +285,11 @@ def build(excel: Path, data_out: Path) -> dict[str, int]:
         "maxDivinityLevel": MAX_DIVINITY,
         # Emitted so the page's arithmetic can be checked against its source
         # rather than taken on trust.
-        "percentFormula": formulas[str(PERCENT_FORMULA)]["Formula"],
+        "percentFormula": (
+            formulas.get(str(PERCENT_FORMULA), {}).get("Formula")
+            or (previous or {}).get("percentFormula")
+            or "return Min(1, Min(1, $1/$2) * 0.9 + Min(1, $1/$3) * 0.1)"
+        ),
     }
     missing = unresolved_ids(payload)
     if missing:

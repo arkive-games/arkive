@@ -5,6 +5,7 @@ import { useDocumentTitle } from '@gamemap/ui'
 import { ContentPage } from '@/components/ContentPage'
 import { FellowsTabs } from '@/features/fellows/FellowsTabs'
 import { HistoryResearch } from '@/features/fellows/HistoryResearch'
+import { FateTributary } from '@/features/fellows/FateTributary'
 import {
   fellowPortraitUrl,
   loadFellowRelations,
@@ -71,6 +72,7 @@ export default function FellowRelationsPage() {
         ))}
       </div>
       <HistoryResearch />
+      <FateTributary />
     </ContentPage>
   )
 }
@@ -109,7 +111,7 @@ function RelationCard({
           const effect = member.effectId ? effectsById.get(member.effectId) : undefined
           return (
             <li key={member.fellowId} className="flex items-center gap-2">
-              {fellow ? (
+              {fellow?.portrait ? (
                 <img
                   src={fellowPortraitUrl(fellow.portrait)}
                   alt=""

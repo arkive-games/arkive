@@ -134,7 +134,7 @@
 /* ---------------------------------------------------------------- fields */
 .gz-field { display: grid; gap: .3125rem; align-content: start; min-width: 0; }
 /* The label heads its value: same size and ink, but bold, while the value stays regular. */
-.gz-field > span:first-child { font-size: 1rem; line-height: 1.25; font-weight: 800; color: var(--gz-ink); white-space: nowrap; }
+.gz-field > span:first-child { font-size: 1rem; line-height: 1.25; font-weight: 800; color: var(--gz-ink); white-space: normal; }
 .gz-field > span:first-child em { font-style: normal; font-size: .75rem; font-weight: 400; color: var(--gz-sub); }
 .gz-field .gz-select select, .gz-field .gz-step input { font-weight: 400; }
 /* The circled mark of Tip.tsx: its bubble is a portalled tooltip, never CSS. */
@@ -186,8 +186,8 @@ select.gz-select {
 .gz-seg .gz-chip.on, .gz-seg .gz-chip[aria-pressed='true'], .gz-seg .gz-chip[aria-selected='true'] {
   background: var(--gz-card); color: var(--gz-ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
 }
-.gz-seg.full { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-.gz-seg.full .gz-chip { justify-content: center; }
+.gz-seg.full { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gz-seg.full .gz-chip { justify-content: center; min-width: 0; height: auto; min-height: 1.875rem; padding-inline: .5rem; white-space: normal; line-height: 1.15; }
 .gz-chip {
   display: inline-flex; align-items: center; gap: .375rem; height: 2rem; padding: 0 .875rem; border-radius: 999px;
   background: var(--gz-card); box-shadow: inset 0 0 0 1px var(--gz-line); font-size: .875rem; font-weight: 700;

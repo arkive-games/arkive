@@ -190,12 +190,16 @@ function FellowCard({
       className={`min-w-0 rounded-lg border p-3 ${QUALITY_CLASS[fellow.quality] ?? 'border-border bg-card'}`}
     >
       <header className="flex items-start gap-3">
-        <img
-          src={fellowPortraitUrl(fellow.portrait)}
-          alt=""
-          loading="lazy"
-          className="size-12 shrink-0 rounded-md border border-border/70 bg-background/40 object-cover"
-        />
+        {fellow.portrait ? (
+          <img
+            src={fellowPortraitUrl(fellow.portrait)}
+            alt=""
+            loading="lazy"
+            className="size-12 shrink-0 rounded-md border border-border/70 bg-background/40 object-cover"
+          />
+        ) : (
+          <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background/40 text-xs text-muted-foreground">?</span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-2">
             <h2 className="text-base font-semibold">{fellow.name}</h2>
