@@ -135,7 +135,7 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
 
   const skillTiles: TileSpec[] = Array.from({ length: 6 }, (_, i) => {
     const skill = skillMap.get(draft.skills[i] ?? 0)
-    return { key: String(i), label: skill?.name?.['zh-CN'] || (draft.skills[i] ? t.unknown : m.skill), icon: skill?.icon, empty: !skill, disabled: !job, onRemove: draft.skills[i] ? () => setSkill(i, 0) : undefined }
+    return { key: String(i), label: skill?.name?.['zh-CN'] || (draft.skills[i] ? t.unknown : m.skill), icon: skill?.icon, empty: !skill, disabled: false, onRemove: draft.skills[i] ? () => setSkill(i, 0) : undefined }
   })
   const talentTiles: TileSpec[] = [
     ...draft.talents.map(id => { const info = talentInfo(data, rules, draft.jobId, id); return { key: String(id), label: info.label || t.unknown, icon: info.icon, onRemove: () => onChange({ talents: draft.talents.filter(v => v !== id) }) } }),
@@ -152,7 +152,7 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
       framed: true,
       empty: !record,
       onRemove: slotConfig(slot.key).id ? () => chooseEquipment(slot.key, 0) : undefined,
-      disabled: !job || slot.key === 'off' && twoHanded,
+      disabled: slot.key === 'off' && twoHanded,
     }
   })
   const soulTiles: TileSpec[] = Array.from({ length: 5 }, (_, i) => {
@@ -207,7 +207,7 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
       <Block icon={<Zap />} title={t.skills} count={m.items.replace('{n}', String(draft.skills.filter(Boolean).length))}>
         <TileBlock tiles={skillTiles} renderInfo={i => {
           const items = data?.profession?.skills.skills.filter(s => pool.has(s.iSkillID)).map(s => ({ id: s.iSkillID, label: s.name?.['zh-CN'] || t.unknown, icon: s.icon, disabled: draft.skills.some((id, k) => k !== i && id === s.iSkillID) })) ?? []
-          return <Picker what={m.skill} items={items} onPick={id => setSkill(i, id)} />
+          return job ? <Picker what={m.skill} items={items} onPick={id => setSkill(i, id)} /> : <p className="bm-note bm-slot-disabled">{m.selectJobFirst}</p>
         }} />
       </Block>
       <Block icon={<Star />} title={t.talents} count={m.items.replace('{n}', String(draft.talents.length))}>

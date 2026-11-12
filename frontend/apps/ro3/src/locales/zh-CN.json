@@ -118,6 +118,7 @@
       "editAffixes": "编辑词条",
       "affixPanel": "当前装备词条",
       "selectEquipmentFirst": "选择装备后，在这里配置词条。",
+      "selectJobFirst": "请先选择职业，技能候选会在这里显示。",
       "noEditableAffixes": "这件装备没有可选词条。",
       "rankFilter": "装备阶级",
       "allRanks": "全部阶级",
