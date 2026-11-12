@@ -201,14 +201,20 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
 
     <SelectionScope key={draft.id}><div className="bm-blocks bm-compact-editor">
       <div className="bm-editor-row bm-row-primary">
+      <Block icon={<BarChart3 />} title={t.attributes} actions={<><span>{m.total.replace('{n}', String(total))}</span><button type="button" className="bm-chip" onClick={() => onChange({ attributes: draft.attributes.map(() => 1) })}>{m.reset}</button></>}>
+        <Stats values={draft.attributes} onChange={(i, v) => onChange({ attributes: draft.attributes.map((x, k) => k === i ? v : x) })} />
+      </Block>
       <Block icon={<Zap />} title={t.skills} count={m.items.replace('{n}', String(draft.skills.filter(Boolean).length))}>
         <TileBlock tiles={skillTiles} renderInfo={i => {
           const items = data?.profession?.skills.skills.filter(s => pool.has(s.iSkillID)).map(s => ({ id: s.iSkillID, label: s.name?.['zh-CN'] || t.unknown, icon: s.icon, disabled: draft.skills.some((id, k) => k !== i && id === s.iSkillID) })) ?? []
           return <Picker what={m.skill} items={items} onPick={id => setSkill(i, id)} />
         }} />
       </Block>
-      <Block icon={<BarChart3 />} title={t.attributes} actions={<><span>{m.total.replace('{n}', String(total))}</span><button type="button" className="bm-chip" onClick={() => onChange({ attributes: draft.attributes.map(() => 1) })}>{m.reset}</button></>}>
-        <Stats values={draft.attributes} onChange={(i, v) => onChange({ attributes: draft.attributes.map((x, k) => k === i ? v : x) })} />
+      <Block icon={<Star />} title={t.talents} count={m.items.replace('{n}', String(draft.talents.length))}>
+        <TileBlock className="bm-tal" tiles={talentTiles} renderInfo={i => {
+          const id = draft.talents[i]
+          return <Picker key={i} talent what={m.talent} items={tal.filter(c => c.id === id || !draft.talents.includes(c.id)).map(c => ({ ...c, label: c.label || t.unknown }))} onPick={pick => onChange({ talents: id === undefined ? [...draft.talents, pick] : draft.talents.map((value, index) => index === i ? pick : value) })} />
+        }} />
       </Block>
       </div>
       <div className="bm-editor-row bm-row-items">
@@ -251,14 +257,6 @@ export function BuildEditor({ draft, data, plans, error, onChange, onSave, onOpe
           </section>
         })}</div>
       </Block>
-      <div className="bm-editor-row bm-row-primary">
-      <Block icon={<Star />} title={t.talents} count={m.items.replace('{n}', String(draft.talents.length))}>
-        <TileBlock className="bm-tal" tiles={talentTiles} renderInfo={i => {
-          const id = draft.talents[i]
-          return <Picker key={i} talent what={m.talent} items={tal.filter(c => c.id === id || !draft.talents.includes(c.id)).map(c => ({ ...c, label: c.label || t.unknown }))} onPick={pick => onChange({ talents: id === undefined ? [...draft.talents, pick] : draft.talents.map((value, index) => index === i ? pick : value) })} />
-        }} />
-      </Block>
-      </div>
       </div>
       <div className="bm-editor-row bm-row-secondary">
       <Block icon={<PawPrint />} title={t.pets} count={m.petCount}>

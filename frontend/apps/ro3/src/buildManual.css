@@ -231,21 +231,25 @@
 .bm-edit-affixes { align-self: flex-start; }
 .bm-compact-editor > .bm-blk:nth-child(-n+2) { align-self: stretch; }
 .bm-compact-editor .bm-body { padding: .5rem .65rem; }
-.bm-compact-editor { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .65rem; }
-.bm-editor-row { display: contents; }
-.bm-row-primary > .bm-blk { grid-column: span 2; grid-row: 1; }
-.bm-row-items > .bm-blk { grid-column: span 3; grid-row: 2; }
-.bm-row-secondary > .bm-blk { grid-column: span 3; grid-row: 3; }
+.bm-compact-editor { display: flex; flex-direction: column; gap: .65rem; }
+.bm-editor-row { display: grid; gap: .65rem; min-width: 0; }
+.bm-row-primary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bm-row-items, .bm-row-secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.bm-editor-row > .bm-blk { align-self: stretch; min-width: 0; }
+.bm-row-primary > .bm-blk:nth-child(1) { order: 2; }
+.bm-row-primary > .bm-blk:nth-child(2) { order: 1; }
+.bm-row-primary > .bm-blk:nth-child(3) { order: 3; }
+.bm-row-primary > .bm-blk { min-height: 10rem; }
+.bm-selection-row { grid-column: 1 / -1; order: 10; min-width: 0; }
 @container (max-width: 999px) {
-  .bm-compact-editor { grid-template-columns: minmax(0, 1fr); }
-  .bm-editor-row > .bm-blk { grid-column: 1; grid-row: auto; }
-}
-@container (min-width: 1000px) {
-  .bm-editor-row > .bm-blk { align-self: stretch; }
+  .bm-row-primary, .bm-row-items, .bm-row-secondary { grid-template-columns: minmax(0, 1fr); }
+  .bm-row-primary > .bm-blk:nth-child(n) { order: initial; }
 }
 .bm-row-secondary .bm-gear-tiles > .bm-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .bm-row-secondary .bm-tile { width: 3.5rem; }
 .bm-row-items > .bm-blk:first-child > .bm-body { gap: .75rem; }
+.bm-row-items > .bm-blk:first-child { min-width: 0; }
+.bm-row-items > .bm-blk:nth-child(2) { min-width: 0; }
 .bm-row-items > .bm-blk:first-child .bm-tiles { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .bm-row-items > .bm-blk:first-child .bm-tile { width: 100%; }
 .bm-row-items .bm-gear-tiles .bm-nm { min-height: 2.7em; white-space: normal; }
