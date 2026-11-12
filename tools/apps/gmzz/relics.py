@@ -71,6 +71,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import json
 import re
 from pathlib import Path
 
@@ -209,9 +210,15 @@ def promotion(excel: Path, strings: dict) -> dict:
     return {"ladder": ladder, "bestGrade": min(by_grade), "worstGrade": max(by_grade)}
 
 
-def risks(excel: Path, strings: dict) -> list[dict]:
+def risks(excel: Path, strings: dict, fallback: list[dict] | None = None) -> list[dict]:
     out = []
-    for row in _rows(resolve_text(load_table(excel, RISK_TABLE), strings)):
+    try:
+        rows = _rows(resolve_text(load_table(excel, RISK_TABLE), strings))
+    except FileNotFoundError:
+        if fallback is not None:
+            return fallback
+        raise
+    for row in rows:
         risk = {"id": row.get("RiskID")}
         # Some live risk rows retain references whose strings the client removed.
         # Preserve the missing references, not stale prose or unresolved markers.
@@ -456,11 +463,16 @@ def constants(excel: Path, strings: dict) -> dict:
 
 def build(excel: Path, data_out: Path) -> dict[str, int]:
     strings = load_strings(excel)
+    previous_path = Path(data_out) / OUT_FILE
+    try:
+        previous = json.loads(previous_path.read_text(encoding="utf-8")) if previous_path.is_file() else None
+    except (OSError, ValueError):
+        previous = None
 
     payload = {
         "artifacts": artifacts(excel, strings),
         "promotion": promotion(excel, strings),
-        "risks": risks(excel, strings),
+        "risks": risks(excel, strings, (previous or {}).get("risks")),
         "resonance": resonance(excel, strings),
         "knowledge": knowledge(excel, strings),
         "worths": worths(excel, strings),

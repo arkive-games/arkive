@@ -76,6 +76,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import json
 import re
 from pathlib import Path
 
@@ -393,10 +394,11 @@ def enhancement(excel: Path, strings: dict) -> dict:
     return {"bodies": out, "markPerStage": sorted(marks), "maxStage": max(len(b["stages"]) for b in out)}
 
 
-def suits(excel: Path, strings: dict) -> dict:
+def suits(excel: Path, strings: dict, previous: dict | None = None) -> dict:
     """The two suits, and the Mark ladder their tiers are worth."""
     formulas = {r["ID"]: r for r in _rows(load_table(excel, FORMULA_TABLE))}
     percent = percent_stats(excel)
+    old_suits = {int(row["id"]): row for row in (previous or {}).get("suits", {}).get("suits", [])}
     named = [
         {
             "id": r["ID"],
@@ -406,7 +408,7 @@ def suits(excel: Path, strings: dict) -> dict:
             "pieceCounts": list(r.get("BeSuitNum") or []),
             "effect2": _plain(r.get("SuitDesc1") or ""),
             "effect3": _plain(r.get("SuitDesc2") or ""),
-            "props": suit_props(r, formulas, percent),
+            "props": suit_props(r, formulas, percent, old_suits.get(int(r["ID"]), {}).get("props")),
         }
         for r in _rows(resolve_text(load_table(excel, SUIT_TABLE), strings))
     ]
@@ -435,7 +437,13 @@ def suits(excel: Path, strings: dict) -> dict:
             "effect": _plain(r.get("SuitAdditionDesc") or ""),
         })
     tiers.sort(key=lambda t: (t["type"] or 0, t["level"] or 0))
-    return {"suits": named, "tiers": tiers, "levelScores": suit_level_scores(excel)}
+    try:
+        level_scores = suit_level_scores(excel)
+    except (KeyError, RuntimeError):
+        level_scores = (previous or {}).get("suits", {}).get("levelScores")
+        if not level_scores:
+            raise
+    return {"suits": named, "tiers": tiers, "levelScores": level_scores}
 
 
 def _linear(name: str, body: str) -> dict:
@@ -462,7 +470,7 @@ def percent_stats(excel: Path) -> set[str]:
     return out
 
 
-def suit_props(row: dict, formulas: dict, percent: set[str]) -> list[list[dict]]:
+def suit_props(row: dict, formulas: dict, percent: set[str], fallback: list[list[dict]] | None = None) -> list[list[dict]]:
     """What each of a suit's piece-count effects grants, as a line in the gear level.
 
     ``SuitPropN`` maps a stat key to a ``FormulaData`` reference
@@ -479,6 +487,10 @@ def suit_props(row: dict, formulas: dict, percent: set[str]) -> list[list[dict]]
             formula = formulas.get(ref.get("Value")) if isinstance(ref, dict) and ref.get("IsFFunc") else None
             if formula is None:
                 raise RuntimeError(f"{SUIT_TABLE} {row['ID']}: SuitProp{level}.{key} is not a formula reference: {ref!r}")
+            if formula is None or not formula.get("Formula"):
+                if fallback is not None:
+                    return fallback
+                raise RuntimeError(f"{SUIT_TABLE} {row['ID']}: FormulaData body for SuitProp{level}.{key} is unavailable")
             entries.append({"key": key, **_linear(formula["Name"], formula["Formula"]), "percent": key in percent})
         out.append(entries)
     return out
@@ -581,6 +593,11 @@ def _reuse_icons(items: list[dict], res_out: Path) -> None:
 
 def build(excel: Path, data_out: Path, res_out: Path | None = None) -> dict[str, int]:
     strings = load_strings(excel)
+    previous_path = Path(data_out) / OUT_FILE
+    try:
+        previous = json.loads(previous_path.read_text(encoding="utf-8")) if previous_path.is_file() else None
+    except (OSError, ValueError):
+        previous = None
 
     slot_rows = slots(excel, strings)
     type_rows = types(excel, strings)
@@ -595,7 +612,7 @@ def build(excel: Path, data_out: Path, res_out: Path | None = None) -> dict[str,
         if item["id"] in myth_rows:
             item["myth"] = myth_rows[item["id"]]
     enhance = enhancement(excel, strings)
-    suit = suits(excel, strings)
+    suit = suits(excel, strings, previous)
     affix = affixes(excel, strings)
 
     payload = {
