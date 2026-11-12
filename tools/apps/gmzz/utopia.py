@@ -47,7 +47,7 @@ def icon_asset_path(card_icon: str) -> str | None:
     return f"C7/Content/{match.group('path')}.png"
 
 
-def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> tuple[int, int]:
+def build(excel: Path, raw: Path, data_out: Path, res_out: Path, reuse_assets: bool = False) -> tuple[int, int]:
     strings = load_strings(excel)
     rows = resolve_text(load_table(excel, CARD_TABLE), strings)
 
@@ -82,17 +82,23 @@ def build(excel: Path, raw: Path, data_out: Path, res_out: Path) -> tuple[int, i
         if asset is None:
             raise RuntimeError(f"card {key}: unparseable CardIcon {card_icon!r}")
         wanted[Path(asset).stem] = Path(raw) / asset
-    absent = {name: p for name, p in wanted.items() if not p.is_file()}
-    if absent:
+    target = Path(res_out) / ICON_SUBDIR
+    target.mkdir(parents=True, exist_ok=True)
+    absent = {name: p for name, p in wanted.items() if not p.is_file() and not (reuse_assets and (target / f"{name}.webp").is_file())}
+    if absent and not reuse_assets:
         raise FileNotFoundError(
             f"{len(absent)} card icon(s) absent from the export, e.g. "
             f"{sorted(absent)[:3]} — run: uex export --profile gmzz "
             f"--only C7/Content/Arts/UI_2/Resource/Skill"
         )
 
-    target = Path(res_out) / ICON_SUBDIR
-    target.mkdir(parents=True, exist_ok=True)
+    missing = set(absent)
+    for card in cards:
+        if card["icon"] in missing:
+            card["icon"] = ""
     for name, png in sorted(wanted.items()):
+        if not png.is_file():
+            continue
         with Image.open(png) as img:
             img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
     write_json(Path(data_out) / OUT_FILE, cards)
@@ -107,6 +113,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--raw", type=Path, default=None)
     parser.add_argument("--data-out", type=Path, default=None)
     parser.add_argument("--res-out", type=Path, default=None)
+    parser.add_argument("--reuse-assets", action="store_true", help="Reuse existing WebPs for unavailable card art")
     args = parser.parse_args(argv)
 
     data_out = args.data_out or require_dir("GMZZ_DATA_OUT")
@@ -115,6 +122,7 @@ def main(argv: list[str] | None = None) -> None:
         args.raw or require_dir("GMZZ_RAW"),
         data_out,
         args.res_out or require_dir("GMZZ_RES_OUT"),
+        args.reuse_assets,
     )
     stamp_version(data_out)
 

@@ -123,7 +123,7 @@ def icon_names(trees: list[dict]) -> list[str]:
     return sorted(name for name in names if name)
 
 
-def locate_icons(raw: Path, names: list[str]) -> dict[str, Path]:
+def locate_icons(raw: Path, names: list[str], existing: Path | None = None) -> dict[str, Path | None]:
     """``{name: exported PNG}`` for every name, searched under :data:`ICON_ROOTS`.
 
     Raises when a name has no PNG (a partial export would ship holes) or more
@@ -133,16 +133,16 @@ def locate_icons(raw: Path, names: list[str]) -> dict[str, Path]:
     for root in ICON_ROOTS:
         for png in (Path(raw) / root).rglob("*.png"):
             found.setdefault(png.stem, []).append(png)
-    missing = [name for name in names if name not in found]
+    missing = [name for name in names if name not in found and not (existing and (existing / f"{name}.webp").is_file())]
     if missing:
         raise FileNotFoundError(
             f"{len(missing)} talent icon(s) absent from the export, e.g. {missing[:5]} — "
             f"run: uex export --profile gmzz --only <root> for each of {list(ICON_ROOTS)} (see this module's docstring)"
         )
-    ambiguous = [name for name in names if len(found[name]) > 1]
+    ambiguous = [name for name in names if name in found and len(found[name]) > 1]
     if ambiguous:
         raise ValueError(f"talent icon name(s) match more than one texture: {ambiguous[:5]}")
-    return {name: found[name][0] for name in names}
+    return {name: (found[name][0] if name in found else None) for name in names}
 
 
 def stat_names(modes, groups) -> dict[str, dict]:
@@ -274,7 +274,7 @@ def build_trees(trees, nodes, defaults, names: dict[str, dict]) -> list[dict]:
     return out
 
 
-def build(excel: Path, data_out: Path, raw: Path, res_out: Path) -> dict[str, int]:
+def build(excel: Path, data_out: Path, raw: Path, res_out: Path, reuse_assets: bool = False) -> dict[str, int]:
     strings = load_strings(excel)
     trees = build_trees(
         resolve_text(load_table(excel, TREE_TABLE), strings),
@@ -290,10 +290,19 @@ def build(excel: Path, data_out: Path, raw: Path, res_out: Path) -> dict[str, in
         raise RuntimeError(f"{NODE_TABLE}: {len(missing)} text id(s) unresolved, e.g. {sorted(missing)[:3]}")
     # Every icon is located before anything is written, so a partial export
     # cannot leave the dataset naming images the image repo does not have.
-    icons = locate_icons(raw, icon_names(trees))
     target = Path(res_out) / ICON_SUBDIR
     target.mkdir(parents=True, exist_ok=True)
+    icons = locate_icons(raw, icon_names(trees), target if reuse_assets else None)
+    missing = {name for name, png in icons.items() if png is None and not (target / f"{name}.webp").is_file()}
+    for tree in trees:
+        if tree["icon"] in missing:
+            tree["icon"] = ""
+        for node in tree["nodes"]:
+            if node["icon"] in missing:
+                node["icon"] = ""
     for name, png in icons.items():
+        if png is None:
+            continue
         with Image.open(png) as img:
             img.save(target / f"{name}.webp", "WEBP", quality=WEBP_QUALITY, method=6)
     payload = {"trees": trees}
@@ -309,6 +318,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out", type=Path, default=None, help="override GMZZ_DATA_OUT")
     parser.add_argument("--raw", type=Path, default=None, help="override GMZZ_RAW")
     parser.add_argument("--res-out", type=Path, default=None, help="override GMZZ_RES_OUT")
+    parser.add_argument("--reuse-assets", action="store_true", help="Reuse existing WebPs for unavailable icons")
     args = parser.parse_args(argv)
 
     data_out = args.out or require_dir("GMZZ_DATA_OUT")
@@ -317,6 +327,7 @@ def main(argv: list[str] | None = None) -> None:
         data_out,
         args.raw or require_dir("GMZZ_RAW"),
         args.res_out or require_dir("GMZZ_RES_OUT"),
+        args.reuse_assets,
     )
     stamp_version(data_out)
 
