@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.35.0",
+      "date": "2026-11-13",
+      "commit": "3e377d9ce2ea3189fb01f893b3459e6616a3b711",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Redesign Connections relations with tier tabs, detailed hover effects, and a strategic-server Fate Tributary view.",
+            "zh-CN": "重做人脉关系页面：加入等级标签、详细悬浮效果和战略服命运支流视图。",
+            "zh-TW": "重做人脈關係頁面：加入等級分頁、詳細懸浮效果與戰略服命運支流檢視。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.34.0",
       "date": "2026-11-13",
       "commit": "58a2ee88c29ff1d819d027267dcef02f5487bf71",
