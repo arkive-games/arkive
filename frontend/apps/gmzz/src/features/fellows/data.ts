@@ -121,15 +121,20 @@ export type AffinityLadder = {
 
 export type FateAttributeMap = Record<string, number>
 
-export type FateMilestone = {
-  id: number
+export type FateAwakeningLevel = {
+  level: number
   relationLevelCap: number
   itemId: number
   itemCount: number
   echoGain: number
   echoPoints: number
-  awakePoints: number
-  echoPropId: number
+  relationPointGain: number
+  relationPointTotal: number
+}
+
+export type FateEchoLevel = {
+  level: number
+  propId: number
   score: number
   mark: number
   attributes: FateAttributeMap
@@ -146,9 +151,14 @@ export type FateCapUnlock = {
 
 export type FateTributary = {
   strategicOnly: boolean
-  milestoneCount: number
-  milestones: FateMilestone[]
+  relationCount: number
+  awakeningLevelCount: number
+  relationPointLevelCount: number
+  maxRelationPoints: number | null
+  maxEchoPoints: number | null
+  awakeningLevels: FateAwakeningLevel[]
   capUnlocks: FateCapUnlock[]
+  echoTable: FateEchoLevel[]
 }
 
 async function load<T>(file: string, what: string): Promise<T> {

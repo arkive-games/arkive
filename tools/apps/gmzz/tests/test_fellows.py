@@ -178,3 +178,37 @@ def test_a_relation_naming_an_unknown_effect_stops_the_build(monkeypatch):
             }}},
             people, [],
         )
+
+
+def test_fate_levels_are_per_relation_and_echo_table_is_global():
+    awake = [
+        {
+            "ID": level,
+            "Limit": 1 if level <= 3 else 3 if level <= 6 else 5,
+            "ItemId": 2000221,
+            "ItemNum": level,
+            "AddEchoPoint": level * 10,
+            "EchoPoint": level * 10,
+            "AwakePoints": int(level in (3, 6, 9)),
+        }
+        for level in range(1, 10)
+    ]
+    echo = [{"PropID": 1, "Score": 10, "Mark": 2}, {"PropID": 2, "Score": 20, "Mark": 4}]
+    props = [{"Atk_P": 0.01}, {"Atk_P": 0.02}]
+    result = fellows.build_fate_tributary({
+        "FellowRelationAwake": awake,
+        "FellowEcho": echo,
+        "FellowEchoProp": props,
+        "FellowRelation": [{}] * fellows.RELATION_COUNT,
+        "Military": [
+            {"ID": 1, "UnlockContent": ["命运支流至3级"]},
+            {"ID": 2, "UnlockContent": ["命运支流至6级"]},
+            {"ID": 3, "UnlockContent": ["命运支流至9级"]},
+        ],
+    })
+    assert result["awakeningLevelCount"] == 9
+    assert [row["level"] for row in result["awakeningLevels"]] == list(range(1, 10))
+    assert [row["relationPointGain"] for row in result["awakeningLevels"]] == [0, 0, 1, 0, 0, 1, 0, 0, 1]
+    assert result["maxRelationPoints"] == 42
+    assert result["echoTable"][1]["level"] == 2
+    assert "attributes" not in result["awakeningLevels"][0]

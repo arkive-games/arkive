@@ -48,7 +48,6 @@ from __future__ import annotations
 
 import argparse
 import re
-from bisect import bisect_right
 from pathlib import Path
 
 from PIL import Image
@@ -68,8 +67,11 @@ WEBP_QUALITY = 90
 #: (41000606) to the roster; keeping this explicit makes a future roster change
 #: fail the extraction instead of silently publishing a partial catalogue.
 FELLOW_COUNT = 16
+RELATION_COUNT = 14
 UPGRADE_COUNT = 5
 GRADE_COUNT = 6
+FATE_AWAKENING_LEVEL_COUNT = 9
+FATE_RELATION_POINT_LEVELS = (3, 6, 9)
 
 #: ``SkillDataNew`` ships as eight shards. All fourteen fellow skills sit in the
 #: first one today, so the loader stops as soon as it has them all rather than
@@ -349,37 +351,59 @@ def build_levels(tables: dict) -> list[dict]:
 
 
 def build_fate_tributary(tables: dict) -> dict:
-    """Build the strategic-server 人脉 awakening track from client tables."""
+    """Build the strategic-server 人脉 awakening track from client tables.
+
+    ``FellowRelationAwakeData`` is the cost ladder for *one* relation.  It is
+    not the global echo-level ladder: every relation can progress through all
+    nine rows, and ``AwakePoints`` grants one relation point at rows 3, 6 and
+    9.  The global attribute level is looked up separately from the sum of the
+    echo points earned by every relation in ``FellowEchoData``.
+    """
     awake = sorted(_rows(tables["FellowRelationAwake"]), key=lambda row: int(row["ID"]))
     echo = sorted(_rows(tables["FellowEcho"]), key=lambda row: int(row["Score"]))
     props = _rows(tables["FellowEchoProp"])
-    if len(awake) != 9:
-        raise RuntimeError(f"FellowRelationAwakeData has {len(awake)} rows, expected 9")
+    if len(awake) != FATE_AWAKENING_LEVEL_COUNT:
+        raise RuntimeError(
+            f"FellowRelationAwakeData has {len(awake)} rows, expected "
+            f"{FATE_AWAKENING_LEVEL_COUNT} per-relation awakening levels"
+        )
+    if [int(row["ID"]) for row in awake] != list(range(1, FATE_AWAKENING_LEVEL_COUNT + 1)):
+        raise RuntimeError("FellowRelationAwakeData IDs must be the contiguous per-relation levels 1..9")
+    if "FellowRelation" in tables and len(_rows(tables["FellowRelation"])) != RELATION_COUNT:
+        raise RuntimeError(
+            f"FellowRelationData has {len(_rows(tables['FellowRelation']))} groups, "
+            f"expected {RELATION_COUNT}"
+        )
     if not echo or len(props) != len(echo):
         raise RuntimeError("FellowEchoData and FellowEchoPropData are missing or out of sync")
 
-    thresholds = [int(row["Score"]) for row in echo]
     # Prop rows are a positional Lua list; FellowEchoData carries the explicit
     # PropID that joins them.
     prop_by_id = {index: row for index, row in enumerate(props, start=1)}
-    milestones = []
+    relation_point_total = 0
+    awakening_levels = []
     for row in awake:
-        points = int(row["EchoPoint"])
-        index = max(0, bisect_right(thresholds, points) - 1)
-        echo_row = echo[index]
-        prop = prop_by_id[int(echo_row["PropID"])]
-        milestones.append({
-            "id": int(row["ID"]),
+        level = int(row["ID"])
+        relation_point_gain = int(row["AwakePoints"])
+        expected_gain = int(level in FATE_RELATION_POINT_LEVELS)
+        if relation_point_gain != expected_gain:
+            raise RuntimeError(
+                f"FellowRelationAwakeData level {level} grants {relation_point_gain} "
+                f"relation points; expected {expected_gain} at levels "
+                f"{FATE_RELATION_POINT_LEVELS}"
+            )
+        relation_point_total += relation_point_gain
+        if int(row["AddEchoPoint"]) <= 0 or int(row["EchoPoint"]) <= 0:
+            raise RuntimeError(f"FellowRelationAwakeData level {level} has invalid echo-point values")
+        awakening_levels.append({
+            "level": level,
             "relationLevelCap": int(row["Limit"]),
             "itemId": int(row["ItemId"]),
             "itemCount": int(row["ItemNum"]),
             "echoGain": int(row["AddEchoPoint"]),
-            "echoPoints": points,
-            "awakePoints": int(row["AwakePoints"]),
-            "echoPropId": int(echo_row["PropID"]),
-            "score": int(echo_row["Score"]),
-            "mark": int(echo_row["Mark"]),
-            "attributes": {key: value for key, value in prop.items() if key != "PropID"},
+            "echoPoints": int(row["EchoPoint"]),
+            "relationPointGain": relation_point_gain,
+            "relationPointTotal": relation_point_total,
         })
 
     caps = []
@@ -402,19 +426,27 @@ def build_fate_tributary(tables: dict) -> dict:
     if [row["level"] for row in caps] != [3, 6, 9]:
         raise RuntimeError(f"expected strategic fate caps 3/6/9, got {[row['level'] for row in caps]}")
 
+    relation_count = len(_rows(tables.get("FellowRelation", [])))
+    max_relation_points = relation_point_total * relation_count if relation_count else None
+    max_echo_points = int(awake[-1]["EchoPoint"]) * relation_count if relation_count else None
     return {
         "strategicOnly": True,
-        "milestoneCount": len(milestones),
-        "milestones": milestones,
+        "relationCount": relation_count,
+        "awakeningLevelCount": len(awakening_levels),
+        "relationPointLevelCount": relation_point_total,
+        "maxRelationPoints": max_relation_points,
+        "maxEchoPoints": max_echo_points,
+        "awakeningLevels": awakening_levels,
         "capUnlocks": caps,
         "echoTable": [
             {
+                "level": level,
                 "propId": int(row["PropID"]),
                 "score": int(row["Score"]),
                 "mark": int(row["Mark"]),
                 "attributes": {key: value for key, value in prop_by_id[int(row["PropID"])].items() if key != "PropID"},
             }
-            for row in echo
+            for level, row in enumerate(echo, start=1)
         ],
     }
 
