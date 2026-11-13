@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.35.1",
+      "date": "2026-11-14",
+      "commit": "3b3bc318d92c655034fa25fbe5df5f8c8740b32c",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Correct Fate Tributary to show nine awakening levels per relation and global attribute levels above 10.",
+            "zh-CN": "修正命运支流：每组关系显示9级觉醒，并按所有关系汇总计算可超过10级的全局属性等级。",
+            "zh-TW": "修正命運支流：每組關係顯示9級覺醒，並按所有關係匯總計算可超過10級的全局屬性等級。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.35.0",
       "date": "2026-11-13",
       "commit": "3e377d9ce2ea3189fb01f893b3459e6616a3b711",
