@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.36.0",
+      "date": "2026-11-14",
+      "commit": "657ca972792b93f66d50d4eede270e8d041d9441",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Add client-accurate Fate Tributary scales, draggable Echo levels, eligible relation markers, and a calculator panel.",
+            "zh-CN": "重做命运支流：按游戏显示支流刻度、可拖动的余响等级、可激活关系标记，并加入非凡评分模拟器面板。",
+            "zh-TW": "重做命運支流：按遊戲顯示支流刻度、可拖動的餘響等級、可啟用關係標記，並加入非凡評分模擬器面板。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.35.1",
       "date": "2026-11-14",
       "commit": "3b3bc318d92c655034fa25fbe5df5f8c8740b32c",
