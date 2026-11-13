@@ -395,6 +395,7 @@ def build_fate_tributary(tables: dict) -> dict:
             "unlockTime": row.get("UnlockTime"),
             "lockText": row.get("lockText", ""),
             "militaryId": int(row["ID"]),
+            "story": row.get("Story", ""),
             "content": content,
         })
     caps.sort(key=lambda row: (row["level"], row["militaryId"]))

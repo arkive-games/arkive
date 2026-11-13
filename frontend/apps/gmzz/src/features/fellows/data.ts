@@ -140,6 +140,7 @@ export type FateCapUnlock = {
   unlockTime: number | null
   lockText: string
   militaryId: number
+  story: string
   content: string
 }
 
