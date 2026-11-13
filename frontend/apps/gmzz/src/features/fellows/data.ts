@@ -75,6 +75,8 @@ export type FellowRelation = {
   quality: number | null
   type: number | null
   isOriginal: boolean
+  /** True when the client exposes the strategic-server fate awakening action. */
+  fateEligible: boolean
   order: number
   story: string
   awakeStory: string
@@ -128,8 +130,8 @@ export type FateAwakeningLevel = {
   itemCount: number
   echoGain: number
   echoPoints: number
-  relationPointGain: number
-  relationPointTotal: number
+  sourceCoreItemId: number | null
+  sourceCoreCount: number
 }
 
 export type FateEchoLevel = {
@@ -151,10 +153,11 @@ export type FateCapUnlock = {
 
 export type FateTributary = {
   strategicOnly: boolean
+  attributeNames: Record<string, string>
   relationCount: number
+  eligibleRelationCount: number
   awakeningLevelCount: number
-  relationPointLevelCount: number
-  maxRelationPoints: number | null
+  maxSourceCoreCount: number | null
   maxEchoPoints: number | null
   awakeningLevels: FateAwakeningLevel[]
   capUnlocks: FateCapUnlock[]

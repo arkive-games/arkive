@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '@gamemap/ui'
+import { IconCircle, IconDiamond, IconHexagon, IconPentagon, IconSquare, IconStar, IconGitBranch } from '@tabler/icons-react'
 
 import { ContentPage } from '@/components/ContentPage'
 import { TipOn } from '@/features/score/Tip'
@@ -51,14 +52,9 @@ export default function FellowRelationsPage() {
 function RelationCard({ relation, fellowsById, effectsById }: { relation: FellowRelation; fellowsById: Map<number, Fellow>; effectsById: Map<number, RelationEffect> }) {
   const { t } = useTranslation()
   const [grade, setGrade] = useState(0)
-  const grades = useMemo(() => {
-    const found = new Set<number>()
-    relation.members.forEach((member) => {
-      const effect = member.effectId ? effectsById.get(member.effectId) : undefined
-      effect?.tiers.forEach((tier) => found.add(tier.grade))
-    })
-    return [...found].sort((a, b) => a - b)
-  }, [effectsById, relation.members])
+  const [storyOpen, setStoryOpen] = useState(false)
+  const gradeIcons = [IconCircle, IconSquare, IconDiamond, IconPentagon, IconHexagon, IconStar]
+  const grades = useMemo(() => [0, 1, 2, 3, 4, 5], [])
   const selectedResearch = relation.researchRewards?.find((reward) => reward.grade === grade)
   const selectedGradeName = selectedResearch?.gradeName
     ?? relation.members.map((member) => member.effectId ? effectsById.get(member.effectId)?.tiers.find((tier) => tier.grade === grade)?.gradeName : undefined).find(Boolean)
@@ -86,8 +82,10 @@ function RelationCard({ relation, fellowsById, effectsById }: { relation: Fellow
           const label = relation.researchRewards?.find((reward) => reward.grade === value)?.gradeName
             ?? relation.members.map((member) => member.effectId ? effectsById.get(member.effectId)?.tiers.find((tier) => tier.grade === value)?.gradeName : undefined).find(Boolean)
             ?? t('fellows.level', { level: value + 1 })
-          return <button key={value} type="button" aria-selected={grade === value} onClick={() => setGrade(value)} className={`min-h-9 shrink-0 rounded-md border px-2 text-xs font-medium ${grade === value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}>{label}</button>
+          const GradeIcon = gradeIcons[value] ?? IconCircle
+          return <button key={value} type="button" title={label} aria-label={label} aria-selected={grade === value} onClick={() => setGrade(value)} className={`flex size-9 shrink-0 items-center justify-center rounded-md border ${grade === value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}><GradeIcon size={18} stroke={1.8} aria-hidden /></button>
         })}
+        {relation.fateEligible ? <TipOn title={t('fellows.fateAvailable')} content={t('fellows.fateAvailableTooltip')}><span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-amber-500/60 text-amber-600"><IconGitBranch size={18} stroke={1.8} aria-hidden /></span></TipOn> : null}
       </nav>
 
       <div className="mt-3 space-y-3">
@@ -100,7 +98,7 @@ function RelationCard({ relation, fellowsById, effectsById }: { relation: Fellow
             return <li key={member.fellowId} className="flex gap-2">{fellow?.portrait ? <img src={fellowPortraitUrl(fellow.portrait)} alt="" loading="lazy" className="size-8 shrink-0 rounded-md border border-border/70 object-cover" /> : <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">?</span>}<div className="min-w-0"><p className="text-sm font-medium">{fellow?.name ?? member.fellowId}</p><p className="text-sm text-muted-foreground">{tier ? plainText(tier.description) : t('fellows.storyOnly')}</p></div></li>
           })}
         </ul>
-        {relation.story || relation.awakeStory ? <section className="border-t border-border/70 pt-3"><h3 className="text-sm font-semibold">{t('fellows.story')}</h3>{relation.story ? <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{plainText(relation.story)}</p> : null}{relation.awakeStory ? <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{plainText(relation.awakeStory)}</p> : null}</section> : null}
+        {relation.story || relation.awakeStory ? <section className="border-t border-border/70 pt-3"><button type="button" className="text-sm font-semibold text-primary hover:underline" onClick={() => setStoryOpen((open) => !open)}>{storyOpen ? t('fellows.hideStory') : t('fellows.showStory')}</button>{storyOpen ? <><h3 className="sr-only">{t('fellows.story')}</h3>{relation.story ? <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{plainText(relation.story)}</p> : null}{relation.awakeStory ? <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{plainText(relation.awakeStory)}</p> : null}</> : null}</section> : null}
       </div>
     </article>
   )

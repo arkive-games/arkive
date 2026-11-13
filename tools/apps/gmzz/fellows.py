@@ -71,7 +71,8 @@ RELATION_COUNT = 14
 UPGRADE_COUNT = 5
 GRADE_COUNT = 6
 FATE_AWAKENING_LEVEL_COUNT = 9
-FATE_RELATION_POINT_LEVELS = (3, 6, 9)
+FATE_SOURCE_CORE_LEVELS = (3, 6, 9)
+FATE_CORE_ITEM_ID = 2000218
 
 #: ``SkillDataNew`` ships as eight shards. All fourteen fellow skills sit in the
 #: first one today, so the loader stops as soon as it has them all rather than
@@ -306,6 +307,9 @@ def build_relations(tables: dict, fellows: list[dict], effects: list[dict]) -> l
             "quality": row.get("RelationQuality"),
             "type": row.get("Type"),
             "isOriginal": bool(row.get("IsOriginal")),
+            # Type 1 is the combat relation in the client.  Only these
+            # relations expose the strategic-server fate awakening action.
+            "fateEligible": int(row.get("Type") or 0) == 1,
             "order": row.get("Order", 0),
             "story": row.get("Story", ""),
             "awakeStory": row.get("AwakeStory", ""),
@@ -380,19 +384,25 @@ def build_fate_tributary(tables: dict) -> dict:
     # Prop rows are a positional Lua list; FellowEchoData carries the explicit
     # PropID that joins them.
     prop_by_id = {index: row for index, row in enumerate(props, start=1)}
-    relation_point_total = 0
+    source_core_total = 0
+    attribute_names = {}
+    for row in _rows(tables.get("FightPropMode", [])):
+        prop_mode = row.get("PropMode")
+        prop_name = row.get("PropModeName")
+        if prop_mode and prop_name:
+            attribute_names[str(prop_mode)] = str(prop_name)
     awakening_levels = []
     for row in awake:
         level = int(row["ID"])
         relation_point_gain = int(row["AwakePoints"])
-        expected_gain = int(level in FATE_RELATION_POINT_LEVELS)
+        expected_gain = int(level in FATE_SOURCE_CORE_LEVELS)
         if relation_point_gain != expected_gain:
             raise RuntimeError(
                 f"FellowRelationAwakeData level {level} grants {relation_point_gain} "
-                f"relation points; expected {expected_gain} at levels "
-                f"{FATE_RELATION_POINT_LEVELS}"
+                f"source cores; expected {expected_gain} at levels "
+                f"{FATE_SOURCE_CORE_LEVELS}"
             )
-        relation_point_total += relation_point_gain
+        source_core_total += relation_point_gain
         if int(row["AddEchoPoint"]) <= 0 or int(row["EchoPoint"]) <= 0:
             raise RuntimeError(f"FellowRelationAwakeData level {level} has invalid echo-point values")
         awakening_levels.append({
@@ -402,8 +412,8 @@ def build_fate_tributary(tables: dict) -> dict:
             "itemCount": int(row["ItemNum"]),
             "echoGain": int(row["AddEchoPoint"]),
             "echoPoints": int(row["EchoPoint"]),
-            "relationPointGain": relation_point_gain,
-            "relationPointTotal": relation_point_total,
+            "sourceCoreItemId": FATE_CORE_ITEM_ID if relation_point_gain else None,
+            "sourceCoreCount": relation_point_gain,
         })
 
     caps = []
@@ -427,14 +437,19 @@ def build_fate_tributary(tables: dict) -> dict:
         raise RuntimeError(f"expected strategic fate caps 3/6/9, got {[row['level'] for row in caps]}")
 
     relation_count = len(_rows(tables.get("FellowRelation", [])))
-    max_relation_points = relation_point_total * relation_count if relation_count else None
-    max_echo_points = int(awake[-1]["EchoPoint"]) * relation_count if relation_count else None
+    eligible_relation_count = sum(
+        int(int(row.get("Type") or 0) == 1)
+        for row in _rows(tables.get("FellowRelation", []))
+    )
+    max_source_core_count = source_core_total * eligible_relation_count if eligible_relation_count else None
+    max_echo_points = int(awake[-1]["EchoPoint"]) * eligible_relation_count if eligible_relation_count else None
     return {
         "strategicOnly": True,
+        "attributeNames": attribute_names,
         "relationCount": relation_count,
+        "eligibleRelationCount": eligible_relation_count,
         "awakeningLevelCount": len(awakening_levels),
-        "relationPointLevelCount": relation_point_total,
-        "maxRelationPoints": max_relation_points,
+        "maxSourceCoreCount": max_source_core_count,
         "maxEchoPoints": max_echo_points,
         "awakeningLevels": awakening_levels,
         "capUnlocks": caps,

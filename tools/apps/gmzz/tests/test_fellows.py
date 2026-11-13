@@ -199,7 +199,7 @@ def test_fate_levels_are_per_relation_and_echo_table_is_global():
         "FellowRelationAwake": awake,
         "FellowEcho": echo,
         "FellowEchoProp": props,
-        "FellowRelation": [{}] * fellows.RELATION_COUNT,
+        "FellowRelation": [{"Type": 1}] * fellows.RELATION_COUNT,
         "Military": [
             {"ID": 1, "UnlockContent": ["命运支流至3级"]},
             {"ID": 2, "UnlockContent": ["命运支流至6级"]},
@@ -208,7 +208,7 @@ def test_fate_levels_are_per_relation_and_echo_table_is_global():
     })
     assert result["awakeningLevelCount"] == 9
     assert [row["level"] for row in result["awakeningLevels"]] == list(range(1, 10))
-    assert [row["relationPointGain"] for row in result["awakeningLevels"]] == [0, 0, 1, 0, 0, 1, 0, 0, 1]
-    assert result["maxRelationPoints"] == 42
+    assert [row["sourceCoreCount"] for row in result["awakeningLevels"]] == [0, 0, 1, 0, 0, 1, 0, 0, 1]
+    assert result["maxSourceCoreCount"] == 42
     assert result["echoTable"][1]["level"] == 2
     assert "attributes" not in result["awakeningLevels"][0]

@@ -11,9 +11,11 @@ import {
   loadFellowRelations,
   loadFellows,
   loadHistoryResearch,
+  loadFateTributary,
   type Fellow,
   type FellowRelation,
   type HistoryResearchRank,
+  type FateTributary,
 } from '@/features/fellows/data'
 import RelicSection, { type RelicTotals } from '@/features/relics/RelicSection'
 import RelicServerToggle from '@/features/relics/RelicServerToggle'
@@ -157,6 +159,7 @@ function ScoreView() {
   const [ranks, setRanks] = useState<HistoryResearchRank[] | null>(null)
   const [fellows, setFellows] = useState<Fellow[] | null>(null)
   const [relations, setRelations] = useState<FellowRelation[] | null>(null)
+  const [fate, setFate] = useState<FateTributary | null>(null)
   // What the two self-contained calculators last reported. They own their own
   // drafts, so their figures arrive by callback rather than being recomputed
   // here; a null is "not loaded yet", which scores as nothing.
@@ -242,6 +245,7 @@ function ScoreView() {
     load(loadHistoryResearch, setRanks)
     load(loadFellows, setFellows)
     load(loadFellowRelations, setRelations)
+    load(loadFateTributary, setFate)
     loadRating()
       .then((data) => {
         if (live) setRating(data)
@@ -328,7 +332,7 @@ function ScoreView() {
   const talentSpecies = rating?.species.find((entry) => entry.module === TALENT_MODULE)
   const talentBenchmark = rating && talentSpecies ? benchmarkAt(talentSpecies.max, roleLevel, divinityLevel, rating.maxRoleLevel) : 0
   const relicSkillBonus = relicTotals?.skillLevelBonus ?? 0
-  const bondsData: BondsData = { partners, scoring, ranks, fellows, relations, skillCap, relicSkillBonus }
+  const bondsData: BondsData = { partners, scoring, ranks, fellows, relations, fate, skillCap, relicSkillBonus }
   const gaps = useMemo(() => (result ? headroom(result).slice(0, 5) : []), [result])
 
   if (character.id && (character.status === 'missing' || (character.status === 'error' && !character.character))) {
