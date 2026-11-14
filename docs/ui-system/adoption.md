@@ -19,7 +19,7 @@ account-menu UID removal and hidden redundant account section heading.
 Canonical foundation/color/site/map/memory owners now record these scoped rules.
 The current homepage source remains unchanged.
 
-Remaining: encyclopedia reconstruction and return adapters outside RO3; remaining
+Remaining: encyclopedia reconstruction and return adapters outside RO3/Palworld; remaining
 map lifecycle migration and OSS preview adoption; production credits generation/manual editor; tool explicit
 save adapters after their open save destinations/account scopes are resolved.
 Do not call the whole stage complete from the catalog/map-detail batch.
@@ -45,6 +45,7 @@ needs no invented network error. Keep final evidence and state actual limitation
 | Acceptance/data | Unreviewed states/themes, contrast/geometry, current inventory/child parity, signed-in ordering and direct-post routes |
 
 Package a team Skill only after canonical adoption and validation mature.
+About/credits implementation is deferred at the user's request on 2026-11-15.
 
 ## Verified local batch
 
@@ -78,3 +79,18 @@ affected app builds/lints pass; full suite: 158 files / 1875 tests. The generate
 key inventory includes the shared map-context factory. No remote delivery.
 This is scoped adoption: legacy selection/display/progress lifecycles, all
 account/storage-failure scenarios and OSS preview are not certified complete.
+
+Palworld encyclopedia return-memory batch: 13 existing reference categories
+(pals, active skills, partner skills, passives, items, buildings, merchants,
+quests, dungeons, technology, research, fishing and raids) now retain applicable
+tab-local browsing fields and result-scoped scroll. Legacy pal facets seed new
+session fields without rewriting the old preference. Item/building reveal depth
+survives async loading and remains independent by result set; mobile pages are
+no longer clamped by desktop visits. Technology links temporarily bypass a
+conflicting query without replacing it. Content layout and tool saving are unchanged.
+
+Browser checks verify item search/facets across category changes and details,
+2400-pixel scroll return, 320-item reveal restoration after reload, technology
+target priority, and mobile page two through detail/reload/breakpoint changes.
+Palworld lint/build and the generated memory-key inventory pass. Full suite:
+161 files / 1882 tests pass. No remote delivery.

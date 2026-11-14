@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
@@ -160,11 +161,11 @@ export default function PassivesPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [raritySel, setRaritySel] = useState<string[]>([])
-  const [categorySel, setCategorySel] = useState<string[]>([])
-  const [mutationOnly, setMutationOnly] = useState(false)
-  const [innateOnly, setInnateOnly] = useState(false)
+  const [query, setQuery] = useCatalogState<string>('passives', 'query', '')
+  const [raritySel, setRaritySel] = useCatalogState<string[]>('passives', 'raritySel', [])
+  const [categorySel, setCategorySel] = useCatalogState<string[]>('passives', 'categorySel', [])
+  const [mutationOnly, setMutationOnly] = useCatalogState<boolean>('passives', 'mutationOnly', false)
+  const [innateOnly, setInnateOnly] = useCatalogState<boolean>('passives', 'innateOnly', false)
 
   useEffect(() => {
     let cancelled = false
@@ -345,7 +346,7 @@ export default function PassivesPage() {
   return (
     <TooltipProvider delayDuration={200}>
     <CatalogDataProvider pals={bundle ?? undefined}>
-    <ContentPage
+    <ContentPage browsing={{ section: 'passives', ready: !!bundle, resultsKey: JSON.stringify([query,raritySel,categorySel,mutationOnly,innateOnly]) }}
       active="/passives"
       title={t('pal.section.passives')}
       heading

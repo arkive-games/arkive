@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
@@ -34,7 +35,16 @@ export default function TechnologyPage() {
 
   const [b, setB] = useState<Bundles | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  const [rememberedQuery, setQuery] = useCatalogState<string>('technology', 'query', '')
+  const [useRememberedQuery, setUseRememberedQuery] = useState(!focusId)
+  const [queryVisit, setQueryVisit] = useState(focusId)
+  if (queryVisit !== focusId) {
+    setQueryVisit(focusId)
+    setUseRememberedQuery(!focusId)
+  }
+  // A direct target must not disappear behind an older search. Keep the saved
+  // query for a later ordinary visit; user edits take over for this visit.
+  const query = useRememberedQuery ? rememberedQuery : ''
 
   useEffect(() => {
     let cancelled = false
@@ -156,12 +166,12 @@ export default function TechnologyPage() {
   }
 
   return (
-    <ContentPage active="/technology" title={t('tech.title')} heading hideMobileFooter>
+    <ContentPage browsing={{ section: 'technology', ready: !!b && !focusId, resultsKey: query }} active="/technology" title={t('tech.title')} heading hideMobileFooter>
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <Input
               type="search"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setUseRememberedQuery(true); setQuery(e.target.value) }}
               placeholder={t('tech.searchPlaceholder')}
               className="max-w-xs"
             />

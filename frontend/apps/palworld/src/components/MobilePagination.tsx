@@ -37,9 +37,9 @@ export function useMobilePagination<T>(
   }, [resetKey, setPage])
 
   useEffect(() => {
-    if (items.length === 0) return
+    if (!isMobile || items.length === 0) return
     setPage((current) => Math.min(current, pageCount))
-  }, [items.length, pageCount, setPage])
+  }, [isMobile, items.length, pageCount, setPage])
 
   const visibleItems = useMemo(
     () => (isMobile ? items.slice((page - 1) * pageSize, page * pageSize) : items),

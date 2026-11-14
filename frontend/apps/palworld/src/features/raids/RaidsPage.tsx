@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ContentPage } from '../../components/ContentPage'
@@ -84,7 +85,7 @@ export default function RaidsPage() {
   const [buildings, setBuildings] = useState<BuildingsBundle | null>(null)
   const [humanNames, setHumanNames] = useState<Record<string, string>>({})
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [biome, setBiome] = useState('all')
+  const [biome, setBiome] = useCatalogState<string>('raids', 'biome', 'all')
 
   useEffect(() => {
     let cancelled = false
@@ -120,7 +121,7 @@ export default function RaidsPage() {
   const mobilePaging = useMobilePagination(list, { pageSize: 12, resetKey: biome })
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'raids', ready: !!file && !!pals && !!items && !!buildings, resultsKey: biome }}
       active="/raids"
       title={t('raids.title')}
       heading

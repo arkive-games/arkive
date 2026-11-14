@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
@@ -18,8 +19,8 @@ export default function MerchantListPage() {
   const [merchants, setMerchants] = useState<MerchantsBundle | null>(null)
   const [items, setItems] = useState<ItemsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('all')
+  const [query, setQuery] = useCatalogState<string>('merchants', 'query', '')
+  const [category, setCategory] = useCatalogState<string>('merchants', 'category', 'all')
 
   useEffect(() => {
     let cancelled = false
@@ -63,7 +64,7 @@ export default function MerchantListPage() {
   const mobilePaging = useMobilePagination(list, { pageSize: 18, resetKey: `${query}:${category}` })
 
   return (
-    <ContentPage active="/merchants" title={t('merchant.title')} heading>
+    <ContentPage browsing={{ section: 'merchants', ready: !!merchants && !!items, resultsKey: JSON.stringify([query,category]) }} active="/merchants" title={t('merchant.title')} heading>
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           type="search"

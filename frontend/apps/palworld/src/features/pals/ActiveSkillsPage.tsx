@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
@@ -24,10 +25,10 @@ export default function ActiveSkillsPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [elementSel, setElementSel] = useState<Element[]>([])
-  const [typeSel, setTypeSel] = useState<string[]>([])
-  const [sourceSel, setSourceSel] = useState<string[]>([])
+  const [query, setQuery] = useCatalogState<string>('active-skills', 'query', '')
+  const [elementSel, setElementSel] = useCatalogState<Element[]>('active-skills', 'elementSel', [])
+  const [typeSel, setTypeSel] = useCatalogState<string[]>('active-skills', 'typeSel', [])
+  const [sourceSel, setSourceSel] = useCatalogState<string[]>('active-skills', 'sourceSel', [])
 
   useEffect(() => {
     let cancelled = false
@@ -131,7 +132,7 @@ export default function ActiveSkillsPage() {
   ) : undefined
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'active-skills', ready: !!bundle, resultsKey: JSON.stringify([query,elementSel,typeSel,sourceSel]) }}
       active="/active-skills"
       title={t('pal.section.activeSkills')}
       heading
