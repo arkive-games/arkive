@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ArkiveContentPage, type ArkiveContentPageProps } from "./ArkiveContentPage"
+import { useLayoutEffect, useRef } from 'react'
 
 let mobile = false
 beforeEach(() => {
@@ -33,6 +34,18 @@ function page(over: Partial<ArkiveContentPageProps> = {}) {
 }
 
 describe("ArkiveContentPage", () => {
+  it.each([[true, 0], [false, 500]] as const)("with resetScroll=%s respects the declared scroll owner", (resetScroll, expected) => {
+    function RestoringChild() {
+      const ref = useRef<HTMLDivElement>(null)
+      useLayoutEffect(() => {
+        ref.current!.closest<HTMLElement>('[data-content-scroll]')!.scrollTop = 500
+      }, [])
+      return <div ref={ref}>Loaded category</div>
+    }
+    const api = render(page({ resetScroll, children: <RestoringChild /> }))
+    expect(api.container.querySelector('[data-content-scroll]')!.scrollTop).toBe(expected)
+  })
+
   it("keeps catalogue controls and a single heading outside the results scroller", () => {
     const api = render(page({ width: "wide", toolbar: <input aria-label="Search" />, filterLabel: "Filters" }))
     const scroller = api.container.querySelector("[data-content-scroll]")!

@@ -19,7 +19,7 @@ account-menu UID removal and hidden redundant account section heading.
 Canonical foundation/color/site/map/memory owners now record these scoped rules.
 The current homepage source remains unchanged.
 
-Remaining: encyclopedia reconstruction and return adapters outside RO3/Palworld; remaining
+Remaining: encyclopedia reconstruction and return adapters outside RO3/Palworld/AION2; remaining
 map lifecycle migration and OSS preview adoption; production credits generation/manual editor; tool explicit
 save adapters after their open save destinations/account scopes are resolved.
 Do not call the whole stage complete from the catalog/map-detail batch.
@@ -94,3 +94,19 @@ Browser checks verify item search/facets across category changes and details,
 target priority, and mobile page two through detail/reload/breakpoint changes.
 Palworld lint/build and the generated memory-key inventory pass. Full suite:
 161 files / 1882 tests pass. No remote delivery.
+
+AION2 encyclopedia return-memory batch: the overview, type hubs, grouped lists
+and item/NPC/quest details bind the existing content scroller to tab-local
+restoration. Hub group/faction and sibling searches are scoped independently;
+search-result navigation retains the query and restores the lazy search index.
+New anchor links take precedence; Back/reload resumes that history entry's
+position without replacing an ordinary group's saved context. Pending routes
+cannot reuse the previous page's browsing scope. The shell's default reset is
+disabled only where the encyclopedia descendant owns restoration.
+
+Browser checks cover search-result return/reload, category isolation, grouped
+list return, remembered hub selection/faction, explicit faction/anchor priority,
+anchor Back/reload, and sibling search restoration. Palworld return smoke passes.
+AION2 lint/build, map-shell typecheck and memory-key inventory pass. Full suite:
+162 files / 1887 tests pass. Existing layout/mobile composition is unchanged;
+this is return-memory adoption, not certification of the full encyclopedia UI.

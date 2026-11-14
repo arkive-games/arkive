@@ -39,6 +39,8 @@ export interface ArkiveContentPageProps {
   resultsKey?: unknown
   /** Opt in to app-owned session restoration instead of unconditional reset. */
   scrollRestoration?: ContentScrollRestoration
+  /** Disable the default reset when a descendant restores this scroller. */
+  resetScroll?: boolean
   /** Accessible name of the back-to-top button; omit for no button. */
   backToTopLabel?: string
   /** Keep the footer on desktop only (pages with their own phone pagination). */
@@ -85,6 +87,7 @@ export function ArkiveContentPage({
   filtersActive = false,
   resultsKey,
   scrollRestoration,
+  resetScroll = true,
   backToTopLabel,
   hideMobileFooter = false,
   hero,
@@ -100,8 +103,8 @@ export function ArkiveContentPage({
   const headingNode = heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null
 
   useLayoutEffect(() => {
-    if (!scrollRestoration && scrollRef.current) scrollRef.current.scrollTop = 0
-  }, [resultsKey, scrollRestoration])
+    if (resetScroll && !scrollRestoration && scrollRef.current) scrollRef.current.scrollTop = 0
+  }, [resultsKey, scrollRestoration, resetScroll])
 
   const backToTop = backToTopLabel != null
   useEffect(() => {

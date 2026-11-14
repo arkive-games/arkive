@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { defineMemoryRecord, memoryPolicy, useMemoryState } from "@gamemap/state-memory";
 import { useDocumentTitle } from "@gamemap/ui";
@@ -7,6 +7,7 @@ import { useDocumentTitle } from "@gamemap/ui";
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
 import { WikiBackLink } from "@/features/wiki/ui";
+import { useWikiScroll } from './wikiMemory';
 
 const FACTIONS = ["all", "light", "dark"] as const;
 type Faction = (typeof FACTIONS)[number];
@@ -27,15 +28,20 @@ export default function GroupList({
   initialFaction?: Extract<Faction, "light" | "dark">;
 }) {
   const { t } = useTranslation(["wiki", "wiki/taxonomy", `wiki/${type}`]);
-  const [tax, setTax] = useState<WikiTaxonomy | null>(null);
-  const [docs, setDocs] = useState<WikiIndexDoc[]>([]);
+  const [loaded, setLoaded] = useState<{ type: string; tax: WikiTaxonomy; docs: WikiIndexDoc[] } | null>(null);
+  const tax = loaded?.type === type ? loaded.tax : null;
+  const docs = useMemo(() => loaded?.type === type ? loaded.docs : [], [loaded, type]);
   const [storedFaction, setStoredFaction] = useMemoryState(factionRecord, { partition: `${type}:${group}` });
   const [explicitFaction, setExplicitFaction] = useState<Faction | null>(initialFaction ?? null);
-  const faction = explicitFaction ?? storedFaction;
-
-  useEffect(() => {
+  const overrideKey = `${type}:${group}:${initialFaction ?? ''}`;
+  const [overrideFor, setOverrideFor] = useState(overrideKey);
+  if (overrideFor !== overrideKey) {
+    setOverrideFor(overrideKey);
     setExplicitFaction(initialFaction ?? null);
-  }, [initialFaction]);
+  }
+  const faction = explicitFaction ?? storedFaction;
+  const { hash } = useLocation();
+  const rootRef = useWikiScroll(`group:${type}:${group}`, !!tax, faction, (hash ?? '').replace(/^#/, ''), `/wiki/${type}/${group}`);
 
   const chooseFaction = (next: Faction) => {
     setExplicitFaction(null);
@@ -43,8 +49,11 @@ export default function GroupList({
   };
 
   useEffect(() => {
-    loadTaxonomy().then(setTax).catch(console.error);
-    loadWikiIndex(type).then((r) => setDocs(r.docs)).catch(console.error);
+    let cancelled = false;
+    Promise.all([loadTaxonomy(), loadWikiIndex(type)])
+      .then(([tax, index]) => { if (!cancelled) setLoaded({ type, tax, docs: index.docs }); })
+      .catch(console.error);
+    return () => { cancelled = true; };
   }, [type]);
 
   useDocumentTitle(`${t(`wiki/taxonomy:groups.${type}.${group}.name`)} - AION2 Wiki`);
@@ -78,6 +87,7 @@ export default function GroupList({
 
   return (
     <div
+      ref={rootRef}
       className={
         isFallbackOnly
           ? "block"

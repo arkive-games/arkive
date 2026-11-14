@@ -244,7 +244,7 @@ describe("MarkerDetailDrawer", () => {
 
   it("preserves current-session comment attachments and releases them on marker change", async () => {
     let objectUrlIndex = 0
-    const createObjectURL = vi.spyOn(URL, "createObjectURL").mockImplementation((file) => `blob:${++objectUrlIndex}-${(file as File).name}`)
+    vi.spyOn(URL, "createObjectURL").mockImplementation((file) => `blob:${++objectUrlIndex}-${(file as File).name}`)
     const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined)
     const { getByAltText, getByTestId, getByRole, getByText, rerender, unmount } = render(
       <MarkerDetailDrawer
