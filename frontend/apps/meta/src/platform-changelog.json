@@ -2,6 +2,24 @@
   "entries": [
     {
       "date": "2026-11-15",
+      "commit": "65c8b78951a794e3667a4f77e164b7c1e39878a6",
+      "targets": [
+        "pbz",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Resume reference searches, filters and reading position when returning or reloading in Phantom Blade Zero and V Rising's V Blood catalog; remember expanded weapon levels and item-document pages in Phantom Blade Zero.",
+            "zh-CN": "影之刃零百科与夜族崛起 V 型血资料返回或刷新时恢复搜索、筛选和浏览位置；影之刃零同时记住武器等级展开与道具文档页码。",
+            "zh-TW": "影之刃零百科與夜族崛起 V 型血資料返回或重新整理時恢復搜尋、篩選和瀏覽位置；影之刃零同時記住武器等級展開與道具文件頁碼。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
       "commit": "ebdfd9195d685bd4a1b0ad4a48f12612fe25f860",
       "targets": [
         "aion2",
