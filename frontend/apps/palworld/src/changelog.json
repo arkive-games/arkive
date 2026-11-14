@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.32.1",
+      "date": "2026-11-15",
+      "commit": "ca0a01ffa78576e267c9e367f019ae0818f795cc",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep encyclopedia searches, filters, loaded entries and browsing position when returning from details or reloading; preserve mobile pages across viewport changes and prioritize direct technology links.",
+            "zh-CN": "百科返回或刷新时保留搜索、筛选、已加载条目和浏览位置；切换屏幕宽度后保留移动端页码，科技直达链接优先展示目标。",
+            "zh-TW": "百科返回或重新整理時保留搜尋、篩選、已載入條目和瀏覽位置；切換螢幕寬度後保留行動端頁碼，科技直達連結優先顯示目標。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.32.0",
       "date": "2026-08-13",
       "commit": "f93254b06d2c6714446e09503239c1d8fc678451",
