@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowUp } from "lucide-react"
 import { cn, FilterDisclosure } from "@gamemap/ui"
+import { useContentScrollRestoration, type ContentScrollRestoration } from './useContentScrollRestoration'
 
 export interface ArkiveContentPageProps {
   /** Desktop navigation (the app's `ArkiveMapTopBar`); hides itself on phones. */
@@ -36,6 +37,8 @@ export interface ArkiveContentPageProps {
    * scope or a new page, never an edit inside a card.
    */
   resultsKey?: unknown
+  /** Opt in to app-owned session restoration instead of unconditional reset. */
+  scrollRestoration?: ContentScrollRestoration
   /** Accessible name of the back-to-top button; omit for no button. */
   backToTopLabel?: string
   /** Keep the footer on desktop only (pages with their own phone pagination). */
@@ -81,6 +84,7 @@ export function ArkiveContentPage({
   filterLabel,
   filtersActive = false,
   resultsKey,
+  scrollRestoration,
   backToTopLabel,
   hideMobileFooter = false,
   hero,
@@ -92,11 +96,12 @@ export function ArkiveContentPage({
   const [showBackToTop, setShowBackToTop] = useState(false)
   const contentWidth = WIDTH[width]
   const hasToolbar = toolbar != null || toolbarLead != null
+  useContentScrollRestoration(scrollRef, scrollRestoration)
   const headingNode = heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null
 
   useLayoutEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0
-  }, [resultsKey])
+    if (!scrollRestoration && scrollRef.current) scrollRef.current.scrollTop = 0
+  }, [resultsKey, scrollRestoration])
 
   const backToTop = backToTopLabel != null
   useEffect(() => {

@@ -1,3 +1,4 @@
+import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, LayoutGrid, PenTool, Search, Sparkles, X } from 'lucide-react'
 import { cn } from '@gamemap/ui'
@@ -85,9 +86,10 @@ const ATTRIBUTE_EFFECT = 1
 export function CardWiki() {
   const [data, setData] = useState<WikiData | null>(null)
   const [dataError, setDataError] = useState(false)
-  const [filters, setFilters] = useState<CardFilters>({ category: 'ordinary', ...NO_FILTERS })
-  const [query, setQuery] = useState('')
-  const [searchOpen, setSearchOpen] = useState(false)
+  useWikiReady(data !== null || dataError)
+  const [filters, setFilters] = useWikiState<CardFilters>('cards.filters', { category: 'ordinary', ...NO_FILTERS })
+  const [query, setQuery] = useWikiState('cards.query', '')
+  const [searchOpen, setSearchOpen] = useWikiState('cards.search-open', false)
   const searchInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -296,8 +298,8 @@ export function CardWiki() {
  */
 function CardBoard({ cards, data, collection }: { cards: WikiCard[]; data: WikiData; collection: boolean }) {
   const wide = useWide()
-  const [selectedId, setSelectedId] = useState<number>()
-  const [tiers, setTiers] = useState<Record<number, number>>({})
+  const [selectedId, setSelectedId] = useWikiOptional<number>(`cards.${collection}.selected`, 'number')
+  const [tiers, setTiers] = useWikiState<Record<number, number>>('cards.tiers', {})
   // Phones fit three across, the smallest the game's nameplates still read at.
   const [gridRef, fit] = useFit(wide ? 6.75 : 5.25)
   const columns = Math.max(3, Math.min(fit || 6, 10))
@@ -314,7 +316,7 @@ function CardBoard({ cards, data, collection }: { cards: WikiCard[]; data: WikiD
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelectedId(undefined) }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [wide, selectedId])
+  }, [wide, selectedId, setSelectedId])
 
   const select = (card: WikiCard) => setSelectedId(!wide && card.id === active?.id ? undefined : card.id)
 

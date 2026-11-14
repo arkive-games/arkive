@@ -19,7 +19,7 @@ account-menu UID removal and hidden redundant account section heading.
 Canonical foundation/color/site/map/memory owners now record these scoped rules.
 The current homepage source remains unchanged.
 
-Remaining: encyclopedia reconstruction/return integration; per-map memory
+Remaining: encyclopedia reconstruction and return adapters outside RO3; per-map memory
 lifecycle migration; production credits generation/manual editor; tool explicit
 save adapters after their open save destinations/account scopes are resolved.
 Do not call the whole stage complete from the catalog/map-detail batch.
@@ -55,3 +55,10 @@ and real AION2/Palworld detail layout. Authenticated page flows remain unverifie
 in the browser; favorite failure/retry is exercised by unit tests. No deployment.
 On this Windows machine unrestricted Vitest forks exhausted V8 memory while
 builds were active; bound workers to two for the closeout run.
+
+RO3 return-memory batch: all seven categories integrated with session context;
+verified page-two/scroll restore, search/facet restore after Back and reload,
+and selected-record restore across categories. Full suite: 157 files / 1871
+tests pass. RO3 lint and production build pass. Its fixed port belongs to a
+separate worktree; this batch is previewed on temporary port 15180 without
+stopping that workspace. No mobile layout changes or remote delivery.

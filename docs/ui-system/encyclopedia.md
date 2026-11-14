@@ -47,3 +47,11 @@ Use `session_context` and precedence/lifetimes in
 Composition is deferred. Do not specify a drawer, icon rail, toolbar reflow or
 content schema from the desktop design. Current pages are references needing
 reconstruction, not finished standards or authorization to implement now.
+
+## Local integration
+
+RO3's seven wiki categories now retain session-only query/facets, subsection,
+paging, selected record and viewed levels/variants. Its shared scroll adapter
+waits for data and content height, preserves category scope and yields to user
+input. Other games need their own adapters; no content or mobile redesign is
+implied. Failed storage remains usable through the state-memory fallback.

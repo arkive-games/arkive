@@ -1,3 +1,4 @@
+import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Crown, Search, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
@@ -24,14 +25,15 @@ const numberFormatter = new Intl.NumberFormat('zh-CN')
 export function PetWiki() {
   const [data, setData] = useState<PetWikiData | null>(null)
   const [dataError, setDataError] = useState(false)
-  const [quality, setQuality] = useState(0)
-  const [kingOnly, setKingOnly] = useState(false)
-  const [query, setQuery] = useState('')
-  const [selectedId, setSelectedId] = useState<number>()
+  useWikiReady(data !== null || dataError)
+  const [quality, setQuality] = useWikiState('pets.quality', 0)
+  const [kingOnly, setKingOnly] = useWikiState('pets.king-only', false)
+  const [query, setQuery] = useWikiState('pets.query', '')
+  const [selectedId, setSelectedId] = useWikiOptional<number>('pets.selected', 'number')
   // One star for every pet, so comparing two at 4 stars takes one click each.
-  const [starIndex, setStarIndex] = useState(0)
+  const [starIndex, setStarIndex] = useWikiState('pets.star', 0)
   // On phones the search field folds behind a button in the wiki header.
-  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useWikiState('pets.search-open', false)
   const searchInput = useRef<HTMLInputElement>(null)
   // Held as state, not a ref: the column remounts after an empty result, and the new node needs the hook again.
   const [detail, setDetail] = useState<HTMLElement | null>(null)
