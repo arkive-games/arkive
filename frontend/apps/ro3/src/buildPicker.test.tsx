@@ -14,7 +14,7 @@ function mount(element: React.ReactNode) {
   return host
 }
 function click(button: Element | null) { act(() => (button as HTMLElement).click()) }
-afterEach(() => { act(() => root?.unmount()); document.body.replaceChildren() })
+afterEach(() => { act(() => root?.unmount()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 it('shows stats without progress bars while retaining all six inputs', () => {
   const host = mount(<Stats values={[1, 2, 3, 4, 5, 6]} onChange={vi.fn()} />)
@@ -85,6 +85,33 @@ it('portals candidates outside slot blocks and removes the row after choosing', 
   click(host.querySelector('.bm-candidate'))
   expect(host.querySelector('.bm-selection-row')).toBeNull()
   vi.unstubAllGlobals()
+})
+it('keeps selection between its owning row and the next row, then below the slot on mobile', () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const host = mount(<SelectionScope><div className="bm-compact-editor">
+    <div className="bm-editor-row bm-row-primary">{['Attributes', 'Skills', 'Talents'].map(label => <section className="bm-blk" key={label}>
+      <TileBlock tiles={[{ key: label, label }]} renderInfo={() => <Picker what={label} items={[{ id: 1, label: 'Choice' }]} onPick={vi.fn()} />} />
+    </section>)}</div>
+    <div className="bm-editor-row bm-row-items"><section className="bm-blk">Equipment</section></div>
+  </div></SelectionScope>)
+  const row = host.querySelector('.bm-row-primary')!
+  const nextRow = host.querySelector('.bm-row-items')!
+  const blocks = row.querySelectorAll('.bm-blk')
+  let stacked = false
+  blocks.forEach((block, index) => vi.spyOn(block, 'getBoundingClientRect').mockImplementation(() => ({ left: stacked ? 0 : index * 200 } as DOMRect)))
+  click(blocks[1].querySelector('[data-tile]'))
+  const panel = host.querySelector('.bm-selection-row')!
+  expect(row.nextElementSibling).toBe(panel)
+  expect(panel.nextElementSibling).toBe(nextRow)
+  expect(host.querySelectorAll('.bm-selection-row')).toHaveLength(1)
+  act(() => { stacked = true; window.dispatchEvent(new Event('resize')) })
+  expect(blocks[1].nextElementSibling).toBe(panel)
+  expect(panel.nextElementSibling).toBe(blocks[2])
+  act(() => { stacked = false; window.dispatchEvent(new Event('resize')) })
+  expect(row.nextElementSibling).toBe(panel)
+  click(host.querySelector('.bm-candidate'))
+  expect(host.querySelector('.bm-selection-row')).toBeNull()
+  expect(document.activeElement).toBe(blocks[1].querySelector('[data-tile]'))
 })
 it('opens populated slots directly and keeps removal outside the selection button', () => {
   const remove = vi.fn()

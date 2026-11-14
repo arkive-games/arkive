@@ -82,7 +82,6 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
   const root = useRef<HTMLDivElement>(null)
   const info = useRef<HTMLDivElement>(null)
   const [panelHost, setPanelHost] = useState<HTMLDivElement | null>(null)
-  const [legacyLayout, setLegacyLayout] = useState(false)
   const active = (!scope || scope.active === owner) && cur >= 0 && cur < tiles.length ? cur : -1
   const close = () => {
     setCur(-1)
@@ -90,31 +89,28 @@ export function TileBlock({ tiles, groups, readOnly, className, renderInfo, init
     root.current?.querySelector<HTMLButtonElement>(`[data-tile="${active}"]`)?.focus()
   }
 
-  // A portal host occupies its own grid row after the owner's complete row.
+  // Wide layouts expand below the whole row; stacked layouts expand below the clicked block.
   useLayoutEffect(() => {
     if (active < 0) return
     const block = root.current?.closest<HTMLElement>('.bm-blk')
-    const grid = block?.parentElement
-    if (!block || !grid) return
-    const row = grid.closest<HTMLElement>('.bm-editor-row') ?? grid
-    if (!row.classList.contains('bm-editor-row') && !grid.classList.contains('bm-compact-editor')) { setLegacyLayout(true); return }
+    const row = block?.parentElement
+    if (!block || !row?.classList.contains('bm-editor-row')) return
     const host = document.createElement('div')
     host.className = 'bm-selection-row'
     const place = () => {
-      const parent = row.parentElement
-      if (!parent) return
-      if (!parent) return
-if (legacyLayout) return
-      if (row.nextElementSibling !== host) parent.insertBefore(host, row.nextElementSibling)
+      const blocks = [...row.children].filter((child): child is HTMLElement => child instanceof HTMLElement && child.classList.contains('bm-blk'))
+      const stacked = blocks.length > 1 && blocks.every(candidate => Math.abs(candidate.getBoundingClientRect().left - block.getBoundingClientRect().left) < 1)
+      const anchor = stacked ? block : row
+      if (anchor.nextElementSibling !== host) anchor.after(host)
       aim(root.current, info.current, active)
     }
     place()
     setPanelHost(host)
     const observer = new ResizeObserver(place)
-    observer.observe(grid)
+    observer.observe(row)
     window.addEventListener('resize', place)
     return () => { observer.disconnect(); window.removeEventListener('resize', place); host.remove(); setPanelHost(null) }
-  }, [active, legacyLayout])
+  }, [active])
 
   // The pointer follows the tile's centre, so it re-aims after every render, resize and tile scroll.
   useLayoutEffect(() => aim(root.current, info.current, active))
@@ -149,7 +145,7 @@ if (legacyLayout) return
     {groups
       ? <div className="bm-groups">{groups.map(g => <div key={g.label} className="bm-group"><span>{g.label}</span><div className="bm-tiles">{tiles.slice(g.from, g.to).map((spec, i) => tile(spec, g.from + i))}</div></div>)}</div>
       : <div className="bm-tiles">{tiles.map(tile)}</div>}
-    {legacyLayout || !panelHost ? content : createPortal(content, panelHost)}
+    {panelHost ? createPortal(content, panelHost) : content}
   </div>
 }
 
