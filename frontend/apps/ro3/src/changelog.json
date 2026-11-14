@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.23.13",
+      "date": "2026-11-14",
+      "commit": "3aa27aff786d8891f3b7eba6f0a52c3672280547",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep selection panels directly below their row on desktop and below the clicked section on mobile, instead of sorting them to the bottom.",
+            "zh-CN": "修复候选区被排到页面底部：桌面紧接所属排下方，手机紧接所点板块下方。",
+            "zh-TW": "修復候選區被排到頁面底部：桌面緊接所屬排下方，手機緊接所點板塊下方。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.12",
       "date": "2026-11-12",
       "commit": "aa7c3aaed80dde4073b734ed337924bc9713e29d",
