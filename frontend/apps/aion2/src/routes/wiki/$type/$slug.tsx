@@ -27,5 +27,5 @@ function Page() {
     if (type === "npc") return <NpcPage id={slug} />;
     if (type === "item") return <ItemPage id={slug} />;
   }
-  return <GroupList type={type} group={slug} initialFaction={faction} />;
+  return <GroupList key={`${type}:${slug}`} type={type} group={slug} initialFaction={faction} />;
 }

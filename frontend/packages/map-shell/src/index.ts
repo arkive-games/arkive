@@ -152,3 +152,4 @@ export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./th
 // The concrete browser adapter lives in @gamemap/ui: this package is storage-free
 // (see `check:shell`), so it may define the ThemeStorage port but never implement it.
 export { resolveRememberedMap } from './mapViewMemory'
+export { useContentScrollRestoration, type ContentScrollRestoration } from './useContentScrollRestoration'

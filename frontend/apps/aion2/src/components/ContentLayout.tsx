@@ -43,6 +43,7 @@ export default function ContentLayout({
 
   return (
     <ArkiveContentPage
+      resetScroll={!/^\/wiki(?:\/|$)/.test(pathname)}
       className={cn("w-screen overflow-hidden", className)}
       contentClassName={contentClassName}
       mobileHeader={

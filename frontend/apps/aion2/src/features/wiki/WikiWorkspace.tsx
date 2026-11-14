@@ -19,6 +19,8 @@ import { useTranslation } from "react-i18next";
 
 import { loadItem, loadNpc, loadQuest, loadTaxonomy, lt } from "@/lib/wiki";
 import { getStaticUrl } from "@/lib/url";
+import { useMemoryState } from '@gamemap/state-memory';
+import { hubGroupRecord } from './wikiMemory';
 import type { WikiTaxonomy } from "@/types/wiki";
 import {
   WIKI_TYPES,
@@ -45,6 +47,7 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
     | WikiType
     | undefined;
   const activeNode = taxonomy?.types.find((entry) => entry.slug === activeType);
+  const [storedGroup] = useMemoryState(hubGroupRecord, { partition: activeType ?? 'all' });
   const pathGroup = activeNode?.groups.find(
     (group) => group.slug === pathname.split("/")[3],
   )?.slug;
@@ -53,7 +56,7 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
     pathGroup ??
     activeNode?.groups.find((group) => group.slug === hashGroup)?.slug ??
     (pathname === `/wiki/${activeType}` || pathname === `/wiki/${activeType}/`
-      ? activeNode?.groups[0]?.slug
+      ? activeNode?.groups.find(group => group.slug === storedGroup)?.slug ?? activeNode?.groups[0]?.slug
       : undefined);
 
   useEffect(() => {

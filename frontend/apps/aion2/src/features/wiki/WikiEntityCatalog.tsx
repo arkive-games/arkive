@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { IconChevronRight, IconSearch } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { Input } from "@gamemap/ui";
 import type { WikiIndexDoc } from "@/types/wiki";
 import type { WikiType } from "@/features/wiki/wikiRecent";
 import { WikiBackLink } from "@/features/wiki/ui";
+import { useEntityQuery, useWikiScroll } from './wikiMemory';
 
 /** Tailwind `2xl`. The sibling rail is `hidden 2xl:block`, so below this it is
  *  invisible -- and, before this hook, still mounted. */
@@ -48,12 +49,8 @@ export default function WikiEntityCatalog({
   children: ReactNode;
 }) {
   const { t } = useTranslation(["wiki", "wiki/taxonomy", `wiki/${type}`]);
-  const [query, setQuery] = useState("");
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    rootRef.current?.closest("[data-content-scroll]")?.scrollTo({ top: 0, left: 0 });
-  }, [currentId]);
+  const [query, setQuery] = useEntityQuery(`${type}:${indexDoc?.group ?? ''}:${indexDoc?.section ?? ''}`);
+  const rootRef = useWikiScroll(`entity:${type}:${currentId}`, true, '', '', `/wiki/${type}/${currentId}`);
 
   const groupDocs = useMemo(() => {
     if (!indexDoc) return docs;

@@ -55,6 +55,9 @@ paging, selected record and viewed levels/variants. Palworld's 13 reference
 categories retain their applicable searches/facets and scroll; item/building
 reveal depth and existing mobile paging survive return and reload. Explicit
 technology links bypass a conflicting remembered query for the visit.
+AION2 retains overview/type searches, hub group/faction, group/detail scroll
+and sibling-catalog queries. New anchor links override ordinary context while
+Back/reload resumes the linked visit's later position.
 The shared scroll adapter waits for data and content height, preserves result
 scope and yields to user input. Other games still need adapters; no content or
 mobile redesign is implied. Unavailable storage keeps the active page usable

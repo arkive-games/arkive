@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IconSearch } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -83,6 +83,10 @@ export default function WikiCatalogToolbar({
     partition: scope,
     debounceMs: 200,
   });
+  const searchIntent = useRef(onSearchIntent);
+  useEffect(() => { searchIntent.current = onSearchIntent; }, [onSearchIntent]);
+  const hasQuery = query.trim().length > 0;
+  useEffect(() => { if (hasQuery) searchIntent.current?.(); }, [hasQuery, scope]);
 
   const buildSearch = useCallback(() => {
     const index = new MiniSearch<SearchDoc>({
@@ -113,7 +117,7 @@ export default function WikiCatalogToolbar({
    * from the same handlers that report intent, so `useMemo` keeps its normal
    * invalidation -- `sources` or `t` moving still discards it.
    */
-  const search = useMemo(() => (armed ? buildSearch() : null), [armed, buildSearch]);
+  const search = useMemo(() => (armed || hasQuery ? buildSearch() : null), [armed, hasQuery, buildSearch]);
   const trimmed = query.trim();
   const hits: SearchHit[] =
     search && trimmed ? (search.search(trimmed).slice(0, 20) as SearchHit[]) : [];
@@ -171,7 +175,6 @@ export default function WikiCatalogToolbar({
                       <Link
                         to="/wiki/$type/$slug"
                         params={{ type: hit.type, slug: String(hit.entityId) }}
-                        onClick={() => setQuery("")}
                         className="grid min-h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-md px-3 py-2 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
                       >
                         <span className="min-w-0 truncate font-medium">{hit.name}</span>
