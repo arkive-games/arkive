@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
@@ -14,8 +15,8 @@ export default function QuestListPage() {
 
   const [bundle, setBundle] = useState<QuestsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [type, setType] = useState('all')
+  const [query, setQuery] = useCatalogState<string>('quests', 'query', '')
+  const [type, setType] = useCatalogState<string>('quests', 'type', 'all')
 
   useEffect(() => {
     let cancelled = false
@@ -77,7 +78,7 @@ export default function QuestListPage() {
   )
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'quests', ready: !!bundle, resultsKey: JSON.stringify([query,type]) }}
       active="/quests"
       title={t('quest.title')}
       heading

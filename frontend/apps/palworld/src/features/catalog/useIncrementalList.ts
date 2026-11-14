@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { browserMemory, defineMemoryRecord, isFiniteNumber, memoryPolicy } from '@gamemap/state-memory'
 
 // Reveal chunk sizes. All catalog data is already in memory (static JSON
@@ -41,31 +41,22 @@ function restoreCount(storageKey: string | undefined): number {
  * `storageKey` persists the reveal depth as session context so list → detail →
  * back restores the scroll position (the browser can only restore scroll if
  * the tiles are actually re-rendered). The count resets to the initial chunk
- * whenever `list` changes identity (new filter / query / language).
+ * when the explicit result scope changes, not when async data arrives.
  */
-export function useIncrementalList<T>(list: T[], storageKey?: string) {
-  const [count, setCount] = useState(() => restoreCount(storageKey))
-  const prevList = useRef<T[] | null>(null)
+export function useIncrementalList<T>(list: T[], storageKey?: string, resultsKey = '') {
+  // Retain the existing default key; filtered result sets get independent depth.
+  const scope = storageKey ? `${storageKey}${resultsKey ? `:${resultsKey}` : ''}` : undefined
+  const [state, setState] = useState(() => ({ scope, count: restoreCount(scope) }))
+  if (state.scope !== scope) setState({ scope, count: restoreCount(scope) })
+  const count = state.count
 
   useEffect(() => {
-    // A list identity change means a filter / query / language switch →
-    // start back at the top with the initial chunk. But keep the restored
-    // depth across mount and the async bundle arrival: while data loads the
-    // list is a fresh empty array each render, so "previous list was empty"
-    // marks initial population, not a user filter change.
-    const prev = prevList.current
-    prevList.current = list
-    if (prev === null || prev.length === 0) return
-    setCount(INITIAL_COUNT)
-  }, [list])
-
-  useEffect(() => {
-    if (!storageKey) return
-    browserMemory.write(revealRecord(storageKey), count, { partition: storageKey })
-  }, [count, storageKey])
+    if (!scope || list.length === 0) return
+    browserMemory.write(revealRecord(scope), count, { partition: scope })
+  }, [count, scope, list.length])
 
   const showMore = useCallback(() => {
-    setCount((c) => c + STEP)
+    setState(previous => ({ ...previous, count: previous.count + STEP }))
   }, [])
 
   const sentinelRef = useCallback(

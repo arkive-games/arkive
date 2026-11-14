@@ -7,6 +7,7 @@ import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@game
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { useSettingsConfig } from '../lib/settings'
+import { useCatalogScroll, type CatalogBrowsingContext } from '../features/catalog/catalogMemory'
 import {
   ARKIVE_HOME_LINK_PROPS,
   ARKIVE_HOME_URL,
@@ -38,6 +39,7 @@ export interface ContentPageProps {
   filtersActive?: boolean
   /** Hide the site footer on phones while keeping it on desktop. */
   hideMobileFooter?: boolean
+  browsing?: CatalogBrowsingContext
   children: ReactNode
 }
 
@@ -76,12 +78,14 @@ export function ContentPage({
   filters,
   filtersActive = false,
   hideMobileFooter = false,
+  browsing,
   children,
 }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
+  const scrollRestoration = useCatalogScroll(browsing)
 
   return (
     <FiltersContext.Provider value={{ node: filters ?? null, active: filtersActive }}>
@@ -114,6 +118,7 @@ export function ContentPage({
         heading={heading}
         backToTopLabel={t('backToTop')}
         hideMobileFooter={hideMobileFooter}
+        scrollRestoration={scrollRestoration}
       >
         {children}
       </ArkiveContentPage>

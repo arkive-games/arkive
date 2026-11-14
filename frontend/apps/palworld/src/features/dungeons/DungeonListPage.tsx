@@ -56,7 +56,7 @@ export default function DungeonListPage() {
   if (legacyId) return <Navigate to="/dungeons/$id" params={{ id: legacyId }} replace />
 
   return (
-    <ContentPage active="/dungeons" title={t('dungeon.title')} heading>
+    <ContentPage browsing={{ section: 'dungeons', ready: !!b, resultsKey: '' }} active="/dungeons" title={t('dungeon.title')} heading>
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !b ? (

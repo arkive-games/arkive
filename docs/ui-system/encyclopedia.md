@@ -51,7 +51,11 @@ reconstruction, not finished standards or authorization to implement now.
 ## Local integration
 
 RO3's seven wiki categories now retain session-only query/facets, subsection,
-paging, selected record and viewed levels/variants. Its shared scroll adapter
-waits for data and content height, preserves category scope and yields to user
-input. Other games need their own adapters; no content or mobile redesign is
-implied. Failed storage remains usable through the state-memory fallback.
+paging, selected record and viewed levels/variants. Palworld's 13 reference
+categories retain their applicable searches/facets and scroll; item/building
+reveal depth and existing mobile paging survive return and reload. Explicit
+technology links bypass a conflicting remembered query for the visit.
+The shared scroll adapter waits for data and content height, preserves result
+scope and yields to user input. Other games still need adapters; no content or
+mobile redesign is implied. Unavailable storage keeps the active page usable
+without guaranteeing restoration after navigation.

@@ -28,6 +28,9 @@ arkive.memory.lostark.combat-power.loadout	-	apps/lostark/src/lib/loadout.ts
 arkive.memory.palworld.breeding.chain-generations	-	apps/palworld/src/features/breeding/BreedingPage.tsx
 arkive.memory.palworld.breeding.favorites	-	apps/palworld/src/features/breeding/BreedingPage.tsx
 arkive.memory.palworld.breeding.search	-	apps/palworld/src/features/breeding/BreedingPage.tsx
+arkive.memory.palworld.catalog-context.field	-	apps/palworld/src/features/catalog/catalogMemory.ts
+arkive.memory.palworld.catalog-context.pal-facets	-	apps/palworld/src/features/pals/PalListPage.tsx
+arkive.memory.palworld.catalog-context.scroll	-	apps/palworld/src/features/catalog/catalogMemory.ts
 arkive.memory.palworld.catalog.page	-	apps/palworld/src/components/MobilePagination.tsx
 arkive.memory.palworld.catalog.reveal-depth	-	apps/palworld/src/features/catalog/useIncrementalList.ts
 arkive.memory.palworld.catalog.view-mode	-	apps/palworld/src/features/pals/PalListPage.tsx

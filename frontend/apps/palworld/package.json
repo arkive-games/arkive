@@ -11,9 +11,9 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@gamemap/auth": "workspace:*",
     "@gamemap/data-contract": "workspace:*",
     "@gamemap/map-engine-gl": "workspace:*",
-    "@gamemap/auth": "workspace:*",
     "@gamemap/map-shell": "workspace:*",
     "@gamemap/state-memory": "workspace:*",
     "@gamemap/ui": "workspace:*",
@@ -29,6 +29,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

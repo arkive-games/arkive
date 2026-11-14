@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FilterChip, FilterRow, Input, toggleValue } from '@gamemap/ui'
@@ -28,8 +29,8 @@ export default function BuildingListPage() {
   const [tech, setTech] = useState<TechBundle | null>(null)
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [cats, setCats] = useState<string[]>([])
+  const [query, setQuery] = useCatalogState<string>('buildings', 'query', '')
+  const [cats, setCats] = useCatalogState<string[]>('buildings', 'cats', [])
 
   useEffect(() => {
     let cancelled = false
@@ -84,7 +85,8 @@ export default function BuildingListPage() {
 
   // Same auto-scroll reveal as the items page; 494 tiles is mild, but the
   // shared behavior also speeds first paint.
-  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'buildings')
+  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'buildings',
+    query || cats.length ? JSON.stringify([query, cats]) : '')
   const mobilePaging = useMobilePagination(list, {
     pageSize: 24,
     resetKey: `${query}|${cats.join(',')}`,
@@ -116,7 +118,7 @@ export default function BuildingListPage() {
   ) : undefined
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'buildings', ready: !!bundle && !!items && !!tech && !!pals, resultsKey: JSON.stringify([query,cats]) }}
       active="/buildings"
       title={t('building.title')}
       heading

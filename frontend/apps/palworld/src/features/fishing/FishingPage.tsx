@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
@@ -92,8 +93,9 @@ export default function FishingPage() {
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [items, setItems] = useState<ItemsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [area, setArea] = useState('all')
-  const [mobileSection, setMobileSection] = useState<'baits' | 'regions'>('baits')
+  const [area, setArea] = useCatalogState<string>('fishing', 'area', 'all')
+  const [mobileSection, setMobileSection] = useCatalogState<'baits' | 'regions'>('fishing', 'mobileSection', 'baits',
+    (value): value is 'baits' | 'regions' => value === 'baits' || value === 'regions')
 
   useEffect(() => {
     let cancelled = false
@@ -144,7 +146,7 @@ export default function FishingPage() {
   const displayedAreas = areas.filter((candidate) => displayedByArea.has(candidate))
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'fishing', ready: !!file && !!pals && !!items, resultsKey: JSON.stringify([area,mobileSection]) }}
       active="/fishing"
       title={t('fishing.title')}
       heading
