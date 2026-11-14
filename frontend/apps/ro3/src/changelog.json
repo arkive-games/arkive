@@ -1,6 +1,276 @@
 {
   "entries": [
     {
+      "version": "0.24.14",
+      "date": "2026-11-14",
+      "commit": "d14213be0cb294c7272fda3322a09b499c9017ad",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Preserve unsaved builds when canceling browser navigation and prevent delayed share requests from replacing another selected build.",
+            "zh-CN": "取消浏览器前进后退时保留未保存方案，防止延迟返回的分享请求覆盖当前选择的方案。",
+            "zh-TW": "取消瀏覽器前進後退時保留未儲存方案，防止延遲返回的分享請求覆蓋目前選擇的方案。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.13",
+      "date": "2026-11-14",
+      "commit": "6976ad723c0528a30767113c47adc1feb8b43a43",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep selection panels directly below their row on desktop and below the clicked section on mobile, instead of sorting them to the bottom.",
+            "zh-CN": "修复候选区被排到页面底部：桌面紧接所属排下方，手机紧接所点板块下方。",
+            "zh-TW": "修復候選區被排到頁面底部：桌面緊接所屬排下方，手機緊接所點板塊下方。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.12",
+      "date": "2026-11-12",
+      "commit": "c0815a25e16d069241cf7bb8caccdcda6374cfe1",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep skill slots open with a clear job prompt before a profession is selected, instead of silently disabling them.",
+            "zh-CN": "未选择职业时技能槽仍可打开并显示明确提示，不再静默变灰。",
+            "zh-TW": "未選擇職業時技能槽仍可開啟並顯示明確提示，不再靜默變灰。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.11",
+      "date": "2026-11-12",
+      "commit": "c7bddf4477f18b836fd8a1b317d3b6022ecf2932",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep skill choices attached to the primary editor row and align its three panels at a shared height.",
+            "zh-CN": "修复技能候选区跑到页面底部的问题，并统一首排三个板块的高度和顺序。",
+            "zh-TW": "修復技能候選區跑到頁面底部的問題，並統一首排三個板塊的高度與順序。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.10",
+      "date": "2026-11-10",
+      "commit": "b6c7ef59a20c929afab6a1f2c3d52df789da8c78",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Align attributes, skills and talents above equipment and cards, with pets and souls below, while keeping expanded choices row-wide.",
+            "zh-CN": "三排布局调整为属性／技能／天赋、装备／卡片、宠物／残响，统一槽位对齐与候选区位置。",
+            "zh-TW": "三排佈局調整為屬性／技能／天賦、裝備／卡片、寵物／殘響，統一槽位對齊與候選區位置。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.9",
+      "date": "2026-11-09",
+      "commit": "6b2839072bfcaffc62470c8a534c574ba63f1262",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Show soul sub-affixes directly beside the selection grid, matching equipment editing and preserving existing rolls.",
+            "zh-CN": "灵魂残响同步右侧副词条编辑，直接展示已选词条与档位，保留原配置。",
+            "zh-TW": "靈魂殘響同步右側副詞條編輯，直接展示已選詞條與檔位，保留原配置。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.8",
+      "date": "2026-11-09",
+      "commit": "49d29b68b4daec27ca5e3f1ca3c9162bf24bcbe3",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Show equipment affixes beside rank-filtered choices, use native quality plates and T badges, and simplify collapsed navigation.",
+            "zh-CN": "装备选择右侧直接编辑词条，支持T阶级筛选与高阶优先，采用游戏品质底板和角标，简化折叠导航。",
+            "zh-TW": "裝備選擇右側直接編輯詞條，支援T階級篩選與高階優先，採用遊戲品質底板和角標，簡化折疊導覽。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.7",
+      "date": "2026-11-09",
+      "commit": "5471a125be5350cc9d8d8b133ca25a7eb88b07a0",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Use native inventory icons for all 242 cards and distinguish parent and child navigation in the collapsed sidebar.",
+            "zh-CN": "全部242张卡片改用游戏原生物品小图，优化折叠侧栏的主栏目与子入口层级。",
+            "zh-TW": "全部242張卡片改用遊戲原生物品小圖，優化折疊側欄的主欄目與子入口層級。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.6",
+      "date": "2026-11-09",
+      "commit": "2bf79fc08667703027d9b2973fff445e483cdfa5",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Simplify selection toolbars, align skill and attribute panels, refine the sidebar toggle, and use verified square card portraits where available.",
+            "zh-CN": "简化候选工具栏并后置关闭按钮，技能与属性板块等高，精修侧栏图标，部分卡片改用游戏方形头像。",
+            "zh-TW": "簡化候選工具列並後置關閉按鈕，技能與屬性板塊等高，精修側欄圖示，部分卡片改用遊戲方形頭像。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.5",
+      "date": "2026-11-09",
+      "commit": "21a9d61e270700518010632a488775f089288146",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Collapse the desktop sidebar into icon navigation to free editing space without resetting the current build.",
+            "zh-CN": "桌面左侧栏可收起为图标导航，扩大编辑空间，切换不重置当前方案。",
+            "zh-TW": "桌面左側欄可收起為圖示導覽，擴大編輯空間，切換不重置目前方案。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.4",
+      "date": "2026-11-08",
+      "commit": "7ac74b1d724e568c8561e2a63fd6a52dbc9b2518",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Open compact choices across the row below fixed slots, with aligned skill slots and immediate dismissal after selection.",
+            "zh-CN": "候选区在槽位所在行下方横向展开，槽位保持原位，技能槽整齐对齐，选中后立即收起。",
+            "zh-TW": "候選區在槽位所在行下方橫向展開，槽位保持原位，技能槽整齊對齊，選中後立即收起。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.3",
+      "date": "2026-11-08",
+      "commit": "f60154149c8afa92faa2772e8b24130b520bf91b",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep equipment in place when opening choices and contain card art inside square frames without obscuring names.",
+            "zh-CN": "修复展开装备时整块换行的问题，卡图限制在方框内，名称不再被遮挡。",
+            "zh-TW": "修復展開裝備時整塊換行的問題，卡圖限制在方框內，名稱不再被遮擋。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.2",
+      "date": "2026-11-08",
+      "commit": "b3675cbf9ba3fb7bc8d85b732ecec894a74d1d18",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Compact card slots and candidate grids, keep only one selection panel open, and close it immediately after choosing.",
+            "zh-CN": "缩紧卡片槽位与候选网格，同一时间只展开一个选择区，选中后立即收起。",
+            "zh-TW": "縮緊卡片槽位與候選網格，同一時間只展開一個選擇區，選中後立即收起。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.1",
+      "date": "2026-11-08",
+      "commit": "3006d74b03788a77dc528e6479312e717ef9e536",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Separate cards into larger square slots, unify inline selection grids, and simplify attribute and removal controls.",
+            "zh-CN": "卡片独立成板块并放大为方形框，候选统一页内网格，简化属性加点与移除操作。",
+            "zh-TW": "卡片獨立成板塊並放大為方形框，候選統一頁內網格，簡化屬性加點與移除操作。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.0",
+      "date": "2026-11-08",
+      "commit": "ad4b51c83e6cfb6e1a93b9fd5890695c12b1ecba",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Prepare account save and publish controls, remove browser-only plans, and clearly show when the account build service is not connected.",
+            "zh-CN": "新增账号保存与发布操作界面，移除浏览器本机方案；服务尚未接通时明确提示，不显示虚假成功。",
+            "zh-TW": "新增帳號儲存與發佈操作介面，移除瀏覽器本機方案；服務尚未接通時明確提示，不顯示虛假成功。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.23.3",
+      "date": "2026-11-05",
+      "commit": "233c9ace46c28f38b67e5580998fe8b12bb4dc03",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Restore the profession and route when editing older saved builds without clearing their existing configuration.",
+            "zh-CN": "修复旧版方案编辑时职业与分支未恢复、技能变灰的问题，保留已有配置。",
+            "zh-TW": "修復舊版方案編輯時職業與分支未恢復、技能變灰的問題，保留既有配置。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.23.2",
+      "date": "2026-11-04",
+      "commit": "48fd70ab45d8dd2004f5778c34ad4fc9a16c5ead",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Compact build editing with aligned equipment columns, icon removal controls, a header reset action, and consistent talent backgrounds.",
+            "zh-CN": "流派编辑布局更紧凑对齐，移除改为图标角标，重置移至右上角，并统一天赋选择底色。",
+            "zh-TW": "流派編輯佈局更緊湊對齊，移除改為圖示角標，重置移至右上角，並統一天賦選擇底色。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.23.1",
+      "date": "2026-11-04",
+      "commit": "197518f90209a1182a757239a503b3e1220cc54f",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Paginate equipment and card selection, keep card names readable, limit normal equipment affixes, and group soul attributes by roll value.",
+            "zh-CN": "装备与卡片选择支持分页，修复卡名遮挡；普通装备词条限制数量，残响属性按数值档位选择。",
+            "zh-TW": "裝備與卡片選擇支援分頁，修復卡名遮擋；普通裝備詞條限制數量，殘響屬性按數值檔位選擇。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.0",
       "date": "2026-11-03",
       "commit": "b2de432ebe1312e87c835e19486c98dc832f99a6",

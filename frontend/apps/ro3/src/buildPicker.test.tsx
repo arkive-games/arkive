@@ -1,0 +1,124 @@
+// @vitest-environment jsdom
+import { act } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import { afterEach, expect, it, vi } from 'vitest'
+import { InlinePicker, Picker, SelectionScope, Stats, TileBlock } from './components/BuildBlocks'
+
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
+let root: Root | undefined
+function mount(element: React.ReactNode) {
+  const host = document.createElement('div')
+  document.body.append(host)
+  root = createRoot(host)
+  act(() => root!.render(element))
+  return host
+}
+function click(button: Element | null) { act(() => (button as HTMLElement).click()) }
+afterEach(() => { act(() => root?.unmount()); document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
+
+it('shows stats without progress bars while retaining all six inputs', () => {
+  const host = mount(<Stats values={[1, 2, 3, 4, 5, 6]} onChange={vi.fn()} />)
+  expect(host.querySelectorAll('.bm-bar')).toHaveLength(0)
+  expect(host.querySelectorAll('input')).toHaveLength(6)
+})
+it('keeps later candidates reachable in an inline paginated grid', () => {
+  const pick = vi.fn()
+  const host = mount(<Picker what="Cards" items={Array.from({ length: 25 }, (_, id) => ({ id, label: `Card ${id}`, icon: 'card.webp' }))} onPick={pick} />)
+  expect(host.querySelectorAll('.bm-candidate')).toHaveLength(12)
+  expect(host.querySelector('[role=dialog]')).toBeNull()
+  click(host.querySelector('.bm-pagination button:last-child'))
+  expect(host.querySelectorAll('.bm-candidate')).toHaveLength(12)
+  click(host.querySelector('.bm-pagination button:last-child'))
+  expect(host.querySelectorAll('.bm-candidate')).toHaveLength(1)
+  click(host.querySelector('.bm-candidate'))
+  expect(pick).toHaveBeenCalledWith(24)
+})
+it('sorts equipment ranks descending and filters the selected rank', () => {
+  const host = mount(<Picker what="Equipment" items={[{ id: 1, label: 'Low', rank: 1 }, { id: 2, label: 'High', rank: 7 }, { id: 3, label: 'Middle', rank: 4 }]} onPick={vi.fn()} />)
+  expect([...host.querySelectorAll('.bm-candidate')].map(node => node.textContent)).toEqual(['High', 'Middle', 'Low'])
+  const select = host.querySelector('select')!
+  expect([...select.options].map(option => option.value)).toEqual(['0', '7', '4', '1'])
+  act(() => { select.value = '4'; select.dispatchEvent(new Event('change', { bubbles: true })) })
+  expect(host.querySelectorAll('.bm-candidate')).toHaveLength(1)
+  expect(host.querySelector('.bm-candidate')?.textContent).toBe('Middle')
+})
+it('opens affix choices inline and closes them after selecting', () => {
+  const pick = vi.fn()
+  const host = mount(<InlinePicker what="Affixes" items={[{ id: 1, label: 'Strength' }]} onPick={pick} />)
+  click(host.querySelector('button'))
+  expect(host.querySelector('.bm-cands')).not.toBeNull()
+  expect(document.querySelector('[role=dialog]')).toBeNull()
+  click(host.querySelector('.bm-candidate'))
+  expect(pick).toHaveBeenCalledWith(1)
+  expect(host.querySelector('.bm-cands')).toBeNull()
+})
+it('allows one open block and closes it after choosing, restoring focus', () => {
+  const pick = vi.fn()
+  const host = mount(<SelectionScope>{['Skills', 'Cards'].map(label => <TileBlock key={label} tiles={[{ key: label, label }]} renderInfo={() => <Picker what={label} items={[{ id: 1, label: 'Choice' }]} onPick={pick} />} />)}</SelectionScope>)
+  const slots = host.querySelectorAll('[data-tile]')
+  click(slots[0])
+  expect(host.querySelectorAll('.bm-info')).toHaveLength(1)
+  click(slots[1])
+  expect(slots[0].getAttribute('aria-expanded')).toBe('false')
+  expect(slots[1].getAttribute('aria-expanded')).toBe('true')
+  expect(host.querySelectorAll('.bm-info')).toHaveLength(1)
+  click(host.querySelector('.bm-candidate'))
+  expect(pick).toHaveBeenCalledWith(1)
+  expect(host.querySelector('.bm-info')).toBeNull()
+  expect(document.activeElement).toBe(slots[1])
+})
+it('portals candidates outside slot blocks and removes the row after choosing', () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const host = mount(<SelectionScope><div className="bm-compact-editor"><div className="bm-editor-row bm-row-items">
+    <section className="bm-blk"><TileBlock tiles={[{ key: 'gear', label: 'Gear' }]} renderInfo={() => <Picker what="Gear" items={[{ id: 1, label: 'Sword' }]} onPick={vi.fn()} />} /></section>
+    <section className="bm-blk">Stats</section></div>
+  </div></SelectionScope>)
+  click(host.querySelector('[data-tile]'))
+  expect(host.querySelector('.bm-blk .bm-info')).toBeNull()
+  expect(host.querySelector('.bm-compact-editor .bm-selection-row .bm-candidate')).not.toBeNull()
+  expect(host.querySelector('.bm-selection-heading')).toBeNull()
+  const pagination = host.querySelector('.bm-pagination')!
+  expect(pagination.lastElementChild?.classList.contains('bm-picker-close')).toBe(true)
+  click(pagination.lastElementChild)
+  expect(host.querySelector('.bm-selection-row')).toBeNull()
+  click(host.querySelector('[data-tile]'))
+  click(host.querySelector('.bm-candidate'))
+  expect(host.querySelector('.bm-selection-row')).toBeNull()
+  vi.unstubAllGlobals()
+})
+it('keeps selection between its owning row and the next row, then below the slot on mobile', () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} })
+  const host = mount(<SelectionScope><div className="bm-compact-editor">
+    <div className="bm-editor-row bm-row-primary">{['Attributes', 'Skills', 'Talents'].map(label => <section className="bm-blk" key={label}>
+      <TileBlock tiles={[{ key: label, label }]} renderInfo={() => <Picker what={label} items={[{ id: 1, label: 'Choice' }]} onPick={vi.fn()} />} />
+    </section>)}</div>
+    <div className="bm-editor-row bm-row-items"><section className="bm-blk">Equipment</section></div>
+  </div></SelectionScope>)
+  const row = host.querySelector('.bm-row-primary')!
+  const nextRow = host.querySelector('.bm-row-items')!
+  const blocks = row.querySelectorAll('.bm-blk')
+  let stacked = false
+  blocks.forEach((block, index) => vi.spyOn(block, 'getBoundingClientRect').mockImplementation(() => ({ left: stacked ? 0 : index * 200 } as DOMRect)))
+  click(blocks[1].querySelector('[data-tile]'))
+  const panel = host.querySelector('.bm-selection-row')!
+  expect(row.nextElementSibling).toBe(panel)
+  expect(panel.nextElementSibling).toBe(nextRow)
+  expect(host.querySelectorAll('.bm-selection-row')).toHaveLength(1)
+  act(() => { stacked = true; window.dispatchEvent(new Event('resize')) })
+  expect(blocks[1].nextElementSibling).toBe(panel)
+  expect(panel.nextElementSibling).toBe(blocks[2])
+  act(() => { stacked = false; window.dispatchEvent(new Event('resize')) })
+  expect(row.nextElementSibling).toBe(panel)
+  click(host.querySelector('.bm-candidate'))
+  expect(host.querySelector('.bm-selection-row')).toBeNull()
+  expect(document.activeElement).toBe(blocks[1].querySelector('[data-tile]'))
+})
+it('opens populated slots directly and keeps removal outside the selection button', () => {
+  const remove = vi.fn()
+  const host = mount(<TileBlock tiles={[{ key: 'one', label: 'Existing', onRemove: remove }]} renderInfo={() => <Picker what="Cards" items={[{ id: 2, label: 'Replacement' }]} onPick={vi.fn()} />} />)
+  click(host.querySelector('[data-tile]'))
+  expect(host.querySelector('.bm-candidate')).not.toBeNull()
+  expect(host.querySelector('button button')).toBeNull()
+  click(host.querySelector('.bm-icon-remove'))
+  expect(remove).toHaveBeenCalledOnce()
+})

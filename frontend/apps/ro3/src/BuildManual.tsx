@@ -4,10 +4,15 @@ import { cn } from '@gamemap/ui'
 import content from './locales/zh-CN.json'
 import { loadPetWikiData } from './creatureData'
 import { loadCardCatalogData, loadEquipmentWikiData, loadProfessionWikiData, loadSoulWikiData, loadTalentWikiData } from './wikiData'
-import { BUILD_SLOTS, careerRoot, loadBuildRules } from './lib/buildRules'
-import { emptyPlanner, migratePlanner, readPlannerStorage, savePlannerBuilds, type PlannerBuild } from './lib/plannerModel'
-import { readFavorites, writeFavorites } from './lib/buildState'
-import { buildSearchText, jobEmblem, rootBranches, rootEmblem, rootTint, ROOTS, ruleSet, type ManualData } from './lib/buildView'
+import { BUILD_SLOTS, loadBuildRules } from './lib/buildRules'
+import type { PlannerBuild } from './lib/plannerModel'
+import { AccountDialog, authStringsFor } from '@gamemap/auth'
+import { browserMemory } from '@gamemap/state-memory'
+import { favoritesRecord, BUILD_STORAGE_KEY } from './lib/buildState'
+import { useBuildCloud } from './lib/useBuildCloud'
+import { pendingBuildGateway, editableBuild, publicBuildLink, type BuildGateway, type CloudBuild } from './lib/buildGateway'
+import { registerBuildNavigationGuard } from './lib/buildNavigation'
+import { jobEmblem, rootBranches, rootEmblem, rootTint, ROOTS, type ManualData } from './lib/buildView'
 import { qualityColor } from './lib/quality'
 import { resourceUrl } from './lib/urls'
 import { HeaderAction, SidebarSub } from './components/SectionNav'
@@ -27,8 +32,7 @@ const SECTIONS: Array<{ key: Section; label: string; icon: typeof Heart }> = [
   { key: 'fav', label: m.fav, icon: Heart },
 ]
 
-/** Recommended builds ship empty until the first curated ones are written. */
-const RECOMMENDED: PlannerBuild[] = []
+const c = content.builds.cloud
 
 function BuildRow({ build, data, faved, onOpen }: { build: PlannerBuild; data: ManualData | null; faved: boolean; onOpen: () => void }) {
   const skills = new Map(data?.profession?.skills.skills.map(s => [s.iSkillID, s]) ?? [])
@@ -48,21 +52,43 @@ function BuildRow({ build, data, faved, onOpen }: { build: PlannerBuild; data: M
   </button>
 }
 
-export function BuildManual() {
+export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: BuildGateway }) {
   const [data, setData] = useState<ManualData | null>(null)
-  const [plans, setPlans] = useState<PlannerBuild[]>([])
-  const [favorites, setFavorites] = useState<string[]>(() => readFavorites())
   const [section, setSection] = useState<Section>('rec')
-  const [view, setView] = useState<View>({ mode: 'list' })
-  const [draft, setDraft] = useState<PlannerBuild>(() => emptyPlanner())
-  const [dirty, setDirty] = useState(false)
-  const [error, setError] = useState('')
+  const [view, setView] = useState<View>(() => {
+    const id = new URLSearchParams(window.location.search).get('build')
+    return id ? { mode: 'detail', id } : { mode: 'list' }
+  })
   const [root, setRoot] = useState(0)
   const [branch, setBranch] = useState(0)
   const [query, setQuery] = useState('')
-  // Saved plans arrive with the data; editing waits for them so a save cannot overwrite storage with an empty list.
+  const [page, setPage] = useState(1)
   const [loaded, setLoaded] = useState(false)
-  const malformed = useRef<string | null>(null)
+  const cloud = useBuildCloud({ collection: section === 'rec' ? 'public' : section === 'mine' ? 'mine' : 'favorites', search: query, root, branch, page, pageSize: 20 }, gateway)
+  const { draft, dirty, error } = cloud
+  const dirtyRef = useRef(false)
+  useEffect(() => { dirtyRef.current = dirty }, [dirty])
+  useEffect(() => registerBuildNavigationGuard(() => !dirtyRef.current || window.confirm(c.leave)), [])
+  useEffect(() => {
+    try { window.localStorage.removeItem(BUILD_STORAGE_KEY); window.localStorage.removeItem(`${BUILD_STORAGE_KEY}:before-v2`); browserMemory.clear(favoritesRecord) } catch { /* Storage denial must not block the account surface. */ }
+  }, [])
+  const linkAccount = useRef<string | null | undefined>(undefined)
+  useEffect(() => {
+    const account = cloud.auth.user?.id ?? null
+    if (linkAccount.current === account) return
+    linkAccount.current = account
+    const id = new URLSearchParams(window.location.search).get('build')
+    if (id) void Promise.resolve().then(() => cloud.openPublic(id))
+  }, [cloud])
+  useEffect(() => {
+    const adopt = () => {
+      const id = new URLSearchParams(window.location.search).get('build')
+      if (id) { setView({ mode: 'detail', id }); void cloud.openPublic(id) }
+      else { cloud.selectDetail(null); setView({ mode: 'list' }) }
+    }
+    window.addEventListener('ro3:location-adopted', adopt)
+    return () => window.removeEventListener('ro3:location-adopted', adopt)
+  }, [cloud])
 
   useEffect(() => {
     let active = true
@@ -71,18 +97,6 @@ export function BuildManual() {
       const value = <T,>(r: PromiseSettledResult<T>) => r.status === 'fulfilled' ? r.value : undefined
       const next: ManualData = { rules: value(results[0]), profession: value(results[1]), equipment: value(results[2]), cards: value(results[3]), pets: value(results[4]), talents: value(results[5]), souls: value(results[6]) }
       setData(next)
-      const stored = readPlannerStorage(window.localStorage)
-      // Unreadable storage is kept and handed to the next save's recovery record rather than dropped.
-      if (stored.malformed) malformed.current = stored.raw
-      const used = new Set<string>()
-      setPlans(stored.records.map((record, index) => {
-        const build = migratePlanner(record, next.equipment?.equipment.equipment ?? [], t.attributesList)
-        const base = build.id
-        let suffix = 0
-        while (used.has(build.id)) build.id = `${base}-recovered-${index}-${suffix++}`
-        used.add(build.id)
-        return build
-      }))
       setLoaded(true)
     })
     return () => { active = false }
@@ -96,50 +110,35 @@ export function BuildManual() {
   }, [dirty])
 
   const rules = data?.rules?.shared
-  const pool = section === 'rec' ? RECOMMENDED : section === 'mine' ? plans : [...RECOMMENDED, ...plans].filter(b => favorites.includes(b.id))
-  // Newest first; a 'hot' order returns once builds carry likes.
-  const ordered = [...pool].reverse()
-  const needle = query.trim().toLocaleLowerCase('zh-CN')
-  const searched = needle ? ordered.filter(b => buildSearchText(b, ruleSet(data, b.rulesVariant)).includes(needle)) : ordered
-  const inRoot = root ? searched.filter(b => careerRoot(b.jobId) === root) : searched
-  const shown = branch ? inRoot.filter(b => b.branchId === branch) : inRoot
+  const shown = cloud.items
+  const needle = query.trim()
   const branches = useMemo(() => rootBranches(rules, root), [rules, root])
-  const counts: Record<Section, number> = { rec: RECOMMENDED.length, mine: plans.length, fav: [...RECOMMENDED, ...plans].filter(b => favorites.includes(b.id)).length }
-
-  // Leaving the editor keeps an unsaved draft; 'new build' brings it back instead of starting over.
-  const go = (next: Section) => { setSection(next); setView({ mode: 'list' }) }
-  const startEdit = (base?: PlannerBuild, keepId = false) => {
-    if (!loaded) return
+  const clearShareUrl = () => {
+    if (window.location.search) window.history.replaceState(window.history.state, '', '/builds')
+  }
+  const backToList = () => { clearShareUrl(); cloud.selectDetail(null); setView({ mode: 'list' }) }
+  const go = (next: Section) => { setSection(next); setPage(1); backToList() }
+  const startEdit = (base?: CloudBuild, keepId = false) => {
+    if (!loaded || cloud.busy) return
     if (!base && dirty) { setView({ mode: 'edit' }); return }
-    if (base && dirty && !window.confirm(m.confirmLeave)) return
-    const fresh = emptyPlanner()
-    setDraft(base ? { ...structuredClone(base), id: keepId ? base.id : fresh.id, recovery: keepId ? base.recovery : [] } : fresh)
-    setDirty(false); setError(''); setView({ mode: 'edit' })
+    if (cloud.edit(base, !keepId && Boolean(base))) { clearShareUrl(); setView({ mode: 'edit' }) }
   }
-  const patch = (next: Partial<PlannerBuild>) => { setDraft(current => ({ ...current, ...next })); setDirty(true); setError('') }
-  const save = () => {
-    if (!loaded) return
-    const build = malformed.current === null ? draft : { ...draft, recovery: [...draft.recovery, { raw: malformed.current }] }
-    const next = plans.some(b => b.id === build.id) ? plans.map(b => b.id === build.id ? build : b) : [...plans, build]
-    if (!savePlannerBuilds(next, window.localStorage)) { setError(content.builds.saveError); return }
-    malformed.current = null
-    setPlans(next); setDraft(build); setDirty(false)
-  }
-  const toggleFav = (id: string) => {
-    const next = favorites.includes(id) ? favorites.filter(v => v !== id) : [...favorites, id]
-    if (writeFavorites(next)) setFavorites(next)
+  const share = async (id: string) => {
+    try { await navigator.clipboard.writeText(publicBuildLink(id)); cloud.setError(c.copied) }
+    catch { cloud.setError(c.failed) }
   }
   const sectionLabel = SECTIONS.find(s => s.key === section)!.label
   const emptyText = needle ? m.emptySearch : section === 'mine' ? m.emptyMine : section === 'fav' ? m.emptyFav : m.emptyList
 
   const nav = <>
+    <AccountDialog open={cloud.loginOpen} onOpenChange={cloud.setLoginOpen} strings={authStringsFor('zh-CN')} />
     <SidebarSub>
-      <div role="tablist" aria-orientation="vertical" className="my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">
+      <div role="tablist" aria-orientation="vertical" className="ro3-build-subnav my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">
         {SECTIONS.map(({ key, label, icon: Icon }) => {
           const selected = section === key
-          return <button key={key} type="button" role="tab" aria-selected={selected} onClick={() => go(key)}
+          return <button key={key} type="button" role="tab" aria-selected={selected} aria-label={label} title={label} onClick={() => go(key)}
             className={cn('flex h-9 items-center gap-2 rounded-lg px-2 text-sm transition-colors', selected ? 'bg-[color:var(--arkive-filter-active)] font-bold text-[color:var(--arkive-nav-active)]' : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground')}>
-            <Icon className="size-4" aria-hidden="true" />{label}<span className="ml-auto text-xs font-semibold text-muted-foreground">{counts[key]}</span>
+            <Icon className="size-4 shrink-0" aria-hidden="true" /><span className="ro3-sidebar-label">{label}</span>
           </button>
         })}
       </div>
@@ -150,28 +149,37 @@ export function BuildManual() {
   </>
 
   if (view.mode === 'edit') return <div className="ro3-bm">{nav}
-    <BuildEditor draft={draft} data={data} plans={plans} dirty={dirty} error={error} backLabel={sectionLabel}
-      onChange={patch} onSave={save} onOpen={p => startEdit(p, true)}
-      onBack={() => setView({ mode: 'list' })} />
+    {!gateway.available ? <p className="bm-note bm-cloud-notice">{c.unavailable}</p> : null}
+    <BuildEditor draft={draft} data={data} plans={[]} dirty={dirty} error={error} backLabel={sectionLabel}
+      busy={cloud.busy} cloudStatus={!cloud.saved ? c.newDraft : dirty ? m.unsaved : cloud.saved.publishedRevision === null ? c.private : cloud.saved.publishedRevision === cloud.saved.revision ? c.published : c.unpublishedChanges}
+      publishLabel={cloud.saved?.publishedRevision ? c.updatePublish : c.publish} onPublish={() => void cloud.save(true)}
+      onChange={cloud.patch} onSave={() => void cloud.save()} onOpen={() => {}}
+      onBack={backToList} />
   </div>
 
-  const detail = view.mode === 'detail' ? [...RECOMMENDED, ...plans].find(b => b.id === view.id) : undefined
-  if (detail) {
-    const own = plans.some(p => p.id === detail.id)
-    return <div className="ro3-bm">{nav}
-      <BuildDetail build={detail} data={data} faved={favorites.includes(detail.id)} section={sectionLabel}
-        onBack={() => setView({ mode: 'list' })} onFav={() => toggleFav(detail.id)}
-        onTemplate={() => startEdit(detail)} onEdit={own ? () => startEdit(detail, true) : undefined} />
-    </div>
-  }
+  const detail = view.mode === 'detail' && cloud.detail?.id === view.id ? cloud.detail : null
+  if (view.mode === 'detail') return <div className="ro3-bm">{nav}
+    {error ? <p role="status" className="bm-note">{error}</p> : null}
+    {detail ? <>
+      <div className="bm-cloud-actions">
+        <span>{detail.publishedRevision === null ? c.private : c.published}</span>
+        {detail.publishedRevision !== null ? <button className="bm-chip" type="button" onClick={() => void share(detail.id)}>{c.share}</button> : null}
+        {detail.editable && detail.publishedRevision !== null ? <button className="bm-chip" disabled={cloud.busy} type="button" onClick={() => void cloud.mutate(detail, 'unpublish')}>{c.unpublish}</button> : null}
+        {detail.editable ? <button className="bm-chip" disabled={cloud.busy} type="button" onClick={() => void cloud.mutate(detail, 'remove')}>{c.delete}</button> : null}
+      </div>
+      <BuildDetail build={editableBuild(detail)} data={data} faved={detail.favorited} section={sectionLabel} canFavorite={detail.publishedRevision !== null} busy={cloud.busy}
+        onBack={backToList} onFav={() => void cloud.mutate(detail, 'favorite')}
+        onTemplate={() => startEdit(detail)} onEdit={detail.editable ? () => startEdit(detail, true) : undefined} />
+    </> : <div className="bm-empty"><p>{error || c.notFound}</p><button type="button" className="bm-chip" onClick={backToList}>{m.back}</button></div>}
+  </div>
 
   const tint = root ? rootTint(root) : 'var(--arkive-nav-accent)'
   return <div className="ro3-bm" style={{ '--tint': tint } as CSSProperties}>{nav}
     <div className="mb-3 lg:hidden"><div className="bm-track sm"><div>{SECTIONS.map(s => <button key={s.key} type="button" className={cn(section === s.key && 'on')} onClick={() => go(s.key)}>{s.label}</button>)}</div></div></div>
     <div className="bm-controls">
       <div className="bm-track cls"><div>
-        <button type="button" className={cn('all', !root && 'on')} onClick={() => { setRoot(0); setBranch(0) }}>{m.all}</button>
-        {ROOTS.filter(r => rules?.jobs.some(j => j.id === r.id)).map(r => <button key={r.id} type="button" className={cn(root === r.id && 'on')} onClick={() => { setRoot(r.id); setBranch(0) }}>
+        <button type="button" className={cn('all', !root && 'on')} onClick={() => { setRoot(0); setBranch(0); setPage(1) }}>{m.all}</button>
+        {ROOTS.filter(r => rules?.jobs.some(j => j.id === r.id)).map(r => <button key={r.id} type="button" className={cn(root === r.id && 'on')} onClick={() => { setRoot(r.id); setBranch(0); setPage(1) }}>
           <img src={rootEmblem(r.id)} alt="" />{rules?.jobs.find(j => j.id === r.id)?.name}
         </button>)}
       </div></div>
@@ -179,21 +187,25 @@ export function BuildManual() {
         <div className="bm-rtabs" role="tablist">
           {root
             ? <>
-              <button type="button" role="tab" aria-selected={!branch} className={cn(!branch && 'on')} onClick={() => setBranch(0)}>{m.allBranches}<small>{inRoot.length}</small></button>
-              {branches.map(({ branch: b }) => <button key={b.id} type="button" role="tab" aria-selected={branch === b.id} className={cn(branch === b.id && 'on')} onClick={() => setBranch(b.id)}>
-                {b.name}<small>{searched.filter(x => careerRoot(x.jobId) === root && x.branchId === b.id).length}</small>
+              <button type="button" role="tab" aria-selected={!branch} className={cn(!branch && 'on')} onClick={() => { setBranch(0); setPage(1) }}>{m.allBranches}</button>
+              {branches.map(({ branch: b }) => <button key={b.id} type="button" role="tab" aria-selected={branch === b.id} className={cn(branch === b.id && 'on')} onClick={() => { setBranch(b.id); setPage(1) }}>
+                {b.name}
               </button>)}
             </>
-            : <button type="button" role="tab" aria-selected className="on">{m.allJobs}<small>{searched.length}</small></button>}
+            : <button type="button" role="tab" aria-selected className="on">{m.allJobs}</button>}
         </div>
         <div className="bm-cright">
-          <label className="bm-search"><input value={query} onChange={e => setQuery(e.target.value)} placeholder={m.searchPlaceholder} aria-label={m.searchPlaceholder} /><span><Search aria-hidden="true" /></span></label>
+          <label className="bm-search"><input value={query} onChange={e => { setQuery(e.target.value); setPage(1) }} placeholder={m.searchPlaceholder} aria-label={m.searchPlaceholder} /><span><Search aria-hidden="true" /></span></label>
           <button type="button" className="bm-pill warm hidden lg:inline-flex" disabled={!loaded} onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>
         </div>
       </div>
     </div>
-    {shown.length
-      ? <div className="bm-rows">{shown.map(b => <BuildRow key={b.id} build={b} data={data} faved={favorites.includes(b.id)} onOpen={() => setView({ mode: 'detail', id: b.id })} />)}</div>
+    {error ? <p className="bm-note" role="status">{error}</p> : null}
+    {cloud.loading ? <p className="bm-note" role="status">{c.loading}</p>
+      : cloud.listError ? <div className="bm-empty"><p>{cloud.listError}</p>{gateway.available ? <button type="button" className="bm-chip" onClick={cloud.retry}>{c.retry}</button> : null}</div>
+      : section !== 'rec' && cloud.auth.status !== 'authenticated' ? <div className="bm-empty"><p>{c.loginRequired}</p><button type="button" className="bm-pill" onClick={() => cloud.auth.enabled ? cloud.setLoginOpen(true) : cloud.setError(c.unavailable)}>{c.login}</button></div>
+      : shown.length ? <div className="bm-rows">{shown.map(b => <BuildRow key={b.id} build={editableBuild(b)} data={data} faved={b.favorited} onOpen={() => { window.history.replaceState(window.history.state, '', section === 'mine' ? '/builds' : publicBuildLink(b.id)); cloud.selectDetail(b); setView({ mode: 'detail', id: b.id }) }} />)}</div>
       : <div className="bm-empty"><p>{emptyText}</p>{needle ? null : <button type="button" className="bm-pill warm" disabled={!loaded} onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>}</div>}
+    {cloud.total > 20 || page > 1 ? <nav className="bm-pagination"><button className="bm-chip" type="button" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{m.previousPage}</button><span>{page}/{Math.ceil(cloud.total / 20)}</span><button className="bm-chip" type="button" disabled={page * 20 >= cloud.total} onClick={() => setPage(p => p + 1)}>{m.nextPage}</button></nav> : null}
   </div>
 }

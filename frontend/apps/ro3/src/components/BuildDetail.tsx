@@ -24,7 +24,7 @@ export function BuildChips({ build, data }: { build: PlannerBuild; data: ManualD
 }
 
 /** A build, read-only: what it is, then every block in full. */
-export function BuildDetail({ build, data, faved, section, onBack, onFav, onTemplate, onEdit }: {
+export function BuildDetail({ build, data, faved, section, onBack, onFav, onTemplate, onEdit, canFavorite = true, busy = false }: {
   build: PlannerBuild
   data: ManualData | null
   faved: boolean
@@ -33,6 +33,8 @@ export function BuildDetail({ build, data, faved, section, onBack, onFav, onTemp
   onFav: () => void
   onTemplate: () => void
   onEdit?: () => void
+  canFavorite?: boolean
+  busy?: boolean
 }) {
   const rules = ruleSet(data, build.rulesVariant)
   const skillMap = new Map(data?.profession?.skills.skills.map(s => [s.iSkillID, s]) ?? [])
@@ -57,7 +59,7 @@ export function BuildDetail({ build, data, faved, section, onBack, onFav, onTemp
           {build.summary ? <p className="bm-intro">{build.summary}</p> : null}
         </div>
         <div className="bm-acts">
-          <button type="button" className={cn('bm-pill', faved && 'on')} aria-pressed={faved} onClick={onFav}><Heart aria-hidden="true" />{faved ? m.faved : m.addFav}</button>
+          {canFavorite ? <button type="button" className={cn('bm-pill', faved && 'on')} disabled={busy} aria-pressed={faved} onClick={onFav}><Heart aria-hidden="true" />{faved ? m.faved : m.addFav}</button> : null}
           {onEdit ? <button type="button" className="bm-pill" onClick={onEdit}><PenLine aria-hidden="true" />{m.edit}</button> : null}
           <button type="button" className="bm-pill warm" onClick={onTemplate}>{m.template}</button>
         </div>
@@ -105,12 +107,13 @@ export function BuildDetail({ build, data, faved, section, onBack, onFav, onTemp
         <div className="bm-items souls">{Array.from({ length: 5 }, (_, i) => {
           const config = build.souls[i]
           const soul = souls.find(s => s.iID === config?.id)
-          const subs = soul ? soulSubOptions(data, soul).filter(o => config?.sub.includes(o.id)) : []
+          const options = soul ? soulSubOptions(data, soul) : []
+          const subs = (config?.sub ?? []).map(id => options.find(o => o.id === id) ?? { id, label: `#${id} · ${t.unknown}`, value: m.valueUnknown })
           return <div key={i} className={cn('bm-item', !soul && 'none')} style={{ '--q': qualityColor(soul?.quality) } as CSSProperties}>
             <ItemIcon icon={soul?.icon} quality={soul?.quality} />
             <div className="bm-itx">
               <b>{soul?.name?.['zh-CN'] ?? m.emptySlot}</b>
-              {subs.length ? <div className="bm-attrs">{subs.map(o => <span key={o.id}>{o.label}</span>)}</div> : null}
+              {subs.length ? <div className="bm-attrs">{subs.map((o, index) => <span key={`${o.id}-${index}`}>{o.label} · {o.value}</span>)}</div> : null}
             </div>
           </div>
         })}</div>

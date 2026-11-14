@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Wrench } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
@@ -40,6 +40,9 @@ import homeSouls from './assets/home/souls.webp'
 import homeBuilds from './assets/home/builds.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
+
+import { canLeaveBuild } from './lib/buildNavigation'
+import { guardedHistory } from './lib/guardedHistory'
 
 const CHANGELOG = changelogRaw as ChangelogFile
 const SITE_VERSION = currentVersion(CHANGELOG)
@@ -105,31 +108,33 @@ function App() {
     document.title = documentTitle(location)
   }, [location])
 
+  const navigationHistory = useRef<ReturnType<typeof guardedHistory> | null>(null)
   useEffect(() => {
-    const handlePopState = () => {
+    const controller = guardedHistory(window, canLeaveBuild, () => {
       setLocation(readLocation())
-      // The browser has already swapped the URL by the time popstate fires, so
-      // the default (read location) is the page the visitor just went back to.
+      window.dispatchEvent(new Event('ro3:location-adopted'))
       trackPageview()
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
+    })
+    navigationHistory.current = controller
+    return () => { controller.dispose(); navigationHistory.current = null }
   }, [])
 
   // The phone wiki header's action slot, handed down to whichever page wants it.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
   // And the sidebar's, under the lit entry, for a page's own sub-pages.
   const [sidebarSlot, setSidebarSlot] = useState<HTMLElement | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const navigate = (key: NavKey) => {
     const next = locationForKey(key)
-    if (!next) return
+    if (!next || !canLeaveBuild()) return
     const href = hrefFor(next.page, next.view)
     if (href !== `${window.location.pathname}${window.location.search}`) {
-      window.history.pushState({}, '', href)
+      if (!navigationHistory.current?.push(href)) return
       trackPageview()
     }
     setLocation(next)
+    window.dispatchEvent(new Event('ro3:location-adopted'))
   }
 
   return (
@@ -144,9 +149,9 @@ function App() {
         version={SITE_VERSION}
       >
         {location.page === 'wiki' ? (
-          <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
+          <div className={sidebarCollapsed ? 'ro3-sidebar-layout lg:grid lg:grid-cols-[3.5rem_minmax(0,1fr)] lg:gap-4' : 'ro3-sidebar-layout lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8'}>
             <h1 className="sr-only">{pageTitle(location)}</h1>
-            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSubSlot={setSidebarSlot} />
+            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSubSlot={setSidebarSlot} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />
             <div className="min-w-0">
               <SectionStrip entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>
@@ -157,9 +162,9 @@ function App() {
             </div>
           </div>
         ) : location.page === 'builds' ? (
-          <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
+          <div className={sidebarCollapsed ? 'ro3-sidebar-layout lg:grid lg:grid-cols-[3.5rem_minmax(0,1fr)] lg:gap-4' : 'ro3-sidebar-layout lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8'}>
             <h1 className="sr-only">{pageTitle(location)}</h1>
-            <SectionSidebar entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSubSlot={setSidebarSlot} />
+            <SectionSidebar entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSubSlot={setSidebarSlot} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />
             <div className="min-w-0">
               <SectionStrip entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>

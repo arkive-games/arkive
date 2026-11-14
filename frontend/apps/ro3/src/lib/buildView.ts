@@ -98,12 +98,12 @@ export function equipmentLines(data: ManualData | null, record: EquipmentRecord,
   const lines: Array<{ text: string; special?: boolean }> = (record.kBasicAttribute ?? []).map(row => ({ text: `${attributeName(row[0])} ${rangeValue(row)}` }))
   for (const id of normal) {
     const entry = attrs?.entryGroups.find(e => e.iID === id)
-    if (entry) lines.push({ text: `${attributeName(entry.iAttriID)} ${entry.iMin === entry.iMax ? entry.iMin ?? '' : `${entry.iMin}–${entry.iMax}`}`.trim() })
+    lines.push({ text: entry ? `${attributeName(entry.iAttriID)} · ${content.builds.manual.valueUnknown}` : `#${id} · ${content.builds.editor.unknown}` })
   }
   for (const id of special) {
     const effect = attrs?.specialEffects.find(e => e.iID === id)
     const label = effect?.name?.['zh-CN'] || effect?.desc?.['zh-CN']
-    if (label) lines.push({ text: stripGameMarkup(label), special: true })
+    lines.push({ text: label ? stripGameMarkup(label) : `#${id} · ${content.builds.editor.unknown}`, special: true })
   }
   return lines
 }
@@ -139,11 +139,27 @@ export function cardEffect(data: ManualData | null, card: WikiCard): string {
   return parts.join(content.builds.manual.separator) || stripGameMarkup(localizedText(card.description))
 }
 
-export function soulSubOptions(data: ManualData | null, soul: SoulRecord): Array<{ id: number; label: string }> {
-  return (soul.subAttributes ?? []).map(a => ({
-    id: a.iID ?? a.attributeId ?? 0,
-    label: data?.souls?.souls.attributes.find(v => v.iID === (a.attributeId ?? a.iSubAttriID))?.name?.['zh-CN'] ?? `#${a.attributeId ?? a.iSubAttriID ?? '-'}`,
-  })).filter(o => o.id)
+export interface SoulSubOption { id: number; attributeId: number; label: string; value: string }
+
+export function soulSubOptions(data: ManualData | null, soul: SoulRecord): SoulSubOption[] {
+  return (soul.subAttributes ?? []).map(a => {
+    const min = a.min ?? a.iMin
+    const max = a.max ?? a.iMax
+    const value = min === undefined ? content.builds.manual.valueUnknown
+      : content.builds.manual.rawValue.replace('{value}', max !== undefined && max !== min ? `${min}–${max}` : String(min))
+    return {
+      id: a.iID ?? a.attributeId ?? 0,
+      attributeId: a.attributeId ?? a.iSubAttriID ?? 0,
+      label: data?.souls?.souls.attributes.find(v => v.iID === (a.attributeId ?? a.iSubAttriID))?.name?.['zh-CN'] ?? `#${a.attributeId ?? a.iSubAttriID ?? '-'}`,
+      value,
+    }
+  }).filter(o => o.id)
+}
+
+/** The largest authored roll count for this quality; absence is not zero. */
+export function normalAffixLimit(data: ManualData | null, record: EquipmentRecord): number | undefined {
+  const rows = data?.equipment?.attrs.entryCounts?.filter(row => row.iQuality === record.item?.iQuality)
+  return rows?.length ? Math.max(...rows.map(row => row.iNum ?? 0)) : undefined
 }
 
 export function talentChoices(data: ManualData | null, rules: BuildRuleSet | undefined, jobId: number): Array<{ id: number; label: string; icon?: string }> {
