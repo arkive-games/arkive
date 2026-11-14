@@ -9,7 +9,7 @@ import { Link, useSearch } from '@tanstack/react-router'
 import type { EngineMarker, GameMapViewProps, GlMapRef } from '@gamemap/map-engine-gl'
 import { worldToPixel } from '@gamemap/map-engine-gl/coords'
 const GameMapView = lazy(() => import('./features/map/GlMapView'))
-import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, markerDetailLabelsFor, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
+import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, markerDetailLabelsFor, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, resolveRememberedMap, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -41,6 +41,8 @@ import {
 } from '@gamemap/ui'
 import {
   browserMemory,
+  createMapSessionRecords,
+  useMapSession,
   defineMemoryRecord,
   isBoolean,
   isString,
@@ -122,6 +124,10 @@ function readStoredSubtypes(): Set<string> | null {
 // Per-map view + selection persistence (center, zoom, selected marker), fed
 // into useMapViewMemory. The storage-free shell hook gets storage through this
 // adapter, same as the theme.
+const palMapSession = createMapSessionRecords('palworld', {
+  categories: () => browserMemory.read(collapsedFilterCategoriesRecord),
+  visibility: () => { const legacy = readStoredSubtypes(); return legacy === null ? null : [...legacy] },
+})
 const MAP_VIEW_KEY = 'palworld.map.view'
 const mapViewRecord = defineMemoryRecord({
   id: 'view',
@@ -168,14 +174,6 @@ export default function App() {
   const [searchSheetOpen, setSearchSheetOpen] = useState(false)
   const [clearCompletedOpen, setClearCompletedOpen] = useState(false)
   const [markerCommentSort, setMarkerCommentSort] = useState<'popular' | 'latest'>('popular')
-  // Restore the persisted selection once at mount (null = nothing saved, so the
-  // default selection below applies). Held in state so it seeds both the initial
-  // `visible` set and the init guard without reading a ref during render.
-  const [restoredVisible] = useState<Set<string> | null>(readStoredSubtypes)
-  // Skip the default-selection init below when a saved set was restored — even
-  // an empty one, since the user may have deliberately hidden everything.
-  const visibleInitialized = useRef(restoredVisible != null)
-
   // Deep-link params (?map=… & ?q=…): open a given map with the search box
   // prefilled — used by the Paldeck "view on full map" link.
   const { q: initialQuery, map: mapParam, x: positionX, y: positionY } = useSearch({ from: '/' })
@@ -183,7 +181,9 @@ export default function App() {
   const [staticData, setStaticData] = useState<{
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
   } | null>(null)
-  const [mapId, setMapId] = useState(mapParam ?? 'MainWorld')
+  const [mapId, setMapId] = useState(() => mapParam ?? (browserMemory.read(palMapSession.lastMap) || 'MainWorld'))
+  const mapSession = useMapSession(palMapSession, mapId)
+  const [entryMapId] = useState(mapId)
   // ?map= is read once as the initial state above; a later in-app navigation
   // (e.g. picking a marker in the global search while already on the map)
   // changes only the URL, so sync it back into state here.
@@ -203,9 +203,9 @@ export default function App() {
   // (React's "adjust state when a prop changes" escape hatch) because the engine
   // reads `initialView` while mounting: an effect fires one commit too late.
   const [mountView, setMountView] = useState<MapViewState | null>(initialView)
-  const [mountedForMapId, setMountedForMapId] = useState(mapId)
-  if (mountedForMapId !== mapId) {
-    setMountedForMapId(mapId)
+  const [mountedForMapId, setMountedForMapId] = useState(`${mapId}:${isMobile}`)
+  if (mountedForMapId !== `${mapId}:${isMobile}`) {
+    setMountedForMapId(`${mapId}:${isMobile}`)
     // Reads the new map's own remembered view, which is exactly what
     // `initialView` just re-read.
     setMountView(readMapView(mapViewStore, mapId).view)
@@ -223,7 +223,13 @@ export default function App() {
   // persistence below must not write while markers and mapId disagree (the
   // one-commit window right after a map switch).
   const [markerData, setMarkerData] = useState<{ mapId: string; markers: MarkerRow[]; l10n: MarkerLocale } | null>(null)
-  const [visible, setVisible] = useState<Set<string>>(() => restoredVisible ?? new Set())
+  const [storedVisible, setStoredVisible] = useMemoryState(palMapSession.visibility, { partition: mapId })
+  const defaultVisible = useMemo(() => staticData?.types.subtypes.filter(subtype => subtype.defaultActive).map(subtype => subtype.id) ?? [], [staticData])
+  const visible = useMemo(() => new Set(storedVisible ?? defaultVisible), [storedVisible, defaultVisible])
+  const setVisible = useCallback((action: Set<string> | ((previous: Set<string>) => Set<string>)) => setStoredVisible(previous => {
+    const next = typeof action === 'function' ? action(new Set(previous ?? defaultVisible)) : action
+    return [...next]
+  }), [setStoredVisible, defaultVisible])
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number } | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -232,23 +238,15 @@ export default function App() {
   const [showLabels, setShowLabels] = useMemoryState(showLabelsRecord)
   // Named-region overlay (borders + hover highlight). Off by default.
   const [showRegions, setShowRegions] = useMemoryState(showRegionsRecord)
-  const [collapsedFilterCategories, setCollapsedFilterCategories] = useMemoryState(collapsedFilterCategoriesRecord)
+  const { categories: collapsedFilterCategories, setCategories: setCollapsedFilterCategories } = mapSession
   const [regionData, setRegionData] = useState<{ mapId: string; regions: RegionInstance[]; l10n: RegionLocale } | null>(null)
 
+  const pendingPositionLink = useRef<{ mapId: string; x: number; y: number } | null>(null)
   useEffect(() => {
-    // The deep-linked position belongs to the map it was linked with. `mapId` is
-    // local state while x/y stay in the URL, so keying on mapId alone re-applied
-    // the coordinates after a map switch -- following a merchant link on
-    // MainWorld and then picking WorldTree flew it to a MainWorld world position
-    // that is outside WorldTree's bounds.
-    const linkedMap = mapParam ?? 'MainWorld'
-    if (positionX !== undefined && positionY !== undefined && mapId === linkedMap) {
-      setSelectedMarkerId(null)
-      setSelectedPosition({ x: positionX, y: positionY })
-    } else {
-      setSelectedPosition(null)
-    }
-  }, [mapId, mapParam, positionX, positionY])
+    pendingPositionLink.current = positionX !== undefined && positionY !== undefined
+      ? { mapId: mapParam ?? entryMapId, x: positionX, y: positionY }
+      : null
+  }, [mapParam, entryMapId, positionX, positionY])
 
   useEffect(() => {
     let cancelled = false
@@ -257,16 +255,6 @@ export default function App() {
       .then((d) => {
         if (cancelled) return
         setStaticData(d)
-        // Only initialize visible set once; preserve user-set empty (Hide all).
-        // Default selection = the subtypes the taxonomy flags `defaultActive`
-        // (a small curated set); every other subtype starts hidden so the map
-        // opens uncluttered.
-        if (!visibleInitialized.current) {
-          visibleInitialized.current = true
-          setVisible(new Set(
-            d.types.subtypes.filter((s) => s.defaultActive).map((s) => s.id),
-          ))
-        }
       })
       .catch((err) => {
         if (cancelled) return
@@ -275,11 +263,6 @@ export default function App() {
       })
     return () => { cancelled = true }
   }, [lng, t])
-
-  // Persist the visible-subtype selection so it survives reloads.
-  useEffect(() => {
-    browserMemory.write(visibleSubtypesRecord, [...visible])
-  }, [visible])
 
   // Encyclopedia data (elements/best-work) for enriching pal marker popups.
   useEffect(() => {
@@ -304,14 +287,19 @@ export default function App() {
   useEffect(() => {
     setMarkerData(null)
     setSelectedMarkerId(null)
+    setSelectedPosition(null)
     setRestoredMarkerId(null)
     let cancelled = false
     loadMarkers(mapId, lng)
       .then((d) => {
         if (cancelled) return
         setMarkerData({ mapId, ...d })
+        const positionLink = pendingPositionLink.current
         const pending = pendingSelectRef.current
-        if (pending) {
+        if (positionLink?.mapId === mapId) {
+          pendingPositionLink.current = null
+          setSelectedPosition({ x: positionLink.x, y: positionLink.y })
+        } else if (pending) {
           pendingSelectRef.current = null
           const target = d.markers.find((m) => m.id === pending)
           if (target) {
@@ -332,7 +320,7 @@ export default function App() {
         setLoadError(t('loadError'))
       })
     return () => { cancelled = true }
-  }, [mapId, lng, t])
+  }, [mapId, lng, t, mapParam, positionX, positionY])
 
   // Named regions for the current map (best-effort — the map renders without
   // them). Feeds the region overlay, the marker-popup region line, and the
@@ -355,12 +343,13 @@ export default function App() {
     saveMarker(selectedMarkerId)
   }, [markerData, mapId, selectedMarkerId, saveMarker])
 
-  // A bad `?map=` deep link would otherwise leave the engine in its empty
-  // state; fall back to the default once the map list is known.
+  // Resolve stale links/saved ids against the loaded inventory before persisting.
   useEffect(() => {
-    if (staticData && !staticData.maps.some((m) => m.id === mapId)) {
-      setMapId('MainWorld')
-    }
+    if (!staticData) return
+    const valid = resolveRememberedMap(staticData.maps, mapId, browserMemory.read(palMapSession.lastMap), 'MainWorld')
+    if (!valid) return
+    if (valid.id !== mapId) setMapId(valid.id)
+    else browserMemory.write(palMapSession.lastMap, mapId)
   }, [staticData, mapId])
 
   const map = staticData?.maps.find((m) => m.id === mapId) ?? undefined
@@ -499,7 +488,7 @@ export default function App() {
       if (next.has(id)) next.delete(id); else next.add(id)
       return next
     })
-  }, [])
+  }, [setVisible])
 
   const onSetCategory = useCallback((categoryId: string, show: boolean) => {
     setVisible((v) => {
@@ -511,7 +500,7 @@ export default function App() {
       }
       return next
     })
-  }, [staticData])
+  }, [staticData, setVisible])
 
   // Completed count per subtype on the current map (X in the X/N filter badge).
   const completedBySubtype = useMemo(() => {
@@ -896,11 +885,13 @@ export default function App() {
 
   const searchPanel = (variant: 'floating' | 'inline') => (
     <SearchPanel
-      items={searchItems}
+      items={markerData?.mapId === mapId ? searchItems : []}
       onSelect={setSelectedMarkerId}
       onFlyTo={setSelectedPosition}
       onResultsChange={setSearchResultIds}
-      initialQuery={initialQuery}
+      key={mapId}
+      queryMemory={mapSession.searchMemory}
+      initialQuery={(mapParam ? mapParam === mapId : entryMapId === mapId) ? initialQuery ?? (positionX !== undefined && positionY !== undefined ? '' : undefined) : undefined}
       labels={searchLabels}
       displayCoords={displayCoords}
       // Palworld's `description` is a spawn level range ("Lv.10–14"), not
@@ -1011,6 +1002,9 @@ export default function App() {
       sidebar={
         <ShellSidebar
           width={320}
+          collapsed={mapSession.collapsed}
+          onCollapsedChange={mapSession.setCollapsed}
+          scrollMemory={{ ...mapSession.scrollMemory, ready: !mapSession.collapsed && markerData?.mapId === mapId }}
           collapseLabel={t('collapse')}
           expandLabel={t('expand')}
           classNames={{

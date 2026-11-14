@@ -81,3 +81,4 @@ export {
   type PreferenceLayers,
   type PreferenceLayerStore,
 } from "./preferences"
+export { createMapSessionRecords, useMapSession } from './mapSession'

@@ -1,3 +1,6 @@
+import { browserMemory } from '@gamemap/state-memory';
+import { resolveRememberedMap } from '@gamemap/map-shell';
+import { aionMapSession } from '@/features/map/mapSession';
 import type {GameMapMeta, MapsFile, MarkerTypeCategory, TypesFile} from "@gamemap/data-contract";
 import React, {createContext, useContext, useEffect, useState} from "react";
 import {loadGameData} from "@/lib/data";
@@ -57,6 +60,7 @@ export const GameMapProvider: React.FC<GameMapProviderProps> = ({children}: Game
     const isIndexPage = window.location.pathname === "/";
 
     if (selectedMap) {
+      browserMemory.write(aionMapSession.lastMap, selectedMap.id);
       if (isIndexPage) {
         setQueryParam("map", selectedMap.name);
       }
@@ -64,18 +68,9 @@ export const GameMapProvider: React.FC<GameMapProviderProps> = ({children}: Game
     }
 
     const initialMapId = isIndexPage ? getQueryParam("map") : null;
-    if (initialMapId) {
-      const matchedMap = maps.find((m) => m.name === initialMapId);
-      setSelectedMap(matchedMap);
-      return;
-    }
-    if (maps.length > 0 && !selectedMap) {
-      // optional fallback: load first map
-      setSelectedMap(maps[0]);
-      if (isIndexPage) {
-        setQueryParam("map", maps[0].name);
-      }
-    }
+    const initial = resolveRememberedMap(maps, initialMapId, browserMemory.read(aionMapSession.lastMap));
+    setSelectedMap(initial);
+    if (isIndexPage && initial) setQueryParam("map", initial.name);
   }, [maps, selectedMap]);
 
 

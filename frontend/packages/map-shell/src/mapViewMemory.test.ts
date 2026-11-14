@@ -5,8 +5,23 @@ import {
   readMapView,
   writeMapView,
   useMapViewMemory,
+  resolveRememberedMap,
   type MapViewStore,
 } from "./mapViewMemory"
+
+describe('available map precedence', () => {
+  const maps = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }]
+  it('prioritizes valid explicit targets and accepts canonical names', () => {
+    expect(resolveRememberedMap(maps, 'Alpha', 'b')?.id).toBe('a')
+    expect(resolveRememberedMap(maps, 'b', 'a')?.id).toBe('b')
+  })
+  it('falls back from stale links or saved maps without leaving a blank map', () => {
+    expect(resolveRememberedMap(maps, 'removed', 'b')?.id).toBe('b')
+    expect(resolveRememberedMap(maps, undefined, 'removed', 'b')?.id).toBe('b')
+    expect(resolveRememberedMap(maps, 'removed', 'also-removed')?.id).toBe('a')
+    expect(resolveRememberedMap([], 'a', 'b')).toBeUndefined()
+  })
+})
 
 /** In-memory store standing in for the app's storage adapter. */
 function memoryStore(initial: string | null = null): MapViewStore & { raw: () => string | null } {
