@@ -16,10 +16,12 @@ import {
   filterCatalogEntries,
   getGameCategories,
   paginateCatalogEntries,
+  prioritizeFavorites,
   type GameCategory,
 } from './gameCatalog'
 import { GAME_LOGOS, siteHref, type SiteCard } from './sites'
 import { useUserSystem } from './UserSystemState'
+import { useCatalogFavorite } from './useCatalogFavorite'
 import './all-games.css'
 
 const PAGE_SIZE = 20
@@ -58,6 +60,7 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
   const { t } = useTranslation()
   const { status } = useAuth()
   const { state, toggleFavoriteGame } = useUserSystem()
+  const favoriteAction = useCatalogFavorite(toggleFavoriteGame, onAuthRequired)
   const [query, setQuery] = useMemoryState(queryRecord, { debounceMs: 200 })
   const [category, setCategory] = useMemoryState(categoryRecord)
   const [page, setPage] = useMemoryState(pageRecord)
@@ -86,8 +89,8 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
     return () => document.removeEventListener('keydown', focusSearch)
   }, [])
   const filteredEntries = useMemo(
-    () => filterCatalogEntries(entries, category, query),
-    [category, entries, query],
+    () => prioritizeFavorites(filterCatalogEntries(entries, category, query), status === 'authenticated' ? state.favoriteGameIds : []),
+    [category, entries, query, status, state.favoriteGameIds],
   )
   const totalPages = Math.max(1, Math.ceil(filteredEntries.length / PAGE_SIZE))
   // Clamp the RESTORED page against the current filter. A persisted page survives a
@@ -165,14 +168,10 @@ export function AllGamesPage({ sites, onAuthRequired, onOpenSite }: AllGamesPage
               <CatalogGameCard
                 key={entry.site.id}
                 game={entry}
-                favorite={state.favoriteGameIds.includes(entry.site.id)}
-                onFavorite={() => {
-                  if (status !== 'authenticated') {
-                    onAuthRequired()
-                    return
-                  }
-                  toggleFavoriteGame(entry.site.id)
-                }}
+                favorite={favoriteAction.authenticated && state.favoriteGameIds.includes(entry.site.id)}
+                pending={favoriteAction.authLoading || favoriteAction.pending.includes(entry.id)}
+                failed={favoriteAction.failed.includes(entry.id)}
+                onFavorite={() => void favoriteAction.toggle(entry.id)}
                 onOpen={() => onOpenSite(entry.site)}
               />
             ))}
@@ -215,11 +214,15 @@ function CatalogGameCard({
   game,
   favorite: isFavorite,
   onFavorite,
+  pending,
+  failed,
   onOpen,
 }: {
   game: CatalogGame
   favorite: boolean
   onFavorite: () => void
+  pending: boolean
+  failed: boolean
   onOpen: () => void
 }) {
   const { t } = useTranslation()
@@ -255,11 +258,14 @@ function CatalogGameCard({
         type="button"
         className={isFavorite ? 'catalog-bookmark is-active' : 'catalog-bookmark'}
         onClick={handleFavorite}
+        disabled={pending}
+        aria-busy={pending || undefined}
         aria-pressed={isFavorite}
         aria-label={t('action.favorite', { game: name })}
       >
         <IconBookmark className="size-5" stroke={1.8} />
       </button>
+      {failed && <p role="alert" className="catalog-favorite-error">{t('catalogStatus.failed')} <button type="button" disabled={pending} onClick={onFavorite}>{t('catalogStatus.retry')}</button></p>}
     </article>
   )
 }

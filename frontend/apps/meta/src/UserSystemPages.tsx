@@ -551,11 +551,7 @@ export function AccountCenterPage({
           </UserSidebar>
 
           <section className="user-system-content" aria-labelledby="account-page-heading">
-            <PageHeading
-              id="account-page-heading"
-              title={t(`userSystem.account.${section}`)}
-              description={t(`userSystem.account.descriptions.${section}`)}
-            />
+            <h1 id="account-page-heading" className="sr-only">{t(`userSystem.account.${section}`)}</h1>
             <AccountContent
               onAuthRequired={onAuthRequired}
               section={section}

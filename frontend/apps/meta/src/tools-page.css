@@ -1,7 +1,7 @@
 /* Controls, results and the empty state are the All Games page's (all-games.css). */
 .tools-filter-icon { flex: none; width: 1.125rem; height: 1.125rem; border-radius: .3rem; }
 .tools-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
-.tools-card { display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; gap: .25rem 1rem; min-width: 0; padding: 1.1rem 1.1rem 1rem; border: 1px solid var(--border); border-radius: 1.25rem; background: var(--card); color: inherit; text-decoration: none; transition: background-color .3s; }
+.tools-card { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-content: start; gap: .25rem 1rem; min-width: 0; padding: 1.1rem 1.1rem 1rem; border: 1px solid var(--border); border-radius: 1.25rem; background: var(--card); color: inherit; text-decoration: none; transition: background-color .3s; }
 .tools-card:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .tools-card-glyph { grid-row: span 2; display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 1rem; background: color-mix(in srgb, var(--game-color) 14%, var(--card)); color: var(--game-color); transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
 .tools-card-glyph svg { width: 1.6rem; height: 1.6rem; }
@@ -29,3 +29,11 @@
 @media (prefers-reduced-motion: reduce) {
   .tools-card, .tools-card-glyph, .tools-card-open { transition: none; }
 }
+
+.tools-card a { text-decoration: none; }
+.tools-card a:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.tools-card .tools-card-favorite { position: static; flex: none; }
+.tools-card-error { grid-column: 1 / -1; color: var(--destructive); font-size: .75rem; }
+.tools-card-error button { color: inherit; text-decoration: underline; cursor: pointer; }
+
+.tools-card-name, .tools-card-game { color: inherit; }

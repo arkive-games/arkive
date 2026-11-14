@@ -1,43 +1,84 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
-import { IconArrowRight, IconSearch, IconTool, IconX } from '@tabler/icons-react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
+import {
+  IconArrowRight,
+  IconBookmark,
+  IconSearch,
+  IconTool,
+  IconX,
+} from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-
-import { FEATURES, featureHref, localize, matchesTool, type GameFeature } from './featureCatalog'
-import { GAME_LOGOS, siteHref, type SiteCard } from './sites'
+import { localize, type GameFeature } from './featureCatalog'
+import { GAME_CATEGORIES, prioritizeFavorites } from './gameCatalog'
+import { GAME_LOGOS, type SiteCard } from './sites'
+import {
+  buildToolCatalog,
+  filterTools,
+  type CatalogTool,
+  type ToolFilter,
+} from './toolCatalog'
 import { TOOL_ICONS } from './toolIcons'
+import { useCatalogFavorite } from './useCatalogFavorite'
+import { useUserSystem } from './UserSystemState'
 import './all-games.css'
 import './tools-page.css'
 
-/**
- * Every tool on every open game, filtered by game and by a search box that
- * looks only at tools. The controls reuse the All Games page's capsule and
- * search styles so the two library pages read as one family.
- */
-export function ToolsPage({ sites, onOpenFeature }: {
+export function ToolsPage({
+  sites,
+  onOpenFeature,
+  onAuthRequired,
+}: {
   sites: readonly SiteCard[]
   onOpenFeature: (feature: GameFeature, site: SiteCard) => void
+  onAuthRequired: () => void
 }) {
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const [query, setQuery] = useState('')
-  const [gameId, setGameId] = useState<string>('all')
+  const [filter, setFilter] = useState<ToolFilter>('all')
   const inputRef = useRef<HTMLInputElement>(null)
-
-  const tools = useMemo(() => FEATURES.flatMap((tool) => {
-    const site = sites.find((item) => item.id === tool.gameId && siteHref(item))
-    return tool.kind === 'tool' && site ? [{ tool, site }] : []
-  }), [sites])
-  // Games in the portal's fixed order, each listed only when it has a tool.
-  const games = sites.filter((site) => tools.some((entry) => entry.site.id === site.id))
-  const gameNames = (site: SiteCard) => [t(site.nameKey), t(`catalog.alias.${site.id}`, { defaultValue: '' })]
-  const searched = tools.filter(({ tool, site }) => matchesTool(tool, query, gameNames(site)))
-  const visible = searched.filter(({ site }) => gameId === 'all' || site.id === gameId)
+  const { state, toggleFavoriteTool } = useUserSystem()
+  const favorite = useCatalogFavorite(toggleFavoriteTool, onAuthRequired)
+  const tools = useMemo(() => buildToolCatalog(sites), [sites])
+  const names = (tool: CatalogTool) =>
+    tool.site
+      ? [
+          t(tool.site.nameKey),
+          t(`catalog.alias.${tool.site.id}`, { defaultValue: '' }),
+        ]
+      : []
+  const searched = filterTools(tools, 'all', query, names)
+  const visible = prioritizeFavorites(
+    filterTools(searched, filter, '', names),
+    favorite.authenticated ? state.favoriteToolIds : [],
+  )
+  const filters = [...GAME_CATEGORIES, 'other'] as const
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
       const target = event.target
-      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
-      if (target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="alertdialog"]')) return
+      if (
+        event.key !== '/' ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        event.isComposing
+      )
+        return
+      if (
+        target instanceof Element &&
+        target.closest(
+          'input, textarea, select, [contenteditable="true"], [role="dialog"], [role="alertdialog"]',
+        )
+      )
+        return
       event.preventDefault()
       inputRef.current?.focus()
     }
@@ -49,24 +90,26 @@ export function ToolsPage({ sites, onOpenFeature }: {
     event.preventDefault()
     inputRef.current?.blur()
   }
-  const filters = [
-    { id: 'all', label: t('toolsLibrary.all'), icon: undefined, count: searched.length },
-    ...games.map((site) => ({
-      id: site.id,
-      label: t(site.nameKey),
-      icon: site.icon ?? GAME_LOGOS[site.id],
-      count: searched.filter((entry) => entry.site.id === site.id).length,
-    })),
-  ]
-
   return (
     <main className="catalog-main tools-main">
-      <section className="home-shell catalog-hero" aria-labelledby="tools-heading">
-        <h1 id="tools-heading" className="sr-only">{t('toolsLibrary.title')}</h1>
-
+      <section
+        className="home-shell catalog-hero"
+        aria-labelledby="tools-heading"
+      >
+        <h1 id="tools-heading" className="sr-only">
+          {t('toolsLibrary.title')}
+        </h1>
         <div className="catalog-controls">
-          <form className="catalog-search" role="search" onSubmit={submitSearch}>
-            <IconSearch className="size-5 shrink-0" stroke={1.8} aria-hidden="true" />
+          <form
+            className="catalog-search"
+            role="search"
+            onSubmit={submitSearch}
+          >
+            <IconSearch
+              className="size-5 shrink-0"
+              stroke={1.8}
+              aria-hidden="true"
+            />
             <input
               ref={inputRef}
               type="search"
@@ -81,49 +124,92 @@ export function ToolsPage({ sites, onOpenFeature }: {
               placeholder={t('toolsLibrary.searchPlaceholder')}
               autoComplete="off"
             />
-            {query && <button type="button" className="catalog-search-clear" aria-label={t('toolsLibrary.clearSearch')} onClick={() => { setQuery(''); inputRef.current?.focus() }}><IconX className="size-4" /></button>}
-            <button type="submit" aria-label={t('toolsLibrary.searchAction')}><IconArrowRight className="size-4" stroke={2.2} aria-hidden="true" /></button>
+            {query && (
+              <button
+                type="button"
+                className="catalog-search-clear"
+                aria-label={t('toolsLibrary.clearSearch')}
+                onClick={() => {
+                  setQuery('')
+                  inputRef.current?.focus()
+                }}
+              >
+                <IconX className="size-4" />
+              </button>
+            )}
+            <button type="submit" aria-label={t('toolsLibrary.searchAction')}>
+              <IconArrowRight
+                className="size-4"
+                stroke={2.2}
+                aria-hidden="true"
+              />
+            </button>
           </form>
-
-          <div className="catalog-categories" role="group" aria-label={t('toolsLibrary.filterLabel')}>
+          <div
+            className="catalog-categories"
+            role="group"
+            aria-label={t('catalog.categoryLabel')}
+          >
             <div>
-              {filters.map((filter) => (
+              {filters.map((value) => (
                 <button
-                  key={filter.id}
+                  key={value}
                   type="button"
-                  className={gameId === filter.id ? 'is-active' : undefined}
-                  aria-pressed={gameId === filter.id}
-                  onClick={() => setGameId(filter.id)}
+                  className={filter === value ? 'is-active' : undefined}
+                  aria-pressed={filter === value}
+                  onClick={() => setFilter(value)}
                 >
-                  {filter.icon && <img className="tools-filter-icon" src={filter.icon} alt="" />}
-                  <span>{filter.label}</span>
-                  <small>{filter.count}</small>
+                  <span>
+                    {value === 'other'
+                      ? t('catalogStatus.other')
+                      : t(`catalog.genre.${value}`)}
+                  </span>
+                  <small>
+                    {filterTools(searched, value, '', names).length}
+                  </small>
                 </button>
               ))}
             </div>
           </div>
         </div>
       </section>
-
-      <section className="home-shell catalog-results" aria-labelledby="tools-heading">
-        <span className="sr-only" role="status">{t('toolsLibrary.resultCount', { count: visible.length })}</span>
-        {visible.length > 0 ? (
+      <section
+        className="home-shell catalog-results"
+        aria-labelledby="tools-heading"
+      >
+        <span className="sr-only" role="status">
+          {t('toolsLibrary.resultCount', { count: visible.length })}
+        </span>
+        {visible.length ? (
           <div className="tools-grid">
-            {visible.map(({ tool, site }) => (
+            {visible.map((tool) => (
               <LibraryToolCard
                 key={tool.id}
                 tool={tool}
-                site={site}
                 language={language}
                 query={query}
-                onOpen={() => onOpenFeature(tool, site)}
+                favorite={
+                  favorite.authenticated &&
+                  state.favoriteToolIds.includes(tool.id)
+                }
+                pending={
+                  favorite.pending.includes(tool.id) || favorite.authLoading
+                }
+                failed={favorite.failed.includes(tool.id)}
+                onFavorite={() => void favorite.toggle(tool.id)}
+                onOpen={() => {
+                  if (tool.feature && tool.site)
+                    onOpenFeature(tool.feature, tool.site)
+                }}
               />
             ))}
           </div>
         ) : (
           <div className="catalog-empty" role="status">
             <IconSearch className="size-8" stroke={1.5} aria-hidden="true" />
-            <strong>{t('toolsLibrary.emptyTitle', { query: query.trim() })}</strong>
+            <strong>
+              {t('toolsLibrary.emptyTitle', { query: query.trim() })}
+            </strong>
             <p>{t('toolsLibrary.emptyDescription')}</p>
           </div>
         )}
@@ -132,40 +218,103 @@ export function ToolsPage({ sites, onOpenFeature }: {
   )
 }
 
-/** Wraps the first case-insensitive occurrence of `query` in `<mark>`. */
 function highlight(text: string, query: string): ReactNode {
   const needle = query.trim().toLocaleLowerCase()
   const index = needle ? text.toLocaleLowerCase().indexOf(needle) : -1
-  if (index < 0) return text
-  return <>{text.slice(0, index)}<mark>{text.slice(index, index + needle.length)}</mark>{text.slice(index + needle.length)}</>
+  return index < 0 ? (
+    text
+  ) : (
+    <>
+      {text.slice(0, index)}
+      <mark>{text.slice(index, index + needle.length)}</mark>
+      {text.slice(index + needle.length)}
+    </>
+  )
 }
 
-/**
- * A tools-page card: a glyph tinted with the game's colour, the tool's name
- * and two lines of description, then its game. The frame stays neutral; the
- * game colour fills it only on hover, as on the All Games page.
- */
-function LibraryToolCard({ tool, site, language, query, onOpen }: {
-  tool: GameFeature
-  site: SiteCard
+function LibraryToolCard({
+  tool,
+  language,
+  query,
+  favorite,
+  pending,
+  failed,
+  onFavorite,
+  onOpen,
+}: {
+  tool: CatalogTool
   language: string
   query: string
+  favorite: boolean
+  pending: boolean
+  failed: boolean
+  onFavorite: () => void
   onOpen: () => void
 }) {
   const { t } = useTranslation()
-  const href = featureHref(tool, site)
   const ToolIcon = TOOL_ICONS[tool.id] ?? IconTool
-  if (!href) return null
-
+  const name = localize(tool.name, language)
+  const gameName = tool.site
+    ? t(tool.site.nameKey)
+    : tool.gameName
+      ? localize(tool.gameName, language)
+      : ''
   return (
-    <a className="tools-card" href={href} onClick={onOpen} style={{ '--game-color': site.color ?? 'var(--muted-foreground)' } as CSSProperties}>
-      <span className="tools-card-glyph" aria-hidden="true"><ToolIcon stroke={1.8} /></span>
-      <strong className="tools-card-name">{highlight(localize(tool.name, language), query)}</strong>
-      {tool.description && <p className="tools-card-desc">{highlight(localize(tool.description, language), query)}</p>}
-      <span className="tools-card-foot">
-        <span className="tools-card-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" />{t(site.nameKey)}</span>
-        <span className="tools-card-open" aria-hidden="true">{t('toolsLibrary.open')}<IconArrowRight className="size-3.5" stroke={2.2} /></span>
-      </span>
-    </a>
+    <article
+      className="tools-card"
+      style={
+        {
+          '--game-color': tool.site?.color ?? 'var(--muted-foreground)',
+        } as CSSProperties
+      }
+    >
+      <a
+        className="tools-card-glyph"
+        href={tool.href}
+        onClick={onOpen}
+        aria-label={name}
+      >
+        <ToolIcon stroke={1.8} aria-hidden="true" />
+      </a>
+      <a className="tools-card-name" href={tool.href} onClick={onOpen}>
+        {highlight(name, query)}
+      </a>
+      {tool.description && (
+        <a className="tools-card-desc" href={tool.href} onClick={onOpen}>
+          {highlight(localize(tool.description, language), query)}
+        </a>
+      )}
+      <div className="tools-card-foot">
+        {gameName ? (
+          <a className="tools-card-game" href={tool.gameHref ?? tool.href}>
+            {tool.site && (
+              <img src={tool.site.icon ?? GAME_LOGOS[tool.site.id]} alt="" />
+            )}
+            {gameName}
+          </a>
+        ) : (
+          <span />
+        )}
+        <button
+          type="button"
+          className={`catalog-bookmark tools-card-favorite${favorite ? ' is-active' : ''}`}
+          disabled={pending}
+          aria-busy={pending || undefined}
+          aria-pressed={favorite}
+          aria-label={t('catalogStatus.favorite', { name })}
+          onClick={onFavorite}
+        >
+          <IconBookmark className="size-5" aria-hidden="true" />
+        </button>
+      </div>
+      {failed && (
+        <div className="tools-card-error" role="alert">
+          {t('catalogStatus.failed')}{' '}
+          <button type="button" onClick={onFavorite} disabled={pending}>
+            {t('catalogStatus.retry')}
+          </button>
+        </div>
+      )}
+    </article>
   )
 }

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arkive encyclopedia shell preview</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Noto Sans SC Variable", "Noto Sans", system-ui, sans-serif;
+        font-size: 17px;
+        --background: #f8f8f8;
+        --surface: #ffffff;
+        --muted: #f0f0f0;
+        --text: #202020;
+        --subtle: #707070;
+        --line: #dfdfdf;
+        --blue: #0d74ce;
+        --blue-soft: #e7f4fe;
+        --warm: #bd7000;
+        --rail-expanded: 11.5rem;
+        --rail-collapsed: 4rem;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 72rem; color: var(--text); background: var(--background); }
+      button, input { font: inherit; }
+      button { color: inherit; cursor: pointer; }
+
+      .app { min-height: 100dvh; display: flex; flex-direction: column; }
+      .topbar {
+        height: 3.5rem; display: flex; align-items: center; gap: 1.25rem;
+        padding: 0 1.5rem; background: var(--surface); border-bottom: 1px solid var(--line);
+      }
+      .wordmark { font-size: 1.35rem; font-weight: 850; letter-spacing: -0.06em; }
+      .game-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .8rem .35rem .4rem; border-radius: 999px; background: var(--muted); font-size: .8rem; font-weight: 700; }
+      .game-dot { width: 1.65rem; height: 1.65rem; display: grid; place-items: center; border-radius: 50%; background: #d8edf9; color: var(--blue); }
+      .topnav { display: flex; gap: .25rem; padding: .25rem; border-radius: 999px; background: var(--muted); }
+      .topnav a { padding: .55rem 1rem; border-radius: 999px; color: var(--subtle); font-size: .8rem; font-weight: 700; text-decoration: none; }
+      .topnav a.active { color: #fff; background: var(--text); }
+      .top-spacer { flex: 1; }
+      .utility { display: flex; gap: .5rem; }
+      .utility button { width: 2.25rem; height: 2.25rem; border: 0; border-radius: 50%; background: var(--muted); color: var(--subtle); }
+
+      .workspace { width: min(96rem, calc(100% - 3rem)); flex: 1; display: grid; grid-template-columns: var(--rail-expanded) minmax(0, 1fr); gap: 2rem; margin: 0 auto; padding: 1.5rem 0 2rem; transition: grid-template-columns .2s ease; }
+      .workspace.is-collapsed { grid-template-columns: var(--rail-collapsed) minmax(0, 1fr); }
+      .rail { position: relative; min-width: 0; }
+      .rail-head { display: flex; align-items: center; justify-content: space-between; margin: 0 .5rem .85rem; }
+      .rail-title { display: flex; align-items: center; gap: .55rem; font-size: 1.05rem; font-weight: 850; }
+      .rail-title::before { width: .3rem; height: 1.25rem; content: ""; border-radius: 999px; background: var(--warm); }
+      .collapse { width: 2rem; height: 2rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface); color: var(--subtle); }
+      .rail-link { display: flex; align-items: center; gap: .7rem; min-height: 2.75rem; padding: .35rem .55rem; margin-bottom: .2rem; border: 0; border-radius: .7rem; background: transparent; color: var(--subtle); text-align: left; }
+      .rail-link:hover { background: var(--muted); color: var(--text); }
+      .rail-link.active { color: var(--blue); background: var(--surface); box-shadow: 0 .2rem .8rem rgb(13 116 206 / 10%), 0 0 0 1px var(--line); font-weight: 750; }
+      .rail-icon { width: 2rem; height: 2rem; flex: none; display: grid; place-items: center; border-radius: .6rem; background: var(--muted); color: var(--subtle); font-size: .9rem; }
+      .active .rail-icon { color: var(--blue); background: var(--blue-soft); }
+      .rail-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+      .rail-children { margin: .2rem 0 .5rem 1.2rem; padding-left: .55rem; border-left: 2px solid var(--line); }
+      .rail-child { display: block; width: 100%; min-height: 2rem; padding: .25rem .55rem; border: 0; border-radius: .5rem; background: transparent; color: var(--subtle); font-size: .75rem; text-align: left; }
+      .rail-child.active { color: var(--blue); background: var(--blue-soft); font-weight: 750; }
+      .is-collapsed .rail-head { justify-content: center; }
+      .is-collapsed .rail-title { display: none; }
+      .is-collapsed .collapse { transform: rotate(180deg); }
+      .is-collapsed .rail-link { justify-content: center; padding-inline: 0; }
+      .is-collapsed .rail-label, .is-collapsed .rail-children { display: none; }
+
+      .main { min-width: 0; }
+      .toolbar { display: flex; align-items: center; gap: .75rem; min-height: 2.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+      .filters { display: flex; flex-wrap: wrap; gap: .4rem; }
+      .filter { height: 2.25rem; padding: 0 .8rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--subtle); font-size: .78rem; }
+      .filter.active { border-color: var(--blue); color: var(--blue); background: var(--blue-soft); font-weight: 750; }
+      .search { width: min(19rem, 40%); height: 2.45rem; display: flex; align-items: center; gap: .5rem; margin-left: auto; padding: 0 .75rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); color: var(--subtle); }
+      .search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: .78rem; }
+      .search:focus-within { border-color: var(--blue); box-shadow: 0 0 0 .2rem rgb(13 116 206 / 12%); }
+
+      .content-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; padding-top: 1.25rem; }
+      .record { min-height: 8rem; display: flex; flex-direction: column; gap: .55rem; padding: 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); }
+      .record-top { display: flex; align-items: center; gap: .65rem; }
+      .record-icon { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; flex: none; border-radius: .7rem; background: var(--blue-soft); color: var(--blue); font-size: 1.1rem; }
+      .record strong { font-size: .9rem; }
+      .record small { color: var(--subtle); font-size: .72rem; }
+      .record p { margin: 0; color: var(--subtle); font-size: .75rem; line-height: 1.55; }
+      .footer { display: flex; justify-content: space-between; align-items: center; min-height: 3.75rem; padding: 0 1.5rem; border-top: 1px solid var(--line); color: var(--subtle); font-size: .7rem; background: var(--surface); }
+      .note { position: fixed; right: 1rem; bottom: 1rem; max-width: 18rem; padding: .7rem .85rem; border: 1px dashed #b8cfe0; border-radius: .6rem; color: #48677b; background: #f4fbff; font-size: .68rem; line-height: 1.5; }
+      @media (max-width: 80rem) { body { min-width: 0; } .workspace { width: calc(100% - 2rem); } .content-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <span class="wordmark">Arkive</span>
+        <span class="game-chip"><span class="game-dot">✦</span>Game space</span>
+        <nav class="topnav" aria-label="Game navigation">
+          <a href="#">Overview</a><a class="active" href="#">Encyclopedia</a><a href="#">Tools</a>
+        </nav>
+        <span class="top-spacer"></span>
+        <div class="utility"><button type="button" aria-label="Language">文</button><button type="button" aria-label="Theme">☼</button><button type="button" aria-label="Account">◯</button></div>
+      </header>
+
+      <div class="workspace" id="workspace">
+        <aside class="rail" aria-label="Encyclopedia directory">
+          <div class="rail-head"><strong class="rail-title">Encyclopedia</strong><button class="collapse" id="collapse" type="button" aria-label="Collapse directory" aria-expanded="true">‹</button></div>
+          <button class="rail-link" type="button"><span class="rail-icon">⌁</span><span class="rail-label">Skills</span></button>
+          <button class="rail-link active" type="button"><span class="rail-icon">✦</span><span class="rail-label">Talents</span></button>
+          <div class="rail-children"><button class="rail-child" type="button">Seasonal Talents</button><button class="rail-child active" type="button">Star Matrix</button></div>
+          <button class="rail-link" type="button"><span class="rail-icon">◇</span><span class="rail-label">Cards</span></button>
+          <button class="rail-link" type="button"><span class="rail-icon">◈</span><span class="rail-label">Pets</span></button>
+          <button class="rail-link" type="button"><span class="rail-icon">◌</span><span class="rail-label">Monsters</span></button>
+          <button class="rail-link" type="button"><span class="rail-icon">▱</span><span class="rail-label">Equipment</span></button>
+        </aside>
+
+        <main class="main">
+          <div class="toolbar" aria-label="Category filters and search">
+            <div class="filters"><button class="filter active" type="button">All 42</button><button class="filter" type="button">Strength 14</button><button class="filter" type="button">Support 12</button><button class="filter" type="button">Utility 16</button></div>
+            <label class="search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search this category" /></label>
+          </div>
+          <section class="content-grid" aria-label="Game-owned content">
+            <article class="record"><div class="record-top"><span class="record-icon">✦</span><div><strong>Resolute</strong><small> · Level 3</small></div></div><p>Game-owned record content begins directly below the controls.</p></article>
+            <article class="record"><div class="record-top"><span class="record-icon">✧</span><div><strong>Iron Wall</strong><small> · Level 3</small></div></div><p>Content presentation can be a table, graph, catalog, or another appropriate form.</p></article>
+            <article class="record"><div class="record-top"><span class="record-icon">◈</span><div><strong>Arcane Rule</strong><small> · Level 2</small></div></div><p>The shell does not add a second category title or introduction here.</p></article>
+            <article class="record"><div class="record-top"><span class="record-icon">✦</span><div><strong>Focused Mind</strong><small> · Level 1</small></div></div><p>Each game can choose the fields and layout its data needs.</p></article>
+            <article class="record"><div class="record-top"><span class="record-icon">◌</span><div><strong>Guarded Step</strong><small> · Level 2</small></div></div><p>Opening a record keeps category, filters, search, and return context.</p></article>
+            <article class="record"><div class="record-top"><span class="record-icon">◇</span><div><strong>Star Echo</strong><small> · Level 3</small></div></div><p>This content area is illustrative only; its visual details are not fixed here.</p></article>
+          </section>
+        </main>
+      </div>
+
+      <footer class="footer"><strong>Arkive</strong><span>Compact site footer · ordinary scrollable page</span><span>About · Updates · Settings</span></footer>
+      <p class="note">Preview scope: desktop shell only. The right side intentionally has no repeated title or introduction. Mobile composition is deferred.</p>
+    </div>
+    <script>
+      const workspace = document.getElementById("workspace");
+      const collapse = document.getElementById("collapse");
+      collapse.addEventListener("click", () => {
+        const collapsed = workspace.classList.toggle("is-collapsed");
+        collapse.setAttribute("aria-expanded", String(!collapsed));
+        collapse.setAttribute("aria-label", collapsed ? "Expand directory" : "Collapse directory");
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arkive homepage footer copy</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://arkive.games/fonts/noto-sans/2088de758f2d1c3f/index.css">
+  <link rel="stylesheet" href="assets/arkive/home-footer-live.css">
+  <style>
+    /* Host reset and inherited values; component rules above are copied verbatim. */
+    :root { font-size: 17px; font-family: "Noto Sans SC Variable", "Noto Sans TC Variable", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; --arkive-page-gutter: 2rem; --home-shell: 80rem; --arkive-layer-sticky: 20; --muted-foreground: #646464; }
+    *, ::before, ::after { box-sizing: border-box; }
+    body { margin: 0; }
+    button { font: inherit; }
+  </style>
+</head>
+<body>
+  <script>
+    // Preserve the copied markup. Translate viewport coordinates only to fit this isolated host.
+    fetch('assets/arkive/home-footer.zh-CN.json').then(r => r.json()).then(async capture => {
+      document.body.insertAdjacentHTML('afterbegin', capture.html);
+      await document.fonts.ready;
+      const footer = document.querySelector('.home-footer');
+      const voyage = footer.querySelector('.home-voyage');
+      const coordinates = [...voyage.querySelectorAll('[style]')].filter(e => e.style.left && e.style.top).map(e => ({e, left: parseFloat(e.style.left), top: parseFloat(e.style.top)}));
+      function fit() {
+        const box = footer.getBoundingClientRect();
+        coordinates.forEach(({e, left, top}) => {
+          e.style.left = `${left / capture.viewport.width * box.width}px`;
+          e.style.top = `${top - capture.rect.top + box.top}px`;
+        });
+        parent.postMessage({type: 'arkive-footer-copy-height', height: document.documentElement.scrollHeight}, location.origin);
+      }
+      fit();
+      addEventListener('resize', fit);
+      document.documentElement.dataset.ready = 'true';
+    });
+  </script>
+</body>
+</html>

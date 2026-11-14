@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arkive shared component gallery</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Noto Sans SC Variable", "Noto Sans", system-ui, sans-serif;
+        font-size: 17px;
+        --background: #fcfcfc;
+        --foreground: #202020;
+        --card: #f9f9f9;
+        --muted: #f0f0f0;
+        --muted-foreground: #646464;
+        --border: #d9d9d9;
+        --input: #f0f0f0;
+        --primary: #0090ff;
+        --primary-foreground: #202020;
+        --ring: #0d74ce;
+        --filter-idle: #f0f0f0;
+        --filter-active: #e6f4fe;
+        --destructive: #ce2c31;
+        --radius-compact: 0.375rem;
+        --radius-standard: 0.5rem;
+        --radius-pill: 999rem;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--foreground); background: var(--background); }
+      button, input, select { font: inherit; }
+      button { cursor: pointer; }
+      .gallery-shell { width: min(100% - 3rem, 80rem); margin: 0 auto; padding: 3rem 0 5rem; }
+      .gallery-header { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
+      .gallery-header h1 { margin: 0; font-size: 1.875rem; line-height: 1.25; }
+      .gallery-header p { max-width: 48rem; margin: 0.65rem 0 0; color: var(--muted-foreground); line-height: 1.65; }
+      .theme-toggle { min-height: 2.75rem; padding: 0 0.9rem; border: 1px solid var(--border); border-radius: var(--radius-standard); background: var(--card); }
+      .gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+      .gallery-section { min-width: 0; padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-standard); background: var(--card); }
+      .gallery-section.wide { grid-column: 1 / -1; }
+      .gallery-section h2 { margin: 0; font-size: 1.125rem; line-height: 1.4; }
+      .gallery-section > p { margin: 0.45rem 0 1rem; color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.65; }
+      .sample-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+      .sample-label { display: block; margin-bottom: 0.4rem; color: var(--muted-foreground); font-size: 0.75rem; font-weight: 700; }
+      .field { display: grid; min-width: min(20rem, 100%); gap: 0.5rem; }
+      .field label { font-size: 0.875rem; font-weight: 600; }
+      .field input, .field select { min-height: 2.25rem; width: 100%; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-standard); color: var(--foreground); background: var(--input); outline: none; }
+      .field input:focus-visible, .field select:focus-visible, .search-field:focus-within { border-color: var(--ring); box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--ring) 20%, transparent); }
+      .field input[aria-invalid="true"] { border-color: var(--destructive); }
+      .field small { color: var(--muted-foreground); font-size: 0.75rem; line-height: 1.5; }
+      .field .error { color: var(--destructive); }
+      .search-field { display: flex; min-width: min(28rem, 100%); min-height: 2.75rem; align-items: center; gap: 0.5rem; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-standard); background: var(--input); }
+      .search-field input { min-width: 0; flex: 1; border: 0; color: inherit; background: transparent; outline: 0; }
+      .primary-button, .secondary-button { min-height: 2.75rem; padding: 0 1rem; border: 1px solid transparent; border-radius: var(--radius-standard); font-size: 0.875rem; font-weight: 700; }
+      .primary-button { color: var(--primary-foreground); background: var(--primary); }
+      .secondary-button { border-color: var(--border); color: var(--foreground); background: var(--card); }
+      .primary-button:focus-visible, .secondary-button:focus-visible, .filter:focus-visible { outline: none; box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--ring) 20%, transparent); }
+      .filter-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .filter { min-height: 2.25rem; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-compact); color: var(--muted-foreground); background: var(--filter-idle); font-size: 0.875rem; font-weight: 600; }
+      .filter[aria-pressed="true"] { border-color: var(--primary); color: var(--primary); background: var(--filter-active); }
+      .state-list { display: grid; gap: 0.75rem; }
+      .state-card { display: grid; grid-template-columns: 8rem minmax(0, 1fr); align-items: center; gap: 1rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-standard); background: var(--background); }
+      .state-card > strong { font-size: 0.75rem; }
+      .catalog-card { display: grid; grid-template-columns: 4rem minmax(0, 1fr) auto; align-items: center; gap: 0.9rem; padding: 0.9rem; border: 1px solid var(--border); border-radius: var(--radius-standard); background: var(--background); }
+      .catalog-icon { display: grid; width: 4rem; height: 4rem; place-items: center; border-radius: var(--radius-standard); color: var(--primary); background: var(--filter-active); font-size: 1.5rem; }
+      .catalog-card strong { display: block; font-size: 1rem; }
+      .catalog-card p { margin: 0.25rem 0 0; color: var(--muted-foreground); font-size: 0.875rem; line-height: 1.5; }
+      .favorite { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--border); border-radius: var(--radius-compact); color: var(--muted-foreground); background: var(--card); }
+      .favorite[aria-pressed="true"] { border-color: var(--primary); color: var(--primary); background: var(--filter-active); }
+      .tokens { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+      .token { display: grid; gap: 0.45rem; }
+      .token-swatch { min-height: 4rem; border: 1px solid var(--border); border-radius: var(--radius-standard); }
+      .token code { color: var(--muted-foreground); font-size: 0.75rem; }
+      .dark { --background: #111111; --foreground: #eeeeee; --card: #191919; --muted-foreground: #b4b4b4; --border: #3a3a3a; --input: #222222; --primary: #0090ff; --primary-foreground: #061018; --filter-idle: #222222; --filter-active: #0d2847; --destructive: #e5484d; }
+      @media (max-width: 52rem) { .gallery-shell { width: min(100% - 2rem, 42rem); padding-top: 2rem; } .gallery-header { align-items: start; flex-direction: column; } .gallery-grid { grid-template-columns: 1fr; } .gallery-section.wide { grid-column: auto; } .tokens { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    </style>
+  </head>
+  <body>
+    <main class="gallery-shell">
+      <header class="gallery-header">
+        <div>
+          <h1>Arkive shared component gallery</h1>
+          <p>Reference states for the shared controls and catalog surfaces. Page patterns own arrangement; foundations own these tokens, shapes, focus treatments, and state meanings.</p>
+        </div>
+        <button class="theme-toggle" type="button" id="theme-toggle">Toggle dark mode</button>
+      </header>
+
+      <div class="gallery-grid">
+        <section class="gallery-section wide">
+          <h2>Inputs and fields</h2>
+          <p>Labels, help, invalid state, and composite search focus use one field association contract.</p>
+          <div class="sample-row">
+            <div class="field"><label for="default-input">Default input</label><input id="default-input" placeholder="Search within this category" /><small>Help text stays attached to the control.</small></div>
+            <div class="field"><label for="error-input">Invalid input</label><input id="error-input" aria-invalid="true" value="Unknown value" /><small class="error">Explain what needs attention.</small></div>
+            <label class="search-field" for="search-input"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Search tools or game names" /></label>
+          </div>
+        </section>
+
+        <section class="gallery-section">
+          <h2>Actions</h2>
+          <p>Primary and secondary actions keep stable geometry and visible focus.</p>
+          <div class="sample-row"><button class="primary-button" type="button">Save changes</button><button class="secondary-button" type="button">Cancel</button></div>
+        </section>
+
+        <section class="gallery-section">
+          <h2>Filters and select</h2>
+          <p>Idle and selected filters use semantic surfaces; selection is not communicated by color alone.</p>
+          <div class="filter-list"><button class="filter" type="button" aria-pressed="true">All 42</button><button class="filter" type="button" aria-pressed="false">Strength 14</button><button class="filter" type="button" aria-pressed="false">Support 12</button></div>
+          <div class="field" style="margin-top: 1rem"><label for="gallery-select">Select</label><select id="gallery-select"><option>Current category</option><option>All categories</option></select></div>
+        </section>
+
+        <section class="gallery-section wide">
+          <h2>Favorite and catalog card</h2>
+          <p>Independent actions remain separate from the primary destination. Pending and failure states keep the card geometry.</p>
+          <div class="catalog-card"><span class="catalog-icon" aria-hidden="true">✦</span><span><strong>Breeding Calculator</strong><p>Find parent pairs and the shortest route to a Pal.</p></span><button class="favorite" type="button" aria-pressed="true" aria-label="Remove favorite">★</button></div>
+        </section>
+
+        <section class="gallery-section wide">
+          <h2>State matrix samples</h2>
+          <p>Use this row when reviewing a new shared component: default, selected, disabled, loading, empty, and error.</p>
+          <div class="state-list"><div class="state-card"><strong>Loading</strong><span class="search-field" aria-hidden="true"><span>⌕</span><span style="color: var(--muted-foreground)">Loading results…</span></span></div><div class="state-card"><strong>Empty</strong><span style="color: var(--muted-foreground); font-size: 0.875rem">No matching records. Keep the current query available.</span></div><div class="state-card"><strong>Error</strong><span style="color: var(--destructive); font-size: 0.875rem">Could not load records. Retry without clearing the query.</span></div></div>
+        </section>
+
+        <section class="gallery-section wide">
+          <h2>Semantic tokens</h2>
+          <div class="tokens"><div class="token"><span class="token-swatch" style="background: var(--background)"></span><code>background</code></div><div class="token"><span class="token-swatch" style="background: var(--input)"></span><code>input</code></div><div class="token"><span class="token-swatch" style="background: var(--filter-active)"></span><code>filter-active</code></div><div class="token"><span class="token-swatch" style="background: var(--primary)"></span><code>primary</code></div></div>
+        </section>
+      </div>
+    </main>
+    <script>
+      document.getElementById("theme-toggle").addEventListener("click", () => document.documentElement.classList.toggle("dark"));
+    </script>
+  </body>
+</html>

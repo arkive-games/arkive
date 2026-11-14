@@ -49,7 +49,7 @@ describe("MarkerPopupCard position copy", () => {
     expect(queryByTestId("marker-description")).toBeNull()
   })
 
-  it("copies the exact displayed coordinate and confirms success", async () => {
+  it("copies the exact displayed coordinate without visible feedback", async () => {
     const writeText = vi.fn<(value: string) => Promise<void>>(() => Promise.resolve())
     stubClipboard(writeText)
     const { getByTestId } = render(
@@ -64,10 +64,12 @@ describe("MarkerPopupCard position copy", () => {
     fireEvent.click(getByTestId("marker-position-copy"))
 
     expect(writeText).toHaveBeenCalledWith(positionCopy.value)
-    await waitFor(() => expect(getByTestId("marker-position-copy").textContent).toContain("Copied"))
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
+    expect(getByTestId("marker-position-copy").getAttribute("aria-label")).toBe(positionCopy.copyLabel)
+    expect(getByTestId("marker-position-copy").textContent).toBe("")
   })
 
-  it("shows a failure state when clipboard access is rejected", async () => {
+  it("keeps the copy action unchanged when clipboard access is rejected", async () => {
     stubClipboard(() => Promise.reject(new Error("denied")))
     vi.spyOn(console, "error").mockImplementation(() => undefined)
     const { getByTestId } = render(
@@ -81,6 +83,8 @@ describe("MarkerPopupCard position copy", () => {
 
     fireEvent.click(getByTestId("marker-position-copy"))
 
-    await waitFor(() => expect(getByTestId("marker-position-copy").textContent).toContain("Copy failed"))
+    await waitFor(() => expect(console.error).toHaveBeenCalled())
+    expect(getByTestId("marker-position-copy").getAttribute("aria-label")).toBe(positionCopy.copyLabel)
+    expect(getByTestId("marker-position-copy").textContent).toBe("")
   })
 })

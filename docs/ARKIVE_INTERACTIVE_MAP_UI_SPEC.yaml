@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.interactive-map.desktop-ui"
 title: "Arkive Interactive Map Desktop UI Specification"
 status: "canonical"
-last_reviewed: "2026-08-13"
+last_reviewed: "2026-11-15"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -215,7 +215,7 @@ marker_detail:
     pointer: "Desktop shows a surface-colored pointer at the bottom center, aligned to the selected marker. Mobile has no pointer."
     drag_affordance: "Mobile shows a drag handle above the identity header. Dragging the handle downward moves the sheet with the pointer; crossing one quarter of the sheet height, 120px at most, or making a deliberate fast downward swipe closes it. Short or cancelled drags animate back into place. The explicit close action remains available."
   regions:
-    - "Fixed identity header with close action and coordinate copy"
+    - "Fixed identity header with close action"
     - "Fixed Details and Comments tab list"
     - "One focusable, independently scrollable middle viewport"
     - "Fixed contextual footer"
@@ -238,12 +238,13 @@ marker_detail:
     metadata_role: "metadata"
   coordinates:
     role: "coordinate_or_id"
-    display: "Use the exact localized value supplied by the game."
+    display: "Plain game-native (A, B, C) when valid height is supplied, otherwise (A, B); no extra height line or invented zero."
+    placement: "Details footer lower-left: location icon, tuple, copy icon; no visible labels or Add Image entry."
     copy:
       copied_value: "Exactly the visible coordinate string"
       idle: "Copy icon"
-      success: "Check icon and localized success label for 2000ms"
-      failure: "Alert icon and localized failure label for 2000ms"
+      success: "Keep the copy icon unchanged; no visible status or toast"
+      failure: "Keep the copy icon unchanged; no visible status or toast"
       transport: "navigator.clipboard.writeText on secure origins"
   description:
     role: "dense_body"
@@ -346,3 +347,7 @@ maintenance:
     - "Component registry paths are authoritative and update with ownership changes."
     - "Do not copy global foundation or color values into this file."
     - "Update last_reviewed when the desktop map contract is intentionally reviewed."
+
+confirmed_detail_exceptions:
+  comment_toolbar: "Remove the comment total / Popular / Latest row; preserve composer, attachments and other comment interactions."
+  rule_owner: "docs/ui-system/map-markers.md"

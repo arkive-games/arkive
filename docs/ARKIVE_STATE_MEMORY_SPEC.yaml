@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.state-memory"
 title: "Arkive State Memory Specification"
 status: "canonical"
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-11-15"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -260,6 +260,12 @@ surface_contracts:
     excluded:
       - "Open search or filter sheet, hovered marker, cursor coordinates, temporary highlight, and popup scroll position"
   tools_and_calculators:
+    explicit_saving:
+      owner: "docs/ui-system/tool-saving.md"
+      exit: "Save and Leave, Leave Without Saving, or Continue Editing on app-controlled dirty exit."
+      failed_save: "Keep work and stay; do not silently save or discard."
+      discard: "Next ordinary visit starts fresh; preserve existing explicitly saved records."
+      migration: "Per tool after save destination/account scope is defined; do not clear legacy drafts globally."
     task_draft:
       - "Mode, target entities, selections, numeric inputs, and route needed to resume the calculation"
     shareable_route: "Create an explicit Share action when another user can meaningfully reuse the configuration."
