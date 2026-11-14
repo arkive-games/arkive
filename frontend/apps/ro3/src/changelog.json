@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.24.14",
+      "date": "2026-11-14",
+      "commit": "d14213be0cb294c7272fda3322a09b499c9017ad",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Preserve unsaved builds when canceling browser navigation and prevent delayed share requests from replacing another selected build.",
+            "zh-CN": "取消浏览器前进后退时保留未保存方案，防止延迟返回的分享请求覆盖当前选择的方案。",
+            "zh-TW": "取消瀏覽器前進後退時保留未儲存方案，防止延遲返回的分享請求覆蓋目前選擇的方案。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.24.13",
       "date": "2026-11-14",
       "commit": "6976ad723c0528a30767113c47adc1feb8b43a43",
