@@ -1,6 +1,37 @@
 {
   "entries": [
     {
+      "date": "2026-11-15",
+      "commit": "382a9d66a0e30f0a329253cd5d003d5b79f74c3c",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "pbz",
+        "gmzz",
+        "ro3",
+        "oss"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Tool Library filters by game type, searches associated game names, and provides separate tool, game and favorite actions. Favorites sort first after filtering and retain their previous state when saving fails.",
+            "zh-CN": "工具库支持按游戏类型筛选与游戏名称搜索，工具、游戏入口和收藏独立操作；收藏在筛选后优先排列，保存失败时保留原状态并可重试。",
+            "zh-TW": "工具庫支援按遊戲類型篩選與遊戲名稱搜尋，工具、遊戲入口及收藏獨立操作；收藏在篩選後優先排列，儲存失敗時保留原狀態並可重試。"
+          }
+        },
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Map details place coordinates at the lower left, omit copy notifications and the old image-upload and comment-sort rows. Account menus omit the account number, and account sections begin directly with their fields.",
+            "zh-CN": "地图详情坐标移至左下角，移除复制提示、原添加图片入口及留言排序行；账号菜单不再显示UID，账户中心各栏目直接展示实际内容。",
+            "zh-TW": "地圖詳情座標移至左下角，移除複製提示、原新增圖片入口及留言排序列；帳號選單不再顯示UID，帳戶中心各欄目直接展示實際內容。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-11",
       "commit": "8ce0383f8b1df1d4476aa03e0902f32f60854924",
       "targets": [
