@@ -1,3 +1,7 @@
+import { useMapSession } from '@gamemap/state-memory';
+import { useGameMap } from '@/context/GameMapContext';
+import { useMarkers } from '@/context/MarkersContext';
+import { aionMapSession } from '../mapSession';
 import { useTranslation } from "react-i18next";
 import { ShellSidebar } from "@gamemap/map-shell";
 import Logo from "./Logo";
@@ -6,10 +10,16 @@ import SelectMap from "./SelectMap";
 
 export default function Sidebar() {
   const { t } = useTranslation(["common"]);
+  const { selectedMap } = useGameMap();
+  const { markersMapId } = useMarkers();
+  const session = useMapSession(aionMapSession, selectedMap?.id ?? "");
 
   return (
     <ShellSidebar
       width={320}
+      collapsed={session.collapsed}
+      onCollapsedChange={session.setCollapsed}
+      scrollMemory={{ ...session.scrollMemory, ready: !session.collapsed && Boolean(selectedMap) && markersMapId === selectedMap?.id }}
       collapseLabel={t("common:menu.collapse", "Collapse")}
       expandLabel={t("common:menu.expand", "Expand")}
       label={t("common:menu.markerTypes", "Marker Types")}

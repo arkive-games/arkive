@@ -114,6 +114,8 @@ const loadVisibleData = (prefix: string, selectedMap: GameMapMeta, validKeys: Se
 export const GameDataProvider: React.FC<GameDataProviderProps> = ({
                                                                     children,
                                                                   }) => {
+  const [subtypesForMap, setSubtypesForMap] = useState<string>();
+  const [regionsForMap, setRegionsForMap] = useState<string>();
   const [visibleSubtypes, setVisibleSubtypes] = useState<Set<string> | undefined>(undefined);
   const [visibleRegions, setVisibleRegions] = useState<Set<string> | undefined>(undefined);
   const [allSubtypes, setAllSubtypes] = useState<Map<string, MarkerTypeSubtype>>(new Map());
@@ -123,7 +125,7 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
   // const { regions } = useMarkers(selectedMap?.name);
 
   const { types, selectedMap } = useGameMap();
-  const { regions } = useMarkers();
+  const { regions, markersMapId } = useMarkers();
 
   // Initialize visibleSubtypes once when types are loaded
   useEffect(() => {
@@ -139,6 +141,7 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
       });
     });
     setAllSubtypes(all);
+    setSubtypesForMap(selectedMap.name);
     const validKeys = new Set(all.keys());
     const visible = loadVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMap, validKeys);
     if (visible) {
@@ -150,7 +153,8 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
 
   // Initialize visibleRegions once when regions are loaded
   useEffect(() => {
-    if (!selectedMap || regions.length === 0) return;
+    if (!selectedMap || markersMapId !== selectedMap.id) return;
+    setRegionsForMap(selectedMap.name);
     // setAllSubtypes(all);
     const validKeys = new Set(regions.map(x => x.name));
     const visible = loadVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMap, validKeys);
@@ -159,16 +163,16 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
     } else {
       setVisibleRegions(validKeys);
     }
-  }, [selectedMap, regions]);
+  }, [selectedMap, regions, markersMapId]);
 
 
   useEffect(() => {
-    saveVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMap, visibleSubtypes)
-  }, [selectedMap, visibleSubtypes]);
+    if (selectedMap?.name === subtypesForMap) saveVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMap, visibleSubtypes)
+  }, [selectedMap, visibleSubtypes, subtypesForMap]);
 
   useEffect(() => {
-    saveVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMap, visibleRegions)
-  }, [selectedMap, visibleRegions]);
+    if (selectedMap?.name === regionsForMap) saveVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMap, visibleRegions)
+  }, [selectedMap, visibleRegions, regionsForMap]);
 
   const handleToggleSubtype = (subtypeId: string) => {
     setVisibleSubtypes((prev) => {

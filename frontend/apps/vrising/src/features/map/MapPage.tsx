@@ -1,3 +1,4 @@
+import { createMapSessionRecords, useMapSession } from '@gamemap/state-memory'
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
@@ -48,6 +49,8 @@ const regionsRecord = defineMemoryRecord({
   validate: isBoolean,
 })
 
+const mapSessionRecords = createMapSessionRecords('vrising')
+
 // The map engine behind a lazy boundary — see features/map/GlMapView.
 const GameMapView = lazy(() => import('./GlMapView'))
 
@@ -89,11 +92,16 @@ export default function MapPage() {
   // Camera + selection persistence. `useMapViewMemory` is storage-free; the
   // adapter comes from lib/storage.
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, MAP_ID)
+  const mapSession = useMapSession(mapSessionRecords, MAP_ID)
   // `initialView` is frozen at page mount while `onViewChange` streams the live
   // camera into storage, so a remount would otherwise restore the camera the page
-  // loaded with and jump. vrising has a single map, so nothing re-reads it during a
-  // session — the state exists to keep the frozen value out of the render path.
-  const [mountView] = useState<MapViewState | null>(initialView)
+  // loaded with and jump. Re-read before mounting the other viewport's engine.
+  const [mountView, setMountView] = useState<MapViewState | null>(initialView)
+  const [mountedForMobile, setMountedForMobile] = useState(isMobile)
+  if (mountedForMobile !== isMobile) {
+    setMountedForMobile(isMobile)
+    setMountView(readMapView(mapViewStore, MAP_ID).view)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -395,6 +403,11 @@ export default function MapPage() {
   const filterPanel = (
     <FilterPanel
       categories={filterCategories}
+      expandedCategoryIds={filterCategories.filter(category => !mapSession.categories.includes(category.id)).map(category => category.id)}
+      onExpandedCategoryIdsChange={expanded => mapSession.setCategories(previous => [
+        ...previous.filter(id => !filterCategories.some(category => category.id === id)),
+        ...filterCategories.filter(category => !expanded.includes(category.id)).map(category => category.id),
+      ])}
       onToggleSubtype={onToggleSubtype}
       onSetCategory={onSetCategory}
       categoryToggleLabels={{ show: t('showAll'), hide: t('hideAll') }}
@@ -435,6 +448,7 @@ export default function MapPage() {
 
   const searchPanel = (variant: 'floating' | 'inline') => (
     <SearchPanel
+      queryMemory={mapSession.searchMemory}
       items={searchItems}
       onSelect={onSelectSearchMarker}
       onFlyTo={setSelectedPosition}
@@ -532,6 +546,9 @@ export default function MapPage() {
         topBar={<TopNav active="/" />}
         sidebar={
           <ShellSidebar
+            collapsed={mapSession.collapsed}
+            onCollapsedChange={mapSession.setCollapsed}
+            scrollMemory={{ ...mapSession.scrollMemory, ready: !mapSession.collapsed && Boolean(markerData) }}
             width={320}
             collapseLabel={t('collapse')}
             expandLabel={t('expand')}

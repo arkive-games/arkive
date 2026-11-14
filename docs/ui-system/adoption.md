@@ -19,8 +19,8 @@ account-menu UID removal and hidden redundant account section heading.
 Canonical foundation/color/site/map/memory owners now record these scoped rules.
 The current homepage source remains unchanged.
 
-Remaining: encyclopedia reconstruction and return adapters outside RO3; per-map memory
-lifecycle migration; production credits generation/manual editor; tool explicit
+Remaining: encyclopedia reconstruction and return adapters outside RO3; remaining
+map lifecycle migration and OSS preview adoption; production credits generation/manual editor; tool explicit
 save adapters after their open save destinations/account scopes are resolved.
 Do not call the whole stage complete from the catalog/map-detail batch.
 
@@ -39,7 +39,7 @@ needs no invented network error. Keep final evidence and state actual limitation
 | Homepage | Mobile shelf/overflow, empty-section treatment, promotion cadence |
 | Catalogs | Tool geometry/truncation/reflow, optional game grouping, Other membership after game entry launches |
 | Encyclopedia | Adjustable rail/sticky calibration; game-owned schema/detail and related links; mobile deferred |
-| Map | Picker geometry/group names, return lifecycle, provisional mobile |
+| Map | Picker geometry/group names, legacy memory retirement, OSS preview adoption, provisional mobile |
 | Tools | Save destination/account scope, saved-record workflow, per-tool applicability |
 | Credits | Identity/aliases, bots, ordering, refresh and manual editor |
 | Acceptance/data | Unreviewed states/themes, contrast/geometry, current inventory/child parity, signed-in ordering and direct-post routes |
@@ -62,3 +62,19 @@ and selected-record restore across categories. Full suite: 157 files / 1871
 tests pass. RO3 lint and production build pass. Its fixed port belongs to a
 separate worktree; this batch is previewed on temporary port 15180 without
 stopping that workspace. No mobile layout changes or remote delivery.
+
+Map return-memory batch: AION2, Palworld, V Rising and PBZ now restore tab-local
+map queries, category disclosure and sidebar collapse/scroll. Palworld/PBZ
+visibility is map-partitioned; existing global preferences seed new contexts
+without deleting old data. AION2 keeps its existing per-map visibility records
+with map-load write guards. Bare entry restores the last available map; explicit
+targets take precedence, and stale map ids fall back to an available map.
+Breakpoint remounts reread the current camera. Completion keys are unchanged.
+
+Browser checks cover AION2/Palworld/PBZ map switching and bare entry, independent
+queries/visibility, category/sidebar restoration, AION2 stale links and marker
+priority, Palworld coordinate priority, and V Rising reload restoration. Four
+affected app builds/lints pass; full suite: 158 files / 1875 tests. The generated
+key inventory includes the shared map-context factory. No remote delivery.
+This is scoped adoption: legacy selection/display/progress lifecycles, all
+account/storage-failure scenarios and OSS preview are not certified complete.

@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react"
+import { useCallback, useRef, useState, type ReactNode } from "react"
+import { useContentScrollRestoration, type ContentScrollRestoration } from './useContentScrollRestoration'
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { cn, ScrollArea } from "@gamemap/ui"
 
@@ -22,6 +23,7 @@ export interface ShellSidebarProps {
   defaultCollapsed?: boolean
   collapsed?: boolean
   onCollapsedChange?: (collapsed: boolean) => void
+  scrollMemory?: ContentScrollRestoration
   collapseLabel: string
   expandLabel: string
   backgroundSlot?: ReactNode
@@ -54,6 +56,7 @@ export function ShellSidebar({
   defaultCollapsed = false,
   collapsed: collapsedProp,
   onCollapsedChange,
+  scrollMemory,
   collapseLabel,
   expandLabel,
   backgroundSlot,
@@ -65,6 +68,11 @@ export function ShellSidebar({
 }: ShellSidebarProps) {
   const [uncontrolled, setUncontrolled] = useState(defaultCollapsed)
   const collapsed = collapsedProp ?? uncontrolled
+  const viewportRef = useRef<HTMLDivElement | null>(null)
+  const scrollRoot = useCallback((node: HTMLDivElement | null) => {
+    viewportRef.current = node?.querySelector<HTMLDivElement>('[data-slot="scroll-area-viewport"]') ?? null
+  }, [])
+  useContentScrollRestoration(viewportRef, scrollMemory)
   const toggle = () => {
     const next = !collapsed
     setUncontrolled(next)
@@ -87,6 +95,7 @@ export function ShellSidebar({
     >
       {backgroundSlot}
       <ScrollArea
+        ref={scrollRoot}
         data-testid="sidebar-scroll-area"
         className={cn("min-h-0 flex-1 overflow-hidden", classNames?.scrollArea)}
       >

@@ -3,6 +3,12 @@ import { useCallback, useMemo } from "react"
 /** DATA-space map center + engine zoom (`scale = 2^zoom`), saved across reloads. */
 export type MapViewState = { x: number; y: number; zoom: number }
 
+/** A stale URL or saved map must fall back to an available map, never blank. */
+export function resolveRememberedMap<T extends { id: string; name?: string }>(maps: readonly T[], explicit?: string | null, remembered?: string | null, fallback?: string): T | undefined {
+  const find = (value: string | null | undefined) => value ? maps.find(map => map.id === value || map.name === value) : undefined
+  return find(explicit) ?? find(remembered) ?? find(fallback) ?? maps[0]
+}
+
 /**
  * Persistence adapter injected by the app — the shell stays storage-free
  * (same contract as ThemeStorage). `get`/`set` move the raw JSON string of
