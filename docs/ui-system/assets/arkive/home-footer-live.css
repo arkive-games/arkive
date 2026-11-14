@@ -1,0 +1,44 @@
+/* Copied from deployed CSS at https://arkive.games/ on 2026-11-15. */
+
+.arkive-wordmark { white-space: nowrap; text-indent: 110%; vertical-align: middle; color: rgba(0, 0, 0, 0); width: 3.26em; height: 0.75em; transition: opacity var(--arkive-motion-standard) var(--arkive-motion-easing); background: linear-gradient(90deg, rgb(23, 24, 28), rgb(77, 59, 23) 48%, rgb(143, 101, 17) 80%, rgb(181, 126, 13)); display: inline-block; overflow: hidden; mask: url("data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20143.596%2033'%3e%3cpath%20transform='matrix(1,0,0,-1,90.0248,9.3036999)'%20d='M0%200C2.315%200%204.198%201.883%204.198%204.198V6.58C4.198%208.028%203.019%209.206%201.571%209.206H-2.382C-3.83%209.206-5.009%208.028-5.009%206.58V0ZM2.875-23.596C3.604-23.596%204.198-23.003%204.198-22.273V-2.646C4.198-1.917%203.604-1.324%202.875-1.324H-3.686C-4.415-1.324-5.009-1.917-5.009-2.646V-22.273C-5.009-23.003-4.415-23.596-3.686-23.596ZM18.147-23.696C22.077-23.696%2025.328-20.949%2026.236-16.862L29.364-2.895C29.453-2.501%2029.358-2.094%2029.106-1.779%2028.854-1.464%2028.477-1.283%2028.074-1.283H21.879C21.254-1.283%2020.723-1.709%2020.589-2.314L18.148-12.791%2015.706-2.319C15.571-1.709%2015.04-1.283%2014.415-1.283H8.249C7.846-1.283%207.47-1.464%207.217-1.778%206.965-2.093%206.87-2.499%206.958-2.892L10.057-16.861C10.966-20.949%2014.217-23.696%2018.147-23.696M-9.216-23.596C-8.703-23.596-8.247-23.309-8.024-22.847-7.802-22.385-7.863-21.848-8.183-21.448L-15.55-12.229C-15.646-12.11-15.645-11.937-15.548-11.819L-8.707-3.486C-8.379-3.086-8.313-2.548-8.533-2.081-8.754-1.614-9.212-1.324-9.729-1.324H-17.729C-18.112-1.324-18.475-1.489-18.727-1.778L-22.053-5.598C-22.119-5.674-22.199-5.712-22.292-5.712-22.378-5.712-22.464-5.678-22.527-5.62-22.592-5.56-22.625-5.48-22.625-5.384V2.957C-22.625%203.686-23.218%204.279-23.947%204.279H-30.508C-31.238%204.279-31.831%203.686-31.831%202.957V-22.273C-31.831-23.003-31.238-23.596-30.508-23.596H-23.947C-23.218-23.596-22.625-23.003-22.625-22.273V-19.071C-22.625-18.832-22.42-18.743-22.291-18.743-22.192-18.743-22.109-18.785-22.043-18.869L-19.878-21.613C-18.883-22.873-17.392-23.596-15.786-23.596ZM-44.343-23.596C-43.613-23.596-43.02-23.003-43.02-22.273V-12.334C-43.02-11.372-42.237-10.59-41.276-10.59H-35.424C-34.695-10.59-34.102-9.996-34.102-9.267V-2.706C-34.102-1.977-34.695-1.383-35.424-1.383H-42.626C-47.919-1.383-52.226-5.69-52.226-10.983V-22.273C-52.226-23.003-51.633-23.596-50.903-23.596ZM45.561-10.963C46.292-10.963%2046.683-10.073%2046.186-9.528%2045.981-9.305%2045.753-9.104%2045.506-8.931%2045.235-8.742%2044.923-8.642%2044.604-8.642H39.165C38.846-8.642%2038.534-8.742%2038.263-8.931%2038.016-9.104%2037.788-9.305%2037.583-9.528%2037.086-10.073%2037.477-10.963%2038.208-10.963ZM38.221-14.384C37.393-14.384%2037.053-15.49%2037.747-15.951%2037.753-15.955%2037.759-15.959%2037.765-15.963%2038.019-16.13%2038.311-16.212%2038.606-16.212H41.351%2044.871%2051.764C52.372-16.212%2052.781-16.848%2052.537-17.415%2051.571-19.649%2049.983-21.536%2048.001-22.837%2047.252-23.33%2046.393-23.571%2045.525-23.571H38.091C37.224-23.571%2036.365-23.33%2035.615-22.837%2032.271-20.641%2030.046-16.779%2030.046-12.389%2030.046-8.126%2032.143-4.361%2035.327-2.136%2036.124-1.578%2037.045-1.283%2037.983-1.283H45.633C46.572-1.283%2047.492-1.578%2048.29-2.136%2051.473-4.361%2053.571-8.126%2053.571-12.389%2053.571-12.805%2053.551-13.217%2053.512-13.622%2053.47-14.057%2053.103-14.384%2052.675-14.384ZM-64.371-23.596C-66.69-23.596-68.878-22.662-70.533-20.964-72.175-19.28-73.079-17.068-73.079-14.735V-14.236H-64.343V-1.079C-64.343-.492-64.63-.115-65.195%20.044-65.326%20.081-65.456%20.099-65.58%20.099-65.968%20.099-66.271-.088-66.505-.474L-79.805-22.947C-80.042-23.347-80.478-23.596-80.943-23.596H-88.7C-89.182-23.596-89.612-23.346-89.85-22.926-90.088-22.507-90.083-22.01-89.835-21.596L-74.375%204.302C-72.472%207.435-69.179%209.304-65.564%209.304-64.608%209.304-63.649%209.171-62.713%208.909-58.181%207.64-55.137%203.626-55.137-1.079V-22.273C-55.137-23.003-55.73-23.596-56.46-23.596Z'/%3e%3c/svg%3e") 50% center / contain no-repeat; }
+.dark .arkive-wordmark, .abyss .arkive-wordmark { background: rgb(255, 255, 255); }
+a:hover > .arkive-wordmark, a:focus-visible > .arkive-wordmark { opacity: 0.78; }
+@media (prefers-reduced-motion: reduce) {.arkive-wordmark, .arkive-round-button svg, .arkive-login-pill, .arkive-dialog-submit, .arkive-dialog-primary, .arkive-settings-card, .arkive-settings-card > summary > [data-slot="settings-chevron"], .arkive-data-hold > summary > [data-slot="settings-chevron"], .arkive-theme-card, .arkive-language-pill, .arkive-nav-indicator, .arkive-nav-indicator[data-animate="true"] { transition: none; }}
+.home-shell { width: min(calc(100% - 2 * var(--arkive-page-gutter)), var(--home-shell)); margin-inline: auto; }
+.home-footer { --f1: #45b8e6; --f2: #2585c4; --f3: #154f8c; --fsub: #f0faffdb; --ffaint: #e8f6ffb3; --fdone: #fff3c4; --gold: #e6a417; --track: #14141e29; margin-top: 3.5rem; position: relative; }
+.dark .home-footer { --f1: #1d4670; --f2: #183c60; --f3: #0c1d33; --fsub: #e1ebf5c7; --ffaint: #e1ebf580; --fdone: #ffcf5a; --gold: #ffcf5a; --track: #ffffff24; }
+.home-footer-edge { width: 100%; height: 5.625rem; display: block; }
+.home-footer-edge stop { transition: stop-color 0.5s; }
+.home-footer-sea { color: rgb(255, 255, 255); background: linear-gradient(180deg, var(--f2), var(--f3)); margin-top: -1px; padding: 0.375rem 0px 1.375rem; transition: background 0.5s; }
+.home-footer-row { grid-template-columns: minmax(0px, 1fr) auto minmax(0px, 1fr); align-items: center; gap: 2rem; display: grid; }
+.home-footer-brand.arkive-wordmark { background: rgb(255, 255, 255); justify-self: start; font-size: 1.75rem; }
+.home-footer-links { color: var(--fsub); flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.625rem; font-size: 0.875rem; font-weight: 700; display: flex; }
+.home-footer-links a, .home-footer-links button { min-height: 1.5rem; color: inherit; font: inherit; cursor: pointer; background: 0px 0px; border: 0px; align-items: center; padding: 0px; text-decoration: none; transition: color 0.2s; display: inline-flex; }
+.home-footer-links a:hover, .home-footer-links button:hover { color: rgb(255, 255, 255); }
+.home-footer-legal { color: var(--ffaint); white-space: nowrap; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 1rem; margin: 0px; font-size: 0.75rem; display: flex; }
+.home-footer-legal a { color: inherit; text-decoration: none; }
+.home-footer-legal a:hover { color: rgb(255, 255, 255); }
+.home-footer .home-footer-track { fill: none; stroke-width: 1.3px; }
+.home-footer .home-footer-done { fill: none; stroke-width: 1.6px; }
+.home-footer-edge .home-footer-track { stroke: rgba(255, 255, 255, 0.14); }
+.home-footer-edge .home-footer-done { stroke: var(--fdone); stroke-opacity: 0.9; }
+.home-voyage { z-index: calc(var(--arkive-layer-sticky) - 1); pointer-events: none; position: fixed; inset: 0px; }
+.home-route { width: 100%; height: 1.5rem; position: absolute; bottom: 0px; left: 0px; }
+.home-route .home-footer-track { stroke: var(--track); }
+.home-route .home-footer-done { stroke: var(--gold); stroke-opacity: 0.85; }
+.home-boat { width: 1.375rem; height: 1.5rem; color: var(--gold); margin: -1.375rem 0px 0px -0.6875rem; transition: opacity 0.5s; position: absolute; top: 0px; left: 0px; }
+.home-boat svg { transform-origin: 50% 90%; width: 100%; height: 100%; animation: 2.4s ease-in-out 0s infinite normal none running home-bob; display: block; }
+.home-boat.is-moored { opacity: 0; width: 1.75rem; height: 1.875rem; margin: -1.75rem 0px 0px -0.875rem; }
+.home-voyage.is-arrived .home-boat.is-sailing { opacity: 0; }
+.home-voyage.is-arrived .home-boat.is-moored { opacity: 1; }
+.home-port { color: var(--muted-foreground); letter-spacing: 0.2em; white-space: nowrap; opacity: 0; font-size: 0.8125rem; transition: opacity 0.6s 0.15s, transform 0.6s 0.15s; position: absolute; top: 0px; left: 0px; transform: translate(-50%, -4.75rem); }
+.home-voyage.is-arrived .home-port { opacity: 1; transform: translate(-50%, -5.125rem); }
+@media (width <= 760px) {.home-footer { margin-top: 2rem; }
+.home-footer-edge { height: 3rem; }
+.home-footer-sea { padding: 0 0 calc(1rem + env(safe-area-inset-bottom)); }
+.home-footer-row { text-align: center; grid-template-columns: minmax(0px, 1fr); justify-items: center; gap: 0.625rem; }
+.home-footer-brand.arkive-wordmark { justify-self: center; font-size: 1.5rem; }
+.home-footer-links { gap: 0.25rem 1.25rem; }
+.home-footer-legal { white-space: normal; justify-content: center; gap: 0.125rem 0.75rem; }
+.home-route, .home-boat.is-sailing { display: none; }}
+@media (prefers-reduced-motion: reduce) {.home-quick > :is(a, button), .home-boat svg, .home-sheet { animation: auto ease 0s 1 normal none running none; }}

@@ -1,0 +1,621 @@
+<!-- Standalone Chinese visual study; no production code is changed by this file. -->
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-geometry="compact">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arkive — Control study</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://arkive.games/fonts/noto-sans/2088de758f2d1c3f/index.css">
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Noto Sans SC Variable", "Noto Sans TC Variable", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: 17px;
+      --page: #fcfcfc;
+      --surface: #ffffff;
+      --raised: #f9f9f9;
+      --field: #f0f0f0;
+      --hover: #e8e8e8;
+      --text: #202020;
+      --muted: #646464;
+      --border: #d9d9d9;
+      --strong-border: #858585;
+      --selected: #202020;
+      --on-selected: #ffffff;
+      --ring: #0d74ce;
+      --warm: linear-gradient(110deg, #ffb25e, #ff9690 60%, #ff83b1);
+      --warm-text: #281a16;
+      --voyage: #ab6400;
+      --shadow: 0 .4rem 1.25rem -.75rem rgb(40 30 10 / 18%);
+      --danger: #ce2c31;
+      --control-radius: 999rem;
+      --rail-width: 11.5rem;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page: #111111;
+      --surface: #191919;
+      --raised: #191919;
+      --field: #262626;
+      --hover: #323232;
+      --text: #eeeeee;
+      --muted: #b4b4b4;
+      --border: #3a3a3a;
+      --strong-border: #858585;
+      --selected: #eeeeee;
+      --on-selected: #202020;
+      --ring: #70b8ff;
+      --shadow: 0 .4rem 1.25rem -.75rem rgb(0 0 0 / 65%);
+      --danger: #ff9592;
+      --voyage: #ffc53d;
+    }
+    [data-geometry="pill"] { --control-radius: 999rem; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--text); }
+    button, input, select { font: inherit; }
+    button, a, input, select { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; cursor: pointer; }
+    button:disabled { cursor: not-allowed; }
+    a { color: inherit; text-decoration: none; }
+    button, a { touch-action: manipulation; }
+    :focus-visible { outline: .125rem solid var(--ring); outline-offset: .2rem; }
+    svg { width: 1.15rem; height: 1.15rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+    .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .site-shell { max-width: 80rem; margin: auto; padding: 1.25rem 2rem 2.5rem; }
+    .study-bar { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 3.25rem; }
+    .identity { display: flex; align-items: center; gap: 1.15rem; }
+    .wordmark { display: block; width: 7.5rem; height: 2.25rem; object-fit: contain; }
+    .dark-logo { display: none; }
+    [data-theme="dark"] .light-logo { display: none; }
+    [data-theme="dark"] .dark-logo { display: block; }
+    .study-name { padding-left: 1.15rem; border-left: 1px solid var(--border); font-size: .875rem; color: var(--muted); }
+    .study-actions { display: flex; align-items: center; gap: .75rem; }
+    .reference-button { display: flex; align-items: center; gap: .4rem; border: 0; background: transparent; font-size: .75rem; color: var(--muted); padding: .7rem .25rem; }
+    .reference-button:hover { color: var(--text); }
+    .icon-button { display: inline-grid; place-items: center; min-width: 2.5rem; height: 2.5rem; padding: 0; border: 1px solid transparent; border-radius: 50%; background: var(--field); }
+    .icon-button:hover { background: var(--hover); }
+    .intro { display: flex; justify-content: space-between; align-items: end; gap: 2rem; padding: 2rem 0 1.75rem; }
+    h1 { margin: 0 0 .5rem; font-size: 1.875rem; letter-spacing: -.035em; line-height: 1.4; }
+    .intro p { margin: 0; color: var(--muted); font-size: .875rem; line-height: 1.8; }
+    .draft-note { color: var(--muted); font-size: .75rem; flex: none; }
+    .comparison { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+    .catalog-study { width: calc(100% + 4rem); margin-top: 2rem; margin-left: -2rem; }
+    .catalog-study .section-top { margin-top: 0; }
+    .catalog-study-grid { margin-top: 1.5rem; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.25rem; }
+    .catalog-study-card { min-width: 0; position: relative; padding: .6rem .6rem .75rem; border: 1px solid var(--border); border-radius: 1.25rem; background: var(--raised); transition: background-color .18s, transform .18s; }
+    .catalog-study-card:hover { background: color-mix(in srgb, var(--game-color) 13%, var(--raised)); transform: translateY(-.1rem); }
+    .catalog-study-link { display: block; color: inherit; text-decoration: none; }
+    .catalog-study-cover { display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 1rem; background: var(--field); }
+    .catalog-study-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .catalog-study-copy { display: block; margin-top: .5rem; min-height: 2.45rem; }
+    .catalog-study-name { display: flex; align-items: center; gap: .45rem; min-width: 0; }
+    .catalog-study-name img { width: 1.5rem; height: 1.5rem; flex: none; border-radius: .35rem; object-fit: cover; }
+    .catalog-study-name strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .875rem; font-weight: 700; line-height: 1.5; }
+    .catalog-study-copy small { display: block; margin-top: .1rem; overflow: hidden; color: var(--muted); font-size: .75rem; line-height: 1.5; text-overflow: ellipsis; white-space: nowrap; }
+    .catalog-study-favorite { position: absolute; right: .35rem; bottom: .35rem; width: 2rem; height: 2rem; display: grid; place-items: center; border: 0; border-radius: 50%; color: var(--muted); background: transparent; }
+    .catalog-study-favorite:hover { color: var(--text); background: var(--field); }
+    .catalog-study-favorite[aria-pressed="true"] { color: var(--voyage); }
+    .catalog-study-status { min-height: 1.5rem; margin-top: .75rem; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+    .catalog-states { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
+    .catalog-state { min-height: 10rem; display: flex; flex-direction: column; justify-content: space-between; padding: 1rem; border: 1px solid var(--border); border-radius: 1.25rem; background: var(--raised); }
+    .catalog-state h3 { margin: 0; font-size: .875rem; }
+    .catalog-state p { margin: .4rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.6; }
+    .catalog-skeleton { display: grid; gap: .5rem; margin-top: .8rem; }
+    .catalog-skeleton span { display: block; height: .6rem; border-radius: 999rem; background: var(--field); }
+    .catalog-skeleton span:last-child { width: 60%; }
+    .catalog-empty { display: grid; place-items: center; min-height: 4.5rem; margin-top: .8rem; border-radius: .75rem; color: var(--muted); background: var(--field); font-size: .75rem; text-align: center; }
+    .catalog-pending { display: inline-flex; align-items: center; gap: .4rem; margin-top: .8rem; padding: .45rem .6rem; border: 1px dashed var(--strong-border); border-radius: .7rem; color: var(--muted); font-size: .75rem; }
+    .catalog-pending svg { width: 1rem; height: 1rem; }
+    .catalog-state .retry { align-self: flex-start; min-height: 2.25rem; padding: 0 .75rem; border: 1px solid var(--strong-border); border-radius: 999rem; color: var(--text); background: transparent; font-size: .75rem; }
+    .catalog-state .retry:hover { background: var(--field); }
+    @media (max-width: 64rem) { .catalog-states { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 48rem) { .catalog-states { grid-template-columns: 1fr; gap: .75rem; } }
+    @media (max-width: 80rem) { .catalog-study-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (max-width: 64rem) { .catalog-study-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 64rem) { .catalog-study { width: calc(100% + 2.5rem); margin-left: -1.25rem; } }
+    @media (max-width: 48rem) { .catalog-study-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; } .catalog-study-card { border-radius: 1rem; padding: .4rem .4rem .65rem; } .catalog-study-cover { border-radius: .7rem; } }
+    .variant { --control-radius: 999rem; min-width: 0; border: 1px solid var(--border); border-radius: 1.5rem; padding: 1.4rem; background: var(--surface); }
+    .variant[data-variant="pill"] { --control-radius: 999rem; }
+    .variant[data-picked="true"] { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); }
+    .variant-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+    .variant-title { display: flex; align-items: center; gap: .65rem; }
+    .variant-letter { width: 1.75rem; height: 1.75rem; display: grid; place-items: center; border-radius: .6rem; background: var(--field); font-size: .875rem; font-weight: 700; }
+    .variant h2 { font-size: 1rem; margin: 0; line-height: 1.5; }
+    .badge { font-size: .75rem; padding: .25rem .5rem; color: var(--warm-text); background: var(--warm); border-radius: 999rem; font-weight: 600; }
+    .variant-desc { color: var(--muted); font-size: .75rem; line-height: 1.8; margin: .6rem 0 1.15rem; }
+    .sample-label { display: block; color: var(--muted); font-size: .75rem; margin: .95rem 0 .45rem; }
+    .search { height: 3.2rem; min-width: 0; display: flex; align-items: center; gap: .55rem; padding: 0 .75rem; border: 1px solid var(--strong-border); border-radius: var(--control-radius); background: var(--surface); color: var(--muted); transition: border-color .15s, box-shadow .15s; }
+    .search:hover { border-color: var(--text); }
+    .search:focus-within { border-color: var(--ring); box-shadow: 0 0 0 .15rem color-mix(in srgb, var(--ring) 20%, transparent); }
+    .search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: .875rem; padding: 0; }
+    .search input::placeholder { color: var(--muted); opacity: 1; }
+    .search input::-webkit-search-cancel-button { display: none; }
+    .catalog-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+    .catalog-search { width: 23rem; height: 3.2rem; flex: 0 0 23rem; display: flex; align-items: center; gap: .5rem; padding: .3rem .3rem .3rem 1rem; border: 1px solid var(--border); border-radius: 999rem; background: var(--raised); color: var(--muted); }
+    .variant .catalog-search { margin-left: auto; }
+    .catalog-search:hover { border-color: var(--strong-border); }
+    .catalog-search:focus-within { border-color: var(--ring); box-shadow: 0 0 0 .15rem color-mix(in srgb, var(--ring) 20%, transparent); }
+    .catalog-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: .875rem; padding: 0; }
+    .catalog-search input::placeholder { color: var(--muted); opacity: 1; }
+    .catalog-search button { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; flex: none; padding: 0; border: 0; border-radius: 50%; background: var(--warm); color: var(--warm-text); }
+    .catalog-search button:hover { filter: brightness(.95); }
+    .catalog-search button svg { width: 1rem; height: 1rem; stroke-width: 2.2; }
+    .catalog-categories { display: inline-flex; align-items: center; height: 3.2rem; min-height: 0; width: fit-content; max-width: 100%; padding: .3rem; border-radius: 999rem; background: var(--field); overflow-x: auto; scrollbar-width: none; }
+    .catalog-categories::-webkit-scrollbar { display: none; }
+    .catalog-categories .chip { min-height: 2.5rem; padding: 0 .85rem; border: 0; border-radius: 999rem; background: transparent; color: var(--muted); font-weight: 600; }
+    .catalog-categories .chip[aria-pressed="true"] { color: var(--on-selected); background: var(--selected); }
+    .catalog-categories .chip:hover { color: var(--text); background: transparent; }
+    .catalog-categories .chip[aria-pressed="true"]:hover { color: var(--on-selected); background: var(--selected); }
+    .catalog-categories .chip small { margin-left: .3rem; font-size: .75rem; font-weight: 500; }
+    .clear-search { display: grid; place-items: center; border: 0; padding: 0; width: 1.5rem; height: 1.5rem; flex: none; background: transparent; border-radius: 50%; color: var(--muted); }
+    .clear-search[hidden] { display: none; }
+    .clear-search:hover { background: var(--field); }
+    .chips { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .chip { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 2.25rem; padding: 0 .85rem; border: 1px solid transparent; border-radius: 999rem; background: var(--field); color: var(--muted); font-size: .875rem; white-space: nowrap; }
+    .chip[aria-pressed="true"] { color: var(--on-selected); background: var(--selected); font-weight: 600; }
+    .chip:not([aria-pressed="true"]):hover { color: var(--text); background: var(--hover); }
+    .button-row { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.5rem; padding: 0 .95rem; border: 1px solid transparent; border-radius: var(--control-radius); font-size: .875rem; font-weight: 600; line-height: 1.5; background: var(--selected); color: var(--on-selected); }
+    .button:hover { filter: brightness(.93); }
+    [data-theme="dark"] .button:hover { filter: brightness(1.1); }
+    .button.secondary { background: var(--surface); color: var(--text); border-color: var(--strong-border); }
+    .button.quiet { background: var(--field); color: var(--text); }
+    .button.brand { background: var(--warm); color: var(--warm-text); }
+    .button:disabled { color: var(--muted); background: var(--field); border-color: transparent; opacity: .65; }
+    .variant-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1.25rem; }
+    .variant-footer small { font-size: .75rem; color: var(--muted); }
+    .pick-button { border: 0; display: inline-flex; align-items: center; gap: .4rem; padding: .35rem 0; background: transparent; font-size: .75rem; font-weight: 600; min-height: 2rem; }
+    .pick-button svg { width: 1rem; height: 1rem; }
+    .section-top { display: flex; justify-content: space-between; align-items: end; gap: 1.5rem; margin: 2rem 0 .9rem; }
+    .section-top h2 { margin: 0; font-size: 1.125rem; line-height: 1.5; }
+    .section-top p { margin: .3rem 0 0; font-size: .75rem; color: var(--muted); line-height: 1.75; }
+    .current-choice { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .75rem; flex: none; padding: .35rem 0; }
+    .current-choice strong { font-weight: 600; color: var(--text); }
+    .context { overflow: visible; border: 0; border-radius: 0; background: transparent; padding: 0; }
+    .context-topbar { height: 3.5rem; display: flex; justify-content: flex-start; align-items: center; gap: 1rem; padding: 0 2rem; border: 1px solid var(--border); border-left: 0; border-right: 0; border-radius: 0; background: var(--raised); box-shadow: none; }
+    .context-logo { display: flex; align-items: center; gap: 1rem; }
+    .context-wordmark { display: block; width: 5.25rem; height: 2.5rem; padding-right: .75rem; border-right: 1px solid var(--border); object-fit: contain; object-position: left center; }
+    .context-game-chip { display: inline-flex; align-items: center; gap: .5rem; height: 2.5rem; min-width: 0; padding: 0 1rem 0 .25rem; border-radius: 999rem; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); font-size: .875rem; font-weight: 700; }
+    .context-game-chip img { width: 1.875rem; height: 1.875rem; flex: none; border-radius: 50%; object-fit: cover; }
+    .context-nav { display: flex; align-items: center; gap: .125rem; padding: .25rem; border-radius: 999rem; background: var(--field); }
+    .context-nav span { display: grid; place-items: center; min-height: 2.5rem; min-width: 0; padding: 0 1rem; border-radius: 999rem; font-size: .875rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+    .context-nav .active { border-radius: 999rem; color: var(--on-selected); background: var(--selected); }
+    .context-utilities { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+    .context-utilities .icon-button { min-width: 2.5rem; height: 2.5rem; }
+    .context-utilities .button { min-height: 2.5rem; border-radius: 999rem; padding: 0 1.25rem; font-size: .875rem; }
+    .context-workspace { display: grid; grid-template-columns: var(--rail-width) minmax(0, 1fr); gap: 1.5rem; min-height: 19rem; margin-top: 1.25rem; }
+    .rail { display: flex; flex-direction: column; gap: .25rem; border-right: 1px solid var(--border); padding: 0 .85rem 1rem .3rem; min-width: 0; }
+    .rail-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: .4rem; padding-left: .5rem; }
+    .rail-top > span { font-size: .75rem; color: var(--muted); }
+    .rail-top .icon-button { min-width: 2rem; height: 2rem; background: transparent; }
+    .rail-link { display: flex; align-items: center; gap: .65rem; width: 100%; min-height: 2.5rem; padding: 0 .65rem; border: 0; border-radius: .75rem; background: transparent; text-align: left; font-size: .875rem; color: var(--muted); white-space: nowrap; }
+    .rail-link.group { color: var(--text); font-weight: 600; }
+    .rail-link.group svg:last-child { margin-left: auto; width: .875rem; }
+    .rail-child { display: flex; align-items: center; min-height: 2.25rem; margin-left: 2.4rem; padding: 0 .65rem; border: 0; border-radius: .65rem; background: transparent; font-size: .75rem; color: var(--muted); text-align: left; white-space: nowrap; }
+    .rail-child.active { background: var(--field); color: var(--text); font-weight: 600; box-shadow: inset .15rem 0 var(--text); }
+    .context-main { min-width: 0; padding: 0 .65rem 1.25rem 0; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .toolbar .catalog-search { width: 23rem; flex-basis: 23rem; }
+    .toolbar .catalog-categories { flex-wrap: nowrap; }
+    .results-meta { margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: .75rem; }
+    .reset-filters { border: 0; background: transparent; color: var(--text); padding: .35rem; font-size: .75rem; border-radius: .4rem; }
+    .reset-filters[hidden] { visibility: hidden; display: block; }
+    .content-placeholder { display: grid; place-content: center; text-align: center; gap: .65rem; min-height: 11.6rem; margin-top: .6rem; border-radius: 1rem; background: var(--surface); }
+    .placeholder-visual { margin: 0 auto; display: grid; grid-template-columns: 2.2rem 5.5rem; align-items: center; gap: .5rem; opacity: .8; }
+    .placeholder-visual .block { width: 2.2rem; height: 2.2rem; border-radius: .65rem; background: var(--field); grid-row: span 2; }
+    .placeholder-visual .line { width: 5.5rem; height: .4rem; border-radius: 999rem; background: var(--field); }
+    .placeholder-visual .line:last-child { width: 3.5rem; align-self: start; }
+    .content-placeholder p { white-space: pre-line; font-size: .75rem; line-height: 1.75; color: var(--muted); margin: .15rem 0 0; }
+    .context-footer { height: 3.125rem; min-height: 3.125rem; margin: 0; padding: 0 2rem; background: var(--page); color: var(--muted); font-size: .75rem; line-height: 1.5; }
+    .context-footer-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; }
+    .context-footer-wordmark { display: block; width: 5.25rem; height: 1.75rem; object-fit: contain; object-position: left center; }
+    .context-footer-links { display: flex; align-items: center; justify-content: center; gap: 1.25rem; font-size: .875rem; }
+    .context-footer-links a:hover, .context-footer-meta a:hover { color: var(--text); }
+    .context-footer-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .75rem; text-align: right; }
+    .context-footer-meta a { color: inherit; }
+    .context-footer-meta a:hover { color: var(--text); }
+    .context-footer-voyage { position: relative; height: 2rem; color: var(--voyage); pointer-events: none; }
+    .context-footer-voyage svg { width: 100%; height: 100%; overflow: visible; }
+    .context-footer-voyage .voyage-ship { position: absolute; right: .25rem; bottom: .2rem; width: 1.5rem; height: 1.625rem; transform: translateY(-100%); }
+    .portal-footer-study { margin-top: 2rem; }
+    .portal-footer-study h2 { margin: 0; font-size: 1.125rem; line-height: 1.5; }
+    .portal-footer-study p { margin: .3rem 0 .9rem; color: var(--muted); font-size: .75rem; line-height: 1.75; }
+    .portal-footer-copy { display: block; width: 100%; height: 13rem; border: 0; }
+    .github-mark { width: 1rem; height: 1rem; }
+    .context[data-collapsed="true"] { --rail-width: 4rem; }
+    .context[data-collapsed="true"] .rail { padding-right: .6rem; }
+    .context[data-collapsed="true"] .rail-top { padding-left: 0; justify-content: center; }
+    .context[data-collapsed="true"] .rail-top > span,
+    .context[data-collapsed="true"] .rail-link span,
+    .context[data-collapsed="true"] .rail-child,
+    .context[data-collapsed="true"] .rail-link.group svg:last-child { display: none; }
+    .context[data-collapsed="true"] .rail-link { justify-content: center; padding: 0; }
+    .context[data-collapsed="true"] .rail-link.group { background: var(--field); }
+    .state-section { margin-top: 2rem; }
+    .states { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+    .state-example { min-width: 0; }
+    .state-example h3 { margin: 0 0 .6rem; font-size: .75rem; color: var(--muted); font-weight: 500; }
+    .search.focus-example { border-color: var(--ring); box-shadow: 0 0 0 .15rem color-mix(in srgb, var(--ring) 20%, transparent); }
+    .search.focus-example input { caret-color: var(--ring); }
+    .caret { display: block; width: 1px; height: 1rem; background: var(--ring); }
+    .search.disabled { background: var(--field); border-color: var(--border); }
+    .search.disabled input { cursor: not-allowed; }
+    .state-caption { margin: .6rem 0 0; color: var(--muted); font-size: .75rem; line-height: 1.8; }
+    .study-footer { padding-top: 2rem; color: var(--muted); font-size: .75rem; }
+    .notice { position: fixed; z-index: 5; bottom: 1.25rem; left: 50%; transform: translateX(-50%); padding: .7rem 1rem; border: 1px solid var(--border); border-radius: 999rem; background: var(--selected); color: var(--on-selected); box-shadow: var(--shadow); font-size: .875rem; }
+    .notice[hidden] { display: none; }
+    dialog { padding: 0; border: 1px solid var(--border); border-radius: 1.5rem; width: min(64rem, 92vw); max-height: 90dvh; background: var(--page); color: var(--text); }
+    dialog::backdrop { background: rgb(0 0 0 / 60%); }
+    .dialog-heading { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 1rem; background: var(--page); border-bottom: 1px solid var(--border); }
+    .dialog-heading h2 { margin: 0; font-size: .875rem; }
+    dialog img { width: 100%; height: auto; display: block; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
+    @media (max-width: 1050px) {
+      .site-shell { padding-inline: 1.25rem; }
+      .toolbar { flex-wrap: wrap; }
+      .toolbar .catalog-search { width: 100%; flex-basis: 100%; }
+      .variant .catalog-controls { flex-wrap: wrap; }
+      .variant .catalog-search { margin-left: auto; }
+      .context-game-chip { display: none; }
+      .context-workspace { gap: 1rem; }
+    }
+    @media (max-width: 700px) {
+      .site-shell { padding: .75rem 1rem 1.5rem; }
+      .study-name, .draft-note { display: none; }
+      .study-actions { gap: .4rem; }
+      .reference-button { font-size: .75rem; }
+      .intro { padding: 1.5rem 0; }
+      h1 { font-size: 1.5rem; }
+      .comparison, .states { grid-template-columns: 1fr; }
+      .context { display: none; }
+      .context-heading { display: none; }
+      .section-top { align-items: start; }
+      .study-footer { align-items: start; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true"><defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 13a9 9 0 0 1-9.5-9.5A9 9 0 1 0 20.5 13Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></symbol>
+    <symbol id="i-sword" viewBox="0 0 24 24"><path d="m6 18 4-4m-3-3 6 6m-4-4L18 4h3v3l-9 9M3 21l3-3"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v5c0 5-8 10-8 10S4 16 4 11V6Z"/><path d="M12 8v7m-3-4h6"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4h6l2 2 2-2h6v15h-6l-2 2-2-2H4ZM12 6v15"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16m7-11-3 3 3 3"/></symbol>
+    <symbol id="i-world" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="3"/><path d="M6.5 19c.5-5.5 10.5-5.5 11 0"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6m0-6L10 14m-1-9H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M18 7v14l-6-4-6 4V7a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4Z"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4.5 1.5-4.5-2.25-6-3m12 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 19 4.77 5.07 5.07 0 0 0 18.91 1S17.73.65 15 2.48a13.38 13.38 0 0 0-7 0C5.27.65 4.09 1 4.09 1A5.07 5.07 0 0 0 4 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 8 18.13V22"/></symbol>
+  </defs></svg>
+  <div class="site-shell">
+    <header class="study-bar">
+      <div class="identity"><div><img class="wordmark light-logo" src="assets/arkive/wordmark-gradient-fill.png" alt="Arkive"><img class="wordmark dark-logo" src="assets/arkive/wordmark-white.png" alt="Arkive"></div><span class="study-name" data-i18n="studyName"></span></div>
+      <div class="study-actions"><button type="button" class="reference-button" id="open-reference"><span data-i18n="reference"></span><svg><use href="#i-external"/></svg></button><button type="button" class="icon-button" id="theme-toggle" data-i18n-aria="toggleTheme"><svg><use href="#i-moon"/></svg></button></div>
+    </header>
+    <main>
+      <section id="comparison-section" aria-labelledby="study-title">
+        <div class="intro"><div><h1 id="study-title" data-i18n="title"></h1><p data-i18n="intro"></p></div><span class="draft-note" data-i18n="draft"></span></div>
+        <div class="comparison">
+          <article class="variant" data-variant="compact" data-picked="true">
+            <div class="variant-heading"><div class="variant-title"><span class="variant-letter">A</span><h2 data-i18n="compactTitle"></h2></div><span class="badge" data-i18n="recommended"></span></div>
+            <p class="variant-desc" data-i18n="compactDesc"></p>
+            <span class="sample-label" data-i18n="rowLabel"></span>
+            <div class="catalog-controls">
+              <div class="catalog-categories" data-sample-filters="a" role="group" data-i18n-aria="sampleFilters"><button type="button" class="chip" aria-pressed="true"><span data-i18n="all"></span><small>6</small></button><button type="button" class="chip" aria-pressed="false"><span>MMORPG</span><small>3</small></button><button type="button" class="chip" aria-pressed="false"><span>单机</span><small>2</small></button><button type="button" class="chip" aria-pressed="false"><span>生存冒险</span><small>2</small></button></div>
+              <form class="catalog-search" id="sample-search-a-form" role="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="sample-search-a" type="search" data-i18n-placeholder="catalogSearchPlaceholder" data-i18n-aria="catalogSearchLabel"><button type="submit" data-i18n-aria="searchSubmit"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></form>
+            </div>
+            <span class="sample-label" data-i18n="buttonLabel"></span>
+            <div class="button-row"><button type="button" class="button" data-demo="saved"><svg aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="save"></span></button><button type="button" class="button secondary" data-demo="exported" data-i18n="export"></button><button type="button" class="button brand" data-demo="login"><svg aria-hidden="true"><use href="#i-user"/></svg><span data-i18n="login"></span></button></div>
+            <div class="variant-footer"><small data-i18n="compactSize"></small><button class="pick-button" type="button" data-pick="compact" aria-pressed="true"><span data-i18n="showCompact"></span><svg><use href="#i-arrow"/></svg></button></div>
+          </article>
+          <article class="variant" data-variant="pill" data-picked="false">
+            <div class="variant-heading"><div class="variant-title"><span class="variant-letter">B</span><h2 data-i18n="pillTitle"></h2></div></div>
+            <p class="variant-desc" data-i18n="pillDesc"></p>
+            <span class="sample-label" data-i18n="rowLabel"></span>
+            <div class="catalog-controls">
+              <div class="catalog-categories" data-sample-filters="b" role="group" data-i18n-aria="sampleFilters"><button type="button" class="chip" aria-pressed="true" data-i18n="all"></button><button type="button" class="chip" aria-pressed="false" data-i18n="attack"></button><button type="button" class="chip" aria-pressed="false" data-i18n="defense"></button><button type="button" class="chip" aria-pressed="false" data-i18n="support"></button></div>
+              <form class="catalog-search" id="sample-search-b-form" role="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="sample-search-b" type="search" data-i18n-placeholder="scopedSearch" data-i18n-aria="scopedSearch"><button type="submit" data-i18n-aria="searchSubmit"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></form>
+            </div>
+            <span class="sample-label" data-i18n="buttonLabel"></span>
+            <div class="button-row"><button type="button" class="button" data-demo="saved"><svg aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="save"></span></button><button type="button" class="button secondary" data-demo="exported" data-i18n="export"></button><button type="button" class="button brand" data-demo="login"><svg aria-hidden="true"><use href="#i-user"/></svg><span data-i18n="login"></span></button></div>
+            <div class="variant-footer"><small data-i18n="pillSize"></small><button class="pick-button" type="button" data-pick="pill" aria-pressed="false"><span data-i18n="showPill"></span><svg><use href="#i-arrow"/></svg></button></div>
+          </article>
+        </div>
+      </section>
+      <section class="catalog-study" aria-labelledby="catalog-study-title">
+        <div class="section-top"><div><h2 id="catalog-study-title" data-i18n="catalogStudyTitle"></h2><p data-i18n="catalogStudyNote"></p></div><span class="current-choice" id="catalog-study-status" role="status"></span></div>
+        <div class="catalog-controls">
+          <div class="catalog-categories" id="catalog-study-filters" role="group" data-i18n-aria="catalogStudyFilters"><button type="button" class="chip" aria-pressed="true" data-catalog-filter="all" data-i18n="all"></button><button type="button" class="chip" aria-pressed="false" data-catalog-filter="mmorpg">MMORPG <small>3</small></button><button type="button" class="chip" aria-pressed="false" data-catalog-filter="single">单机 <small>2</small></button><button type="button" class="chip" aria-pressed="false" data-catalog-filter="survival">生存冒险 <small>2</small></button></div>
+          <form class="catalog-search" id="catalog-study-search-form" role="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="catalog-card-search" type="search" data-i18n-placeholder="catalogSearchPlaceholder" data-i18n-aria="catalogSearchLabel"><button type="submit" data-i18n-aria="searchSubmit"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></form>
+        </div>
+        <div class="catalog-study-grid" id="catalog-study-grid">
+          <article class="catalog-study-card" data-game="aion2" data-types="mmorpg survival" style="--game-color:#5a7fb8"><a class="catalog-study-link" href="https://aion2.arkive.games"><span class="catalog-study-cover"><img src="https://arkive.games/assets/aion2-banner-qejfd6fR.webp" alt=""></span><span class="catalog-study-copy"><span class="catalog-study-name"><img src="https://arkive.games/assets/aion2-icon-CDJYaZHN.webp" alt=""><strong>永恒之塔 2</strong></span><small>地图 · 资料库</small></span></a><button type="button" class="catalog-study-favorite" aria-pressed="false" aria-label="收藏 永恒之塔 2"><svg><use href="#i-bookmark"/></svg></button></article>
+          <article class="catalog-study-card" data-game="palworld" data-types="single survival" style="--game-color:#4a9ad0"><a class="catalog-study-link" href="https://palworld.arkive.games"><span class="catalog-study-cover"><img src="https://arkive.games/assets/palworld-banner-DTfz2OUR.webp" alt=""></span><span class="catalog-study-copy"><span class="catalog-study-name"><img src="https://arkive.games/assets/palworld-icon-BJqZcV4X.webp" alt=""><strong>幻兽帕鲁</strong></span><small>地图 · 图鉴 · 配种</small></span></a><button type="button" class="catalog-study-favorite" aria-pressed="false" aria-label="收藏 幻兽帕鲁"><svg><use href="#i-bookmark"/></svg></button></article>
+          <article class="catalog-study-card" data-game="gmzz" data-types="single" style="--game-color:#8a6a3a"><a class="catalog-study-link" href="https://gmzz.arkive.games"><span class="catalog-study-cover"><img src="https://arkive.games/assets/gmzz-banner-Bk2m-xIb.webp" alt=""></span><span class="catalog-study-copy"><span class="catalog-study-name"><img src="https://arkive.games/assets/gmzz-icon-BO0e83S5.webp" alt=""><strong>诡秘之主</strong></span><small>百科 · 地图 · 工具</small></span></a><button type="button" class="catalog-study-favorite" aria-pressed="false" aria-label="收藏 诡秘之主"><svg><use href="#i-bookmark"/></svg></button></article>
+          <article class="catalog-study-card" data-game="ro3" data-types="mmorpg" style="--game-color:#6aa8d8"><a class="catalog-study-link" href="https://ro3.arkive.games"><span class="catalog-study-cover"><img src="https://arkive.games/assets/ro3-banner-DJT-oKpM.webp" alt=""></span><span class="catalog-study-copy"><span class="catalog-study-name"><img src="https://arkive.games/assets/ro3-icon-BXBIFF2g.webp" alt=""><strong>仙境传说3</strong></span><small>技能 · 副本 · 职业</small></span></a><button type="button" class="catalog-study-favorite" aria-pressed="false" aria-label="收藏 仙境传说3"><svg><use href="#i-bookmark"/></svg></button></article>
+          <article class="catalog-study-card" data-game="vrising" data-types="single survival" style="--game-color:#9a2a3a"><a class="catalog-study-link" href="https://vrising.arkive.games"><span class="catalog-study-cover"><img src="https://arkive.games/assets/vrising-banner-BJVDqno4.webp" alt=""></span><span class="catalog-study-copy"><span class="catalog-study-name"><img src="https://arkive.games/assets/vrising-icon-BT1s_RrP.webp" alt=""><strong>夜族崛起</strong></span><small>地图 · 区域资料</small></span></a><button type="button" class="catalog-study-favorite" aria-pressed="false" aria-label="收藏 夜族崛起"><svg><use href="#i-bookmark"/></svg></button></article>
+          <article class="catalog-study-card" data-game="pbz" data-types="single" style="--game-color:#c98a3e"><a class="catalog-study-link" href="https://pbz.arkive.games"><span class="catalog-study-cover"><img src="https://arkive.games/assets/pbz-banner-2JWQv-AY.webp" alt=""></span><span class="catalog-study-copy"><span class="catalog-study-name"><img src="https://arkive.games/assets/pbz-icon-Bz6akrf9.webp" alt=""><strong>影之刃零</strong></span><small>全区域互动地图</small></span></a><button type="button" class="catalog-study-favorite" aria-pressed="false" aria-label="收藏 影之刃零"><svg><use href="#i-bookmark"/></svg></button></article>
+        </div>
+        <div class="catalog-states" aria-label="全部游戏状态样例">
+          <article class="catalog-state"><div><h3 data-i18n="loadingState"></h3><p data-i18n="loadingStateNote"></p><div class="catalog-skeleton" aria-hidden="true"><span></span><span></span></div></div></article>
+          <article class="catalog-state"><div><h3 data-i18n="emptyState"></h3><p data-i18n="emptyStateNote"></p><div class="catalog-empty" data-i18n="emptyStateAction"></div></div></article>
+          <article class="catalog-state"><div><h3 data-i18n="pendingState"></h3><p data-i18n="pendingStateNote"></p><div class="catalog-pending"><svg aria-hidden="true"><use href="#i-star"/></svg><span data-i18n="pendingStateBadge"></span></div></div></article>
+          <article class="catalog-state"><div><h3 data-i18n="favoriteErrorState"></h3><p data-i18n="favoriteErrorStateNote"></p></div><button class="retry" type="button" data-demo="saved" data-i18n="retry"></button></article>
+        </div>
+      </section>
+      <section class="context-heading" aria-labelledby="context-title">
+        <div class="section-top"><div><h2 id="context-title" data-i18n="contextTitle"></h2><p data-i18n="contextNote"></p></div><span class="current-choice"><span data-i18n="current"></span><strong id="current-geometry"></strong></span></div>
+        <div class="context" id="context-frame" data-collapsed="false">
+          <div class="context-topbar">
+            <div class="context-logo"><img class="context-wordmark" src="assets/arkive/wordmark-gradient-fill.png" alt="Arkive"><span class="context-game-chip"><img src="https://ro3.arkive.games/assets/ro3-icon-BXBIFF2g.webp" alt=""><span data-i18n="game"></span></span></div>
+            <div class="context-nav" aria-hidden="true"><span data-i18n="home"></span><span class="active" data-i18n="encyclopedia"></span><span data-i18n="buildManual"></span></div>
+            <div class="context-utilities"><span class="icon-button" aria-hidden="true"><svg><use href="#i-world"/></svg></span><button type="button" class="icon-button" id="context-theme-toggle" data-i18n-aria="toggleTheme"><svg><use href="#i-moon"/></svg></button><button type="button" class="button brand" data-demo="login" data-i18n="login"></button></div>
+          </div>
+          <div class="context-workspace">
+            <aside class="rail" data-i18n-aria="directory">
+              <div class="rail-top"><span data-i18n="directory"></span><button type="button" class="icon-button" id="collapse-rail" aria-expanded="true" data-i18n-aria="collapse"><svg><use href="#i-panel"/></svg></button></div>
+              <div class="rail-link"><svg aria-hidden="true"><use href="#i-grid"/></svg><span data-i18n="classes"></span></div>
+              <div class="rail-link"><svg aria-hidden="true"><use href="#i-shield"/></svg><span data-i18n="equipment"></span></div>
+              <div class="rail-link group"><svg aria-hidden="true"><use href="#i-star"/></svg><span data-i18n="talents"></span><svg aria-hidden="true"><use href="#i-chevron"/></svg></div>
+              <div class="rail-child active" data-i18n="matrix"></div>
+              <div class="rail-child" data-i18n="seasonal"></div>
+              <div class="rail-link"><svg aria-hidden="true"><use href="#i-book"/></svg><span data-i18n="items"></span></div>
+            </aside>
+            <div class="context-main">
+              <div class="toolbar">
+                <div class="catalog-categories" id="context-filters" role="group" data-i18n-aria="categoryFilters"><button type="button" class="chip" aria-pressed="true" data-filter="all" data-i18n="all"></button><button type="button" class="chip" aria-pressed="false" data-filter="attack" data-i18n="attack"></button><button type="button" class="chip" aria-pressed="false" data-filter="defense" data-i18n="defense"></button><button type="button" class="chip" aria-pressed="false" data-filter="support" data-i18n="support"></button></div>
+                <form class="catalog-search" id="context-search-form" role="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="context-search" type="search" data-i18n-placeholder="scopedSearch" data-i18n-aria="scopedSearch"><button type="submit" data-i18n-aria="searchSubmit"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></form>
+              </div>
+              <div class="results-meta"><span id="filter-summary" role="status"></span><button type="button" class="reset-filters" id="reset-filters" data-i18n="reset" hidden></button></div>
+              <div class="content-placeholder"><div class="placeholder-visual" aria-hidden="true"><span class="block"></span><span class="line"></span><span class="line"></span></div><p data-i18n="contentNote"></p></div>
+            </div>
+          </div>
+          <div class="context-footer-voyage" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 1270 34"><path stroke-opacity=".22" d="M0 26 L6 27.46 L12 27.71 L18 26.56 L24 24.94 L30 24.2 L36 24.94 L42 26.56 L48 27.71 L54 27.46 L60 26 L66 24.54 L72 24.29 L78 25.44 L84 27.06 L90 27.8 L96 27.06 L102 25.44 L108 24.29 L114 24.54 L120 26 L126 27.46 L132 27.71 L138 26.56 L144 24.94 L150 24.2 L156 24.94 L162 26.56 L168 27.71 L174 27.46 L180 26 L186 24.54 L192 24.29 L198 25.44 L204 27.06 L210 27.8 L216 27.06 L222 25.44 L228 24.29 L234 24.54 L240 26 L246 27.46 L252 27.71 L258 26.56 L264 24.94 L270 24.2 L276 24.94 L282 26.56 L288 27.71 L294 27.46 L300 26 L306 24.54 L312 24.29 L318 25.44 L324 27.06 L330 27.8 L336 27.06 L342 25.44 L348 24.29 L354 24.54 L360 26 L366 27.46 L372 27.71 L378 26.56 L384 24.94 L390 24.2 L396 24.94 L402 26.56 L408 27.71 L414 27.46 L420 26 L426 24.54 L432 24.29 L438 25.44 L444 27.06 L450 27.8 L456 27.06 L462 25.44 L468 24.29 L474 24.54 L480 26 L486 27.46 L492 27.71 L498 26.56 L504 24.94 L510 24.2 L516 24.94 L522 26.56 L528 27.71 L534 27.46 L540 26 L546 24.54 L552 24.29 L558 25.44 L564 27.06 L570 27.8 L576 27.06 L582 25.44 L588 24.29 L594 24.54 L600 26 L606 27.46 L612 27.71 L618 26.56 L624 24.94 L630 24.2 L636 24.94 L642 26.56 L648 27.71 L654 27.46 L660 26 L666 24.54 L672 24.29 L678 25.44 L684 27.06 L690 27.8 L696 27.06 L702 25.44 L708 24.29 L714 24.54 L720 26 L726 27.46 L732 27.71 L738 26.56 L744 24.94 L750 24.2 L756 24.94 L762 26.56 L768 27.71 L774 27.46 L780 26 L786 24.54 L792 24.29 L798 25.44 L804 27.06 L810 27.8 L816 27.06 L822 25.44 L828 24.29 L834 24.54 L840 26 L846 27.46 L852 27.71 L858 26.56 L864 24.94 L870 24.2 L876 24.94 L882 26.56 L888 27.71 L894 27.46 L900 26 L906 24.54 L912 24.29 L918 25.44 L924 27.06 L930 27.8 L936 27.06 L942 25.44 L948 24.29 L954 24.54 L960 26 L966 27.46 L972 27.71 L978 26.56 L984 24.94 L990 24.2 L996 24.94 L1002 26.56 L1008 27.71 L1014 27.46 L1020 26 L1026 24.54 L1032 24.29 L1038 25.44 L1044 27.06 L1050 27.8 L1056 27.06 L1062 25.44 L1068 24.29 L1074 24.54 L1080 26 L1086 27.46 L1092 27.71 L1098 26.56 L1104 24.94 L1110 24.2 L1116 24.94 L1122 26.56 L1128 27.71 L1134 27.46 L1140 26 L1146 24.54 L1152 24.29 L1158 25.44 L1164 27.06 L1170 27.8 L1176 27.06 L1182 25.44 L1188 24.29 L1194 24.54 L1200 26 L1206 27.46 L1212 27.71 L1218 26.56 L1224 24.94 L1230 24.2 L1236 24.94 L1242 26.56 L1248 27.71 L1254 27.46 L1260 26 L1266 24.54 L1272 24.29"/><path stroke-width="2" d="M0 26 L6 27.46 L12 27.71 L18 26.56 L24 24.94 L30 24.2 L36 24.94 L42 26.56 L48 27.71 L54 27.46 L60 26 L66 24.54 L72 24.29 L78 25.44 L84 27.06 L90 27.8 L96 27.06 L102 25.44 L108 24.29 L114 24.54 L120 26 L126 27.46 L132 27.71 L138 26.56 L144 24.94 L150 24.2 L156 24.94 L162 26.56 L168 27.71 L174 27.46 L180 26 L186 24.54 L192 24.29 L198 25.44 L204 27.06 L210 27.8 L216 27.06 L222 25.44 L228 24.29 L234 24.54 L240 26 L246 27.46 L252 27.71 L258 26.56 L264 24.94 L270 24.2 L276 24.94 L282 26.56 L288 27.71 L294 27.46 L300 26 L306 24.54 L312 24.29 L318 25.44 L324 27.06 L330 27.8 L336 27.06 L342 25.44 L348 24.29 L354 24.54 L360 26 L366 27.46 L372 27.71 L378 26.56 L384 24.94 L390 24.2 L396 24.94 L402 26.56 L408 27.71 L414 27.46 L420 26 L426 24.54 L432 24.29 L438 25.44 L444 27.06 L450 27.8 L456 27.06 L462 25.44 L468 24.29 L474 24.54 L480 26 L486 27.46 L492 27.71 L498 26.56 L504 24.94 L510 24.2 L516 24.94 L522 26.56 L528 27.71 L534 27.46 L540 26 L546 24.54 L552 24.29 L558 25.44 L564 27.06 L570 27.8 L576 27.06 L582 25.44 L588 24.29 L594 24.54 L600 26 L606 27.46 L612 27.71 L618 26.56 L624 24.94 L630 24.2 L636 24.94 L642 26.56 L648 27.71 L654 27.46 L660 26 L666 24.54 L672 24.29 L678 25.44 L684 27.06 L690 27.8 L696 27.06 L702 25.44 L708 24.29 L714 24.54 L720 26 L726 27.46 L732 27.71 L738 26.56 L744 24.94 L750 24.2 L756 24.94 L762 26.56 L768 27.71 L774 27.46 L780 26 L786 24.54 L792 24.29 L798 25.44 L804 27.06 L810 27.8 L816 27.06 L822 25.44 L828 24.29 L834 24.54 L840 26 L846 27.46 L852 27.71 L858 26.56 L864 24.94 L870 24.2 L876 24.94 L882 26.56 L888 27.71 L894 27.46 L900 26 L906 24.54 L912 24.29 L918 25.44 L924 27.06 L930 27.8 L936 27.06 L942 25.44 L948 24.29 L954 24.54 L960 26 L966 27.46 L972 27.71 L978 26.56 L984 24.94 L990 24.2 L996 24.94 L1002 26.56 L1008 27.71 L1014 27.46 L1020 26 L1026 24.54 L1032 24.29 L1038 25.44 L1044 27.06 L1050 27.8 L1056 27.06 L1062 25.44 L1068 24.29 L1074 24.54 L1080 26 L1086 27.46 L1092 27.71 L1098 26.56 L1104 24.94 L1110 24.2 L1116 24.94 L1122 26.56 L1128 27.71 L1134 27.46 L1140 26 L1146 24.54 L1152 24.29 L1158 25.44 L1164 27.06 L1170 27.8 L1176 27.06 L1182 25.44 L1188 24.29 L1194 24.54 L1200 26 L1206 27.46 L1212 27.71 L1218 26.56 L1224 24.94 L1230 24.2 L1236 24.94 L1242 26.56 L1248 27.71 L1254 27.46 L1260 26 L1266 24.54 L1272 24.29"/></svg><span class="voyage-ship"><svg viewBox="0 0 24 26" fill="currentColor"><path d="M11 2 L11 18 L3 18 Z M13 5 L13 18 L20 18 Z M2 20 H22 L19 24 H5 Z"/></svg></span></div><div class="context-footer"><div class="context-footer-grid"><img class="context-footer-wordmark" src="assets/arkive/wordmark-gradient-fill.png" alt="Arkive"><nav class="context-footer-links" aria-label="普通页脚链接"><a href="#about" data-i18n="aboutArkive"></a><a href="#contact" data-i18n="contact"></a><a href="#updates" data-i18n="updates"></a><a href="#settings" data-i18n="settings"></a></nav><div class="context-footer-meta"><span>© 2025-2026 Arkive.games</span><a href="https://beian.miit.gov.cn/">沪ICP备2025152827号-1</a></div></div></div>
+        </div>
+      </section>
+      <section class="portal-footer-study" aria-labelledby="portal-footer-title">
+        <h2 id="portal-footer-title" data-i18n="portalFooterTitle"></h2>
+        <p data-i18n="portalFooterNote"></p>
+        <iframe class="portal-footer-copy" src="home-footer-copy.html" title="Arkive homepage footer copy"></iframe>
+      </section>
+      <section class="state-section" aria-labelledby="states-title">
+        <div class="section-top"><div><h2 id="states-title" data-i18n="statesTitle"></h2><p data-i18n="statesNote"></p></div></div>
+        <div class="states">
+          <div class="state-example"><h3 data-i18n="defaultState"></h3><div class="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input type="search" data-i18n-placeholder="searchPlaceholder" data-i18n-aria="defaultSearch"></div><p class="state-caption" data-i18n="defaultCaption"></p></div>
+          <div class="state-example"><h3 data-i18n="focusedState"></h3><div class="search focus-example"><svg aria-hidden="true"><use href="#i-search"/></svg><input type="text" value="" data-i18n-value="sampleQuery" data-i18n-aria="focusSearch"></div><p class="state-caption" data-i18n="focusCaption"></p></div>
+          <div class="state-example"><h3 data-i18n="disabledState"></h3><div class="search disabled"><svg aria-hidden="true"><use href="#i-search"/></svg><input disabled type="search" data-i18n-placeholder="disabledPlaceholder" data-i18n-aria="disabledSearch"></div><p class="state-caption" data-i18n="disabledCaption"></p></div>
+        </div>
+      </section>
+    </main>
+    <footer class="study-footer"><span data-i18n="footerNote"></span></footer>
+  </div>
+  <dialog id="reference-dialog" aria-labelledby="reference-title"><div class="dialog-heading"><h2 id="reference-title" data-i18n="referenceTitle"></h2><button type="button" class="icon-button" id="close-reference" data-i18n-aria="close"><svg><use href="#i-x"/></svg></button></div><div style="padding: 2rem; line-height: 1.8; color: var(--muted); font-size: .875rem;"><span data-i18n="referenceCopy"></span><br><a href="https://arkive.games/#games" target="_blank" rel="noreferrer" style="color: var(--text); font-weight: 600;">https://arkive.games/#games</a></div></dialog>
+  <div class="notice" id="demo-notice" role="status" hidden></div>
+  <script type="application/json" id="locale-zh-CN">
+  {
+    "studyName": "共享控件 · 视觉样例",
+    "reference": "首页参考",
+    "toggleTheme": "切换深浅主题",
+    "title": "搜索框与整条筛选",
+    "intro": "按线上「全部游戏」页修正：左侧整条筛选，右侧短搜索框，箭头按钮独立。A、B 只展示页面场景差异，控件高度和圆润程度完全一致。",
+    "draft": "线上结构参考 · 视觉仍待确认",
+    "compactTitle": "线上「全部游戏」",
+    "compactDesc": "左侧是一整条游戏类型筛选，右侧是约 23rem 的搜索框，末端箭头独立成圆按钮。",
+    "pillTitle": "百科页复用",
+    "pillDesc": "沿用同一组外形；搜索提示改为当前分类，筛选项换成该分类可用内容。按钮、搜索框、筛选条与 A 完全同高同圆。",
+    "recommended": "线上参考",
+    "searchLabel": "搜索框",
+    "catalogSearchLabel": "搜索游戏名称",
+    "searchPlaceholder": "搜索当前分类…",
+    "catalogSearchPlaceholder": "万千攻略，藏于一舟。",
+    "searchSubmit": "搜索",
+    "clearSearch": "清空搜索",
+    "filterLabel": "左侧整条筛选 · 点击可切换",
+    "rowLabel": "线上控件行 · 左筛选 / 右搜索",
+    "sampleFilters": "筛选样例",
+    "all": "全部",
+    "attack": "攻击",
+    "defense": "防御",
+    "support": "辅助",
+    "buttonLabel": "按钮 · 常规操作 / 次要操作 / 品牌入口",
+    "save": "保存方案",
+    "export": "导出",
+    "login": "登录",
+    "compactSize": "搜索约 23rem · 筛选与搜索同高同圆",
+    "pillSize": "同一高度 · 同一胶囊圆角 · 词语按当前分类",
+    "showCompact": "在下方查看线上布局",
+    "showPill": "在下方查看百科复用",
+    "contextTitle": "百科页复用示意",
+    "contextNote": "顶栏直接按线上仙境传说3结构复刻；左侧目录，右侧顶部整条筛选与短搜索框。内容仅占位，不规定各游戏的资料排法。",
+    "current": "当前示意",
+    "compactChoice": "A · 线上「全部游戏」",
+    "pillChoice": "B · 百科页复用",
+    "game": "仙境传说 3",
+    "home": "首页",
+    "encyclopedia": "百科",
+    "buildManual": "流派手册",
+    "directory": "百科目录",
+    "collapse": "收起侧栏",
+    "expand": "展开侧栏",
+    "classes": "职业",
+    "equipment": "装备",
+    "talents": "天赋系统",
+    "matrix": "星之矩阵",
+    "seasonal": "赛季天赋",
+    "items": "道具",
+    "categoryFilters": "当前分类筛选",
+    "scopedSearch": "搜索星之矩阵…",
+    "reset": "重置筛选",
+    "scopeNote": "仅搜索当前分类",
+    "filterPrefix": "当前筛选：",
+    "queryPrefix": "；关键词：",
+    "contentNote": "这里保留给各游戏的实际内容\n本次只确认搜索框与整条筛选的视觉",
+    "compactFooter": "普通页面页脚 · 中间保留站点链接",
+    "catalogStudyTitle": "全部游戏卡片参考",
+    "catalogStudyNote": "按当前线上页面核对：5 列桌面卡片、封面比例、游戏图标、简介和独立收藏按钮。",
+    "catalogStudyFilters": "游戏类型筛选",
+    "loadingState": "加载中",
+    "loadingStateNote": "保留卡片和工具栏几何，不突然跳动。",
+    "emptyState": "无匹配结果",
+    "emptyStateNote": "保留当前搜索词和筛选条件。",
+    "emptyStateAction": "清空搜索或调整筛选",
+    "pendingState": "待上线",
+    "pendingStateNote": "只显示状态，不提供失效的游戏入口。",
+    "pendingStateBadge": "即将上线",
+    "favoriteErrorState": "收藏失败",
+    "favoriteErrorStateNote": "保持原收藏状态，并提供再次尝试。",
+    "retry": "再次尝试",
+    "portalFooterTitle": "首页页脚参考",
+    "portalFooterNote": "直接读取线上首页页脚的 HTML 与 CSS 副本，不再手工重绘。此处展示静态外观，弹窗和滚动航行动画仍以原站为准。",
+    "aboutArkive": "关于藏舟",
+    "contact": "联系我们",
+    "updates": "更新日志",
+    "settings": "网站设置",
+    "statesTitle": "同一套控件的状态",
+    "statesNote": "日常状态保持安静，需要操作时给出清晰反馈；这里的高度和胶囊圆角与上方控件一致。",
+    "defaultState": "默认",
+    "focusedState": "正在输入",
+    "disabledState": "不可用",
+    "defaultSearch": "默认搜索框样例",
+    "focusSearch": "输入中搜索框样例",
+    "disabledSearch": "不可用搜索框样例",
+    "sampleQuery": "攻击",
+    "disabledPlaceholder": "数据准备中…",
+    "defaultCaption": "细边框标明可输入区域，背景保持干净。",
+    "focusCaption": "蓝色聚焦边缘只在输入时出现，方便键盘操作。",
+    "disabledCaption": "颜色减弱，同时保留不可用的原因。",
+    "footerNote": "这是独立视觉预览，尚未应用到网站。可切换方案、主题和左侧栏。",
+    "referenceTitle": "已确认的首页风格 · 线上参考",
+    "referenceAlt": "藏舟线上首页的风格参考",
+    "referenceCopy": "线上首页参考（新窗口打开）",
+    "close": "关闭",
+    "saved": "这里只演示按钮外观，不会保存真实方案。",
+    "exported": "这里只演示按钮外观，不会导出游戏数据。",
+    "loginDemo": "这里只演示品牌入口，不会打开真实登录。"
+  }
+  </script>
+  <script>
+    const locale = JSON.parse(document.getElementById('locale-zh-CN').textContent);
+    const t = key => locale[key];
+    document.title = 'Arkive · ' + t('title');
+    document.querySelectorAll('.rail-link').forEach(el => { el.setAttribute('role', 'img'); el.setAttribute('aria-label', el.querySelector('span').dataset.i18n ? t(el.querySelector('span').dataset.i18n) : el.textContent.trim()); el.title = el.getAttribute('aria-label'); });
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    for (const [attribute, target] of [['data-i18n-aria', 'aria-label'], ['data-i18n-placeholder', 'placeholder'], ['data-i18n-alt', 'alt']]) {
+      document.querySelectorAll('[' + attribute + ']').forEach(el => el.setAttribute(target, t(el.getAttribute(attribute))));
+    }
+    document.querySelectorAll('[data-i18n-value]').forEach(el => { el.value = t(el.dataset.i18nValue); });
+    const root = document.documentElement;
+    const context = document.getElementById('context-frame');
+    const contextInput = document.getElementById('context-search');
+    const referenceDialog = document.getElementById('reference-dialog');
+    function setGeometry(geometry) {
+      root.dataset.geometry = geometry;
+      document.querySelectorAll('.variant').forEach(el => { el.dataset.picked = String(el.dataset.variant === geometry); });
+      document.querySelectorAll('[data-pick]').forEach(el => el.setAttribute('aria-pressed', String(el.dataset.pick === geometry)));
+      document.getElementById('current-geometry').textContent = t(geometry === 'compact' ? 'compactChoice' : 'pillChoice');
+    }
+    document.querySelectorAll('[data-pick]').forEach(button => button.addEventListener('click', () => setGeometry(button.dataset.pick)));
+    function toggleTheme() {
+      root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
+      document.querySelectorAll('#theme-toggle use, #context-theme-toggle use').forEach(el => el.setAttribute('href', root.dataset.theme === 'light' ? '#i-moon' : '#i-sun'));
+
+    }
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    document.getElementById('context-theme-toggle').addEventListener('click', toggleTheme);
+    document.getElementById('collapse-rail').addEventListener('click', event => {
+      const collapsed = context.dataset.collapsed !== 'true';
+      context.dataset.collapsed = String(collapsed);
+      event.currentTarget.setAttribute('aria-expanded', String(!collapsed));
+      event.currentTarget.setAttribute('aria-label', t(collapsed ? 'expand' : 'collapse'));
+    });
+    document.querySelectorAll('[data-sample-filters]').forEach(group => group.addEventListener('click', event => {
+      const button = event.target.closest('.chip');
+      if (button) group.querySelectorAll('.chip').forEach(el => el.setAttribute('aria-pressed', String(el === button)));
+    }));
+    let contextFilter = 'all';
+    function updateFilterSummary() {
+      const query = contextInput.value.trim();
+      document.getElementById('filter-summary').textContent = contextFilter === 'all' && !query ? t('scopeNote') : t('filterPrefix') + t(contextFilter) + (query ? t('queryPrefix') + query : '');
+      document.getElementById('reset-filters').hidden = contextFilter === 'all' && !query;
+    }
+    document.getElementById('context-filters').addEventListener('click', event => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      contextFilter = button.dataset.filter;
+      document.querySelectorAll('#context-filters .chip').forEach(el => el.setAttribute('aria-pressed', String(el === button)));
+      updateFilterSummary();
+    });
+    document.querySelectorAll('.catalog-search').forEach(form => form.addEventListener('submit', event => event.preventDefault()));
+    document.querySelectorAll('input[type="search"]').forEach(input => input.addEventListener('input', () => {
+      const clear = document.querySelector('[data-clear="' + input.id + '"]');
+      if (clear) clear.hidden = !input.value;
+      if (input === contextInput) updateFilterSummary();
+    }));
+    document.querySelectorAll('[data-clear]').forEach(button => button.addEventListener('click', () => {
+      const input = document.getElementById(button.dataset.clear);
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+      input.focus();
+    }));
+    document.getElementById('reset-filters').addEventListener('click', () => {
+      contextFilter = 'all'; contextInput.value = '';
+      document.querySelectorAll('#context-filters .chip').forEach(el => el.setAttribute('aria-pressed', String(el.dataset.filter === 'all')));
+      contextInput.dispatchEvent(new Event('input'));
+      updateFilterSummary();
+    });
+    let noticeTimer;
+    document.querySelectorAll('[data-demo]').forEach(button => button.addEventListener('click', () => {
+      const notice = document.getElementById('demo-notice');
+      notice.textContent = t(button.dataset.demo === 'login' ? 'loginDemo' : button.dataset.demo);
+      notice.hidden = false;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => { notice.hidden = true; }, 2400);
+    }));
+    document.getElementById('open-reference').addEventListener('click', () => referenceDialog.showModal());
+    document.getElementById('close-reference').addEventListener('click', () => referenceDialog.close());
+    referenceDialog.addEventListener('click', event => { if (event.target === referenceDialog) { const rect = referenceDialog.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) referenceDialog.close(); } });
+    document.getElementById('catalog-study-search-form').addEventListener('submit', event => event.preventDefault());
+    const catalogGrid = document.getElementById('catalog-study-grid');
+    const catalogStatus = document.getElementById('catalog-study-status');
+    let catalogFilter = 'all';
+    function updateCatalogStudy() {
+      const query = document.getElementById('catalog-card-search').value.trim().toLowerCase();
+      let visibleCount = 0;
+      catalogGrid.querySelectorAll('.catalog-study-card').forEach(card => {
+        const matchesFilter = catalogFilter === 'all' || card.dataset.types.split(' ').includes(catalogFilter);
+        const matchesQuery = !query || card.textContent.toLowerCase().includes(query);
+        const visible = matchesFilter && matchesQuery;
+        card.hidden = !visible;
+        if (visible) visibleCount += 1;
+      });
+      catalogStatus.textContent = visibleCount + ' / 6 款游戏';
+    }
+    document.getElementById('catalog-study-filters').addEventListener('click', event => {
+      const button = event.target.closest('[data-catalog-filter]');
+      if (!button) return;
+      catalogFilter = button.dataset.catalogFilter;
+      document.querySelectorAll('[data-catalog-filter]').forEach(el => el.setAttribute('aria-pressed', String(el === button)));
+      updateCatalogStudy();
+    });
+    document.getElementById('catalog-card-search').addEventListener('input', updateCatalogStudy);
+    document.querySelectorAll('.catalog-study-favorite').forEach(button => button.addEventListener('click', event => {
+      event.preventDefault();
+      button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+    }));
+    setGeometry('compact'); updateFilterSummary(); updateCatalogStudy();
+    addEventListener('message', event => {
+      const frame = document.querySelector('.portal-footer-copy');
+      if (event.origin === location.origin && event.source === frame.contentWindow && event.data?.type === 'arkive-footer-copy-height') frame.style.height = `${event.data.height}px`;
+    });
+  </script>
+</body>
+</html>

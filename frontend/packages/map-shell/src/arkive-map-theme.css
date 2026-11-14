@@ -2,6 +2,10 @@
   --radius: 0.5rem;
   --arkive-radius-compact: 0.375rem;
   --arkive-radius-standard: 0.5rem;
+  --arkive-radius-card: 1.25rem;
+  --arkive-radius-media: 0.875rem;
+  --arkive-catalog-control-height: 3.2rem;
+  --arkive-catalog-control-inner-height: 2.5rem;
   /* Surfaces that float free of the page: top-bar menus and the phone menu drawer. */
   --arkive-radius-floating: 1rem;
   /* Every dialog, from the shared Dialog and AlertDialog. */

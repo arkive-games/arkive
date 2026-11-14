@@ -151,27 +151,25 @@ describe("MarkerDetailDrawer", () => {
     expect(getByTestId("marker-detail-collapse-drops").getAttribute("aria-expanded")).toBe("false")
   })
 
-  it("keeps marker gallery uploads separate from comment attachments", () => {
+  it("removes the Details upload entry while retaining comment attachments", () => {
     const onGalleryUpload = vi.fn()
     const onSubmit = vi.fn()
-    const { getByTestId, getByRole } = render(
+    const { getByTestId, getByRole, queryByTestId } = render(
       <MarkerDetailDrawer
         {...baseProps}
         gallery={{ markerId: "marker-1", images: [], onUpload: onGalleryUpload }}
         comments={{ markerId: "marker-1", items: [], sort: "popular", onSortChange: vi.fn(), onSubmit }}
       />,
     )
-    const galleryFile = new File(["gallery"], "gallery.png", { type: "image/png" })
-    fireEvent.change(getByTestId("marker-gallery-upload"), { target: { files: [galleryFile] } })
-    expect(onGalleryUpload).toHaveBeenCalledWith("marker-1", [galleryFile])
+    expect(queryByTestId("marker-gallery-upload")).toBeNull()
 
     fireEvent.click(getByRole("tab", { name: /Comments/ }))
     const commentFile = new File(["comment"], "comment.png", { type: "image/png" })
     fireEvent.change(getByTestId("marker-comment-attachment"), { target: { files: [commentFile] } })
-    expect(onGalleryUpload).toHaveBeenCalledTimes(1)
+    expect(onGalleryUpload).not.toHaveBeenCalled()
   })
 
-  it("supports comment sorting, likes, replies, and publishing up to three images", async () => {
+  it("keeps comment interactions without the removed sort toolbar", async () => {
     const onSortChange = vi.fn()
     const onLike = vi.fn()
     const onReply = vi.fn()
@@ -191,10 +189,9 @@ describe("MarkerDetailDrawer", () => {
       />,
     )
     fireEvent.click(getByRole("tab", { name: /Comments/ }))
-    fireEvent.click(getByRole("button", { name: "Latest" }))
     fireEvent.click(getByLabelText("Like"))
     fireEvent.click(getByRole("button", { name: "Reply" }))
-    expect(onSortChange).toHaveBeenCalledWith("latest")
+    expect(onSortChange).not.toHaveBeenCalled()
     expect(onLike).toHaveBeenCalledWith("comment-1")
     expect(onReply).toHaveBeenCalledWith("comment-1")
 
@@ -239,13 +236,13 @@ describe("MarkerDetailDrawer", () => {
       <MarkerDetailDrawer {...baseProps} gallery={{ markerId: "marker-1", images: [] }} completeAction={{ completed: false, label: "Mark as completed", completedLabel: "Completed", onToggle: vi.fn() }} />,
     )
     expect(getByTestId("marker-complete-toggle").textContent).toContain("Mark as completed")
-    expect(getByTestId("marker-gallery-upload")).not.toBeNull()
+    expect(document.querySelector('[data-testid="marker-gallery-upload"]')).toBeNull()
     expect(queryByText("Official data")).toBeNull()
     expect(queryByText("View encyclopedia")).toBeNull()
     expect(queryByText("Exploration tip")).toBeNull()
   })
 
-  it("uses current-session fallbacks for gallery uploads and comments", async () => {
+  it("preserves current-session comment attachments and releases them on marker change", async () => {
     let objectUrlIndex = 0
     const createObjectURL = vi.spyOn(URL, "createObjectURL").mockImplementation((file) => `blob:${++objectUrlIndex}-${(file as File).name}`)
     const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined)
@@ -258,13 +255,6 @@ describe("MarkerDetailDrawer", () => {
       />,
     )
 
-    const galleryFile = new File(["gallery"], "gallery.png", { type: "image/png" })
-    fireEvent.change(getByTestId("marker-gallery-upload"), { target: { files: [galleryFile] } })
-    expect(getByText("Awaiting review")).not.toBeNull()
-    expect(createObjectURL).toHaveBeenCalledWith(galleryFile)
-    expect(revokeObjectURL).not.toHaveBeenCalled()
-    const galleryUrl = getByAltText("gallery.png").getAttribute("src")
-
     fireEvent.click(getByRole("tab", { name: /Comments/ }))
     const commentFile = new File(["comment"], "comment.png", { type: "image/png" })
     fireEvent.change(getByTestId("marker-comment-attachment"), { target: { files: [commentFile] } })
@@ -274,8 +264,6 @@ describe("MarkerDetailDrawer", () => {
     const commentImage = getByAltText("comment.png")
     const commentUrl = commentImage.getAttribute("src")
     expect(commentImage.closest("article")).not.toBeNull()
-    expect(getByAltText("gallery.png").closest("figure")).not.toBeNull()
-    expect(revokeObjectURL).not.toHaveBeenCalledWith(galleryUrl)
     expect(revokeObjectURL).not.toHaveBeenCalledWith(commentUrl)
 
     rerender(
@@ -288,7 +276,6 @@ describe("MarkerDetailDrawer", () => {
       />,
     )
     await waitFor(() => {
-      expect(revokeObjectURL).toHaveBeenCalledWith(galleryUrl)
       expect(revokeObjectURL).toHaveBeenCalledWith(commentUrl)
     })
     unmount()
@@ -378,8 +365,7 @@ describe("MarkerDetailDrawer", () => {
     expect(getByTestId("marker-details-empty").textContent).toContain("No additional details yet.")
     expect(getByTestId("marker-details-empty").className).toContain("min-h-12")
     expect(getByTestId("marker-details-empty").className).not.toContain("flex-col")
-    expect(getByTestId("marker-gallery-upload")).not.toBeNull()
-    expect(getByTestId("marker-gallery-upload").parentElement?.className).toContain("border-primary")
+    expect(document.querySelector('[data-testid="marker-gallery-upload"]')).toBeNull()
     fireEvent.click(getByRole("tab", { name: /Comments/ }))
     expect(getByTestId("marker-comments-empty").className).toContain("min-h-12")
     expect(getByTestId("marker-comments-empty").className).not.toContain("flex-col")

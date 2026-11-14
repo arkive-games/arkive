@@ -439,7 +439,7 @@ export default function App() {
           onOpenSite={rememberSite}
         />
       ) : activeRoute.view === 'tools' && HAS_TOOLS ? (
-        <ToolsPage sites={VISIBLE_SITES} onOpenFeature={rememberFeature} />
+        <ToolsPage sites={VISIBLE_SITES} onOpenFeature={rememberFeature} onAuthRequired={() => setAccountOpen(true)} />
       ) : activeRoute.view === 'forum' ? (
         <ForumPage
           sites={VISIBLE_SITES}

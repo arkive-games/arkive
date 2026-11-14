@@ -1,0 +1,5 @@
+{
+  "en-US": { "other": "Other", "favorite": "Favorite {{name}}", "failed": "Favorite could not be saved.", "retry": "Retry" },
+  "zh-CN": { "other": "其他", "favorite": "收藏{{name}}", "failed": "收藏保存失败。", "retry": "重试" },
+  "zh-TW": { "other": "其他", "favorite": "收藏{{name}}", "failed": "收藏儲存失敗。", "retry": "重試" }
+}

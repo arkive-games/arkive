@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.site-color-system"
 title: "Arkive Site-wide Color System"
 status: "canonical"
-last_reviewed: "2026-10-27"
+last_reviewed: "2026-11-15"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -66,6 +66,7 @@ brand_direction:
   rules:
     - "A game colour only ever marks its own game; it never becomes shared chrome."
     - "One warm_action control per compact surface; secondary actions use neutral pills."
+    - "Catalog active type filters use foreground/background neutral contrast; warm search decoration does not redefine semantic feedback or data selection."
     - "Do not put white text or icons on any warm gradient; use the warm-action foreground."
 
 semantic_tokens:

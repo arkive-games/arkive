@@ -133,7 +133,6 @@ export function ArkiveAccountControl({
     status: auth.status,
     userName: auth.user?.name,
     avatarUrl: auth.user?.avatarUrl,
-    accountNumber: auth.user ? String(auth.user.specialUid ?? auth.user.uid) : undefined,
     mobileAvatar: variant === 'mobileHeader',
     signInLabel: strings.signIn,
     signOutLabel: strings.signOut,

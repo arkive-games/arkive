@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react"
-import { IconAlertCircle, IconCheck, IconCopy, IconMapPin } from "@tabler/icons-react"
+import { useCallback, type ReactNode } from "react"
+import { IconCopy, IconMapPin } from "@tabler/icons-react"
 import { Card, CardContent, cn } from "@gamemap/ui"
 import { IdLabel, type IdLabelValue } from "./IdLabel"
 
@@ -29,18 +29,6 @@ export function MarkerPopupCard({
   idLabel, name, icon, metaLine, positionLabel, positionValue,
   positionCopy, description, images, children, className,
 }: MarkerPopupCardProps) {
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle")
-
-  useEffect(() => {
-    setCopyState("idle")
-  }, [positionCopy?.value])
-
-  useEffect(() => {
-    if (copyState === "idle") return
-    const id = setTimeout(() => setCopyState("idle"), 2000)
-    return () => clearTimeout(id)
-  }, [copyState])
-
   const copyPosition = useCallback(async () => {
     if (!positionCopy) return
     try {
@@ -48,20 +36,10 @@ export function MarkerPopupCard({
         throw new Error("Clipboard API unavailable")
       }
       await navigator.clipboard.writeText(positionCopy.value)
-      setCopyState("copied")
     } catch (err) {
-      setCopyState("failed")
       console.error("Clipboard error", err)
     }
   }, [positionCopy])
-
-  const copyStatusLabel = positionCopy
-    ? copyState === "copied"
-      ? positionCopy.copiedLabel
-      : copyState === "failed"
-        ? positionCopy.failedLabel
-        : positionCopy.copyLabel
-    : ""
 
   return (
     <Card
@@ -111,35 +89,18 @@ export function MarkerPopupCard({
                 <button
                   type="button"
                   data-testid="marker-position-copy"
-                  aria-label={copyStatusLabel}
-                  title={copyStatusLabel}
+                  aria-label={positionCopy.copyLabel}
+                  title={positionCopy.copyLabel}
                   onClick={(event) => {
                     event.stopPropagation()
                     void copyPosition()
                   }}
-                  className={cn(
-                    "inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 font-sans text-xs font-semibold transition-colors",
-                    copyState === "copied" && "bg-primary/10 text-primary",
-                    copyState === "failed" && "bg-destructive/10 text-destructive",
-                    copyState === "idle" && "text-muted-foreground hover:bg-primary/10 hover:text-primary",
-                  )}
+                  className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 font-sans text-xs font-semibold text-muted-foreground hover:bg-primary/10 hover:text-primary"
                 >
-                  {copyState === "copied" ? (
-                    <IconCheck className="size-4" stroke={1.8} />
-                  ) : copyState === "failed" ? (
-                    <IconAlertCircle className="size-4" stroke={1.8} />
-                  ) : (
-                    <IconCopy className="size-4" stroke={1.8} />
-                  )}
-                  {copyState !== "idle" ? <span>{copyStatusLabel}</span> : null}
+                  <IconCopy className="size-4" stroke={1.8} />
                 </button>
               ) : null}
             </span>
-            {positionCopy ? (
-              <span role="status" aria-live="polite" className="sr-only">
-                {copyState === "idle" ? "" : copyStatusLabel}
-              </span>
-            ) : null}
           </div>
         ) : null}
 
