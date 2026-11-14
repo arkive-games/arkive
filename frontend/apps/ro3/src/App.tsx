@@ -1,3 +1,4 @@
+import { WikiSessionProvider } from './WikiSessionProvider'
 import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Wrench } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
@@ -133,6 +134,7 @@ function App() {
   }
 
   return (
+    <WikiSessionProvider key={active} section={active}>
       <ContentPage
         active={active}
         onNavigate={navigate}
@@ -175,6 +177,7 @@ function App() {
           <HomePage onNavigate={navigate} />
         )}
       </ContentPage>
+    </WikiSessionProvider>
   )
 }
 

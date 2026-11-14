@@ -1,3 +1,4 @@
+import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Search, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
@@ -25,11 +26,12 @@ const text = content.wiki.professions
 export function ProfessionWiki() {
   const [data, setData] = useState<ProfessionData | null>(null)
   const [dataError, setDataError] = useState(false)
-  const [lineId, setLineId] = useState(PROFESSION_LINES[0].id)
-  const [routeId, setRouteId] = useState(PROFESSION_LINES[0].routes[0].id)
-  const [query, setQuery] = useState('')
+  useWikiReady(data !== null || dataError)
+  const [lineId, setLineId] = useWikiState('skills.line', PROFESSION_LINES[0].id)
+  const [routeId, setRouteId] = useWikiState('skills.route', PROFESSION_LINES[0].routes[0].id)
+  const [query, setQuery] = useWikiState('skills.query', '')
   // On phones the search field folds behind a button in the wiki header.
-  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useWikiState('skills.search-open', false)
   const searchInput = useRef<HTMLInputElement>(null)
   // Level rows by skill, filled a route at a time; every block reads them.
   const [levelRows, setLevelRows] = useState<Map<number, SkillLevelRow[]>>(() => new Map())
@@ -229,8 +231,8 @@ function StageBlock({ stage, index, matches, levelRows, failedSkills }: {
   levelRows: Map<number, SkillLevelRow[]>
   failedSkills: Set<number>
 }) {
-  const [selectedId, setSelectedId] = useState<number>()
-  const [levelIndexes, setLevelIndexes] = useState<Record<number, number>>({})
+  const [selectedId, setSelectedId] = useWikiOptional<number>(`skills.${stage.professionId}.${stage.stageId}.selected`, 'number')
+  const [levelIndexes, setLevelIndexes] = useWikiState<Record<number, number>>(`skills.${stage.professionId}.${stage.stageId}.levels`, {})
   const panel = useRef<HTMLDivElement>(null)
   const tiles = useRef<HTMLDivElement>(null)
   const pointer = useRef<HTMLSpanElement>(null)

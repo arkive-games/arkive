@@ -1,3 +1,4 @@
+import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { cn } from '@gamemap/ui'
 import { Notice } from './components/wiki'
@@ -24,10 +25,11 @@ const fill = (template: string, values: Record<string, string | number>) =>
 export function SoulWiki() {
   const [data, setData] = useState<SoulData | null>(null)
   const [dataError, setDataError] = useState(false)
-  const [quality, setQuality] = useState<number | null>(null)
-  const [view, setView] = useState<SoulView>('souls')
-  const [query, setQuery] = useState('')
-  const [searchOpen, setSearchOpen] = useState(false)
+  useWikiReady(data !== null || dataError)
+  const [quality, setQuality] = useWikiState<number | null>('souls.quality', null)
+  const [view, setView] = useWikiState<SoulView>('souls.view', 'souls')
+  const [query, setQuery] = useWikiState('souls.query', '')
+  const [searchOpen, setSearchOpen] = useWikiState('souls.search-open', false)
 
   useEffect(() => {
     let active = true
@@ -109,8 +111,8 @@ export function SoulWiki() {
 
 function SoulBoard({ souls, data }: { souls: SoulRecord[]; data: SoulData }) {
   const wide = useWide()
-  const [selected, setSelected] = useState<number>()
-  const [levels, setLevels] = useState<Record<number, number>>({})
+  const [selected, setSelected] = useWikiOptional<number>('souls.selected', 'number')
+  const [levels, setLevels] = useWikiState<Record<number, number>>('souls.levels', {})
   const [gridRef, fit] = useFit(wide ? 6.75 : 5.25)
   const columns = Math.max(3, Math.min(fit || 6, 10))
   const selectedIndex = souls.findIndex((soul) => soul.iID === selected)
@@ -126,7 +128,7 @@ function SoulBoard({ souls, data }: { souls: SoulRecord[]; data: SoulData }) {
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(undefined) }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [wide, selected])
+  }, [wide, selected, setSelected])
 
   if (souls.length === 0) return <div className="p-3"><Notice>{text.empty}</Notice></div>
 

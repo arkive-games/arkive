@@ -1,3 +1,4 @@
+import { useWikiScrollRestoration } from '../wikiMemory'
 import type { ReactNode } from 'react'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveContentPage, ArkiveMobileHeader } from '@gamemap/map-shell'
@@ -25,6 +26,7 @@ export interface ContentPageProps extends NavigationProps {
  * phone the compact header plus the bottom strip in place of the bar.
  */
 export function ContentPage({ active, onNavigate, title, heading = false, wide = false, version, children }: ContentPageProps) {
+  const scrollRestoration = useWikiScrollRestoration(active)
   return (
     <ArkiveContentPage
       topBar={<TopNav active={active} onNavigate={onNavigate} />}
@@ -55,6 +57,7 @@ export function ContentPage({ active, onNavigate, title, heading = false, wide =
       // The column scrolls, not the window, so a new page has to be brought
       // back to the top here -- the browser only does that for the document.
       resultsKey={active}
+      scrollRestoration={scrollRestoration}
     >
       {children}
     </ArkiveContentPage>
