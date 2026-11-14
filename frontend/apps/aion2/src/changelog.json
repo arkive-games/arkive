@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.16.2",
+      "date": "2026-11-15",
+      "commit": "6d4179c0efeecd7d89aa5350dff2e0e7cb42dad6",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep encyclopedia searches, category and faction choices, and browsing position when returning or reloading; direct section links take priority while Back resumes the linked visit.",
+            "zh-CN": "百科返回或刷新时保留搜索、分类、阵营选择和浏览位置；分类直达链接优先定位，返回详情前的位置时不再跳回原锚点。",
+            "zh-TW": "百科返回或重新整理時保留搜尋、分類、陣營選擇和瀏覽位置；分類直達連結優先定位，返回詳情前的位置時不再跳回原錨點。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.16.1",
       "date": "2026-10-28",
       "commit": "701fed8e5edd0014d29ce635022dbd9e11ca0aae",
