@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Wrench } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
@@ -42,6 +42,7 @@ import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
 
 import { canLeaveBuild } from './lib/buildNavigation'
+import { guardedHistory } from './lib/guardedHistory'
 
 const CHANGELOG = changelogRaw as ChangelogFile
 const SITE_VERSION = currentVersion(CHANGELOG)
@@ -107,19 +108,16 @@ function App() {
     document.title = documentTitle(location)
   }, [location])
 
+  const navigationHistory = useRef<ReturnType<typeof guardedHistory> | null>(null)
   useEffect(() => {
-    const currentUrl = window.location.href
-    const handlePopState = () => {
-      if (!canLeaveBuild()) { window.history.pushState({}, '', currentUrl); return }
+    const controller = guardedHistory(window, canLeaveBuild, () => {
       setLocation(readLocation())
       window.dispatchEvent(new Event('ro3:location-adopted'))
-      // The browser has already swapped the URL by the time popstate fires, so
-      // the default (read location) is the page the visitor just went back to.
       trackPageview()
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [location])
+    })
+    navigationHistory.current = controller
+    return () => { controller.dispose(); navigationHistory.current = null }
+  }, [])
 
   // The phone wiki header's action slot, handed down to whichever page wants it.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
@@ -132,7 +130,7 @@ function App() {
     if (!next || !canLeaveBuild()) return
     const href = hrefFor(next.page, next.view)
     if (href !== `${window.location.pathname}${window.location.search}`) {
-      window.history.pushState({}, '', href)
+      if (!navigationHistory.current?.push(href)) return
       trackPageview()
     }
     setLocation(next)

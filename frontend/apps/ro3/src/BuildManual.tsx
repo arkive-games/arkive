@@ -84,7 +84,7 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
     const adopt = () => {
       const id = new URLSearchParams(window.location.search).get('build')
       if (id) { setView({ mode: 'detail', id }); void cloud.openPublic(id) }
-      else setView({ mode: 'list' })
+      else { cloud.selectDetail(null); setView({ mode: 'list' }) }
     }
     window.addEventListener('ro3:location-adopted', adopt)
     return () => window.removeEventListener('ro3:location-adopted', adopt)
@@ -116,7 +116,7 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
   const clearShareUrl = () => {
     if (window.location.search) window.history.replaceState(window.history.state, '', '/builds')
   }
-  const backToList = () => { clearShareUrl(); setView({ mode: 'list' }) }
+  const backToList = () => { clearShareUrl(); cloud.selectDetail(null); setView({ mode: 'list' }) }
   const go = (next: Section) => { setSection(next); setPage(1); backToList() }
   const startEdit = (base?: CloudBuild, keepId = false) => {
     if (!loaded || cloud.busy) return
@@ -157,7 +157,7 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
       onBack={backToList} />
   </div>
 
-  const detail = view.mode === 'detail' ? cloud.detail : null
+  const detail = view.mode === 'detail' && cloud.detail?.id === view.id ? cloud.detail : null
   if (view.mode === 'detail') return <div className="ro3-bm">{nav}
     {error ? <p role="status" className="bm-note">{error}</p> : null}
     {detail ? <>
@@ -204,7 +204,7 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
     {cloud.loading ? <p className="bm-note" role="status">{c.loading}</p>
       : cloud.listError ? <div className="bm-empty"><p>{cloud.listError}</p>{gateway.available ? <button type="button" className="bm-chip" onClick={cloud.retry}>{c.retry}</button> : null}</div>
       : section !== 'rec' && cloud.auth.status !== 'authenticated' ? <div className="bm-empty"><p>{c.loginRequired}</p><button type="button" className="bm-pill" onClick={() => cloud.auth.enabled ? cloud.setLoginOpen(true) : cloud.setError(c.unavailable)}>{c.login}</button></div>
-      : shown.length ? <div className="bm-rows">{shown.map(b => <BuildRow key={b.id} build={editableBuild(b)} data={data} faved={b.favorited} onOpen={() => { window.history.replaceState(window.history.state, '', section === 'mine' ? '/builds' : publicBuildLink(b.id)); cloud.setDetail(b); setView({ mode: 'detail', id: b.id }) }} />)}</div>
+      : shown.length ? <div className="bm-rows">{shown.map(b => <BuildRow key={b.id} build={editableBuild(b)} data={data} faved={b.favorited} onOpen={() => { window.history.replaceState(window.history.state, '', section === 'mine' ? '/builds' : publicBuildLink(b.id)); cloud.selectDetail(b); setView({ mode: 'detail', id: b.id }) }} />)}</div>
       : <div className="bm-empty"><p>{emptyText}</p>{needle ? null : <button type="button" className="bm-pill warm" disabled={!loaded} onClick={() => startEdit()}><Plus aria-hidden="true" />{m.newBuild}</button>}</div>}
     {cloud.total > 20 || page > 1 ? <nav className="bm-pagination"><button className="bm-chip" type="button" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{m.previousPage}</button><span>{page}/{Math.ceil(cloud.total / 20)}</span><button className="bm-chip" type="button" disabled={page * 20 >= cloud.total} onClick={() => setPage(p => p + 1)}>{m.nextPage}</button></nav> : null}
   </div>

@@ -21,6 +21,7 @@ export function useBuildCloud(query: BuildQuery, gateway: BuildGateway = pending
   const [refresh, setRefresh] = useState(0)
   const generation = useRef(0)
   const epoch = useRef(0)
+  const detailEpoch = useRef(0)
   const lock = useRef(false)
   const account = auth.user?.id ?? null
   const [previousAccount, setPreviousAccount] = useState(account)
@@ -64,7 +65,7 @@ export function useBuildCloud(query: BuildQuery, gateway: BuildGateway = pending
   const patch = (next: Partial<PlannerBuild>) => { generation.current++; setDraft(current => ({ ...current, ...next })); setDirty(true); setError('') }
   const edit = (base?: CloudBuild, copy = false) => {
     if (lock.current || dirty && !window.confirm(content.builds.manual.confirmLeave)) return false
-    epoch.current++; generation.current++
+    epoch.current++; detailEpoch.current++; generation.current++
     const fresh = emptyPlanner()
     setDraft(base ? { ...editableBuild(base), id: copy ? fresh.id : base.id } : fresh)
     setSaved(base && !copy ? base : null); setDirty(copy); setError('')
@@ -107,13 +108,16 @@ export function useBuildCloud(query: BuildQuery, gateway: BuildGateway = pending
     if (owner !== liveAccount.current || token !== epoch.current) return
     setDetail(current => current?.id === target.id ? action === 'remove' ? null : next : current); setRefresh(v => v + 1)
   })
+  const selectDetail = (next: CloudBuild | null) => { detailEpoch.current++; setDetail(next); setError('') }
   const openPublic = async (id: string) => {
-    const token = ++epoch.current
+    const token = ++detailEpoch.current
+    const sessionToken = epoch.current
     setError(''); setDetail(null)
     if (!gateway.available) { setError(c.unavailable); return }
-    try { const next = await gateway.getPublic(id); if (token === epoch.current) setDetail(next) }
-    catch (error) { if (token === epoch.current) failure(error) }
+    const current = () => token === detailEpoch.current && sessionToken === epoch.current
+    try { const next = await gateway.getPublic(id); if (current()) setDetail(next) }
+    catch (error) { if (current()) failure(error) }
   }
-  return { auth, draft, saved, dirty, patch, edit, save, items, total, detail, setDetail, openPublic, mutate,
+  return { auth, draft, saved, dirty, patch, edit, save, items, total, detail, selectDetail, openPublic, mutate,
     error, setError, listError, loading, busy, loginOpen, setLoginOpen, retry: () => setRefresh(v => v + 1) }
 }

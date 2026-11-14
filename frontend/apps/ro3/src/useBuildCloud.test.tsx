@@ -68,6 +68,21 @@ it('does not replace private state with an old account save response', async () 
   expect(result.current.saved).toBeNull()
   expect(result.current.draft.title).toBe('')
 })
+it('ignores a delayed share response after returning to the list or selecting another build', async () => {
+  const gateway = api()
+  let resolve!: (value: CloudBuild) => void
+  gateway.getPublic = vi.fn(() => new Promise<CloudBuild>(done => { resolve = done }))
+  const { result } = renderHook(() => useBuildCloud(query, gateway))
+  let pending!: Promise<void>
+  act(() => { pending = result.current.openPublic('old') })
+  act(() => result.current.selectDetail(null))
+  await act(async () => { resolve({ ...record(), id: 'old' }); await pending })
+  expect(result.current.detail).toBeNull()
+  act(() => { pending = result.current.openPublic('old') })
+  act(() => result.current.selectDetail({ ...record(), id: 'new' }))
+  await act(async () => { resolve({ ...record(), id: 'old' }); await pending })
+  expect(result.current.detail?.id).toBe('new')
+})
 it('keeps an anonymous draft through login without automatically publishing', async () => {
   session.user = null; session.status = 'anonymous'
   const gateway = api()
