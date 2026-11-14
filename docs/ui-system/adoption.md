@@ -5,7 +5,7 @@ Hierarchy, page rules, component/state contracts and shared visual roles are
 recorded in the [index](../ARKIVE_PRODUCT_IA_DRAFT.md); production compliance is
 not implied. Preserve existing homepage design. Forum redesign/Skill are deferred.
 
-## Stage 4: permission required
+## Stage 4: approved local reconciliation
 
 Local stage 4 work was approved on 2026-11-15. The active worktree is
 `.scratch/ui-stage4`, based on `origin/master` at `c70f9509`; the previous spec
@@ -19,7 +19,7 @@ account-menu UID removal and hidden redundant account section heading.
 Canonical foundation/color/site/map/memory owners now record these scoped rules.
 The current homepage source remains unchanged.
 
-Remaining: encyclopedia reconstruction and return adapters outside RO3/Palworld/AION2; remaining
+Remaining: encyclopedia reconstruction and category-specific return adapters not covered below; remaining
 map lifecycle migration and OSS preview adoption; production credits generation/manual editor; tool explicit
 save adapters after their open save destinations/account scopes are resolved.
 Do not call the whole stage complete from the catalog/map-detail batch.
@@ -110,3 +110,20 @@ anchor Back/reload, and sibling search restoration. Palworld return smoke passes
 AION2 lint/build, map-shell typecheck and memory-key inventory pass. Full suite:
 162 files / 1887 tests pass. Existing layout/mobile composition is unchanged;
 this is return-memory adoption, not certification of the full encyclopedia UI.
+
+PBZ/V Rising encyclopedia batch: PBZ's weapons, Phantom Edges, accessories,
+medicines, items and enemies retain queries/facets and result-scoped scroll.
+Details retain reading position, weapon-level expansion and item-document page
+selection by entity. Skills retain ordinary reading position; hash visits use
+the existing anchor behavior. V Rising's V Blood list/detail retain reading
+position alongside existing query/act/hide-completed state. Completion data,
+reward disclosure and layout remain unchanged. The shared state-memory adapter
+binds a declared record, result scope and loading readiness to the existing shell.
+
+Browser checks verify PBZ search/filter return/reload, weapon/Phantom Edge
+isolation, 1000-pixel item-list return, 59-level expansion and item-document
+page isolation. V Blood query/filter and 1200-pixel return/reload pass, with
+completion storage unchanged. Both app lints/builds, state-memory typecheck and
+the key inventory pass; full suite: 163 files / 1890 tests. No remote delivery.
+Other V Rising categories and other unintegrated encyclopedia surfaces remain
+outside this batch; this does not certify the entire stage.

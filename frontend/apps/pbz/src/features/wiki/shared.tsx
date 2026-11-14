@@ -9,17 +9,17 @@ import { RichText } from '../../lib/richText'
 export function useWiki<N extends DatasetName>(name: N) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
-  const [state, setState] = useState<{ data: Dataset<N>; labels: Labels } | null>(null)
+  const [state, setState] = useState<{ name: N; data: Dataset<N>; labels: Labels } | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
     setError(null)
     Promise.all([loadDataset(name, lng), loadLabels(lng)])
-      .then(([data, labels]) => { if (!cancelled) setState({ data, labels }) })
+      .then(([data, labels]) => { if (!cancelled) setState({ name, data, labels }) })
       .catch((err) => { console.error(err); if (!cancelled) setError(t('loadError')) })
     return () => { cancelled = true }
   }, [name, lng, t])
-  return { ...state, error }
+  return { ...(state?.name === name ? state : null), error }
 }
 
 /** Item names, for material lists on the other pages. */

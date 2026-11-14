@@ -70,6 +70,11 @@ arkive.memory.pbz.map.map-id	-	apps/pbz/src/lib/storage.ts
 arkive.memory.pbz.map.show-labels	-	apps/pbz/src/features/map/MapPage.tsx
 arkive.memory.pbz.map.view	-	apps/pbz/src/lib/storage.ts
 arkive.memory.pbz.map.visible-subtypes	-	apps/pbz/src/lib/storage.ts
+arkive.memory.pbz.wiki-context.expanded-levels	-	apps/pbz/src/features/wiki/memory.ts
+arkive.memory.pbz.wiki-context.filters	-	apps/pbz/src/features/wiki/memory.ts
+arkive.memory.pbz.wiki-context.item-page	-	apps/pbz/src/features/wiki/memory.ts
+arkive.memory.pbz.wiki-context.query	-	apps/pbz/src/features/wiki/memory.ts
+arkive.memory.pbz.wiki-context.scroll	-	apps/pbz/src/features/wiki/memory.ts
 arkive.memory.ro3.builds.favorites	-	apps/ro3/src/lib/buildState.ts
 arkive.memory.ro3.wiki.scroll	-	apps/ro3/src/wikiMemory.ts
 arkive.memory.site.account-editor.profile	account	apps/meta/src/UserSystemPages.tsx
@@ -88,6 +93,7 @@ arkive.memory.site.user-system.progress	account	apps/meta/src/UserSystemState.ts
 arkive.memory.site.user-system.settings	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.sts2.cards-catalog.filters	-	apps/sts2/src/features/cards/CardListPage.tsx
 arkive.memory.sts2.cards-catalog.query	-	apps/sts2/src/features/cards/CardListPage.tsx
+arkive.memory.vrising.catalog-context.scroll	-	apps/vrising/src/lib/memory.ts
 arkive.memory.vrising.knowledge.query	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
 arkive.memory.vrising.knowledge.reveal-depth	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
 arkive.memory.vrising.knowledge.section	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx

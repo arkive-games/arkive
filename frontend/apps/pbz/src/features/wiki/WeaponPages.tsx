@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useWikiQuery, useWikiFilters, useExpandedLevels } from './memory'
+import { useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ContentPage } from '../../components/ContentPage'
@@ -15,9 +16,9 @@ const TYPE_LABELS = { weapons: 'weaponType', phantomEdges: 'edgeType' } as const
 export function WeaponListPage({ kind }: { kind: Kind }) {
   const { t } = useTranslation()
   const { data, labels, error } = useWiki(kind)
-  const [query, setQuery] = useState('')
-  const [types, setTypes] = useState<string[]>([])
-  const [rarities, setRarities] = useState<string[]>([])
+  const [query, setQuery] = useWikiQuery(kind)
+  const [types, setTypes] = useWikiFilters(kind, 'types')
+  const [rarities, setRarities] = useWikiFilters(kind, 'rarities')
 
   const rows = useMemo(() => (data?.rows ?? []).filter((w) =>
     (!types.length || types.includes(w.type))
@@ -27,7 +28,7 @@ export function WeaponListPage({ kind }: { kind: Kind }) {
 
   const title = labels?.section[kind] ?? t(`nav.${kind}`)
   return (
-    <ContentPage active={ROUTE[kind]} title={title} heading wide>
+    <ContentPage browsing={{ scope: kind, ready: !!data && !!labels, resultsKey: JSON.stringify([query, types, rarities]) }} active={ROUTE[kind]} title={title} heading wide>
       <PageState error={error} loading={!data || !labels} />
       {data && labels ? (
         <>
@@ -64,7 +65,7 @@ export function WeaponDetailPage({ kind }: { kind: Kind }) {
   const { id } = useParams({ strict: false }) as { id: string }
   const { data, labels, error } = useWiki(kind)
   const names = useItemNames()
-  const [showAll, setShowAll] = useState(false)
+  const [showAll, setShowAll] = useExpandedLevels(kind, id)
 
   const weapon = data?.byId.get(id)
   const text = weapon ? data?.text[weapon.id] : undefined
@@ -74,7 +75,7 @@ export function WeaponDetailPage({ kind }: { kind: Kind }) {
   const totalDust = levels.reduce((sum, [, dust]) => sum + dust, 0)
 
   return (
-    <ContentPage active={ROUTE[kind]} title={name}>
+    <ContentPage active={ROUTE[kind]} title={name} browsing={{ scope: `${kind}:${id}`, ready: !!weapon && !!labels }}>
       <PageState error={error} loading={!data || !labels} missing={!!data && !weapon} />
       {weapon && labels ? (
         <div className="flex flex-col gap-4">

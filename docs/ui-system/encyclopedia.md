@@ -58,7 +58,12 @@ technology links bypass a conflicting remembered query for the visit.
 AION2 retains overview/type searches, hub group/faction, group/detail scroll
 and sibling-catalog queries. New anchor links override ordinary context while
 Back/reload resumes the linked visit's later position.
+PBZ's six lists retain queries/facets and result-scoped scroll; detail reading
+positions, weapon-level expansion and item-document pages are session-scoped.
+Skills remember ordinary reading position; hash visits keep their existing
+anchor behavior. V Rising's V Blood list/detail restore reading position while
+retaining existing query/act/completion filters and progress ownership.
 The shared scroll adapter waits for data and content height, preserves result
-scope and yields to user input. Other games still need adapters; no content or
+scope and yields to user input. Remaining categories still need adapters; no content or
 mobile redesign is implied. Unavailable storage keeps the active page usable
 without guaranteeing restoration after navigation.

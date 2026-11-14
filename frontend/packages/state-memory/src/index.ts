@@ -82,3 +82,4 @@ export {
   type PreferenceLayerStore,
 } from "./preferences"
 export { createMapSessionRecords, useMapSession } from './mapSession'
+export { sessionScrollBinding, useSessionScroll, type SessionScrollContext } from './sessionScroll'
