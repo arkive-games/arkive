@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.24.0",
+      "date": "2026-11-15",
+      "commit": "46249ada4e90cdf3a627936aadeb19d4b33fa158",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Encyclopedia categories remember searches, filters, pages, selected entries and viewed levels during the session. Returning restores the reading position after content loads.",
+            "zh-CN": "百科分类会记住本次浏览中的搜索、筛选、页码、选中条目及查看等级，返回时在内容加载完成后恢复阅读位置。",
+            "zh-TW": "百科分類會記住本次瀏覽中的搜尋、篩選、頁碼、選中條目及查看等級，返回時在內容載入完成後恢復閱讀位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.0",
       "date": "2026-11-03",
       "commit": "b2de432ebe1312e87c835e19486c98dc832f99a6",
