@@ -1,9 +1,9 @@
 {
   "entries": [
     {
-      "version": "0.23.13",
+      "version": "0.24.13",
       "date": "2026-11-14",
-      "commit": "3aa27aff786d8891f3b7eba6f0a52c3672280547",
+      "commit": "6976ad723c0528a30767113c47adc1feb8b43a43",
       "changes": [
         {
           "kind": "fix",
@@ -16,9 +16,9 @@
       ]
     },
     {
-      "version": "0.23.12",
+      "version": "0.24.12",
       "date": "2026-11-12",
-      "commit": "aa7c3aaed80dde4073b734ed337924bc9713e29d",
+      "commit": "c0815a25e16d069241cf7bb8caccdcda6374cfe1",
       "changes": [
         {
           "kind": "fix",
@@ -31,9 +31,9 @@
       ]
     },
     {
-      "version": "0.23.11",
+      "version": "0.24.11",
       "date": "2026-11-12",
-      "commit": "4c9fc76013182d9b945e63440d0749ac15a82814",
+      "commit": "c7bddf4477f18b836fd8a1b317d3b6022ecf2932",
       "changes": [
         {
           "kind": "fix",
@@ -46,9 +46,9 @@
       ]
     },
     {
-      "version": "0.23.10",
+      "version": "0.24.10",
       "date": "2026-11-10",
-      "commit": "431d2b4a6a44674637ee1f6a8ccab978f86d3460",
+      "commit": "b6c7ef59a20c929afab6a1f2c3d52df789da8c78",
       "changes": [
         {
           "kind": "improvement",
@@ -61,9 +61,9 @@
       ]
     },
     {
-      "version": "0.23.9",
+      "version": "0.24.9",
       "date": "2026-11-09",
-      "commit": "1a73b14702bdff0fb2fbd97b760460a4885d2ee4",
+      "commit": "6b2839072bfcaffc62470c8a534c574ba63f1262",
       "changes": [
         {
           "kind": "fix",
@@ -76,9 +76,9 @@
       ]
     },
     {
-      "version": "0.23.8",
+      "version": "0.24.8",
       "date": "2026-11-09",
-      "commit": "cfaa9a052ddaf95583132f9f533bdf7b6047e1f5",
+      "commit": "49d29b68b4daec27ca5e3f1ca3c9162bf24bcbe3",
       "changes": [
         {
           "kind": "improvement",
@@ -91,9 +91,9 @@
       ]
     },
     {
-      "version": "0.23.7",
+      "version": "0.24.7",
       "date": "2026-11-09",
-      "commit": "6c4d6af62faece34b6d541534657b7321d7573e1",
+      "commit": "5471a125be5350cc9d8d8b133ca25a7eb88b07a0",
       "changes": [
         {
           "kind": "improvement",
@@ -106,9 +106,9 @@
       ]
     },
     {
-      "version": "0.23.6",
+      "version": "0.24.6",
       "date": "2026-11-09",
-      "commit": "62d70f290f9a2e2feb7249bc57a2f65322f9199f",
+      "commit": "2bf79fc08667703027d9b2973fff445e483cdfa5",
       "changes": [
         {
           "kind": "improvement",
@@ -121,9 +121,9 @@
       ]
     },
     {
-      "version": "0.23.5",
+      "version": "0.24.5",
       "date": "2026-11-09",
-      "commit": "9e6aae0e2ebff65884290618dfafbfa855a16874",
+      "commit": "21a9d61e270700518010632a488775f089288146",
       "changes": [
         {
           "kind": "improvement",
@@ -136,9 +136,9 @@
       ]
     },
     {
-      "version": "0.23.4",
+      "version": "0.24.4",
       "date": "2026-11-08",
-      "commit": "3201b333f3a1f06ce8ba6a16e6fd8ee8e8161a40",
+      "commit": "7ac74b1d724e568c8561e2a63fd6a52dbc9b2518",
       "changes": [
         {
           "kind": "improvement",
@@ -151,9 +151,9 @@
       ]
     },
     {
-      "version": "0.23.3",
+      "version": "0.24.3",
       "date": "2026-11-08",
-      "commit": "0f4b72ae0993fa48a28be5c8d6398f8ed498a4a8",
+      "commit": "f60154149c8afa92faa2772e8b24130b520bf91b",
       "changes": [
         {
           "kind": "fix",
@@ -166,9 +166,9 @@
       ]
     },
     {
-      "version": "0.23.2",
+      "version": "0.24.2",
       "date": "2026-11-08",
-      "commit": "5c1510ddb6a56b6e6e28a3efe0cfcb1a9d110451",
+      "commit": "b3675cbf9ba3fb7bc8d85b732ecec894a74d1d18",
       "changes": [
         {
           "kind": "improvement",
@@ -181,9 +181,9 @@
       ]
     },
     {
-      "version": "0.23.1",
+      "version": "0.24.1",
       "date": "2026-11-08",
-      "commit": "299d9d5d784dfa30e2912060820dce7db74f64cf",
+      "commit": "3006d74b03788a77dc528e6479312e717ef9e536",
       "changes": [
         {
           "kind": "improvement",
@@ -196,9 +196,9 @@
       ]
     },
     {
-      "version": "0.23.0",
+      "version": "0.24.0",
       "date": "2026-11-08",
-      "commit": "60b0911dd5b09fb40faf4cd83d3f9093987c8e6e",
+      "commit": "ad4b51c83e6cfb6e1a93b9fd5890695c12b1ecba",
       "changes": [
         {
           "kind": "feature",
@@ -211,9 +211,9 @@
       ]
     },
     {
-      "version": "0.22.3",
+      "version": "0.23.3",
       "date": "2026-11-05",
-      "commit": "e6cd8af7264bc02be867400d53746142313dbe02",
+      "commit": "233c9ace46c28f38b67e5580998fe8b12bb4dc03",
       "changes": [
         {
           "kind": "fix",
@@ -226,9 +226,9 @@
       ]
     },
     {
-      "version": "0.22.2",
+      "version": "0.23.2",
       "date": "2026-11-04",
-      "commit": "ffbc1899127f3d6b5d269f3b861bda169567f34d",
+      "commit": "48fd70ab45d8dd2004f5778c34ad4fc9a16c5ead",
       "changes": [
         {
           "kind": "improvement",
@@ -241,9 +241,9 @@
       ]
     },
     {
-      "version": "0.22.1",
+      "version": "0.23.1",
       "date": "2026-11-04",
-      "commit": "4606a0fddaffa644086ae0b5ba663e5869a130d1",
+      "commit": "197518f90209a1182a757239a503b3e1220cc54f",
       "changes": [
         {
           "kind": "fix",
