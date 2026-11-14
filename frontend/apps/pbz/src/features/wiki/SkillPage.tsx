@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
@@ -18,6 +19,7 @@ export default function SkillPage() {
   const { t } = useTranslation()
   const { data, labels, error } = useWiki('skills')
   const names = useItemNames()
+  const { hash } = useLocation()
 
   const rows = useMemo(() => {
     const nodes = data?.rows ?? []
@@ -32,7 +34,8 @@ export default function SkillPage() {
   const nodeName = (id: string) => data?.text[id]?.name ?? id
 
   return (
-    <ContentPage active="/skills" title={t('nav.skills')} heading wide>
+    <ContentPage active="/skills" title={t('nav.skills')} heading wide
+      browsing={hash ? undefined : { scope: 'skills', ready: !!data && !!labels }}>
       <PageState error={error} loading={!data || !labels} />
       {data && labels ? (
         <div className="flex flex-col gap-6">

@@ -135,7 +135,7 @@ export default function VBloodDetailPage() {
 
   const isCompleted = completed.has(boss.id)
   return (
-    <ContentPage active="/vblood" title={boss.name} wide>
+    <ContentPage active="/vblood" title={boss.name} wide browsing={{ scope: `vblood:${boss.id}`, ready: true }}>
       <Link to="/vblood" className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition hover:text-primary">
         <ChevronLeft className="size-4" />
         {t('vblood.backToList')}

@@ -135,7 +135,8 @@ export default function VBloodListPage() {
   }, [bosses, query, activeAct, hideCompleted, completed])
 
   return (
-    <ContentPage active="/vblood" title={t('vblood.title')} heading wide>
+    <ContentPage active="/vblood" title={t('vblood.title')} heading wide
+      browsing={{ scope: 'vblood', ready: bosses !== null, resultsKey: JSON.stringify([query, activeAct, hideCompleted]) }}>
       <div className="mb-5 rounded-xl border border-primary/15 bg-gradient-to-r from-primary/10 via-card to-card p-4 md:flex md:items-center md:justify-between md:gap-6">
         <div>
           <p className="text-sm font-semibold text-primary">{t('vblood.eyebrow')}</p>

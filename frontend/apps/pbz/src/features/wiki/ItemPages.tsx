@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useWikiQuery, useWikiFilters, useItemPage } from './memory'
+import { useMemo } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ContentPage } from '../../components/ContentPage'
@@ -8,14 +9,14 @@ import { DetailHeader, ListControls, matches, optionsOf, PageState, Prose, Row, 
 export function ItemListPage() {
   const { t } = useTranslation()
   const { data, labels, error } = useWiki('items')
-  const [query, setQuery] = useState('')
-  const [categories, setCategories] = useState<string[]>([])
+  const [query, setQuery] = useWikiQuery('items')
+  const [categories, setCategories] = useWikiFilters('items', 'categories')
   const rows = useMemo(() => (data?.rows ?? [])
     .filter((it) => (!categories.length || categories.includes(it.category)) && matches(query, data?.text[it.id]?.name))
     .sort((a, b) => a.order - b.order), [data, categories, query])
 
   return (
-    <ContentPage active="/items" title={labels?.section.items ?? t('nav.items')} heading wide>
+    <ContentPage browsing={{ scope: 'items', ready: !!data && !!labels, resultsKey: JSON.stringify([query, categories]) }} active="/items" title={labels?.section.items ?? t('nav.items')} heading wide>
       <PageState error={error} loading={!data || !labels} />
       {data && labels ? (
         <>
@@ -66,10 +67,11 @@ export function ItemDetailPage() {
   const text = item ? data?.text[item.id] : undefined
   const name = text?.name ?? id
   const uses = useUses(id)
-  const [page, setPage] = useState(0)
+  const [storedPage, setPage] = useItemPage(id)
+  const page = Math.min(storedPage, Math.max(0, (text?.pages?.length ?? 1) - 1))
 
   return (
-    <ContentPage active="/items" title={name}>
+    <ContentPage active="/items" title={name} browsing={{ scope: `items:${id}`, ready: !!item && !!labels }}>
       <PageState error={error} loading={!data || !labels} missing={!!data && !item} />
       {item && labels ? (
         <div className="flex flex-col gap-4">
