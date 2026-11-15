@@ -3,6 +3,7 @@ import { ArrowRight, Search, X } from 'lucide-react'
 import { cn } from './utils'
 
 export interface CatalogSearchInputProps extends Omit<ComponentProps<'input'>, 'size' | 'ref'> {
+  density?: 'comfortable' | 'compact'
   submitLabel?: string
   clearLabel?: string
   onClear?: () => void
@@ -12,11 +13,11 @@ export interface CatalogSearchInputProps extends Omit<ComponentProps<'input'>, '
 }
 
 /** The reviewed catalog control; live filtering stays owned by the caller. */
-export function CatalogSearchInput({ className, inputClassName, inputRef: externalRef, submitLabel, clearLabel, onClear, onSearch,
+export function CatalogSearchInput({ density = 'comfortable', className, inputClassName, inputRef: externalRef, submitLabel, clearLabel, onClear, onSearch,
   type = 'search', ...input }: CatalogSearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const label = input['aria-label'] ?? input.placeholder
-  return <form role="search" aria-disabled={input.disabled || undefined} className={cn('catalog-search', className)} onSubmit={event => {
+  return <form data-density={density} role="search" aria-disabled={input.disabled || undefined} className={cn('catalog-search', className)} onSubmit={event => {
     event.preventDefault()
     if (input.disabled) return
     onSearch?.()

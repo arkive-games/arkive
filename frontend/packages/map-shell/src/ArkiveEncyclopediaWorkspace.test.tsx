@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 import { useState } from 'react'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ArkiveEncyclopediaWorkspace } from './ArkiveEncyclopediaWorkspace'
 
 afterEach(cleanup)
-function Workspace({ collapsible = false }: { collapsible?: boolean }) {
+function Workspace({ collapsible = false, appearance = 'framed' }: { collapsible?: boolean; appearance?: 'framed' | 'quiet' }) {
   const [collapsed, setCollapsed] = useState(false)
   return <ArkiveEncyclopediaWorkspace
     groups={[{ key: 'records', label: 'Records', collapsible, entries: [{ key: '/items', label: 'Items', icon: <span aria-hidden>I</span> }] }]}
-    active="/items" label="Encyclopedia" collapsed={collapsed} onCollapsedChange={setCollapsed}
+    active="/items" label="Encyclopedia" collapsed={collapsed} onCollapsedChange={setCollapsed} appearance={appearance}
     collapseLabel="Collapse navigation" expandLabel="Expand navigation"
     railFooter={<a href="/items/ore">Recently viewed ore</a>}
     renderSubnavigation={() => <input aria-label="Subsection choice" defaultValue="season" />}
@@ -18,6 +18,19 @@ function Workspace({ collapsible = false }: { collapsible?: boolean }) {
   </ArkiveEncyclopediaWorkspace>
 }
 describe('encyclopedia workspace', () => {
+  it('keeps the collapsed quiet directory at the parent level and opens labelled child links on demand', async () => {
+    render(<Workspace collapsible appearance="quiet" />)
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search' }), { target: { value: 'ore' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse navigation' }))
+    expect(screen.queryByRole('link', { name: 'Items' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Records' }))
+    const link = await screen.findByRole('link', { name: 'Items' })
+    expect(link.getAttribute('aria-current')).toBe('page')
+    link.addEventListener('click', event => event.preventDefault())
+    fireEvent.click(link)
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Items' })).toBeNull())
+    expect((screen.getByRole('textbox', { name: 'Search' }) as HTMLInputElement).value).toBe('ore')
+  })
   it('folds a parent group without changing the selected category or reading controls', () => {
     render(<Workspace collapsible />)
     fireEvent.change(screen.getByRole('textbox', { name: 'Search' }), { target: { value: 'ore' } })

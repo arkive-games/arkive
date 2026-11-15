@@ -1024,3 +1024,17 @@ a:focus-visible > .arkive-wordmark {
 .catalog-search[aria-disabled="true"] { opacity: .5; }
 .catalog-search button:disabled { cursor: not-allowed; transform: none; }
 @media (prefers-reduced-motion: reduce) { .catalog-search button, .catalog-search button svg { transition: none; } }
+
+/* Compact desktop catalog controls retain the standard control-label type role. */
+@media (min-width: 1024px) {
+  .catalog-search[data-density="compact"] {
+    height: 2.25rem;
+    width: 20rem;
+    padding: .125rem .125rem .125rem .75rem;
+    border-radius: var(--arkive-radius-standard);
+  }
+  .catalog-search[data-density="compact"] button {
+    width: 1.75rem;
+    min-height: 1.75rem;
+  }
+}

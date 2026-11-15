@@ -82,7 +82,7 @@ export default function PalListPage() {
   }, [lng, t])
 
   const desktop = useEncyclopediaDesktop()
-  const search = <CatalogSearchInput value={query} onChange={event => setQuery(event.target.value)}
+  const search = <CatalogSearchInput density="compact" value={query} onChange={event => setQuery(event.target.value)}
     placeholder={t('pal.searchPlaceholder')} submitLabel={t('pal.searchPlaceholder')}
     clearLabel={fs.clear} onClear={() => setQuery('')} />
 
