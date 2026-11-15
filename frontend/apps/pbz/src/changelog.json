@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.0",
+      "date": "2026-11-15",
+      "commit": "998c8e8ded6888edff4926839a26a53f91c86d7e",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse encyclopedia categories and details from a collapsible desktop directory while retaining the existing records, filters and mobile layout.",
+            "zh-CN": "百科新增可收起的桌面分类目录，保留原有资料卡片、详情、筛选和手机端布局。",
+            "zh-TW": "百科新增可收起的桌面分類目錄，保留原有資料卡片、詳情、篩選和手機端版面。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.1",
       "date": "2026-10-31",
       "commit": "d2d04161c788b615e51953fdeb34ee84eb27ed19",
