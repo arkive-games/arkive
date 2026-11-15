@@ -5,6 +5,8 @@ common:
   level: "{{n}} 級"
 nav: { wiki: "百科" }
 workspace:
+  collapse: "收起百科目錄"
+  expand: "展開百科目錄"
   title: "永恆之塔2百科"
   overview: "總覽"
   recent: "最近瀏覽"

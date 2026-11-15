@@ -17,11 +17,13 @@ export function useEncyclopediaDesktop() {
 }
 
 /** Category navigation only; the game continues to own its records and controls. */
-export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, onCollapsedChange, collapseLabel, expandLabel, renderLink, children }: {
+export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, onCollapsedChange, collapseLabel, expandLabel, renderLink, railFooter, children }: {
   groups: readonly EncyclopediaGroup[]; active: string; label: string;
   collapsed: boolean; onCollapsedChange: (collapsed: boolean) => void;
   collapseLabel: string; expandLabel: string;
   renderLink: (entry: EncyclopediaEntry, className: string, children: ReactNode) => ReactNode;
+  /** Optional game-owned reading history, hidden with the expanded labels. */
+  railFooter?: ReactNode;
   children: ReactNode;
 }) {
   const navId = useId()
@@ -54,6 +56,7 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
           </div>)}
         </div>)}
       </nav>
+      {!collapsed && railFooter}
     </aside>
     <div className="min-w-0" data-encyclopedia-content>{children}</div>
   </div>

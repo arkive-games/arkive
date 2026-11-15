@@ -127,12 +127,12 @@ export default function WikiCatalogToolbar({
       <div
         className={
           showHeading
-            ? "grid gap-3 md:grid-cols-[minmax(13rem,auto)_minmax(22rem,1fr)] md:items-center"
+            ? "grid gap-3 md:grid-cols-[minmax(13rem,auto)_minmax(22rem,1fr)] md:items-center lg:grid-cols-1"
             : "grid"
         }
       >
         {showHeading && (
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 lg:sr-only">
             <h1 className="min-w-0 truncate text-3xl font-bold text-[color:var(--arkive-nav-active)]">
               {title}
             </h1>

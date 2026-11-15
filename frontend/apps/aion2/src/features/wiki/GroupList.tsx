@@ -123,7 +123,7 @@ export default function GroupList({
             destination={t(`wiki/taxonomy:types.${type}.name`)}
             className="mb-2"
           />
-          <h1 className="text-3xl font-bold text-[color:var(--arkive-nav-active)]">
+          <h1 className="text-3xl font-bold text-[color:var(--arkive-nav-active)] lg:sr-only">
             {t(`wiki/taxonomy:groups.${type}.${group}.name`)}
           </h1>
           {hasFactionChoices && <div className="mt-5 grid grid-cols-3 overflow-hidden rounded-md border border-border text-sm">
