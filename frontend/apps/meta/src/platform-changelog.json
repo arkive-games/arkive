@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-11-15",
+      "commit": "b91bb61161a56e5c2ad77cfb3f264d63c300e090",
+      "targets": [
+        "gmzz",
+        "palworld",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Encyclopedia lists explain empty search results, and reference pages omit redundant interface instructions.",
+            "zh-CN": "百科列表补齐搜索无结果提示，资料页移除多余的界面操作说明。",
+            "zh-TW": "百科列表補齊搜尋無結果提示，資料頁移除多餘的介面操作說明。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
       "commit": "7678a26be4e13e6f07c01c9ff12fcfd9df5ee954",
       "targets": [
         "aion2",
