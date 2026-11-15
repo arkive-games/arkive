@@ -94,7 +94,6 @@ export const SITES: SiteCard[] = [
   {
     id: 'oss',
     kind: 'offline',
-    comingSoon: !import.meta.env.DEV,
     url: resolveSiteUrl(import.meta.env.VITE_OSS_URL, 'http://localhost:15181', 'https://oss.arkive.games'),
     bg: '/oss-preview.svg',
     nameKey: 'site.oss.name',

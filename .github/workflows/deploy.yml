@@ -104,11 +104,10 @@ jobs:
             smoke_path: /changelog
             data_base_url: https://data-pbz.arkive.games
             resource_base_url: https://resource-pbz.arkive.games
-          # Domain provisioning and artifact publication are tracked in
-          # docs/oss-deployment.md. Enable smoke checks after HTTPS is verified.
+          # Domain and artifact verification are recorded in docs/oss-deployment.md.
           - app: oss
             project: arkive-oss
-            domain:
+            domain: oss.arkive.games
             smoke_path: /changelog
             data_base_url: https://data-oss.arkive.games
             resource_base_url: https://resource-oss.arkive.games
