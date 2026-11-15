@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.1",
+      "date": "2026-11-16",
+      "commit": "65a84946e98fb072a152206ce69b1216d7d122f6",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Align encyclopedia pages with the wider directory layout and simplify the pal catalog to filters and a grid.",
+            "zh-CN": "百科页面采用更宽的贴边目录布局，帕鲁图鉴精简为筛选和网格展示。",
+            "zh-TW": "百科頁面採用更寬的貼邊目錄版面，帕魯圖鑑精簡為篩選與網格展示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.0",
       "date": "2026-11-15",
       "commit": "237f7e6dbfa73c7efdd4b1a6cf2e17841fd97655",
