@@ -46,8 +46,8 @@ export function PalCard({
             className="size-14 object-contain sm:size-16"
           />
         </div>
-        <div className="flex min-h-12 items-center justify-between gap-2 border-t border-border px-3 py-2 text-left">
-          <span className="min-w-0 break-words text-sm font-semibold leading-tight">{name}</span>
+        <div className="flex min-h-8 items-center justify-between gap-1.5 border-t border-border px-2 py-1 text-left">
+          <span className="min-w-0 break-words text-xs font-semibold leading-tight">{name}</span>
           <span className="hidden shrink-0 items-center gap-1 sm:flex" aria-hidden>
             {pal.elements.map(element => <img key={element} src={elementIconUrl(element)} alt="" className="size-4 object-contain" />)}
           </span>

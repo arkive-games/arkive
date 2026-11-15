@@ -102,7 +102,7 @@ export default function PalListPage() {
       filtersActive={isFilterActive({ ...filter, query: '' })}
     >
         <CatalogDataProvider pals={bundle ?? undefined}>
-          {!desktop && <div className="mb-3">{search}</div>}
+          {(!desktop || !bundle) && <div className="mb-3">{search}</div>}
           <ContentPageFilters className="mb-4" />
 
           {loadError ? (
