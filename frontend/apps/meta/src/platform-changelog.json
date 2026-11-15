@@ -2,6 +2,28 @@
   "entries": [
     {
       "date": "2026-11-15",
+      "commit": "c04e3b8ea67cc4b356f805261aa4b77e3c2da742",
+      "targets": [
+        "aion2",
+        "palworld",
+        "gmzz",
+        "vrising",
+        "ro3",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Disabled encyclopedia search fields also disable their search and clear actions.",
+            "zh-CN": "百科搜索框不可用时，搜索和清空按钮也同步停用。",
+            "zh-TW": "百科搜尋框無法使用時，搜尋與清除按鈕也同步停用。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
       "commit": "026c4016c2ac8df817b3d318572670a1249c4a52",
       "targets": [
         "aion2",
