@@ -213,3 +213,17 @@ connection failed during QA, so its check used actual local artifacts. PBZ used
 temporary port 15182 because 15180 belongs to the RO3 preview. Four app lints/
 builds and the inventory pass. Full suite: 169 files / 1909 tests. No remote
 delivery; broader account/storage failure and visual acceptance remain open.
+
+Reference-memory gap follow-up: Palworld base-camp progression now restores
+reading position independently by desktop/existing mobile page. GMZZ puppet
+search/facets and result position are tab-local, separate from existing level
+records. Trade reference sections restore independent positions, goods sorting
+is a validated device preference, and commission query/type/page are tab-local.
+The calculator's input workflow and all existing page layouts are unchanged.
+
+Browser checks verify puppet query/quality reload and 1200-pixel return, trade
+sort return, commission page two and query/type reload, base-camp 900-pixel
+return through a building detail, and existing mobile page two through reload/
+breakpoint changes. Both app lints/builds and the key inventory pass; full suite:
+169 files / 1909 tests. No remote delivery. This closes the three identified
+browsing gaps, not the remaining encyclopedia shell/layout reconstruction.

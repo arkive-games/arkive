@@ -28,6 +28,7 @@ arkive.memory.gmzz.calculators.trade	-	apps/gmzz/src/features/calculators/memory
 arkive.memory.gmzz.encyclopedia.field	scope	apps/gmzz/src/features/catalog/memory.ts
 arkive.memory.gmzz.encyclopedia.scroll	-	apps/gmzz/src/features/catalog/memory.ts
 arkive.memory.gmzz.encyclopedia.view	section	apps/gmzz/src/features/catalog/memory.ts
+arkive.memory.gmzz.managedtrade.goods-sort	-	apps/gmzz/src/features/managedtrade/ManagedTradePage.tsx
 arkive.memory.gmzz.score.bonds	-	apps/gmzz/src/features/score/memory.ts
 arkive.memory.gmzz.score.character	-	apps/gmzz/src/features/score/memory.ts
 arkive.memory.gmzz.score.equipment	-	apps/gmzz/src/features/equipment/memory.ts

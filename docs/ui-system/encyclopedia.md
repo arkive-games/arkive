@@ -51,10 +51,11 @@ reconstruction, not finished standards or authorization to implement now.
 ## Local integration
 
 RO3's seven wiki categories now retain session-only query/facets, subsection,
-paging, selected record and viewed levels/variants. Palworld's 13 reference
+paging, selected record and viewed levels/variants. Palworld's 14 reference
 categories retain their applicable searches/facets and scroll; item/building
 reveal depth and existing mobile paging survive return and reload. Explicit
-technology links bypass a conflicting remembered query for the visit.
+technology links bypass a conflicting remembered query for the visit. Base-camp
+reading position is scoped separately for desktop and existing mobile pages.
 AION2 retains overview/type searches, hub group/faction, group/detail scroll
 and sibling-catalog queries. New anchor links override ordinary context while
 Back/reload resumes the linked visit's later position.
@@ -66,10 +67,13 @@ retaining existing query/act/completion filters and progress ownership.
 V Rising's parsed recipe/passive/building/research records retain independent
 queries, reveal depth, passive disclosure and reading position. Existing
 page-level context is adopted once without replacing newer subsection state.
-GMZZ's ten reference pages retain applicable queries/facets, pagination,
+GMZZ's reference pages retain applicable queries/facets, pagination,
 per-entity reading disclosures and result-scoped scroll. Trade/Utopia view
 preferences are device-local; other reading fields are tab-local. Explicit
 piece links reveal their target without replacing ordinary piece filters.
+Puppet browsing retains query/facets independently from its existing level
+records. Trade reference sections retain independent positions; goods sorting
+is a device preference, while commission filters/query/page are tab-local.
 Calculators, editors and progress records keep their existing lifecycles.
 STS2's card/character lists and details retain result/entity-scoped position.
 Card facets are tab-local with the old device record retained as a migration
