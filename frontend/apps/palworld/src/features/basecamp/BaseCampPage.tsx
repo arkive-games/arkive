@@ -91,7 +91,9 @@ export default function BaseCampPage() {
   const mobilePaging = useMobilePagination(file?.levels ?? [], { pageSize: 8 })
 
   return (
-    <ContentPage active="/basecamp" title={t('basecamp.title')} heading>
+    <ContentPage active="/basecamp" title={t('basecamp.title')} heading
+      browsing={{ section: 'basecamp', ready: !!file && !!buildings && !loadError,
+        resultsKey: mobilePaging.isMobile ? `mobile:${mobilePaging.page}` : 'desktop' }}>
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !file || !buildings ? (
