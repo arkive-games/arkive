@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.37.0",
+      "date": "2026-11-15",
+      "commit": "fb51d67a6b074212bce56f22d5b25a38559e4e83",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse reference categories from a collapsible desktop directory, with filters and search beside the selected records.",
+            "zh-CN": "桌面百科新增可收起的分类目录，筛选和搜索位于当前资料右侧内容区。",
+            "zh-TW": "桌面百科新增可收起的分類目錄，篩選和搜尋位於目前資料右側內容區。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.36.3",
       "date": "2026-11-15",
       "commit": "7c95d141279230b1988f0e654316ef9d99ee5afb",
