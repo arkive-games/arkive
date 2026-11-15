@@ -94,8 +94,10 @@ arkive.memory.site.user-system.legacy-snapshot	account	apps/meta/src/UserSystemS
 arkive.memory.site.user-system.profile-content	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.site.user-system.progress	account	apps/meta/src/UserSystemState.tsx
 arkive.memory.site.user-system.settings	account	apps/meta/src/UserSystemState.tsx
-arkive.memory.sts2.cards-catalog.filters	-	apps/sts2/src/features/cards/CardListPage.tsx
-arkive.memory.sts2.cards-catalog.query	-	apps/sts2/src/features/cards/CardListPage.tsx
+arkive.memory.sts2.cards-catalog.filters	-	apps/sts2/src/features/cards/memory.ts
+arkive.memory.sts2.cards-catalog.query	-	apps/sts2/src/features/cards/memory.ts
+arkive.memory.sts2.cards-context.facets	-	apps/sts2/src/features/cards/memory.ts
+arkive.memory.sts2.reference-context.scroll	-	apps/sts2/src/features/cards/memory.ts
 arkive.memory.vrising.catalog-context.scroll	-	apps/vrising/src/lib/memory.ts
 arkive.memory.vrising.knowledge.expanded-records	-	apps/vrising/src/features/knowledge/memory.ts
 arkive.memory.vrising.knowledge.query	-	apps/vrising/src/features/knowledge/memory.ts

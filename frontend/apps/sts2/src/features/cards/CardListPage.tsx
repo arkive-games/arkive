@@ -1,35 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@gamemap/ui'
-import { defineMemoryRecord, isString, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
+import { useMemoryState } from '@gamemap/state-memory'
 import { ContentPage } from '../../components/ContentPage'
 import { loadBundle, type Bundle } from '../../lib/data'
 import { CardFilters, CardTile, ClearFiltersButton, PageLoading, usePoolColors } from './components'
 import { EMPTY_FILTER, isFilterActive, useFilteredCards, type CardFilter } from './useFilteredCards'
-
-const FILTER_KEY = 'sts2.cards.filter'
-
-function isCardFilter(value: unknown): value is CardFilter {
-  if (!value || typeof value !== 'object') return false
-  const filter = value as Partial<CardFilter>
-  return typeof filter.query === 'string'
-    && [filter.pools, filter.types, filter.rarities].every((items) =>
-      Array.isArray(items) && items.every((item) => typeof item === 'string'))
-    && Array.isArray(filter.costs) && filter.costs.every((item) => typeof item === 'number' && Number.isFinite(item))
-}
-
-const filterRecord = defineMemoryRecord({
-  id: 'filters', namespace: 'sts2', surface: 'cards-catalog',
-  ...memoryPolicy.userPreference('clear-card-filters'),
-  schemaVersion: '1.0.0', defaultValue: () => ({ ...EMPTY_FILTER }), validate: isCardFilter,
-  legacyKeys: [FILTER_KEY],
-  migrateLegacy: (raw: string) => ({ ...EMPTY_FILTER, ...(parseJson(raw) as Partial<CardFilter>), query: '' }),
-})
-const queryRecord = defineMemoryRecord({
-  id: 'query', namespace: 'sts2', surface: 'cards-catalog',
-  ...memoryPolicy.sessionContext('clear-card-search'),
-  schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
-})
+import { cardFacetsRecord, cardQueryRecord } from './memory'
 
 /** Merged onto EMPTY_FILTER so a stored object from an older build stays valid. */
 export default function CardListPage() {
@@ -38,11 +15,11 @@ export default function CardListPage() {
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [durableFilter, setDurableFilter] = useMemoryState(filterRecord)
-  const [query, setQuery] = useMemoryState(queryRecord, { debounceMs: 200 })
-  const filter = { ...durableFilter, query }
+  const [facets, setFacets] = useMemoryState(cardFacetsRecord)
+  const [query, setQuery] = useMemoryState(cardQueryRecord)
+  const filter = { ...facets, query }
   const setFilter = (next: CardFilter) => {
-    setDurableFilter({ ...next, query: '' })
+    setFacets({ ...next, query: '' })
     setQuery(next.query)
   }
 
@@ -59,7 +36,8 @@ export default function CardListPage() {
   const colors = usePoolColors(bundle)
 
   return (
-    <ContentPage active="/cards" title={t('card.title')} heading wide>
+    <ContentPage active="/cards" title={t('card.title')} heading wide
+      browsing={{ scope: 'cards', ready: !!bundle && !loadError, resultsKey: JSON.stringify(filter) }}>
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <Input
           value={filter.query}

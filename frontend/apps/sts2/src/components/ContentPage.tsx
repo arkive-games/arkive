@@ -8,6 +8,8 @@ import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
+import { useSessionScroll, type SessionScrollContext } from '@gamemap/state-memory'
+import { referenceScrollRecord } from '../features/cards/memory'
 
 export interface ContentPageProps {
   active: NavKey
@@ -16,15 +18,17 @@ export interface ContentPageProps {
   heading?: boolean
   /** Widen past the default for dense grids. */
   wide?: boolean
+  browsing?: SessionScrollContext
   children: ReactNode
 }
 
 /** This game's navigation, strings and links, in the shared page shell. */
-export function ContentPage({ active, title, heading = false, wide = false, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, wide = false, browsing, children }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
+  const scrollRestoration = useSessionScroll(referenceScrollRecord, browsing)
 
   return (
     <ArkiveContentPage
@@ -51,6 +55,8 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
       title={title}
       heading={heading}
       width={wide ? 'wide' : 'standard'}
+      resultsKey={browsing?.resultsKey}
+      scrollRestoration={scrollRestoration}
     >
       {children}
     </ArkiveContentPage>

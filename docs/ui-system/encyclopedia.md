@@ -71,6 +71,9 @@ per-entity reading disclosures and result-scoped scroll. Trade/Utopia view
 preferences are device-local; other reading fields are tab-local. Explicit
 piece links reveal their target without replacing ordinary piece filters.
 Calculators, editors and progress records keep their existing lifecycles.
+STS2's card/character lists and details retain result/entity-scoped position.
+Card facets are tab-local with the old device record retained as a migration
+seed; the existing tab-local search key remains stable.
 The shared scroll adapter waits for data and content height, preserves result
 scope and yields to user input. Remaining categories still need adapters; no content or
 mobile redesign is implied. Unavailable storage keeps the active page usable

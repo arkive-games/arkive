@@ -46,7 +46,8 @@ export default function CharacterDetailPage() {
     : []
 
   return (
-    <ContentPage active="/characters" title={name} wide>
+    <ContentPage active="/characters" title={name} wide
+      browsing={{ scope: `character:${id}`, ready: !!character && !loadError }}>
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (

@@ -153,3 +153,18 @@ Relation story disclosure has no current data to exercise in the browser.
 GMZZ lint/build and the memory-key inventory pass. Full suite: 165 files / 1897
 tests pass. No layout change or remote delivery; other unintegrated surfaces
 and the deferred About panel remain outside this batch.
+
+STS2 reference-memory follow-up: card/character lists and details now bind
+result/entity-scoped reading positions to the shared shell. Card facets move
+to tab-local context, seeded from the former device preference without rewriting
+it or replacing newer session choices; the existing search key is unchanged.
+Layout, home, version history and account behavior are unchanged.
+
+The local artifact directory is absent and known live data endpoints were not
+available. Browser checks therefore use an explicitly controlled 400-card/two-
+character fixture, not production data: search/facet Back/reload, 1200-pixel
+list restoration, 900-pixel character return, per-entity detail isolation,
+detail reload, explicit targets and query retention across a phone breakpoint
+pass. This does not certify live inventory or mobile layout. App lint/build,
+memory-key inventory and full suite pass: 166 files / 1900 tests. No remote
+delivery. Remaining map/OSS/tool workflows and deferred credits are still open.
