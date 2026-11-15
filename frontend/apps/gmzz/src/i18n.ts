@@ -2575,7 +2575,7 @@ function withScoreMessages(base: Strings, lng: Language): Strings {
 void i18n.use(initReactI18next).init({
   lng: detectLanguagePreference(LANGUAGES, 'en-US'),
   resources: Object.fromEntries(
-    LANGUAGES.map((lng) => [lng, { translation: { ...withScoreMessages(UI[lng] ?? en, lng), builds: buildMessages[lng], secretpartners: secretPartnerMessages[lng], managedtrade: managedTradeMessages[lng], characters: characterMessages[lng] } }]),
+    LANGUAGES.map((lng) => [lng, { translation: { ...withScoreMessages(UI[lng] ?? en, lng), encyclopedia: lng === 'zh-CN' ? { collapse: '收起百科目录', expand: '展开百科目录' } : lng === 'zh-TW' ? { collapse: '收合百科目錄', expand: '展開百科目錄' } : { collapse: 'Collapse encyclopedia navigation', expand: 'Expand encyclopedia navigation' }, builds: buildMessages[lng], secretpartners: secretPartnerMessages[lng], managedtrade: managedTradeMessages[lng], characters: characterMessages[lng] } }]),
   ),
   supportedLngs: [...LANGUAGES],
   fallbackLng: 'en-US',

@@ -128,7 +128,7 @@ export default function UtopianTheaterPage() {
   return (
     <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide browsing={{ scope: 'utopia', ready: true }} resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} filtersActive={Boolean(query || tag) || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+          <p className="lg:hidden max-w-3xl text-sm leading-6 text-muted-foreground">
             {t("utopianTheater.description", { count: entries.length })}
           </p>
           <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">

@@ -1,15 +1,17 @@
 import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { SiteFooter } from '@gamemap/ui'
-import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
+import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName, useEncyclopediaDesktop } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
 import { useSessionScroll, type SessionScrollContext } from '@gamemap/state-memory'
 import { catalogScroll } from '../features/catalog/memory'
+import { EncyclopediaLayout } from './EncyclopediaLayout'
+import { isEncyclopediaSection } from './navGroups'
 
 export interface ContentPageProps {
   active: NavKey
@@ -45,6 +47,10 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
   const scrollRestoration = useSessionScroll(catalogScroll.record, browsing ? { ...browsing, resultsKey: browsing.resultsKey ?? resultsKey } : undefined)
+  const search = useSearch({ strict: false }) as { tab?: string }
+  const encyclopedia = isEncyclopediaSection(active, search.tab)
+  const desktop = useEncyclopediaDesktop()
+  const inlineToolbar = encyclopedia && desktop
 
   return (
     <ArkiveContentPage
@@ -70,16 +76,20 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
       }
       title={title}
       heading={heading}
+      headingClassName={encyclopedia ? 'lg:sr-only' : undefined}
       width={wide ? 'wide' : 'standard'}
-      toolbar={toolbar}
-      toolbarLead={toolbarLead}
+      toolbar={inlineToolbar ? undefined : toolbar}
+      toolbarLead={inlineToolbar ? undefined : toolbarLead}
       filterLabel={t('filterToggle')}
       filtersActive={filtersActive}
       resultsKey={resultsKey}
       scrollRestoration={scrollRestoration}
       hero={hero}
     >
-      {children}
+      {encyclopedia ? <EncyclopediaLayout active={active}>
+        {inlineToolbar && (toolbar != null || toolbarLead != null) && <div className="mb-4" data-encyclopedia-toolbar>{toolbarLead}{toolbar}</div>}
+        {children}
+      </EncyclopediaLayout> : children}
     </ArkiveContentPage>
   )
 }

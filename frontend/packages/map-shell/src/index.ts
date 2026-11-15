@@ -26,7 +26,7 @@ export {
   type ArkiveMobileHeaderProps,
 } from "./ArkiveMobileHeader"
 export { ArkiveContentPage, type ArkiveContentPageProps } from "./ArkiveContentPage"
-export { ArkiveEncyclopediaWorkspace, type EncyclopediaEntry, type EncyclopediaGroup } from './ArkiveEncyclopediaWorkspace'
+export { ArkiveEncyclopediaWorkspace, useEncyclopediaDesktop, type EncyclopediaEntry, type EncyclopediaGroup } from './ArkiveEncyclopediaWorkspace'
 export { ArkiveSiteInfoDialog, type ArkiveSiteInfoDialogLabels } from "./ArkiveSiteInfoDialog"
 export {
   ArkiveMobileMapControls,

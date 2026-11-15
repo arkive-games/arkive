@@ -98,7 +98,7 @@ export default function ManagedTradePage() {
       resultsKey={JSON.stringify(tab === 'goods' ? [sort] : tab === 'commissions' ? [type, query, page] : [])}
       toolbarLead={
         <header className="mb-3 space-y-3 border-b border-border pb-3">
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+          <p className={cn("max-w-3xl text-sm leading-6 text-muted-foreground", tab !== 'calculator' && 'lg:hidden')}>
             {t('managedtrade.description', { goods: data.goods.length, sites: data.sites.length, routes: data.routes.length })}
           </p>
           <Tabs current={tab} t={t} />

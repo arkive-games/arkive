@@ -262,3 +262,16 @@ and narrow-page overflow.
 Palworld lint/build, map-shell typecheck, inventory and full suite pass:
 171 files / 1914 tests. Other games' desktop shells and broader visual
 acceptance remain open; this is local implementation, not remote delivery.
+
+GMZZ desktop-shell adoption: 12 reference routes reuse the shared encyclopedia
+workspace, existing navigation inventory and game artwork. The active People
+branch exposes roster/relations children. Desktop filters/search mount once in
+the right column; duplicate category headings/intros are visually hidden.
+Collapse is tab-local. Record contents, top navigation, footer, tools, the trade
+calculator and existing mobile composition retain their ownership and layout.
+
+Browser checks cover every reference route, tool exclusions, nested navigation,
+loaded artwork, collapse/query reload, single-toolbar placement and narrow-page
+overflow. Palworld's shared-shell smoke check passes. GMZZ lint/build, Palworld
+build, map-shell typecheck and the memory inventory pass; full suite: 172 files /
+1916 tests. BUILD exit protection remains deferred. No remote delivery.

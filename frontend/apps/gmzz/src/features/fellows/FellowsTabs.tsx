@@ -1,24 +1,19 @@
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@gamemap/ui'
-
-const TABS = [
-  { to: '/fellows', labelKey: 'fellows.title' },
-  { to: '/fellows/relations', labelKey: 'fellows.relationsTitle' },
-] as const
+import { FELLOW_REFERENCE_TABS as TABS } from '../../components/navGroups'
 
 /**
  * Roster and Relations, as the game's own Connections panel puts them: two tabs of
  * one screen.
  *
- * The nav carries a single Connections entry because its menus are one level deep, so
- * this control is the only way from one page to the other. It is a pair of real
- * links rather than state, so each page keeps its own URL and can be shared.
+ * The mobile control retains two real links and shareable routes. Desktop uses
+ * the same entries as children of Connections in the encyclopedia rail.
  */
 export function FellowsTabs({ current }: { current: (typeof TABS)[number]['to'] }) {
   const { t } = useTranslation()
   return (
-    <nav aria-label={t('nav.fellows')} className="mb-4 inline-flex rounded-md border border-border p-0.5">
+    <nav aria-label={t('nav.fellows')} className="mb-4 inline-flex rounded-md border border-border p-0.5 lg:hidden">
       {TABS.map((tab) => (
         <Link
           key={tab.to}

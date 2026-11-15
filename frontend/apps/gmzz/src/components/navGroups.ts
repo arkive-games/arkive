@@ -119,6 +119,16 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
+/** Connections has one top-menu entry and two game-owned reference pages. */
+export const FELLOW_REFERENCE_TABS = [
+  { to: '/fellows', labelKey: 'fellows.title', icon: Contact },
+  { to: '/fellows/relations', labelKey: 'fellows.relationsTitle', icon: Link2 },
+] as const
+export const ENCYCLOPEDIA_GROUPS = NAV_GROUPS.filter(group => group.key === 'wiki' || group.key === 'autochess')
+export const isEncyclopediaSection = (active: NavKey, tab?: string) =>
+  !(active === '/managedtrade' && tab === 'calculator') &&
+  (active === '/fellows/relations' || ENCYCLOPEDIA_GROUPS.some(group => group.children.some(entry => entry.key === active)))
+
 /**
  * Whether a menu entry is the page being shown. Exact match, except that the
  * single Connections entry stands for both of its pages.
