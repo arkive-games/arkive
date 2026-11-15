@@ -58,8 +58,10 @@ visually hidden on desktop; game-owned detail headings and existing mobile
 composition remain intact. GMZZ's 12 reference routes reuse the same workspace,
 with game-art category icons and nested roster/relations links. Its existing
 filters/search sit in the right column on desktop; tools, the trade calculator
-and existing mobile composition remain separate. Other games still need
-desktop-shell adoption.
+and existing mobile composition remain separate. AION2's overview, three type
+hubs, group lists and details now reuse the workspace while retaining taxonomy
+counts, subgroup destinations and expanded reading history. Other games still
+need desktop-shell adoption.
 
 RO3's seven wiki categories now retain session-only query/facets, subsection,
 paging, selected record and viewed levels/variants. Palworld's 14 reference

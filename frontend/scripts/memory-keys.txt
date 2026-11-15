@@ -1,3 +1,4 @@
+arkive.memory.aion2.encyclopedia.rail-collapsed	-	apps/aion2/src/features/wiki/wikiMemory.ts
 arkive.memory.aion2.map-context.collapsed-categories	partition	apps/aion2/src/features/map/mapSession.ts
 arkive.memory.aion2.map-context.query	partition	apps/aion2/src/features/map/mapSession.ts
 arkive.memory.aion2.map-context.selected-marker	-	apps/aion2/src/features/map/MapRoute.tsx

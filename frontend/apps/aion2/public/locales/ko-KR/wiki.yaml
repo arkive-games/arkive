@@ -5,6 +5,8 @@ common:
   level: "Lv. {{n}}"
 nav: { wiki: "위키" }
 workspace:
+  collapse: "백과사전 탐색 접기"
+  expand: "백과사전 탐색 펼치기"
   title: "아이온2 백과"
   overview: "개요"
   recent: "최근 본 항목"

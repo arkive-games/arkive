@@ -275,3 +275,16 @@ loaded artwork, collapse/query reload, single-toolbar placement and narrow-page
 overflow. Palworld's shared-shell smoke check passes. GMZZ lint/build, Palworld
 build, map-shell typecheck and the memory inventory pass; full suite: 172 files /
 1916 tests. BUILD exit protection remains deferred. No remote delivery.
+
+AION2 desktop-shell adoption: the overview, quest/NPC/item hubs, group lists
+and record pages use the shared 11.5rem/4rem directory with tab-local collapse.
+Existing taxonomy counts, hash-based groups, flat-group destinations and recent
+reading links remain available. Duplicate desktop category headings are visually
+hidden; record headings, data, navigation, footer and mobile layouts stay owned
+by the app. The shared workspace accepts an expanded-only reading-history slot.
+
+Browser checks cover all three hubs and 13 subgroup destinations, search/collapse
+reload, quest detail return to the same 632-pixel reading position, recent links,
+faction filtering and existing 390-pixel mobile navigation without overflow.
+AION2 lint/build, map-shell typecheck, memory inventory and the full suite pass:
+172 files / 1916 tests. No remote delivery; broader visual acceptance stays open.

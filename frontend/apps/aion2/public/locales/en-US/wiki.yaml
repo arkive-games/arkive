@@ -5,6 +5,8 @@ common:
   level: "Lv. {{n}}"
 nav: { wiki: "Wiki" }
 workspace:
+  collapse: "Collapse encyclopedia navigation"
+  expand: "Expand encyclopedia navigation"
   title: "AION2 Wiki"
   overview: "Overview"
   recent: "Recently viewed"

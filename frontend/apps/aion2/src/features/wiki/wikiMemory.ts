@@ -1,7 +1,13 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { useContentScrollRestoration } from '@gamemap/map-shell'
-import { browserMemory, createBrowserHistoryMemoryEnvironment, defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemoryState, type MemoryClient } from '@gamemap/state-memory'
+import { browserMemory, createBrowserHistoryMemoryEnvironment, defineMemoryRecord, isBoolean, isFiniteNumber, isString, memoryPolicy, useMemoryState, type MemoryClient } from '@gamemap/state-memory'
+
+export const railCollapsedRecord = defineMemoryRecord({
+  id: 'rail-collapsed', namespace: 'aion2', surface: 'encyclopedia',
+  ...memoryPolicy.sessionContext('reset-encyclopedia-navigation'), schemaVersion: '1.0.0',
+  defaultValue: () => false, validate: isBoolean,
+})
 
 export const hubGroupRecord = defineMemoryRecord({
   id: 'hub-group', namespace: 'aion2', surface: 'wiki-catalog',
