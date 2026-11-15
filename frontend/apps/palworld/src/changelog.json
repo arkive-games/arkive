@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.32.2",
+      "date": "2026-11-15",
+      "commit": "7c95d141279230b1988f0e654316ef9d99ee5afb",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Resume base camp reading position when returning from building details.",
+            "zh-CN": "从建筑资料返回据点页面时恢复阅读位置。",
+            "zh-TW": "從建築資料返回據點頁面時恢復閱讀位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.32.1",
       "date": "2026-11-15",
       "commit": "ca0a01ffa78576e267c9e367f019ae0818f795cc",
