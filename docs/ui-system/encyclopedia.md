@@ -69,7 +69,11 @@ subsections move into the active desktop branch, while incomplete categories
 remain disabled and mobile category cards retain their composition. RO3's seven
 categories use the shared directory frame with original artwork, row styling
 and portal-based talent subsections. Folding hides those subsections without
-unmounting them. Other games still need desktop-shell adoption.
+unmounting them. PBZ's seven categories and their existing details now reuse
+the directory with the top navigation's inventory and existing mobile-menu
+icons. Its cards, filters, documents and skill sections retain their layout.
+The six scoped game shells are integrated locally; cross-game acceptance
+remains a separate closeout step.
 
 RO3's seven wiki categories now retain session-only query/facets, subsection,
 paging, selected record and viewed levels/variants. Palworld's 14 reference

@@ -32,6 +32,7 @@ const en = {
   themeDark: 'Dark',
   themeMenu: 'Theme',
   languageMenu: 'Language',
+  encyclopedia: { label: 'Encyclopedia', collapse: 'Collapse encyclopedia navigation', expand: 'Expand encyclopedia navigation' },
   nav: {
     map: 'Map', changelog: 'Changelog', weapons: 'Weapons', phantomEdges: 'Phantom Edges', accessories: 'Accessories',
     medicines: 'Medicines', items: 'Items', enemies: 'Gallery', skills: 'Abilities',
@@ -97,6 +98,7 @@ const zhCN: Strings = {
   themeDark: '深色模式',
   themeMenu: '主题',
   languageMenu: '语言',
+  encyclopedia: { label: '百科', collapse: '收起百科目录', expand: '展开百科目录' },
   nav: {
     map: '地图', changelog: '更新日志', weapons: '武器', phantomEdges: '影之武装', accessories: '饰品',
     medicines: '药瓶', items: '道具', enemies: '图鉴', skills: '心法',
@@ -160,6 +162,7 @@ const zhTW: Strings = {
   themeDark: '深色模式',
   themeMenu: '主題',
   languageMenu: '語言',
+  encyclopedia: { label: '百科', collapse: '收起百科目錄', expand: '展開百科目錄' },
   nav: {
     map: '地圖', changelog: '更新日誌', weapons: '武器', phantomEdges: '影之武裝', accessories: '飾品',
     medicines: '藥瓶', items: '道具', enemies: '圖鑑', skills: '心法',

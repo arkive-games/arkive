@@ -10,6 +10,8 @@ import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
 import { useSessionScroll, type SessionScrollContext } from '@gamemap/state-memory'
 import { wikiScrollRecord } from '../features/wiki/memory'
+import { EncyclopediaLayout } from './EncyclopediaLayout'
+import { isEncyclopediaSection } from './encyclopediaNavigation'
 
 export interface ContentPageProps {
   active: NavKey
@@ -29,6 +31,7 @@ export function ContentPage({ active, title, heading = false, wide = false, brow
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
   const scrollRestoration = useSessionScroll(wikiScrollRecord, browsing)
+  const encyclopedia = isEncyclopediaSection(active)
 
   return (
     <ArkiveContentPage
@@ -54,10 +57,11 @@ export function ContentPage({ active, title, heading = false, wide = false, brow
       }
       title={title}
       heading={heading}
+      headingClassName={encyclopedia ? 'lg:sr-only' : undefined}
       width={wide ? 'wide' : 'standard'}
       scrollRestoration={scrollRestoration}
     >
-      {children}
+      {encyclopedia ? <EncyclopediaLayout active={active}>{children}</EncyclopediaLayout> : children}
     </ArkiveContentPage>
   )
 }
