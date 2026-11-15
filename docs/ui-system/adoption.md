@@ -45,9 +45,12 @@ Their exclusion does not block packaging the current confirmed rules.
 
 ## Delivery boundary
 
-Local signed commits remain in `.scratch/ui-stage4` on `codex/ui-stage4`.
-No push, PR, merge or deployment is authorized by this batch. Remote delivery
-requires the user's instruction and the repository workflow. The
+The user subsequently authorized formal PR submission of `codex/ui-stage4`.
+Merge, checks and deployment status must be read from GitHub; the evidence here
+describes local acceptance, not an automatic production certification. The
+configured Claude review workflow is currently disabled, despite older repository
+instructions describing its comment trigger. Do not report a posted review
+request as a completed review. The
 [Skill](../../.agents/skills/arkive-ui/SKILL.md) routes to existing rules rather
 than copying them; its component map is read only when relevant. It needs an
 Arkive checkout, not a fixed personal path. Team members need this repository
