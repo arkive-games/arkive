@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.2",
+      "date": "2026-11-16",
+      "commit": "780b8883ca988d8c399036aa1fc9e2f3448cafeb",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Refresh the Paldeck with clearer navigation, larger artwork, compact filters, restored search and 24 Pals per page on desktop and mobile.",
+            "zh-CN": "重做帕鲁图鉴的目录、原画卡片与紧凑筛选，恢复搜索，桌面和手机均每页展示24只帕鲁。",
+            "zh-TW": "重做帕魯圖鑑的目錄、原畫卡片與精簡篩選，恢復搜尋，桌面與手機均每頁展示24隻帕魯。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.1",
       "date": "2026-11-16",
       "commit": "65a84946e98fb072a152206ce69b1216d7d122f6",
