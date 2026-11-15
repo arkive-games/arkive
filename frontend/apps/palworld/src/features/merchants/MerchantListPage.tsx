@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { FilterChip, FilterRow, Input } from '@gamemap/ui'
+import { FilterChip, FilterRow, CatalogSearchInput } from '@gamemap/ui'
 import { MapPin } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -66,18 +66,14 @@ export default function MerchantListPage() {
   return (
     <ContentPage browsing={{ section: 'merchants', ready: !!merchants && !!items, resultsKey: JSON.stringify([query,category]) }} active="/merchants" title={t('merchant.title')} heading>
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
+        <CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('merchant.searchPlaceholder')}
-          className="max-w-sm"
+          className=""
         />
-        {merchants ? (
-          <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="merchant-count">
-            {t('merchant.count', { count: list.length })}
-          </span>
-        ) : null}
+
       </div>
       {merchants ? (
         <FilterRow label={t('filters.category')} testId="merchant-category-filter">
@@ -124,7 +120,7 @@ export default function MerchantListPage() {
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="truncate text-sm font-semibold">{merchantName(m.nameKey, m.id)}</span>
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                    <span className="tabular-nums">{t('item.count', { count: m.products.length })}</span>
+
                     <span className="inline-flex items-center gap-1">
                       {curIcon ? <ItemGlyph icon={curIcon} size={16} /> : null}
                       {items.text[m.currency]?.name ?? m.currency}

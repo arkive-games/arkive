@@ -72,8 +72,8 @@ export default function AutoChessPiecesPage() {
             {roles.map((value) => <FilterChip key={value} active={role === value} onClick={() => setRole(value)}>{value}</FilterChip>)}
           </FilterRow>
         </div>
-        <FilterBar count={t('autochess.pieces.resultCount', { count: filtered.length })}>
-          <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs" value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
+        <FilterBar>
+          <SearchInput className="min-w-0" value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
           {(cost || bondId || role || query) ? <button type="button" onClick={reset} className="text-sm text-primary hover:underline">{t('autochess.clearFilters')}</button> : null}
         </FilterBar>
   </>

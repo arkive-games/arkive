@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
-import { FilterChip, FilterRow, Input, toggleValue, useIsMobile } from '@gamemap/ui'
+import { FilterChip, FilterRow, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -140,17 +140,15 @@ export default function ActiveSkillsPage() {
       filtersActive={elementSel.length > 0 || typeSel.length > 0 || sourceSel.length > 0}
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
+        <CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
-          className="max-w-sm"
+          className=""
           data-testid="active-skill-search"
         />
-        {bundle ? (
-          <span className="text-sm text-muted-foreground">{t('resultsCount', { count: list.length })}</span>
-        ) : null}
+
       </div>
 
       <ContentPageFilters className="mb-4 space-y-1.5" />

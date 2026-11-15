@@ -7,6 +7,9 @@ After shared top navigation: left category/subsection directory beside right
 category filters/search, then game-owned content. Do not repeat the selected
 category as a right-side title/intro. Search only the current category, e.g.
 Talents searches talents, not the whole encyclopedia.
+Use the shared capsule search and panel-frame directory toggle from the visual
+foundations. Do not add click/hover tutorials, implementation commentary or
+visible result-total summaries. Actual game descriptions and progress remain.
 
 Reuse the actual game shell, not an older local approximation: wordmark, game
 icon/name chip, then game-owned links (RO3: Home, Encyclopedia, Build Manual),

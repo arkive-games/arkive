@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { IconChevronRight, IconSearch } from "@tabler/icons-react";
+import { IconChevronRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import { Input } from "@gamemap/ui";
+import { CatalogSearchInput } from "@gamemap/ui";
 import type { WikiIndexDoc } from "@/types/wiki";
 import type { WikiType } from "@/features/wiki/wikiRecent";
 import { WikiBackLink } from "@/features/wiki/ui";
@@ -102,23 +102,15 @@ export default function WikiEntityCatalog({
             {sectionName && (
               <p className="mt-1 text-sm text-muted-foreground">{sectionName}</p>
             )}
-            <p className="mt-2 text-xs tabular-nums text-muted-foreground">
-              {t("wiki:workspace.entries", { count: groupDocs.length })}
-            </p>
           </div>
 
           <div className="relative my-4">
-            <IconSearch
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              stroke={1.8}
-              aria-hidden
-            />
-            <Input
+            <CatalogSearchInput
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t("wiki:workspace.search")}
               aria-label={t("wiki:workspace.search")}
-              className="h-10 rounded-md border-border bg-background pl-9 text-sm shadow-none"
+
             />
           </div>
 

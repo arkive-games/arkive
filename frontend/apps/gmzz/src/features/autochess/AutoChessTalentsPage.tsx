@@ -65,7 +65,7 @@ export default function AutoChessTalentsPage() {
 
   return (
     <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide browsing={{ scope: 'chess-talents', ready: true }} resultsKey={JSON.stringify([query, rarity, showHidden])} filtersActive={Boolean(query || rarity || showHidden)} toolbar={
-      <FilterBar count={t('autochess.talents.resultCount', { count: filtered.length })}>
+      <FilterBar>
         <FilterRow label={t('autochess.talents.rarityFilter')}>
           <FilterChip active={rarity === 0} onClick={() => setRarity(0)}>{t('autochess.all')}</FilterChip>
           {rarities.map((value) => (
@@ -75,7 +75,7 @@ export default function AutoChessTalentsPage() {
           ))}
         </FilterRow>
 
-        <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs"
+        <SearchInput className="min-w-0"
           value={query}
           onChange={setQuery}
           placeholder={t('autochess.talents.searchPlaceholder')}

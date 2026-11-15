@@ -307,3 +307,26 @@ copy of the live schema-2 rewards payload (24 passives, 924 buildings, 377 tech
 records); the on-disk artifact uses schema 3 and was not substituted. Production
 data configuration is unchanged. App lint/build, memory inventory and full suite
 pass: 172 files / 1916 tests. No remote delivery; visual acceptance remains open.
+
+Catalog-control correction: portal catalog search CSS is now owned once by the
+shared theme. CatalogSearchInput and the SearchInput adapter reuse its capsule,
+leading magnifier and round warm arrow; existing live-query, lazy-index, clear,
+focus and session-memory behavior remain caller-owned. Palworld, AION2, GMZZ,
+V Rising, RO3 and PBZ reference searches adopt it, including RO3's custom search
+rows and GMZZ's former compact primary fields. Encyclopedia toggles now use the
+approved panel-frame/internal-arrow drawing. Interface tutorials, technical
+source notes and visible result summaries are removed from the affected
+reference views; shared map result totals remain screen-reader-only. Game data,
+taxonomy counts, progress, errors and empty states remain intact.
+
+At 1440 pixels, the portal plus six game references share the measured 23rem
+width, 3.2rem height, pill radius and arrow gradient without document overflow.
+GMZZ's four formerly compact searches share that height. A 390-pixel V Rising
+check retains one search and the existing mobile composition without overflow;
+search text and directory collapse survive reload. Seven app builds/lints,
+shared-package typechecks and the full suite pass: 173 files / 1917 tests.
+Browser-only copies of live V Rising/PBZ data avoid remote-data failures; source
+configuration stays unchanged. Some captures timed out waiting for webfonts,
+stable geometry or navigation; restarting the named session on explicit IPv4
+completed final capture. Capture serially after builds and retain only the final
+correction screenshot. No remote delivery.

@@ -425,3 +425,8 @@ maintenance:
     - "The color specification owns all color roles and values."
     - "Mobile and map specifications may compose these tokens but cannot redefine them."
     - "Update this file before introducing a new global token or foundation rule."
+
+catalog_controls_and_copy:
+  search: "Use the shared CatalogSearchInput or its SearchInput adapter: the reviewed portal pill, leading magnifier, and round warm arrow. Keep one outer focus treatment and the catalog height tokens. Dense embedded pickers are a separate size role."
+  directory_toggle: "Encyclopedia directories use ArkiveEncyclopediaWorkspace's panel-frame icon with its internal directional arrow; no app-local chevron substitute."
+  copy: "Across the site, omit interface tutorials, implementation explanations and visible result-total summaries such as Showing N records. Keep game facts, taxonomy counts, progress, useful field labels, actions, errors and empty states."

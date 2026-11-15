@@ -206,11 +206,7 @@ export default function ReforgePage() {
           </FilterGroup>
         </section>
 
-        <section className="flex min-h-9 items-center justify-between gap-3 border-b border-border pb-2">
-          <span className="text-sm tabular-nums text-muted-foreground">
-            {t('reforge.resultCount', { count: filtered.length })}
-          </span>
-        </section>
+
       </div>}>
       <div data-testid="reforge-page" className="space-y-3">
         {sections.length === 0 ? (

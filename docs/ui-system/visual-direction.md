@@ -40,6 +40,10 @@ the approved stage 4 local batch reconciles the scoped rules below.
 Existing spacing steps/content-width roles remain the only scales. Layout owns
 inter-region gaps; controls own padding. Preserve real alignment/right clearance.
 Measured widths at one viewport are not fixed widths for every screen.
+Catalog search implementation comes from `CatalogSearchInput`, including its
+round arrow action; encyclopedia collapse uses the shared panel-frame icon.
+Do not recreate either control in individual game pages. Omit interface
+instructions, implementation notes and visible result-total summaries site-wide.
 
 ## Shells, footers and boundaries
 

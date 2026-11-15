@@ -40,8 +40,8 @@ export default function SecretPartnersPage() {
             {categories.map((value) => <FilterChip key={value} active={category === value} onClick={() => setCategory(value)}>{value}</FilterChip>)}
           </FilterRow>
         </div>
-        <FilterBar count={t('secretpartners.count', { count: shown.length })}>
-          <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs" value={query} onChange={setQuery} placeholder={t('secretpartners.search')} />
+        <FilterBar>
+          <SearchInput className="min-w-0" value={query} onChange={setQuery} placeholder={t('secretpartners.search')} />
           {(query || category || quality || attribute) && <button type="button" className="text-sm text-primary hover:underline" onClick={() => { setQuery(''); setCategory(''); setQuality(0); setAttribute('') }}>{t('secretpartners.reset')}</button>}
         </FilterBar>
   </>

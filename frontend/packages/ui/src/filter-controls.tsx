@@ -2,6 +2,7 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from "react"
 import { Search, X } from "lucide-react"
 import { Input } from "./input"
 import { cn } from "./utils"
+import { CatalogSearchInput } from './catalog-search-input'
 
 /** Toggle a value in or out of a multi-select filter selection. */
 export function toggleValue<T>(list: readonly T[], value: T): T[] {
@@ -150,15 +151,11 @@ export function FilterGroup({ label, hint, children }: { label: ReactNode; hint?
   )
 }
 
-/**
- * Every filter, the search box and the result count on one wrapping line, the
- * count at its end where it reads as the answer to whatever was just filtered.
- */
-export function FilterBar({ children, count }: { children: ReactNode; count?: ReactNode }) {
+/** Filters and the catalog search, without a result-total summary. */
+export function FilterBar({ children }: { children: ReactNode }) {
   return (
     <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border pb-3">
       {children}
-      {count != null ? <span className="ml-auto shrink-0 text-sm tabular-nums text-muted-foreground">{count}</span> : null}
     </div>
   )
 }
@@ -203,6 +200,13 @@ export function SearchInput({
         if (event.key === "Escape") onChange("")
       }
     : undefined
+  if (size === 'md') return <div className={className}>
+    {caption != null && <span className="mb-1 block text-xs font-semibold text-muted-foreground">{caption}</span>}
+    <CatalogSearchInput value={value} onChange={event => onChange(event.target.value)} type={type}
+      placeholder={placeholder} aria-label={typeof caption === 'string' ? caption : (label ?? placeholder)}
+      clearLabel={clearLabel} onClear={() => onChange('')} onKeyDown={onKeyDown}
+      data-testid={testId} inputClassName={inputClassName} />
+  </div>
   const box = (
     <span className="relative block">
       <Search

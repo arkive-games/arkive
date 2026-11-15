@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { Input } from '@gamemap/ui'
+import { CatalogSearchInput } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
@@ -86,19 +86,15 @@ export default function QuestListPage() {
       filtersActive={type !== 'all'}
     >
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('quest.searchPlaceholder')}
-              className="max-w-sm"
+              className=""
             />
             <ContentPageFilters />
-            {bundle ? (
-              <span className="text-sm text-muted-foreground">
-                {t('quest.count', { count: list.length })}
-              </span>
-            ) : null}
+
           </div>
 
           {loadError ? (

@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { FilterChip, FilterRow, HoverCard, HoverCardTrigger, Input, toggleValue } from '@gamemap/ui'
+import { FilterChip, FilterRow, HoverCard, HoverCardTrigger, CatalogSearchInput, toggleValue } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -141,18 +141,14 @@ export default function ItemListPage() {
       hideMobileFooter
     >
           <div className="mb-3 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('item.searchPlaceholder')}
-              className="max-w-sm"
+              className=""
             />
-            {bundle ? (
-              <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="item-count">
-                {t('item.count', { count: list.length })}
-              </span>
-            ) : null}
+
           </div>
           <ContentPageFilters className="mb-4" />
 

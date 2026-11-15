@@ -147,9 +147,7 @@ export default function FellowsPage() {
         />
       </FilterDisclosure>
 
-      <p className="mb-3 text-sm text-muted-foreground">
-        {t('fellows.resultCount', { count: filtered.length })}
-      </p>
+
       <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {filtered.map((fellow) => (
           <FellowCard

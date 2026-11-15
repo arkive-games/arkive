@@ -345,7 +345,7 @@ export function SearchPanel({
       {/* Results panel */}
       {hasQuery && (
         <div data-map-avoid="" className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-popover/95 shadow-sm backdrop-blur">
-          <div className="border-b border-border px-3 py-2 text-center text-xs text-muted-foreground">
+          <div className="sr-only" role="status">
             {labels.resultsCount(results.length)}
           </div>
           <ul
