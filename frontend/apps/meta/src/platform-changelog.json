@@ -1,6 +1,23 @@
 {
   "entries": [
     {
+      "date": "2026-11-15",
+      "commit": "ba62618f7267e170470d8b4bf994a1cf050fa37e",
+      "targets": [
+        "oss"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Make Order of the Sinking Star available from the homepage and game directory.",
+            "zh-CN": "开放沉星之序的首页和游戏目录入口。",
+            "zh-TW": "開放沉星之序的首頁和遊戲目錄入口。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-11",
       "commit": "8ce0383f8b1df1d4476aa03e0902f32f60854924",
       "targets": [
