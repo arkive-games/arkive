@@ -37,6 +37,12 @@
 /* ---------- 1. the cover carousel ---------- */
 
 .home-hero {
+  /* Resolve in CSS so prerendered HTML already fits the visitor's viewport.
+     Keep the 3:1 desktop frame and shrink it on short screens. */
+  --w: max(560px, min(920px, 53vw, calc((100dvh - 400px) * 3)));
+  --h: calc(var(--w) / 3);
+  --cw: min(calc(100vw - 32px), calc(var(--w) / 0.734));
+  --sw: calc(var(--w) * 0.6766);
   position: relative;
   padding-top: 1.5rem;
   overflow-x: clip;
@@ -111,7 +117,14 @@ button.home-slide {
   transition: none;
 }
 
-.home-slide > img {
+.home-slide-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.home-slide-art > img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -138,7 +151,7 @@ button.home-slide {
   opacity: 1;
 }
 
-.home-slide[data-d="0"]:hover > img {
+.home-slide[data-d="0"]:hover > .home-slide-art > img {
   transform: scale(1.03);
 }
 
@@ -163,11 +176,11 @@ button.home-slide {
 }
 
 /* A strip shows the banner's outer edge; the inline focal point is for the middle. */
-.home-slide[data-d="-1"] > img {
+.home-slide[data-d="-1"] > .home-slide-art > img {
   object-position: left center !important;
 }
 
-.home-slide[data-d="1"] > img {
+.home-slide[data-d="1"] > .home-slide-art > img {
   object-position: right center !important;
 }
 
@@ -1191,6 +1204,10 @@ button.home-slide {
 
 @media (max-width: 760px) {
   .home-hero {
+    /* A 2:1 phone frame with 44px of each neighbour visible. */
+    --w: calc(100vw - 88px);
+    --h: calc(var(--w) / 2);
+    --cw: 100vw;
     padding-top: 1rem;
   }
 
@@ -1210,7 +1227,7 @@ button.home-slide {
     background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
   }
 
-  .home-slide[data-d="0"]:hover > img {
+  .home-slide[data-d="0"]:hover > .home-slide-art > img {
     transform: none;
   }
 
@@ -1383,7 +1400,7 @@ button.home-slide {
 
   /* A slide moved by hand switches in place rather than flying across. */
   .home-slide,
-  .home-slide > img {
+  .home-slide-art > img {
     transition: none;
   }
 }
