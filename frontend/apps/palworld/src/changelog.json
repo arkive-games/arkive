@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.0",
+      "date": "2026-11-15",
+      "commit": "237f7e6dbfa73c7efdd4b1a6cf2e17841fd97655",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse encyclopedia categories from a collapsible desktop directory while keeping your current filters and reading context.",
+            "zh-CN": "桌面百科新增可收起为图标的分类目录，保留当前筛选和阅读状态。",
+            "zh-TW": "桌面百科新增可收合為圖示的分類目錄，保留目前篩選和閱讀狀態。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.32.2",
       "date": "2026-11-15",
       "commit": "7c95d141279230b1988f0e654316ef9d99ee5afb",
