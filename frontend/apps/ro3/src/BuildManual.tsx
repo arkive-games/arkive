@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { BookMarked, FolderOpen, Heart, Plus, Search } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { cn, useUnsavedChanges } from '@gamemap/ui'
 import content from './locales/zh-CN.json'
 import { loadPetWikiData } from './creatureData'
 import { loadCardCatalogData, loadEquipmentWikiData, loadProfessionWikiData, loadSoulWikiData, loadTalentWikiData } from './wikiData'
@@ -66,9 +66,15 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
   const [loaded, setLoaded] = useState(false)
   const cloud = useBuildCloud({ collection: section === 'rec' ? 'public' : section === 'mine' ? 'mine' : 'favorites', search: query, root, branch, page, pageSize: 20 }, gateway)
   const { draft, dirty, error } = cloud
-  const dirtyRef = useRef(false)
-  useEffect(() => { dirtyRef.current = dirty }, [dirty])
-  useEffect(() => registerBuildNavigationGuard(() => !dirtyRef.current || window.confirm(c.leave)), [])
+  const { request, dialog } = useUnsavedChanges({
+    dirty, onSave: () => cloud.save(false, false), onDiscard: cloud.discard,
+    labels: { ...content.builds.leaveEditor, failed: content.builds.saveError },
+  })
+  useEffect(() => registerBuildNavigationGuard(leave => {
+    if (!dirty) return true
+    if (leave) request(leave)
+    return false
+  }), [dirty, request])
   useEffect(() => {
     try { window.localStorage.removeItem(BUILD_STORAGE_KEY); window.localStorage.removeItem(`${BUILD_STORAGE_KEY}:before-v2`); browserMemory.clear(favoritesRecord) } catch { /* Storage denial must not block the account surface. */ }
   }, [])
@@ -116,12 +122,15 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
   const clearShareUrl = () => {
     if (window.location.search) window.history.replaceState(window.history.state, '', '/builds')
   }
-  const backToList = () => { clearShareUrl(); cloud.selectDetail(null); setView({ mode: 'list' }) }
-  const go = (next: Section) => { setSection(next); setPage(1); backToList() }
+  const leaveList = () => { clearShareUrl(); cloud.selectDetail(null); setView({ mode: 'list' }) }
+  const backToList = () => request(leaveList)
+  const go = (next: Section) => request(() => { setSection(next); setPage(1); leaveList() })
   const startEdit = (base?: CloudBuild, keepId = false) => {
     if (!loaded || cloud.busy) return
     if (!base && dirty) { setView({ mode: 'edit' }); return }
-    if (cloud.edit(base, !keepId && Boolean(base))) { clearShareUrl(); setView({ mode: 'edit' }) }
+    request(() => {
+      if (cloud.edit(base, !keepId && Boolean(base), true)) { clearShareUrl(); setView({ mode: 'edit' }) }
+    })
   }
   const share = async (id: string) => {
     try { await navigator.clipboard.writeText(publicBuildLink(id)); cloud.setError(c.copied) }
@@ -131,6 +140,7 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
   const emptyText = needle ? m.emptySearch : section === 'mine' ? m.emptyMine : section === 'fav' ? m.emptyFav : m.emptyList
 
   const nav = <>
+    {dialog}
     <AccountDialog open={cloud.loginOpen} onOpenChange={cloud.setLoginOpen} strings={authStringsFor('zh-CN')} />
     <SidebarSub>
       <div role="tablist" aria-orientation="vertical" className="ro3-build-subnav my-1 ml-6 flex flex-col gap-0.5 border-l-2 border-border pl-2">

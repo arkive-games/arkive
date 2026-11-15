@@ -131,6 +131,7 @@ function SectionLink({ entry, active, onNavigate, collapsed = false }: {
       href={hrefForKey(entry.key)}
       onClick={navigateOnClick(entry.key, onNavigate)}
       aria-current={current ? 'page' : undefined}
+      aria-label={entry.label}
       title={collapsed ? entry.label : undefined}
       className={cn(
         'group flex h-12 items-center rounded-xl px-2 text-sm font-semibold transition-[background-color,color,box-shadow]',

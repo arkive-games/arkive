@@ -36,10 +36,10 @@ it('retains edits made while a save is pending and does not publish on save', as
   gateway.save = vi.fn(() => new Promise<CloudBuild>(done => { resolve = done }))
   const { result } = renderHook(() => useBuildCloud(query, gateway))
   act(() => result.current.patch({ title: 'First', jobId: 1400, branchId: 131 }))
-  let pending!: Promise<void>
+  let pending!: Promise<boolean>
   act(() => { pending = result.current.save() })
   act(() => result.current.patch({ title: 'Newer edit' }))
-  await act(async () => { resolve(record()); await pending })
+  await act(async () => { resolve(record()); expect(await pending).toBe(false) })
   expect(result.current.draft.title).toBe('Newer edit')
   expect(result.current.dirty).toBe(true)
   expect(result.current.saved?.revision).toBe(1)
@@ -54,13 +54,27 @@ it('publishes the acknowledged revision only after confirmation', async () => {
   expect(gateway.publish).toHaveBeenCalledWith('server', 1)
   expect(result.current.saved?.publishedRevision).toBe(1)
 })
+it('allows departure only after a confirmed save and retains failed edits until explicitly discarded', async () => {
+  const gateway = api()
+  const { result } = renderHook(() => useBuildCloud(query, gateway))
+  act(() => result.current.patch({ title: 'First', jobId: 1400, branchId: 131 }))
+  await act(async () => { expect(await result.current.save()).toBe(true) })
+  act(() => result.current.patch({ title: 'Unsaved' }))
+  gateway.save = vi.fn(async () => { throw new Error('offline') })
+  await act(async () => { expect(await result.current.save()).toBe(false) })
+  expect(result.current.draft.title).toBe('Unsaved')
+  expect(result.current.dirty).toBe(true)
+  act(() => result.current.discard())
+  expect(result.current.draft.title).toBe('Saved')
+  expect(result.current.dirty).toBe(false)
+})
 it('does not replace private state with an old account save response', async () => {
   const gateway = api()
   let resolve!: (value: CloudBuild) => void
   gateway.save = vi.fn(() => new Promise<CloudBuild>(done => { resolve = done }))
   const { result, rerender } = renderHook(() => useBuildCloud(query, gateway))
   act(() => result.current.patch({ title: 'Private', jobId: 1400, branchId: 131 }))
-  let pending!: Promise<void>
+  let pending!: Promise<boolean>
   act(() => { pending = result.current.save() })
   session.user = { id: 'two' }
   rerender()
@@ -96,4 +110,14 @@ it('keeps an anonymous draft through login without automatically publishing', as
   expect(result.current.loginOpen).toBe(false)
   expect(result.current.draft.title).toBe('Unsaved')
   expect(gateway.publish).not.toHaveBeenCalled()
+})
+it('does not stack a login dialog over the unsaved departure dialog', async () => {
+  session.user = null; session.status = 'anonymous'
+  const gateway = api()
+  const { result } = renderHook(() => useBuildCloud(query, gateway))
+  act(() => result.current.patch({ title: 'Unsaved' }))
+  await act(async () => { expect(await result.current.save(false, false)).toBe(false) })
+  expect(result.current.loginOpen).toBe(false)
+  expect(result.current.draft.title).toBe('Unsaved')
+  expect(result.current.dirty).toBe(true)
 })

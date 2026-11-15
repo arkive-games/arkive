@@ -50,36 +50,36 @@ export function useBuildCloud(query: BuildQuery, gateway: BuildGateway = pending
     return () => { active = false }
   }, [gateway, collection, search, root, branch, page, pageSize, account, refresh])
 
-  const failure = (value: unknown) => {
+  const failure = (value: unknown, promptLogin = true) => {
     const code = value instanceof BuildFailure ? value.code : 'failed'
     setError(c[code])
-    if (code === 'unauthorized' && auth.enabled) setLoginOpen(true)
+    if (code === 'unauthorized' && auth.enabled && promptLogin) setLoginOpen(true)
   }
-  const ready = () => {
+  const ready = (promptLogin = true) => {
     setError('')
     if (!auth.enabled) { setError(c.unavailable); return false }
-    if (auth.status !== 'authenticated') { setLoginOpen(true); return false }
+    if (auth.status !== 'authenticated') { if (promptLogin) setLoginOpen(true); setError(c.loginRequired); return false }
     if (!gateway.available) { setError(c.unavailable); return false }
     return true
   }
   const patch = (next: Partial<PlannerBuild>) => { generation.current++; setDraft(current => ({ ...current, ...next })); setDirty(true); setError('') }
-  const edit = (base?: CloudBuild, copy = false) => {
-    if (lock.current || dirty && !window.confirm(content.builds.manual.confirmLeave)) return false
+  const edit = (base?: CloudBuild, copy = false, approved = false) => {
+    if (lock.current || dirty && !approved && !window.confirm(content.builds.manual.confirmLeave)) return false
     epoch.current++; detailEpoch.current++; generation.current++
     const fresh = emptyPlanner()
     setDraft(base ? { ...editableBuild(base), id: copy ? fresh.id : base.id } : fresh)
     setSaved(base && !copy ? base : null); setDirty(copy); setError('')
     return true
   }
-  const run = async (action: () => Promise<void>) => {
-    if (lock.current || !ready()) return
+  const run = async (action: () => Promise<boolean | void>, promptLogin = true) => {
+    if (lock.current || !ready(promptLogin)) return false
     lock.current = true; setBusy(true)
     const owner = account
     const token = epoch.current
-    try { await action() } catch (error) { if (liveAccount.current === owner && token === epoch.current) failure(error) }
+    try { return await action() === true } catch (error) { if (liveAccount.current === owner && token === epoch.current) failure(error, promptLogin); return false }
     finally { lock.current = false; setBusy(false) }
   }
-  const save = (publish = false) => run(async () => {
+  const save = (publish = false, promptLogin = true) => run(async () => {
     if (!draft.title.trim() || !draft.jobId || !draft.branchId) { setError(c.required); return }
     if (publish && !window.confirm(c.publishConfirm)) return
     const token = epoch.current
@@ -96,7 +96,8 @@ export function useBuildCloud(query: BuildQuery, gateway: BuildGateway = pending
       if (owner !== liveAccount.current || token !== epoch.current) return
       setSaved(published); setRefresh(v => v + 1)
     }
-  })
+    return version === generation.current
+  }, promptLogin)
   const mutate = (target: CloudBuild, action: 'favorite' | 'unpublish' | 'remove') => run(async () => {
     if (action !== 'favorite' && !window.confirm(action === 'remove' ? c.deleteConfirm : c.unpublishConfirm)) return
     const token = epoch.current
@@ -118,6 +119,7 @@ export function useBuildCloud(query: BuildQuery, gateway: BuildGateway = pending
     try { const next = await gateway.getPublic(id); if (current()) setDetail(next) }
     catch (error) { if (current()) failure(error) }
   }
-  return { auth, draft, saved, dirty, patch, edit, save, items, total, detail, selectDetail, openPublic, mutate,
+  const discard = () => { generation.current++; setDraft(saved ? editableBuild(saved) : emptyPlanner()); setDirty(false); setError('') }
+  return { auth, draft, saved, dirty, patch, edit, save, discard, items, total, detail, selectDetail, openPublic, mutate,
     error, setError, listError, loading, busy, loginOpen, setLoginOpen, retry: () => setRefresh(v => v + 1) }
 }
