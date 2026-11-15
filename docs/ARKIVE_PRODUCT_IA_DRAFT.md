@@ -46,4 +46,6 @@ Implementation/verification research: [live audit](ui-system/live-visual-audit.m
 [dated inventory](ui-system/evidence.md), [historical reconciliation](ui-system/reconciliation.md),
 [acceptance procedure](ui-system/visual-regression.md). Dated audits and
 illustrations are optional evidence, not daily rules or final art baselines.
-Forum redesign remains deferred; team Skill packaging is not started.
+Forum redesign remains deferred. The repository-owned
+[Arkive UI Skill](../.agents/skills/arkive-ui/SKILL.md) routes here; rules are not
+duplicated inside the Skill. Team distribution follows repository delivery.

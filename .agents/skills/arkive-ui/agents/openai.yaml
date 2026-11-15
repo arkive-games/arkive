@@ -1,0 +1,4 @@
+interface:
+  display_name: "Arkive UI"
+  short_description: "Apply Arkive UI rules with task-scoped references"
+  default_prompt: "Use $arkive-ui to implement or review this Arkive interface using existing components and relevant project specifications."
