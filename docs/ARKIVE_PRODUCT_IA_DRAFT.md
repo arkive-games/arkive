@@ -1,7 +1,9 @@
 # Arkive UI: Reading Index
 
-Updated 2026-11-15. Confirmed discussion rules; observations and proposals are
-labelled. No production conformance is claimed. Stage 4 local reconciliation was approved on 2026-11-15; delivery remains unshipped.
+Updated 2026-11-15. Current reading router; the legacy filename is retained for
+existing links. Topic decisions are confirmed unless marked provisional or
+deferred. Local implementation and acceptance status live only in
+[Adoption](ui-system/adoption.md); no production conformance is claimed.
 
 ## Read by task
 
@@ -30,14 +32,18 @@ shape, geometry, accessibility, motion and layers; [colors](ARKIVE_SITE_COLOR_SY
 owns semantic values/contrast; [memory](ARKIVE_STATE_MEMORY_SPEC.yaml) owns
 storage lifetimes and restoration; [map UI](ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml)
 and [mobile](ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml) own their specialist details.
-Known conflicts are listed in the visual migration map, pending stage 4.
+The visual topic records the reconciled canonical roles. Do not use historical
+audits or old batch notes as current implementation instructions.
 
 ## References only when needed
 
-Visual review: [catalog sample](ui-system/catalog-controls-preview.html),
+Current visual review: [real-component gallery](http://localhost:15172/ui-review.html)
+and [acceptance procedure](ui-system/visual-regression.md).
+Historical illustrations: [catalog sample](ui-system/catalog-controls-preview.html),
 [map sample](ui-system/map-shell-preview.html), [copied live homepage footer](ui-system/home-footer-copy.html),
 [brand assets](ui-system/assets/arkive/README.md).
 Implementation/verification research: [live audit](ui-system/live-visual-audit.md),
 [dated inventory](ui-system/evidence.md), [historical reconciliation](ui-system/reconciliation.md),
-[acceptance plan](ui-system/visual-regression.md). These are not daily rules or
-proof that the site is finished. Forum redesign and Skill packaging are deferred.
+[acceptance procedure](ui-system/visual-regression.md). Dated audits and
+illustrations are optional evidence, not daily rules or final art baselines.
+Forum redesign remains deferred; team Skill packaging is not started.

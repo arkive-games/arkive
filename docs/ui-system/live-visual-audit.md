@@ -4,6 +4,8 @@ Status: desktop reference observations, clarified 2026-11-15 before stage 4 appr
 This record compares the deployed pages with the confirmed product topics. It
 records evidence and conflicts; it does not authorize production changes.
 Mobile encyclopedia composition remains deferred by product decision.
+The action column and pending-migration wording describe that historical audit,
+not current work. Use [Adoption](adoption.md) for current status.
 
 ## Evidence set
 

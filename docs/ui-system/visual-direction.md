@@ -63,6 +63,9 @@ Exact surface measurements remain in [Live audit](live-visual-audit.md).
 
 ## Stage 4 migration map
 
+The scoped canonical wording below has been reconciled locally. This table is
+an ownership map, not a list of changes still awaiting stage 4 approval.
+
 | Canonical owner | Current local reconciliation |
 | --- | --- |
 | Foundations `shape.rules` / `control_geometry` | Reviewed pill/equal-height catalog and All Games card roles, preserving ordinary form/popup/touch defaults |
@@ -76,5 +79,6 @@ Exact surface measurements remain in [Live audit](live-visual-audit.md).
 Sidebar dimensions remain adjustable in [Encyclopedia](encyclopedia.md) and
 [Map workspace](map-workspace.md). Encyclopedia content/detail is contextual;
 its mobile composition is deferred. Map mobile and tool-card reflow/truncation
-remain provisional. Real state/theme/cross-game acceptance remains partial; see the verified local batch in Adoption.
-[Adoption](adoption.md) owns next work and the stage 4 permission boundary.
+remain provisional. Shared acceptance tooling is implemented; uncovered visual
+and state cases are listed only in [Adoption](adoption.md#remaining-acceptance).
+Adoption also owns deferred scope and the local/remote delivery boundary.
