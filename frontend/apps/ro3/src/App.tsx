@@ -39,7 +39,7 @@ import homeSouls from './assets/home/souls.webp'
 import homeBuilds from './assets/home/builds.webp'
 import content from './locales/zh-CN.json'
 
-import { canLeaveBuild } from './lib/buildNavigation'
+import { canLeaveBuild, requestBuildDeparture } from './lib/buildNavigation'
 import { guardedHistory } from './lib/guardedHistory'
 import { SITE_VERSION } from './lib/siteVersion'
 
@@ -110,7 +110,7 @@ function App() {
       setLocation(readLocation())
       window.dispatchEvent(new Event('ro3:location-adopted'))
       trackPageview()
-    })
+    }, requestBuildDeparture)
     navigationHistory.current = controller
     return () => { controller.dispose(); navigationHistory.current = null }
   }, [])
@@ -123,14 +123,16 @@ function App() {
 
   const navigate = (key: NavKey) => {
     const next = locationForKey(key)
-    if (!next || !canLeaveBuild()) return
+    if (!next) return
     const href = hrefFor(next.page, next.view)
-    if (href !== `${window.location.pathname}${window.location.search}`) {
-      if (!navigationHistory.current?.push(href)) return
-      trackPageview()
-    }
-    setLocation(next)
-    window.dispatchEvent(new Event('ro3:location-adopted'))
+    requestBuildDeparture(() => {
+      if (href !== `${window.location.pathname}${window.location.search}`) {
+        if (!navigationHistory.current?.push(href)) return
+        trackPageview()
+      }
+      setLocation(next)
+      window.dispatchEvent(new Event('ro3:location-adopted'))
+    })
   }
 
   return (

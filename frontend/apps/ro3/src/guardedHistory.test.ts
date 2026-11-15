@@ -16,6 +16,26 @@ function fixture() {
 }
 
 describe('guarded history', () => {
+  it('restores the current entry before asking and resumes an approved traversal once', () => {
+    const f = fixture()
+    const adopt = vi.fn()
+    let resume: (() => void) | undefined
+    const request = vi.fn((leave: () => void) => {
+      expect(f.current().url).toBe('/equipment')
+      resume = leave
+    })
+    const navigation = guardedHistory(f.target, () => false, adopt, request)
+    navigation.push('/equipment')
+    f.history.go(-1)
+    expect(adopt).not.toHaveBeenCalled()
+    expect(request).toHaveBeenCalledTimes(1)
+    resume!()
+    expect(f.current().url).toBe('/builds?build=old')
+    expect(adopt).toHaveBeenCalledTimes(1)
+    expect(request).toHaveBeenCalledTimes(1)
+    expect(f.history.pushState).toHaveBeenCalledTimes(1)
+    navigation.dispose()
+  })
   it('returns to the actual previous entry on refused forward navigation without rewriting its URL', () => {
     const f = fixture()
     const allow = vi.fn(() => true)
