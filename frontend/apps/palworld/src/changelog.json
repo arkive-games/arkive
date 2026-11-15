@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.5",
+      "date": "2026-11-16",
+      "commit": "c4d97f07262807d65ba3113d590ff27b2f29c676",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Combine search and facet menus in a compact toolbar, improve the collapsed directory and tighten Pal card labels with aligned page headings.",
+            "zh-CN": "搜索与筛选菜单整合为紧凑工具栏，优化收起后的目录，压缩帕鲁卡片名称区并对齐页面顶部。",
+            "zh-TW": "搜尋與篩選選單整合為精簡工具列，優化收合後的目錄，壓縮帕魯卡片名稱區並對齊頁面頂部。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.4",
       "date": "2026-11-16",
       "commit": "df8ce0375ace60577bdc9bb2382421a830360c4f",
