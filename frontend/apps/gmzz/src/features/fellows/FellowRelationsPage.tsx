@@ -41,7 +41,7 @@ export default function FellowRelationsPage() {
   return (
     <ContentPage active="/fellows/relations" title={t('fellows.sectionTitle')} heading wide browsing={{ scope: 'fellow-relations', ready: true }}>
       <FellowsTabs current="/fellows/relations" />
-      <p className="lg:hidden mb-4 text-sm text-muted-foreground">{t('fellows.relationsDescription', { count: all.length })}</p>
+      <p className="lg:hidden mb-4 text-sm text-muted-foreground">{t('fellows.relationsDescription')}</p>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {all.map((relation) => <RelationCard key={relation.id} relation={relation} fellowsById={fellowsById} effectsById={effectsById} />)}
       </div>

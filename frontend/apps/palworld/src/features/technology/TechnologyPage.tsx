@@ -15,7 +15,7 @@ import {
   type TechEntry,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
-import { CatalogPageLoading } from '../catalog/components'
+import { CatalogPageLoading, CatalogNoResults } from '../catalog/components'
 import { buildRegions, makeTechResolvers, type LevelGroup, type TechResolvers } from './techModel'
 import { TechTile } from './components/TechTile'
 
@@ -112,10 +112,10 @@ export default function TechnologyPage() {
     body = <div className="text-center text-destructive">{loadError}</div>
   } else if (!b || !resolvers) {
     body = <CatalogPageLoading />
+  } else if (matchCount === 0) {
+    body = <CatalogNoResults />
   } else if (isMobile) {
-    body = matchCount === 0 ? (
-      <div className="py-8 text-center text-muted-foreground">{t('tech.empty')}</div>
-    ) : (
+    body = (
       <div>
         <MobileTechLevels
           levels={mobilePaging.visibleItems}
@@ -156,11 +156,6 @@ export default function TechnologyPage() {
           </Fragment>
         ))}
 
-        {levels.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground md:col-span-8">
-            {t('tech.empty')}
-          </div>
-        ) : null}
       </div>
     )
   }

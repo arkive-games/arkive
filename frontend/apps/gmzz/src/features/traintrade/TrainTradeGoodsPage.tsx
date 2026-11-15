@@ -2,7 +2,6 @@ import { useContextState, useCatalogView } from '../catalog/memory'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   IconGrid3x3,
-  IconInfoCircle,
   IconList,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
@@ -135,11 +134,7 @@ export default function TrainTradeGoodsPage() {
 
   return (
     <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide browsing={{ scope: 'traintrade', ready: true }} resultsKey={JSON.stringify([query, category, quality, view, currentPage])} filtersActive={Boolean(query) || category !== "all" || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
-        <div className="min-w-0">
-          <p className="lg:hidden max-w-3xl text-sm leading-6 text-muted-foreground">
-            {t("trainTrade.description", { count: goods.length })}
-          </p>
-        </div>
+        <div className="min-w-0" />
         <SearchInput
           value={query}
           onChange={(value) => {
@@ -155,7 +150,7 @@ export default function TrainTradeGoodsPage() {
         />
       </header>} toolbar={<div className="space-y-3">
       <section aria-label={t("trainTrade.filters")} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
-        <FilterGroup label={t("trainTrade.categoryLabel")} hint={t("trainTrade.categoryHint")}>
+        <FilterGroup label={t("trainTrade.categoryLabel")}>
           {visibleCategories.map((option) => (
             <FilterChip variant="accent" key={option} active={category === option} onClick={() => { setCategory(option); setPage(1); }} testId={`train-trade-category-${option}`}>
               {t(`trainTrade.category.${option}`)}
@@ -163,7 +158,7 @@ export default function TrainTradeGoodsPage() {
             </FilterChip>
           ))}
         </FilterGroup>
-        <FilterGroup label={t("trainTrade.qualityLabel")} hint={t("trainTrade.qualityHint")}>
+        <FilterGroup label={t("trainTrade.qualityLabel")}>
           {visibleQualities.map((option) => (
             <FilterChip variant="accent" key={option} active={quality === option} onClick={() => { setQuality(option); setPage(1); }} testId={`train-trade-quality-${option}`}>
               {option === "all" ? t("trainTrade.all") : t("trainTrade.qualityValue", { value: option })}
@@ -195,11 +190,6 @@ export default function TrainTradeGoodsPage() {
       )}
 
       <CatalogPagination page={currentPage} pageCount={pageCount} onPageChange={changePage} />
-
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <IconInfoCircle className="size-4 shrink-0" stroke={1.8} aria-hidden />
-        {t("trainTrade.sourceNote")}
-      </p>
     </div>
     </ContentPage>
   );

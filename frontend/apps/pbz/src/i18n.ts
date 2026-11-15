@@ -39,7 +39,7 @@ const en = {
   },
   wiki: {
     search: 'Search by name', count: '{{count}} entries', type: 'Type', rarity: 'Rarity', category: 'Category',
-    area: 'Area', boss: 'Boss', bossOnly: 'Bosses only', notFound: 'Not found.', description: 'Description',
+    area: 'Area', boss: 'Boss', bossOnly: 'Bosses only', notFound: 'Not found.', noResults: 'No matching results.', description: 'Description',
     effect: 'Effect', lore: 'Lore', baseStats: 'Base attributes', moves: 'Moves', cost: 'Cost', level: 'Level',
     upgrades: 'Upgrades ({{count}} levels, {{dust}} dust in total)', upgradesShort: 'Upgrades',
     showAll: 'Show all {{count}} levels', showLess: 'Show fewer', dust: '{{count}} dust',
@@ -105,7 +105,7 @@ const zhCN: Strings = {
   },
   wiki: {
     search: '按名称搜索', count: '共 {{count}} 项', type: '类型', rarity: '品质', category: '分类',
-    area: '区域', boss: '首领', bossOnly: '只看首领', notFound: '未找到。', description: '描述',
+    area: '区域', boss: '首领', bossOnly: '只看首领', notFound: '未找到。', noResults: '无匹配结果', description: '描述',
     effect: '效果', lore: '背景', baseStats: '基础属性', moves: '招式', cost: '消耗', level: '等级',
     upgrades: '升级（共 {{count}} 级，合计 {{dust}} 尘）', upgradesShort: '升级',
     showAll: '显示全部 {{count}} 级', showLess: '收起', dust: '{{count}} 尘',
@@ -169,7 +169,7 @@ const zhTW: Strings = {
   },
   wiki: {
     search: '依名稱搜尋', count: '共 {{count}} 項', type: '類型', rarity: '品質', category: '分類',
-    area: '區域', boss: '首領', bossOnly: '只看首領', notFound: '找不到。', description: '描述',
+    area: '區域', boss: '首領', bossOnly: '只看首領', notFound: '找不到。', noResults: '無符合結果', description: '描述',
     effect: '效果', lore: '背景', baseStats: '基礎屬性', moves: '招式', cost: '消耗', level: '等級',
     upgrades: '升級（共 {{count}} 級，合計 {{dust}} 塵）', upgradesShort: '升級',
     showAll: '顯示全部 {{count}} 級', showLess: '收合', dust: '{{count}} 塵',

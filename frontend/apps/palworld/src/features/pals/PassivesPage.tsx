@@ -1,3 +1,4 @@
+import { CatalogNoResults } from '../catalog/components'
 import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -372,6 +373,8 @@ export default function PassivesPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (
         <PalPageLoading />
+      ) : list.length === 0 ? (
+        <CatalogNoResults />
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {mobilePaging.visibleItems.map((r) => (

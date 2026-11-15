@@ -17,7 +17,7 @@ import { loadPals, type PalsBundle } from '../../lib/pals'
 import { itemTypeLabel, typeOrder } from '../catalog/labels'
 import {
   CatalogDataProvider,
-  CatalogPageLoading,
+  CatalogPageLoading, CatalogNoResults,
   HoverCardBody,
   ItemGlyph,
   ItemSummary,
@@ -156,6 +156,8 @@ export default function ItemListPage() {
             <div className="mt-8 text-center text-destructive">{loadError}</div>
           ) : !bundle ? (
             <CatalogPageLoading />
+          ) : list.length === 0 ? (
+            <CatalogNoResults />
           ) : (
             <CatalogDataProvider
               items={bundle}
