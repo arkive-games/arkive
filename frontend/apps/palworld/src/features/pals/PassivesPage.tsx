@@ -1,7 +1,9 @@
+import { CatalogNoResults } from '../catalog/components'
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { FilterChip, FilterRow, Hint, Input, toggleValue, TooltipProvider } from '@gamemap/ui'
+import { FilterChip, FilterRow, Hint, CatalogSearchInput, toggleValue, TooltipProvider } from '@gamemap/ui'
 import { ArrowRight, Coins, Dna, Dices, PawPrint, Sparkles, Stethoscope, TreePine } from 'lucide-react'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -160,11 +162,11 @@ export default function PassivesPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [raritySel, setRaritySel] = useState<string[]>([])
-  const [categorySel, setCategorySel] = useState<string[]>([])
-  const [mutationOnly, setMutationOnly] = useState(false)
-  const [innateOnly, setInnateOnly] = useState(false)
+  const [query, setQuery] = useCatalogState<string>('passives', 'query', '')
+  const [raritySel, setRaritySel] = useCatalogState<string[]>('passives', 'raritySel', [])
+  const [categorySel, setCategorySel] = useCatalogState<string[]>('passives', 'categorySel', [])
+  const [mutationOnly, setMutationOnly] = useCatalogState<boolean>('passives', 'mutationOnly', false)
+  const [innateOnly, setInnateOnly] = useCatalogState<boolean>('passives', 'innateOnly', false)
 
   useEffect(() => {
     let cancelled = false
@@ -345,7 +347,7 @@ export default function PassivesPage() {
   return (
     <TooltipProvider delayDuration={200}>
     <CatalogDataProvider pals={bundle ?? undefined}>
-    <ContentPage
+    <ContentPage browsing={{ section: 'passives', ready: !!bundle, resultsKey: JSON.stringify([query,raritySel,categorySel,mutationOnly,innateOnly]) }}
       active="/passives"
       title={t('pal.section.passives')}
       heading
@@ -355,19 +357,15 @@ export default function PassivesPage() {
       }
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
+        <CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
-          className="max-w-sm border-primary/50 bg-primary/5 focus-visible:border-primary"
+          className=""
           data-testid="passive-search"
         />
-        {bundle ? (
-          <span className="text-sm text-muted-foreground">
-            {t('resultsCount', { count: list.length })}
-          </span>
-        ) : null}
+
       </div>
       <ContentPageFilters className="mb-4 space-y-1.5" />
 
@@ -375,6 +373,8 @@ export default function PassivesPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (
         <PalPageLoading />
+      ) : list.length === 0 ? (
+        <CatalogNoResults />
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {mobilePaging.visibleItems.map((r) => (

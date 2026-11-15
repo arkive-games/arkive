@@ -71,6 +71,13 @@
       "offlineDraft": "当前内容仅在页面中，关闭或刷新会丢失；保存到账号后才会保留。"
     },
     "title": "流派手册",
+    "leaveEditor": {
+      "title": "还有未保存的修改",
+      "description": "离开前要保存当前方案吗？放弃修改不会删除已保存的方案。",
+      "save": "保存后离开",
+      "discard": "放弃修改并离开",
+      "stay": "继续编辑"
+    },
     "manual": {
       "rec": "公开方案",
       "mine": "我的方案",
@@ -155,6 +162,8 @@
     "tools": "工具"
   },
   "wiki": {
+    "collapseDirectory": "收起百科目录",
+    "expandDirectory": "展开百科目录",
     "variant": "装备品质版本",
     "eyebrow": "玩家资料库",
     "title": "仙境传说 3 游戏百科",

@@ -1,12 +1,16 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
 import { createContext, useContext, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { FilterDisclosure, SiteFooter } from '@gamemap/ui'
+import { FilterDisclosure } from '@gamemap/ui'
 import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { useSettingsConfig } from '../lib/settings'
+import { useCatalogScroll, type CatalogBrowsingContext } from '../features/catalog/catalogMemory'
+import { EncyclopediaLayout } from './EncyclopediaLayout'
+import { isEncyclopediaSection } from './encyclopediaNavigation'
 import {
   ARKIVE_HOME_LINK_PROPS,
   ARKIVE_HOME_URL,
@@ -38,6 +42,7 @@ export interface ContentPageProps {
   filtersActive?: boolean
   /** Hide the site footer on phones while keeping it on desktop. */
   hideMobileFooter?: boolean
+  browsing?: CatalogBrowsingContext
   children: ReactNode
 }
 
@@ -76,12 +81,15 @@ export function ContentPage({
   filters,
   filtersActive = false,
   hideMobileFooter = false,
+  browsing,
   children,
 }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
+  const scrollRestoration = useCatalogScroll(browsing)
+  const encyclopedia = isEncyclopediaSection(active)
 
   return (
     <FiltersContext.Provider value={{ node: filters ?? null, active: filtersActive }}>
@@ -102,6 +110,8 @@ export function ContentPage({
         // rather than falling back to the public-web defaults.
         footer={
           <SiteFooter
+          locale={lng}
+          settings={settings}
             className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
             homeUrl={ARKIVE_HOME_URL}
             homeLinkProps={ARKIVE_HOME_LINK_PROPS}
@@ -112,10 +122,12 @@ export function ContentPage({
         }
         title={title}
         heading={heading}
+        headingClassName={encyclopedia ? 'lg:sr-only' : undefined}
         backToTopLabel={t('backToTop')}
         hideMobileFooter={hideMobileFooter}
+        scrollRestoration={scrollRestoration}
       >
-        {children}
+        {encyclopedia ? <EncyclopediaLayout active={active}>{children}</EncyclopediaLayout> : children}
       </ArkiveContentPage>
     </FiltersContext.Provider>
   )

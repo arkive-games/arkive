@@ -1,8 +1,10 @@
+import { CatalogNoResults } from '../catalog/components'
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
-import { FilterChip, FilterRow, Input, toggleValue, useIsMobile } from '@gamemap/ui'
+import { FilterChip, FilterRow, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -24,10 +26,10 @@ export default function ActiveSkillsPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [elementSel, setElementSel] = useState<Element[]>([])
-  const [typeSel, setTypeSel] = useState<string[]>([])
-  const [sourceSel, setSourceSel] = useState<string[]>([])
+  const [query, setQuery] = useCatalogState<string>('active-skills', 'query', '')
+  const [elementSel, setElementSel] = useCatalogState<Element[]>('active-skills', 'elementSel', [])
+  const [typeSel, setTypeSel] = useCatalogState<string[]>('active-skills', 'typeSel', [])
+  const [sourceSel, setSourceSel] = useCatalogState<string[]>('active-skills', 'sourceSel', [])
 
   useEffect(() => {
     let cancelled = false
@@ -131,7 +133,7 @@ export default function ActiveSkillsPage() {
   ) : undefined
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'active-skills', ready: !!bundle, resultsKey: JSON.stringify([query,elementSel,typeSel,sourceSel]) }}
       active="/active-skills"
       title={t('pal.section.activeSkills')}
       heading
@@ -139,17 +141,15 @@ export default function ActiveSkillsPage() {
       filtersActive={elementSel.length > 0 || typeSel.length > 0 || sourceSel.length > 0}
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
+        <CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
-          className="max-w-sm"
+          className=""
           data-testid="active-skill-search"
         />
-        {bundle ? (
-          <span className="text-sm text-muted-foreground">{t('resultsCount', { count: list.length })}</span>
-        ) : null}
+
       </div>
 
       <ContentPageFilters className="mb-4 space-y-1.5" />
@@ -158,6 +158,8 @@ export default function ActiveSkillsPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (
         <PalPageLoading />
+      ) : list.length === 0 ? (
+        <CatalogNoResults />
       ) : isMobile ? (
         <ul className="space-y-2">
           {mobilePaging.visibleItems.map((s) => (

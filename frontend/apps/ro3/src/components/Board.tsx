@@ -1,6 +1,6 @@
-import { useRef, type ReactNode, type RefObject } from 'react'
+import { type ReactNode, type RefObject } from 'react'
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { CatalogSearchInput, cn } from '@gamemap/ui'
 import { pageWindow } from '../wikiBoards'
 
 const WARM_BUTTON = 'bg-[image:var(--arkive-warm-search)] text-[color:var(--arkive-warm-search-foreground)] shadow-[0_0.3rem_0.8rem_rgba(236,122,28,0.28)]'
@@ -55,37 +55,10 @@ export function SearchBox({ open, query, onQuery, label, placeholder }: {
   label: string
   placeholder: string
 }) {
-  const input = useRef<HTMLInputElement>(null)
-  return (
-    <form
-      role="search"
-      onSubmit={(event) => {
-        event.preventDefault()
-        input.current?.focus()
-      }}
-      className={cn(
-        'w-full items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-shadow focus-within:ring-2 focus-within:ring-ring/40 lg:flex lg:w-[23rem]',
-        open ? 'flex' : 'hidden',
-      )}
-    >
-      <input
-        ref={input}
-        type="search"
-        value={query}
-        onChange={(event) => onQuery(event.target.value)}
-        aria-label={label}
-        placeholder={placeholder}
-        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-      />
-      <button
-        type="submit"
-        aria-label={label}
-        className={cn('grid size-9 shrink-0 place-items-center rounded-full transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:scale-105', WARM_BUTTON)}
-      >
-        <Search aria-hidden="true" className="size-4" />
-      </button>
-    </form>
-  )
+  return <div className={cn('w-full lg:w-[23rem]', open ? 'block' : 'hidden lg:block')}>
+    <CatalogSearchInput value={query} onChange={event => onQuery(event.target.value)}
+      aria-label={label} submitLabel={label} placeholder={placeholder} />
+  </div>
 }
 
 /** Numbered pages under a board: both ends, the current page's neighbours, and arrows either side. */

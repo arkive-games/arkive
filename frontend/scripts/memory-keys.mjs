@@ -61,6 +61,19 @@ function dimensionsOf(tail) {
 function keysIn(file, text, exported) {
   const found = []
   const relative = path.relative(ROOT, file).replaceAll('\\', '/')
+  for (const match of text.matchAll(/\bcreateMapViewStore\(\s*['"]([\w-]+)['"]/g)) {
+    found.push({ key: `arkive.memory.${match[1]}.map.view`, file: relative, dims: '' })
+    found.push({ key: `arkive.memory.${match[1]}.map-context.selected-marker`, file: relative, dims: '' })
+  }
+
+  // This shared factory owns a fixed record family with app-owned namespaces.
+  for (const match of text.matchAll(/\bcreateMapSessionRecords\(\s*['"]([\w-]+)['"]/g)) {
+    const namespace = match[1]
+    found.push({ key: `arkive.memory.${namespace}.map.last-map`, file: relative, dims: '' })
+    for (const id of ['query', 'sidebar-collapsed', 'sidebar-scroll', 'collapsed-categories', 'visible-subtypes']) {
+      found.push({ key: `arkive.memory.${namespace}.map-context.${id}`, file: relative, dims: 'partition' })
+    }
+  }
 
   const local = new Map()
   for (const m of text.matchAll(/(?:const|let)\s+(\w+)\s*=\s*memoryFor\(\s*['"]([\w-]+)['"]/g)) {

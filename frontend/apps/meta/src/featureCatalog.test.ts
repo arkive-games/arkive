@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   FEATURES,
+  HOME_TOOL_IDS,
   featureHref,
   featuresOf,
   localize,
@@ -187,5 +188,20 @@ describe('matchesTool', () => {
 
   it('rejects a query nothing in the tool carries', () => {
     expect(matchesTool(breeding, '积分', names)).toBe(false)
+  })
+})
+
+describe('Ragnarok reference and tool destinations', () => {
+  it('includes the editable handbook in the tool registry without promoting it on the homepage', () => {
+    const handbook = FEATURES.find(feature => feature.id === 'ro3-builds')!
+    expect(handbook.kind).toBe('tool')
+    expect(handbook.path).toBe('/builds')
+    expect(handbook.description?.['en-US']).toBeTruthy()
+    expect(HOME_TOOL_IDS.has(handbook.id)).toBe(false)
+  })
+  it('links every reference directly to its canonical category', () => {
+    for (const feature of FEATURES.filter(feature => feature.gameId === 'ro3' && feature.kind === 'wiki')) {
+      expect(feature.path).toBe('/' + feature.id.slice('ro3-'.length))
+    }
   })
 })

@@ -503,7 +503,9 @@ export function AccountCenterPage({
         await auth.client.updateCurrentUser(remoteUpdate)
         await auth.refresh()
       }
-      updateLocalProfile({ bio: nextProfile.bio })
+      if (!updateLocalProfile({ bio: nextProfile.bio })) {
+        throw new Error('Profile storage is unavailable')
+      }
       skipNextDraftWrite.current = true
       browserMemory.clear(profileDraftRecord, { accountId: user.id })
       setProfile(nextProfile)
@@ -551,11 +553,7 @@ export function AccountCenterPage({
           </UserSidebar>
 
           <section className="user-system-content" aria-labelledby="account-page-heading">
-            <PageHeading
-              id="account-page-heading"
-              title={t(`userSystem.account.${section}`)}
-              description={t(`userSystem.account.descriptions.${section}`)}
-            />
+            <h1 id="account-page-heading" className="sr-only">{t(`userSystem.account.${section}`)}</h1>
             <AccountContent
               onAuthRequired={onAuthRequired}
               section={section}

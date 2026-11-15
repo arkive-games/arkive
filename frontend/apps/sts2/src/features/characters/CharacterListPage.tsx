@@ -65,7 +65,8 @@ export default function CharacterListPage() {
   const playable = bundle?.characters.filter((c) => c.playable) ?? []
 
   return (
-    <ContentPage active="/characters" title={t('character.title')} heading>
+    <ContentPage active="/characters" title={t('character.title')} heading
+      browsing={{ scope: 'characters', ready: !!bundle && !loadError }}>
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (

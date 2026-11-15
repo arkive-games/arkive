@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.ui-foundations"
 title: "Arkive UI Foundations Specification"
 status: "canonical"
-last_reviewed: "2026-10-27"
+last_reviewed: "2026-11-15"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -180,7 +180,7 @@ shared_component_contracts:
   compact_site_footer:
     owner: "frontend/packages/ui/src/site-footer.tsx"
     use: "Scrollable portal and game pages that are not the true portal home view."
-    desktop_layout: "Three columns: the Arkive wordmark on the left, host-owned links in the middle, the legal and version line on the right"
+    desktop_layout: "Three columns: the Arkive wordmark on the left, About, Contact, Updates and Settings in the middle, the legal and version line on the right"
     geometry: "Quiet neutral surface, no extra top border, tight spacing. A desktop-only gold voyage line and boat follow the actual scroll container and dock at the footer; neither appears on mobile."
     homepage_exception: "Keep the discovery homepage's sea footer unchanged."
     exclusions:
@@ -231,9 +231,9 @@ shape:
   tokens:
     compact_radius: { value: "0.375rem", css: "--arkive-radius-compact" }
     standard_radius: { value: "0.5rem", css: "--arkive-radius-standard" }
-    media_radius: { value: "0.875rem", css: "--arkive-radius-media (to add)" }
+    media_radius: { value: "0.875rem", css: "--arkive-radius-media" }
     floating_radius: { value: "1rem", css: "--arkive-radius-floating" }
-    card_radius: { value: "1.25rem", css: "--arkive-radius-card (to add)" }
+    card_radius: { value: "1.25rem", css: "--arkive-radius-card" }
     dialog_radius: { value: "1.5rem", css: "--arkive-radius-dialog" }
     pill_radius: { value: "999rem", css: "rounded-full" }
   rules:
@@ -247,6 +247,8 @@ shape:
     - "Use only these tokens. Values such as 0.55rem, 0.9rem, or 1.375rem are not permitted."
 
 control_geometry:
+  catalog_control_height: "3.2rem; --arkive-catalog-control-height, equal search/filter outer height"
+  catalog_control_inner_height: "2.5rem; --arkive-catalog-control-inner-height, options and submit arrow"
   desktop_compact_height: "2.25rem"
   touch_target_standard: "2.75rem"
   touch_target_accessibility_floor: "24px"
@@ -413,9 +415,9 @@ verification:
 
 known_gaps:
   - >-
-    --arkive-radius-media and --arkive-radius-card are not yet defined in
-    arkive-map-theme.css. all-games.css and home-landing.css paste 0.9rem, 1.25rem, 1.375rem, 1.625rem
-    and 1.75rem directly; move them to the two tokens.
+    The radius and catalog geometry tokens are defined. Existing homepage art
+    and other app-local shapes still contain calibrated literals; preserve the
+    accepted homepage rather than flattening decorative geometry during migration.
 
 maintenance:
   rules:
@@ -423,3 +425,8 @@ maintenance:
     - "The color specification owns all color roles and values."
     - "Mobile and map specifications may compose these tokens but cannot redefine them."
     - "Update this file before introducing a new global token or foundation rule."
+
+catalog_controls_and_copy:
+  search: "Use the shared CatalogSearchInput or its SearchInput adapter: the reviewed portal pill, leading magnifier, and round warm arrow. Keep one outer focus treatment and the catalog height tokens. Dense embedded pickers are a separate size role."
+  directory_toggle: "Encyclopedia directories use ArkiveEncyclopediaWorkspace's panel-frame icon with its internal directional arrow; no app-local chevron substitute."
+  copy: "Across the site, omit interface tutorials, implementation explanations and visible result-total summaries such as Showing N records. Keep game facts, taxonomy counts, progress, useful field labels, actions, errors and empty states."

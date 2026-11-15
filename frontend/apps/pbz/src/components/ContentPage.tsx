@@ -1,13 +1,17 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { SiteFooter } from '@gamemap/ui'
 import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
+import { useSessionScroll, type SessionScrollContext } from '@gamemap/state-memory'
+import { wikiScrollRecord } from '../features/wiki/memory'
+import { EncyclopediaLayout } from './EncyclopediaLayout'
+import { isEncyclopediaSection } from './encyclopediaNavigation'
 
 export interface ContentPageProps {
   active: NavKey
@@ -16,15 +20,18 @@ export interface ContentPageProps {
   heading?: boolean
   /** Widen past the default for dense grids. */
   wide?: boolean
+  browsing?: SessionScrollContext
   children: ReactNode
 }
 
 /** This game's navigation, strings and links, in the shared page shell. */
-export function ContentPage({ active, title, heading = false, wide = false, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, wide = false, browsing, children }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
+  const scrollRestoration = useSessionScroll(wikiScrollRecord, browsing)
+  const encyclopedia = isEncyclopediaSection(active)
 
   return (
     <ArkiveContentPage
@@ -41,6 +48,8 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
       }
       footer={
         <SiteFooter
+          locale={lng}
+          settings={settings}
           className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
           homeUrl={ARKIVE_HOME_URL}
           githubUrl={import.meta.env.VITE_GITHUB_URL}
@@ -50,9 +59,11 @@ export function ContentPage({ active, title, heading = false, wide = false, chil
       }
       title={title}
       heading={heading}
+      headingClassName={encyclopedia ? 'lg:sr-only' : undefined}
       width={wide ? 'wide' : 'standard'}
+      scrollRestoration={scrollRestoration}
     >
-      {children}
+      {encyclopedia ? <EncyclopediaLayout active={active}>{children}</EncyclopediaLayout> : children}
     </ArkiveContentPage>
   )
 }

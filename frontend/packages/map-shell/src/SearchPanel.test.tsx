@@ -8,6 +8,24 @@ import { SearchPanel, type SearchField, type SearchItem } from "./SearchPanel"
 
 afterEach(cleanup)
 
+describe('map-scoped search context', () => {
+  it('restores each map query and lets explicit query links win without rewriting the remembered value', () => {
+    const saved = { a: 'village', b: 'boss' }
+    const a = { key: 'a', get: () => saved.a, set: (query: string) => { saved.a = query } }
+    const b = { key: 'b', get: () => saved.b, set: (query: string) => { saved.b = query } }
+    const props = { items: [] as SearchItem[], labels, onSelect: vi.fn(), onFlyTo: vi.fn(), searchFields: ['name'] as SearchField[], debounceMs: 0 }
+    const page = render(<SearchPanel {...props} queryMemory={a} />)
+    expect((page.getByTestId('marker-search') as HTMLInputElement).value).toBe('village')
+    fireEvent.change(page.getByTestId('marker-search'), { target: { value: 'new village' } })
+    expect(saved.a).toBe('new village')
+    page.rerender(<SearchPanel {...props} queryMemory={b} initialQuery="linked target" />)
+    expect((page.getByTestId('marker-search') as HTMLInputElement).value).toBe('linked target')
+    expect(saved.b).toBe('boss')
+    page.rerender(<SearchPanel {...props} queryMemory={a} />)
+    expect((page.getByTestId('marker-search') as HTMLInputElement).value).toBe('new village')
+  })
+})
+
 const labels = {
   search: "Search",
   placeholder: "Search quests, NPCs, items, or map markers",

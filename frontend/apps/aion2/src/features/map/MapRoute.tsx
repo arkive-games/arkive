@@ -1,3 +1,4 @@
+import { aionMapSession } from './mapSession';
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -12,7 +13,6 @@ import {
   SearchPanel,
   readMapView,
   useMapViewMemory,
-  type MapViewStore,
   type SearchItem,
   canUseLodTiers,
 } from "@gamemap/map-shell";
@@ -20,7 +20,7 @@ import { useIsMobile } from "@gamemap/ui";
 import { ArkiveAccountControl } from "@gamemap/auth";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
 import { useSettingsConfig } from "@/lib/settings";
-import { browserMemory, defineMemoryRecord, isString, memoryPolicy } from "@gamemap/state-memory";
+import { createMapViewStore, useMapSession } from "@gamemap/state-memory";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { defaultVisibleSubtypeKeys, useGameData } from "@/context/GameDataContext";
@@ -43,21 +43,7 @@ const GameMapView = lazy(() => import("@/features/map/GlMapView"));
 // into useMapViewMemory. The storage-free shell hook gets storage through this
 // adapter, same as the theme.
 const MAP_VIEW_KEY = "aion2.map.view";
-const mapViewRecord = defineMemoryRecord({
-  id: "view",
-  namespace: "aion2",
-  surface: "map",
-  ...memoryPolicy.recentActivity("clear-recent-map-view"),
-  schemaVersion: "1.0.0",
-  defaultValue: () => "",
-  validate: isString,
-  legacyKeys: [MAP_VIEW_KEY],
-  migrateLegacy: (raw: string) => raw,
-});
-const mapViewStore: MapViewStore = {
-  get: () => browserMemory.read(mapViewRecord) || null,
-  set: (raw) => { browserMemory.write(mapViewRecord, raw); },
-};
+const mapViewStore = createMapViewStore("aion2", { legacyKeys: [MAP_VIEW_KEY] });
 
 export default function MapRoute() {
   // A small {getCenter,getZoom,flyTo,project,dispose} handle, not a DOM map.
@@ -117,6 +103,9 @@ export default function MapRoute() {
 
   // Per-map view (center/zoom) + selected marker, persisted across reloads.
   const mapId = selectedMap?.id ?? "";
+  const mapSession = useMapSession(aionMapSession, mapId);
+  const [entryMapId, setEntryMapId] = useState(mapId);
+  if (!entryMapId && mapId) setEntryMapId(mapId);
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId);
   // The engine consumes `initialView` at mount only, and the hook memoizes it
   // per map id — so on the remount caused by a breakpoint switch it would replay
@@ -151,7 +140,7 @@ export default function MapRoute() {
 
   // Prefill the search box from a `?q=` deep link (read once on mount, like the
   // marker/pos deep link below).
-  const initialQuery = useMemo(() => getQueryParam("q") ?? undefined, []);
+  const initialQuery = useMemo(() => getQueryParam("q") ?? (getQueryParam("marker") || getQueryParam("pos") ? "" : undefined), []);
 
   /**
    * App markers (already translated) + subtype taxonomy + completion state →
@@ -298,6 +287,7 @@ export default function MapRoute() {
   useEffect(() => {
     if (!selectedMap) return;
     if (prevMapIdRef.current === selectedMap.id) return;
+    if (prevMapIdRef.current !== null) deepLinkNavigated.current = false;
     prevMapIdRef.current = selectedMap.id;
     setSelectedMarkerId(null);
     setSelectedPosition(null);
@@ -370,11 +360,13 @@ export default function MapRoute() {
 
   const searchPanel = (variant: "floating" | "inline") => (
     <SearchPanel
-      items={searchItems}
+      items={markersMapId === mapId ? searchItems : []}
       onSelect={setSelectedMarkerId}
       onFlyTo={setSelectedPosition}
       onResultsChange={setSearchResultIds}
-      initialQuery={initialQuery}
+      key={mapId}
+      queryMemory={mapSession.searchMemory}
+      initialQuery={entryMapId === mapId ? initialQuery : undefined}
       labels={searchLabels}
       searchFields={["name", "description"]}
       resultAside={(itm) => subzoneAt(itm.x, itm.y) || undefined}

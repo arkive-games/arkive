@@ -1,6 +1,51 @@
 {
   "entries": [
     {
+      "version": "1.17.0",
+      "date": "2026-11-15",
+      "commit": "1ec71c228f0f881d743082dec3859bbd285927b9",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse the encyclopedia with a collapsible desktop category directory while keeping search, subgroup links and recent reading history.",
+            "zh-CN": "桌面百科目录支持收起为图标，保留分类搜索、下级入口和最近浏览记录。",
+            "zh-TW": "桌面百科目錄支援收起為圖示，保留分類搜尋、下級入口和最近瀏覽記錄。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.16.3",
+      "date": "2026-11-15",
+      "commit": "a5f1979a51aae775770063da49139154ccd101dd",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep map filters in the current tab and adopt previous choices once without overwriting them.",
+            "zh-CN": "地图筛选在当前标签页保留，旧选择只迁移一次且保留原记录。",
+            "zh-TW": "地圖篩選在目前分頁保留，舊選擇只遷移一次並保留原紀錄。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "1.16.2",
+      "date": "2026-11-15",
+      "commit": "6d4179c0efeecd7d89aa5350dff2e0e7cb42dad6",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep encyclopedia searches, category and faction choices, and browsing position when returning or reloading; direct section links take priority while Back resumes the linked visit.",
+            "zh-CN": "百科返回或刷新时保留搜索、分类、阵营选择和浏览位置；分类直达链接优先定位，返回详情前的位置时不再跳回原锚点。",
+            "zh-TW": "百科返回或重新整理時保留搜尋、分類、陣營選擇和瀏覽位置；分類直達連結優先定位，返回詳情前的位置時不再跳回原錨點。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.16.1",
       "date": "2026-10-28",
       "commit": "701fed8e5edd0014d29ce635022dbd9e11ca0aae",

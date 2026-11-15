@@ -40,7 +40,7 @@ const MarkerPopupContent: React.FC<Props> = ({ marker, onClose, anchored = false
     .join(" / ");
   const name = marker.localizedName || t("common:markerSearch.unnamed", "Unnamed");
   const description = marker.localizedDescription || "";
-  const position = `${Math.round(marker.x)}, ${Math.round(marker.y)}`;
+  const position = `(${Math.round(marker.x)}, ${Math.round(marker.y)})`;
   const canComplete = marker.subtypeMeta?.canComplete !== false;
   const isCompleted =
     completedBySubtype[marker.subtype]?.has(marker.indexInSubtype) ?? false;

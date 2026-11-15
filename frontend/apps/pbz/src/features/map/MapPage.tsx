@@ -1,3 +1,4 @@
+import { createMapSessionRecords, useMapSession } from '@gamemap/state-memory'
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
@@ -6,7 +7,7 @@ import { DEFAULT_MAP_THEME } from '@gamemap/map-engine-gl/theme'
 import {
   ArkiveMobileMapControls, FilterPanel, SearchPanel, ShellLayout, ShellMapSelect, ShellSidebar,
   readMapView, useMapViewMemory,
-  type FilterCategory, type SearchItem,
+  type FilterCategory, type SearchItem, type MapViewState,
 } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype } from '@gamemap/data-contract'
 import {
@@ -24,7 +25,7 @@ import { pbzAssets } from '../../lib/assets'
 import { useCompletedMarkers } from '../../lib/completedMarkers'
 import { ARKIVE_HOME_URL } from '../../lib/brand'
 import { useSettingsConfig } from '../../lib/settings'
-import { mapViewStore, readMapId, readVisibleSubtypes, writeMapId, writeVisibleSubtypes } from '../../lib/storage'
+import { mapViewStore, readMapId, readVisibleSubtypes, writeMapId } from '../../lib/storage'
 import { TopNav } from '../../components/TopNav'
 import { PbzMarkerDetail } from './MarkerDetail'
 
@@ -33,6 +34,8 @@ const labelsRecord = defineMemoryRecord({
   ...memoryPolicy.userPreference('reset-map-labels'),
   schemaVersion: '1.0.0', defaultValue: () => false, validate: isBoolean,
 })
+
+const mapSessionRecords = createMapSessionRecords('pbz', { visibility: () => { const legacy = readVisibleSubtypes(); return legacy === null ? null : [...legacy] } })
 
 // The map engine behind a lazy boundary — see features/map/GlMapView.
 const GameMapView = lazy(() => import('./GlMapView'))
@@ -46,8 +49,6 @@ export default function MapPage() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [searchSheetOpen, setSearchSheetOpen] = useState(false)
 
-  const [restoredVisible] = useState<Set<string> | null>(readVisibleSubtypes)
-  const visibleInitialized = useRef(restoredVisible != null)
   const { q: initialQuery, map: linkedMapId, marker: linkedMarkerId } = useSearch({ from: '/' })
   // A deep link (from a notification, or a shared URL) names a marker once. It is
   // consumed on first use so that choosing another map afterwards is not dragged
@@ -60,8 +61,16 @@ export default function MapPage() {
     maps: MapMeta[]; types: Taxonomy; mapsL10n: MapsLocale; typesL10n: TypesLocale
   } | null>(null)
   const [mapId, setMapId] = useState<string>(() => linkedMapId ?? readMapId())
+  const mapSession = useMapSession(mapSessionRecords, mapId)
+  const [entryMapId] = useState(mapId)
   const [markerData, setMarkerData] = useState<{ mapId: string; markers: MarkerRow[]; l10n: MarkerLocale } | null>(null)
-  const [visible, setVisible] = useState<Set<string>>(() => restoredVisible ?? new Set())
+  const [storedVisible, setStoredVisible] = useMemoryState(mapSessionRecords.visibility, { partition: mapId })
+  const defaultVisible = useMemo(() => staticData?.types.subtypes.filter(subtype => subtype.defaultActive).map(subtype => subtype.id) ?? [], [staticData])
+  const visible = useMemo(() => new Set(storedVisible ?? defaultVisible), [storedVisible, defaultVisible])
+  const setVisible = useCallback((action: Set<string> | ((previous: Set<string>) => Set<string>)) => setStoredVisible(previous => {
+    const next = typeof action === 'function' ? action(new Set(previous ?? defaultVisible)) : action
+    return [...next]
+  }), [setStoredVisible, defaultVisible])
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number } | null>(null)
   const [restoredMarkerId, setRestoredMarkerId] = useState<string | null>(null)
@@ -78,10 +87,6 @@ export default function MapPage() {
         if (cancelled) return
         setStaticData(d)
         setMapId((cur) => (d.maps.some((m) => m.id === cur) ? cur : d.maps[0]?.id ?? ''))
-        if (!visibleInitialized.current) {
-          visibleInitialized.current = true
-          setVisible(new Set(d.types.subtypes.filter((s) => s.defaultActive).map((s) => s.id)))
-        }
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -91,13 +96,18 @@ export default function MapPage() {
     return () => { cancelled = true }
   }, [lng, t])
 
-  // Not before the defaults are applied: the placeholder empty set written on a
-  // first visit would be restored next time as "show nothing".
-  useEffect(() => { if (visibleInitialized.current) writeVisibleSubtypes(visible) }, [visible])
-  useEffect(() => { if (mapId) writeMapId(mapId) }, [mapId])
+  // Persist only a map confirmed by the loaded inventory.
+  useEffect(() => { if (staticData?.maps.some(map => map.id === mapId)) writeMapId(mapId) }, [mapId, staticData])
 
   const map = staticData?.maps.find((m) => m.id === mapId)
   const { initialView, saveView, saveMarker } = useMapViewMemory(mapViewStore, mapId)
+  const mountKey = `${mapId}:${isMobile}`
+  const [mountedFor, setMountedFor] = useState(mountKey)
+  const [mountView, setMountView] = useState<MapViewState | null>(initialView)
+  if (mountedFor !== mountKey) {
+    setMountedFor(mountKey)
+    setMountView(readMapView(mapViewStore, mapId).view)
+  }
   const { completed, toggleCompleted, clearCompleted } = useCompletedMarkers(mapId)
 
   useEffect(() => {
@@ -243,7 +253,7 @@ export default function MapPage() {
       if (next.has(id)) next.delete(id); else next.add(id)
       return next
     })
-  }, [])
+  }, [setVisible])
 
   const onSetCategory = useCallback((categoryId: string, show: boolean) => {
     setVisible((v) => {
@@ -255,7 +265,7 @@ export default function MapPage() {
       }
       return next
     })
-  }, [staticData])
+  }, [staticData, setVisible])
 
   const onToggleMarker = useCallback((id: string | null) => {
     setSelectedMarkerId((cur) => (cur === id ? null : id))
@@ -339,6 +349,11 @@ export default function MapPage() {
     <>
     <FilterPanel
       categories={filterCategories}
+      expandedCategoryIds={filterCategories.filter(category => !mapSession.categories.includes(category.id)).map(category => category.id)}
+      onExpandedCategoryIdsChange={expanded => mapSession.setCategories(previous => [
+        ...previous.filter(id => !filterCategories.some(category => category.id === id)),
+        ...filterCategories.filter(category => !expanded.includes(category.id)).map(category => category.id),
+      ])}
       onToggleSubtype={onToggleSubtype}
       onSetCategory={onSetCategory}
       categoryToggleLabels={{ show: t('map.showAll'), hide: t('map.hideAll') }}
@@ -383,12 +398,13 @@ export default function MapPage() {
 
   const searchPanel = (variant: 'floating' | 'inline') => (
     <SearchPanel
+      queryMemory={mapSession.searchMemory}
       key={map.id}
       items={searchItems}
       onSelect={onSelectSearchMarker}
       onFlyTo={setSelectedPosition}
       onResultsChange={setSearchResultIds}
-      initialQuery={initialQuery}
+      initialQuery={mapId === (linkedMapId ?? entryMapId) ? initialQuery ?? (linkedMarkerId ? "" : undefined) : undefined}
       labels={searchLabels}
       searchFields={['name', 'description']}
       variant={variant}
@@ -408,7 +424,7 @@ export default function MapPage() {
     selectedMarkerId,
     forceShowIds,
     selectedPosition,
-    initialView,
+    initialView: mountView,
     onViewChange: saveView,
     suppressInitialFlyForId: restoredMarkerId,
     onToggleMarker,
@@ -467,6 +483,9 @@ export default function MapPage() {
         topBar={<TopNav active="/" />}
         sidebar={
           <ShellSidebar
+            collapsed={mapSession.collapsed}
+            onCollapsedChange={mapSession.setCollapsed}
+            scrollMemory={{ ...mapSession.scrollMemory, ready: !mapSession.collapsed && currentMarkers?.mapId === mapId }}
             width={320}
             collapseLabel={t('map.collapse')}
             expandLabel={t('map.expand')}

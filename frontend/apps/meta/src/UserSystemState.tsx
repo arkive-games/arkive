@@ -53,12 +53,13 @@ export interface UserSystemState {
   likedPostIds: string[]
   likedCommentIds: string[]
   favoriteGameIds: string[]
+  favoriteToolIds: string[]
   publishedPosts: LocalForumPost[]
 }
 
 interface UserSystemContextValue {
   state: UserSystemState
-  updateLocalProfile: (profile: Partial<UserSystemState['profile']>) => void
+  updateLocalProfile: (profile: Partial<UserSystemState['profile']>) => boolean
   toggleNotificationSetting: (key: NotificationPreferenceKey) => void
   markNotificationSectionRead: (section: NotificationInboxSection) => void
   setPrivacySetting: (key: PrivacyPreferenceKey, value: boolean) => void
@@ -66,7 +67,8 @@ interface UserSystemContextValue {
   toggleBookmarkedPost: (postId: string) => void
   toggleLikedPost: (postId: string) => void
   toggleLikedComment: (commentId: string) => void
-  toggleFavoriteGame: (gameId: string) => void
+  toggleFavoriteGame: (gameId: string) => boolean
+  toggleFavoriteTool: (toolId: string) => boolean
   publishForumPost: (post: LocalForumPost) => boolean
 }
 
@@ -94,6 +96,7 @@ export function createDefaultUserSystemState(): UserSystemState {
     likedPostIds: [],
     likedCommentIds: [],
     favoriteGameIds: [],
+    favoriteToolIds: [],
     publishedPosts: [],
   }
 }
@@ -214,6 +217,7 @@ function normalizeUserSystemState(value: unknown): UserSystemState {
     likedPostIds: stringArray(parsed.likedPostIds),
     likedCommentIds: stringArray(parsed.likedCommentIds),
     favoriteGameIds: stringArray(parsed.favoriteGameIds),
+    favoriteToolIds: stringArray(parsed.favoriteToolIds),
     publishedPosts: localForumPosts(parsed.publishedPosts),
   }
 }
@@ -236,7 +240,7 @@ type UserProfileState = UserSystemState['profile']
 type UserSettingsState = Pick<UserSystemState, 'notificationSettings' | 'privacySettings'>
 type UserProgressState = Pick<UserSystemState,
   'readNotificationSections' | 'followedUserIds' | 'bookmarkedPostIds'
-  | 'likedPostIds' | 'likedCommentIds' | 'favoriteGameIds'>
+  | 'likedPostIds' | 'likedCommentIds' | 'favoriteGameIds' | 'favoriteToolIds'>
 type LegacyUserProgressState = UserProgressState & { publishedPosts?: LocalForumPost[] }
 
 function legacyUserSystemRecord(userId: string) {
@@ -296,6 +300,7 @@ function progressOf(state: UserSystemState): UserProgressState {
     likedPostIds: state.likedPostIds,
     likedCommentIds: state.likedCommentIds,
     favoriteGameIds: state.favoriteGameIds,
+    favoriteToolIds: state.favoriteToolIds,
   }
 }
 
@@ -479,7 +484,7 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
 
   const toggleListValue = useCallback((key: keyof Pick<
     UserSystemState,
-    'followedUserIds' | 'bookmarkedPostIds' | 'likedPostIds' | 'likedCommentIds' | 'favoriteGameIds'
+    'followedUserIds' | 'bookmarkedPostIds' | 'likedPostIds' | 'likedCommentIds' | 'favoriteGameIds' | 'favoriteToolIds'
   >, value: string) => {
     return update((current) => {
       const values = current[key]
@@ -518,6 +523,7 @@ export function UserSystemProvider({ children }: { children: ReactNode }) {
     toggleLikedPost: (id) => toggleListValue('likedPostIds', id),
     toggleLikedComment: (id) => toggleListValue('likedCommentIds', id),
     toggleFavoriteGame: (id) => toggleListValue('favoriteGameIds', id),
+    toggleFavoriteTool: (id) => toggleListValue('favoriteToolIds', id),
     publishForumPost: (post) => update((current) => ({
       ...current,
       publishedPosts: [persistableForumPost(post), ...current.publishedPosts],

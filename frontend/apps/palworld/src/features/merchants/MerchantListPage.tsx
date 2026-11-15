@@ -1,7 +1,8 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { FilterChip, FilterRow, Input } from '@gamemap/ui'
+import { FilterChip, FilterRow, CatalogSearchInput } from '@gamemap/ui'
 import { MapPin } from 'lucide-react'
 import { ContentPage } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -9,7 +10,7 @@ import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
 import { palIconUrl } from '../../lib/assets'
 import { toGameCoords } from '../../lib/coords'
-import { CatalogPageLoading, ItemGlyph } from '../catalog/components'
+import { CatalogPageLoading, CatalogNoResults, ItemGlyph } from '../catalog/components'
 
 export default function MerchantListPage() {
   const { t, i18n } = useTranslation()
@@ -18,8 +19,8 @@ export default function MerchantListPage() {
   const [merchants, setMerchants] = useState<MerchantsBundle | null>(null)
   const [items, setItems] = useState<ItemsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('all')
+  const [query, setQuery] = useCatalogState<string>('merchants', 'query', '')
+  const [category, setCategory] = useCatalogState<string>('merchants', 'category', 'all')
 
   useEffect(() => {
     let cancelled = false
@@ -63,20 +64,16 @@ export default function MerchantListPage() {
   const mobilePaging = useMobilePagination(list, { pageSize: 18, resetKey: `${query}:${category}` })
 
   return (
-    <ContentPage active="/merchants" title={t('merchant.title')} heading>
+    <ContentPage browsing={{ section: 'merchants', ready: !!merchants && !!items, resultsKey: JSON.stringify([query,category]) }} active="/merchants" title={t('merchant.title')} heading>
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
+        <CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('merchant.searchPlaceholder')}
-          className="max-w-sm"
+          className=""
         />
-        {merchants ? (
-          <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="merchant-count">
-            {t('merchant.count', { count: list.length })}
-          </span>
-        ) : null}
+
       </div>
       {merchants ? (
         <FilterRow label={t('filters.category')} testId="merchant-category-filter">
@@ -98,6 +95,8 @@ export default function MerchantListPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !merchants || !items ? (
         <CatalogPageLoading />
+      ) : list.length === 0 ? (
+        <CatalogNoResults />
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {mobilePaging.visibleItems.map((m) => {
@@ -123,7 +122,7 @@ export default function MerchantListPage() {
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="truncate text-sm font-semibold">{merchantName(m.nameKey, m.id)}</span>
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                    <span className="tabular-nums">{t('item.count', { count: m.products.length })}</span>
+
                     <span className="inline-flex items-center gap-1">
                       {curIcon ? <ItemGlyph icon={curIcon} size={16} /> : null}
                       {items.text[m.currency]?.name ?? m.currency}

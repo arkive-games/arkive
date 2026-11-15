@@ -1,3 +1,4 @@
+import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@gamemap/ui'
@@ -35,8 +36,9 @@ const slotIcon = (slot: string) => resourceUrl(`icons/other/icon_equip_${slot}_0
 export function EquipmentWiki() {
   const [data, setData] = useState<EquipmentData | null>(null)
   const [dataError, setDataError] = useState(false)
-  const [filter, setFilter] = useState<EquipmentFilter>({ slot: 'all', level: null, quality: null, query: '' })
-  const [searchOpen, setSearchOpen] = useState(false)
+  useWikiReady(data !== null || dataError)
+  const [filter, setFilter] = useWikiState<EquipmentFilter>('equipment.filters', { slot: 'all', level: null, quality: null, query: '' })
+  const [searchOpen, setSearchOpen] = useWikiState('equipment.search-open', false)
 
   useEffect(() => {
     let active = true
@@ -90,11 +92,7 @@ export function EquipmentWiki() {
               </UnderlineTab>
             ))}
           </div>
-          {data ? (
-            <span aria-live="polite" className="ml-auto hidden shrink-0 text-xs tabular-nums text-muted-foreground md:block">
-              {fill(text.resultCount, { count: filtered.length })}
-            </span>
-          ) : null}
+
         </div>
 
         <div className="flex items-center gap-x-3 gap-y-1.5 overflow-x-auto border-b border-dashed border-border px-2.5 py-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-3.5">
@@ -128,8 +126,8 @@ export function EquipmentWiki() {
 
 function EquipmentBoard({ groups, data, quality }: { groups: EquipmentGroup[]; data: EquipmentData; quality: number | null }) {
   const wide = useWide()
-  const [selected, setSelected] = useState<string>()
-  const [picked, setPicked] = useState<Record<string, number>>({})
+  const [selected, setSelected] = useWikiOptional<string>('equipment.selected', 'string')
+  const [picked, setPicked] = useWikiState<Record<string, number>>('equipment.variants', {})
   const [gridRef, fit] = useFit(wide ? 6.75 : 5.25)
   const columns = Math.max(3, Math.min(fit || 6, 10))
   const selectedIndex = groups.findIndex((group) => group.key === selected)
@@ -148,7 +146,7 @@ function EquipmentBoard({ groups, data, quality }: { groups: EquipmentGroup[]; d
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(undefined) }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [wide, selected])
+  }, [wide, selected, setSelected])
 
   if (groups.length === 0) return <div className="p-3"><Notice>{text.empty}</Notice></div>
 

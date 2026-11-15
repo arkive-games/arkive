@@ -9,6 +9,8 @@ import WikiCatalogToolbar, {
 import type { WikiType } from "@/features/wiki/wikiRecent";
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiGroup, WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
+import { useMemoryState } from '@gamemap/state-memory';
+import { hubFactionRecord, hubGroupRecord, resolveWikiGroup, useWikiScroll } from './wikiMemory';
 
 type FactionBucket = "light" | "dark" | "both";
 type FactionFilter = "all" | FactionBucket;
@@ -63,10 +65,8 @@ export default function TypeHub({ type }: { type: string }) {
   const [tax, setTax] = useState<WikiTaxonomy | null>(null);
   const [docs, setDocs] = useState<WikiIndexDoc[]>([]);
   const [loading, setLoading] = useState(true);
-  const [factionSelection, setFactionSelection] = useState<{
-    group: string;
-    faction: FactionFilter;
-  }>({ group: "", faction: "all" });
+  const [loadedType, setLoadedType] = useState('');
+  const [storedGroup, setStoredGroup] = useMemoryState(hubGroupRecord, { partition: type });
 
   useEffect(() => {
     let live = true;
@@ -76,6 +76,7 @@ export default function TypeHub({ type }: { type: string }) {
         if (!live) return;
         setTax(nextTax);
         setDocs(index.docs);
+        setLoadedType(type);
       })
       .catch(console.error)
       .finally(() => {
@@ -88,9 +89,13 @@ export default function TypeHub({ type }: { type: string }) {
 
   const node = tax?.types.find((entry) => entry.slug === type);
   const requestedGroup = (hash ?? "").replace(/^#?group-/, "");
-  const activeGroup =
-    node?.groups.find((group) => group.slug === requestedGroup) ?? node?.groups[0];
+  const activeGroup = resolveWikiGroup(node?.groups ?? [], requestedGroup, storedGroup);
   const activeGroupSlug = activeGroup?.slug ?? "";
+  const [activeFaction, setFactionSelection] = useMemoryState(hubFactionRecord, { partition: `${type}:${activeGroupSlug}` });
+  useEffect(() => {
+    if (!loading && loadedType === type && activeGroupSlug) setStoredGroup(activeGroupSlug);
+  }, [loading, loadedType, type, activeGroupSlug, setStoredGroup]);
+  const rootRef = useWikiScroll(`hub:${type}`, !loading && loadedType === type && !!node, `${activeGroupSlug}:${activeFaction}`, '', `/wiki/${type}`);
   const searchSources = useMemo<WikiCatalogSource[]>(
     () => [{ type: type as WikiType, docs }],
     [docs, type],
@@ -111,10 +116,6 @@ export default function TypeHub({ type }: { type: string }) {
     ? buildGroupBuckets(activeGroup, sectionCounts)
     : emptyBuckets();
   const visibleBuckets = BUCKETS.filter((bucket) => buckets[bucket].length > 0);
-  const activeFaction =
-    factionSelection.group === activeGroupSlug
-      ? factionSelection.faction
-      : "all";
   const shownBuckets =
     activeFaction === "all" || !visibleBuckets.includes(activeFaction)
       ? visibleBuckets
@@ -122,7 +123,7 @@ export default function TypeHub({ type }: { type: string }) {
 
   useDocumentTitle(node ? `${t(`wiki/taxonomy:types.${type}.name`)} - AION2 Wiki` : undefined);
 
-  if (loading) return <HubLoading />;
+  if (loading || loadedType !== type) return <HubLoading />;
   if (!node || !activeGroup) {
     return <p className="text-muted-foreground">{t("wiki:list.empty")}</p>;
   }
@@ -171,7 +172,7 @@ export default function TypeHub({ type }: { type: string }) {
   }
 
   return (
-    <div data-testid="wiki-type-hub">
+    <div ref={rootRef} data-testid="wiki-type-hub">
       <WikiCatalogToolbar
         title={t(`wiki/taxonomy:groups.${type}.${activeGroup.slug}.name`)}
         count={activeGroup.count}
@@ -232,10 +233,7 @@ export default function TypeHub({ type }: { type: string }) {
                   key={faction}
                   type="button"
                   onClick={() =>
-                    setFactionSelection({
-                      group: activeGroupSlug,
-                      faction,
-                    })
+                    setFactionSelection(faction)
                   }
                   className={`min-h-9 rounded px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)] ${
                     active

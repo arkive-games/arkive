@@ -1,6 +1,66 @@
 {
   "entries": [
     {
+      "version": "0.38.0",
+      "date": "2026-11-16",
+      "commit": "fb51d67a6b074212bce56f22d5b25a38559e4e83",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse reference categories from a collapsible desktop directory, with filters and search beside the selected records.",
+            "zh-CN": "桌面百科新增可收起的分类目录，筛选和搜索位于当前资料右侧内容区。",
+            "zh-TW": "桌面百科新增可收起的分類目錄，篩選和搜尋位於目前資料右側內容區。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.37.4",
+      "date": "2026-11-16",
+      "commit": "7c95d141279230b1988f0e654316ef9d99ee5afb",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Resume puppet searches and trade reference browsing, including commission filters and pages.",
+            "zh-CN": "秘偶与贸易资料保留浏览状态，包括委托搜索、筛选和分页。",
+            "zh-TW": "秘偶與貿易資料保留瀏覽狀態，包括委託搜尋、篩選和分頁。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.37.3",
+      "date": "2026-11-16",
+      "commit": "dbe1f4a8f1c830e0cf83165cac380a5062a03446",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Automatically remember league, station and trade-profit calculator inputs on this device, with reset support.",
+            "zh-CN": "联赛、站点和贸易利润计算器自动记住本机输入，支持重置。",
+            "zh-TW": "聯賽、站點與貿易利潤計算器自動記住本機輸入，支援重設。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.37.2",
+      "date": "2026-11-16",
+      "commit": "77018ab7e40368a740becada29dcdc52079be48f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Resume reference searches, filters, pages and reading position when returning.",
+            "zh-CN": "返回资料页时恢复搜索、筛选、分页和阅读位置。",
+            "zh-TW": "返回資料頁時恢復搜尋、篩選、分頁和閱讀位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.37.1",
       "date": "2026-11-16",
       "commit": "e259801071df049722d9001172d2596e2213a518",

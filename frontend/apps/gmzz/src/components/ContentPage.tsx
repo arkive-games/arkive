@@ -1,13 +1,17 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
 import type { ReactNode } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { SiteFooter } from '@gamemap/ui'
-import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
+import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName, useEncyclopediaDesktop } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
+import { useSessionScroll, type SessionScrollContext } from '@gamemap/state-memory'
+import { catalogScroll } from '../features/catalog/memory'
+import { EncyclopediaLayout } from './EncyclopediaLayout'
+import { isEncyclopediaSection } from './navGroups'
 
 export interface ContentPageProps {
   active: NavKey
@@ -30,17 +34,23 @@ export interface ContentPageProps {
   filtersActive?: boolean
   /** Only result-scope changes reset reading position, not edits inside cards. */
   resultsKey?: string
+  browsing?: SessionScrollContext
   /** Full-bleed banner above the content column. */
   hero?: ReactNode
   children: ReactNode
 }
 
 /** This game's navigation, strings and links, in the shared page shell. */
-export function ContentPage({ active, title, heading = false, wide = false, toolbar, toolbarLead, filtersActive = false, resultsKey, hero, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, wide = false, toolbar, toolbarLead, filtersActive = false, resultsKey, browsing, hero, children }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
+  const scrollRestoration = useSessionScroll(catalogScroll.record, browsing ? { ...browsing, resultsKey: browsing.resultsKey ?? resultsKey } : undefined)
+  const search = useSearch({ strict: false }) as { tab?: string }
+  const encyclopedia = isEncyclopediaSection(active, search.tab)
+  const desktop = useEncyclopediaDesktop()
+  const inlineToolbar = encyclopedia && desktop
 
   return (
     <ArkiveContentPage
@@ -57,6 +67,8 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
       }
       footer={
         <SiteFooter
+          locale={lng}
+          settings={settings}
           className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
           homeUrl={ARKIVE_HOME_URL}
           githubUrl={import.meta.env.VITE_GITHUB_URL}
@@ -66,15 +78,20 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
       }
       title={title}
       heading={heading}
+      headingClassName={encyclopedia ? 'lg:sr-only' : undefined}
       width={wide ? 'wide' : 'standard'}
-      toolbar={toolbar}
-      toolbarLead={toolbarLead}
+      toolbar={inlineToolbar ? undefined : toolbar}
+      toolbarLead={inlineToolbar ? undefined : toolbarLead}
       filterLabel={t('filterToggle')}
       filtersActive={filtersActive}
       resultsKey={resultsKey}
+      scrollRestoration={scrollRestoration}
       hero={hero}
     >
-      {children}
+      {encyclopedia ? <EncyclopediaLayout active={active}>
+        {inlineToolbar && (toolbar != null || toolbarLead != null) && <div className="mb-4" data-encyclopedia-toolbar>{toolbarLead}{toolbar}</div>}
+        {children}
+      </EncyclopediaLayout> : children}
     </ArkiveContentPage>
   )
 }

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useWikiQuery, useWikiFilters } from './memory'
+import { useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ContentPage } from '../../components/ContentPage'
@@ -10,14 +11,14 @@ import {
 export function AccessoryListPage() {
   const { t } = useTranslation()
   const { data, labels, error } = useWiki('accessories')
-  const [query, setQuery] = useState('')
-  const [types, setTypes] = useState<string[]>([])
+  const [query, setQuery] = useWikiQuery('accessories')
+  const [types, setTypes] = useWikiFilters('accessories', 'types')
   const rows = useMemo(() => (data?.rows ?? []).filter((a) =>
     (!types.length || types.includes(a.type)) && matches(query, data?.text[a.id]?.name, data?.text[a.id]?.desc),
   ), [data, types, query])
 
   return (
-    <ContentPage active="/accessories" title={labels?.section.accessories ?? t('nav.accessories')} heading wide>
+    <ContentPage browsing={{ scope: 'accessories', ready: !!data && !!labels, resultsKey: JSON.stringify([query, types]) }} active="/accessories" title={labels?.section.accessories ?? t('nav.accessories')} heading wide>
       <PageState error={error} loading={!data || !labels} />
       {data && labels ? (
         <>
@@ -48,7 +49,7 @@ export function AccessoryDetailPage() {
   const name = text?.name ?? id
 
   return (
-    <ContentPage active="/accessories" title={name}>
+    <ContentPage active="/accessories" title={name} browsing={{ scope: `accessories:${id}`, ready: !!acc && !!labels }}>
       <PageState error={error} loading={!data || !labels} missing={!!data && !acc} />
       {acc && labels ? (
         <div className="flex flex-col gap-4">
@@ -94,14 +95,14 @@ export function AccessoryDetailPage() {
 export function MedicineListPage() {
   const { t } = useTranslation()
   const { data, labels, error } = useWiki('medicines')
-  const [query, setQuery] = useState('')
-  const [types, setTypes] = useState<string[]>([])
+  const [query, setQuery] = useWikiQuery('medicines')
+  const [types, setTypes] = useWikiFilters('medicines', 'types')
   const rows = useMemo(() => (data?.rows ?? []).filter((m) =>
     (!types.length || types.includes(m.type)) && matches(query, data?.text[m.id]?.name),
   ), [data, types, query])
 
   return (
-    <ContentPage active="/medicines" title={labels?.section.medicines ?? t('nav.medicines')} heading wide>
+    <ContentPage browsing={{ scope: 'medicines', ready: !!data && !!labels, resultsKey: JSON.stringify([query, types]) }} active="/medicines" title={labels?.section.medicines ?? t('nav.medicines')} heading wide>
       <PageState error={error} loading={!data || !labels} />
       {data && labels ? (
         <>
@@ -132,7 +133,7 @@ export function MedicineDetailPage() {
   const name = text?.name ?? id
 
   return (
-    <ContentPage active="/medicines" title={name}>
+    <ContentPage active="/medicines" title={name} browsing={{ scope: `medicines:${id}`, ready: !!med && !!labels }}>
       <PageState error={error} loading={!data || !labels} missing={!!data && !med} />
       {med && labels ? (
         <div className="flex flex-col gap-4">

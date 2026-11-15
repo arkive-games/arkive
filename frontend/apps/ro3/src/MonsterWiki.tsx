@@ -1,3 +1,4 @@
+import { useWikiState, useWikiReady, useWikiOptional, validMonsterFilter } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Crown, LayoutGrid, Skull, Sparkles, Swords, X } from 'lucide-react'
 import { cn } from '@gamemap/ui'
@@ -42,10 +43,11 @@ const fill = (template: string, values: Record<string, string | number>) =>
 export function MonsterWiki() {
   const [data, setData] = useState<MonsterWikiData | null>(null)
   const [dataError, setDataError] = useState(false)
+  useWikiReady(data !== null || dataError)
   const [items, setItems] = useState<Map<number, ItemSummary>>()
-  const [filter, setFilter] = useState<MonsterFilter>({ rank: 'all', band: null, element: null, race: null, size: null, query: '' })
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [paging, setPaging] = useState({ key: '', page: 0 })
+  const [filter, setFilter] = useWikiState<MonsterFilter>('monsters.filters', { rank: 'all', band: null, element: null, race: null, size: null, query: '' }, validMonsterFilter)
+  const [searchOpen, setSearchOpen] = useWikiState('monsters.search-open', false)
+  const [paging, setPaging] = useWikiState('monsters.paging', { key: '', page: 0 })
   const board = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -127,11 +129,7 @@ export function MonsterWiki() {
               </UnderlineTab>
             ))}
           </div>
-          {data ? (
-            <span aria-live="polite" className="ml-auto hidden shrink-0 text-xs tabular-nums text-muted-foreground md:block">
-              {fill(text.resultCount, { count: filtered.length })}
-            </span>
-          ) : null}
+
         </div>
 
         <div className="flex items-center gap-x-3 gap-y-1.5 overflow-x-auto border-b border-dashed border-border px-2.5 py-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-3.5">
@@ -189,8 +187,8 @@ function MonsterBoard({ groups, data, mvps, items, wideCards }: {
   wideCards: boolean
 }) {
   const wide = useWide()
-  const [selected, setSelected] = useState<string>()
-  const [variants, setVariants] = useState<Record<string, number>>({})
+  const [selected, setSelected] = useWikiOptional<string>('monsters.selected', 'string')
+  const [variants, setVariants] = useWikiState<Record<string, number>>('monsters.variants', {})
   const [gridRef, fit] = useFit(wideCards ? 13.5 : wide ? 6.75 : 5.25)
   const columns = wideCards ? Math.max(1, Math.min(fit || 3, 4)) : Math.max(3, Math.min(fit || 6, 10))
   const selectedIndex = groups.findIndex((group) => group.name === selected)
@@ -204,7 +202,7 @@ function MonsterBoard({ groups, data, mvps, items, wideCards }: {
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(undefined) }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [wide, selected])
+  }, [wide, selected, setSelected])
 
   if (groups.length === 0) return <div className="p-3"><Notice>{text.empty}</Notice></div>
 

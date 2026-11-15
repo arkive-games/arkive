@@ -2,6 +2,10 @@
   --radius: 0.5rem;
   --arkive-radius-compact: 0.375rem;
   --arkive-radius-standard: 0.5rem;
+  --arkive-radius-card: 1.25rem;
+  --arkive-radius-media: 0.875rem;
+  --arkive-catalog-control-height: 3.2rem;
+  --arkive-catalog-control-inner-height: 2.5rem;
   /* Surfaces that float free of the page: top-bar menus and the phone menu drawer. */
   --arkive-radius-floating: 1rem;
   /* Every dialog, from the shared Dialog and AlertDialog. */
@@ -55,11 +59,13 @@
   --arkive-content-reading: 72ch;
   --arkive-content-standard: 80rem;
   --arkive-content-wide-data: 96rem;
+  --arkive-encyclopedia-rail-expanded: 11.5rem;
+  --arkive-encyclopedia-rail-collapsed: 4rem;
   --arkive-leading-caption: 1.5;
   --arkive-leading-body: 1.65;
   --arkive-leading-title: 1.4;
   --arkive-leading-page-title: 1.25;
-  --arkive-nav-active: #0D74CE;
+  --arkive-nav-active: #0B6FC6;
   --arkive-nav-on-active: #FFFFFF;
   --arkive-nav-accent: #AB6400;
   --arkive-brand-slogan: #AB6400;
@@ -999,3 +1005,22 @@ a:focus-visible > .arkive-wordmark {
     overscroll-behavior: contain;
   }
 }
+
+/* Catalog search geometry is shared with the reviewed portal control. */
+.catalog-search { height: var(--arkive-catalog-control-height); display: flex; align-items: center; gap: .5rem; width: 23rem; max-width: 100%; padding: .3rem .3rem .3rem 1rem; border: 1px solid var(--border); border-radius: 999rem; background: var(--card); }
+.catalog-search:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
+.catalog-search input { flex: 1; min-width: 0; width: 0; border: 0; outline: none; background: transparent; color: var(--foreground); font-size: .875rem; }
+.catalog-search input::placeholder { color: var(--muted-foreground); }
+.catalog-search input::-webkit-search-cancel-button { display: none; }
+.catalog-search button { flex: none; display: grid; place-items: center; width: var(--arkive-catalog-control-inner-height); min-height: var(--arkive-catalog-control-inner-height); padding: 0; border: 0; border-radius: 999rem; background: var(--muted); color: var(--muted-foreground); cursor: pointer; transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s; }
+/* Warm amber, in the family of the nav's gradient login pill and the gold voyage line. */
+.catalog-search button[type="submit"] { background: var(--arkive-warm-search); color: var(--arkive-warm-search-foreground); box-shadow: 0 .3rem .8rem rgba(236, 122, 28, .28); }
+.catalog-search button[type="submit"]:hover { transform: scale(1.06); box-shadow: 0 .4rem 1rem rgba(236, 122, 28, .38); }
+.catalog-search button[type="submit"] svg { transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+.catalog-search button[type="submit"]:hover svg { transform: translateX(2px); }
+.catalog-search .catalog-search-clear { display: grid; place-items: center; min-height: 2rem; width: 2rem; padding: 0; color: var(--muted-foreground); background: var(--muted); }
+
+.catalog-search input:focus-visible { outline: none; box-shadow: none; }
+.catalog-search[aria-disabled="true"] { opacity: .5; }
+.catalog-search button:disabled { cursor: not-allowed; transform: none; }
+@media (prefers-reduced-motion: reduce) { .catalog-search button, .catalog-search button svg { transition: none; } }

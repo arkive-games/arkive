@@ -1,3 +1,5 @@
+import { useMapSession } from '@gamemap/state-memory';
+import { aionMapSession } from '../mapSession';
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconEraser } from "@tabler/icons-react";
@@ -45,6 +47,7 @@ export default function MarkerTypes() {
     useMarkers();
   const { t } = useTranslation(["common", "types"]);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const session = useMapSession(aionMapSession, selectedMap?.id ?? "");
 
   // Categories that have at least one subtype with a non-zero count.
   const renderableCategories = types.filter((category) =>
@@ -138,6 +141,11 @@ export default function MarkerTypes() {
     <div className="flex w-full flex-col px-3 pb-4">
       <FilterPanel
         categories={filterCategories}
+        expandedCategoryIds={filterCategories.filter(category => !session.categories.includes(category.id)).map(category => category.id)}
+        onExpandedCategoryIdsChange={expanded => session.setCategories(previous => [
+          ...previous.filter(id => !filterCategories.some(category => category.id === id)),
+          ...filterCategories.filter(category => !expanded.includes(category.id)).map(category => category.id),
+        ])}
         onToggleSubtype={handleToggleSubtype}
         onSetCategory={onSetCategory}
         categoryToggleLabels={{

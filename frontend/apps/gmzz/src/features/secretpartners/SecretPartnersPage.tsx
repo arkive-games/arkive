@@ -7,14 +7,15 @@ import { ContentPage } from '@/components/ContentPage'
 import { useRemoteData } from '@/lib/useRemoteData'
 import { clampPartnerLevel, filterPartners, formatPartnerAttribute, loadSecretPartners, PARTNER_QUALITY, partnerLevelBounds, plainText, portraitUrl, type SecretPartner } from './data'
 import { partnerLevel } from './memory'
+import { useContextState } from '../catalog/memory'
 
 export default function SecretPartnersPage() {
   const { t } = useTranslation()
   const remote = useRemoteData(loadSecretPartners)
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('')
-  const [quality, setQuality] = useState(0)
-  const [attribute, setAttribute] = useState('')
+  const [query, setQuery] = useContextState('secretpartners', 'query', '')
+  const [category, setCategory] = useContextState('secretpartners', 'category', '')
+  const [quality, setQuality] = useContextState('secretpartners', 'quality', 0)
+  const [attribute, setAttribute] = useContextState('secretpartners', 'attribute', '')
   const records = useMemo(() => remote.data ?? [], [remote.data])
   const categories = useMemo(() => [...new Set(records.map((record) => record.category))].filter(Boolean).sort(), [records])
   const qualities = useMemo(() => [...new Set(records.map((record) => record.quality))].sort((a, b) => b - a), [records])
@@ -39,14 +40,16 @@ export default function SecretPartnersPage() {
             {categories.map((value) => <FilterChip key={value} active={category === value} onClick={() => setCategory(value)}>{value}</FilterChip>)}
           </FilterRow>
         </div>
-        <FilterBar count={t('secretpartners.count', { count: shown.length })}>
-          <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs" value={query} onChange={setQuery} placeholder={t('secretpartners.search')} />
+        <FilterBar>
+          <SearchInput className="min-w-0" value={query} onChange={setQuery} placeholder={t('secretpartners.search')} />
           {(query || category || quality || attribute) && <button type="button" className="text-sm text-primary hover:underline" onClick={() => { setQuery(''); setCategory(''); setQuality(0); setAttribute('') }}>{t('secretpartners.reset')}</button>}
         </FilterBar>
   </>
 
   return (
-    <ContentPage active="/secretpartners" title={t('secretpartners.title')} heading wide resultsKey={JSON.stringify([query, category, quality, attribute])} filtersActive={Boolean(query || category || quality || attribute)} toolbar={remote.error || remote.loading ? undefined : toolbar}>
+    <ContentPage active="/secretpartners" title={t('secretpartners.title')} heading wide
+      browsing={{ scope: 'secretpartners', ready: !remote.loading && !remote.error }}
+      resultsKey={JSON.stringify([query, category, quality, attribute])} filtersActive={Boolean(query || category || quality || attribute)} toolbar={remote.error || remote.loading ? undefined : toolbar}>
       {remote.error ? <div role="alert" className="text-sm">
         <p>{t('secretpartners.error')}</p>
         <button type="button" className="mt-2 rounded-lg border px-3 py-2 text-primary" onClick={() => window.location.reload()}>{t('secretpartners.reload')}</button>

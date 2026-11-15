@@ -7,14 +7,13 @@ import { useRemoteData } from '@/lib/useRemoteData'
 import { attributeMap, filterPieces, loadAutoChessAttributes, loadAutoChessBonds, loadAutoChessPieces, membersByBond, plainText } from './data'
 import { BondTag, PieceIcon, PieceStats } from './PieceDetails'
 import { PIECE_COST_BORDER } from './quality'
+import { EMPTY_PIECE_FILTERS as EMPTY_FILTERS, isPieceFilters, useContextState } from '../catalog/memory'
 
 // TagColor 2 still uses an unverified hue; the other role styles are client-matched.
 const ROLE_CLASS: Record<number, string> = {
   0: 'bg-emerald-600/90 text-white', 1: 'bg-sky-600/90 text-white',
   2: 'bg-violet-600/90 text-white', 3: 'bg-amber-500/90 text-black', 4: 'bg-rose-600/90 text-white',
 }
-
-const EMPTY_FILTERS = { cost: 0, bondId: 0, role: '', query: '' }
 
 function focusPiece(id: number) {
   const target = document.getElementById(`piece-${id}`)
@@ -28,11 +27,15 @@ export default function AutoChessPiecesPage() {
   const bonds = useRemoteData(loadAutoChessBonds)
   const attributes = useRemoteData(loadAutoChessAttributes)
   const selected = useSearch({ from: '/autochess/chess' }).piece
-  const [filters, setFilters] = useState({ ...EMPTY_FILTERS, piece: selected })
+  const [storedFilters, setStoredFilters] = useContextState('chess', 'filters', EMPTY_FILTERS, isPieceFilters)
+  const [linkedFilters, setLinkedFilters] = useState({ ...EMPTY_FILTERS, piece: selected })
   // Adjust before committing a query change so history navigation also reveals its target.
-  if (filters.piece !== selected) setFilters({ ...EMPTY_FILTERS, piece: selected })
-  const { cost, bondId, role, query } = filters.piece === selected ? filters : EMPTY_FILTERS
-  const updateFilters = (patch: Partial<typeof EMPTY_FILTERS>) => setFilters({ ...filters, ...patch, piece: selected })
+  if (linkedFilters.piece !== selected) setLinkedFilters({ ...EMPTY_FILTERS, piece: selected })
+  const filters = selected ? linkedFilters : storedFilters
+  const { cost, bondId, role, query } = filters
+  const updateFilters = (patch: Partial<typeof EMPTY_FILTERS>) => selected
+    ? setLinkedFilters({ ...linkedFilters, ...patch, piece: selected })
+    : setStoredFilters({ ...storedFilters, ...patch })
   const setCost = (value: number) => updateFilters({ cost: value })
   const setBondId = (value: number) => updateFilters({ bondId: value })
   const setRole = (value: string) => updateFilters({ role: value })
@@ -69,12 +72,14 @@ export default function AutoChessPiecesPage() {
             {roles.map((value) => <FilterChip key={value} active={role === value} onClick={() => setRole(value)}>{value}</FilterChip>)}
           </FilterRow>
         </div>
-        <FilterBar count={t('autochess.pieces.resultCount', { count: filtered.length })}>
-          <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs" value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
+        <FilterBar>
+          <SearchInput className="min-w-0" value={query} onChange={setQuery} placeholder={t('autochess.pieces.searchPlaceholder')} />
           {(cost || bondId || role || query) ? <button type="button" onClick={reset} className="text-sm text-primary hover:underline">{t('autochess.clearFilters')}</button> : null}
         </FilterBar>
   </>
-  return <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide resultsKey={JSON.stringify([cost, bondId, role, query])} filtersActive={Boolean(cost || bondId || role || query)} toolbar={pieces.error || bonds.error || attributes.error || pieces.loading || bonds.loading || attributes.loading ? undefined : toolbar}>
+  return <ContentPage active="/autochess/chess" title={t('autochess.pieces.title')} heading wide
+    browsing={{ scope: selected ? `chess-link:${selected}` : 'chess', ready: !selected && !pieces.loading && !bonds.loading && !attributes.loading && !pieces.error && !bonds.error && !attributes.error }}
+    resultsKey={JSON.stringify([cost, bondId, role, query])} filtersActive={Boolean(cost || bondId || role || query)} toolbar={pieces.error || bonds.error || attributes.error || pieces.loading || bonds.loading || attributes.loading ? undefined : toolbar}>
     {pieces.error || bonds.error || attributes.error ? <p role="alert" className="text-sm text-muted-foreground">{t('autochess.loadError')}</p>
       : pieces.loading || bonds.loading || attributes.loading ? <p role="status" className="text-sm text-muted-foreground">{t('loading')}</p> : <>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

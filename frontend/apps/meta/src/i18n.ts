@@ -1,5 +1,6 @@
 import i18n from 'i18next'
 import ossLocale from './ossLocale.json'
+import catalogLocale from './catalogLocale.json'
 import { initReactI18next } from 'react-i18next'
 import { detectLanguagePreference, saveLanguagePreference } from '@gamemap/state-memory'
 import { bindArkiveDocumentLocale } from '@gamemap/map-shell'
@@ -1155,6 +1156,7 @@ i18n.use(initReactI18next).init({
 })
 
 for (const code of LANGUAGES) {
+  i18n.addResourceBundle(code, 'translation', { catalogStatus: catalogLocale[code as keyof typeof catalogLocale] ?? catalogLocale['en-US'] }, true, true)
   const copy = ossLocale[code as keyof typeof ossLocale] ?? ossLocale['en-US']
   i18n.addResourceBundle(code, 'translation', { site: { oss: copy } }, true, true)
 }

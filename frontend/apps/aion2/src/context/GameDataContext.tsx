@@ -4,13 +4,11 @@ import type { GameMapMeta, MarkerTypeSubtype } from "@gamemap/data-contract";
 import {useGameMap} from "@/context/GameMapContext";
 import {useMarkers} from "@/context/MarkersContext";
 import { VISIBLE_SUBTYPES_STORAGE_PREFIX, VISIBLE_REGIONS_STORAGE_PREFIX } from "@/lib/constants";
+import { readAionFilters, writeAionFilters } from '../features/map/filterMemory';
 import {
-  browserMemory,
   defineMemoryRecord,
   isBoolean,
-  isStringArray,
   memoryPolicy,
-  parseJson,
   useMemoryState,
 } from "@gamemap/state-memory";
 
@@ -58,18 +56,6 @@ type GameDataProviderProps = {
   children: React.ReactNode;
 };
 
-const visibleDataRecord = (kind: "subtypes" | "regions", legacyKey: string) => defineMemoryRecord({
-  id: `visible-${kind}`,
-  namespace: "aion2",
-  surface: "map",
-  ...memoryPolicy.userPreference("clear-map-filters"),
-  schemaVersion: "1.0.0",
-  defaultValue: () => null as string[] | null,
-  validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
-  legacyKeys: [legacyKey],
-  migrateLegacy: parseJson,
-});
-
 const bordersRecord = defineMemoryRecord({
   id: "show-borders",
   namespace: "aion2",
@@ -94,26 +80,21 @@ const lodRecord = defineMemoryRecord({
 
 const saveVisibleData = (prefix: string, selectedMap: GameMapMeta | undefined, data: Set<string> | undefined) => {
   if (!selectedMap || !data) return;
-  const storageKey = `${prefix}${selectedMap.name}`;
   const kind = prefix === VISIBLE_SUBTYPES_STORAGE_PREFIX ? "subtypes" : "regions";
-  browserMemory.write(visibleDataRecord(kind, storageKey), Array.from(data), {
-    partition: selectedMap.name,
-  });
+  writeAionFilters(kind, selectedMap.id, data);
 }
 
 const loadVisibleData = (prefix: string, selectedMap: GameMapMeta, validKeys: Set<string>) => {
   const storageKey = `${prefix}${selectedMap.name}`;
   const kind = prefix === VISIBLE_SUBTYPES_STORAGE_PREFIX ? "subtypes" : "regions";
-  const parsed = browserMemory.read(visibleDataRecord(kind, storageKey), {
-    partition: selectedMap.name,
-  });
-  if (parsed === null) return null;
-  return new Set(parsed.filter((key) => validKeys.has(key)));
+  return readAionFilters(kind, selectedMap, storageKey, validKeys);
 }
 
 export const GameDataProvider: React.FC<GameDataProviderProps> = ({
                                                                     children,
                                                                   }) => {
+  const [subtypesForMap, setSubtypesForMap] = useState<string>();
+  const [regionsForMap, setRegionsForMap] = useState<string>();
   const [visibleSubtypes, setVisibleSubtypes] = useState<Set<string> | undefined>(undefined);
   const [visibleRegions, setVisibleRegions] = useState<Set<string> | undefined>(undefined);
   const [allSubtypes, setAllSubtypes] = useState<Map<string, MarkerTypeSubtype>>(new Map());
@@ -123,7 +104,7 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
   // const { regions } = useMarkers(selectedMap?.name);
 
   const { types, selectedMap } = useGameMap();
-  const { regions } = useMarkers();
+  const { regions, markersMapId } = useMarkers();
 
   // Initialize visibleSubtypes once when types are loaded
   useEffect(() => {
@@ -139,6 +120,7 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
       });
     });
     setAllSubtypes(all);
+    setSubtypesForMap(selectedMap.name);
     const validKeys = new Set(all.keys());
     const visible = loadVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMap, validKeys);
     if (visible) {
@@ -150,7 +132,8 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
 
   // Initialize visibleRegions once when regions are loaded
   useEffect(() => {
-    if (!selectedMap || regions.length === 0) return;
+    if (!selectedMap || markersMapId !== selectedMap.id) return;
+    setRegionsForMap(selectedMap.name);
     // setAllSubtypes(all);
     const validKeys = new Set(regions.map(x => x.name));
     const visible = loadVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMap, validKeys);
@@ -159,16 +142,16 @@ export const GameDataProvider: React.FC<GameDataProviderProps> = ({
     } else {
       setVisibleRegions(validKeys);
     }
-  }, [selectedMap, regions]);
+  }, [selectedMap, regions, markersMapId]);
 
 
   useEffect(() => {
-    saveVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMap, visibleSubtypes)
-  }, [selectedMap, visibleSubtypes]);
+    if (selectedMap?.name === subtypesForMap) saveVisibleData(VISIBLE_SUBTYPES_STORAGE_PREFIX, selectedMap, visibleSubtypes)
+  }, [selectedMap, visibleSubtypes, subtypesForMap]);
 
   useEffect(() => {
-    saveVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMap, visibleRegions)
-  }, [selectedMap, visibleRegions]);
+    if (selectedMap?.name === regionsForMap) saveVisibleData(VISIBLE_REGIONS_STORAGE_PREFIX, selectedMap, visibleRegions)
+  }, [selectedMap, visibleRegions, regionsForMap]);
 
   const handleToggleSubtype = (subtypeId: string) => {
     setVisibleSubtypes((prev) => {

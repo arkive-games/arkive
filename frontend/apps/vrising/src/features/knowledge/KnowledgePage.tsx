@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
-import { Anvil, BookOpen, Boxes, ChevronDown, FlaskConical, Hammer, Shield, Sparkles, Swords } from 'lucide-react'
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SearchInput } from '@gamemap/ui'
-import { defineMemoryRecord, isFiniteNumber, isString, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
+import { browserMemory, useMemoryState } from '@gamemap/state-memory'
+import { createKnowledgeQueryRecord, createKnowledgeRevealRecord, createSectionRecord, expandedRecords, knowledgeQueryScope, knowledgeResultsScope, migrateKnowledgeContext, type PageKind, type SectionKey } from './memory'
 import { ContentPage } from '../../components/ContentPage'
+import { KNOWLEDGE_SECTIONS } from '../../components/encyclopediaNavigation'
 import type { NavKey } from '../../components/TopNav'
 import { cleanGameText } from '../../lib/gameText'
 import {
@@ -17,42 +18,7 @@ import {
   type VBloodTechReward,
 } from '../../lib/vblood'
 
-type PageKind = 'database' | 'systems'
-type SectionKey = 'items' | 'weapons' | 'armor' | 'recipes' | 'spells' | 'passives' | 'buildings' | 'research'
 type CatalogRecord = VBloodRewardRef | VBloodTechReward | VBloodPassiveRecord
-
-const DATABASE: { key: SectionKey; icon: LucideIcon }[] = [
-  { key: 'items', icon: Boxes },
-  { key: 'weapons', icon: Swords },
-  { key: 'armor', icon: Shield },
-  { key: 'recipes', icon: FlaskConical },
-]
-
-const SYSTEMS: { key: SectionKey; icon: LucideIcon }[] = [
-  { key: 'spells', icon: Sparkles },
-  { key: 'passives', icon: Anvil },
-  { key: 'buildings', icon: Hammer },
-  { key: 'research', icon: BookOpen },
-]
-
-const createSectionRecord = (defaultSection: SectionKey) => defineMemoryRecord({
-  id: 'section', namespace: 'vrising', surface: 'knowledge',
-  ...memoryPolicy.sessionContext('clear-knowledge-section'),
-  schemaVersion: '1.0.0', defaultValue: () => defaultSection,
-  validate: (value: unknown): value is SectionKey =>
-    ['items', 'weapons', 'armor', 'recipes', 'spells', 'passives', 'buildings', 'research'].includes(String(value)),
-})
-const queryRecord = defineMemoryRecord({
-  id: 'query', namespace: 'vrising', surface: 'knowledge',
-  ...memoryPolicy.sessionContext('clear-knowledge-search'),
-  schemaVersion: '1.0.0', defaultValue: () => '', validate: isString,
-})
-const revealRecord = defineMemoryRecord({
-  id: 'reveal-depth', namespace: 'vrising', surface: 'knowledge',
-  ...memoryPolicy.sessionContext('clear-knowledge-reveal'),
-  schemaVersion: '1.0.0', defaultValue: () => 48,
-  validate: (value: unknown): value is number => isFiniteNumber(value) && value >= 48,
-})
 
 function recordsFor(catalog: VBloodKnowledgeCatalog, key: SectionKey): CatalogRecord[] | null {
   if (key === 'recipes') return catalog.recipes
@@ -89,7 +55,7 @@ export function recordMatchesQuery(record: CatalogRecord, query: string): boolea
     ))
 }
 
-function RecordCard({ record }: { record: CatalogRecord }) {
+function RecordCard({ record, expanded, onExpandedChange }: { record: CatalogRecord; expanded: boolean; onExpandedChange: (open: boolean) => void }) {
   const { t, i18n } = useTranslation()
   if (isPassiveRecord(record)) {
     const name = localizedText(record.name, i18n.resolvedLanguage ?? i18n.language)
@@ -98,7 +64,7 @@ function RecordCard({ record }: { record: CatalogRecord }) {
       t('knowledge.runtimeValueInline'),
     )
     return (
-      <details className="group min-w-0 rounded-xl border border-primary/15 bg-card px-3.5 py-3 shadow-sm open:border-primary/35 open:ring-2 open:ring-primary/8">
+      <details open={expanded} onToggle={event => { if (event.currentTarget.open !== expanded) onExpandedChange(event.currentTarget.open) }} className="group min-w-0 rounded-xl border border-primary/15 bg-card px-3.5 py-3 shadow-sm open:border-primary/35 open:ring-2 open:ring-primary/8">
         <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/25 [&::-webkit-details-marker]:hidden">
           <span className="min-w-0">
             <span className="block text-sm font-bold leading-snug">{name}</span>
@@ -115,17 +81,14 @@ function RecordCard({ record }: { record: CatalogRecord }) {
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/85">{description}</p>
           {record.statModifications.length ? (
             <div className="mt-3">
-              <p className="text-xs font-medium text-muted-foreground">{t('knowledge.verifiedStats')}</p>
+              <p className="text-xs font-medium text-muted-foreground">{t('knowledge.attributes')}</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {record.statModifications.map((value, index) => (
                   <Metric key={`${value.statType}-${index}`}>{t(`knowledge.stats.${value.statType}`)}</Metric>
                 ))}
               </div>
             </div>
-          ) : (
-            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t('knowledge.scriptedEffect')}</p>
-          )}
-          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t('knowledge.runtimeValueNote')}</p>
+          ) : null}
         </div>
       </details>
     )
@@ -150,17 +113,22 @@ function RecordCard({ record }: { record: CatalogRecord }) {
 
 export default function KnowledgePage({ kind }: { kind: PageKind }) {
   const { t } = useTranslation()
-  const cards = kind === 'database' ? DATABASE : SYSTEMS
+  const cards = KNOWLEDGE_SECTIONS[kind]
   const active = (kind === 'database' ? '/database' : '/systems') as NavKey
   const defaultSection: SectionKey = kind === 'database' ? 'recipes' : 'passives'
   const [catalog, setCatalog] = useState<VBloodKnowledgeCatalog | null | undefined>(undefined)
   const selectedRecord = useMemo(() => createSectionRecord(defaultSection), [defaultSection])
   const [selected, setSelected] = useMemoryState(selectedRecord, { partition: kind })
-  const [query, setQuery] = useMemoryState(queryRecord, { partition: kind, debounceMs: 200 })
-  const [visibleCount, setVisibleCount] = useMemoryState(revealRecord, { partition: kind })
+  const [initialSection] = useState(() => browserMemory.read(selectedRecord, { partition: kind }))
+  useLayoutEffect(() => { migrateKnowledgeContext(kind, initialSection) }, [kind, initialSection])
+  const queryRecord = useMemo(() => createKnowledgeQueryRecord(kind, selected, initialSection), [kind, selected, initialSection])
+  const [query, setQuery] = useMemoryState(queryRecord, { partition: knowledgeQueryScope(kind, selected), debounceMs: 200 })
+  const revealRecord = useMemo(() => createKnowledgeRevealRecord(kind, selected, query, initialSection), [kind, selected, query, initialSection])
+  const [visibleCount, setVisibleCount] = useMemoryState(revealRecord, { partition: knowledgeResultsScope(kind, selected, query) })
+  const [expanded, setExpanded] = useMemoryState(expandedRecords, { partition: knowledgeQueryScope(kind, selected) })
 
   useEffect(() => {
-    const available = kind === 'database' ? DATABASE : SYSTEMS
+    const available = KNOWLEDGE_SECTIONS[kind]
     if (!available.some(({ key }) => key === selected)) setSelected(defaultSection)
   }, [defaultSection, kind, selected, setSelected])
 
@@ -184,25 +152,13 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
   const chooseSection = (key: SectionKey) => {
     if (!catalog || !recordsFor(catalog, key)) return
     setSelected(key)
-    setQuery('')
-    setVisibleCount(48)
   }
 
   return (
-    <ContentPage active={active} title={t(`knowledge.${kind}.title`)} heading>
-      <div className="mb-5 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card to-card p-4">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <BookOpen className="size-4" />
-          </div>
-          <div>
-            <p className="font-bold">{t('knowledge.verifiedTitle')}</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t('knowledge.verifiedCaption')}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
+    <ContentPage active={active} title={t(`knowledge.${kind}.title`)} heading
+      directory={{ kind, selected, available: cards.filter(({ key }) => catalog && recordsFor(catalog, key) !== null).map(({ key }) => key), loading: catalog === undefined, onSelect: chooseSection }}
+      browsing={{ scope: `knowledge:${kind}:${selected}`, ready: catalog !== undefined && catalog !== null, resultsKey: query }}>
+      <div className="grid gap-3 sm:grid-cols-2 lg:hidden">
         {cards.map(({ key, icon: Icon }) => {
           const records = catalog ? recordsFor(catalog, key) : null
           const ready = records !== null
@@ -223,9 +179,7 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
                   <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">{t('loading')}</span>
                 ) : ready ? (
                   <span className="rounded-full border border-primary/20 bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary">
-                    {key === 'passives'
-                      ? t('knowledge.viewableCount', { count: records.length })
-                      : t('knowledge.verifiedCount', { count: records.length })}
+                    {records.length}
                   </span>
                 ) : (
                   <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
@@ -235,29 +189,17 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
               </div>
               <h2 className="mt-4 text-lg font-bold">{t(`knowledge.sections.${key}.title`)}</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t(`knowledge.sections.${key}.caption`)}</p>
-              <p className="mt-4 border-t border-border pt-3 text-xs font-medium text-muted-foreground">
-                {ready
-                  ? t(key === 'passives' ? 'knowledge.openPassiveEffects' : 'knowledge.openRecords')
-                  : t('knowledge.schemaReady')}
-              </p>
             </button>
           )
         })}
       </div>
 
       {selectedRecords ? (
-        <section className="mt-5 rounded-2xl border border-primary/15 bg-secondary/25 p-4 md:p-5">
+        <section className="mt-5 rounded-2xl border border-primary/15 bg-secondary/25 p-4 md:p-5 lg:mt-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase text-primary">{t('knowledge.verifiedRecords')}</p>
-              <h2 className="mt-1 text-xl font-bold">{t(`knowledge.sections.${selected}.title`)}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t(selected === 'passives' ? 'knowledge.passiveSourceCaption' : 'knowledge.sourceCaption')}
-              </p>
-            </div>
             <SearchInput
   value={query}
-  onChange={(value) => { setQuery(value); setVisibleCount(48) }}
+  onChange={setQuery}
   label={t('knowledge.searchPlaceholder')}
   placeholder={t('knowledge.searchPlaceholder')}
   type="search"
@@ -265,12 +207,14 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
 />
           </div>
 
-          <p className="mt-4 text-xs font-medium text-muted-foreground">
-            {t('knowledge.showingRecords', { shown: Math.min(visibleCount, filtered.length), total: filtered.length })}
-          </p>
           {filtered.length ? (
             <div className={`mt-3 grid gap-2.5 sm:grid-cols-2 ${selected === 'passives' ? 'xl:grid-cols-2' : 'xl:grid-cols-3'}`}>
-              {filtered.slice(0, visibleCount).map((record) => <RecordCard key={record.prefabId} record={record} />)}
+              {filtered.slice(0, visibleCount).map((record) => <RecordCard key={record.prefabId} record={record}
+                expanded={expanded.includes(record.prefabName)}
+                onExpandedChange={open => setExpanded(previous => open
+                  ? [...new Set([...previous, record.prefabName])]
+                  : previous.filter(name => name !== record.prefabName))}
+              />)}
             </div>
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">

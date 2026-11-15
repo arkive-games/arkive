@@ -1,3 +1,4 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
@@ -245,7 +246,7 @@ export default function ResearchPage() {
   const [tech, setTech] = useState<TechBundle | null>(null)
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [activeCat, setActiveCat] = useState<string | null>(null)
+  const [activeCat, setActiveCat] = useCatalogState<string | null>('research', 'activeCat', null)
 
   useEffect(() => {
     let cancelled = false
@@ -289,7 +290,7 @@ export default function ResearchPage() {
   const current = trees.find((tr) => tr.category === activeCat) ?? trees[0]
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'research', ready: !!research && !!items && !!tech && !!pals, resultsKey: activeCat ?? '' }}
       active="/research"
       title={t('research.title')}
       heading

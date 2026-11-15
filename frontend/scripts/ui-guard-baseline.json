@@ -1,0 +1,56 @@
+{
+  "description": "Reviewed legacy style occurrences. No automatic acceptance; review every baseline change.",
+  "scope": "Shared UI/shell and released-game chrome. Game records, assets, locales and tests are excluded.",
+  "occurrences": {
+    "4577d40027e958604096": 1,
+    "477c10cc574884385fea": 1,
+    "ac6d7acfcd3e2e14a345": 1,
+    "4f3916559677ea7b3a01": 1,
+    "4358afcc633b6deff764": 2,
+    "092dcff77b7b5c2de0f1": 1
+  },
+  "exceptions": [
+    {
+      "id": "4577d40027e958604096",
+      "file": "apps/ro3/src/components/SectionNav.tsx",
+      "rule": "numeric-layer",
+      "sample": "className=\"absolute inset-x-0 top-full z-30 mt-1.5 grid grid-cols-4 gap-1 rounded-2xl bg-card p-2 shadow-[0_0.75rem_2rem_rgba(0,0,0,0.14),0_0_0_1px_var(--border)]\"",
+      "reason": "Existing RO3 mobile menu stack; preserve its original composition in this desktop acceptance batch. No additional occurrences allowed."
+    },
+    {
+      "id": "477c10cc574884385fea",
+      "file": "apps/ro3/src/components/SectionNav.tsx",
+      "rule": "custom-radius",
+      "sample": "'grid size-9 shrink-0 place-items-center rounded-[0.6rem] transition-[background-color,transform] duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:scale-105',",
+      "reason": "Existing RO3 category-art frame; preserve reviewed game-owned row styling. No additional occurrences allowed."
+    },
+    {
+      "id": "ac6d7acfcd3e2e14a345",
+      "file": "packages/map-shell/src/ArkiveMapTopBar.tsx",
+      "rule": "literal-color",
+      "sample": "fill=\"var(--arkive-mark-cutout, #F9F9F9)\"",
+      "reason": "Existing brand-cutout fallback behind its semantic variable. Preserve the supplied brand asset treatment."
+    },
+    {
+      "id": "4f3916559677ea7b3a01",
+      "file": "packages/map-shell/src/MarkerDetailDrawer.tsx",
+      "rule": "numeric-layer",
+      "sample": "? \"md:inset-auto md:left-0 md:top-0 md:w-[min(22rem,calc(100vw-1.5rem))] md:max-h-[min(34rem,calc(100dvh-7rem))] md:overflow-visible md:before:absolute md:before:-bottom-1.5 md:before:left-[var(--marker-detail-arrow-x,50%)] md:before:z-[-1] md:before:size-3 md:before:-translate-x-1/2 md:before:rotate-45 md:before:border md:before:border-border md:before:bg-background\"",
+      "reason": "Existing local detail-arrow underlay, not an application overlay layer. No additional occurrences allowed."
+    },
+    {
+      "id": "4358afcc633b6deff764",
+      "file": "packages/map-shell/src/ShellGameHeader.tsx",
+      "rule": "literal-color",
+      "sample": "\"absolute inset-0 bg-[linear-gradient(180deg,rgba(4,28,38,0.18),rgba(4,28,38,0.9))]\",",
+      "reason": "Existing game-header artwork readability overlay. Preserve current game art treatment in this batch."
+    },
+    {
+      "id": "092dcff77b7b5c2de0f1",
+      "file": "packages/ui/src/filter-controls.tsx",
+      "rule": "literal-color",
+      "sample": "active && color ? { backgroundColor: color, borderColor: color, color: \"#fff\" } : undefined",
+      "reason": "Existing on-color foreground for game-provided solid chips. Game palette contrast remains a separate review."
+    }
+  ]
+}

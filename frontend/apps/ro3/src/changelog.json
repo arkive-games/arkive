@@ -1,6 +1,36 @@
 {
   "entries": [
     {
+      "version": "0.25.0",
+      "date": "2026-11-16",
+      "commit": "6975c5631f4f1387876e597a90df9c8eeee47098",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Fold the desktop encyclopedia directory to icons while keeping its original artwork and selected talent system, search and browsing context.",
+            "zh-CN": "百科桌面目录支持收起为图标，保留原有图案和选中样式，并记住天赋分类、搜索及浏览状态。",
+            "zh-TW": "百科桌面目錄支援收起為圖示，保留原有圖案和選取樣式，並記住天賦分類、搜尋及瀏覽狀態。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.24.15",
+      "date": "2026-11-16",
+      "commit": "46249ada4e90cdf3a627936aadeb19d4b33fa158",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Encyclopedia categories remember searches, filters, pages, selected entries and viewed levels during the session. Returning restores the reading position after content loads.",
+            "zh-CN": "百科分类会记住本次浏览中的搜索、筛选、页码、选中条目及查看等级，返回时在内容加载完成后恢复阅读位置。",
+            "zh-TW": "百科分類會記住本次瀏覽中的搜尋、篩選、頁碼、選中條目及查看等級，返回時在內容載入完成後恢復閱讀位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.24.14",
       "date": "2026-11-14",
       "commit": "d14213be0cb294c7272fda3322a09b499c9017ad",

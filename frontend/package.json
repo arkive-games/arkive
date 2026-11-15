@@ -57,11 +57,13 @@
     "preview:ro3": "pnpm --filter ro3 preview",
     "preview:sts2": "pnpm --filter sts2 preview",
     "preview:vrising": "pnpm --filter vrising preview",
-    "test": "vitest run",
+    "test": "node scripts/ui-guard.mjs && vitest run",
     "toy:build": "node scripts/toy-build.mjs",
     "toy:publish": "node scripts/toy-publish.mjs",
     "toy:serve": "node scripts/toy-serve.mjs",
-    "validate-data": "node packages/data-contract/scripts/validate-data.ts"
+    "validate-data": "node packages/data-contract/scripts/validate-data.ts",
+    "check:ui": "node scripts/ui-guard.mjs",
+    "ui:verify": "node scripts/ui-verify.mjs"
   },
   "devDependencies": {
     "jsdom": "^30.0.1",

@@ -49,7 +49,8 @@ export default function CardDetailPage() {
   const upgradable = hasUpgrade(card?.vars)
 
   return (
-    <ContentPage active="/cards" title={name}>
+    <ContentPage active="/cards" title={name}
+      browsing={{ scope: `card:${id}`, ready: !!card && !loadError }}>
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (

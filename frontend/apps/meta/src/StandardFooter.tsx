@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SiteFooter } from '@gamemap/ui'
 import { settingsStringsFor } from '@gamemap/map-shell'
@@ -8,6 +8,14 @@ import { IS_TOY } from './sites'
 export function StandardFooter({ brandName, onOpenSettings, hasMobileBottomNav = false }: { brandName: string; onOpenSettings: () => void; hasMobileBottomNav?: boolean }) {
   const { t, i18n } = useTranslation()
   const [dialog, setDialog] = useState<'about' | 'contact' | null>(null)
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const requested = url.searchParams.get('footer')
+    if (requested !== 'about' && requested !== 'contact') return
+    setDialog(requested)
+    url.searchParams.delete('footer')
+    window.history.replaceState(window.history.state, '', url)
+  }, [])
   return <>
     <SiteFooter
       className={hasMobileBottomNav ? 'max-md:pb-[calc(5.25rem+env(safe-area-inset-bottom))]' : undefined}

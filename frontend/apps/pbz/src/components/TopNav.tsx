@@ -5,18 +5,13 @@ import { ArkiveMapTopBar, getArkiveBrandName } from '@gamemap/map-shell'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
+import { REFERENCE_ENTRIES } from './encyclopediaNavigation'
 
 export type NavKey = '/' | '/changelog' | '/weapons' | '/phantom-edges' | '/accessories' | '/medicines' | '/items' | '/enemies' | '/skills'
 
 const ITEMS: { key: NavKey; labelKey: string }[] = [
   { key: '/', labelKey: 'nav.map' },
-  { key: '/weapons', labelKey: 'nav.weapons' },
-  { key: '/phantom-edges', labelKey: 'nav.phantomEdges' },
-  { key: '/accessories', labelKey: 'nav.accessories' },
-  { key: '/medicines', labelKey: 'nav.medicines' },
-  { key: '/items', labelKey: 'nav.items' },
-  { key: '/enemies', labelKey: 'nav.enemies' },
-  { key: '/skills', labelKey: 'nav.skills' },
+  ...REFERENCE_ENTRIES,
 ]
 
 export function TopNav({ active }: { active: NavKey }) {

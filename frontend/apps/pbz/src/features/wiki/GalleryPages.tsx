@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useWikiQuery, useWikiFilters } from './memory'
+import { useMemo } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ContentPage } from '../../components/ContentPage'
@@ -20,10 +21,10 @@ function useAreaOf(labels: Labels | undefined) {
 export function EnemyListPage() {
   const { t } = useTranslation()
   const { data, labels, error } = useWiki('enemies')
-  const [query, setQuery] = useState('')
-  const [types, setTypes] = useState<string[]>([])
-  const [maps, setMaps] = useState<string[]>([])
-  const [bossOnly, setBossOnly] = useState<string[]>([])
+  const [query, setQuery] = useWikiQuery('enemies')
+  const [types, setTypes] = useWikiFilters('enemies', 'types')
+  const [maps, setMaps] = useWikiFilters('enemies', 'maps')
+  const [bossOnly, setBossOnly] = useWikiFilters('enemies', 'bossOnly')
 
   const areaOf = useAreaOf(labels)
   const rows = useMemo(() => (data?.rows ?? []).filter((e) =>
@@ -42,7 +43,7 @@ export function EnemyListPage() {
   }, [rows, areaOf])
 
   return (
-    <ContentPage active="/enemies" title={labels?.section.enemies ?? t('nav.enemies')} heading wide>
+    <ContentPage browsing={{ scope: 'enemies', ready: !!data && !!labels, resultsKey: JSON.stringify([query, types, maps, bossOnly]) }} active="/enemies" title={labels?.section.enemies ?? t('nav.enemies')} heading wide>
       <PageState error={error} loading={!data || !labels} />
       {data && labels ? (
         <>
@@ -96,7 +97,7 @@ export function EnemyDetailPage() {
   const name = text?.name ?? id
 
   return (
-    <ContentPage active="/enemies" title={name}>
+    <ContentPage active="/enemies" title={name} browsing={{ scope: `enemies:${id}`, ready: !!enemy && !!labels }}>
       <PageState error={error} loading={!data || !labels} missing={!!data && !enemy} />
       {enemy && labels ? (
         <div className="grid gap-4 md:grid-cols-[minmax(0,22rem)_1fr]">

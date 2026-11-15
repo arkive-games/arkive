@@ -1,7 +1,8 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { FilterChip, FilterRow, HoverCard, HoverCardTrigger, Input, toggleValue } from '@gamemap/ui'
+import { FilterChip, FilterRow, HoverCard, HoverCardTrigger, CatalogSearchInput, toggleValue } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -16,7 +17,7 @@ import { loadPals, type PalsBundle } from '../../lib/pals'
 import { itemTypeLabel, typeOrder } from '../catalog/labels'
 import {
   CatalogDataProvider,
-  CatalogPageLoading,
+  CatalogPageLoading, CatalogNoResults,
   HoverCardBody,
   ItemGlyph,
   ItemSummary,
@@ -39,12 +40,12 @@ export default function ItemListPage() {
   const [bundles, setBundles] = useState<Bundles | null>(null)
   const bundle = bundles?.items ?? null
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [cats, setCats] = useState<string[]>([])
+  const [query, setQuery] = useCatalogState<string>('items', 'query', '')
+  const [cats, setCats] = useCatalogState<string[]>('items', 'cats', [])
   // "No known source" blueprint filter — only offered (and only applies) while
   // the Blueprint category is selected. The matching items are hidden dead
   // data (`illegal`), so this chip is the one place that reveals them.
-  const [noSourceOnly, setNoSourceOnly] = useState(false)
+  const [noSourceOnly, setNoSourceOnly] = useCatalogState<boolean>('items', 'noSourceOnly', false)
 
   useEffect(() => {
     let cancelled = false
@@ -95,7 +96,8 @@ export default function ItemListPage() {
 
   // Auto-scroll reveal: the full list is in memory, but mounting ~1,900
   // HoverCard tiles at once is a DOM-size problem, not a data one.
-  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'items')
+  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'items',
+    query || cats.length || noSourceActive ? JSON.stringify([query, cats, noSourceActive]) : '')
   const mobilePaging = useMobilePagination(list, {
     pageSize: 24,
     resetKey: `${query}|${cats.join(',')}|${noSourceActive}`,
@@ -130,7 +132,7 @@ export default function ItemListPage() {
   ) : undefined
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'items', ready: !!bundle, resultsKey: JSON.stringify([query,cats,noSourceActive]) }}
       active="/items"
       title={t('item.title')}
       heading
@@ -139,18 +141,14 @@ export default function ItemListPage() {
       hideMobileFooter
     >
           <div className="mb-3 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('item.searchPlaceholder')}
-              className="max-w-sm"
+              className=""
             />
-            {bundle ? (
-              <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="item-count">
-                {t('item.count', { count: list.length })}
-              </span>
-            ) : null}
+
           </div>
           <ContentPageFilters className="mb-4" />
 
@@ -158,6 +156,8 @@ export default function ItemListPage() {
             <div className="mt-8 text-center text-destructive">{loadError}</div>
           ) : !bundle ? (
             <CatalogPageLoading />
+          ) : list.length === 0 ? (
+            <CatalogNoResults />
           ) : (
             <CatalogDataProvider
               items={bundle}

@@ -1,6 +1,7 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FilterChip, FilterRow, Input, toggleValue } from '@gamemap/ui'
+import { FilterChip, FilterRow, CatalogSearchInput, toggleValue } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -13,7 +14,7 @@ import {
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { buildingTypeLabel, typeOrder } from '../catalog/labels'
-import { CatalogDataProvider, CatalogPageLoading } from '../catalog/components'
+import { CatalogDataProvider, CatalogPageLoading, CatalogNoResults } from '../catalog/components'
 import { RevealFooter } from '../catalog/RevealFooter'
 import { useIncrementalList } from '../catalog/useIncrementalList'
 import { makeTechResolvers } from '../technology/techModel'
@@ -28,8 +29,8 @@ export default function BuildingListPage() {
   const [tech, setTech] = useState<TechBundle | null>(null)
   const [pals, setPals] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [cats, setCats] = useState<string[]>([])
+  const [query, setQuery] = useCatalogState<string>('buildings', 'query', '')
+  const [cats, setCats] = useCatalogState<string[]>('buildings', 'cats', [])
 
   useEffect(() => {
     let cancelled = false
@@ -84,7 +85,8 @@ export default function BuildingListPage() {
 
   // Same auto-scroll reveal as the items page; 494 tiles is mild, but the
   // shared behavior also speeds first paint.
-  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'buildings')
+  const { shown, remaining, showMore, sentinelRef } = useIncrementalList(list, 'buildings',
+    query || cats.length ? JSON.stringify([query, cats]) : '')
   const mobilePaging = useMobilePagination(list, {
     pageSize: 24,
     resetKey: `${query}|${cats.join(',')}`,
@@ -116,7 +118,7 @@ export default function BuildingListPage() {
   ) : undefined
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'buildings', ready: !!bundle && !!items && !!tech && !!pals, resultsKey: JSON.stringify([query,cats]) }}
       active="/buildings"
       title={t('building.title')}
       heading
@@ -124,18 +126,14 @@ export default function BuildingListPage() {
       filtersActive={cats.length > 0}
     >
           <div className="mb-3 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('building.searchPlaceholder')}
-              className="max-w-sm"
+              className=""
             />
-            {bundle ? (
-              <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="building-count">
-                {t('building.count', { count: list.length })}
-              </span>
-            ) : null}
+
           </div>
           <ContentPageFilters className="mb-4" />
 
@@ -143,6 +141,8 @@ export default function BuildingListPage() {
             <div className="mt-8 text-center text-destructive">{loadError}</div>
           ) : !bundle || !tech || !techResolvers ? (
             <CatalogPageLoading />
+          ) : list.length === 0 ? (
+            <CatalogNoResults />
           ) : (
             <CatalogDataProvider items={items ?? undefined} buildings={bundle} tech={tech}>
               <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">

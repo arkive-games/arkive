@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.site"
 title: "Arkive Site Specification"
 status: "canonical"
-last_reviewed: "2026-10-27"
+last_reviewed: "2026-11-15"
 
 purpose:
   summary: >-
@@ -15,6 +15,7 @@ purpose:
 specification_router:
   always_read: "docs/ARKIVE_SITE_SPEC.yaml"
   read_when_needed:
+    confirmed_page_and_product_rules: "docs/ARKIVE_PRODUCT_IA_DRAFT.md"
     ui_foundations: "docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml"
     color_or_theme: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
     interactive_map_desktop_ui: "docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml"
@@ -116,11 +117,11 @@ product_model:
       - key: "forum"
         label_zh-CN: "论坛"
     unfinished_destination: "Show the localized coming-soon notice; do not navigate to a dead route."
-    first_screen: "Every live game and every tool is reachable without scrolling."
+    first_screen: "Preserve the existing discovery composition; complete inventories belong to All Games and Tool Library."
     body_order:
       - "Coverflow carousel: one wide banner per game; the centre slide sits flat and its neighbours tilt back; no masks or colour filters"
-      - "Rounded game icon row, one icon per live game"
-      - "Tool dock: the calculator and planner pages"
+      - "Manually configured mixed visual entry shelf; ten desktop tiles initially, expandable manually"
+      - "Tool dock: editorial/popularity-selected tools; independent from the complete Tool Library"
       - "Community feed beside the voyage log"
       - "The sea footer"
     excluded: "A body search box, and showcasing a single game"
@@ -167,7 +168,7 @@ product_model:
       and artwork. It must reuse the cross-site shell and brand identity.
     inventory_owner: "frontend/apps/meta/src/sites.ts (SITES, VISIBLE_SITES)"
     live_order: ["aion2", "palworld", "gmzz", "ro3", "vrising"]
-    display_order: "Every portal list shows live games in live_order (the SITES order in sites.ts); clicks and recent visits never reorder them."
+    display_order: "SITES defines default order. All Games filters first, then places signed-in favorites first with stable order in both groups; homepage selection remains editorial."
     unlaunched: "sts2 and lostark stay out of the home page, the game menu, All Games and the forum cabins until they open."
     game_colour: "Each game's colour tints only that game's own icon, card hover and menu row."
   game_about:

@@ -1,8 +1,10 @@
+import { CatalogNoResults } from '../catalog/components'
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { FilterChip, FilterRow, Input, toggleValue, useIsMobile } from '@gamemap/ui'
+import { FilterChip, FilterRow, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -35,12 +37,13 @@ export default function PartnerSkillsPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [categorySel, setCategorySel] = useState<PartnerCategory[]>([])
-  const [elementSel, setElementSel] = useState<Element[]>([])
+  const [query, setQuery] = useCatalogState<string>('partner-skills', 'query', '')
+  const [categorySel, setCategorySel] = useCatalogState<PartnerCategory[]>('partner-skills', 'categorySel', [])
+  const [elementSel, setElementSel] = useCatalogState<Element[]>('partner-skills', 'elementSel', [])
   // Default order is the Paldeck (zukan) order; clicking the Power header
   // toggles power-descending / power-ascending sort.
-  const [powerSort, setPowerSort] = useState<'desc' | 'asc' | null>(null)
+  const [powerSort, setPowerSort] = useCatalogState<'desc' | 'asc' | null>('partner-skills', 'powerSort', null,
+    (value): value is 'desc' | 'asc' | null => value === null || value === 'desc' || value === 'asc')
 
   useEffect(() => {
     let cancelled = false
@@ -146,7 +149,7 @@ export default function PartnerSkillsPage() {
   ) : undefined
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'partner-skills', ready: !!bundle, resultsKey: JSON.stringify([query,categorySel,elementSel,powerSort]) }}
       active="/partner-skills"
       title={t('partner.title')}
       heading
@@ -154,17 +157,15 @@ export default function PartnerSkillsPage() {
       filtersActive={categorySel.length > 0 || elementSel.length > 0}
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
+        <CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
-          className="max-w-sm"
+          className=""
           data-testid="partner-skill-search"
         />
-        {bundle ? (
-          <span className="text-sm text-muted-foreground">{t('resultsCount', { count: list.length })}</span>
-        ) : null}
+
       </div>
 
       <ContentPageFilters className="mb-4 space-y-1.5" />
@@ -173,6 +174,8 @@ export default function PartnerSkillsPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (
         <PalPageLoading />
+      ) : list.length === 0 ? (
+        <CatalogNoResults />
       ) : isMobile ? (
         <>
           <button

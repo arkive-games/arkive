@@ -17,6 +17,7 @@ import { WikiLoading } from "@/features/wiki/ui";
 import { WIKI_TYPES, type WikiType } from "@/features/wiki/wikiRecent";
 import { loadTaxonomy, loadWikiIndex } from "@/lib/wiki";
 import type { WikiIndexDoc, WikiTaxonomy } from "@/types/wiki";
+import { useWikiScroll } from './wikiMemory';
 
 const TYPE_ICONS: Record<WikiType, Icon> = {
   quest: IconChecklist,
@@ -40,6 +41,7 @@ export default function WikiHome() {
   });
 
   const [wantsSearch, setWantsSearch] = useState(false);
+  const rootRef = useWikiScroll('home', !!tax);
 
   useEffect(() => {
     let live = true;
@@ -103,7 +105,7 @@ export default function WikiHome() {
   const totalCount = tax.types.reduce((sum, type) => sum + type.count, 0);
 
   return (
-    <div data-testid="wiki-home">
+    <div ref={rootRef} data-testid="wiki-home">
       {/* Visually suppressed, not absent. The redesign drops the big title, but
           a page whose first heading is the rail's "Recently viewed" h2 has no
           document outline, and screen-reader users navigate by heading. */}

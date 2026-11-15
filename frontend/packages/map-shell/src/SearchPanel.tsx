@@ -43,6 +43,8 @@ export type SearchPanelLabels = {
 }
 
 export type SearchPanelProps = {
+  /** App-owned session query; automatic overlay dismissal does not discard it. */
+  queryMemory?: { key: string; get: () => string; set: (query: string) => void }
   items: SearchItem[]
   onSelect: (id: string) => void
   onFlyTo: (pos: { x: number; y: number }) => void
@@ -138,13 +140,16 @@ export function SearchPanel({
   maxProximityDistance = Number.POSITIVE_INFINITY,
   resultAside,
   initialQuery,
+  queryMemory,
   onResultsChange,
   variant = "floating",
   floatingPlacement = "right",
 }: SearchPanelProps) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const [query, setQuery] = useState(initialQuery ?? "")
-  const [debounced, setDebounced] = useState(initialQuery ?? "")
+  const [query, setQuery] = useState(() => initialQuery ?? queryMemory?.get() ?? "")
+  const [debounced, setDebounced] = useState(() => initialQuery ?? queryMemory?.get() ?? "")
+  const memoryKey = queryMemory?.key
+  const readQuery = queryMemory?.get
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(query), debounceMs)
@@ -156,10 +161,11 @@ export function SearchPanel({
   // is never clobbered by an unrelated re-render. Bypasses the debounce so the
   // deep-linked search shows immediately.
   useEffect(() => {
-    if (initialQuery === undefined) return
-    setQuery(initialQuery)
-    setDebounced(initialQuery)
-  }, [initialQuery])
+    if (initialQuery === undefined && !readQuery) return
+    const next = initialQuery ?? readQuery?.() ?? ""
+    setQuery(next)
+    setDebounced(next)
+  }, [initialQuery, memoryKey, readQuery])
 
   const itemsById = useMemo(() => {
     const m = new Map<string, SearchItem>()
@@ -322,7 +328,7 @@ export function SearchPanel({
         <input
           data-testid="marker-search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => { setQuery(e.target.value); queryMemory?.set(e.target.value) }}
           placeholder={labels.placeholder ?? labels.search}
           className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
@@ -339,7 +345,7 @@ export function SearchPanel({
       {/* Results panel */}
       {hasQuery && (
         <div data-map-avoid="" className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-popover/95 shadow-sm backdrop-blur">
-          <div className="border-b border-border px-3 py-2 text-center text-xs text-muted-foreground">
+          <div className="sr-only" role="status">
             {labels.resultsCount(results.length)}
           </div>
           <ul

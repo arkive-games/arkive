@@ -1,10 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
-import { IconSearch } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import MiniSearch, { type SearchResult } from "minisearch";
 
-import { Input } from "@gamemap/ui";
+import { CatalogSearchInput } from "@gamemap/ui";
 import {
   defineMemoryRecord,
   isString,
@@ -40,7 +39,6 @@ const queryRecord = defineMemoryRecord({
 
 export default function WikiCatalogToolbar({
   title,
-  count,
   sources,
   onSearchIntent,
   scope,
@@ -83,6 +81,10 @@ export default function WikiCatalogToolbar({
     partition: scope,
     debounceMs: 200,
   });
+  const searchIntent = useRef(onSearchIntent);
+  useEffect(() => { searchIntent.current = onSearchIntent; }, [onSearchIntent]);
+  const hasQuery = query.trim().length > 0;
+  useEffect(() => { if (hasQuery) searchIntent.current?.(); }, [hasQuery, scope]);
 
   const buildSearch = useCallback(() => {
     const index = new MiniSearch<SearchDoc>({
@@ -113,7 +115,7 @@ export default function WikiCatalogToolbar({
    * from the same handlers that report intent, so `useMemo` keeps its normal
    * invalidation -- `sources` or `t` moving still discards it.
    */
-  const search = useMemo(() => (armed ? buildSearch() : null), [armed, buildSearch]);
+  const search = useMemo(() => (armed || hasQuery ? buildSearch() : null), [armed, hasQuery, buildSearch]);
   const trimmed = query.trim();
   const hits: SearchHit[] =
     search && trimmed ? (search.search(trimmed).slice(0, 20) as SearchHit[]) : [];
@@ -123,28 +125,20 @@ export default function WikiCatalogToolbar({
       <div
         className={
           showHeading
-            ? "grid gap-3 md:grid-cols-[minmax(13rem,auto)_minmax(22rem,1fr)] md:items-center"
+            ? "grid gap-3 md:grid-cols-[minmax(13rem,auto)_minmax(22rem,1fr)] md:items-center lg:grid-cols-1"
             : "grid"
         }
       >
         {showHeading && (
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 lg:sr-only">
             <h1 className="min-w-0 truncate text-3xl font-bold text-[color:var(--arkive-nav-active)]">
               {title}
             </h1>
-            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-              {t("wiki:workspace.entries", { count })}
-            </span>
           </div>
         )}
 
-        <div className="relative" role="search">
-          <IconSearch
-            className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
-            stroke={1.8}
-            aria-hidden
-          />
-          <Input
+        <div className="relative">
+          <CatalogSearchInput
             value={query}
             onFocus={arm}
             onChange={(event) => {
@@ -156,7 +150,7 @@ export default function WikiCatalogToolbar({
             }}
             placeholder={t("wiki:hub.searchHint")}
             aria-label={t("wiki:list.search")}
-            className="h-11 rounded-md border-border bg-background pl-10 pr-4 text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
+
             data-testid="wiki-search"
           />
           {query.trim() && (
@@ -171,7 +165,6 @@ export default function WikiCatalogToolbar({
                       <Link
                         to="/wiki/$type/$slug"
                         params={{ type: hit.type, slug: String(hit.entityId) }}
-                        onClick={() => setQuery("")}
                         className="grid min-h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-md px-3 py-2 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]"
                       >
                         <span className="min-w-0 truncate font-medium">{hit.name}</span>

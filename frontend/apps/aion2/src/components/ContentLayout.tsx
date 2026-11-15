@@ -1,8 +1,9 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
 import type { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArkiveAccountControl } from "@gamemap/auth";
-import { cn, SiteFooter, useIsMobile } from "@gamemap/ui";
+import { cn, useIsMobile } from "@gamemap/ui";
 import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from "@gamemap/map-shell";
 
 import TopNavbar from "@/components/TopNavbar";
@@ -43,6 +44,7 @@ export default function ContentLayout({
 
   return (
     <ArkiveContentPage
+      resetScroll={!/^\/wiki(?:\/|$)/.test(pathname)}
       className={cn("w-screen overflow-hidden", className)}
       contentClassName={contentClassName}
       mobileHeader={
@@ -63,6 +65,8 @@ export default function ContentLayout({
       // content clear of the bottom safe area.
       footer={
         <SiteFooter
+          locale={currentLng}
+          settings={settings}
           className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
           homeUrl={ARKIVE_HOME_URL}
           githubUrl={import.meta.env.VITE_GITHUB_URL}

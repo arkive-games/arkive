@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { cn, FilterChip, FilterRow, Input, NotFoundMessage, toggleValue } from '@gamemap/ui'
+import { cn, FilterChip, FilterRow, CatalogSearchInput, NotFoundMessage, toggleValue } from '@gamemap/ui'
 import { loadDataset, loadLabels, wikiImage, type Dataset, type DatasetName, type Labels, type Materials } from '../../lib/wiki'
 import { RichText } from '../../lib/richText'
 
@@ -9,17 +9,17 @@ import { RichText } from '../../lib/richText'
 export function useWiki<N extends DatasetName>(name: N) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
-  const [state, setState] = useState<{ data: Dataset<N>; labels: Labels } | null>(null)
+  const [state, setState] = useState<{ name: N; data: Dataset<N>; labels: Labels } | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
     setError(null)
     Promise.all([loadDataset(name, lng), loadLabels(lng)])
-      .then(([data, labels]) => { if (!cancelled) setState({ data, labels }) })
+      .then(([data, labels]) => { if (!cancelled) setState({ name, data, labels }) })
       .catch((err) => { console.error(err); if (!cancelled) setError(t('loadError')) })
     return () => { cancelled = true }
   }, [name, lng, t])
-  return { ...state, error }
+  return { ...(state?.name === name ? state : null), error }
 }
 
 /** Item names, for material lists on the other pages. */
@@ -115,8 +115,7 @@ export function ListControls({ query, onQuery, groups, count }: {
   return (
     <div className="mb-4 flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Input value={query} onChange={(e) => onQuery(e.target.value)} placeholder={t('wiki.search')} className="max-w-xs" data-testid="wiki-search" />
-        <span className="text-sm text-muted-foreground" data-testid="wiki-count">{t('wiki.count', { count })}</span>
+        <CatalogSearchInput value={query} onChange={(e) => onQuery(e.target.value)} placeholder={t('wiki.search')} className="" data-testid="wiki-search" />
       </div>
       {groups.some((g) => g.options.length > (g.toggle ? 0 : 1)) ? (
         <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
@@ -131,6 +130,7 @@ export function ListControls({ query, onQuery, groups, count }: {
           ))}
         </div>
       ) : null}
+      {count === 0 ? <p role="status" className="py-8 text-center text-sm text-muted-foreground">{t('wiki.noResults')}</p> : null}
     </div>
   )
 }

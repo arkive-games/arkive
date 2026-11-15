@@ -1,5 +1,5 @@
+import { useContextState, useCatalogView } from '../catalog/memory'
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IconDatabase, IconInfoCircle } from "@tabler/icons-react";
 import { Grid2X2, List } from "lucide-react";
 import { FilterChip, FilterGroup, SearchInput, useDocumentTitle } from "@gamemap/ui";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,6 @@ import {
 
 const QUALITY_OPTIONS = ["all", "1", "2", "3"] as const;
 type QualityFilter = (typeof QUALITY_OPTIONS)[number];
-type ViewMode = "grid" | "list";
 const PAGE_SIZE = 32;
 
 const QUALITY_CLASS: Record<number, string> = {
@@ -35,11 +34,11 @@ export default function UtopianTheaterPage() {
   const [entries, setEntries] = useState<UtopiaCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [tag, setTag] = useState<string>("");
-  const [quality, setQuality] = useState<QualityFilter>("all");
-  const [query, setQuery] = useState("");
-  const [view, setView] = useState<ViewMode>("grid");
-  const [page, setPage] = useState(1);
+  const [tag, setTag] = useContextState<string>('utopia', 'tag', "");
+  const [quality, setQuality] = useContextState<QualityFilter>('utopia', 'quality', "all");
+  const [query, setQuery] = useContextState<string>('utopia', 'query', "");
+  const [view, setView] = useCatalogView('utopia');
+  const [page, setPage] = useContextState<number>('utopia', 'page', 1);
   const resultsAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,11 +125,8 @@ export default function UtopianTheaterPage() {
   }
 
   return (
-    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} filtersActive={Boolean(query || tag) || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
+    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide browsing={{ scope: 'utopia', ready: true }} resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} filtersActive={Boolean(query || tag) || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            {t("utopianTheater.description", { count: entries.length })}
-          </p>
           <p className="mt-0.5 max-w-3xl text-xs leading-5 text-muted-foreground">
             {t("utopianTheater.dungeonNote")}
           </p>
@@ -153,7 +149,7 @@ export default function UtopianTheaterPage() {
         aria-label={t("utopianTheater.tags")}
         className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6"
       >
-        <FilterGroup label={t("utopianTheater.tagLabel")} hint={t("utopianTheater.tagHint")}>
+        <FilterGroup label={t("utopianTheater.tagLabel")}>
           {["", ...tags].map((value) => (
             <FilterChip variant="accent"
               key={value || "all"}
@@ -169,7 +165,7 @@ export default function UtopianTheaterPage() {
             </FilterChip>
           ))}
         </FilterGroup>
-        <FilterGroup label={t("utopianTheater.quality")} hint={t("utopianTheater.qualityHint")}>
+        <FilterGroup label={t("utopianTheater.quality")}>
           {QUALITY_OPTIONS.map((value) => (
             <FilterChip variant="accent"
               key={value}
@@ -188,9 +184,7 @@ export default function UtopianTheaterPage() {
       </section>
 
       <section className="flex min-h-9 items-center justify-between gap-3 border-b border-border pb-2">
-        <span className="text-sm tabular-nums text-muted-foreground">
-          {t("utopianTheater.resultCount", { count: filtered.length })}
-        </span>
+
         <div className="inline-flex shrink-0 overflow-hidden rounded-md border border-border" role="group" aria-label={t("utopianTheater.view")}>
           <button
             type="button"
@@ -279,16 +273,7 @@ export default function UtopianTheaterPage() {
 
       <CatalogPagination page={currentPage} pageCount={pageCount} onPageChange={changePage} />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-        <p className="flex items-center gap-2">
-          <IconDatabase className="size-4" stroke={1.8} aria-hidden />
-          {t("utopianTheater.sourceNote")}
-        </p>
-        <p className="flex items-center gap-2">
-          <IconInfoCircle className="size-4" stroke={1.8} aria-hidden />
-          {t("utopianTheater.runtimeNote")}
-        </p>
-      </div>
+
     </div>
     </ContentPage>
   );

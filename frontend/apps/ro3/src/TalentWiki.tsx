@@ -1,3 +1,4 @@
+import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useState, type ReactNode, type RefObject } from 'react'
 import { ChevronRight, GitFork, Heart, LockKeyhole, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
 import { cn } from '@gamemap/ui'
@@ -43,14 +44,15 @@ const PATRON_COLUMNS = 4
 export function TalentWiki() {
   const [data, setData] = useState<TalentData | null>(null)
   const [dataError, setDataError] = useState(false)
+  useWikiReady(data !== null || dataError)
   const [itemNames, setItemNames] = useState<Map<number, string>>(() => new Map())
-  const [mode, setMode] = useState<TalentMode>('season')
-  const [lineId, setLineId] = useState(TALENT_LINES[0].lineId)
-  const [variantId, setVariantId] = useState<number>()
+  const [mode, setMode] = useWikiState<TalentMode>('talents.mode', 'season')
+  const [lineId, setLineId] = useWikiState('talents.line', TALENT_LINES[0].lineId)
+  const [variantId, setVariantId] = useWikiOptional<number>('talents.variant', 'number')
   const line = TALENT_LINES.find((candidate) => candidate.lineId === lineId) ?? TALENT_LINES[0]
   const jobClass = line.classes.find((candidate) => candidate.jobId === variantId) ?? line.classes[0]
-  const [treeId, setTreeId] = useState<number>()
-  const [groupId, setGroupId] = useState<number>()
+  const [treeId, setTreeId] = useWikiOptional<number>('talents.tree', 'number')
+  const [groupId, setGroupId] = useWikiOptional<number>('talents.group', 'number')
 
   useEffect(() => {
     let active = true
@@ -277,10 +279,8 @@ function SeasonBoard({ talents, treeId, tabs, tabsLabel, needLevel, jobClass, it
   const loose = useMemo(() => nodes.filter((node) => node.iTalentTreeID === treeId && !node.kPosition && node.iType !== BRANCH_HEAD_TYPE && node.iType !== BRANCH_CHILD_TYPE && node.levels?.length), [nodes, treeId])
 
   // The board stays mounted across trees, so a pick only holds on the tree it was made on.
-  const [picked, setPicked] = useState<{ treeId: number; nodeId: number }>()
-  const selectedId = picked?.treeId === treeId ? picked.nodeId : undefined
-  const setSelectedId = (nodeId: number) => setPicked({ treeId, nodeId })
-  const [levelIndexes, setLevelIndexes] = useState<Record<number, number>>({})
+  const [selectedId, setSelectedId] = useWikiOptional<number>(`talents.season.${treeId}.selected`, 'number')
+  const [levelIndexes, setLevelIndexes] = useWikiState<Record<number, number>>('talents.season.levels', {})
   const selected = [...placed, ...loose].find((node) => node.iId === selectedId)
     ?? placed.find((node) => node.iIsStartPoint) ?? placed[0]
   const { panelRef, areaRef, pointerRef } = usePointer(`${selected?.iId}`)
@@ -558,8 +558,8 @@ function PatronBoard({ talents, nodeIds, tabs, tabsLabel }: { talents: TalentCat
     return talents.patronTalents.nodes.filter((node) => ids.has(node.iID))
   }, [talents, nodeIds])
   const attrById = useMemo(() => new Map(talents.patronTalents.attrLevels.map((row) => [row.iID, row])), [talents])
-  const [selectedId, setSelectedId] = useState<number>()
-  const [levelIndexes, setLevelIndexes] = useState<Record<number, number>>({})
+  const [selectedId, setSelectedId] = useWikiOptional<number>('talents.patron.selected', 'number')
+  const [levelIndexes, setLevelIndexes] = useWikiState<Record<number, number>>('talents.patron.levels', {})
   const selected = nodes.find((node) => node.iID === selectedId) ?? nodes.find((node) => node.iIsStartPoint) ?? nodes[0]
   const { panelRef, areaRef, pointerRef } = usePointer(`${selected?.iID}`)
   const rows = Math.max(1, Math.ceil(Math.max(...nodes.map((node) => node.iPos)) / PATRON_COLUMNS))

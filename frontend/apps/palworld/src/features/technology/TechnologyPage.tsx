@@ -1,7 +1,8 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
-import { Input, useIsMobile } from '@gamemap/ui'
+import { CatalogSearchInput, useIsMobile } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -14,7 +15,7 @@ import {
   type TechEntry,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
-import { CatalogPageLoading } from '../catalog/components'
+import { CatalogPageLoading, CatalogNoResults } from '../catalog/components'
 import { buildRegions, makeTechResolvers, type LevelGroup, type TechResolvers } from './techModel'
 import { TechTile } from './components/TechTile'
 
@@ -34,7 +35,16 @@ export default function TechnologyPage() {
 
   const [b, setB] = useState<Bundles | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  const [rememberedQuery, setQuery] = useCatalogState<string>('technology', 'query', '')
+  const [useRememberedQuery, setUseRememberedQuery] = useState(!focusId)
+  const [queryVisit, setQueryVisit] = useState(focusId)
+  if (queryVisit !== focusId) {
+    setQueryVisit(focusId)
+    setUseRememberedQuery(!focusId)
+  }
+  // A direct target must not disappear behind an older search. Keep the saved
+  // query for a later ordinary visit; user edits take over for this visit.
+  const query = useRememberedQuery ? rememberedQuery : ''
 
   useEffect(() => {
     let cancelled = false
@@ -102,10 +112,10 @@ export default function TechnologyPage() {
     body = <div className="text-center text-destructive">{loadError}</div>
   } else if (!b || !resolvers) {
     body = <CatalogPageLoading />
+  } else if (matchCount === 0) {
+    body = <CatalogNoResults />
   } else if (isMobile) {
-    body = matchCount === 0 ? (
-      <div className="py-8 text-center text-muted-foreground">{t('tech.empty')}</div>
-    ) : (
+    body = (
       <div>
         <MobileTechLevels
           levels={mobilePaging.visibleItems}
@@ -146,30 +156,21 @@ export default function TechnologyPage() {
           </Fragment>
         ))}
 
-        {levels.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground md:col-span-8">
-            {t('tech.empty')}
-          </div>
-        ) : null}
       </div>
     )
   }
 
   return (
-    <ContentPage active="/technology" title={t('tech.title')} heading hideMobileFooter>
+    <ContentPage browsing={{ section: 'technology', ready: !!b && !focusId, resultsKey: query }} active="/technology" title={t('tech.title')} heading hideMobileFooter>
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setUseRememberedQuery(true); setQuery(e.target.value) }}
               placeholder={t('tech.searchPlaceholder')}
-              className="max-w-xs"
+              className=""
             />
-            {b ? (
-              <span className="text-sm text-muted-foreground">
-                {t('tech.count', { count: matchCount })}
-              </span>
-            ) : null}
+
           </div>
           {body}
     </ContentPage>

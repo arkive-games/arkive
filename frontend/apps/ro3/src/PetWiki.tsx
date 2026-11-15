@@ -1,6 +1,7 @@
+import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Crown, Search, Shield, Sparkles, Star, Swords, Zap } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { CatalogSearchInput, cn } from '@gamemap/ui'
 import { localizedText } from './cardCatalog'
 import { filterPets, findPetStar, petSkillIds } from './creatureCatalog'
 import { loadPetWikiData, type PetRecord, type PetStarRecord, type PetWikiData } from './creatureData'
@@ -24,14 +25,15 @@ const numberFormatter = new Intl.NumberFormat('zh-CN')
 export function PetWiki() {
   const [data, setData] = useState<PetWikiData | null>(null)
   const [dataError, setDataError] = useState(false)
-  const [quality, setQuality] = useState(0)
-  const [kingOnly, setKingOnly] = useState(false)
-  const [query, setQuery] = useState('')
-  const [selectedId, setSelectedId] = useState<number>()
+  useWikiReady(data !== null || dataError)
+  const [quality, setQuality] = useWikiState('pets.quality', 0)
+  const [kingOnly, setKingOnly] = useWikiState('pets.king-only', false)
+  const [query, setQuery] = useWikiState('pets.query', '')
+  const [selectedId, setSelectedId] = useWikiOptional<number>('pets.selected', 'number')
   // One star for every pet, so comparing two at 4 stars takes one click each.
-  const [starIndex, setStarIndex] = useState(0)
+  const [starIndex, setStarIndex] = useWikiState('pets.star', 0)
   // On phones the search field folds behind a button in the wiki header.
-  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useWikiState('pets.search-open', false)
   const searchInput = useRef<HTMLInputElement>(null)
   // Held as state, not a ref: the column remounts after an empty result, and the new node needs the hook again.
   const [detail, setDetail] = useState<HTMLElement | null>(null)
@@ -145,34 +147,10 @@ export function PetWiki() {
             <span className="sr-only md:not-sr-only">{text.kingToggle}</span>
           </button>
         </div>
-        <form
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault()
-            searchInput.current?.focus()
-          }}
-          className={cn(
-            'w-full items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-shadow focus-within:ring-2 focus-within:ring-ring/40 lg:flex lg:w-[23rem]',
-            searchOpen ? 'flex' : 'hidden',
-          )}
-        >
-          <input
-            ref={searchInput}
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            aria-label={text.searchLabel}
-            placeholder={text.searchPlaceholder}
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <button
-            type="submit"
-            aria-label={text.searchLabel}
-            className="grid size-9 shrink-0 place-items-center rounded-full bg-[image:var(--arkive-warm-search)] text-[color:var(--arkive-warm-search-foreground)] shadow-[0_0.3rem_0.8rem_rgba(236,122,28,0.28)] transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:scale-105"
-          >
-            <Search aria-hidden="true" className="size-4" />
-          </button>
-        </form>
+        <div className={cn('w-full lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
+          <CatalogSearchInput inputRef={searchInput} value={query} onChange={event => setQuery(event.target.value)}
+            aria-label={text.searchLabel} submitLabel={text.searchLabel} placeholder={text.searchPlaceholder} />
+        </div>
       </div>
 
       {dataError ? <Notice>{content.wiki.dataError}</Notice> : !data ? <Notice>{content.wiki.loading}</Notice> : groups.length === 0 ? (

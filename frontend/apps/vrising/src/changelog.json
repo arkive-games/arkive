@@ -1,6 +1,51 @@
 {
   "entries": [
     {
+      "version": "0.12.0",
+      "date": "2026-11-15",
+      "commit": "b7db5d0a1cd176e3369d8a36906ef7b272c72be5",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse V Blood and knowledge records from a collapsible desktop directory, with search beside the selected records and existing mobile category cards retained.",
+            "zh-CN": "桌面百科新增可收起的分类目录，可切换首领、配方、被动、建筑与研究，搜索位于资料区，手机端保留原有分类卡片。",
+            "zh-TW": "桌面百科新增可收起的分類目錄，可切換首領、配方、被動、建築與研究，搜尋位於資料區，手機端保留原有分類卡片。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.11.2",
+      "date": "2026-11-15",
+      "commit": "b83bb15ffec5e1e7306f99bec9f675780f480578",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep map marker filters independent in each tab and restore them when returning.",
+            "zh-CN": "地图标记筛选按标签页独立保留，返回时恢复原选择。",
+            "zh-TW": "地圖標記篩選按分頁獨立保留，返回時恢復原選擇。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.11.1",
+      "date": "2026-11-15",
+      "commit": "e5b99b1b156b54e250a3bbce1210201b2fe9a4b0",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep independent searches, loaded records, expanded passive effects and reading positions in recipe, passive, building and research sections when switching or reloading.",
+            "zh-CN": "配方、被动、建筑和研究分类分别记住搜索、已加载记录、被动展开状态和浏览位置，切换页面或刷新后继续浏览。",
+            "zh-TW": "配方、被動、建築和研究分類分別記住搜尋、已載入記錄、被動展開狀態和瀏覽位置，切換頁面或重新整理後繼續瀏覽。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.11.0",
       "date": "2026-08-12",
       "commit": "37bf311d01b76346cfa835b77a07e5a5cc1b8e11",

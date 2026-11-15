@@ -1,7 +1,8 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
+import { useWikiScrollRestoration } from '../wikiMemory'
 import type { ReactNode } from 'react'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveContentPage, ArkiveMobileHeader } from '@gamemap/map-shell'
-import { SiteFooter } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 import { HOME_URL, SETTINGS } from '../lib/brand'
 import { navigateOnClick, type NavigationProps } from '../navigation'
@@ -25,6 +26,7 @@ export interface ContentPageProps extends NavigationProps {
  * phone the compact header plus the bottom strip in place of the bar.
  */
 export function ContentPage({ active, onNavigate, title, heading = false, wide = false, version, children }: ContentPageProps) {
+  const scrollRestoration = useWikiScrollRestoration(active)
   return (
     <ArkiveContentPage
       topBar={<TopNav active={active} onNavigate={onNavigate} />}
@@ -40,6 +42,8 @@ export function ContentPage({ active, onNavigate, title, heading = false, wide =
       }
       footer={
         <SiteFooter
+          locale={'zh-CN'}
+          settings={SETTINGS}
           className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
           homeUrl={HOME_URL}
           githubUrl={import.meta.env.VITE_GITHUB_URL}
@@ -55,6 +59,7 @@ export function ContentPage({ active, onNavigate, title, heading = false, wide =
       // The column scrolls, not the window, so a new page has to be brought
       // back to the top here -- the browser only does that for the document.
       resultsKey={active}
+      scrollRestoration={scrollRestoration}
     >
       {children}
     </ArkiveContentPage>

@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useContextState } from '../catalog/memory'
+import { useMemo, type ReactNode } from 'react'
 import { FilterChip, FilterDisclosure, FilterRow, SearchInput, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
 
@@ -38,10 +39,10 @@ export default function FellowsPage() {
   const relations = useRemoteData(loadFellowRelations)
   const ladders = useRemoteData(loadAffinityLadders)
 
-  const [quality, setQuality] = useState(0)
-  const [label, setLabel] = useState('')
-  const [query, setQuery] = useState('')
-  const [openId, setOpenId] = useState<number | null>(null)
+  const [quality, setQuality] = useContextState<number>('fellows', 'quality', 0)
+  const [label, setLabel] = useContextState<string>('fellows', 'label', '')
+  const [query, setQuery] = useContextState<string>('fellows', 'query', '')
+  const [openId, setOpenId] = useContextState<number | null>('fellows', 'openId', null)
 
   useDocumentTitle(`${t('fellows.sectionTitle')} · ${t('fellows.title')} - ${t('siteTitle')}`)
 
@@ -109,6 +110,7 @@ export default function FellowsPage() {
       title={t('fellows.sectionTitle')}
       heading
       wide
+      browsing={{ scope: 'fellows', ready: true }}
       resultsKey={JSON.stringify([query, quality, label])}
     >
       <FellowsTabs current="/fellows" />
@@ -145,9 +147,7 @@ export default function FellowsPage() {
         />
       </FilterDisclosure>
 
-      <p className="mb-3 text-sm text-muted-foreground">
-        {t('fellows.resultCount', { count: filtered.length })}
-      </p>
+
       <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {filtered.map((fellow) => (
           <FellowCard
@@ -182,6 +182,7 @@ function FellowCard({
   onToggle: () => void
 }) {
   const { t } = useTranslation()
+  const [upgradesOpen, setUpgradesOpen] = useContextState<boolean>(`fellow:${fellow.id}`, 'upgrades', false)
   const levelName = (level: number | null) =>
     ladder?.levels.find((row) => row.level === level)?.name ?? ''
 
@@ -241,7 +242,7 @@ function FellowCard({
       {/* The 一阶…五阶 rungs the stars unlock belong to the skill above.
           Reading the five rungs as five separate skills is the mistake this
           layout exists to prevent. */}
-      <details className="mt-2 border-t border-border/70 pt-1">
+      <details open={upgradesOpen} onToggle={event => { if (event.currentTarget.open !== upgradesOpen) setUpgradesOpen(event.currentTarget.open) }} className="mt-2 border-t border-border/70 pt-1">
         <summary className="min-h-9 cursor-pointer py-2 text-sm font-medium text-primary">
           {t('fellows.upgrades')}
         </summary>

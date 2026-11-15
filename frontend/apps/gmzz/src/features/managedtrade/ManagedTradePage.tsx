@@ -8,6 +8,10 @@ import { ContentPage } from '@/components/ContentPage'
 import CatalogPagination from '@/features/traintrade/CatalogPagination'
 import { useRemoteData } from '@/lib/useRemoteData'
 import { TYPE } from '@/lib/typography'
+import { useMemory } from '@gamemap/state-memory'
+import { calculationSetter, defaultTradeInputs, tradeInputs } from '../calculators/memory'
+import { useContextState } from '../catalog/memory'
+import { gmzzMemory } from '../../lib/memory'
 import {
   adjacency,
   breakEvenSellPrice,
@@ -54,10 +58,24 @@ const fmt = (value: number) => value.toLocaleString()
 
 type T = (key: string, options?: Record<string, unknown>) => string
 
+const GOODS_SORTS = ['order', 'marginPerLoad', 'margin'] as const
+type GoodsSort = (typeof GOODS_SORTS)[number]
+const TYPE_FILTERS = ['all', '1', '2'] as const
+const goodsSortMemory = gmzzMemory.preference('managedtrade/goods-sort', {
+  default: 'marginPerLoad' as GoodsSort,
+  validate: (value: unknown): value is GoodsSort => GOODS_SORTS.some(option => option === value),
+})
+
 export default function ManagedTradePage() {
   const { t } = useTranslation()
   const tab = useSearch({ from: '/managedtrade' }).tab ?? 'overview'
   const { data, error } = useRemoteData(loadManagedTrade)
+  const [sort, setSort] = useMemory(goodsSortMemory)
+  const [type, setType] = useContextState<(typeof TYPE_FILTERS)[number]>('trade-commissions', 'type', 'all',
+    (value): value is (typeof TYPE_FILTERS)[number] => TYPE_FILTERS.some(option => option === value))
+  const [query, setQuery] = useContextState('trade-commissions', 'query', '')
+  const [page, setPage] = useContextState('trade-commissions', 'page', 1,
+    (value): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 1)
 
   useDocumentTitle(`${t('managedtrade.title')} - ${t('utopianTheater.siteTitle')}`)
 
@@ -76,10 +94,11 @@ export default function ManagedTradePage() {
       title={title}
       heading
       wide
-      resultsKey={tab}
+      browsing={tab === 'calculator' ? undefined : { scope: `managedtrade:${tab}`, ready: true }}
+      resultsKey={JSON.stringify(tab === 'goods' ? [sort] : tab === 'commissions' ? [type, query, page] : [])}
       toolbarLead={
         <header className="mb-3 space-y-3 border-b border-border pb-3">
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+          <p className={cn("max-w-3xl text-sm leading-6 text-muted-foreground", tab !== 'calculator' && 'lg:hidden')}>
             {t('managedtrade.description', { goods: data.goods.length, sites: data.sites.length, routes: data.routes.length })}
           </p>
           <Tabs current={tab} t={t} />
@@ -88,11 +107,11 @@ export default function ManagedTradePage() {
     >
       <div data-testid="managed-trade-page">
         {tab === 'overview' && <Overview data={data} t={t} />}
-        {tab === 'goods' && <GoodsSection data={data} t={t} />}
+        {tab === 'goods' && <GoodsSection data={data} t={t} sort={sort} setSort={setSort} />}
         {tab === 'stations' && <StationsSection data={data} t={t} />}
         {tab === 'caravan' && <CaravanSection data={data} t={t} />}
         {tab === 'calculator' && <Calculator data={data} t={t} />}
-        {tab === 'commissions' && <CommissionsSection data={data} t={t} />}
+        {tab === 'commissions' && <CommissionsSection data={data} t={t} type={type} setType={setType} query={query} setQuery={setQuery} page={page} setPage={setPage} />}
         <p className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
           <IconInfoCircle className="size-4 shrink-0" stroke={1.8} aria-hidden />
           {t('managedtrade.source')}
@@ -181,11 +200,8 @@ function Range({ range }: { range: PriceRange }) {
   )
 }
 
-const GOODS_SORTS = ['order', 'marginPerLoad', 'margin'] as const
-type GoodsSort = (typeof GOODS_SORTS)[number]
 
-function GoodsSection({ data, t }: { data: ManagedTradeData; t: T }) {
-  const [sort, setSort] = useState<GoodsSort>('marginPerLoad')
+function GoodsSection({ data, t, sort, setSort }: { data: ManagedTradeData; t: T; sort: GoodsSort; setSort: (value: GoodsSort) => void }) {
   const rows = useMemo(() => {
     const list = [...data.goods]
     if (sort === 'margin') list.sort((a, b) => unitMargin(b) - unitMargin(a))
@@ -424,17 +440,29 @@ const intValue = (raw: string) => {
 }
 
 function Calculator({ data, t }: { data: ManagedTradeData; t: T }) {
-  const [goodsId, setGoodsId] = useState(data.goods[0].id)
+  const [record] = useState(() => tradeInputs(data))
+  const [inputs, setInputs] = useMemory(record)
+  const goodsId = inputs.goodsId
+  const setGoodsId = calculationSetter(setInputs, 'goodsId')
   const goods = data.goods.find((entry) => entry.id === goodsId) ?? data.goods[0]
-  const [from, setFrom] = useState(goods.producers[0] ?? data.sites[0].id)
-  const [to, setTo] = useState(() => data.sites.find((site) => !goods.producers.includes(site.id))?.id ?? data.sites[0].id)
-  const [buyPrice, setBuyPrice] = useState(goods.stationSells.mid)
-  const [sellPrice, setSellPrice] = useState(goods.stationBuys.mid)
-  const [buyTax, setBuyTax] = useState(data.sites[0].baseTax)
-  const [sellTax, setSellTax] = useState(data.sites[0].baseTax)
-  const [level, setLevel] = useState(1)
-  const [partLevels, setPartLevels] = useState<number[]>(() => (data.parts[0] ?? []).map(() => 1))
-  const [quantity, setQuantity] = useState<number | null>(null)
+  const from = inputs.from
+  const setFrom = calculationSetter(setInputs, 'from')
+  const to = inputs.to
+  const setTo = calculationSetter(setInputs, 'to')
+  const buyPrice = inputs.buyPrice
+  const setBuyPrice = calculationSetter(setInputs, 'buyPrice')
+  const sellPrice = inputs.sellPrice
+  const setSellPrice = calculationSetter(setInputs, 'sellPrice')
+  const buyTax = inputs.buyTax
+  const setBuyTax = calculationSetter(setInputs, 'buyTax')
+  const sellTax = inputs.sellTax
+  const setSellTax = calculationSetter(setInputs, 'sellTax')
+  const level = inputs.level
+  const setLevel = calculationSetter(setInputs, 'level')
+  const partLevels = inputs.partLevels
+  const setPartLevels = calculationSetter(setInputs, 'partLevels')
+  const quantity = inputs.quantity
+  const setQuantity = calculationSetter(setInputs, 'quantity')
 
   const parts = data.parts[level - 1] ?? []
   const stats = caravanStats(data, level, partLevels)
@@ -533,6 +561,9 @@ function Calculator({ data, t }: { data: ManagedTradeData; t: T }) {
           ))}
         </div>
         <div className="flex flex-wrap items-end gap-3">
+          <button type="button" onClick={() => setInputs(defaultTradeInputs(data))} className={cn('h-9 rounded-md border border-border px-3 text-sm text-muted-foreground hover:bg-accent hover:text-foreground', FOCUS)}>
+            {t('managedtrade.calc.reset')}
+          </button>
           <Field label={t('managedtrade.calc.quantity')}>
             <Input type="number" min={0} value={count} onChange={(event) => setQuantity(intValue(event.target.value))} className="h-9 w-32 text-sm" />
           </Field>
@@ -602,12 +633,12 @@ function PriceHint({ level, range, t, selling = false }: { level: PriceLevel; ra
 }
 
 const COMMISSION_PAGE = 30
-const TYPE_FILTERS = ['all', '1', '2'] as const
 
-function CommissionsSection({ data, t }: { data: ManagedTradeData; t: T }) {
-  const [type, setType] = useState<(typeof TYPE_FILTERS)[number]>('all')
-  const [query, setQuery] = useState('')
-  const [page, setPage] = useState(1)
+function CommissionsSection({ data, t, type, setType, query, setQuery, page, setPage }: {
+  data: ManagedTradeData; t: T;
+  type: (typeof TYPE_FILTERS)[number]; setType: (value: (typeof TYPE_FILTERS)[number]) => void;
+  query: string; setQuery: (value: string) => void; page: number; setPage: (value: number) => void;
+}) {
   const goodsById = useMemo(() => new Map(data.goods.map((goods) => [goods.id, goods])), [data.goods])
   // Reward per unit of caravan load: a commission's goods ride in the same hold
   // as trade goods, so this is what it is weighed against.

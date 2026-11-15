@@ -26,6 +26,12 @@ export interface CatalogEntry {
   searchText: string
 }
 
+/** Stable favorite-first order, applied only after result membership is resolved. */
+export function prioritizeFavorites<T extends { id: string }>(entries: readonly T[], ids: readonly string[]): T[] {
+  const favorites = new Set(ids)
+  return [...entries.filter(entry => favorites.has(entry.id)), ...entries.filter(entry => !favorites.has(entry.id))]
+}
+
 export function getGameCategories(siteId: string): readonly SpecificGameCategory[] {
   return GAME_CATEGORY_MAP[siteId] ?? []
 }

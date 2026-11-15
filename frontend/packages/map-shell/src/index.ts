@@ -26,6 +26,7 @@ export {
   type ArkiveMobileHeaderProps,
 } from "./ArkiveMobileHeader"
 export { ArkiveContentPage, type ArkiveContentPageProps } from "./ArkiveContentPage"
+export { ArkiveEncyclopediaWorkspace, useEncyclopediaDesktop, type EncyclopediaEntry, type EncyclopediaGroup } from './ArkiveEncyclopediaWorkspace'
 export { ArkiveSiteInfoDialog, type ArkiveSiteInfoDialogLabels } from "./ArkiveSiteInfoDialog"
 export {
   ArkiveMobileMapControls,
@@ -151,3 +152,6 @@ export {
 export { ThemeToggle, type ThemeToggleProps, type ThemeToggleLabels } from "./theme/ThemeToggle"
 // The concrete browser adapter lives in @gamemap/ui: this package is storage-free
 // (see `check:shell`), so it may define the ThemeStorage port but never implement it.
+export { resolveRememberedMap } from './mapViewMemory'
+export { ArkiveSiteFooter, type ArkiveSiteFooterProps } from './ArkiveSiteFooter'
+export { useContentScrollRestoration, type ContentScrollRestoration } from './useContentScrollRestoration'

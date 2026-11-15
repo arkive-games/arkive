@@ -1117,6 +1117,11 @@ for (const lng of LANGUAGES) {
         category: FILTER_CATEGORY_LABELS[lng],
       },
       nav: { database: DATABASE_LABELS[lng], pals: PALS_GROUP_LABELS[lng] },
+      encyclopedia: lng === 'zh-CN'
+        ? { label: '百科', collapse: '收起百科目录', expand: '展开百科目录' }
+        : lng === 'zh-TW'
+          ? { label: '百科', collapse: '收合百科目錄', expand: '展開百科目錄' }
+          : { label: 'Encyclopedia', collapse: 'Collapse encyclopedia navigation', expand: 'Expand encyclopedia navigation' },
       markerActions: {
         markCompleted: MARK_COMPLETED_LABELS[lng],
         completed: COMPLETED_LABELS[lng],

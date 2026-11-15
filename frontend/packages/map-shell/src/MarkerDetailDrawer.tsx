@@ -13,14 +13,12 @@ import {
   type ReactNode,
 } from "react"
 import {
-  IconAlertCircle,
   IconCheck,
   IconChevronDown,
   IconCopy,
   IconMapPin,
   IconArrowBackUp,
   IconPhoto,
-  IconPhotoPlus,
   IconMessageCircle,
   IconFlag,
   IconLoader2,
@@ -462,25 +460,6 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
 
   return (
     <div className="min-h-full bg-card" data-testid="marker-comments" aria-busy={config.loading || undefined}>
-      <div className="flex min-h-10 items-center justify-between gap-2 border-b border-border px-3">
-        <strong className="text-sm">{labels.commentCount(config.items.length)}</strong>
-        <div className="flex" role="group" aria-label={labels.comments}>
-          {(["popular", "latest"] as const).map((sort) => (
-            <button
-              key={sort}
-              type="button"
-              aria-pressed={config.sort === sort}
-              onClick={() => config.onSortChange(sort)}
-              className={cn(
-                "min-h-9 rounded-md px-2 text-xs font-semibold text-muted-foreground hover:bg-accent",
-                config.sort === sort && "text-primary",
-              )}
-            >
-              {sort === "popular" ? labels.popular : labels.latest}
-            </button>
-          ))}
-        </div>
-      </div>
       {error ? (
         <p role="alert" data-testid="marker-comment-error" className="border-b border-border bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p>
       ) : null}
@@ -619,27 +598,6 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
   )
 }
 
-function GalleryUploadControl({ config, labels }: { config: MarkerGalleryConfig; labels: MarkerDetailLabels }) {
-  return (
-    <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md border border-primary bg-background px-3 text-sm font-medium text-primary shadow-xs transition-colors hover:bg-primary/10 focus-within:ring-2 focus-within:ring-ring">
-      <IconPhotoPlus className="size-4" stroke={1.8} />
-      {labels.uploadImage}
-      <input
-        data-testid="marker-gallery-upload"
-        className="sr-only"
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={(event) => {
-          const files = Array.from(event.currentTarget.files ?? []).slice(0, 3)
-          if (files.length) void config.onUpload?.(config.markerId, files)
-          event.currentTarget.value = ""
-        }}
-      />
-    </label>
-  )
-}
-
 function CommentComposer({ config, labels }: { config: MarkerCommentsConfig; labels: MarkerDetailLabels }) {
   const [body, setBody] = useState("")
   const [attachments, setAttachments] = useState<File[]>([])
@@ -772,7 +730,6 @@ export function MarkerDetailDrawer({
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [activeTab, setActiveTab] = useState<"details" | "comments">("details")
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle")
   const [sessionImages, setSessionImages] = useState<MarkerGalleryImage[]>([])
   const [sessionComments, setSessionComments] = useState<MarkerComment[]>([])
   const [commentLikeOverrides, setCommentLikeOverrides] = useState<Record<string, boolean>>({})
@@ -816,7 +773,6 @@ export function MarkerDetailDrawer({
 
   useEffect(() => {
     setActiveTab("details")
-    setCopyState("idle")
     setSessionImages([])
     setSessionComments([])
     setCommentLikeOverrides({})
@@ -826,21 +782,13 @@ export function MarkerDetailDrawer({
     }
   }, [sessionKey])
 
-  useEffect(() => {
-    if (copyState === "idle") return
-    const timeout = setTimeout(() => setCopyState("idle"), 2000)
-    return () => clearTimeout(timeout)
-  }, [copyState])
-
   const copyPosition = useCallback(async () => {
     if (!positionCopyValue) return
     try {
       if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") throw new Error("Clipboard API unavailable")
       await navigator.clipboard.writeText(positionCopyValue)
-      setCopyState("copied")
     } catch (error) {
       console.error("Clipboard error", error)
-      setCopyState("failed")
     }
   }, [positionCopyValue])
 
@@ -958,12 +906,6 @@ export function MarkerDetailDrawer({
           </div>
           <button type="button" aria-label={labels.close} title={labels.close} onClick={onClose} className="inline-flex size-8 items-center justify-center justify-self-end rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><IconX className="size-5" stroke={1.8} /></button>
         </div>
-        {positionValue ? (
-          <div className="mx-3 mb-2.5 flex min-h-9 items-center justify-between gap-2 rounded-md bg-primary/10 px-2.5">
-            <div className="flex min-w-0 items-center gap-2 text-xs"><IconMapPin className="size-4 shrink-0 text-primary" stroke={1.8} /><span className="font-semibold text-primary">{labels.position}</span><strong className="truncate font-mono tabular-nums">{positionValue}</strong></div>
-            {positionCopyValue ? <button type="button" data-testid="marker-detail-position-copy" aria-label={copyState === "copied" ? labels.copied : copyState === "failed" ? labels.copyFailed : labels.copyPosition} onClick={() => void copyPosition()} className="inline-flex min-h-7 shrink-0 items-center gap-1 rounded-md bg-card px-2 text-xs font-semibold text-primary hover:bg-accent">{copyState === "copied" ? <IconCheck className="size-4" /> : copyState === "failed" ? <IconAlertCircle className="size-4" /> : <IconCopy className="size-4" />}<span className="max-md:hidden">{copyState === "copied" ? labels.copied : copyState === "failed" ? labels.copyFailed : labels.copyPosition}</span></button> : null}
-          </div>
-        ) : null}
       </header>
 
       <div className="grid shrink-0 grid-cols-2 border-b border-border bg-card" role="tablist" aria-label={name}>
@@ -988,11 +930,15 @@ export function MarkerDetailDrawer({
         </div>
       </div>
 
-      {(activeTab === "details" ? effectiveGallery || completeAction : effectiveComments) ? (
+      {(activeTab === "details" ? positionValue || completeAction : effectiveComments) ? (
         <footer className="shrink-0 border-t border-border bg-card px-3 py-2 shadow-[0_-0.75rem_1.5rem_rgba(35,47,51,0.05)]">
           {activeTab === "details" ? (
             <div className="flex items-center justify-between gap-2">
-              {effectiveGallery ? <GalleryUploadControl config={effectiveGallery} labels={labels} /> : <span />}
+              {positionValue ? <div data-testid="marker-detail-coordinates" className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                <IconMapPin className="size-4 shrink-0" aria-hidden="true" />
+                <span className="font-mono tabular-nums">{positionValue}</span>
+                {positionCopyValue ? <button type="button" data-testid="marker-detail-position-copy" aria-label={labels.copyPosition} onClick={() => void copyPosition()} className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><IconCopy className="size-4" aria-hidden="true" /></button> : null}
+              </div> : <span />}
               {completeAction ? <Button size="sm" data-testid="marker-complete-toggle" aria-pressed={completeAction.completed} onClick={completeAction.onToggle} className={cn(completeAction.completed && "bg-emerald-600 hover:bg-emerald-600/90")}><IconCheck className="size-4" stroke={2} />{completeAction.completed ? completeAction.completedLabel : completeAction.label}</Button> : null}
             </div>
           ) : effectiveComments ? <CommentComposer config={effectiveComments} labels={labels} /> : null}

@@ -1,7 +1,7 @@
+import { useContextState, useCatalogView } from '../catalog/memory'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   IconGrid3x3,
-  IconInfoCircle,
   IconList,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
@@ -47,11 +47,11 @@ const QUALITY_RAIL_CLASS: Record<number, string> = {
 export default function TrainTradeGoodsPage() {
   const { t } = useTranslation();
   const [goods, setGoods] = useState<TrainTradeGoods[]>([]);
-  const [category, setCategory] = useState<Category>("all");
-  const [quality, setQuality] = useState<Quality>("all");
-  const [query, setQuery] = useState("");
-  const [view, setView] = useState<"grid" | "list">("grid");
-  const [page, setPage] = useState(1);
+  const [category, setCategory] = useContextState<Category>('traintrade', 'category', "all");
+  const [quality, setQuality] = useContextState<Quality>('traintrade', 'quality', "all");
+  const [query, setQuery] = useContextState<string>('traintrade', 'query', "");
+  const [view, setView] = useCatalogView('traintrade');
+  const [page, setPage] = useContextState<number>('traintrade', 'page', 1);
   const [error, setError] = useState(false);
   const resultsAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -133,12 +133,8 @@ export default function TrainTradeGoodsPage() {
   }
 
   return (
-    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide resultsKey={JSON.stringify([query, category, quality, view, currentPage])} filtersActive={Boolean(query) || category !== "all" || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
-        <div className="min-w-0">
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            {t("trainTrade.description", { count: goods.length })}
-          </p>
-        </div>
+    <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide browsing={{ scope: 'traintrade', ready: true }} resultsKey={JSON.stringify([query, category, quality, view, currentPage])} filtersActive={Boolean(query) || category !== "all" || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
+        <div className="min-w-0" />
         <SearchInput
           value={query}
           onChange={(value) => {
@@ -154,7 +150,7 @@ export default function TrainTradeGoodsPage() {
         />
       </header>} toolbar={<div className="space-y-3">
       <section aria-label={t("trainTrade.filters")} className="grid gap-3 border-b border-border pb-3 lg:grid-cols-2 lg:gap-6">
-        <FilterGroup label={t("trainTrade.categoryLabel")} hint={t("trainTrade.categoryHint")}>
+        <FilterGroup label={t("trainTrade.categoryLabel")}>
           {visibleCategories.map((option) => (
             <FilterChip variant="accent" key={option} active={category === option} onClick={() => { setCategory(option); setPage(1); }} testId={`train-trade-category-${option}`}>
               {t(`trainTrade.category.${option}`)}
@@ -162,7 +158,7 @@ export default function TrainTradeGoodsPage() {
             </FilterChip>
           ))}
         </FilterGroup>
-        <FilterGroup label={t("trainTrade.qualityLabel")} hint={t("trainTrade.qualityHint")}>
+        <FilterGroup label={t("trainTrade.qualityLabel")}>
           {visibleQualities.map((option) => (
             <FilterChip variant="accent" key={option} active={quality === option} onClick={() => { setQuality(option); setPage(1); }} testId={`train-trade-quality-${option}`}>
               {option === "all" ? t("trainTrade.all") : t("trainTrade.qualityValue", { value: option })}
@@ -173,7 +169,7 @@ export default function TrainTradeGoodsPage() {
       </section>
 
       <section className="flex min-h-9 items-center justify-between gap-3 border-b border-border pb-2">
-        <span className="text-sm tabular-nums text-muted-foreground">{t("trainTrade.resultCount", { count: filtered.length })}</span>
+
         <div className="inline-flex shrink-0 overflow-hidden rounded-md border border-border" role="group" aria-label={t("trainTrade.view")}>
           <ViewButton active={view === "grid"} onClick={() => { setView("grid"); setPage(1); }} label={t("trainTrade.viewGrid")}><IconGrid3x3 className="size-4" aria-hidden /></ViewButton>
           <ViewButton active={view === "list"} onClick={() => { setView("list"); setPage(1); }} label={t("trainTrade.viewList")} bordered><IconList className="size-4" aria-hidden /></ViewButton>
@@ -194,11 +190,6 @@ export default function TrainTradeGoodsPage() {
       )}
 
       <CatalogPagination page={currentPage} pageCount={pageCount} onPageChange={changePage} />
-
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <IconInfoCircle className="size-4 shrink-0" stroke={1.8} aria-hidden />
-        {t("trainTrade.sourceNote")}
-      </p>
     </div>
     </ContentPage>
   );

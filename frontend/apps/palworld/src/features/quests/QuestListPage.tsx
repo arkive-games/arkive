@@ -1,11 +1,12 @@
+import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { Input } from '@gamemap/ui'
+import { CatalogSearchInput } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
-import { CatalogPageLoading } from '../catalog/components'
+import { CatalogPageLoading, CatalogNoResults } from '../catalog/components'
 import { questTypeLabel } from './labels'
 
 export default function QuestListPage() {
@@ -14,8 +15,8 @@ export default function QuestListPage() {
 
   const [bundle, setBundle] = useState<QuestsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [type, setType] = useState('all')
+  const [query, setQuery] = useCatalogState<string>('quests', 'query', '')
+  const [type, setType] = useCatalogState<string>('quests', 'type', 'all')
 
   useEffect(() => {
     let cancelled = false
@@ -77,7 +78,7 @@ export default function QuestListPage() {
   )
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'quests', ready: !!bundle, resultsKey: JSON.stringify([query,type]) }}
       active="/quests"
       title={t('quest.title')}
       heading
@@ -85,25 +86,23 @@ export default function QuestListPage() {
       filtersActive={type !== 'all'}
     >
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('quest.searchPlaceholder')}
-              className="max-w-sm"
+              className=""
             />
             <ContentPageFilters />
-            {bundle ? (
-              <span className="text-sm text-muted-foreground">
-                {t('quest.count', { count: list.length })}
-              </span>
-            ) : null}
+
           </div>
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
           ) : !bundle ? (
             <CatalogPageLoading />
+          ) : list.length === 0 ? (
+            <CatalogNoResults />
           ) : (
             <ul className="divide-y divide-border/60 rounded-lg border border-border bg-card">
               {mobilePaging.visibleItems.map((quest) => (

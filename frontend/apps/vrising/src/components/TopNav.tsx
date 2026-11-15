@@ -6,6 +6,7 @@ import gameIcon from '../assets/vrising-icon.webp'
 import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } from '../i18n'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
+import { REFERENCE_ENTRIES } from './encyclopediaNavigation'
 
 export type NavKey = '/' | '/vblood' | '/database' | '/systems' | '/changelog'
 
@@ -17,9 +18,7 @@ export function TopNav({ active }: { active: NavKey }) {
 
   const items: ShellNavItem[] = [
     { key: '/', label: t('nav.map'), active: active === '/' },
-    { key: '/vblood', label: t('nav.vblood'), active: active === '/vblood' },
-    { key: '/database', label: t('nav.database'), active: active === '/database' },
-    { key: '/systems', label: t('nav.systems'), active: active === '/systems' },
+    ...REFERENCE_ENTRIES.map(entry => ({ key: entry.key, label: t(entry.labelKey), active: active === entry.key })),
   ]
 
   return (

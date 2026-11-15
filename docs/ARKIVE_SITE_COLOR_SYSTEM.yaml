@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.site-color-system"
 title: "Arkive Site-wide Color System"
 status: "canonical"
-last_reviewed: "2026-10-27"
+last_reviewed: "2026-11-15"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -66,6 +66,7 @@ brand_direction:
   rules:
     - "A game colour only ever marks its own game; it never becomes shared chrome."
     - "One warm_action control per compact surface; secondary actions use neutral pills."
+    - "Catalog active type filters use foreground/background neutral contrast; warm search decoration does not redefine semantic feedback or data selection."
     - "Do not put white text or icons on any warm gradient; use the warm-action foreground."
 
 semantic_tokens:
@@ -78,7 +79,7 @@ semantic_tokens:
     popover_foreground: { value: "#202020", css: "--popover-foreground" }
     primary: { value: "#0090FF", css: "--primary" }
     primary_foreground: { value: "#202020", css: "--primary-foreground" }
-    link: { value: "#0D74CE", css_note: "No separate token; use --arkive-nav-active" }
+    link: { value: "#0B6FC6", css_note: "No separate token; use --arkive-nav-active" }
     secondary: { value: "#F0F0F0", css: "--secondary" }
     secondary_foreground: { value: "#202020", css: "--secondary-foreground" }
     muted: { value: "#F0F0F0", css: "--muted" }
@@ -88,7 +89,7 @@ semantic_tokens:
     input: { value: "#F0F0F0", css: "--input" }
     focus_ring: { value: "#0D74CE", css: "--ring" }
     selected_surface: { value: "#E6F4FE", css: "--arkive-filter-active when no tint, plus non-color indicator" }
-    navigation: { value: "#0D74CE", css: "--arkive-nav-active" }
+    navigation: { value: "#0B6FC6", css: "--arkive-nav-active" }
     navigation_foreground: { value: "#FFFFFF", css: "--arkive-nav-on-active" }
     warm_action: { value: "linear-gradient(110deg, #ffd08a, #ffb398 60%, #ffa7be)", css: "--arkive-warm-action" }
     warm_action_foreground: { value: "#40251c", css: "--arkive-warm-action-foreground" }
@@ -111,7 +112,7 @@ semantic_tokens:
     popover_foreground: { value: "#EEEEEE", css: "--popover-foreground" }
     primary: { value: "#0090FF", css: "--primary" }
     primary_foreground: { value: "#061018", css: "--primary-foreground" }
-    link: { value: "#70B8FF", css_note: "No separate token; use --arkive-nav-active" }
+    link: { value: "#0090FF", css_note: "No separate token; use --arkive-nav-active" }
     secondary: { value: "#222222", css: "--secondary" }
     secondary_foreground: { value: "#EEEEEE", css: "--secondary-foreground" }
     muted: { value: "#222222", css: "--muted" }
@@ -151,6 +152,7 @@ contrast_contract:
       decorative dividers, or between two adjacent surfaces (--input is a field
       FILL, not a border; its ratio against the page is not a conformance figure).
   verified_pairs:
+    light_selected_label: "#0B6FC6 on #E6F4FE, 4.57:1"
     light_primary_text: "#202020 on #0090FF, 4.99:1"
     dark_primary_text: "#061018 on #0090FF, 5.87:1"
     light_warm_text: "#40251c on #ffa7be (worst gradient stop), 7.68:1"
@@ -195,7 +197,7 @@ theme_contract:
 
 component_usage:
   main_call_to_action: "warm_action and warm_action_foreground, on a pill"
-  portal_search_and_compose: "warm_search and warm_search_foreground, only for the portal's game-search submit and the forum's compose and publish buttons"
+  portal_search_and_compose: "warm_search and warm_search_foreground, for catalog-search submit controls and the forum's compose and publish buttons"
   secondary_action: "neutral pill: muted or card surface with foreground text"
   data_tool_primary_action: "primary and primary_foreground inside map and calculator workspaces"
   navigation_and_link: "navigation or link according to whether the role is a surface or text"

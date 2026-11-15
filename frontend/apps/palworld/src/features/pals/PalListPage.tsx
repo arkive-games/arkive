@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Input } from '@gamemap/ui'
-import { defineMemoryRecord, isString, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
+import { Button, CatalogSearchInput } from '@gamemap/ui'
+import { browserMemory, defineMemoryRecord, isString, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadPals, type PalsBundle } from '../../lib/pals'
@@ -47,6 +47,15 @@ const queryRecord = defineMemoryRecord({
   validate: isString,
 })
 
+// Keep the old device preference as a migration seed, never rewrite it.
+const facetsRecord = defineMemoryRecord({
+  id: 'pal-facets', namespace: 'palworld', surface: 'catalog-context',
+  ...memoryPolicy.sessionContext('clear-catalog-context'),
+  schemaVersion: '1.0.0',
+  defaultValue: () => ({ ...browserMemory.read(filterRecord), query: '' }),
+  validate: isPalFilter,
+})
+
 const viewRecord = defineMemoryRecord({
   id: 'view-mode',
   namespace: 'palworld',
@@ -66,7 +75,7 @@ export default function PalListPage() {
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [durableFilter, setDurableFilter] = useMemoryState(filterRecord)
+  const [durableFilter, setDurableFilter] = useMemoryState(facetsRecord)
   const [query, setQuery] = useMemoryState(queryRecord, { partition: 'pals' })
   const [view, setView] = useMemoryState(viewRecord)
   const filter = { ...durableFilter, query }
@@ -98,7 +107,7 @@ export default function PalListPage() {
   })
 
   return (
-    <ContentPage
+    <ContentPage browsing={{ section: 'pals', ready: !!bundle, resultsKey: JSON.stringify([filter,view]) }}
       active="/pals"
       title={t('pal.title')}
       heading
@@ -111,12 +120,12 @@ export default function PalListPage() {
     >
         <CatalogDataProvider pals={bundle ?? undefined}>
           <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 md:flex md:flex-wrap">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={filter.query}
               onChange={(e) => setFilter({ ...filter, query: e.target.value })}
               placeholder={t('pal.searchPlaceholder')}
-              className="order-1 max-w-none md:max-w-xs"
+              className="order-1"
             />
             <div className="order-2 inline-flex overflow-hidden rounded-md border border-border md:order-3 md:ml-auto">
               <Button
@@ -136,11 +145,7 @@ export default function PalListPage() {
                 {fs.listView}
               </Button>
             </div>
-            {bundle ? (
-              <span data-pagination-anchor data-testid="pal-count" className="order-3 col-span-2 text-sm text-muted-foreground md:order-2">
-                {t('pal.count', { count: roster.length })}
-              </span>
-            ) : null}
+
           </div>
 
           <ContentPageFilters className="mb-4" />
