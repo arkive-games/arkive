@@ -10,7 +10,7 @@ import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
 import { palIconUrl } from '../../lib/assets'
 import { toGameCoords } from '../../lib/coords'
-import { CatalogPageLoading, ItemGlyph } from '../catalog/components'
+import { CatalogPageLoading, CatalogNoResults, ItemGlyph } from '../catalog/components'
 
 export default function MerchantListPage() {
   const { t, i18n } = useTranslation()
@@ -95,6 +95,8 @@ export default function MerchantListPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !merchants || !items ? (
         <CatalogPageLoading />
+      ) : list.length === 0 ? (
+        <CatalogNoResults />
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {mobilePaging.visibleItems.map((m) => {

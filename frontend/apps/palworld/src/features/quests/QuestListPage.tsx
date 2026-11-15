@@ -6,7 +6,7 @@ import { CatalogSearchInput } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
-import { CatalogPageLoading } from '../catalog/components'
+import { CatalogPageLoading, CatalogNoResults } from '../catalog/components'
 import { questTypeLabel } from './labels'
 
 export default function QuestListPage() {
@@ -101,6 +101,8 @@ export default function QuestListPage() {
             <div className="mt-8 text-center text-destructive">{loadError}</div>
           ) : !bundle ? (
             <CatalogPageLoading />
+          ) : list.length === 0 ? (
+            <CatalogNoResults />
           ) : (
             <ul className="divide-y divide-border/60 rounded-lg border border-border bg-card">
               {mobilePaging.visibleItems.map((quest) => (

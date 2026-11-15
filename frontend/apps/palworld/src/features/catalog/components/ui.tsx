@@ -67,6 +67,11 @@ export function StatRow({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
+export function CatalogNoResults() {
+  const { t } = useTranslation()
+  return <p role="status" className="py-8 text-center text-sm text-muted-foreground">{t('globalSearch.empty')}</p>
+}
+
 export function CatalogPageLoading() {
   const { t } = useTranslation()
   return <PageSkeleton label={t('catalogLoading')} />

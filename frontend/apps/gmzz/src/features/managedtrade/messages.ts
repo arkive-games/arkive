@@ -1,7 +1,7 @@
 export const managedTradeMessages = {
   'en-US': {
     title: 'Trade War',
-    description: 'The guild caravan market: {{goods}} goods traded across {{sites}} stations on {{routes}} routes. Prices are set live by the server; this page carries the ranges, rules and costs the client ships.',
+    description: 'Trade prices change during play; the listed values are price ranges.',
     loadError: 'Trade War data could not be loaded. Reload the page to try again.',
     tabs: { label: 'Trade War sections', overview: 'Rules', goods: 'Goods', stations: 'Stations', caravan: 'Caravan', calculator: 'Profit calculator', commissions: 'Commissions' },
     rules: {
@@ -121,7 +121,7 @@ export const managedTradeMessages = {
   },
   'zh-CN': {
     title: '贸易战',
-    description: '俱乐部商队贸易：{{goods}} 种特产、{{sites}} 个贸易站、{{routes}} 条路线。实时价格由服务器决定，本页整理客户端中的价格区间、规则与成本。',
+    description: '成交价格会随游戏变化，所列价格为区间值。',
     loadError: '贸易战数据加载失败，请刷新页面重试。',
     tabs: { label: '贸易战分区', overview: '规则', goods: '特产', stations: '贸易站', caravan: '商队', calculator: '利润计算器', commissions: '委托' },
     rules: {
@@ -241,7 +241,7 @@ export const managedTradeMessages = {
   },
   'zh-TW': {
     title: '貿易戰',
-    description: '俱樂部商隊貿易：{{goods}} 種特產、{{sites}} 個貿易站、{{routes}} 條路線。即時價格由伺服器決定，本頁整理客戶端中的價格區間、規則與成本。',
+    description: '成交價格會隨遊戲變化，所列價格為區間值。',
     loadError: '貿易戰資料載入失敗，請重新整理頁面再試。',
     tabs: { label: '貿易戰分區', overview: '規則', goods: '特產', stations: '貿易站', caravan: '商隊', calculator: '利潤計算器', commissions: '委託' },
     rules: {

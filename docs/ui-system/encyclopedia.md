@@ -72,8 +72,10 @@ and portal-based talent subsections. Folding hides those subsections without
 unmounting them. PBZ's seven categories and their existing details now reuse
 the directory with the top navigation's inventory and existing mobile-menu
 icons. Its cards, filters, documents and skill sections retain their layout.
-The six scoped game shells are integrated locally; cross-game acceptance
-remains a separate closeout step.
+The six scoped game shells have passed local cross-game closeout: 47 category
+routes for directory/overflow and six representative desktop/mobile pages for
+shared controls, session reload and empty-result layout. This is local
+verification, not production deployment or approval of deferred mobile design.
 
 RO3's seven wiki categories now retain session-only query/facets, subsection,
 paging, selected record and viewed levels/variants. Palworld's 14 reference

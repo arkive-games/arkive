@@ -1,3 +1,4 @@
+import { CatalogNoResults } from '../catalog/components'
 import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -173,6 +174,8 @@ export default function PartnerSkillsPage() {
         <div className="mt-8 text-center text-destructive">{loadError}</div>
       ) : !bundle ? (
         <PalPageLoading />
+      ) : list.length === 0 ? (
+        <CatalogNoResults />
       ) : isMobile ? (
         <>
           <button

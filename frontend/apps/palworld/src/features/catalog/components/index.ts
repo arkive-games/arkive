@@ -3,6 +3,7 @@ export {
   InfoRows,
   StatRow,
   CatalogPageLoading,
+  CatalogNoResults,
   CatalogNotFound,
   rarityBorderClass,
   BuildingGlyph,

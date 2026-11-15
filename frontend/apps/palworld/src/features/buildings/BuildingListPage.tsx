@@ -14,7 +14,7 @@ import {
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { buildingTypeLabel, typeOrder } from '../catalog/labels'
-import { CatalogDataProvider, CatalogPageLoading } from '../catalog/components'
+import { CatalogDataProvider, CatalogPageLoading, CatalogNoResults } from '../catalog/components'
 import { RevealFooter } from '../catalog/RevealFooter'
 import { useIncrementalList } from '../catalog/useIncrementalList'
 import { makeTechResolvers } from '../technology/techModel'
@@ -141,6 +141,8 @@ export default function BuildingListPage() {
             <div className="mt-8 text-center text-destructive">{loadError}</div>
           ) : !bundle || !tech || !techResolvers ? (
             <CatalogPageLoading />
+          ) : list.length === 0 ? (
+            <CatalogNoResults />
           ) : (
             <CatalogDataProvider items={items ?? undefined} buildings={bundle} tech={tech}>
               <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">

@@ -105,7 +105,7 @@ export interface ChipGroup {
 }
 
 /** Search box plus chip filters; every page's list header. */
-export function ListControls({ query, onQuery, groups }: {
+export function ListControls({ query, onQuery, groups, count }: {
   query: string
   onQuery: (q: string) => void
   groups: ChipGroup[]
@@ -130,6 +130,7 @@ export function ListControls({ query, onQuery, groups }: {
           ))}
         </div>
       ) : null}
+      {count === 0 ? <p role="status" className="py-8 text-center text-sm text-muted-foreground">{t('wiki.noResults')}</p> : null}
     </div>
   )
 }

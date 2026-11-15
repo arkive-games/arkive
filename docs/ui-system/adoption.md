@@ -363,3 +363,24 @@ on port 15182; repository deployment configuration is unchanged. App lint/build,
 memory inventory and the full suite pass: 173 files / 1917 tests. No remote
 delivery. This completes the six scoped directory integrations; their final
 cross-game visual review remains open.
+
+
+Six-game encyclopedia closeout: 47 existing category routes passed directory,
+single-toggle and document-overflow checks. Six representative pages passed
+expanded/collapsed width, shared search geometry, session query/collapse reload,
+390-pixel overflow and empty-result footer checks. These checks preserve existing
+game-owned records, art, navigation, footers and mobile composition.
+
+The review removed remaining GMZZ interface tutorials, implementation notes and
+result-total introductions while retaining game facts. Eight Palworld catalogs
+and PBZ's shared list controls now explain no-match states only after data is
+ready. Nine loaded/no-match/clear browser flows restore their original records.
+The 47-route shell check is not a claim that every record or every filter was
+exhaustively tested. Mobile redesign, About/credits, forum and GMZZ BUILD exit
+protection remain outside this closeout.
+
+Affected app lint/build checks, the 140-key memory inventory and the full suite
+pass: 173 files / 1917 tests. Final screenshots wait for actual records and
+visible images rather than treating a mounted search input as data readiness.
+Chinese comparison evidence is retained in ignored output/playwright. Changes
+remain local; no push, pull request or deployment is part of this review.
