@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.4",
+      "date": "2026-11-16",
+      "commit": "df8ce0375ace60577bdc9bb2382421a830360c4f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Restore the encyclopedia heading, tighten Pal card metadata and organize common filters into aligned icon choices.",
+            "zh-CN": "恢复百科标题与橙色标识，压缩帕鲁卡片顶部信息区，并将常用筛选整理为对齐的图标选项。",
+            "zh-TW": "恢復百科標題與橙色標識，壓縮帕魯卡片頂部資訊區，並將常用篩選整理為對齊的圖示選項。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.3",
       "date": "2026-11-16",
       "commit": "9fd0e6f3c1cdf558050d3cf61996d5432fc8a84f",
