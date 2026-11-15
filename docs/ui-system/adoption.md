@@ -40,7 +40,7 @@ needs no invented network error. Keep final evidence and state actual limitation
 | Catalogs | Tool geometry/truncation/reflow, optional game grouping, Other membership after game entry launches |
 | Encyclopedia | Adjustable rail/sticky calibration; game-owned schema/detail and related links; mobile deferred |
 | Map | Picker geometry/group names, legacy memory retirement in released games, provisional mobile; OSS deferred |
-| Tools | Save destination/account scope, saved-record workflow, per-tool applicability |
+| Tools | Explicit-save editor destinations/account scope and exit guards; ordinary calculators use automatic device memory |
 | Credits | Identity/aliases, bots, ordering, refresh and manual editor |
 | Acceptance/data | Unreviewed states/themes, contrast/geometry, current inventory/child parity, signed-in ordering and direct-post routes |
 
@@ -181,3 +181,18 @@ verify legacy adoption, Hide All through return/reload, independent new-tab
 filters and unchanged device seed. App lint/build and focused tests pass.
 Full suite: 166 files / 1900 tests pass; memory-key inventory is unchanged.
 Unreleased games and OSS preview are excluded from further adoption work.
+
+Calculator memory decision: ordinary calculators without a save workflow use
+automatic device-local task drafts, without a Save button or leave reminder.
+Named build/loadout editors retain the explicit-save contract. Palworld breeding
+and stat inputs already use local records; this batch adds GMZZ league points,
+station planning and trade-profit inputs with independent validated records.
+Trade inputs validate current goods/sites/caravan/part ids. Results are recomputed,
+and the existing league/station reset controls plus the trade reset replace
+remembered input. The shared 30-day local-draft retention applies.
+
+Browser checks against the current game data verify return/reload, independent
+tool records and persistent reset behavior. Closing/reopening the browser with
+the same profile restores the league input. GMZZ lint/build, inventory and full
+suite pass: 167 files / 1904 tests. No remote delivery. Explicit-save editor exit
+guards and their save destinations remain separate outstanding work.

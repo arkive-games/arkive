@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { useMemory } from '@gamemap/state-memory'
+import { calculationSetter, leagueInputs } from '../calculators/memory'
 import { IconInfoCircle, IconRefresh } from '@tabler/icons-react'
 import { Button, Input, useDocumentTitle } from '@gamemap/ui'
 import { useTranslation } from 'react-i18next'
@@ -22,10 +24,14 @@ function ScenarioLine({ scenario, targetId, t }: { scenario: LeagueScenario; tar
 
 export default function LeaguePointsPage() {
   const { t } = useTranslation()
-  const [guilds, setGuilds] = useState<LeagueGuild[]>(DEFAULT_GUILDS.map((guild) => ({ ...guild, weeks: { ...guild.weeks } })))
+  const [inputs, setInputs] = useMemory(leagueInputs)
+  const guilds = inputs.guilds
+  const setGuilds = calculationSetter(setInputs, 'guilds')
   const rules: LeagueRules = DEFAULT_RULES
-  const [targetId, setTargetId] = useState(DEFAULT_GUILDS[0].id)
-  const [weekStarted, setWeekStarted] = useState<Record<WeekNumber, boolean>>({ 1: false, 2: false, 3: false, 4: false })
+  const targetId = inputs.targetId
+  const setTargetId = calculationSetter(setInputs, 'targetId')
+  const weekStarted = inputs.weekStarted
+  const setWeekStarted = calculationSetter(setInputs, 'weekStarted')
   useDocumentTitle(`${t('league.title')} - ${t('siteTitle')}`)
   const valid = isValidRoster(guilds)
   const simulationGuilds = useMemo(() => guilds.map((guild) => ({ ...guild, weeks: Object.fromEntries(([1, 2, 3, 4] as WeekNumber[]).map((week) => [week, { ...guild.weeks[week], status: weekStarted[week] ? guild.weeks[week].status : 'absent' }])) as LeagueGuild['weeks'] })), [guilds, weekStarted])

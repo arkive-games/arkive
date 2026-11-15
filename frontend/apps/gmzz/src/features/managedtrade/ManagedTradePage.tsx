@@ -8,6 +8,8 @@ import { ContentPage } from '@/components/ContentPage'
 import CatalogPagination from '@/features/traintrade/CatalogPagination'
 import { useRemoteData } from '@/lib/useRemoteData'
 import { TYPE } from '@/lib/typography'
+import { useMemory } from '@gamemap/state-memory'
+import { calculationSetter, defaultTradeInputs, tradeInputs } from '../calculators/memory'
 import {
   adjacency,
   breakEvenSellPrice,
@@ -424,17 +426,29 @@ const intValue = (raw: string) => {
 }
 
 function Calculator({ data, t }: { data: ManagedTradeData; t: T }) {
-  const [goodsId, setGoodsId] = useState(data.goods[0].id)
+  const [record] = useState(() => tradeInputs(data))
+  const [inputs, setInputs] = useMemory(record)
+  const goodsId = inputs.goodsId
+  const setGoodsId = calculationSetter(setInputs, 'goodsId')
   const goods = data.goods.find((entry) => entry.id === goodsId) ?? data.goods[0]
-  const [from, setFrom] = useState(goods.producers[0] ?? data.sites[0].id)
-  const [to, setTo] = useState(() => data.sites.find((site) => !goods.producers.includes(site.id))?.id ?? data.sites[0].id)
-  const [buyPrice, setBuyPrice] = useState(goods.stationSells.mid)
-  const [sellPrice, setSellPrice] = useState(goods.stationBuys.mid)
-  const [buyTax, setBuyTax] = useState(data.sites[0].baseTax)
-  const [sellTax, setSellTax] = useState(data.sites[0].baseTax)
-  const [level, setLevel] = useState(1)
-  const [partLevels, setPartLevels] = useState<number[]>(() => (data.parts[0] ?? []).map(() => 1))
-  const [quantity, setQuantity] = useState<number | null>(null)
+  const from = inputs.from
+  const setFrom = calculationSetter(setInputs, 'from')
+  const to = inputs.to
+  const setTo = calculationSetter(setInputs, 'to')
+  const buyPrice = inputs.buyPrice
+  const setBuyPrice = calculationSetter(setInputs, 'buyPrice')
+  const sellPrice = inputs.sellPrice
+  const setSellPrice = calculationSetter(setInputs, 'sellPrice')
+  const buyTax = inputs.buyTax
+  const setBuyTax = calculationSetter(setInputs, 'buyTax')
+  const sellTax = inputs.sellTax
+  const setSellTax = calculationSetter(setInputs, 'sellTax')
+  const level = inputs.level
+  const setLevel = calculationSetter(setInputs, 'level')
+  const partLevels = inputs.partLevels
+  const setPartLevels = calculationSetter(setInputs, 'partLevels')
+  const quantity = inputs.quantity
+  const setQuantity = calculationSetter(setInputs, 'quantity')
 
   const parts = data.parts[level - 1] ?? []
   const stats = caravanStats(data, level, partLevels)
@@ -533,6 +547,9 @@ function Calculator({ data, t }: { data: ManagedTradeData; t: T }) {
           ))}
         </div>
         <div className="flex flex-wrap items-end gap-3">
+          <button type="button" onClick={() => setInputs(defaultTradeInputs(data))} className={cn('h-9 rounded-md border border-border px-3 text-sm text-muted-foreground hover:bg-accent hover:text-foreground', FOCUS)}>
+            {t('managedtrade.calc.reset')}
+          </button>
           <Field label={t('managedtrade.calc.quantity')}>
             <Input type="number" min={0} value={count} onChange={(event) => setQuantity(intValue(event.target.value))} className="h-9 w-32 text-sm" />
           </Field>

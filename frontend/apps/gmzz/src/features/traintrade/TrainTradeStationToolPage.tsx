@@ -21,6 +21,8 @@ import {
   type StationType,
 } from "@/features/traintrade/stationSolver";
 import "./station.css";
+import { useMemory } from '@gamemap/state-memory';
+import { calculationSetter, stationInputs } from '../calculators/memory';
 
 const STATION_KEY: Record<StationType, string> = {
   winery: "trainTrade.station.wine",
@@ -71,13 +73,21 @@ export default function TrainTradeStationToolPage() {
   const { t, i18n } = useTranslation();
   const [profiles, setProfiles] = useState<TrainTradeRouteProfile[] | null>(null);
   const [dataError, setDataError] = useState(false);
-  const [difficulty, setDifficulty] = useState<TrainTradeDifficultyId | "">("");
-  const [routeMix, setRouteMix] = useState<StationTotals | null>(null);
-  const [areaMixes, setAreaMixes] = useState<(StationTotals | undefined)[]>([]);
-  const [originHint, setOriginHint] = useState<HintId | "">("");
-  const [steps, setSteps] = useState<ConfirmedStep[]>([]);
-  const [pendingCurrent, setPendingCurrent] = useState<StationType | "">("");
-  const [pendingHint, setPendingHint] = useState<HintId | "">("");
+  const [inputs, setInputs] = useMemory(stationInputs);
+  const difficulty = inputs.difficulty;
+  const setDifficulty = calculationSetter(setInputs, 'difficulty');
+  const routeMix = inputs.routeMix;
+  const setRouteMix = calculationSetter(setInputs, 'routeMix');
+  const areaMixes = inputs.areaMixes;
+  const setAreaMixes = calculationSetter(setInputs, 'areaMixes');
+  const originHint = inputs.originHint;
+  const setOriginHint = calculationSetter(setInputs, 'originHint');
+  const steps = inputs.steps;
+  const setSteps = calculationSetter(setInputs, 'steps');
+  const pendingCurrent = inputs.pendingCurrent;
+  const setPendingCurrent = calculationSetter(setInputs, 'pendingCurrent');
+  const pendingHint = inputs.pendingHint;
+  const setPendingHint = calculationSetter(setInputs, 'pendingHint');
 
   useDocumentTitle(`${t("trainTrade.stationTool.title")} - ${t("trainTrade.stationTool.productTitle")}`);
 
@@ -133,7 +143,7 @@ export default function TrainTradeStationToolPage() {
     if (isArea) {
       // Correcting an area's mix keeps the stops already confirmed in it.
       setAreaMixes((current) => Array.from({ length: Math.max(current.length, areaIndex + 1) }, (_, index) => (
-        index === areaIndex ? next : current[index]
+        index === areaIndex ? next : current[index] ?? null
       )));
       setPendingCurrent("");
       return;
