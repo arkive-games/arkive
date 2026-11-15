@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.36.1",
+      "date": "2026-11-15",
+      "commit": "77018ab7e40368a740becada29dcdc52079be48f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Resume reference searches, filters, pages and reading position when returning.",
+            "zh-CN": "返回资料页时恢复搜索、筛选、分页和阅读位置。",
+            "zh-TW": "返回資料頁時恢復搜尋、篩選、分頁和閱讀位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.36.0",
       "date": "2026-11-14",
       "commit": "657ca972792b93f66d50d4eede270e8d041d9441",
