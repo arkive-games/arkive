@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.12.0",
+      "date": "2026-11-15",
+      "commit": "b7db5d0a1cd176e3369d8a36906ef7b272c72be5",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse V Blood and knowledge records from a collapsible desktop directory, with search beside the selected records and existing mobile category cards retained.",
+            "zh-CN": "桌面百科新增可收起的分类目录，可切换首领、配方、被动、建筑与研究，搜索位于资料区，手机端保留原有分类卡片。",
+            "zh-TW": "桌面百科新增可收起的分類目錄，可切換首領、配方、被動、建築與研究，搜尋位於資料區，手機端保留原有分類卡片。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.11.2",
       "date": "2026-11-15",
       "commit": "b83bb15ffec5e1e7306f99bec9f675780f480578",
