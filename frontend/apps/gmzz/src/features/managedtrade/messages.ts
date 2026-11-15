@@ -67,6 +67,7 @@ export const managedTradeMessages = {
       note: 'Each caravan level has its own part ladder: upgrading the caravan needs every part at its top, and the parts start again from level 1 on the new caravan.',
     },
     calc: {
+      reset: 'Reset calculation',
       heading: 'Profit calculator',
       intro: 'Enter the untaxed prices shown in the two markets. The result uses the game\'s own tax formulas.',
       goods: 'Goods',
@@ -186,6 +187,7 @@ export const managedTradeMessages = {
       note: '每个商队等级有独立的部件等级：所有部件升满后才能升级商队，升级后的新商队部件从 1 级重新开始。',
     },
     calc: {
+      reset: '重置计算',
       heading: '利润计算器',
       intro: '填入两个交易面板中显示的税前价格，按游戏内税率公式计算。',
       goods: '特产',
@@ -305,6 +307,7 @@ export const managedTradeMessages = {
       note: '每個商隊等級有獨立的部件等級：所有部件升滿後才能升級商隊，升級後的新商隊部件從 1 級重新開始。',
     },
     calc: {
+      reset: '重設計算',
       heading: '利潤計算器',
       intro: '填入兩個交易面板中顯示的稅前價格，按遊戲內稅率公式計算。',
       goods: '特產',
