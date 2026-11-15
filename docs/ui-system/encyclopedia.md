@@ -17,8 +17,15 @@ with current section active. Flush-top geometry and ordinary footer follow
 [Visual foundations](visual-direction.md#shells-footers-and-boundaries).
 
 One primary document scroller; detail surfaces may scroll internally. Use the
-foundation content-width roles. Shared states come from [States](state-matrix.md);
+wide-data foundation width for the desktop directory and content together,
+matching the RO3 skills page rather than centering the directory in a narrower
+standard-width column. Keep the shared page gutter at the viewport edges.
+Shared states come from [States](state-matrix.md);
 loading reserves geometry and errors retain query/filters.
+
+The Palworld pal catalog is filter-only and always uses its grid presentation.
+Do not add a search or grid/list toolbar above its filters, and do not apply
+legacy hidden search or list-mode preferences to that page.
 
 ## Desktop sidebar
 
@@ -33,7 +40,9 @@ values, initially calibrated from RO3:
 Collapse shows only primary icons, hides labels/inline children and releases
 content width. Keep expand control, selected indication and accessible icon
 names. Presentation collapse/loading must retain selected branch, search and
-filters. Structural reference: supplied [ZCOOL](https://www.zcool.com.cn/recommend#tab_anchor)
+filters. Hide the directory scrollbar while retaining wheel, touch and keyboard
+scrolling so long game directories remain fully reachable.
+Structural reference: supplied [ZCOOL](https://www.zcool.com.cn/recommend#tab_anchor)
 screenshots; do not borrow its branding.
 
 ## Details and returning

@@ -1,6 +1,28 @@
 {
   "entries": [
     {
+      "date": "2026-11-16",
+      "commit": "e58e7f350dc132b6c79768cf13e6b0c3df6d3c4b",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Encyclopedia directories scroll without a visible scrollbar.",
+            "zh-CN": "百科目录保留滚动操作，不再显示滚动条。",
+            "zh-TW": "百科目錄保留捲動操作，不再顯示捲動條。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-15",
       "commit": "27513879d26d33164d56cf28a1e031a082ee77f4",
       "targets": [

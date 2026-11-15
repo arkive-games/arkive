@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, CatalogSearchInput } from '@gamemap/ui'
-import { browserMemory, defineMemoryRecord, isString, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadPals, type PalsBundle } from '../../lib/pals'
 import { CatalogDataProvider } from '../catalog/components'
-import { PalCard, PalFilters, PalPageLoading, PalTable } from './components'
+import { PalCard, PalFilters, PalPageLoading } from './components'
 import { filterStrings } from './filterStrings'
 import { EMPTY_FILTER, isFilterActive, useFilteredPals, type PalFilter } from './useFilteredPals'
 
@@ -37,16 +36,6 @@ const filterRecord = defineMemoryRecord({
   migrateLegacy: (raw: string) => ({ ...EMPTY_FILTER, ...(parseJson(raw) as Partial<PalFilter>), query: '' }),
 })
 
-const queryRecord = defineMemoryRecord({
-  id: 'query',
-  namespace: 'palworld',
-  surface: 'pals-catalog',
-  ...memoryPolicy.sessionContext('clear-pal-search'),
-  schemaVersion: '1.0.0',
-  defaultValue: () => '',
-  validate: isString,
-})
-
 // Keep the old device preference as a migration seed, never rewrite it.
 const facetsRecord = defineMemoryRecord({
   id: 'pal-facets', namespace: 'palworld', surface: 'catalog-context',
@@ -54,16 +43,6 @@ const facetsRecord = defineMemoryRecord({
   schemaVersion: '1.0.0',
   defaultValue: () => ({ ...browserMemory.read(filterRecord), query: '' }),
   validate: isPalFilter,
-})
-
-const viewRecord = defineMemoryRecord({
-  id: 'view-mode',
-  namespace: 'palworld',
-  surface: 'catalog',
-  ...memoryPolicy.userPreference('reset-catalog-view'),
-  schemaVersion: '1.0.0',
-  defaultValue: () => 'grid' as 'grid' | 'list',
-  validate: (value: unknown): value is 'grid' | 'list' => value === 'grid' || value === 'list',
 })
 
 /** Read the persisted filter, merged onto EMPTY_FILTER so a stored object with
@@ -76,13 +55,8 @@ export default function PalListPage() {
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [durableFilter, setDurableFilter] = useMemoryState(facetsRecord)
-  const [query, setQuery] = useMemoryState(queryRecord, { partition: 'pals' })
-  const [view, setView] = useMemoryState(viewRecord)
-  const filter = { ...durableFilter, query }
-  const setFilter = (next: PalFilter) => {
-    setDurableFilter({ ...next, query: '' })
-    setQuery(next.query)
-  }
+  const filter = { ...durableFilter, query: '' }
+  const setFilter = (next: PalFilter) => setDurableFilter({ ...next, query: '' })
 
   useEffect(() => {
     let cancelled = false
@@ -106,48 +80,16 @@ export default function PalListPage() {
     resetKey: JSON.stringify(filter),
   })
 
+
   return (
-    <ContentPage browsing={{ section: 'pals', ready: !!bundle, resultsKey: JSON.stringify([filter,view]) }}
+    <ContentPage browsing={{ section: 'pals', ready: !!bundle, resultsKey: JSON.stringify(filter) }}
       active="/pals"
       title={t('pal.title')}
       heading
-      // Inline on desktop, behind the mobile header's filter icon (see
-      // ContentPage). The search box and the grid/list switch stay on the page.
       filters={bundle ? <PalFilters bundle={bundle} filter={filter} onChange={setFilter} /> : undefined}
-      // The query lives in the on-page search box, so it must not dot the icon —
-      // only the facets inside the sheet count as "filters active".
       filtersActive={isFilterActive({ ...filter, query: '' })}
     >
         <CatalogDataProvider pals={bundle ?? undefined}>
-          <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 md:flex md:flex-wrap">
-            <CatalogSearchInput
-              type="search"
-              value={filter.query}
-              onChange={(e) => setFilter({ ...filter, query: e.target.value })}
-              placeholder={t('pal.searchPlaceholder')}
-              className="order-1"
-            />
-            <div className="order-2 inline-flex overflow-hidden rounded-md border border-border md:order-3 md:ml-auto">
-              <Button
-                variant={view === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-11 rounded-none md:h-8"
-                onClick={() => setView('grid')}
-              >
-                {fs.gridView}
-              </Button>
-              <Button
-                variant={view === 'list' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-11 rounded-none md:h-8"
-                onClick={() => setView('list')}
-              >
-                {fs.listView}
-              </Button>
-            </div>
-
-          </div>
-
           <ContentPageFilters className="mb-4" />
 
           {loadError ? (
@@ -156,8 +98,6 @@ export default function PalListPage() {
             <PalPageLoading />
           ) : roster.length === 0 ? (
             <div className="mt-12 text-center text-sm text-muted-foreground">{fs.noResults}</div>
-          ) : view === 'list' ? (
-            <PalTable pals={mobilePaging.visibleItems} bundle={bundle} />
           ) : (
             <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
               {mobilePaging.visibleItems.map((p) => (

@@ -123,6 +123,7 @@ export function ContentPage({
         title={title}
         heading={heading}
         headingClassName={encyclopedia ? 'lg:sr-only' : undefined}
+        width={encyclopedia ? 'wide' : 'standard'}
         backToTopLabel={t('backToTop')}
         hideMobileFooter={hideMobileFooter}
         scrollRestoration={scrollRestoration}
