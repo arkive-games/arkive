@@ -63,6 +63,9 @@ positions, weapon-level expansion and item-document pages are session-scoped.
 Skills remember ordinary reading position; hash visits keep their existing
 anchor behavior. V Rising's V Blood list/detail restore reading position while
 retaining existing query/act/completion filters and progress ownership.
+V Rising's parsed recipe/passive/building/research records retain independent
+queries, reveal depth, passive disclosure and reading position. Existing
+page-level context is adopted once without replacing newer subsection state.
 The shared scroll adapter waits for data and content height, preserves result
 scope and yields to user input. Remaining categories still need adapters; no content or
 mobile redesign is implied. Unavailable storage keeps the active page usable

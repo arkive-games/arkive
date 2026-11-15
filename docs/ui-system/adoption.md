@@ -125,5 +125,15 @@ isolation, 1000-pixel item-list return, 59-level expansion and item-document
 page isolation. V Blood query/filter and 1200-pixel return/reload pass, with
 completion storage unchanged. Both app lints/builds, state-memory typecheck and
 the key inventory pass; full suite: 163 files / 1890 tests. No remote delivery.
-Other V Rising categories and other unintegrated encyclopedia surfaces remain
-outside this batch; this does not certify the entire stage.
+Other unintegrated encyclopedia surfaces remain outside this batch; this does
+not certify the entire stage.
+
+V Rising knowledge follow-up: the available recipe/passive/building/research
+sections now retain independent queries, result-scoped reveal depth, passive
+disclosure and scroll. Existing page-level search/reveal records are adopted
+once into their original subsection, preserved as read-only seeds and never
+allowed to replace newer subsection state. Unavailable categories and layout
+remain unchanged. Browser checks verify subsection/route isolation, passive
+disclosure after reload and 96 loaded building records with 1200-pixel return/
+reload restoration. App lint/build and the key inventory pass. Full suite:
+164 files / 1894 tests pass. No remote delivery.

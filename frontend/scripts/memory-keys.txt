@@ -94,9 +94,13 @@ arkive.memory.site.user-system.settings	account	apps/meta/src/UserSystemState.ts
 arkive.memory.sts2.cards-catalog.filters	-	apps/sts2/src/features/cards/CardListPage.tsx
 arkive.memory.sts2.cards-catalog.query	-	apps/sts2/src/features/cards/CardListPage.tsx
 arkive.memory.vrising.catalog-context.scroll	-	apps/vrising/src/lib/memory.ts
-arkive.memory.vrising.knowledge.query	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
-arkive.memory.vrising.knowledge.reveal-depth	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
-arkive.memory.vrising.knowledge.section	-	apps/vrising/src/features/knowledge/KnowledgePage.tsx
+arkive.memory.vrising.knowledge.expanded-records	-	apps/vrising/src/features/knowledge/memory.ts
+arkive.memory.vrising.knowledge.query	-	apps/vrising/src/features/knowledge/memory.ts
+arkive.memory.vrising.knowledge.result-reveal-depth	-	apps/vrising/src/features/knowledge/memory.ts
+arkive.memory.vrising.knowledge.reveal-depth	-	apps/vrising/src/features/knowledge/memory.ts
+arkive.memory.vrising.knowledge.section	-	apps/vrising/src/features/knowledge/memory.ts
+arkive.memory.vrising.knowledge.section-context-migrated	-	apps/vrising/src/features/knowledge/memory.ts
+arkive.memory.vrising.knowledge.section-query	-	apps/vrising/src/features/knowledge/memory.ts
 arkive.memory.vrising.map-context.collapsed-categories	partition	apps/vrising/src/features/map/MapPage.tsx
 arkive.memory.vrising.map-context.query	partition	apps/vrising/src/features/map/MapPage.tsx
 arkive.memory.vrising.map-context.sidebar-collapsed	partition	apps/vrising/src/features/map/MapPage.tsx
