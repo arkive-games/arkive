@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearch } from '@tanstack/react-router'
-import { Input, useIsMobile } from '@gamemap/ui'
+import { CatalogSearchInput, useIsMobile } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -168,18 +168,14 @@ export default function TechnologyPage() {
   return (
     <ContentPage browsing={{ section: 'technology', ready: !!b && !focusId, resultsKey: query }} active="/technology" title={t('tech.title')} heading hideMobileFooter>
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => { setUseRememberedQuery(true); setQuery(e.target.value) }}
               placeholder={t('tech.searchPlaceholder')}
-              className="max-w-xs"
+              className=""
             />
-            {b ? (
-              <span className="text-sm text-muted-foreground">
-                {t('tech.count', { count: matchCount })}
-              </span>
-            ) : null}
+
           </div>
           {body}
     </ContentPage>

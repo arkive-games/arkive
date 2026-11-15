@@ -80,11 +80,7 @@ export function SoulWiki() {
               <UnderlineTab key={value} selected={view === value} onClick={() => setView(value)}>{text.views[value]}</UnderlineTab>
             ))}
           </div>
-          {data ? (
-            <span aria-live="polite" className="ml-auto hidden shrink-0 text-xs tabular-nums text-muted-foreground md:block">
-              {fill(text.resultCount, { count: view === 'souls' ? filtered.length : resonance.length })}
-            </span>
-          ) : null}
+
         </div>
 
         {dataError ? <div className="p-3"><Notice>{content.wiki.dataError}</Notice></div> : !data ? <div className="p-3"><Notice>{content.wiki.loading}</Notice></div> : view === 'souls' ? (

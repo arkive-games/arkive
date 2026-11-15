@@ -1,5 +1,4 @@
 import { useId, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 
 export interface EncyclopediaEntry { key: string; label: string; icon: ReactNode; children?: readonly EncyclopediaEntry[] }
@@ -35,8 +34,11 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
         {!collapsed && <h2 className="flex items-center gap-2 text-2xl font-extrabold leading-tight"><span aria-hidden className="h-[1.15em] w-1.5 shrink-0 rounded-full bg-[image:var(--arkive-warm-search)]" />{label}</h2>}
         <button type="button" onClick={() => onCollapsedChange(!collapsed)} aria-expanded={!collapsed} aria-controls={navId}
           aria-label={collapsed ? expandLabel : collapseLabel} title={collapsed ? expandLabel : collapseLabel}
-          className="grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
-          {collapsed ? <ChevronRight className="size-4" aria-hidden /> : <ChevronLeft className="size-4" aria-hidden />}
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
+          <svg data-slot="encyclopedia-collapse-icon" className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="3" y="4" width="18" height="16" rx="3" />
+            <path d={collapsed ? 'M9 4v16m4-11 3 3-3 3' : 'M9 4v16m7-11-3 3 3 3'} />
+          </svg>
         </button>
       </div>
       <nav id={navId} aria-label={label}>

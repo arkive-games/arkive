@@ -129,11 +129,7 @@ export function MonsterWiki() {
               </UnderlineTab>
             ))}
           </div>
-          {data ? (
-            <span aria-live="polite" className="ml-auto hidden shrink-0 text-xs tabular-nums text-muted-foreground md:block">
-              {fill(text.resultCount, { count: filtered.length })}
-            </span>
-          ) : null}
+
         </div>
 
         <div className="flex items-center gap-x-3 gap-y-1.5 overflow-x-auto border-b border-dashed border-border px-2.5 py-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-3.5">

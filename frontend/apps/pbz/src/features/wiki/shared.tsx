@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { cn, FilterChip, FilterRow, Input, NotFoundMessage, toggleValue } from '@gamemap/ui'
+import { cn, FilterChip, FilterRow, CatalogSearchInput, NotFoundMessage, toggleValue } from '@gamemap/ui'
 import { loadDataset, loadLabels, wikiImage, type Dataset, type DatasetName, type Labels, type Materials } from '../../lib/wiki'
 import { RichText } from '../../lib/richText'
 
@@ -105,7 +105,7 @@ export interface ChipGroup {
 }
 
 /** Search box plus chip filters; every page's list header. */
-export function ListControls({ query, onQuery, groups, count }: {
+export function ListControls({ query, onQuery, groups }: {
   query: string
   onQuery: (q: string) => void
   groups: ChipGroup[]
@@ -115,8 +115,7 @@ export function ListControls({ query, onQuery, groups, count }: {
   return (
     <div className="mb-4 flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Input value={query} onChange={(e) => onQuery(e.target.value)} placeholder={t('wiki.search')} className="max-w-xs" data-testid="wiki-search" />
-        <span className="text-sm text-muted-foreground" data-testid="wiki-count">{t('wiki.count', { count })}</span>
+        <CatalogSearchInput value={query} onChange={(e) => onQuery(e.target.value)} placeholder={t('wiki.search')} className="" data-testid="wiki-search" />
       </div>
       {groups.some((g) => g.options.length > (g.toggle ? 0 : 1)) ? (
         <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">

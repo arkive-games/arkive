@@ -140,7 +140,6 @@ export default function VBloodListPage() {
       <div className="mb-5 rounded-xl border border-primary/15 bg-gradient-to-r from-primary/10 via-card to-card p-4 md:flex md:items-center md:justify-between md:gap-6 lg:hidden">
         <div>
           <p className="text-sm font-semibold text-primary">{t('vblood.eyebrow')}</p>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">{t('vblood.caption')}</p>
         </div>
         <div className="mt-3 flex shrink-0 items-baseline gap-2 md:mt-0">
           <span className="text-2xl font-bold tabular-nums">{completed.size}</span>
@@ -186,7 +185,7 @@ export default function VBloodListPage() {
             {t('vblood.hideCompleted')}
           </button>
           <span className="hidden text-xs text-muted-foreground lg:inline">{completed.size} / {bosses?.length ?? '—'} {t('vblood.completed')}</span>
-          {bosses ? <span className="ml-auto text-sm text-muted-foreground">{t('resultsCount', { count: shown.length })}</span> : null}
+
         </div>
       </div>
 

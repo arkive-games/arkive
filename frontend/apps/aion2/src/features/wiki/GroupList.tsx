@@ -152,9 +152,6 @@ export default function GroupList({
                 <h2 className="text-lg font-semibold text-[color:var(--arkive-nav-active)]">
                   {t(`wiki/taxonomy:sections.${s.slug}.name`)}
                 </h2>
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {t("wiki:workspace.entries", { count: sections[s.slug].length })}
-                </span>
               </div>}
               <table className="w-full table-fixed text-sm">
                 <tbody>

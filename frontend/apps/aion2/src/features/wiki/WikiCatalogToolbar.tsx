@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IconSearch } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import MiniSearch, { type SearchResult } from "minisearch";
 
-import { Input } from "@gamemap/ui";
+import { CatalogSearchInput } from "@gamemap/ui";
 import {
   defineMemoryRecord,
   isString,
@@ -40,7 +39,6 @@ const queryRecord = defineMemoryRecord({
 
 export default function WikiCatalogToolbar({
   title,
-  count,
   sources,
   onSearchIntent,
   scope,
@@ -136,19 +134,11 @@ export default function WikiCatalogToolbar({
             <h1 className="min-w-0 truncate text-3xl font-bold text-[color:var(--arkive-nav-active)]">
               {title}
             </h1>
-            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-              {t("wiki:workspace.entries", { count })}
-            </span>
           </div>
         )}
 
-        <div className="relative" role="search">
-          <IconSearch
-            className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
-            stroke={1.8}
-            aria-hidden
-          />
-          <Input
+        <div className="relative">
+          <CatalogSearchInput
             value={query}
             onFocus={arm}
             onChange={(event) => {
@@ -160,7 +150,7 @@ export default function WikiCatalogToolbar({
             }}
             placeholder={t("wiki:hub.searchHint")}
             aria-label={t("wiki:list.search")}
-            className="h-11 rounded-md border-border bg-background pl-10 pr-4 text-sm shadow-none focus-visible:ring-[color:var(--arkive-nav-accent)]"
+
             data-testid="wiki-search"
           />
           {query.trim() && (

@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { FilterChip, FilterRow, Hint, Input, toggleValue, TooltipProvider } from '@gamemap/ui'
+import { FilterChip, FilterRow, Hint, CatalogSearchInput, toggleValue, TooltipProvider } from '@gamemap/ui'
 import { ArrowRight, Coins, Dna, Dices, PawPrint, Sparkles, Stethoscope, TreePine } from 'lucide-react'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -356,19 +356,15 @@ export default function PassivesPage() {
       }
     >
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
+        <CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
-          className="max-w-sm border-primary/50 bg-primary/5 focus-visible:border-primary"
+          className=""
           data-testid="passive-search"
         />
-        {bundle ? (
-          <span className="text-sm text-muted-foreground">
-            {t('resultsCount', { count: list.length })}
-          </span>
-        ) : null}
+
       </div>
       <ContentPageFilters className="mb-4 space-y-1.5" />
 

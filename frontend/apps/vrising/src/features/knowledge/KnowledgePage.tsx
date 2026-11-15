@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react'
-import { BookOpen, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SearchInput } from '@gamemap/ui'
 import { browserMemory, useMemoryState } from '@gamemap/state-memory'
@@ -81,17 +81,14 @@ function RecordCard({ record, expanded, onExpandedChange }: { record: CatalogRec
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/85">{description}</p>
           {record.statModifications.length ? (
             <div className="mt-3">
-              <p className="text-xs font-medium text-muted-foreground">{t('knowledge.verifiedStats')}</p>
+              <p className="text-xs font-medium text-muted-foreground">{t('knowledge.attributes')}</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {record.statModifications.map((value, index) => (
                   <Metric key={`${value.statType}-${index}`}>{t(`knowledge.stats.${value.statType}`)}</Metric>
                 ))}
               </div>
             </div>
-          ) : (
-            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t('knowledge.scriptedEffect')}</p>
-          )}
-          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t('knowledge.runtimeValueNote')}</p>
+          ) : null}
         </div>
       </details>
     )
@@ -161,18 +158,6 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
     <ContentPage active={active} title={t(`knowledge.${kind}.title`)} heading
       directory={{ kind, selected, available: cards.filter(({ key }) => catalog && recordsFor(catalog, key) !== null).map(({ key }) => key), loading: catalog === undefined, onSelect: chooseSection }}
       browsing={{ scope: `knowledge:${kind}:${selected}`, ready: catalog !== undefined && catalog !== null, resultsKey: query }}>
-      <div className="mb-5 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card to-card p-4 lg:hidden">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <BookOpen className="size-4" />
-          </div>
-          <div>
-            <p className="font-bold">{t('knowledge.verifiedTitle')}</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t('knowledge.verifiedCaption')}</p>
-          </div>
-        </div>
-      </div>
-
       <div className="grid gap-3 sm:grid-cols-2 lg:hidden">
         {cards.map(({ key, icon: Icon }) => {
           const records = catalog ? recordsFor(catalog, key) : null
@@ -194,9 +179,7 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
                   <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">{t('loading')}</span>
                 ) : ready ? (
                   <span className="rounded-full border border-primary/20 bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary">
-                    {key === 'passives'
-                      ? t('knowledge.viewableCount', { count: records.length })
-                      : t('knowledge.verifiedCount', { count: records.length })}
+                    {records.length}
                   </span>
                 ) : (
                   <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
@@ -206,11 +189,6 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
               </div>
               <h2 className="mt-4 text-lg font-bold">{t(`knowledge.sections.${key}.title`)}</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t(`knowledge.sections.${key}.caption`)}</p>
-              <p className="mt-4 border-t border-border pt-3 text-xs font-medium text-muted-foreground">
-                {ready
-                  ? t(key === 'passives' ? 'knowledge.openPassiveEffects' : 'knowledge.openRecords')
-                  : t('knowledge.schemaReady')}
-              </p>
             </button>
           )
         })}
@@ -219,13 +197,6 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
       {selectedRecords ? (
         <section className="mt-5 rounded-2xl border border-primary/15 bg-secondary/25 p-4 md:p-5 lg:mt-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div className="lg:hidden">
-              <p className="text-xs font-semibold uppercase text-primary">{t('knowledge.verifiedRecords')}</p>
-              <h2 className="mt-1 text-xl font-bold">{t(`knowledge.sections.${selected}.title`)}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t(selected === 'passives' ? 'knowledge.passiveSourceCaption' : 'knowledge.sourceCaption')}
-              </p>
-            </div>
             <SearchInput
   value={query}
   onChange={setQuery}
@@ -236,12 +207,6 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
 />
           </div>
 
-          <p className="mt-3 hidden text-xs leading-relaxed text-muted-foreground lg:block">
-            {t(selected === 'passives' ? 'knowledge.passiveSourceCaption' : 'knowledge.sourceCaption')}
-          </p>
-          <p className="mt-4 text-xs font-medium text-muted-foreground">
-            {t('knowledge.showingRecords', { shown: Math.min(visibleCount, filtered.length), total: filtered.length })}
-          </p>
           {filtered.length ? (
             <div className={`mt-3 grid gap-2.5 sm:grid-cols-2 ${selected === 'passives' ? 'xl:grid-cols-2' : 'xl:grid-cols-3'}`}>
               {filtered.slice(0, visibleCount).map((record) => <RecordCard key={record.prefabId} record={record}

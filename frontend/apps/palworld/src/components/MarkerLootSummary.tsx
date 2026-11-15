@@ -112,11 +112,7 @@ export function MarkerLootSummary({ lootArea, kind }: { lootArea?: string; kind:
             <span className="ml-1 font-mono opacity-70">{lootArea}</span>
           </div>
         </div>
-        {items && loot.length ? (
-          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-            {t('resultsCount', { count: loot.length })}
-          </span>
-        ) : null}
+
       </div>
 
       {!items && !failed ? (

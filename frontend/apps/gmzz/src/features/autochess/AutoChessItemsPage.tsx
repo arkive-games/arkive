@@ -92,8 +92,8 @@ export default function AutoChessItemsPage() {
           ))}
         </FilterRow>
       </div>
-      <FilterBar count={t('autochess.items.resultCount', { count: filtered.length })}>
-        <SearchInput size="sm" className="min-w-48 flex-1 md:max-w-xs"
+      <FilterBar>
+        <SearchInput className="min-w-0"
           value={query}
           onChange={setQuery}
           placeholder={t('autochess.items.searchPlaceholder')}

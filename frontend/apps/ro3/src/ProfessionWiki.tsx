@@ -1,7 +1,7 @@
 import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Search, Zap } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { CatalogSearchInput, cn } from '@gamemap/ui'
 import { buildProfessionStages, PROFESSION_LINES, stageEmblem, type ProfessionSkillChoice, type ProfessionStageData } from './professionCatalog'
 import { Notice } from './components/wiki'
 import { GameText } from './components/GameText'
@@ -168,34 +168,10 @@ export function ProfessionWiki() {
               )
             })}
           </div>
-          <form
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault()
-              searchInput.current?.focus()
-            }}
-            className={cn(
-              'w-full items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-shadow focus-within:ring-2 focus-within:ring-ring/40 lg:flex lg:w-[23rem]',
-              searchOpen ? 'flex' : 'hidden',
-            )}
-          >
-            <input
-              ref={searchInput}
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              aria-label={text.searchLabel}
-              placeholder={text.searchPlaceholder}
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <button
-              type="submit"
-              aria-label={text.searchLabel}
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-[image:var(--arkive-warm-search)] text-[color:var(--arkive-warm-search-foreground)] shadow-[0_0.3rem_0.8rem_rgba(236,122,28,0.28)] transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] hover:scale-105"
-            >
-              <Search aria-hidden="true" className="size-4" />
-            </button>
-          </form>
+          <div className={cn('w-full lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
+          <CatalogSearchInput inputRef={searchInput} value={query} onChange={event => setQuery(event.target.value)}
+            aria-label={text.searchLabel} submitLabel={text.searchLabel} placeholder={text.searchPlaceholder} />
+        </div>
         </div>
       </div>
 

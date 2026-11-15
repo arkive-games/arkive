@@ -174,7 +174,7 @@ export default function TrainTradeGoodsPage() {
       </section>
 
       <section className="flex min-h-9 items-center justify-between gap-3 border-b border-border pb-2">
-        <span className="text-sm tabular-nums text-muted-foreground">{t("trainTrade.resultCount", { count: filtered.length })}</span>
+
         <div className="inline-flex shrink-0 overflow-hidden rounded-md border border-border" role="group" aria-label={t("trainTrade.view")}>
           <ViewButton active={view === "grid"} onClick={() => { setView("grid"); setPage(1); }} label={t("trainTrade.viewGrid")}><IconGrid3x3 className="size-4" aria-hidden /></ViewButton>
           <ViewButton active={view === "list"} onClick={() => { setView("list"); setPage(1); }} label={t("trainTrade.viewList")} bordered><IconList className="size-4" aria-hidden /></ViewButton>

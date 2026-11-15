@@ -1,7 +1,7 @@
 import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FilterChip, FilterRow, Input, toggleValue } from '@gamemap/ui'
+import { FilterChip, FilterRow, CatalogSearchInput, toggleValue } from '@gamemap/ui'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -126,18 +126,14 @@ export default function BuildingListPage() {
       filtersActive={cats.length > 0}
     >
           <div className="mb-3 flex flex-wrap items-center gap-3">
-            <Input
+            <CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('building.searchPlaceholder')}
-              className="max-w-sm"
+              className=""
             />
-            {bundle ? (
-              <span className="text-sm text-muted-foreground" data-pagination-anchor data-testid="building-count">
-                {t('building.count', { count: list.length })}
-              </span>
-            ) : null}
+
           </div>
           <ContentPageFilters className="mb-4" />
 
