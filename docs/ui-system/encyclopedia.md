@@ -66,6 +66,11 @@ retaining existing query/act/completion filters and progress ownership.
 V Rising's parsed recipe/passive/building/research records retain independent
 queries, reveal depth, passive disclosure and reading position. Existing
 page-level context is adopted once without replacing newer subsection state.
+GMZZ's ten reference pages retain applicable queries/facets, pagination,
+per-entity reading disclosures and result-scoped scroll. Trade/Utopia view
+preferences are device-local; other reading fields are tab-local. Explicit
+piece links reveal their target without replacing ordinary piece filters.
+Calculators, editors and progress records keep their existing lifecycles.
 The shared scroll adapter waits for data and content height, preserves result
 scope and yields to user input. Remaining categories still need adapters; no content or
 mobile redesign is implied. Unavailable storage keeps the active page usable

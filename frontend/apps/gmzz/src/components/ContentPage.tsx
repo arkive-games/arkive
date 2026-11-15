@@ -8,6 +8,8 @@ import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
+import { useSessionScroll, type SessionScrollContext } from '@gamemap/state-memory'
+import { catalogScroll } from '../features/catalog/memory'
 
 export interface ContentPageProps {
   active: NavKey
@@ -30,17 +32,19 @@ export interface ContentPageProps {
   filtersActive?: boolean
   /** Only result-scope changes reset reading position, not edits inside cards. */
   resultsKey?: string
+  browsing?: SessionScrollContext
   /** Full-bleed banner above the content column. */
   hero?: ReactNode
   children: ReactNode
 }
 
 /** This game's navigation, strings and links, in the shared page shell. */
-export function ContentPage({ active, title, heading = false, wide = false, toolbar, toolbarLead, filtersActive = false, resultsKey, hero, children }: ContentPageProps) {
+export function ContentPage({ active, title, heading = false, wide = false, toolbar, toolbarLead, filtersActive = false, resultsKey, browsing, hero, children }: ContentPageProps) {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
+  const scrollRestoration = useSessionScroll(catalogScroll.record, browsing ? { ...browsing, resultsKey: browsing.resultsKey ?? resultsKey } : undefined)
 
   return (
     <ArkiveContentPage
@@ -72,6 +76,7 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
       filterLabel={t('filterToggle')}
       filtersActive={filtersActive}
       resultsKey={resultsKey}
+      scrollRestoration={scrollRestoration}
       hero={hero}
     >
       {children}

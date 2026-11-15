@@ -1,3 +1,4 @@
+import { useContextState } from '../catalog/memory'
 import { useEffect, useMemo, useState } from 'react'
 import { IconDatabase, IconInfoCircle } from '@tabler/icons-react'
 import { FilterChip, FilterGroup, SearchInput, useDocumentTitle } from '@gamemap/ui'
@@ -42,9 +43,9 @@ export default function ReforgePage() {
   const [slots, setSlots] = useState<ReforgeSlot[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [slot, setSlot] = useState(0)
-  const [affixCount, setAffixCount] = useState(0)
-  const [query, setQuery] = useState('')
+  const [slot, setSlot] = useContextState<number>('reforge', 'slot', 0)
+  const [affixCount, setAffixCount] = useContextState<number>('reforge', 'affixCount', 0)
+  const [query, setQuery] = useContextState<string>('reforge', 'query', '')
 
   useEffect(() => {
     let live = true
@@ -147,7 +148,7 @@ export default function ReforgePage() {
   }
 
   return (
-    <ContentPage active="/reforge" title={t('reforge.title')} wide resultsKey={JSON.stringify([query, slot, affixCount])} filtersActive={Boolean(query || slot || affixCount)} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
+    <ContentPage active="/reforge" title={t('reforge.title')} wide browsing={{ scope: 'reforge', ready: true }} resultsKey={JSON.stringify([query, slot, affixCount])} filtersActive={Boolean(query || slot || affixCount)} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
           <div className="min-w-0">
             <h1 className="text-3xl font-bold text-foreground">{t('reforge.title')}</h1>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">

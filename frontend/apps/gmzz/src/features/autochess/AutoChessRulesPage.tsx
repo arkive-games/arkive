@@ -146,7 +146,7 @@ export default function AutoChessRulesPage() {
   const streakRows = buildStreakRows(winSteps, loseSteps)
 
   return (
-    <ContentPage active="/autochess" title={t('autochess.title')} heading wide>
+    <ContentPage active="/autochess" title={t('autochess.title')} heading wide browsing={{ scope: 'chess-rules', ready: true }}>
       <p className="mb-4 text-sm text-muted-foreground">{t('autochess.description')}</p>
 
       {/* A two-column grid, so the cards side by side share a top and a bottom

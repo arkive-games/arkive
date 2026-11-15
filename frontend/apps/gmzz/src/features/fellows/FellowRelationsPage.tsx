@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { useContextState } from '../catalog/memory'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '@gamemap/ui'
 import { IconCircle, IconDiamond, IconHexagon, IconPentagon, IconSquare, IconStar, IconGitBranch } from '@tabler/icons-react'
@@ -38,7 +39,7 @@ export default function FellowRelationsPage() {
   }
 
   return (
-    <ContentPage active="/fellows/relations" title={t('fellows.sectionTitle')} heading wide>
+    <ContentPage active="/fellows/relations" title={t('fellows.sectionTitle')} heading wide browsing={{ scope: 'fellow-relations', ready: true }}>
       <FellowsTabs current="/fellows/relations" />
       <p className="mb-4 text-sm text-muted-foreground">{t('fellows.relationsDescription', { count: all.length })}</p>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -51,8 +52,9 @@ export default function FellowRelationsPage() {
 
 function RelationCard({ relation, fellowsById, effectsById }: { relation: FellowRelation; fellowsById: Map<number, Fellow>; effectsById: Map<number, RelationEffect> }) {
   const { t } = useTranslation()
-  const [grade, setGrade] = useState(0)
-  const [storyOpen, setStoryOpen] = useState(false)
+  const [grade, setGrade] = useContextState<number>(`relation:${relation.id}`, 'grade', 0,
+    (value): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 5)
+  const [storyOpen, setStoryOpen] = useContextState<boolean>(`relation:${relation.id}`, 'story', false)
   const gradeIcons = [IconCircle, IconSquare, IconDiamond, IconPentagon, IconHexagon, IconStar]
   const grades = useMemo(() => [0, 1, 2, 3, 4, 5], [])
   const selectedResearch = relation.researchRewards?.find((reward) => reward.grade === grade)

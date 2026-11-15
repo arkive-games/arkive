@@ -1,3 +1,4 @@
+import { useContextState, useCatalogView } from '../catalog/memory'
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IconDatabase, IconInfoCircle } from "@tabler/icons-react";
 import { Grid2X2, List } from "lucide-react";
@@ -15,7 +16,6 @@ import {
 
 const QUALITY_OPTIONS = ["all", "1", "2", "3"] as const;
 type QualityFilter = (typeof QUALITY_OPTIONS)[number];
-type ViewMode = "grid" | "list";
 const PAGE_SIZE = 32;
 
 const QUALITY_CLASS: Record<number, string> = {
@@ -35,11 +35,11 @@ export default function UtopianTheaterPage() {
   const [entries, setEntries] = useState<UtopiaCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [tag, setTag] = useState<string>("");
-  const [quality, setQuality] = useState<QualityFilter>("all");
-  const [query, setQuery] = useState("");
-  const [view, setView] = useState<ViewMode>("grid");
-  const [page, setPage] = useState(1);
+  const [tag, setTag] = useContextState<string>('utopia', 'tag', "");
+  const [quality, setQuality] = useContextState<QualityFilter>('utopia', 'quality', "all");
+  const [query, setQuery] = useContextState<string>('utopia', 'query', "");
+  const [view, setView] = useCatalogView('utopia');
+  const [page, setPage] = useContextState<number>('utopia', 'page', 1);
   const resultsAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export default function UtopianTheaterPage() {
   }
 
   return (
-    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} filtersActive={Boolean(query || tag) || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
+    <ContentPage active="/utopia" title={t("utopianTheater.title")} heading wide browsing={{ scope: 'utopia', ready: true }} resultsKey={JSON.stringify([query, tag, quality, view, currentPage])} filtersActive={Boolean(query || tag) || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
             {t("utopianTheater.description", { count: entries.length })}
