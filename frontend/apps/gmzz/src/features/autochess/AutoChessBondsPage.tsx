@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useContextState } from '../catalog/memory'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle, FilterChip, FilterBar, FilterRow } from '@gamemap/ui'
 
@@ -28,7 +29,7 @@ export default function AutoChessBondsPage() {
   const pieces = useRemoteData(loadAutoChessPieces)
   const attributes = useRemoteData(loadAutoChessAttributes)
   const attrs = useMemo(() => attributeMap(attributes.data ?? []), [attributes.data])
-  const [group, setGroup] = useState<AutoChessBondGroup | ''>('')
+  const [group, setGroup] = useContextState<AutoChessBondGroup | ''>('chess-bonds', 'group', '')
 
   useDocumentTitle(`${t('autochess.bonds.title')} - ${t('siteTitle')}`)
 
@@ -54,7 +55,7 @@ export default function AutoChessBondsPage() {
   }
 
   return (
-    <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide resultsKey={group} filtersActive={group !== ''} toolbar={
+    <ContentPage active="/autochess/bonds" title={t('autochess.bonds.title')} heading wide browsing={{ scope: 'chess-bonds', ready: true }} resultsKey={group} filtersActive={group !== ''} toolbar={
       <FilterBar>
         <FilterRow label={t('autochess.bonds.groupFilter')}>
           <FilterChip active={group === ''} onClick={() => setGroup('')}>

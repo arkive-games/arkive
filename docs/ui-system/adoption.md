@@ -137,3 +137,19 @@ remain unchanged. Browser checks verify subsection/route isolation, passive
 disclosure after reload and 96 loaded building records with 1200-pixel return/
 reload restoration. App lint/build and the key inventory pass. Full suite:
 164 files / 1894 tests pass. No remote delivery.
+
+GMZZ reference-memory follow-up: autochess rules/pieces/bonds/items/talents,
+the fellows roster/relations, reforge reference, trade goods and Utopia cards
+retain applicable tab-local queries/facets, pagination, reading disclosures
+and result-scoped scroll. Trade/Utopia views use device preferences. Explicit
+piece links reveal the target without overwriting ordinary saved filters.
+Builds, scores, equipment, relics, saved characters, trade calculators, league
+tools, managed trade and progress records keep their existing lifecycles.
+
+Browser checks verify piece query/cost return/reload and explicit-link priority,
+trade/Utopia page-two and list-view restoration, fellows query/story/upgrade
+restoration, independent relation grades and 1200-pixel return/reload position.
+Relation story disclosure has no current data to exercise in the browser.
+GMZZ lint/build and the memory-key inventory pass. Full suite: 165 files / 1897
+tests pass. No layout change or remote delivery; other unintegrated surfaces
+and the deferred About panel remain outside this batch.

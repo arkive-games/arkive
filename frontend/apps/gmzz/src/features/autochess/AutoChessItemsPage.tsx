@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useContextState } from '../catalog/memory'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle, FilterChip, FilterBar, FilterRow, SearchInput } from '@gamemap/ui'
 
@@ -27,10 +28,10 @@ export default function AutoChessItemsPage() {
   const { t } = useTranslation()
   const items = useRemoteData(loadAutoChessItems)
   const attributes = useRemoteData(loadAutoChessAttributes)
-  const [useType, setUseType] = useState(0)
-  const [typeName, setTypeName] = useState('')
-  const [query, setQuery] = useState('')
-  const [rarity, setRarity] = useState(0)
+  const [useType, setUseType] = useContextState<number>('chess-items', 'useType', 0)
+  const [typeName, setTypeName] = useContextState<string>('chess-items', 'typeName', '')
+  const [query, setQuery] = useContextState<string>('chess-items', 'query', '')
+  const [rarity, setRarity] = useContextState<number>('chess-items', 'rarity', 0)
 
   useDocumentTitle(`${t('autochess.items.title')} - ${t('siteTitle')}`)
 
@@ -63,7 +64,7 @@ export default function AutoChessItemsPage() {
   }
 
   return (
-    <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide resultsKey={JSON.stringify([query, rarity, useType, typeName])} filtersActive={Boolean(query || rarity || useType || typeName)} toolbar={<>
+    <ContentPage active="/autochess/items" title={t('autochess.items.title')} heading wide browsing={{ scope: 'chess-items', ready: true }} resultsKey={JSON.stringify([query, rarity, useType, typeName])} filtersActive={Boolean(query || rarity || useType || typeName)} toolbar={<>
       <div className="mb-3 flex flex-col gap-2">
         <FilterRow label={t('autochess.items.qualityFilter')}>
           <FilterChip active={!rarity} onClick={() => setRarity(0)}>{t('autochess.all')}</FilterChip>

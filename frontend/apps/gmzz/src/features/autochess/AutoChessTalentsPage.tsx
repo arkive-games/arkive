@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useContextState } from '../catalog/memory'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle, FilterChip, FilterBar, FilterRow, SearchInput } from '@gamemap/ui'
 
@@ -17,11 +18,11 @@ const RARITY_CLASS: Record<number, string> = {
 export default function AutoChessTalentsPage() {
   const { t } = useTranslation()
   const talents = useRemoteData(loadAutoChessTalents)
-  const [rarity, setRarity] = useState(0)
-  const [query, setQuery] = useState('')
+  const [rarity, setRarity] = useContextState<number>('chess-talents', 'rarity', 0)
+  const [query, setQuery] = useContextState<string>('chess-talents', 'query', '')
   // The client hides some rows from its own handbook; matching that default
   // keeps internal entries off the page unless asked for.
-  const [showHidden, setShowHidden] = useState(false)
+  const [showHidden, setShowHidden] = useContextState<boolean>('chess-talents', 'showHidden', false)
 
   useDocumentTitle(`${t('autochess.talents.title')} - ${t('siteTitle')}`)
 
@@ -63,7 +64,7 @@ export default function AutoChessTalentsPage() {
   const hidden = all.filter((talent) => !talent.inHandbook).length
 
   return (
-    <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide resultsKey={JSON.stringify([query, rarity, showHidden])} filtersActive={Boolean(query || rarity || showHidden)} toolbar={
+    <ContentPage active="/autochess/talents" title={t('autochess.talents.title')} heading wide browsing={{ scope: 'chess-talents', ready: true }} resultsKey={JSON.stringify([query, rarity, showHidden])} filtersActive={Boolean(query || rarity || showHidden)} toolbar={
       <FilterBar count={t('autochess.talents.resultCount', { count: filtered.length })}>
         <FilterRow label={t('autochess.talents.rarityFilter')}>
           <FilterChip active={rarity === 0} onClick={() => setRarity(0)}>{t('autochess.all')}</FilterChip>
