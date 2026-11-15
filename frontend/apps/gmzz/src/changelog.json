@@ -1,9 +1,9 @@
 {
   "entries": [
     {
-      "version": "0.37.0",
+      "version": "0.38.0",
       "date": "2026-11-15",
-      "commit": "fb51d67a6b074212bce56f22d5b25a38559e4e83",
+      "commit": "bc1e0aaf9003b62432e6a04ed96f38b2f0d44d72",
       "changes": [
         {
           "kind": "feature",
@@ -16,9 +16,9 @@
       ]
     },
     {
-      "version": "0.36.3",
+      "version": "0.37.3",
       "date": "2026-11-15",
-      "commit": "7c95d141279230b1988f0e654316ef9d99ee5afb",
+      "commit": "42868f3d978d6eee1f5e5d958289376af209c2be",
       "changes": [
         {
           "kind": "improvement",
@@ -31,9 +31,9 @@
       ]
     },
     {
-      "version": "0.36.2",
+      "version": "0.37.2",
       "date": "2026-11-15",
-      "commit": "dbe1f4a8f1c830e0cf83165cac380a5062a03446",
+      "commit": "5e8e55ac4a98d1347832b8afe8fcf273c422dfa0",
       "changes": [
         {
           "kind": "improvement",
@@ -46,9 +46,9 @@
       ]
     },
     {
-      "version": "0.36.1",
+      "version": "0.37.1",
       "date": "2026-11-15",
-      "commit": "77018ab7e40368a740becada29dcdc52079be48f",
+      "commit": "43f7974258050a3084c25b4dd50e6f494dc1d118",
       "changes": [
         {
           "kind": "improvement",

@@ -3,7 +3,7 @@
     {
       "version": "1.33.0",
       "date": "2026-11-15",
-      "commit": "237f7e6dbfa73c7efdd4b1a6cf2e17841fd97655",
+      "commit": "d2272a948164a1d1f27fbf3e1446b127678b8ed5",
       "changes": [
         {
           "kind": "feature",
@@ -18,7 +18,7 @@
     {
       "version": "1.32.2",
       "date": "2026-11-15",
-      "commit": "7c95d141279230b1988f0e654316ef9d99ee5afb",
+      "commit": "42868f3d978d6eee1f5e5d958289376af209c2be",
       "changes": [
         {
           "kind": "improvement",
@@ -33,7 +33,7 @@
     {
       "version": "1.32.1",
       "date": "2026-11-15",
-      "commit": "ca0a01ffa78576e267c9e367f019ae0818f795cc",
+      "commit": "c77f9e2a500bf71fec938c65c9aa84bf1a583e5c",
       "changes": [
         {
           "kind": "improvement",
