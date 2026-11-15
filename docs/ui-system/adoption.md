@@ -20,7 +20,7 @@ Canonical foundation/color/site/map/memory owners now record these scoped rules.
 The current homepage source remains unchanged.
 
 Remaining: encyclopedia reconstruction and category-specific return adapters not covered below; remaining
-map lifecycle migration and OSS preview adoption; production credits generation/manual editor; tool explicit
+map lifecycle migration in released games; production credits generation/manual editor; tool explicit
 save adapters after their open save destinations/account scopes are resolved.
 Do not call the whole stage complete from the catalog/map-detail batch.
 
@@ -39,13 +39,16 @@ needs no invented network error. Keep final evidence and state actual limitation
 | Homepage | Mobile shelf/overflow, empty-section treatment, promotion cadence |
 | Catalogs | Tool geometry/truncation/reflow, optional game grouping, Other membership after game entry launches |
 | Encyclopedia | Adjustable rail/sticky calibration; game-owned schema/detail and related links; mobile deferred |
-| Map | Picker geometry/group names, legacy memory retirement, OSS preview adoption, provisional mobile |
+| Map | Picker geometry/group names, legacy memory retirement in released games, provisional mobile; OSS deferred |
 | Tools | Save destination/account scope, saved-record workflow, per-tool applicability |
 | Credits | Identity/aliases, bots, ordering, refresh and manual editor |
 | Acceptance/data | Unreviewed states/themes, contrast/geometry, current inventory/child parity, signed-in ordering and direct-post routes |
 
 Package a team Skill only after canonical adoption and validation mature.
 About/credits implementation is deferred at the user's request on 2026-11-15.
+Further adoption work is limited to released games at the user's request.
+STS2, OSS preview and other unreleased surfaces are deferred; the earlier STS2
+local batch remains recorded as historical work, not a reason to extend it.
 
 ## Verified local batch
 
@@ -168,3 +171,13 @@ detail reload, explicit targets and query retention across a phone breakpoint
 pass. This does not certify live inventory or mobile layout. App lint/build,
 memory-key inventory and full suite pass: 166 files / 1900 tests. No remote
 delivery. Remaining map/OSS/tool workflows and deferred credits are still open.
+
+V Rising map-filter follow-up: marker visibility is now map-partitioned tab
+context. The former device filter remains a read-only migration seed; new
+choices never overwrite it. Loading cannot write an empty placeholder before
+the taxonomy resolves. Camera, selected marker, labels, boundaries and progress
+retain their existing behavior. Browser checks with the actual local artifact
+verify legacy adoption, Hide All through return/reload, independent new-tab
+filters and unchanged device seed. App lint/build and focused tests pass.
+Full suite: 166 files / 1900 tests pass; memory-key inventory is unchanged.
+Unreleased games and OSS preview are excluded from further adoption work.
