@@ -1,0 +1,198 @@
+/* A compact, art-led workbench inside the shared content shell. */
+.build-workspace {
+  --gz-card: var(--card);
+  --gz-ink: var(--foreground);
+  --gz-sub: var(--muted-foreground);
+  --gz-faint: var(--muted-foreground);
+  --gz-line: var(--border);
+  --build-tint: color-mix(in srgb, rgb(72 150 160 / .09), var(--card));
+  --build-line: rgb(72 150 160 / .20);
+  --build-surface: linear-gradient(135deg, rgb(72 150 160 / .13), rgb(72 150 160 / .025) 75%), var(--card);
+  color: var(--foreground);
+}
+.build-editor { display: grid; gap: 1rem; min-width: 0; padding-bottom: .5rem; }
+.build-workspace :is(button, input, textarea, select):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.build-plan-surface { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1.25rem; padding: .75rem 1rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); }
+.build-plan-surface h1 { margin: 0; padding-right: 1.25rem; border-right: 1px solid var(--border); font-size: 1.125rem; line-height: 2.5rem; font-weight: 800; white-space: nowrap; }
+.build-workspace .build-account-controls { grid-column: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; min-width: 0; }
+.build-plan-switch { display: flex; flex: 0 0 11rem; min-width: 0; align-items: center; border: 1px solid var(--border); border-radius: .75rem; background: var(--background); }
+.build-plan-name { min-width: 0; flex: 1; height: 2.5rem; padding: 0 .625rem; text-align: left; font-size: .875rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.build-plan-name:hover { background: var(--muted); }
+.build-plan-switch .gz-cname > [data-slot=select-value] { display: none; }
+.build-plan-switch .gz-sel.gz-cname { flex: 0 0 2rem; width: 2rem; height: 2.5rem; padding: 0 .5rem; border: 0; border-radius: 0 .75rem .75rem 0; box-shadow: none; }
+.build-plan-switch .gz-sel:disabled { opacity: 1; color: var(--muted-foreground); }
+.build-plan-fields { display: flex; gap: .75rem; min-width: 0; }
+.build-plan-fields .build-field { display: block; }
+.build-plan-fields .build-field > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.build-field { display: grid; gap: .25rem; min-width: 0; }
+.build-field > span { font-size: .75rem; font-weight: 600; }
+.build-field :is(input, .gz-sel) { width: 100%; height: 2.5rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--background); box-shadow: none; font-size: .875rem; }
+.build-plan-fields .gz-sel { width: 8rem; padding-inline: .625rem .5rem; }
+.build-account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; margin-left: auto; }
+.build-account-actions [data-slot=button] { padding-inline: .625rem; font-size: .75rem; }
+.build-workspace [data-slot=button] { border-radius: .75rem; }
+.build-account-actions [data-slot=button] { height: 2.5rem; }
+.build-account-actions [data-testid=build-more] { width: 2.5rem; height: 2.5rem; padding: 0; }
+.build-account-controls .build-account-status { grid-column: 1 / -1; font-size: .75rem; }
+.build-account-controls .gz-who, .build-account-controls .gz-cbar-hint { grid-column: 1 / -1; width: auto; padding: 0; margin: 0; }
+.build-account-controls .gz-cbar-hint { font-size: .75rem; }
+.build-primary { background: var(--arkive-warm-action); color: var(--arkive-warm-action-foreground); }
+.build-primary:hover:not(:disabled) { background: var(--arkive-warm-action); filter: brightness(1.03); }
+.build-mobile-switch { display: none; }
+.build-workbench { display: grid; grid-template-columns: minmax(32rem, 1.35fr) minmax(0, 1fr); gap: 1rem; align-items: stretch; min-height: clamp(30rem, calc(100dvh - 25.5rem), 44rem); }
+.build-loadout-region { min-width: 0; }
+.build-loadout-surface { display: grid; align-content: start; gap: .75rem; min-height: 100%; overflow: visible; padding: 1rem; border-radius: 1.25rem; background: var(--build-surface); box-shadow: inset 0 0 0 1px var(--build-line); }
+.build-loadout-section { display: grid; gap: 1rem; min-width: 0; }
+.build-section-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; min-height: 2rem; }
+.build-section-heading h2 { font-size: 1.125rem; line-height: 1.4; font-weight: 800; margin: 0; }
+.build-heading-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; }
+.build-count { font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--muted-foreground); }
+.build-skill-group { min-width: 0; padding: .75rem; border-radius: 1rem; background: rgb(72 150 160 / .07); box-shadow: inset 0 0 0 1px rgb(72 150 160 / .12); }
+.build-skill-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .625rem .5rem; }
+.build-companion-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.build-slot-wrap { min-width: 0; display: grid; align-content: start; gap: .25rem; }
+.build-slot-label { display: flex; align-items: center; justify-content: space-between; gap: .25rem; min-height: 1.5rem; color: var(--muted-foreground); font-size: .75rem; }
+.build-remove { flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 999rem; color: var(--muted-foreground); }
+.build-remove:hover { background: var(--accent); color: var(--foreground); }
+.build-slot { width: 100%; min-width: 0; min-height: 5.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .375rem; padding: .5rem .25rem; border-radius: .875rem; background: color-mix(in srgb, var(--card) 55%, transparent); border: 1px dashed rgb(72 150 160 / .30); transition: background .18s; }
+.build-slot:hover { background: var(--card); border-color: rgb(72 150 160 / .6); }
+.build-slot.is-equipped { border-style: solid; background: var(--card); border-color: rgb(72 150 160 / .22); }
+.build-empty-art { width: 2.5rem; height: 2.5rem; flex: none; display: grid; place-items: center; border-radius: 999rem; background: color-mix(in srgb, var(--arkive-nav-active) 9%, var(--card)); color: var(--arkive-nav-active); }
+.build-workspace .build-skill-icon { background: var(--card); border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent); border-radius: .625rem; padding: .125rem; }
+.build-skill-group .build-slot .build-skill-icon, .build-skill-group .build-fixed-skill .build-skill-icon { width: 3rem; height: 3rem; padding: .125rem; }
+.build-workspace .build-skill-icon img { object-fit: contain; }
+.build-slot-name { max-width: 100%; overflow-wrap: anywhere; font-size: .75rem; font-weight: 600; line-height: 1.5; }
+.build-companion-grid .build-slot { min-height: 4.5rem; flex-direction: row; justify-content: start; gap: .75rem; padding: .75rem; text-align: left; }
+.build-companion-grid .build-slot-name { font-size: .875rem; }
+.build-fixed-tile { min-width: 0; display: grid; align-content: start; gap: .25rem; padding: .375rem .25rem; border-radius: .875rem; background: color-mix(in srgb, var(--card) 35%, transparent); }
+.build-fixed-label { display: block; min-height: 1.5rem; color: var(--muted-foreground); font-size: .75rem; }
+.build-fixed-skill { display: flex; flex-direction: column; align-items: center; gap: .375rem; width: 100%; min-width: 0; padding: .125rem; border-radius: .5rem; text-align: center; }
+.build-fixed-skill:hover { background: var(--muted); }
+.build-fixed-skill > span { font-size: .75rem; line-height: 1.5; overflow-wrap: anywhere; }
+.build-other-group { padding-top: .75rem; border-top: 1px solid rgb(72 150 160 / .14); }
+.build-other-group h3 { margin-bottom: .5rem; font-size: .75rem; font-weight: 600; color: var(--muted-foreground); }
+.build-relic-section { display: grid; gap: .5rem; padding-top: .25rem; }
+.build-relic-section .build-section-heading h3 { margin: 0; font-size: .875rem; font-weight: 700; }
+.build-relic-list { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; }
+.build-relic-mode { display: flex; gap: .25rem; }
+.build-relic-mode button { height: 2rem; padding-inline: .75rem; border-radius: .625rem; font-size: .75rem; color: var(--muted-foreground); }
+.build-relic-mode button[aria-pressed=true] { background: var(--foreground); color: var(--background); }
+.build-relic-locked { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; min-height: 7rem; border: 1px dashed var(--border); border-radius: .875rem; color: var(--muted-foreground); font-size: .75rem; }
+.build-relic-locked .build-fixed-label { min-height: 0; }
+.build-relic-row { position: relative; min-width: 0; }
+.build-relic { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; width: 100%; min-width: 0; min-height: 7rem; padding: .75rem .25rem; text-align: center; border-radius: .875rem; background: color-mix(in srgb, var(--card) 65%, transparent); border: 1px solid rgb(72 150 160 / .16); }
+.build-relic:hover { background: var(--card); }
+.build-relic-row > .build-remove { position: absolute; right: .5rem; bottom: .25rem; }
+.build-relic-name { display: grid; min-width: 0; gap: .25rem; }
+.build-relic-name small { font-size: .75rem; color: var(--muted-foreground); }
+.build-relic-name strong { font-size: .875rem; font-weight: 600; overflow-wrap: anywhere; }
+.build-combo-region { min-width: 0; display: grid; gap: 1rem; container: build-combo / inline-size; }
+.build-combo-surface { display: grid; align-content: start; gap: .75rem; min-height: 100%; padding: 1rem; border-radius: 1.25rem; border: 1px solid var(--border); background: var(--build-surface); box-shadow: inset 0 0 0 1px var(--build-line); }
+.build-presets { display: flex; align-items: center; gap: .5rem; }
+.build-description { display: grid; gap: .5rem; font-size: .875rem; color: var(--foreground); }
+.build-description > span { font-weight: 700; }
+.build-description textarea { min-height: 5rem; border-color: var(--border); background: var(--background); }
+.build-presets .gz-sel { width: auto; min-width: 6rem; height: 2.25rem; font-size: .75rem; }
+.build-presets [data-slot=button] { height: 2.25rem; }
+.build-combo-editor { display: grid; align-content: start; gap: .75rem; min-width: 0; }
+.build-combo-section { min-width: 0; padding: .75rem; border: 1px solid var(--build-line); border-radius: 1rem; background: color-mix(in srgb, var(--card) 76%, transparent); }
+.build-sequence { background: var(--build-tint); }
+.build-sequence summary { display: flex; gap: .5rem; align-items: center; cursor: pointer; min-height: 2.25rem; font-size: .875rem; font-weight: 600; }
+.build-sequence summary::after { content: '+'; margin-left: auto; font-size: 1.125rem; }
+.build-sequence[open] summary::after { content: '−'; }
+.build-sequence summary::-webkit-details-marker { display: none; }
+.build-sequence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.25rem, 1fr)); gap: .75rem 1rem; margin-top: .75rem; }
+.build-sequence-item { position: relative; min-width: 0; }
+.build-sequence-arrow { position: absolute; top: 1rem; right: 0; width: .75rem; height: .75rem; color: var(--muted-foreground); pointer-events: none; }
+.build-sequence-node { display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: .25rem; width: 100%; min-width: 0; border-radius: var(--arkive-radius-standard); }
+.build-sequence-node:hover { background: var(--accent); }
+.build-sequence-art { position: relative; }
+.build-sequence-number { position: absolute; left: -.375rem; top: -.25rem; min-width: 1.125rem; height: 1.125rem; padding-inline: .125rem; display: grid; place-items: center; background: var(--foreground); color: var(--background); border-radius: 999rem; font-size: .75rem; font-variant-numeric: tabular-nums; }
+.build-sequence-name { width: 100%; font-size: .75rem; line-height: 1.4; overflow-wrap: anywhere; }
+.build-sequence-node.is-invalid { color: var(--destructive); }
+.build-sequence-node.is-invalid .build-sequence-number { background: var(--destructive); color: var(--destructive-foreground); }
+.build-combo-empty { text-align: center; padding: 1.5rem .5rem; color: var(--muted-foreground); font-size: .875rem; }
+.build-command-section { min-width: 0; }
+.build-command-section h3 { margin: 0 0 .5rem; font-size: .875rem; font-weight: 700; }
+.build-commands { display: grid; gap: .25rem; }
+.build-command { display: flex; align-items: center; gap: .5rem; min-width: 0; padding-right: .5rem; border: 1px solid var(--border); border-radius: var(--arkive-radius-standard); background: var(--card); }
+.build-command.is-invalid { border-color: var(--destructive); }
+.build-command-main { display: flex; align-items: center; gap: .5rem; min-width: 0; flex: 1; padding: .5rem; text-align: left; border-radius: var(--arkive-radius-standard); }
+.build-command-main:hover { background: var(--muted); }
+.build-command-number { flex: none; font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--muted-foreground); }
+.build-command-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .25rem .5rem; flex: 1; min-width: 0; line-height: 1.4; }
+.build-command-copy strong { font-size: .875rem; font-weight: 600; overflow-wrap: anywhere; }
+.build-command-copy small { font-size: .75rem; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.build-command.is-invalid .build-command-copy small { color: var(--destructive); }
+.build-command-actions { display: flex; flex: none; gap: .125rem; }
+.build-add-action { width: 100%; margin-top: .75rem; min-height: 2.75rem; background: var(--build-tint); border-style: dashed; }
+@media (max-width: 1200px) {
+  .build-relic-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.build-action-dialog-header { flex: none; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+.build-action-dialog-body { min-height: 0; display: flex; flex: 1; flex-direction: column; gap: 1rem; overflow-y: auto; padding: 1rem 1.25rem; }
+.build-action-dialog-action-field { display: grid; gap: .5rem; }
+.build-action-dialog-action-field > span, .build-action-dialog-body h3 { font-size: .875rem; font-weight: 700; }
+.build-action-dialog-action-field select { width: 100%; min-height: 2.75rem; border-color: var(--border); background: var(--background); }
+.build-action-dialog-body > div { padding-top: 1rem; border-top: 1px solid var(--border); }
+.build-action-dialog-footer { display: flex; flex: none; justify-content: flex-end; gap: .5rem; padding: .75rem 1.25rem; border-top: 1px solid var(--border); background: var(--card); }
+.build-condition-group { display: grid; gap: .5rem; padding: .625rem; border: 1px solid var(--border); border-radius: .75rem; background: color-mix(in srgb, var(--card) 70%, transparent); }
+.build-condition-row { display: flex; flex-wrap: nowrap; min-width: 0; align-items: center; gap: .375rem; padding: .375rem; border: 1px solid var(--border); border-radius: .625rem; background: var(--background); }
+.build-condition-row select, .build-condition-row input { min-width: 0; width: 100%; min-height: 2.25rem; padding-block: .375rem; border-color: var(--border); background: var(--card); }
+.build-condition-row .condition-name { flex: 1 1 0; width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.build-condition-row .condition-param { flex: 1 1 0; width: 0; }
+.build-condition-row .condition-operator { flex: 0 1 4rem; width: 4rem; }
+.build-condition-row .condition-value { flex: 0 1 5rem; min-width: 0; }
+.build-condition-row .condition-number { min-width: 0; }
+.build-condition-row .condition-conjunction { flex: none; }
+.build-condition-row .condition-remove { flex: 0 0 2rem; width: 2rem; }
+.build-condition-group > button, .build-condition-editor > button { justify-self: start; }
+@container build-combo (max-width: 32rem) {
+  .build-command { flex-wrap: wrap; padding-right: 0; gap: 0; }
+  .build-command-main { flex-basis: 100%; }
+  .build-command-actions { width: 100%; justify-content: end; padding: .25rem .5rem; border-top: 1px solid var(--border); }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .build-workbench { grid-template-columns: minmax(27rem, 1.2fr) minmax(0, 1fr); gap: .75rem; }
+  .build-loadout-surface, .build-combo-surface { padding: .875rem; }
+  .build-skill-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .build-editor { gap: 1rem; }
+  .build-plan-surface { grid-template-columns: minmax(0, 1fr); padding: .75rem; gap: .75rem; }
+  .build-plan-surface h1 { border: 0; padding: 0; font-size: 1rem; line-height: 1.5rem; }
+  .build-workspace .build-account-controls { display: flex; gap: .75rem; }
+  .build-plan-switch { flex: 1 1 10rem; }
+  .build-account-actions { width: 100%; margin: 0; }
+  .build-plan-fields { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; width: 100%; }
+  .build-plan-fields .gz-sel { width: 100%; }
+  .build-account-actions .build-account-status { display: none; }
+  .build-plan-switch .gz-cname { min-width: 0; }
+  .build-mobile-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem; padding: .25rem; background: var(--muted); border-radius: 999rem; }
+  .build-mobile-switch button { display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; border-radius: 999rem; font-size: .875rem; font-weight: 600; color: var(--muted-foreground); }
+  .build-mobile-switch button[aria-pressed=true] { background: var(--foreground); color: var(--background); }
+  .build-mobile-switch button > span { font-size: .75rem; }
+  .build-workbench { grid-template-columns: minmax(0, 1fr); gap: 0; min-height: 0; height: auto; align-items: start; }
+  .build-loadout-region, .build-combo-region { height: auto; }
+  .build-loadout-surface { height: auto; overflow: visible; }
+  .build-combo-surface { height: auto; overflow: visible; grid-template-rows: none; }
+  .build-combo-editor { overflow: visible; padding-right: 0; }
+  .build-loadout-surface, .build-combo-surface { padding: 1rem; border-radius: 1rem; }
+  .build-loadout-region { gap: 1.5rem; }
+  .build-editor[data-workspace=loadout] .build-combo-region, .build-editor[data-workspace=combo] .build-loadout-region { display: none; }
+  .build-section-heading { gap: .5rem; }
+  .build-section-heading h2 { font-size: 1rem; }
+  .build-skill-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .build-relic-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .build-slot { min-height: 6rem; }
+  .build-companion-grid .build-slot { gap: .5rem; padding: .5rem; }
+  .build-companion-grid .build-slot-name { font-size: .75rem; }
+  .build-presets { flex-wrap: wrap; }
+  .build-presets .gz-sel { min-width: 5rem; }
+  .build-sequence { padding: .5rem .75rem; }
+  .build-sequence-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .build-command-main { gap: .5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .build-workspace * { transition: none !important; }
+}

@@ -10,6 +10,7 @@ import { isLimitReached, MAX_CHARACTERS, type CharacterSummary, type SavedCharac
 import { useCharacter, type SyncStatus } from '@/features/characters/CharacterProvider'
 import { serverName, useServers, type GameServer } from '@/features/characters/servers'
 import { TYPE } from '@/lib/typography'
+import { hasBuildEdits } from '@/features/builds/model'
 
 const LOCAL = ''
 
@@ -50,12 +51,10 @@ const STATUS_TONE: Partial<Record<SyncStatus, string>> = {
 }
 
 /**
- * The strip above the score page's inputs: which character is open, whether
- * its edits have reached the server, and what can be done with it. Shown even
- * where no character API is configured, so the local draft and the way to sign
- * in are always visible.
+ * The score strip keeps its local draft and sign-in action. Build planning
+ * instead lists account plans only; authentication stays in the site top bar.
  */
-export function CharacterBar({ surface = 'score' }: { surface?: 'score' | 'build' }) {
+export function CharacterBar({ surface = 'score', planName, menuItems, onRename, children }: { surface?: 'score' | 'build'; planName?: string; menuItems?: ReactNode; onRename?: () => void; children?: ReactNode }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const ctx = useCharacter()
@@ -105,6 +104,45 @@ export function CharacterBar({ surface = 'score' }: { surface?: 'score' | 'build
 
   // The switcher lists the open character even when it is someone else's.
   const foreign = id && character && !owned ? character : null
+
+  if (surface === 'build') {
+    const currentName = planName || character?.name || t('builds.unnamed')
+    return <section className="gz-cbar build-account-controls" data-testid="character-bar" aria-label={t('builds.savedPlans')}>
+      <div className="build-plan-switch">
+        <button type="button" className="build-plan-name" title={t('builds.rename')} aria-label={t('builds.rename')} disabled={ctx.readOnly} onClick={onRename}>{currentName}</button>
+        <GzSelect value={id ?? LOCAL} onChange={(next) => {
+          if (!id && hasBuildEdits(ctx.sections.builds) && !window.confirm(t('builds.discardUnsaved'))) return
+          open(next === LOCAL ? null : next)
+        }} label={t('builds.savedPlans')} testId="character-switcher" className="gz-cname"
+          options={[
+            ...(!id ? [{ value: LOCAL, label: currentName, disabled: true }] : []),
+            ...switcherOptions('', characters, foreign, label, t('characters.mine', { count: characters?.length ?? 0, max: MAX_CHARACTERS }), false),
+          ]} disabled={!signedIn && !id} />
+      </div>
+      {children}
+      <div className="build-account-actions">
+        {status !== 'local' && <span className={`gz-status ${STATUS_TONE[status] ?? ''} build-account-status`} role="status" data-testid="character-status"><i aria-hidden />{t(STATUS_KEY[status])}</span>}
+        <Button size="sm" className="build-primary" data-testid="build-save" disabled={!signedIn || busy || ctx.readOnly || (full && !owned) || Boolean(id && !owned) || Boolean(id && status === 'saved') || Boolean(id && status === 'saving')}
+          onClick={() => { if (!id) setDialog('save'); else void run(() => ctx.saveNow()) }}>
+          <IconDeviceFloppy className="size-4" aria-hidden />{t('characters.save')}
+        </Button>
+        {menuItems}
+        {id && owned && character && <>
+          {character.visibility === 'link' && <Button size="sm" variant="outline" onClick={() => void copyLink()}>{copied ? t('characters.linkCopied') : t('characters.copyLink')}</Button>}
+          <Button size="sm" variant="outline" data-testid="character-manage" onClick={() => setDialog('manage')}>{t('characters.manage')}</Button>
+          <Button size="sm" variant="outline" disabled={busy || full} onClick={() => void run(async () => open(await ctx.copy(character.id, t('characters.copyName', { name: character.name }).slice(0, 32))))}>{t('characters.saveCopy')}</Button>
+        </>}
+        {foreign && signedIn && <Button size="sm" variant="outline" disabled={busy || full} onClick={() => void run(async () => open(await ctx.copy(foreign.id)))}>{t('characters.copyToMine')}</Button>}
+        {foreign && <Button size="sm" variant="outline" onClick={() => open(null)}>{t('characters.backShort')}</Button>}
+      </div>
+      {id && character?.uid && <Identity character={character} />}
+      {full && signedIn && <p className="gz-cbar-hint" data-testid="character-limit">{t('characters.limitReached', { max: MAX_CHARACTERS })}</p>}
+      {failure && !dialog && <p className="gz-cbar-hint bad" role="alert">{failure}</p>}
+      <ConflictDialog />
+      <SaveDraftDialog key={dialog === 'save' ? 'saving' : 'closed'} initialName={planName} open={dialog === 'save'} onClose={() => setDialog(null)} onSaved={(created) => open(created)} />
+      {character && owned && <ManageDialog open={dialog === 'manage'} character={character} servers={servers} label={label} onClose={() => setDialog(null)} onOpen={open} />}
+    </section>
+  }
 
   return (
     <section className="gz-cbar" data-testid="character-bar" aria-label={t('characters.switcher')}>
@@ -216,8 +254,9 @@ function switcherOptions(
   foreign: SavedCharacter | null,
   label: (name: string, serverId?: number) => string,
   mine: string,
+  includeLocal = true,
 ): (GzOption | GzOptionGroup)[] {
-  const options: (GzOption | GzOptionGroup)[] = [{ value: LOCAL, label: draft }]
+  const options: (GzOption | GzOptionGroup)[] = includeLocal ? [{ value: LOCAL, label: draft }] : []
   if (characters && characters.length > 0) {
     options.push({ label: mine, options: characters.map((entry) => ({ value: entry.id, label: label(entry.name, entry.serverId) })) })
   }
@@ -258,10 +297,10 @@ function Check({ checked, onChange, children, hint, testId }: {
   )
 }
 
-function SaveDraftDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: (id: string) => void }) {
+function SaveDraftDialog({ open, onClose, onSaved, initialName = '' }: { open: boolean; onClose: () => void; onSaved: (id: string) => void; initialName?: string }) {
   const { t } = useTranslation()
   const { saveDraftAs } = useCharacter()
-  const [name, setName] = useState('')
+  const [name, setName] = useState(initialName)
   const [busy, setBusy] = useState(false)
   const [failure, setFailure] = useState<string | null>(null)
 
