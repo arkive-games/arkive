@@ -58,6 +58,7 @@ const en = {
   noMapSelected: 'No map selected.',
   zoomIn: 'Zoom in',
   zoomOut: 'Zoom out',
+  encyclopedia: { label: 'Encyclopedia', collapse: 'Collapse encyclopedia navigation', expand: 'Expand encyclopedia navigation' },
   nav: { map: 'Map', vblood: 'V Blood', database: 'Database', systems: 'Powers & Research', changelog: 'Changelog' },
   siteInfo: {
     tab: 'About',
@@ -215,6 +216,7 @@ const zhCN: Strings = {
   noMapSelected: '未选择地图。',
   zoomIn: '放大',
   zoomOut: '缩小',
+  encyclopedia: { label: '百科', collapse: '收起百科目录', expand: '展开百科目录' },
   nav: { map: '地图', vblood: 'V 型血首领', database: '资料库', systems: '法术与研究', changelog: '更新日志' },
   siteInfo: {
     tab: '关于',
@@ -371,6 +373,7 @@ const zhTW: Strings = {
   noMapSelected: '未選擇地圖。',
   zoomIn: '放大',
   zoomOut: '縮小',
+  encyclopedia: { label: '百科', collapse: '收起百科目錄', expand: '展開百科目錄' },
   nav: { map: '地圖', vblood: 'V 型血首領', database: '資料庫', systems: '法術與研究', changelog: '更新日誌' },
   siteInfo: {
     tab: '關於',

@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
-import { Anvil, BookOpen, Boxes, ChevronDown, FlaskConical, Hammer, Shield, Sparkles, Swords } from 'lucide-react'
+import { BookOpen, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SearchInput } from '@gamemap/ui'
 import { browserMemory, useMemoryState } from '@gamemap/state-memory'
 import { createKnowledgeQueryRecord, createKnowledgeRevealRecord, createSectionRecord, expandedRecords, knowledgeQueryScope, knowledgeResultsScope, migrateKnowledgeContext, type PageKind, type SectionKey } from './memory'
 import { ContentPage } from '../../components/ContentPage'
+import { KNOWLEDGE_SECTIONS } from '../../components/encyclopediaNavigation'
 import type { NavKey } from '../../components/TopNav'
 import { cleanGameText } from '../../lib/gameText'
 import {
@@ -19,20 +19,6 @@ import {
 } from '../../lib/vblood'
 
 type CatalogRecord = VBloodRewardRef | VBloodTechReward | VBloodPassiveRecord
-
-const DATABASE: { key: SectionKey; icon: LucideIcon }[] = [
-  { key: 'items', icon: Boxes },
-  { key: 'weapons', icon: Swords },
-  { key: 'armor', icon: Shield },
-  { key: 'recipes', icon: FlaskConical },
-]
-
-const SYSTEMS: { key: SectionKey; icon: LucideIcon }[] = [
-  { key: 'spells', icon: Sparkles },
-  { key: 'passives', icon: Anvil },
-  { key: 'buildings', icon: Hammer },
-  { key: 'research', icon: BookOpen },
-]
 
 function recordsFor(catalog: VBloodKnowledgeCatalog, key: SectionKey): CatalogRecord[] | null {
   if (key === 'recipes') return catalog.recipes
@@ -130,7 +116,7 @@ function RecordCard({ record, expanded, onExpandedChange }: { record: CatalogRec
 
 export default function KnowledgePage({ kind }: { kind: PageKind }) {
   const { t } = useTranslation()
-  const cards = kind === 'database' ? DATABASE : SYSTEMS
+  const cards = KNOWLEDGE_SECTIONS[kind]
   const active = (kind === 'database' ? '/database' : '/systems') as NavKey
   const defaultSection: SectionKey = kind === 'database' ? 'recipes' : 'passives'
   const [catalog, setCatalog] = useState<VBloodKnowledgeCatalog | null | undefined>(undefined)
@@ -145,7 +131,7 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
   const [expanded, setExpanded] = useMemoryState(expandedRecords, { partition: knowledgeQueryScope(kind, selected) })
 
   useEffect(() => {
-    const available = kind === 'database' ? DATABASE : SYSTEMS
+    const available = KNOWLEDGE_SECTIONS[kind]
     if (!available.some(({ key }) => key === selected)) setSelected(defaultSection)
   }, [defaultSection, kind, selected, setSelected])
 
@@ -173,8 +159,9 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
 
   return (
     <ContentPage active={active} title={t(`knowledge.${kind}.title`)} heading
+      directory={{ kind, selected, available: cards.filter(({ key }) => catalog && recordsFor(catalog, key) !== null).map(({ key }) => key), loading: catalog === undefined, onSelect: chooseSection }}
       browsing={{ scope: `knowledge:${kind}:${selected}`, ready: catalog !== undefined && catalog !== null, resultsKey: query }}>
-      <div className="mb-5 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card to-card p-4">
+      <div className="mb-5 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card to-card p-4 lg:hidden">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <BookOpen className="size-4" />
@@ -186,7 +173,7 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:hidden">
         {cards.map(({ key, icon: Icon }) => {
           const records = catalog ? recordsFor(catalog, key) : null
           const ready = records !== null
@@ -230,9 +217,9 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
       </div>
 
       {selectedRecords ? (
-        <section className="mt-5 rounded-2xl border border-primary/15 bg-secondary/25 p-4 md:p-5">
+        <section className="mt-5 rounded-2xl border border-primary/15 bg-secondary/25 p-4 md:p-5 lg:mt-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
+            <div className="lg:hidden">
               <p className="text-xs font-semibold uppercase text-primary">{t('knowledge.verifiedRecords')}</p>
               <h2 className="mt-1 text-xl font-bold">{t(`knowledge.sections.${selected}.title`)}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -249,6 +236,9 @@ export default function KnowledgePage({ kind }: { kind: PageKind }) {
 />
           </div>
 
+          <p className="mt-3 hidden text-xs leading-relaxed text-muted-foreground lg:block">
+            {t(selected === 'passives' ? 'knowledge.passiveSourceCaption' : 'knowledge.sourceCaption')}
+          </p>
           <p className="mt-4 text-xs font-medium text-muted-foreground">
             {t('knowledge.showingRecords', { shown: Math.min(visibleCount, filtered.length), total: filtered.length })}
           </p>

@@ -111,6 +111,7 @@ arkive.memory.sts2.cards-catalog.query	-	apps/sts2/src/features/cards/memory.ts
 arkive.memory.sts2.cards-context.facets	-	apps/sts2/src/features/cards/memory.ts
 arkive.memory.sts2.reference-context.scroll	-	apps/sts2/src/features/cards/memory.ts
 arkive.memory.vrising.catalog-context.scroll	-	apps/vrising/src/lib/memory.ts
+arkive.memory.vrising.encyclopedia.rail-collapsed	-	apps/vrising/src/components/EncyclopediaLayout.tsx
 arkive.memory.vrising.knowledge.expanded-records	-	apps/vrising/src/features/knowledge/memory.ts
 arkive.memory.vrising.knowledge.query	-	apps/vrising/src/features/knowledge/memory.ts
 arkive.memory.vrising.knowledge.result-reveal-depth	-	apps/vrising/src/features/knowledge/memory.ts

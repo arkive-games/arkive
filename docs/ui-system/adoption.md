@@ -288,3 +288,22 @@ reload, quest detail return to the same 632-pixel reading position, recent links
 faction filtering and existing 390-pixel mobile navigation without overflow.
 AION2 lint/build, map-shell typecheck, memory inventory and the full suite pass:
 172 files / 1916 tests. No remote delivery; broader visual acceptance stays open.
+
+V Rising desktop-shell adoption: V Blood list/detail, Database and Powers &
+Research use the shared directory and tab-local collapse. Top navigation and
+the directory share the reference inventory; desktop subsection controls and
+existing mobile category cards share their own inventory. Unavailable item,
+weapon, armor and spell sections remain disabled and marked as extracting.
+Duplicate desktop headings/category cards are suppressed; record content,
+progress, top navigation, footer and mobile composition remain game-owned.
+
+Browser checks cover all ready subsections, collapse/query/disclosure reload,
+independent subsection queries, research selection, V Blood completion reload,
+chapter/search filters and detail return to the same 114-pixel list position.
+At 390 pixels the existing category cards work with one search and no overflow;
+empty desktop results keep the footer at the bottom. Changelog excludes the
+directory. Intermittent data-host failures required a temporary browser-only
+copy of the live schema-2 rewards payload (24 passives, 924 buildings, 377 tech
+records); the on-disk artifact uses schema 3 and was not substituted. Production
+data configuration is unchanged. App lint/build, memory inventory and full suite
+pass: 172 files / 1916 tests. No remote delivery; visual acceptance remains open.
