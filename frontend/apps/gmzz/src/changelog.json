@@ -1,6 +1,29 @@
 {
   "entries": [
     {
+      "version": "0.37.0",
+      "date": "2026-11-15",
+      "commit": "bcb6094fddcf84f5c268183ab7ac89d65a7decbc",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Reorganize Build planning with a compact plan toolbar, unified skill and relic panels, single-page scrolling, and compact condition editing.",
+            "zh-CN": "重整Build模拟器：统一方案工具栏、技能与封印物面板，采用页面滚动和紧凑单行条件编辑。",
+            "zh-TW": "重整Build模擬器：統一方案工具列、技能與封印物面板，採用頁面捲動與精簡單行條件編輯。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Configure six strategic-server relic slots, lock the extra slots locally, and save named plans to your account with protected switching and renaming.",
+            "zh-CN": "支持战略服六格封印物与本服后三格锁定；方案保存至账号，并保护切换和重命名过程中的未保存修改。",
+            "zh-TW": "支援戰略服六格封印物與本服後三格鎖定；方案儲存至帳號，並保護切換及重新命名時尚未儲存的修改。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.36.0",
       "date": "2026-11-14",
       "commit": "657ca972792b93f66d50d4eede270e8d041d9441",
