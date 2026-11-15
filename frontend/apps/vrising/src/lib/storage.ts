@@ -12,8 +12,7 @@ const mapViewRecord = defineMemoryRecord({
 })
 const visibleRecord = defineMemoryRecord({
   id: 'visible-subtypes', namespace: 'vrising', surface: 'map',
-  // userPreference, not sessionContext: this was localStorage-backed before, so a
-  // tab-scoped class would discard a curated subtype selection when the tab closes.
+  // Read-only migration seed for tab-local map filters; preserve existing data.
   ...memoryPolicy.userPreference('clear-map-filters'),
   schemaVersion: '1.0.0', defaultValue: () => null as string[] | null,
   validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
@@ -32,8 +31,4 @@ export const mapViewStore: MapViewStore = {
 export function readVisibleSubtypes(): Set<string> | null {
   const ids = browserMemory.read(visibleRecord)
   return ids === null ? null : new Set(ids)
-}
-
-export function writeVisibleSubtypes(ids: Set<string>): void {
-  browserMemory.write(visibleRecord, [...ids])
 }

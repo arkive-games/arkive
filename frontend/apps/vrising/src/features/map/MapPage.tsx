@@ -18,7 +18,7 @@ import {
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import { useIsMobile } from '@gamemap/ui'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
+import { browserMemory, defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import {
   loadStatic, loadMarkers, loadRegions,
   type MapMeta, type MarkerLocale, type MarkerRow, type MapsLocale,
@@ -26,7 +26,7 @@ import {
 } from '../../lib/data'
 import { markerImageUrl, vrisingAssets } from '../../lib/assets'
 import { cleanGameText } from '../../lib/gameText'
-import { mapViewStore, readVisibleSubtypes, writeVisibleSubtypes } from '../../lib/storage'
+import { mapViewStore, readVisibleSubtypes } from '../../lib/storage'
 import { vrisingTheme } from '../../theme'
 import { TopNav } from '../../components/TopNav'
 import { InfoSidebar } from '../../components/InfoSidebar'
@@ -49,7 +49,9 @@ const regionsRecord = defineMemoryRecord({
   validate: isBoolean,
 })
 
-const mapSessionRecords = createMapSessionRecords('vrising')
+const mapSessionRecords = createMapSessionRecords('vrising', {
+  visibility: () => { const seed = readVisibleSubtypes(); return seed === null ? null : [...seed] },
+})
 
 // The map engine behind a lazy boundary — see features/map/GlMapView.
 const GameMapView = lazy(() => import('./GlMapView'))
@@ -66,7 +68,10 @@ export default function MapPage() {
 
   // Restore the persisted subtype selection once at mount; null = never chosen,
   // so the taxonomy's `defaultActive` flags apply instead.
-  const [restoredVisible] = useState<Set<string> | null>(readVisibleSubtypes)
+  const [restoredVisible] = useState<Set<string> | null>(() => {
+    const saved = browserMemory.read(mapSessionRecords.visibility, { partition: MAP_ID })
+    return saved === null ? null : new Set(saved)
+  })
   const visibleInitialized = useRef(restoredVisible != null)
 
   const { q: initialQuery } = useSearch({ from: '/' })
@@ -123,7 +128,10 @@ export default function MapPage() {
     return () => { cancelled = true }
   }, [lng, t])
 
-  useEffect(() => { writeVisibleSubtypes(visible) }, [visible])
+  useEffect(() => {
+    if (!staticData || !visibleInitialized.current) return
+    browserMemory.write(mapSessionRecords.visibility, [...visible], { partition: MAP_ID })
+  }, [staticData, visible])
 
   useEffect(() => {
     let cancelled = false
