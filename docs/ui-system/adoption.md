@@ -14,7 +14,7 @@ not deployed. [Evidence](evidence.md) records exact coverage/limits;
 | 3. Components/states | Contracts and shared primitives established |
 | 4. Code reconciliation | Agreed local changes implemented, including this closeout's fixes |
 | 5. Acceptance | Tooling and scoped checks complete; coverage/limits below, not universal art approval |
-| 6. Team Skill | Not started; next deliverable |
+| 6. Team Skill | Repository-owned `arkive-ui` created; structure, references and task-scope walkthroughs validated |
 
 ## Acceptance closeout
 
@@ -47,5 +47,11 @@ Their exclusion does not block packaging the current confirmed rules.
 
 Local signed commits remain in `.scratch/ui-stage4` on `codex/ui-stage4`.
 No push, PR, merge or deployment is authorized by this batch. Remote delivery
-requires the user's instruction and the repository workflow. The Skill is not
-yet created. Documentation links/status are validated separately from app tests.
+requires the user's instruction and the repository workflow. The
+[Skill](../../.agents/skills/arkive-ui/SKILL.md) routes to existing rules rather
+than copying them; its component map is read only when relevant. It needs an
+Arkive checkout, not a fixed personal path. Team members need this repository
+version and a workspace rooted in that checkout; discovery on their computers
+has not been observed. Structure/link checks and manual walkthroughs cover new
+encyclopedia content, shared search, tool registration and review-only work;
+they are not an independent model trial. No app code changed in this batch.
