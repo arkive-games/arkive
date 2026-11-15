@@ -21,6 +21,7 @@ export {
   type MemoryViewport,
   type StorageLike,
 } from "./core"
+export { createMapViewStore } from './mapViewStore'
 export {
   useLanguagePreference,
   useMemory,

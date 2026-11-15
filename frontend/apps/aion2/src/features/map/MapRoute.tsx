@@ -13,7 +13,6 @@ import {
   SearchPanel,
   readMapView,
   useMapViewMemory,
-  type MapViewStore,
   type SearchItem,
   canUseLodTiers,
 } from "@gamemap/map-shell";
@@ -21,7 +20,7 @@ import { useIsMobile } from "@gamemap/ui";
 import { ArkiveAccountControl } from "@gamemap/auth";
 import { ARKIVE_HOME_URL } from "@/lib/brand";
 import { useSettingsConfig } from "@/lib/settings";
-import { browserMemory, defineMemoryRecord, isString, memoryPolicy, useMapSession } from "@gamemap/state-memory";
+import { createMapViewStore, useMapSession } from "@gamemap/state-memory";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { defaultVisibleSubtypeKeys, useGameData } from "@/context/GameDataContext";
@@ -44,21 +43,7 @@ const GameMapView = lazy(() => import("@/features/map/GlMapView"));
 // into useMapViewMemory. The storage-free shell hook gets storage through this
 // adapter, same as the theme.
 const MAP_VIEW_KEY = "aion2.map.view";
-const mapViewRecord = defineMemoryRecord({
-  id: "view",
-  namespace: "aion2",
-  surface: "map",
-  ...memoryPolicy.recentActivity("clear-recent-map-view"),
-  schemaVersion: "1.0.0",
-  defaultValue: () => "",
-  validate: isString,
-  legacyKeys: [MAP_VIEW_KEY],
-  migrateLegacy: (raw: string) => raw,
-});
-const mapViewStore: MapViewStore = {
-  get: () => browserMemory.read(mapViewRecord) || null,
-  set: (raw) => { browserMemory.write(mapViewRecord, raw); },
-};
+const mapViewStore = createMapViewStore("aion2", { legacyKeys: [MAP_VIEW_KEY] });
 
 export default function MapRoute() {
   // A small {getCenter,getZoom,flyTo,project,dispose} handle, not a DOM map.

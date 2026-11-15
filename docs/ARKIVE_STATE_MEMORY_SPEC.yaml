@@ -254,6 +254,8 @@ surface_contracts:
       - "Deliberate label or boundary toggles, renderer choice where exposed, and desktop sidebar density"
     session_context:
       - "Content layer and category filters, active search, and a selected marker that has no route representation"
+      - "Incidental marker selection is tab-local even when the marker can also be shared by URL; an explicit URL target takes precedence."
+    filter_migration: "AION2 adopts each map's legacy subtype/region filter once per device into the current tab, preserves the legacy record, and starts later independent tabs with defaults. Newer tab context takes precedence over the legacy seed."
     saved_default_exception: "Content layers become a preference only through an explicit Save as default action."
     durable_progress:
       - "Completion and collection progress"

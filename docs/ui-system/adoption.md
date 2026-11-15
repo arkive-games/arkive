@@ -196,3 +196,20 @@ tool records and persistent reset behavior. Closing/reopening the browser with
 the same profile restores the league input. GMZZ lint/build, inventory and full
 suite pass: 167 files / 1904 tests. No remote delivery. Explicit-save editor exit
 guards and their save destinations remain separate outstanding work.
+
+Map lifetime follow-up: AION2 subtype/region filters now use map-scoped tab
+context. A device migration flag adopts each legacy filter once, preserves the
+old record and never replaces newer tab choices. Later independent tabs start
+with current defaults. AION2, Palworld, V Rising and PBZ now use one shared
+adapter separating device-local camera history from tab-local selected markers.
+Legacy camera coordinates remain readable; legacy durable markers are ignored.
+Layout, label/boundary preferences and completion records remain unchanged.
+
+Browser checks verify AION2 one-time adoption, explicit empty filters, independent
+new-tab defaults and preserved legacy data; AION2/Palworld selection return and
+new-tab isolation; AION2/PBZ direct marker links; PBZ map switching/new-tab
+selection isolation; and V Rising selection reload. V Rising's remote data
+connection failed during QA, so its check used actual local artifacts. PBZ used
+temporary port 15182 because 15180 belongs to the RO3 preview. Four app lints/
+builds and the inventory pass. Full suite: 169 files / 1909 tests. No remote
+delivery; broader account/storage failure and visual acceptance remain open.

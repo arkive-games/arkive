@@ -4,13 +4,11 @@ import type { GameMapMeta, MarkerTypeSubtype } from "@gamemap/data-contract";
 import {useGameMap} from "@/context/GameMapContext";
 import {useMarkers} from "@/context/MarkersContext";
 import { VISIBLE_SUBTYPES_STORAGE_PREFIX, VISIBLE_REGIONS_STORAGE_PREFIX } from "@/lib/constants";
+import { readAionFilters, writeAionFilters } from '../features/map/filterMemory';
 import {
-  browserMemory,
   defineMemoryRecord,
   isBoolean,
-  isStringArray,
   memoryPolicy,
-  parseJson,
   useMemoryState,
 } from "@gamemap/state-memory";
 
@@ -58,18 +56,6 @@ type GameDataProviderProps = {
   children: React.ReactNode;
 };
 
-const visibleDataRecord = (kind: "subtypes" | "regions", legacyKey: string) => defineMemoryRecord({
-  id: `visible-${kind}`,
-  namespace: "aion2",
-  surface: "map",
-  ...memoryPolicy.userPreference("clear-map-filters"),
-  schemaVersion: "1.0.0",
-  defaultValue: () => null as string[] | null,
-  validate: (value: unknown): value is string[] | null => value === null || isStringArray(value),
-  legacyKeys: [legacyKey],
-  migrateLegacy: parseJson,
-});
-
 const bordersRecord = defineMemoryRecord({
   id: "show-borders",
   namespace: "aion2",
@@ -94,21 +80,14 @@ const lodRecord = defineMemoryRecord({
 
 const saveVisibleData = (prefix: string, selectedMap: GameMapMeta | undefined, data: Set<string> | undefined) => {
   if (!selectedMap || !data) return;
-  const storageKey = `${prefix}${selectedMap.name}`;
   const kind = prefix === VISIBLE_SUBTYPES_STORAGE_PREFIX ? "subtypes" : "regions";
-  browserMemory.write(visibleDataRecord(kind, storageKey), Array.from(data), {
-    partition: selectedMap.name,
-  });
+  writeAionFilters(kind, selectedMap.id, data);
 }
 
 const loadVisibleData = (prefix: string, selectedMap: GameMapMeta, validKeys: Set<string>) => {
   const storageKey = `${prefix}${selectedMap.name}`;
   const kind = prefix === VISIBLE_SUBTYPES_STORAGE_PREFIX ? "subtypes" : "regions";
-  const parsed = browserMemory.read(visibleDataRecord(kind, storageKey), {
-    partition: selectedMap.name,
-  });
-  if (parsed === null) return null;
-  return new Set(parsed.filter((key) => validKeys.has(key)));
+  return readAionFilters(kind, selectedMap, storageKey, validKeys);
 }
 
 export const GameDataProvider: React.FC<GameDataProviderProps> = ({

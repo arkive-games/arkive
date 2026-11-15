@@ -1,10 +1,13 @@
 arkive.memory.aion2.map-context.collapsed-categories	partition	apps/aion2/src/features/map/mapSession.ts
 arkive.memory.aion2.map-context.query	partition	apps/aion2/src/features/map/mapSession.ts
+arkive.memory.aion2.map-context.selected-marker	-	apps/aion2/src/features/map/MapRoute.tsx
 arkive.memory.aion2.map-context.sidebar-collapsed	partition	apps/aion2/src/features/map/mapSession.ts
 arkive.memory.aion2.map-context.sidebar-scroll	partition	apps/aion2/src/features/map/mapSession.ts
+arkive.memory.aion2.map-context.visible-regions	-	apps/aion2/src/features/map/filterMemory.ts
 arkive.memory.aion2.map-context.visible-subtypes	partition	apps/aion2/src/features/map/mapSession.ts
 arkive.memory.aion2.map.completed-markers	-	apps/aion2/src/context/MarkersContext.tsx
 arkive.memory.aion2.map.completed-markers-v1	-	apps/aion2/src/context/MarkersContext.tsx
+arkive.memory.aion2.map.filter-migration	-	apps/aion2/src/features/map/filterMemory.ts
 arkive.memory.aion2.map.info-collapsed	-	apps/aion2/src/features/map/sidebar/InfoSidebar.tsx
 arkive.memory.aion2.map.last-map	-	apps/aion2/src/features/map/mapSession.ts
 arkive.memory.aion2.map.level-of-detail	-	apps/aion2/src/context/GameDataContext.tsx
@@ -46,6 +49,7 @@ arkive.memory.palworld.catalog.reveal-depth	-	apps/palworld/src/features/catalog
 arkive.memory.palworld.catalog.view-mode	-	apps/palworld/src/features/pals/PalListPage.tsx
 arkive.memory.palworld.map-context.collapsed-categories	partition	apps/palworld/src/App.tsx
 arkive.memory.palworld.map-context.query	partition	apps/palworld/src/App.tsx
+arkive.memory.palworld.map-context.selected-marker	-	apps/palworld/src/App.tsx
 arkive.memory.palworld.map-context.sidebar-collapsed	partition	apps/palworld/src/App.tsx
 arkive.memory.palworld.map-context.sidebar-scroll	partition	apps/palworld/src/App.tsx
 arkive.memory.palworld.map-context.visible-subtypes	partition	apps/palworld/src/App.tsx
@@ -67,6 +71,7 @@ arkive.memory.palworld.stat-simulator.passives	-	apps/palworld/src/features/simu
 arkive.memory.palworld.stat-simulator.souls	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
 arkive.memory.pbz.map-context.collapsed-categories	partition	apps/pbz/src/features/map/MapPage.tsx
 arkive.memory.pbz.map-context.query	partition	apps/pbz/src/features/map/MapPage.tsx
+arkive.memory.pbz.map-context.selected-marker	-	apps/pbz/src/lib/storage.ts
 arkive.memory.pbz.map-context.sidebar-collapsed	partition	apps/pbz/src/features/map/MapPage.tsx
 arkive.memory.pbz.map-context.sidebar-scroll	partition	apps/pbz/src/features/map/MapPage.tsx
 arkive.memory.pbz.map-context.visible-subtypes	partition	apps/pbz/src/features/map/MapPage.tsx
@@ -111,6 +116,7 @@ arkive.memory.vrising.knowledge.section-context-migrated	-	apps/vrising/src/feat
 arkive.memory.vrising.knowledge.section-query	-	apps/vrising/src/features/knowledge/memory.ts
 arkive.memory.vrising.map-context.collapsed-categories	partition	apps/vrising/src/features/map/MapPage.tsx
 arkive.memory.vrising.map-context.query	partition	apps/vrising/src/features/map/MapPage.tsx
+arkive.memory.vrising.map-context.selected-marker	-	apps/vrising/src/lib/storage.ts
 arkive.memory.vrising.map-context.sidebar-collapsed	partition	apps/vrising/src/features/map/MapPage.tsx
 arkive.memory.vrising.map-context.sidebar-scroll	partition	apps/vrising/src/features/map/MapPage.tsx
 arkive.memory.vrising.map-context.visible-subtypes	partition	apps/vrising/src/features/map/MapPage.tsx
