@@ -31,4 +31,4 @@ prompts apply only where the app controls navigation.
 Save destination, account needs and saved-record management remain per-editor
 decisions. This contract does not redefine
 encyclopedia return context, map memory, favorites, progress, or unrelated form
-drafts. See [adoption](adoption.md) for the older task-draft policy conflict.
+drafts. See [adoption](adoption.md) for implementation and verification scope.

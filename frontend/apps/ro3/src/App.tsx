@@ -1,5 +1,5 @@
 import { WikiSessionProvider } from './WikiSessionProvider'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Wrench } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
@@ -7,6 +7,7 @@ import {
   resolveChangelog,
   VersionHistory,
   type ChangelogFile,
+  type UnsavedChangesRequest,
 } from '@gamemap/ui'
 import { PetWiki } from './PetWiki'
 import { MonsterWiki } from './MonsterWiki'
@@ -92,6 +93,9 @@ function documentTitle(location: Location): string {
 
 function App() {
   const [location, setLocation] = useState<Location>(readLocation)
+  const buildGuard = useRef<UnsavedChangesRequest | null>(null)
+  const historyIndex = useRef(0)
+  const registerBuildGuard = useCallback((guard: UnsavedChangesRequest | null) => { buildGuard.current = guard }, [])
   const active = navKeyFor(location)
 
   // The home page moved from /overview to /; old links still land on it, under
@@ -107,7 +111,28 @@ function App() {
   }, [location])
 
   useEffect(() => {
+    const stored = window.history.state?.arkivePosition
+    historyIndex.current = Number.isInteger(stored) ? stored : 0
+    window.history.replaceState({ ...window.history.state, arkivePosition: historyIndex.current }, '')
+    let afterRestore: (() => void) | null = null
+    let approvedTraversal = false
     const handlePopState = () => {
+      if (afterRestore) {
+        const ask = afterRestore
+        afterRestore = null
+        ask()
+        return
+      }
+      const targetIndex = window.history.state?.arkivePosition ?? 0
+      const delta = targetIndex - historyIndex.current
+      if (buildGuard.current && !approvedTraversal && delta !== 0) {
+        const request = buildGuard.current
+        afterRestore = () => request(() => { approvedTraversal = true; window.history.go(delta) })
+        window.history.go(-delta)
+        return
+      }
+      approvedTraversal = false
+      historyIndex.current = targetIndex
       setLocation(readLocation())
       // The browser has already swapped the URL by the time popstate fires, so
       // the default (read location) is the page the visitor just went back to.
@@ -126,11 +151,15 @@ function App() {
     const next = locationForKey(key)
     if (!next) return
     const href = hrefFor(next.page, next.view)
-    if (href !== `${window.location.pathname}${window.location.search}`) {
-      window.history.pushState({}, '', href)
+    if (href === `${window.location.pathname}${window.location.search}`) return
+    const leave = () => {
+      historyIndex.current += 1
+      window.history.pushState({ arkivePosition: historyIndex.current }, '', href)
       trackPageview()
+      setLocation(next)
     }
-    setLocation(next)
+    if (buildGuard.current) buildGuard.current(leave)
+    else leave()
   }
 
   return (
@@ -166,7 +195,7 @@ function App() {
               <SectionStrip entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>
                 <SidebarSubProvider value={sidebarSlot}>
-                  <BuildManual />
+                  <BuildManual onGuardChange={registerBuildGuard} />
                 </SidebarSubProvider>
               </HeaderActionProvider>
             </div>

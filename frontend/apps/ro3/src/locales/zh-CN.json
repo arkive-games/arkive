@@ -40,6 +40,13 @@
     "editor": {"name":"方案名称","unnamed":"未命名方案","save":"保存方案","skills":"技能配置","attributes":"属性加点","pets":"宠物配置","talents":"职业天赋","souls":"灵魂残响","combat":"出战","assist":"助战","replace":"更换","normal":"普通词条","special":"特殊词条","sub":"副属性","unknown":"原配置资料暂不可用","attributesList":["力量","敏捷","体质","智力","灵巧","幸运"],"slots":{"main":"主手","off":"副手","armor":"衣服","cloak":"披风","shoes":"鞋子","accessory1":"饰品 1","accessory2":"饰品 2"}},
     "saveError": "无法保存到浏览器。当前方案仍保留在页面中，请检查浏览器存储权限后重试，暂时不要关闭页面。",
     "title": "流派手册",
+    "leaveEditor": {
+      "title": "还有未保存的修改",
+      "description": "离开前要保存当前方案吗？放弃修改不会删除已保存的方案。",
+      "save": "保存后离开",
+      "discard": "放弃修改并离开",
+      "stay": "继续编辑"
+    },
     "manual": {
       "rec": "推荐流派",
       "mine": "我的方案",

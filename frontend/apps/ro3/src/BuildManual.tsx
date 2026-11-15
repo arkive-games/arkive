@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { BookMarked, FolderOpen, Heart, Plus, Search } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { cn, useUnsavedChanges, type UnsavedChangesRequest } from '@gamemap/ui'
 import content from './locales/zh-CN.json'
 import { loadPetWikiData } from './creatureData'
 import { loadCardCatalogData, loadEquipmentWikiData, loadProfessionWikiData, loadSoulWikiData, loadTalentWikiData } from './wikiData'
@@ -48,14 +48,15 @@ function BuildRow({ build, data, faved, onOpen }: { build: PlannerBuild; data: M
   </button>
 }
 
-export function BuildManual() {
+export function BuildManual({ onGuardChange }: { onGuardChange?: (guard: UnsavedChangesRequest | null) => void }) {
   const [data, setData] = useState<ManualData | null>(null)
   const [plans, setPlans] = useState<PlannerBuild[]>([])
   const [favorites, setFavorites] = useState<string[]>(() => readFavorites())
   const [section, setSection] = useState<Section>('rec')
   const [view, setView] = useState<View>({ mode: 'list' })
   const [draft, setDraft] = useState<PlannerBuild>(() => emptyPlanner())
-  const [dirty, setDirty] = useState(false)
+  const [baseline, setBaseline] = useState(() => JSON.stringify(draft))
+  const dirty = JSON.stringify(draft) !== baseline
   const [error, setError] = useState('')
   const [root, setRoot] = useState(0)
   const [branch, setBranch] = useState(0)
@@ -88,12 +89,6 @@ export function BuildManual() {
     return () => { active = false }
   }, [])
 
-  useEffect(() => {
-    if (!dirty) return
-    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
-    window.addEventListener('beforeunload', warn)
-    return () => window.removeEventListener('beforeunload', warn)
-  }, [dirty])
 
   const rules = data?.rules?.shared
   const pool = section === 'rec' ? RECOMMENDED : section === 'mine' ? plans : [...RECOMMENDED, ...plans].filter(b => favorites.includes(b.id))
@@ -106,25 +101,34 @@ export function BuildManual() {
   const branches = useMemo(() => rootBranches(rules, root), [rules, root])
   const counts: Record<Section, number> = { rec: RECOMMENDED.length, mine: plans.length, fav: [...RECOMMENDED, ...plans].filter(b => favorites.includes(b.id)).length }
 
-  // Leaving the editor keeps an unsaved draft; 'new build' brings it back instead of starting over.
-  const go = (next: Section) => { setSection(next); setView({ mode: 'list' }) }
   const startEdit = (base?: PlannerBuild, keepId = false) => {
     if (!loaded) return
-    if (!base && dirty) { setView({ mode: 'edit' }); return }
-    if (base && dirty && !window.confirm(m.confirmLeave)) return
-    const fresh = emptyPlanner()
-    setDraft(base ? { ...structuredClone(base), id: keepId ? base.id : fresh.id, recovery: keepId ? base.recovery : [] } : fresh)
-    setDirty(false); setError(''); setView({ mode: 'edit' })
+    request(() => {
+      const fresh = emptyPlanner()
+      const next = base ? { ...structuredClone(base), id: keepId ? base.id : fresh.id, recovery: keepId ? base.recovery : [] } : fresh
+      setDraft(next); setBaseline(JSON.stringify(next)); setError(''); setView({ mode: 'edit' })
+    })
   }
-  const patch = (next: Partial<PlannerBuild>) => { setDraft(current => ({ ...current, ...next })); setDirty(true); setError('') }
+  const patch = (next: Partial<PlannerBuild>) => { setDraft(current => ({ ...current, ...next })); setError('') }
   const save = () => {
-    if (!loaded) return
+    if (!loaded) return false
     const build = malformed.current === null ? draft : { ...draft, recovery: [...draft.recovery, { raw: malformed.current }] }
     const next = plans.some(b => b.id === build.id) ? plans.map(b => b.id === build.id ? build : b) : [...plans, build]
-    if (!savePlannerBuilds(next, window.localStorage)) { setError(content.builds.saveError); return }
+    if (!savePlannerBuilds(next, window.localStorage)) { setError(content.builds.saveError); return false }
     malformed.current = null
-    setPlans(next); setDraft(build); setDirty(false)
+    setPlans(next); setDraft(build); setBaseline(JSON.stringify(build)); setError('')
+    return true
   }
+  const { request, dialog } = useUnsavedChanges({
+    dirty, onSave: save,
+    onDiscard: () => { const fresh = emptyPlanner(); setDraft(fresh); setBaseline(JSON.stringify(fresh)); setError('') },
+    labels: { ...content.builds.leaveEditor, failed: content.builds.saveError },
+  })
+  useEffect(() => {
+    onGuardChange?.(dirty ? request : null)
+    return () => onGuardChange?.(null)
+  }, [dirty, request, onGuardChange])
+  const go = (next: Section) => request(() => { setSection(next); setView({ mode: 'list' }) })
   const toggleFav = (id: string) => {
     const next = favorites.includes(id) ? favorites.filter(v => v !== id) : [...favorites, id]
     if (writeFavorites(next)) setFavorites(next)
@@ -149,10 +153,10 @@ export function BuildManual() {
     </HeaderAction>
   </>
 
-  if (view.mode === 'edit') return <div className="ro3-bm">{nav}
+  if (view.mode === 'edit') return <div className="ro3-bm">{nav}{dialog}
     <BuildEditor draft={draft} data={data} plans={plans} dirty={dirty} error={error} backLabel={sectionLabel}
       onChange={patch} onSave={save} onOpen={p => startEdit(p, true)}
-      onBack={() => setView({ mode: 'list' })} />
+      onBack={() => request(() => setView({ mode: 'list' }))} />
   </div>
 
   const detail = view.mode === 'detail' ? [...RECOMMENDED, ...plans].find(b => b.id === view.id) : undefined
