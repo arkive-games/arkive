@@ -9,6 +9,7 @@ export type BuildDraft = {
   description: string
   professionId: number
   talentTreeId?: number
+  relicServer?: 'local' | 'cross'
   slots: Record<string, number>
   sealed: Record<string, number>
   nodes: ComboNode[]
@@ -16,8 +17,18 @@ export type BuildDraft = {
   original: string
 }
 export const emptyBuild = (): BuildDraft => ({ name: '', description: '', professionId: 1200001, slots: {}, sealed: {}, nodes: [], iconId: 1, original: '' })
+export function hasBuildEdits(draft: BuildDraft): boolean {
+  const empty = emptyBuild()
+  return Boolean(draft.name || draft.description || draft.original || draft.nodes.length
+    || Object.keys(draft.slots).length || Object.keys(draft.sealed).length
+    || draft.professionId !== empty.professionId || draft.iconId !== empty.iconId
+    || draft.talentTreeId !== undefined || draft.relicServer === 'cross')
+}
 export const SKILL_SLOTS = [1, 2, 3, 4, 17, 20] as const
-export const SEALED_SLOTS = [1, 2, 3] as const
+export const SEALED_SLOTS = [1, 2, 3, 4, 5, 6] as const
+export const sealedGroup = (slot: number): number => ((slot - 1) % 3) + 1
+export const relicServerOf = (draft: BuildDraft): 'local' | 'cross' => draft.relicServer ?? (Object.keys(draft.sealed).some((slot) => Number(slot) > 3) ? 'cross' : 'local')
+export const activeSealed = (draft: BuildDraft): Record<string, number> => Object.fromEntries(Object.entries(draft.sealed).filter(([slot]) => relicServerOf(draft) === 'cross' || ![4, 5, 6].includes(Number(slot))))
 const record = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v)
 const positive = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v > 0
 const idDict = (v: unknown): v is Record<string, number> => record(v) && Object.entries(v).every(([k, id]) => /^\d+$/.test(k) && positive(id))
@@ -35,6 +46,7 @@ export function isBuild(value: unknown): value is BuildDraft {
   return record(value) && typeof value.name === 'string' && value.name.length <= 100
     && typeof value.description === 'string' && value.description.length <= 1000 && positive(value.professionId)
     && (value.talentTreeId === undefined || positive(value.talentTreeId))
+    && (value.relicServer === undefined || value.relicServer === 'local' || value.relicServer === 'cross')
     && idDict(value.slots) && idDict(value.sealed) && Object.keys(value.slots).length <= 32 && Object.keys(value.sealed).length <= 16
     && Array.isArray(value.nodes) && value.nodes.length <= 50 && value.nodes.every(isNode)
     && positive(value.iconId) && typeof value.original === 'string' && value.original.length <= MAX_CODE_LENGTH
@@ -84,6 +96,7 @@ export function importBuild(input: string, current: BuildDraft): BuildDraft {
     talentTreeId: wire.has(5) ? wire.get(5) === 0 ? undefined : wire.get(5) as number : wire.get(2) === current.professionId ? current.talentTreeId : undefined,
     slots: wire.get(2) === current.professionId || hasSlots ? slots : {},
     sealed: record(sealed) ? sealed as Record<string, number> : {},
+    ...(wire.has(4) ? { relicServer: record(sealed) && Object.keys(sealed).some((slot) => Number(slot) > 3) ? 'cross' as const : 'local' as const } : {}),
     nodes: record(combo) ? normalizeNodes(combo.c ?? []) : combo === undefined && wire.get(2) === current.professionId ? current.nodes : [],
     iconId: record(combo) && positive(combo.i) ? combo.i : 1,
     original: extractCode(encodeShare(preserved)),
@@ -111,7 +124,7 @@ export function exportBuild(draft: BuildDraft, onlyCombo = false, talentTree?: T
     for (const key of [...wire.keys()]) if (![1, 2, 10, 11, 13].includes(key)) wire.delete(key)
   } else {
     wire.set(3, new Map(Object.entries(draft.slots).map(([slot, id]) => [id, Number(slot)])))
-    const relics = Object.entries(draft.sealed).map(([slot, id]) => [Number(slot), id]).sort((a, b) => a[0] - b[0])
+    const relics = Object.entries(activeSealed(draft)).map(([slot, id]) => [Number(slot), id]).sort((a, b) => a[0] - b[0])
     wire.set(4, relics.every(([slot], index) => slot === index + 1) ? relics.map(([, id]) => id) : new Map(relics.map(([slot, id]) => [slot, id])))
     if (talentTree) {
       if (talentTree.professionId !== draft.professionId) throw new Error('Talent pathway mismatch')

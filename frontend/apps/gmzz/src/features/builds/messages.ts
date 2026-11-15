@@ -1,10 +1,12 @@
 const en = {
+  discardUnsaved: 'Switch plans and discard the current unsaved changes?',
+  more: 'More actions', rename: 'Rename plan', locked: 'Locked', crossSlotLocked: 'Available on the strategic server',
   artifactDetails: 'Relic details',
   viewAction: 'View action {{n}}',
   gameSchemeMessage: 'Copy this message, click [Import] in the lower right of Recommended Plans, and use the plan from [{{name}}].',
   gameComboMessage: 'Copy this message, click [Import] in the lower right of One-click Assist, and use the plan from [{{name}}].',
   title: 'Build Simulator', description: 'Plan skills, puppets, connections, relics and one-click combos.',
-  pathway: 'Pathway', name: 'Plan name', descriptionLabel: 'Description',
+  pathway: 'Pathway', name: 'Plan name', descriptionLabel: 'Description', savedPlans: 'Saved plans',
   talent: 'Pathway talent', maxTalent: 'Max level', talentEffect: 'Talent · {{name}}',
   fixedSkills: 'Fixed skills', basicAttack: 'Basic attack', specialSkill: 'Special skill', tacticalSkill: 'Tactical skill',
   loadout: 'Loadout', sequence: 'Sequence skills', puppet: 'Puppet skill', fellow: 'Connection skill',
@@ -45,12 +47,14 @@ const en = {
 }
 type Messages = { [K in keyof typeof en]: string }
 const zhCN: Messages = {
+  discardUnsaved: '切换方案将放弃当前未保存的修改，是否继续？',
+  more: '更多操作', rename: '重命名方案', locked: '未解锁', crossSlotLocked: '战略服开放此槽位',
   artifactDetails: '封印物详情',
   viewAction: '查看动作 {{n}}',
   gameSchemeMessage: '复制该消息，在推荐方案界面右下角点击【导入】，一键使用来自【{{name}}】的方案 。',
   gameComboMessage: '复制该消息，在一键辅助界面右下角点击【导入】，一键使用来自【{{name}}】的方案 。',
   title: 'Build 模拟器', description: '搭配技能、秘偶、人脉与封印物，编排一键连招。',
-  pathway: '途径', name: '方案名称', descriptionLabel: '方案描述',
+  pathway: '途径', name: '方案名称', descriptionLabel: '方案描述', savedPlans: '已保存方案',
   talent: '途径天赋', maxTalent: '满级', talentEffect: '天赋 · {{name}}',
   fixedSkills: '固定技能', basicAttack: '普通攻击', specialSkill: '特殊技能', tacticalSkill: '战略技能',
   loadout: '技能搭配', sequence: '序列技能', puppet: '秘偶技能', fellow: '人脉技能',
@@ -90,12 +94,13 @@ const zhCN: Messages = {
   talentChanged: '天赋已更新，不适用的携带技能已移除，请检查连招中标记的动作。',
 }
 const zhTW: Messages = {
-  ...zhCN, title: 'Build 模擬器', description: '搭配技能、秘偶、人脈與封印物，編排一鍵連招。',
+  ...zhCN, discardUnsaved: '切換方案將放棄目前未儲存的修改，是否繼續？', title: 'Build 模擬器', description: '搭配技能、秘偶、人脈與封印物，編排一鍵連招。',
+  more: '更多操作', rename: '重新命名方案', locked: '未解鎖', crossSlotLocked: '戰略服開放此欄位',
   artifactDetails: '封印物詳情',
   viewAction: '查看動作 {{n}}',
   gameSchemeMessage: '複製該訊息，在推薦方案介面右下角點擊【匯入】，一鍵使用來自【{{name}}】的方案 。',
   gameComboMessage: '複製該訊息，在一鍵輔助介面右下角點擊【匯入】，一鍵使用來自【{{name}}】的方案 。',
-  pathway: '途徑', descriptionLabel: '方案描述', loadout: '技能搭配', fellow: '人脈技能',
+  pathway: '途徑', descriptionLabel: '方案描述', loadout: '技能搭配', fellow: '人脈技能', savedPlans: '已儲存方案',
   talent: '途徑天賦', maxTalent: '滿級', talentEffect: '天賦 · {{name}}',
   fixedSkills: '固定技能', basicAttack: '普通攻擊', specialSkill: '特殊技能', tacticalSkill: '戰略技能',
   skillSlot: '技能 {{n}}', sealedSlot: '封印物 {{n}}', sealed: '封印物攜帶',

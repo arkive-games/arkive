@@ -1,5 +1,6 @@
 import type { EquipmentRecord } from '../wikiData'
-import { BUILD_SLOTS, type BuildSlotKey } from './buildRules'
+import { BUILD_SLOTS, careerRoot, type BuildRuleSet, type BuildRulesDocument, type BuildSlotKey } from './buildRules'
+import { PROFESSION_LINES } from '../professionCatalog'
 import { BUILD_STORAGE_KEY, clampStat } from './buildState'
 
 export interface PlannerEquipment {
@@ -47,8 +48,25 @@ export function readPlannerStorage(storage: Pick<Storage, 'getItem'>): StoredPla
   } catch { return { records: [], raw, malformed: true } }
 }
 
+const LEGACY_ROOTS: Record<string, number> = { swordman: 1100, magician: 2100, archer: 3100, acolyte: 4100, thief: 5100, merchant: 6100 }
+
+/** Resolve authored legacy routes, never infer a career from a title or equipped items. */
+function legacyCareer(source: Record<string, unknown>, rules: BuildRuleSet | undefined): { jobId: number; branchId: number } | undefined {
+  if (!rules || typeof source.professionLineId !== 'string' || typeof source.professionRouteId !== 'string') return
+  const line = PROFESSION_LINES.find(line => line.id === source.professionLineId)
+  const route = line?.routes.find(route => route.id === source.professionRouteId)
+  if (!route) return
+  for (const stage of [...route.stages].reverse()) {
+    const matches = rules.jobs.filter(job => careerRoot(job.id) === LEGACY_ROOTS[line!.id] && job.rank === stage.rank)
+      .flatMap(job => rules.branches.filter(branch => job.branchIds.includes(branch.id) && branch.professionId === stage.professionId)
+        .map(branch => ({ jobId: job.id, branchId: branch.id })))
+    if (matches.length === 1) return matches[0]
+    if (matches.length > 1) return
+  }
+}
+
 /** Loading never writes. Every ambiguous legacy record remains in recovery/original. */
-export function migratePlanner(value: unknown, equipment: EquipmentRecord[], attributeKeys: string[]): PlannerBuild {
+export function migratePlanner(value: unknown, equipment: EquipmentRecord[], attributeKeys: string[], rulesDocument?: BuildRulesDocument): PlannerBuild {
   const source = record(value)
   const build = emptyPlanner(typeof source.id === 'string' ? source.id : 'recovered')
   build.title = typeof source.title === 'string' ? source.title : ''
@@ -58,6 +76,11 @@ export function migratePlanner(value: unknown, equipment: EquipmentRecord[], att
   build.jobId = typeof source.jobId === 'number' ? source.jobId : 0
   build.branchId = typeof source.branchId === 'number' ? source.branchId : 0
   build.rulesVariant = typeof source.rulesVariant === 'string' ? source.rulesVariant : 'shared'
+  const rules = build.rulesVariant === 'shared' ? rulesDocument?.shared : rulesDocument?.variants[build.rulesVariant]
+  if (!build.jobId && !build.branchId) {
+    const career = legacyCareer(modern ? record(source.original) : source, rules)
+    if (career) Object.assign(build, career)
+  }
   build.original = modern ? source.original : value
   build.recovery = Array.isArray(source.recovery) ? [...source.recovery] : []
   const sourceAttributes = modern && Array.isArray(source.attributes) ? source.attributes : attributeKeys.map(k => record(source.attributes)[k])

@@ -1,6 +1,6 @@
 import { createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, PanelLeft } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 import { ArkiveEncyclopediaWorkspace } from '@gamemap/map-shell'
 import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
@@ -91,18 +91,25 @@ function SectionTitle({ children, className }: { children: ReactNode; className?
  * straight on the page under a large title. It sticks while the page scrolls,
  * so the footer below still runs the full width.
  */
-export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot }: SectionNavProps & {
+export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot, collapsed = false, onToggle }: SectionNavProps & {
+  collapsed?: boolean
+  onToggle?: () => void
   /** Receives the slot under the lit entry, for `SidebarSubProvider`. */
   onSubSlot: (node: HTMLElement | null) => void
 }) {
   return (
-    <nav aria-label={label} className="sticky top-4 hidden flex-col gap-1 self-start lg:flex">
-      <SectionTitle className="mb-3 px-2 text-2xl">{label}</SectionTitle>
+    <nav aria-label={label} className={cn('ro3-section-sidebar sticky top-4 hidden flex-col gap-1 self-start lg:flex', collapsed && 'is-collapsed')}>
+      <div className={cn('mb-3 flex min-h-9 items-center gap-1', collapsed && 'justify-center')}>
+        {!collapsed ? <SectionTitle className="px-2 text-2xl">{label}</SectionTitle> : null}
+        {onToggle ? <button type="button" onClick={onToggle} aria-expanded={!collapsed} aria-label={collapsed ? content.nav.expandSidebar : content.nav.collapseSidebar} title={collapsed ? content.nav.expandSidebar : content.nav.collapseSidebar} className={cn('grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring', !collapsed && 'ml-auto')}>
+          <PanelLeft className="size-4" strokeWidth={1.6} aria-hidden="true" />
+        </button> : null}
+      </div>
       {entries.map((entry) => {
         const current = entry.key === active
         return (
           <Fragment key={entry.key}>
-          <SectionLink entry={entry} active={active} onNavigate={onNavigate} />
+          <SectionLink entry={entry} active={active} onNavigate={onNavigate} collapsed={collapsed} />
           {current ? <div ref={onSubSlot} className="empty:hidden" /> : null}
           </Fragment>
         )
@@ -124,6 +131,7 @@ function SectionLink({ entry, active, onNavigate, collapsed = false }: {
       href={hrefForKey(entry.key)}
       onClick={navigateOnClick(entry.key, onNavigate)}
       aria-current={current ? 'page' : undefined}
+      aria-label={entry.label}
       title={collapsed ? entry.label : undefined}
       className={cn(
         'group flex h-12 items-center rounded-xl px-2 text-sm font-semibold transition-[background-color,color,box-shadow]',

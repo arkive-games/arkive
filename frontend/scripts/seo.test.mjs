@@ -27,6 +27,7 @@ function servable(path, sources) {
 describe("search engine discovery", () => {
   it("finds the deployed sites", () => {
     expect(SITES.map((site) => site.app)).toContain("meta")
+    expect(SITES).toContainEqual({ app: "oss", domain: "oss.arkive.games" })
     expect(SITES.length).toBeGreaterThan(1)
   })
 

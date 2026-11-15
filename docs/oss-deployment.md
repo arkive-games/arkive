@@ -1,7 +1,7 @@
 # Order of the Sinking Star Deployment
 
 The frontend is a static Vite app in `frontend/apps/oss`. It uses the
-direct-upload EdgeOne Makers project `arkive-oss` and the intended production
+direct-upload EdgeOne Makers project `arkive-oss` and the production
 host `oss.arkive.games`. The local app port is 15181; PBZ owns 15180.
 
 ## Required Artifacts
@@ -13,19 +13,14 @@ The frontend cannot render a map without the separate exported datasets:
 - `resource-oss`: every tile referenced by those documents, including the
   expanded base layers and any tile overrides.
 
-These artifacts are not in the monorepo. PR #200 describes them as prepared
-locally by its contributor. On November 3, 2026, neither artifact repository
-existed in the GitHub organization, neither artifact project existed in the
-configured EdgeOne account, and no local OSS artifact checkout was available.
-Publishing the frontend alone therefore publishes its shell and changelog,
-not a working interactive map. Keep the homepage card marked coming soon
-until all artifact requests and rendered layers have been verified.
+These artifacts are published in the private organization repositories
+`arkive-games/data-oss` and `arkive-games/resource-oss`, on `master`.
+Their HTTPS hosts are `data-oss.arkive.games` and `resource-oss.arkive.games`;
+both serve the exported files with cross-origin GET access for the frontend.
 
-When the exports are available, publish them separately with cross-origin
-GET access for the frontend. Bind `data-oss.arkive.games` and
-`resource-oss.arkive.games` to their projects. Use the organization artifact
-repositories and Git-connected EdgeOne projects, as for the other games;
-do not commit exported game data or tiles to the monorepo.
+Keep future exports in these separate artifact repositories and their
+Git-connected EdgeOne projects. Publish referenced images before the data
+that uses them; do not commit exported game data or tiles to the monorepo.
 
 ## Credentials and Tools
 
@@ -86,9 +81,10 @@ data files, visible tiles on all three layers, working search and collection
 filters, and no uncaught browser errors. An HTTP 200 for the frontend alone
 does not establish that the map works.
 
-After the domain is bound, set the OSS deployment matrix's `domain` to
-`oss.arkive.games` so subsequent deployments run deep-link smoke checks.
-Remove the homepage's OSS `comingSoon` flag only after the map checks pass.
+The OSS deployment matrix now names `oss.arkive.games`, enabling deep-link
+smoke checks and the shared SEO tests. The homepage configuration no longer
+marks OSS as coming soon. Those configuration changes take effect on the
+public homepage and deployment workflow only after they land and deploy.
 
 ## Execution Record
 
@@ -113,6 +109,17 @@ Remove the homepage's OSS `comingSoon` flag only after the map checks pass.
 - GitHub run `41660142159` also uploaded OSS successfully. Its overall
   result was failure because the unrelated PBZ job received HTTP 522 from
   `DescribePagesProjects`, then attempted to create its existing project.
-- Activation remains incomplete: custom-domain DNS/HTTPS is pending and
-  artifact publication is blocked until the contributor's exported data
-  and tiles are available. Keep the homepage card marked coming soon.
+- November 3, 2026 status: activation was incomplete while custom-domain
+  DNS/HTTPS and artifact publication were pending.
+- November 5, 2026: both private artifact repositories were created and
+  populated. Published heads: data `fba1a193bb03f9ee10935fb8ad84271e2bf3e42e`,
+  resources `e4b44f3630bacb6717ac2de5feeb9a0aea3df7d8`.
+- November 15, 2026: all three production hosts resolved and served HTTPS.
+  Browser verification followed the corrected production-build homepage
+  shortcut to the live map, loaded all four data files, and switched among
+  ground, upper, and underground canvases with successful tile responses.
+  Collection toggling, search, `/changelog?check=oss-launch`, and the mobile
+  homepage shortcut passed. No uncaught page errors or failed artifact
+  requests were observed in the completed check.
+- The homepage visibility and deployment-domain fixes are prepared locally;
+  they still require a PR, merge, and deployment to activate publicly.

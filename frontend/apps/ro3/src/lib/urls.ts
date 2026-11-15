@@ -47,5 +47,6 @@ export function iconUrl(icon: string): string {
 }
 
 export function resourceUrl(path: string): string {
+  if (/^(?:\/|https?:\/\/|data:)/.test(path)) return path
   return `${RES_BASE}/${path.replace(/^\/+/, '')}`
 }

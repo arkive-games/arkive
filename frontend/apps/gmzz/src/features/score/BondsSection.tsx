@@ -7,8 +7,6 @@ import { useTranslation } from 'react-i18next'
 import { DialogHead } from '@/features/equipment/EquipmentSection'
 import { IconTile } from '@/features/equipment/PickerModal'
 import { formatResearchAttribute, type Fellow, type FellowRelation, type HistoryResearchRank } from '@/features/fellows/data'
-import { FateTributaryPanel } from '@/features/fellows/FateTributary'
-import type { FateTributary } from '@/features/fellows/data'
 import {
   activeAttributes,
   carriedPuppetSkill,
@@ -56,7 +54,6 @@ export type BondsData = {
   ranks: HistoryResearchRank[] | null
   fellows: Fellow[] | null
   relations: FellowRelation[] | null
-  fate: FateTributary | null
   /** The highest skill level the chosen role and divinity level allow; null until the rating loads. */
   skillCap: number | null
   /** Skill levels relics add on top of the shared level; shown, never scored. */
@@ -109,7 +106,6 @@ export default function BondsSection({
                 lead={data.ranks ? <HistoryResearch ranks={data.ranks} relations={data.relations} draft={draft} /> : null} />
             ) : unavailable}
           </div>
-          {data.fate ? <FateTributaryPanel data={data.fate} compact /> : null}
         </>
       }
     />

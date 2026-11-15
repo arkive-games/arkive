@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowRight, Copy, Eye, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, useIsMobile } from '@gamemap/ui'
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '@gamemap/ui'
 import { IconTile } from '../equipment/PickerModal'
 import { iconUrl } from '../../lib/urls'
 import { skillIcon, type BuildData } from './data'
@@ -16,8 +16,6 @@ export function ComboEditor({ data, draft, treeId, readOnly = false, onChange }:
 }) {
   const { t } = useTranslation()
   const tr = (key: string) => t('builds.' + key)
-  const mobile = useIsMobile()
-  const columns = mobile ? 3 : 5
   const actionLabel = readOnly ? 'builds.viewAction' : 'builds.editAction'
   const [editing, setEditing] = useState<{ index: number; node: ComboNode } | null>(null)
   const { catalog } = data
@@ -45,62 +43,57 @@ export function ComboEditor({ data, draft, treeId, readOnly = false, onChange }:
     : editing.node[0].ActionName === 2 ? SKILL_SLOTS.some((slot) => slot === editing.node[0].ActionParam)
       : editing.node[0].ActionName === 3 && catalog.relicActions.some((item) => item.id === editing.node[0].ActionParam))
   return <>
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]">
-      <div className="min-w-0">
-        <h3 className="mb-4 text-sm font-semibold text-muted-foreground">{tr('timeline')}</h3>
-        <ol aria-label={tr('timeline')} className="grid auto-rows-36 md:auto-rows-40" style={{ gridTemplateColumns: 'repeat(' + columns + ', minmax(0, 1fr))' }}>
+    <div className="build-combo-editor">
+      <details className="build-combo-section build-sequence" open>
+        <summary>{tr('timeline')}<span className="build-count">{draft.nodes.length}</span></summary>
+        <ol aria-label={tr('timeline')} className="build-sequence-grid" data-testid="build-sequence">
           {draft.nodes.map((node, index) => {
-            const row = Math.floor(index / columns)
-            const offset = index % columns
-            const column = row % 2 ? columns - offset - 1 : offset
             const { name, skill, relic, icon } = details(node)
             const invalid = !compatibleAction(node, draft, catalog.skills, treeId)
             const tile = <button type="button" aria-label={t(actionLabel, { n: index + 1 }) + ' · ' + name} onClick={() => open(index)}
-              className="relative z-10 flex w-full min-w-0 flex-col items-center gap-2 rounded p-1 focus-visible:outline-2 focus-visible:outline-ring">
-              <span className="relative"><IconTile src={icon} quality={null} label={name.slice(0, 1)} className={'size-14 md:size-16 [&]:rounded-full [&]:border-2 ' + (invalid ? 'border-destructive' : 'border-border hover:border-primary')} />
-                <span className="absolute -left-1 -top-1 grid size-5 place-items-center rounded-full bg-foreground text-xs tabular-nums text-background">{index + 1}</span></span>
-              <span className={'w-full break-words text-xs font-medium md:text-sm ' + (invalid ? 'text-destructive' : '')}>{name}</span>
+              className={`build-sequence-node ${invalid ? 'is-invalid' : ''}`}>
+              <span className="build-sequence-art"><IconTile src={icon} quality={null} label={name.slice(0, 1)} className="size-10 [&]:border-0" />
+                <span className="build-sequence-number">{index + 1}</span></span>
+              <span className="build-sequence-name">{name}</span>
             </button>
-            return <li key={index} className="relative min-w-0" style={{ gridRow: row + 1, gridColumn: column + 1 }}>
-              {index < draft.nodes.length - 1 && (offset === columns - 1
-                ? <span aria-hidden className="absolute left-1/2 top-28 flex h-7 -translate-x-1/2 flex-col items-center text-muted-foreground"><span className="h-3 border-l border-border" /><ChevronDown className="size-4" /></span>
-                : <span aria-hidden className={'absolute top-8 flex h-4 w-full items-center text-muted-foreground ' + (row % 2 ? '-left-1/2' : 'left-1/2')}><span className="w-full border-t border-border" />{row % 2 ? <ChevronLeft className="absolute left-1/2 size-4 -translate-x-1/2 bg-background" /> : <ChevronRight className="absolute left-1/2 size-4 -translate-x-1/2 bg-background" />}</span>)}
+            return <li key={index} className="build-sequence-item">
+              {index < draft.nodes.length - 1 && <ArrowRight className="build-sequence-arrow" aria-hidden />}
               {skill ? <SkillHint skill={skill} treeId={treeId} owner="" interactive>{tile}</SkillHint> : <ArtifactHint artifact={relic} interactive>{tile}</ArtifactHint>}
             </li>
           })}
         </ol>
-        {!draft.nodes.length && <p className="py-10 text-center text-sm text-muted-foreground">{tr('emptyCombo')}</p>}
-      </div>
-      <div className="min-w-0 lg:border-l lg:border-border lg:pl-6">
-        <h3 className="mb-4 text-sm font-semibold text-muted-foreground">{tr('commands')}</h3>
-        <ol aria-label={tr('commands')} className="space-y-2">{draft.nodes.map((node, index) => {
-          const { name } = details(node)
+        {!draft.nodes.length && <p className="build-combo-empty">{tr('emptyCombo')}</p>}
+      </details>
+      <div className="build-combo-section build-command-section">
+        <h3>{tr('commands')}</h3>
+        <ol aria-label={tr('commands')} className="build-commands" data-testid="build-commands">{draft.nodes.map((node, index) => {
+          const { name, icon } = details(node)
           const valid = compatibleAction(node, draft, catalog.skills, treeId) && validConditions(node, catalog, draft.professionId)
-          return <li key={index} className={'min-w-0 rounded-md border bg-background ' + (valid ? 'border-border' : 'border-destructive')}>
-            <button type="button" aria-label={t(actionLabel, { n: index + 1 }) + ' · ' + name} className="flex w-full min-w-0 items-center gap-3 rounded-t-md p-3 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" onClick={() => open(index)}>
-              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{String(index + 1).padStart(2, '0')}</span>
-              <span className="min-w-0 flex-1 break-words text-sm"><span className="font-mono text-muted-foreground">/cast </span>{name}</span>{readOnly ? <Eye className="size-4 shrink-0 text-muted-foreground" /> : <Pencil className="size-4 shrink-0 text-muted-foreground" />}
+          return <li key={index} className={`build-command ${valid ? '' : 'is-invalid'}`}>
+            <button type="button" data-testid={`build-action-${index}`} aria-label={t(actionLabel, { n: index + 1 }) + ' · ' + name + ' · ' + (valid ? conditionSummary(node) : tr('unavailableAction'))} className="build-command-main" onClick={() => open(index)}>
+              <span className="build-command-number">{String(index + 1).padStart(2, '0')}</span>
+              <IconTile src={icon} quality={null} label={name.slice(0, 1)} className="size-9 build-skill-icon [&]:border-0" />
+              <span className="build-command-copy"><strong>{name}</strong><small>{valid ? conditionSummary(node) : tr('unavailableAction')}</small></span>
+              {readOnly ? <Eye className="size-4 shrink-0 text-muted-foreground" /> : <Pencil className="size-4 shrink-0 text-muted-foreground" />}
             </button>
-            <div className="flex items-center justify-between gap-1 border-t border-border px-2 py-1">
-              <span className={'min-w-0 break-words pl-1 text-xs ' + (valid ? 'text-muted-foreground' : 'text-destructive')}>{valid ? conditionSummary(node) : tr('unavailableAction')}</span>
-              {!readOnly && <div className="flex shrink-0">
+              {!readOnly && <div className="build-command-actions">
                 <Button size="icon" className="size-8" variant="ghost" title={tr('moveUp')} aria-label={tr('moveUp')} disabled={index === 0} onClick={() => move(index, -1)}><ArrowUp className="size-3.5" /></Button>
                 <Button size="icon" className="size-8" variant="ghost" title={tr('moveDown')} aria-label={tr('moveDown')} disabled={index === draft.nodes.length - 1} onClick={() => move(index, 1)}><ArrowDown className="size-3.5" /></Button>
                 <Button size="icon" className="size-8" variant="ghost" title={tr('duplicate')} aria-label={tr('duplicate')} disabled={draft.nodes.length >= catalog.limits.nodes} onClick={() => onChange([...draft.nodes.slice(0, index + 1), structuredClone(node), ...draft.nodes.slice(index + 1)])}><Copy className="size-3.5" /></Button>
                 <Button size="icon" className="size-8" variant="ghost" title={tr('remove')} aria-label={tr('remove')} onClick={() => onChange(draft.nodes.filter((_, at) => at !== index))}><Trash2 className="size-3.5" /></Button>
               </div>}
-            </div>
           </li>
         })}</ol>
-        {!readOnly && <Button className="mt-3" variant="outline" disabled={draft.nodes.length >= catalog.limits.nodes} onClick={() => setEditing({ index: draft.nodes.length, node: [{ ActionName: 2, ActionParam: 1 }, []] })}><Plus className="size-4" />{tr('add')}</Button>}
+        {!readOnly && <Button className="build-add-action" data-testid="build-add-action" variant="outline" disabled={draft.nodes.length >= catalog.limits.nodes} onClick={() => setEditing({ index: draft.nodes.length, node: [{ ActionName: 2, ActionParam: 1 }, []] })}><Plus className="size-4" />{tr('add')}</Button>}
       </div>
     </div>
     <Dialog open={editing !== null} onOpenChange={(value) => { if (!value) setEditing(null) }}>
-      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl" aria-describedby={undefined}
+      <DialogContent className="build-action-dialog flex max-h-[min(85dvh,48rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl" aria-describedby={undefined}
         onEscapeKeyDown={(event) => { if (event.target instanceof Element && event.target.closest('[data-slot="sheet-content"]')) event.preventDefault() }}>
-        <DialogHeader><DialogTitle>{t(actionLabel, { n: (editing?.index ?? 0) + 1 })}</DialogTitle></DialogHeader>
+        <DialogHeader className="build-action-dialog-header"><DialogTitle>{t(actionLabel, { n: (editing?.index ?? 0) + 1 })}</DialogTitle></DialogHeader>
         {editing && <>
-          <label className="space-y-2 text-sm"><span>{tr('skillAction')}</span>
+        <div className="build-action-dialog-body">
+          <label className="build-action-dialog-action-field text-sm"><span>{tr('skillAction')}</span>
             <select disabled={readOnly} aria-label={t('builds.action', { n: editing.index + 1 })} className={SELECT_CLASS + ' mt-2 w-full'} value={selected} onChange={(event) => {
               const [ActionName, ActionParam] = event.target.value.split(':').map(Number)
               setEditing({ ...editing, node: [{ ...editing.node[0], ActionName, ActionParam }, editing.node[1]] })
@@ -116,7 +109,8 @@ export function ComboEditor({ data, draft, treeId, readOnly = false, onChange }:
           </div>
           {!compatibleAction(editing.node, draft, catalog.skills, treeId) && <p role="alert" className="text-sm text-destructive">{tr('unavailableAction')}</p>}
           {!validConditions(editing.node, catalog, draft.professionId) && <p role="alert" className="text-sm text-destructive">{tr('invalidConditions')}</p>}
-          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setEditing(null)}>{tr('cancel')}</Button>{!readOnly && <Button disabled={!compatibleAction(editing.node, draft, catalog.skills, treeId) || !validConditions(editing.node, catalog, draft.professionId)} onClick={() => {
+        </div>
+          <div className="build-action-dialog-footer"><Button variant="outline" onClick={() => setEditing(null)}>{tr('cancel')}</Button>{!readOnly && <Button disabled={!compatibleAction(editing.node, draft, catalog.skills, treeId) || !validConditions(editing.node, catalog, draft.professionId)} onClick={() => {
             const nodes = [...draft.nodes]
             nodes[editing.index] = editing.node
             onChange(nodes)

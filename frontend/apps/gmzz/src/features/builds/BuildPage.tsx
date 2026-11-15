@@ -1,20 +1,19 @@
 import { useMemo, useState } from 'react'
-import { Check, Copy, Download, FilePlus, Upload, X } from 'lucide-react'
+import { Check, Copy, Download, FilePlus, LockKeyhole, Plus, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useOptionalAuth } from '@gamemap/auth'
-import { useMemory } from '@gamemap/state-memory'
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Input, SearchInput, TooltipProvider, useDocumentTitle,
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
+import { GzSelect } from '../../components/GzSelect'
 import { IconTile } from '../equipment/PickerModal'
 import { plainText } from '../fellows/data'
 import { iconUrl } from '../../lib/urls'
 import { useRemoteData } from '../../lib/useRemoteData'
 import { treeFor, treesFor } from '../score/talents'
 import { loadBuildData, skillIcon, type BuildData, type Skill } from './data'
-import { buildDraft } from './memory'
-import { availableSkill, changeTalent, compatibleAction, emptyBuild, equipSkill, exportBuild, importBuild, normalizeNodes, rememberedTalentTreeId, SEALED_SLOTS, type BuildDraft, type ComboNode } from './model'
+import { relicServerOf, sealedGroup, availableSkill, changeTalent, compatibleAction, emptyBuild, equipSkill, exportBuild, importBuild, normalizeNodes, rememberedTalentTreeId, SEALED_SLOTS, type BuildDraft, type ComboNode } from './model'
 import { SELECT_CLASS } from './ConditionEditor'
 import { ComboEditor } from './ComboEditor'
 import { SkillHint } from './SkillHint'
@@ -23,6 +22,7 @@ import { CharacterProvider, useCharacter, useSection } from '../characters/Chara
 import { CharacterBar } from '../characters/CharacterBar'
 import { validConditions } from './rules'
 import '../score/score.css'
+import './builds.css'
 
 type Picker = { kind: 'skill' | 'sealed'; slot: number }
 type Confirm = { title: string; body: string; label: string; run: () => void }
@@ -42,12 +42,12 @@ function BuildView() {
   const navigate = useNavigate()
   const remote = useRemoteData(loadBuildData)
   useDocumentTitle(t('builds.title') + ' - ' + t('siteTitle'))
-  return <ContentPage active="/tools/build" title={t('builds.title')} heading wide>
+  return <ContentPage active="/tools/build" title={t('builds.title')} wide>
     {character.id && (character.status === 'missing' || (character.status === 'error' && !character.character))
       ? <div className="space-y-3"><p role="alert">{t(character.status === 'missing' ? 'characters.missingTitle' : 'characters.loadErrorTitle')}</p><Button variant="outline" onClick={() => void navigate({ to: '/tools/build' })}>{t('characters.backToDraft')}</Button></div>
       : remote.loading || character.status === 'loading' ? <p role="status">{t('builds.loading')}</p> : remote.error || !remote.data
       ? <div role="alert" className="space-y-3"><p>{t('builds.loadError')}</p><Button onClick={() => window.location.reload()}>{t('builds.retry')}</Button></div>
-      : <><div className="mb-6 max-w-xl [--gz-card:var(--card)] [--gz-ink:var(--foreground)] [--gz-sub:var(--muted-foreground)] [--gz-faint:var(--muted-foreground)] [--gz-line:var(--border)] [--b3:124,96,214]"><CharacterBar surface="build" /></div><BuildEditor data={remote.data} /></>}
+      : <div className="build-workspace" data-testid="build-workspace"><BuildEditor data={remote.data} /></div>}
   </ContentPage>
 }
 
@@ -55,13 +55,15 @@ function BuildEditor({ data }: { data: BuildData }) {
   const { t } = useTranslation()
   const tr = (key: string) => t('builds.' + key)
   const [draft, setDraft] = useSection('builds')
-  const [, , , status] = useMemory(buildDraft)
-  const { id: characterId, readOnly } = useCharacter()
+  const { id: characterId, readOnly, resetDraft, updateMeta } = useCharacter()
   const navigate = useNavigate()
   const auth = useOptionalAuth()
   const [picker, setPicker] = useState<Picker | null>(null)
   const [query, setQuery] = useState('')
-  const [dialog, setDialog] = useState<'import' | 'export' | null>(null)
+  const [dialog, setDialog] = useState<'import' | 'export' | 'rename' | null>(null)
+  const [renamed, setRenamed] = useState('')
+  const [renaming, setRenaming] = useState(false)
+  const [renameError, setRenameError] = useState('')
   const [text, setText] = useState('')
   const [preview, setPreview] = useState<BuildDraft | null>(null)
   const [onlyCombo, setOnlyCombo] = useState(false)
@@ -69,7 +71,9 @@ function BuildEditor({ data }: { data: BuildData }) {
   const [confirm, setConfirm] = useState<Confirm | null>(null)
   const [preset, setPreset] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [workspace, setWorkspace] = useState<'loadout' | 'combo'>('loadout')
   const { catalog } = data
+  const relicServer = relicServerOf(draft)
   const talentTrees = treesFor(data.talents, draft.professionId)
   const talentTree = useMemo(() => treeFor(data.talents, draft.professionId, rememberedTalentTreeId(draft) ?? null), [data.talents, draft])
   const skillById = useMemo(() => new Map(catalog.skills.map((skill) => [skill.id, skill])), [catalog.skills])
@@ -95,7 +99,7 @@ function BuildEditor({ data }: { data: BuildData }) {
   function changeProfession(id: number) {
     const run = () => {
       setDraft({ ...emptyBuild(), name: draft.name, description: draft.description, professionId: id,
-        sealed: draft.sealed, slots: Object.fromEntries(Object.entries(draft.slots).filter(([slot]) => ['17', '20'].includes(slot))) })
+        sealed: draft.sealed, relicServer: draft.relicServer, slots: Object.fromEntries(Object.entries(draft.slots).filter(([slot]) => ['17', '20'].includes(slot))) })
       setPreset(0)
     }
     if (draft.nodes.length || Object.keys(draft.slots).some((slot) => !['17', '20'].includes(slot))) setConfirm({ title: tr('changeTitle'), body: tr('changeBody'), label: tr('confirmChange'), run })
@@ -108,21 +112,21 @@ function BuildEditor({ data }: { data: BuildData }) {
     const id = draft.slots[String(slot)]
     const skill = skillById.get(id)
     const tile = <button type="button" aria-label={t('builds.select', { name: slotName(slot) })} onClick={() => { if (!readOnly) picked('skill', slot) }}
-      className="flex min-h-24 w-full flex-col items-center justify-center gap-2 rounded-md p-2 text-center hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
-      <span className="grid size-16 shrink-0 place-items-center"><IconTile quality={null} src={skill ? skillIcon(skill.icon) : undefined} label={id ? String(id) : '+'} className="size-12" /></span>
-      <span className="min-w-0 break-words text-sm font-semibold">{id ? skillName(id) : tr('empty')}</span>
+      data-testid={`build-skill-${slot}`} className={`build-slot ${id ? 'is-equipped' : ''}`}>
+      {skill ? <IconTile quality={null} src={skillIcon(skill.icon)} label={skill.name.slice(0, 1)} className="size-12" /> : <span className="build-empty-art"><Plus className="size-5" aria-hidden /></span>}
+      <span className="build-slot-name">{id ? skillName(id) : tr('empty')}</span>
     </button>
-    return <div key={slot} className="min-w-0 space-y-2">
-      <div className="relative flex h-7 items-center justify-between gap-1 text-xs font-medium text-muted-foreground lg:justify-center"><span>{slotName(slot)}</span>
-        {id && !readOnly && <button type="button" title={tr('clear')} aria-label={tr('clear') + ' ' + slotName(slot)} className="grid size-6 shrink-0 place-items-center rounded hover:bg-muted lg:absolute lg:right-0" onClick={() => setDraft(equipSkill(draft, slot, 0, familyOf))}><X className="size-3.5" /></button>}
+    return <div key={slot} className="build-slot-wrap">
+      <div className="build-slot-label"><span>{slotName(slot)}</span>
+        {id && !readOnly && <button type="button" title={tr('clear')} aria-label={tr('clear') + ' ' + slotName(slot)} className="build-remove" onClick={() => setDraft(equipSkill(draft, slot, 0, familyOf))}><X className="size-3.5" /></button>}
       </div>
       {skill ? <SkillHint skill={skill} treeId={talentTree?.id} owner={owner(skill)} interactive>{tile}</SkillHint> : tile}
     </div>
   }
   function fixedTile(skill: Skill | undefined, label: string) {
-    const tile = <button type="button" aria-label={skill?.name ?? label} className="flex min-h-24 w-full cursor-help flex-col items-center justify-center gap-2 rounded-md p-2 text-center hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
-      <span className="grid size-16 shrink-0 place-items-center"><IconTile quality={null} src={skill ? skillIcon(skill.icon) : undefined} label={skill?.name.slice(0, 1) ?? '-'} className={skill?.fixedRole === 'basicAttack' ? 'size-16 [&]:border-0 [&]:bg-transparent' : 'size-12'} /></span>
-      <span className="min-w-0 break-words text-sm font-semibold">{skill?.name ?? label}</span>
+    const tile = <button type="button" aria-label={skill?.name ?? label} className="build-fixed-skill">
+      <IconTile quality={null} src={skill ? skillIcon(skill.icon) : undefined} label={skill?.name.slice(0, 1) ?? '-'} className="size-9 build-skill-icon [&]:border-0 [&]:bg-transparent" />
+      <span>{skill?.name ?? label}</span>
     </button>
     return skill ? <SkillHint skill={skill} treeId={talentTree?.id} owner={owner(skill)}>{tile}</SkillHint> : tile
   }
@@ -133,69 +137,85 @@ function BuildEditor({ data }: { data: BuildData }) {
       .sort((a, b) => a.order - b.order || a.id - b.id)
       .map((skill) => ({ id: skill.id, name: skill.name, description: [owner(skill), plainText(skill.brief || skill.description)].filter(Boolean).join(' '), icon: skillIcon(skill.icon), quality: null }))
   } else if (picker) {
-    pickerRows = data.relics.artifacts.filter((artifact) => artifact.groupId === picker.slot).map((artifact) => ({ id: artifact.id, name: artifact.name, description: plainText(artifact.description), icon: artifact.icon ? iconUrl(artifact.icon) : undefined, quality: artifact.quality }))
+    pickerRows = data.relics.artifacts.filter((artifact) => artifact.groupId === sealedGroup(picker.slot)).map((artifact) => ({ id: artifact.id, name: artifact.name, description: plainText(artifact.description), icon: artifact.icon ? iconUrl(artifact.icon) : undefined, quality: artifact.quality }))
   }
   const needle = query.trim().toLocaleLowerCase()
   const filteredRows = pickerRows.filter((row) => !needle || (row.name + ' ' + row.description).toLocaleLowerCase().includes(needle))
-  return <TooltipProvider delayDuration={150}><div className="space-y-7 pb-5">
-    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
-      <div className="flex min-w-0 flex-wrap gap-3">
-        <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">{tr('pathway')}
-          <select disabled={readOnly} className={SELECT_CLASS} value={draft.professionId} onChange={(event) => changeProfession(Number(event.target.value))}>
-            {!catalog.professions.some((profession) => profession.id === draft.professionId) && <option value={draft.professionId}>{draft.professionId}</option>}
-            {catalog.professions.map((profession) => <option key={profession.id} value={profession.id}>{profession.name}</option>)}
-          </select>
-        </label>
-        {talentTree && <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">{tr('talent')}
-          <select disabled={readOnly} aria-label={tr('talent')} className={SELECT_CLASS} value={talentTree.id} onChange={(event) => { setDraft(changeTalent(draft, Number(event.target.value), catalog.skills)); setNotice(tr('talentChanged')) }}>
-            {talentTrees.map((tree) => <option key={tree.id} value={tree.id}>{tree.name} · {tr('maxTalent')}</option>)}
-          </select>
-        </label>}
-        <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">{tr('name')}
-          <Input readOnly={readOnly} className="w-48 max-w-full" value={draft.name} maxLength={catalog.limits.name} placeholder={tr('unnamed')} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
-        </label>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setConfirm({ title: tr('resetTitle'), body: tr('resetBody'), label: tr('confirm'), run: () => { buildDraft.clear(); setPreset(0); if (characterId) void navigate({ to: '/tools/build' }) } })}><FilePlus className="size-4" />{tr('new')}</Button>
-        <Button disabled={readOnly} variant="outline" size="sm" onClick={() => { setText(''); setPreview(null); setNotice(''); setDialog('import') }}><Upload className="size-4" />{tr('import')}</Button>
-        <Button size="sm" disabled={!canExport} title={!canExport ? tr('exportError') : undefined} onClick={() => { setCopied(false); setNotice(''); setDialog('export') }}><Download className="size-4" />{tr('export')}</Button>
-      </div>
+  return <TooltipProvider delayDuration={150}><div className="build-editor" data-workspace={workspace}>
+    <div className="build-plan-surface">
+      <h1>{tr('title')}</h1>
+      <CharacterBar surface="build" planName={draft.name || undefined} onRename={() => { setRenamed(draft.name); setRenameError(''); setDialog('rename') }} menuItems={<>
+        <Button size="sm" variant="outline" data-testid="build-new" onClick={() => setConfirm({ title: tr('resetTitle'), body: tr('resetBody'), label: tr('confirm'), run: () => { resetDraft(null); setPreset(0); if (characterId) void navigate({ to: '/tools/build' }) } })}><FilePlus className="size-4" />{tr('new')}</Button>
+        <Button size="sm" variant="outline" disabled={readOnly} data-testid="build-import" onClick={() => { setText(''); setPreview(null); setNotice(''); setDialog('import') }}><Upload className="size-4" />{tr('import')}</Button>
+        <Button size="sm" variant="outline" disabled={!canExport} data-testid="build-export" onClick={() => { setCopied(false); setNotice(''); setDialog('export') }}><Download className="size-4" />{tr('export')}</Button>
+      </>}>
+        <div className="build-plan-fields">
+        <div className="build-field"><span>{tr('pathway')}</span>
+          <GzSelect disabled={readOnly} label={tr('pathway')} testId="build-pathway" value={String(draft.professionId)} onChange={(value) => changeProfession(Number(value))}
+            options={catalog.professions.some((profession) => profession.id === draft.professionId) ? catalog.professions.map((profession) => ({ value: String(profession.id), label: profession.name })) : [{ value: String(draft.professionId), label: String(draft.professionId) }, ...catalog.professions.map((profession) => ({ value: String(profession.id), label: profession.name }))]} />
+        </div>
+        {talentTree && <div className="build-field"><span>{tr('talent')}</span>
+          <GzSelect disabled={readOnly} label={tr('talent')} testId="build-talent" value={String(talentTree.id)} onChange={(value) => { setDraft(changeTalent(draft, Number(value), catalog.skills)); setNotice(tr('talentChanged')) }}
+            options={talentTrees.map((tree) => ({ value: String(tree.id), label: `${tree.name} · ${tr('maxTalent')}` }))} />
+        </div>}
+        </div>
+      </CharacterBar>
     </div>
-    <section aria-label={tr('loadout')} className="space-y-4">
-      <h2 className="text-lg font-semibold">{tr('loadout')}</h2>
-      <div aria-label={tr('loadout')} className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
-        {[1, 2, 3, 4].map(slotTile)}
-        {fixedRoles.map((role, index) => <div key={role} className="min-w-0 space-y-2"><div className="flex h-7 items-center justify-center text-xs font-medium text-muted-foreground">{tr(role)}</div>{fixedTile(fixedSkills[index], tr(role))}</div>)}
-        {[17, 20].map(slotTile)}
+    <div className="build-mobile-switch" role="group" aria-label={tr('title')}>
+      {(['loadout', 'combo'] as const).map((view) => <button key={view} type="button" aria-pressed={workspace === view} aria-controls={`build-${view}-region`} data-testid={`build-view-${view}`} onClick={() => setWorkspace(view)}>{tr(view)}{view === 'combo' && <span className="tabular-nums">{draft.nodes.length}</span>}</button>)}
+    </div>
+    <div className="build-workbench">
+    <div className="build-loadout-region" id="build-loadout-region">
+    <div className="build-loadout-surface">
+    <section aria-label={tr('loadout')} className="build-loadout-section">
+      <div className="build-section-heading"><h2>{tr('loadout')}</h2></div>
+      <div aria-label={tr('sequence')} className="build-skill-group">
+        <div className="build-skill-grid">
+          {[1, 2, 3, 4, 17, 20].map(slotTile)}
+          {fixedRoles.map((role, index) => <div key={role} className="build-fixed-tile">
+            <span className="build-fixed-label">{tr(role)}</span>{fixedTile(fixedSkills[index], tr(role))}
+          </div>)}
+          {otherSkills.map((skill) => <div key={skill.id} className="build-fixed-tile"><span className="build-fixed-label">{tr('otherSkills')}</span>{fixedTile(skill, skill.name)}</div>)}
+        </div>
       </div>
-      {otherSkills.length > 0 && <div aria-label={tr('otherSkills')} className="grid grid-cols-3 gap-2 border-t border-border pt-3 sm:grid-cols-5 lg:grid-cols-9">{otherSkills.map((skill) => <div key={skill.id} className="min-w-0">{fixedTile(skill, skill.name)}</div>)}</div>}
-    </section>
-    <section aria-label={tr('sealed')} className="space-y-3">
-      <h2 className="text-lg font-semibold">{tr('sealed')}</h2>
-      <div className="grid gap-3 md:grid-cols-3">{SEALED_SLOTS.map((slot) => {
+      <div aria-label={tr('sealed')} className="build-relic-section">
+      <div className="build-section-heading"><h3>{tr('sealed')}</h3>
+        <div className="build-relic-mode" role="group" aria-label={t('relic.server')}>
+          {(['local', 'cross'] as const).map((server) => <button key={server} type="button" disabled={readOnly} aria-pressed={relicServer === server} data-testid={`build-server-${server}`} onClick={() => setDraft({ ...draft, relicServer: server })}>{t(server === 'local' ? 'relic.serverLocal' : 'relic.serverCross')}</button>)}
+        </div>
+      </div>
+      <div className="build-relic-list">{SEALED_SLOTS.map((slot) => {
         const id = draft.sealed[String(slot)]
         const artifact = data.relics.artifacts.find((item) => item.id === id)
-        const label = data.relics.groupNames[String(slot)] ?? t('builds.sealedSlot', { n: slot })
-        return <div key={slot} className="min-w-0">
-          <div className="mb-1 flex h-7 items-center justify-between text-xs text-muted-foreground"><span>{label}</span>{id && !readOnly && <button title={tr('clear')} aria-label={tr('clear') + ' ' + label} className="grid size-7 place-items-center hover:bg-muted" onClick={() => { const sealed = { ...draft.sealed }; delete sealed[String(slot)]; setDraft({ ...draft, sealed }) }}><X className="size-3.5" /></button>}</div>
-          <ArtifactHint artifact={artifact} interactive={!readOnly}><button className="flex min-h-20 w-full items-center gap-3 rounded-md border border-border p-3 text-left hover:border-primary focus-visible:outline-2 focus-visible:outline-ring" aria-label={t('builds.select', { name: label })} onClick={() => { if (!readOnly) picked('sealed', slot) }}>
-            <IconTile quality={artifact?.quality ?? null} src={artifact?.icon ? iconUrl(artifact.icon) : undefined} label="+" className="size-12" />
-            <span className="min-w-0 break-words text-sm font-semibold">{artifact?.name ?? (id ? t('builds.unknown', { id }) : tr('empty'))}</span>
+        const label = data.relics.groupNames[String(sealedGroup(slot))] ?? t('builds.sealedSlot', { n: slot })
+        const locked = relicServer === 'local' && slot > 3
+        if (locked) return <div key={slot} className="build-relic-row build-relic-locked" data-testid={`build-relic-locked-${slot}`} aria-label={t('builds.crossSlotLocked')}><span className="build-fixed-label">{label}</span><LockKeyhole className="size-6" aria-hidden /><span>{tr('locked')}</span></div>
+        return <div key={slot} className="build-relic-row">
+          <ArtifactHint artifact={artifact} interactive={!readOnly}><button className="build-relic" data-testid={`build-relic-${slot}`} aria-label={t('builds.select', { name: label })} onClick={() => { if (!readOnly) picked('sealed', slot) }}>
+            {artifact ? <IconTile quality={artifact.quality} src={artifact.icon ? iconUrl(artifact.icon) : undefined} label={artifact.name.slice(0, 1)} className="size-11" /> : <span className="build-empty-art"><Plus className="size-5" aria-hidden /></span>}
+            <span className="build-relic-name"><small>{label}</small><strong>{artifact?.name ?? (id ? t('builds.unknown', { id }) : tr('empty'))}</strong></span>
           </button></ArtifactHint>
+          {id && !readOnly && <button title={tr('clear')} aria-label={tr('clear') + ' ' + label} className="build-remove" onClick={() => { const sealed = { ...draft.sealed }; delete sealed[String(slot)]; setDraft({ ...draft, sealed }) }}><X className="size-3.5" /></button>}
         </div>
       })}</div>
+      </div>
     </section>
-    <section aria-label={tr('combo')} className="space-y-4 border-t border-border pt-5">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-baseline gap-3"><h2 className="text-lg font-semibold">{tr('combo')}</h2><span className="text-xs tabular-nums text-muted-foreground">{t('builds.nodeCount', { n: draft.nodes.length, max: catalog.limits.nodes })}</span></div>
-        {!readOnly && presets.length > 0 && <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <select aria-label={tr('preset')} className={SELECT_CLASS} value={preset} onChange={(event) => setPreset(Number(event.target.value))}>{presets.map((_, at) => <option key={at} value={at}>{t('builds.presetNumber', { n: at + 1 })}</option>)}</select>
-          <Button size="sm" variant="outline" onClick={() => { const run = () => mutateNodes(normalizeNodes(presets[preset])); if (draft.nodes.length) setConfirm({ title: tr('presetTitle'), body: tr('presetBody'), label: tr('usePreset'), run }); else run() }}>{tr('usePreset')}</Button>
+    </div>
+    </div>
+    <section aria-label={tr('combo')} className="build-combo-region" id="build-combo-region">
+      <div className="build-combo-surface">
+      <div className="build-section-heading"><div className="build-heading-title"><h2>{tr('combo')}</h2><span className="build-count">{t('builds.nodeCount', { n: draft.nodes.length, max: catalog.limits.nodes })}</span></div>
+        {!readOnly && presets.length > 0 && <div className="build-presets">
+          <GzSelect label={tr('preset')} testId="build-preset" value={String(preset)} onChange={(value) => setPreset(Number(value))} options={presets.map((_, at) => ({ value: String(at), label: `${tr('preset')} ${at + 1}` }))} />
+          <Button size="sm" variant="outline" data-testid="build-apply-preset" onClick={() => { const run = () => mutateNodes(normalizeNodes(presets[preset])); if (draft.nodes.length) setConfirm({ title: tr('presetTitle'), body: tr('presetBody'), label: tr('usePreset'), run }); else run() }}>{tr('usePreset')}</Button>
         </div>}
       </div>
       <ComboEditor data={data} draft={draft} treeId={talentTree?.id} readOnly={readOnly} onChange={mutateNodes} />
-      <label className="block space-y-2 text-xs text-muted-foreground"><span>{tr('descriptionLabel')}</span><textarea readOnly={readOnly} className={SELECT_CLASS + ' block min-h-20 w-full resize-y'} maxLength={catalog.limits.description} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
+      <label className="build-combo-section build-description"><span>{tr('descriptionLabel')}</span><textarea readOnly={readOnly} className={SELECT_CLASS + ' block min-h-20 w-full resize-y'} maxLength={catalog.limits.description} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
+      </div>
     </section>
-    <p role="status" className="text-xs text-muted-foreground">{notice || (!characterId ? status === 'failed' ? tr('saveError') : status === 'saved' ? tr('saved') : '' : '')}</p>
+    </div>
+    <p role="status" className="text-xs text-muted-foreground">{notice}</p>
     <Dialog open={picker !== null} onOpenChange={(open) => { if (!open) setPicker(null) }}>
       <DialogContent className="flex max-h-[85dvh] flex-col sm:max-w-2xl" aria-describedby={undefined}
         onEscapeKeyDown={(event) => { if (event.target instanceof Element && event.target.closest('[data-slot="sheet-content"]')) event.preventDefault() }}>
@@ -218,7 +238,29 @@ function BuildEditor({ data }: { data: BuildData }) {
         })}</div>{!filteredRows.length && <p className="p-8 text-center text-sm text-muted-foreground">{tr('noResults')}</p>}</div>
       </DialogContent>
     </Dialog>
-    <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null) }}>
+    <Dialog open={dialog === 'rename'} onOpenChange={(open) => { if (!open) setDialog(null) }}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader><DialogTitle>{tr('rename')}</DialogTitle></DialogHeader>
+        <form className="space-y-4" onSubmit={async (event) => {
+          event.preventDefault()
+          if (readOnly || renaming) return
+          setRenaming(true)
+          setRenameError('')
+          try {
+            const name = renamed.trim()
+            if (characterId) await updateMeta({ name })
+            setDraft((current) => ({ ...current, name }))
+            setDialog(null)
+          } catch { setRenameError(t('characters.failed')) }
+          finally { setRenaming(false) }
+        }}>
+          <label className="build-field"><span>{tr('name')}</span><Input autoFocus data-testid="build-name" value={renamed} maxLength={catalog.limits.name} disabled={renaming} onChange={(event) => setRenamed(event.target.value)} /></label>
+          {renameError && <p role="alert" className="text-sm text-destructive">{renameError}</p>}
+          <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={renaming} onClick={() => setDialog(null)}>{tr('cancel')}</Button><Button type="submit" disabled={readOnly || renaming || !renamed.trim()}>{t('characters.save')}</Button></div>
+        </form>
+      </DialogContent>
+    </Dialog>
+    <Dialog open={dialog === 'import' || dialog === 'export'} onOpenChange={(open) => { if (!open) setDialog(null) }}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle>{dialog === 'import' ? tr('importTitle') : tr('exportTitle')}</DialogTitle><DialogDescription>{draft.name || tr('unnamed')}</DialogDescription></DialogHeader>
         {dialog === 'import' ? <>

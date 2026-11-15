@@ -18,16 +18,16 @@ export function ConditionEditor({ groups, catalog, professionId, treeId, onChang
   function update(group: number, index: number, value: Condition | null) {
     onChange(groups.map((conditions, at) => at !== group ? conditions : conditions.flatMap((condition, pos) => pos !== index ? [condition] : value ? [value] : [])).filter((conditions) => conditions.length))
   }
-  return <div className="space-y-2">
+  return <div className="build-condition-editor space-y-2">
     {groups.length === 0 && <span className="text-xs text-muted-foreground">{tr('always')}</span>}
-    {groups.map((conditions, group) => <div key={group} className="space-y-2 border-l-2 border-border pl-3">
+    {groups.map((conditions, group) => <div key={group} className="build-condition-group">
       {group > 0 && <span className="text-xs font-semibold text-muted-foreground">{tr('or')}</span>}
       {conditions.map(([id, params], index) => {
         const meta = catalog.conditions.find((entry) => entry.ID === id)
         const changeParam = (position: number, value: number) => update(group, index, [id, params.map((item, at) => at === position ? value : item)])
-        return <div key={index} className="flex flex-wrap items-center gap-2">
-          {index > 0 && <span className="text-xs text-muted-foreground">{tr('and')}</span>}
-          <select aria-label={tr('conditions')} className={SELECT_CLASS + ' w-full sm:w-64'} value={id} onChange={(event) => update(group, index, defaultCondition(catalog, Number(event.target.value), professionId))}>
+        return <div key={index} className="build-condition-row">
+          {index > 0 && <span className="condition-conjunction text-xs text-muted-foreground">{tr('and')}</span>}
+          <select aria-label={tr('conditions')} className={SELECT_CLASS + ' condition-name'} value={id} onChange={(event) => update(group, index, defaultCondition(catalog, Number(event.target.value), professionId))}>
             {!available.some((entry) => entry.ID === id) && <option value={id}>{meta?.EditDescStr ?? t('builds.unknownCondition', { id })}</option>}
             {available.map((entry) => <option key={entry.ID} value={entry.ID}>{entry.EditDescStr}</option>)}
           </select>
@@ -37,7 +37,7 @@ export function ConditionEditor({ groups, catalog, professionId, treeId, onChang
             if (meta?.ParamForEdit[at] === false) return null
             if (type === 1) {
               const buffs = buffOptions(catalog, id, professionId)
-              return <select key={at} aria-label={tr('paramBuff')} className={SELECT_CLASS + ' w-40'} value={value} onChange={(event) => changeParam(at, Number(event.target.value))}>
+              return <select key={at} aria-label={tr('paramBuff')} className={SELECT_CLASS + ' condition-param'} value={value} onChange={(event) => changeParam(at, Number(event.target.value))}>
                 {!buffs.some((buff) => buff.id === value) && <option value={value}>{value}</option>}
                 {buffs.map((buff) => <option key={buff.id} value={buff.id}>{buff.name}</option>)}
               </select>
@@ -45,7 +45,7 @@ export function ConditionEditor({ groups, catalog, professionId, treeId, onChang
             if (type === 7) {
               const entries = [...catalog.skills.filter((skill) => skill.professionId === professionId && availableSkill(skill, professionId, treeId) && skill.autoCast && ![1, 10].includes(skill.type)).map((skill) => ({ id: skill.id, name: skill.name, slot: 1 })),
                 { id: 17, name: tr('fellow'), slot: 2 }, { id: 20, name: tr('puppet'), slot: 2 }]
-              return <select key={at} aria-label={tr('paramSlot')} className={SELECT_CLASS + ' w-40'} value={value} onChange={(event) => {
+              return <select key={at} aria-label={tr('paramSlot')} className={SELECT_CLASS + ' condition-param'} value={value} onChange={(event) => {
                 const entry = entries.find((item) => item.id === Number(event.target.value))!
                 update(group, index, [id, params.map((item, position) => position === at ? entry.id : position === 1 ? entry.slot : item)])
               }}>
@@ -56,15 +56,15 @@ export function ConditionEditor({ groups, catalog, professionId, treeId, onChang
             const options = type === 2 ? ['<', '≤', '=', '≥', '>'].map((name, key) => [key, name] as const)
               : type === 8 ? [[1, tr('exists')], [0, tr('absent')]] as const
                 : type === 9 ? [[0, tr('blue')], [1, tr('yellow')]] as const : null
-            if (options) return <select key={at} aria-label={label} value={value} className={SELECT_CLASS} onChange={(event) => changeParam(at, Number(event.target.value))}>
+            if (options) return <select key={at} aria-label={label} value={value} className={SELECT_CLASS + ' condition-operator'} onChange={(event) => changeParam(at, Number(event.target.value))}>
               {!options.some(([key]) => key === value) && <option value={value}>{value}</option>}
               {options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}
             </select>
             const scale = type === 5 ? 100 : 1
             const bounds = meta ? conditionLimits(meta, at, catalog, professionId) : null
-            return <label key={at} className="flex items-center gap-1 text-xs text-muted-foreground">
+            return <label key={at} className="condition-value flex items-center gap-1 text-xs text-muted-foreground">
               <span className="sr-only">{label}</span>
-              <input className={SELECT_CLASS + ' w-24'} aria-label={label} type="number" value={Number((value * scale).toFixed(4))} step={type === 3 ? 1 : 0.1}
+              <input className={SELECT_CLASS + ' condition-number'} aria-label={label} type="number" value={Number((value * scale).toFixed(4))} step={type === 3 ? 1 : 0.1}
                 min={bounds ? bounds[1] * scale : undefined} max={bounds ? bounds[0] * scale : undefined}
                 onChange={(event) => { if (event.target.value !== '' && Number.isFinite(event.target.valueAsNumber)) {
                   let next = event.target.valueAsNumber / scale
@@ -75,7 +75,7 @@ export function ConditionEditor({ groups, catalog, professionId, treeId, onChang
               {type === 5 ? '%' : null}
             </label>
           })}
-          <Button size="icon" variant="ghost" title={tr('clear')} aria-label={tr('clear')} onClick={() => update(group, index, null)}><X className="size-4" /></Button>
+          <Button size="icon" variant="ghost" className="condition-remove" title={tr('clear')} aria-label={tr('clear')} onClick={() => update(group, index, null)}><X className="size-4" /></Button>
         </div>
       })}
       <Button size="sm" variant="ghost" disabled={conditions.length >= 50} onClick={() => onChange(groups.map((items, at) => at === group ? [...items, defaultCondition(catalog, 5, professionId)] : items))}><Plus className="size-3.5" />{tr('addCondition')}</Button>

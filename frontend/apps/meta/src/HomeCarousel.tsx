@@ -28,30 +28,6 @@ const RECRUIT_COLOR = '#3fb0e6'
 
 const AUTO_MS = 5000
 const SWIPE_PX = 40
-/** Matches the phone breakpoint in home-landing.css. */
-const PHONE_MAX = 760
-
-/**
- * Sizes for the current window. Desktop keeps a 3:1 banner that shrinks on
- * short screens so the shortcut row stays on the first screen; the middle
- * banner is 73.4% of the stage and each neighbour 67.7% of the middle one.
- * A phone shows a 2:1 banner with ~44px of each neighbour peeking out.
- */
-function carouselSize(): CSSProperties {
-  const W = window.innerWidth
-  const H = window.innerHeight
-  const phone = W <= PHONE_MAX
-  const w = phone ? W - 88 : Math.max(560, Math.min(920, Math.round(W * 0.53), Math.round((H - 400) * 3)))
-  const h = Math.round(w / (phone ? 2 : 3))
-  const cw = phone ? W : Math.min(W - 32, Math.round(w / 0.734))
-  return {
-    '--w': `${w}px`,
-    '--h': `${h}px`,
-    '--cw': `${cw}px`,
-    '--sw': `${Math.round(w * 0.6766)}px`,
-    '--auto': `${AUTO_MS}ms`,
-  } as CSSProperties
-}
 
 /**
  * One slide: a game's banner, or one of the site's own recruitment posters,
@@ -137,8 +113,6 @@ export function HomeCarousel({ sites, onOpenSite }: {
   const [reduced, setReduced] = useState(false)
   // Set by the pause button, and kept until the visitor presses play again.
   const [stopped, setStopped] = useState(false)
-  const [size, setSize] = useState(carouselSize)
-  const [phone, setPhone] = useState(() => window.innerWidth <= PHONE_MAX)
   // Bumped on every move so the active dot's progress fill restarts.
   const [cycle, setCycle] = useState(0)
   const swipe = useRef<{ x: number; moved: boolean } | null>(null)
@@ -152,19 +126,13 @@ export function HomeCarousel({ sites, onOpenSite }: {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
     const updateMotion = () => setReduced(media.matches)
     const updateVisibility = () => setHidden(document.hidden)
-    const updateSize = () => {
-      setSize(carouselSize())
-      setPhone(window.innerWidth <= PHONE_MAX)
-    }
     updateMotion()
     updateVisibility()
     media.addEventListener('change', updateMotion)
     document.addEventListener('visibilitychange', updateVisibility)
-    window.addEventListener('resize', updateSize)
     return () => {
       media.removeEventListener('change', updateMotion)
       document.removeEventListener('visibilitychange', updateVisibility)
-      window.removeEventListener('resize', updateSize)
     }
   }, [])
 
@@ -223,7 +191,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
     <>
       <section
         className={`home-hero${paused ? ' is-paused' : ''}`}
-        style={{ ...size, '--glow': slides[active].color ?? 'var(--primary)' } as CSSProperties}
+        style={{ '--auto': `${AUTO_MS}ms`, '--glow': slides[active].color ?? 'var(--primary)' } as CSSProperties}
         aria-roledescription="carousel"
         aria-label={t('landing.carousel.label')}
         // Only a real mouse hovers: a tap fires a synthetic mouseenter with no
@@ -270,12 +238,15 @@ export function HomeCarousel({ sites, onOpenSite }: {
             }
             const content = (
               <>
-                <img
-                  src={phone && slide.phoneBanner ? slide.phoneBanner : slide.banner}
-                  alt=""
-                  draggable={false}
-                  style={{ objectPosition: slide.bannerPosition }}
-                />
+                <picture className="home-slide-art">
+                  {slide.phoneBanner && <source media="(max-width: 760px)" srcSet={slide.phoneBanner} />}
+                  <img
+                    src={slide.banner}
+                    alt=""
+                    draggable={false}
+                    style={{ objectPosition: slide.bannerPosition }}
+                  />
+                </picture>
                 <span className="home-slide-caption">
                   <img className="home-slide-icon" src={slide.icon} alt="" />
                   <span className="home-slide-text">

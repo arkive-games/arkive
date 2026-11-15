@@ -1,8 +1,8 @@
 {
   "entries": [
     {
-      "version": "0.37.0",
-      "date": "2026-11-15",
+      "version": "0.38.0",
+      "date": "2026-11-16",
       "commit": "fb51d67a6b074212bce56f22d5b25a38559e4e83",
       "changes": [
         {
@@ -16,8 +16,8 @@
       ]
     },
     {
-      "version": "0.36.3",
-      "date": "2026-11-15",
+      "version": "0.37.4",
+      "date": "2026-11-16",
       "commit": "7c95d141279230b1988f0e654316ef9d99ee5afb",
       "changes": [
         {
@@ -31,8 +31,8 @@
       ]
     },
     {
-      "version": "0.36.2",
-      "date": "2026-11-15",
+      "version": "0.37.3",
+      "date": "2026-11-16",
       "commit": "dbe1f4a8f1c830e0cf83165cac380a5062a03446",
       "changes": [
         {
@@ -46,8 +46,8 @@
       ]
     },
     {
-      "version": "0.36.1",
-      "date": "2026-11-15",
+      "version": "0.37.2",
+      "date": "2026-11-16",
       "commit": "77018ab7e40368a740becada29dcdc52079be48f",
       "changes": [
         {
@@ -56,6 +56,44 @@
             "en-US": "Resume reference searches, filters, pages and reading position when returning.",
             "zh-CN": "返回资料页时恢复搜索、筛选、分页和阅读位置。",
             "zh-TW": "返回資料頁時恢復搜尋、篩選、分頁和閱讀位置。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.37.1",
+      "date": "2026-11-16",
+      "commit": "e259801071df049722d9001172d2596e2213a518",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Hide Fate Tributary from the rating calculator.",
+            "zh-CN": "在非凡评分计算器中隐藏命运支流区块。",
+            "zh-TW": "在非凡評分計算器中隱藏命運支流區塊。"
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.37.0",
+      "date": "2026-11-15",
+      "commit": "3fde6ab8cecd49a8eb3ce8763783dbf11a5a9ca2",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Reorganize Build planning with a compact plan toolbar, unified skill and relic panels, single-page scrolling, and compact condition editing.",
+            "zh-CN": "重整Build模拟器：统一方案工具栏、技能与封印物面板，采用页面滚动和紧凑单行条件编辑。",
+            "zh-TW": "重整Build模擬器：統一方案工具列、技能與封印物面板，採用頁面捲動與精簡單行條件編輯。"
+          }
+        },
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Configure six strategic-server relic slots, lock the extra slots locally, and save named plans to your account with protected switching and renaming.",
+            "zh-CN": "支持战略服六格封印物与本服后三格锁定；方案保存至账号，并保护切换和重命名过程中的未保存修改。",
+            "zh-TW": "支援戰略服六格封印物與本服後三格鎖定；方案儲存至帳號，並保護切換及重新命名時尚未儲存的修改。"
           }
         }
       ]

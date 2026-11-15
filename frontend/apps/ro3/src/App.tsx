@@ -1,5 +1,5 @@
 import { WikiSessionProvider } from './WikiSessionProvider'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Wrench } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
 import {
@@ -7,7 +7,6 @@ import {
   resolveChangelog,
   VersionHistory,
   type ChangelogFile,
-  type UnsavedChangesRequest,
 } from '@gamemap/ui'
 import { PetWiki } from './PetWiki'
 import { MonsterWiki } from './MonsterWiki'
@@ -42,6 +41,9 @@ import homeSouls from './assets/home/souls.webp'
 import homeBuilds from './assets/home/builds.webp'
 import content from './locales/zh-CN.json'
 import changelogRaw from './changelog.json'
+
+import { canLeaveBuild } from './lib/buildNavigation'
+import { guardedHistory } from './lib/guardedHistory'
 
 const CHANGELOG = changelogRaw as ChangelogFile
 const SITE_VERSION = currentVersion(CHANGELOG)
@@ -93,9 +95,6 @@ function documentTitle(location: Location): string {
 
 function App() {
   const [location, setLocation] = useState<Location>(readLocation)
-  const buildGuard = useRef<UnsavedChangesRequest | null>(null)
-  const historyIndex = useRef(0)
-  const registerBuildGuard = useCallback((guard: UnsavedChangesRequest | null) => { buildGuard.current = guard }, [])
   const active = navKeyFor(location)
 
   // The home page moved from /overview to /; old links still land on it, under
@@ -110,56 +109,33 @@ function App() {
     document.title = documentTitle(location)
   }, [location])
 
+  const navigationHistory = useRef<ReturnType<typeof guardedHistory> | null>(null)
   useEffect(() => {
-    const stored = window.history.state?.arkivePosition
-    historyIndex.current = Number.isInteger(stored) ? stored : 0
-    window.history.replaceState({ ...window.history.state, arkivePosition: historyIndex.current }, '')
-    let afterRestore: (() => void) | null = null
-    let approvedTraversal = false
-    const handlePopState = () => {
-      if (afterRestore) {
-        const ask = afterRestore
-        afterRestore = null
-        ask()
-        return
-      }
-      const targetIndex = window.history.state?.arkivePosition ?? 0
-      const delta = targetIndex - historyIndex.current
-      if (buildGuard.current && !approvedTraversal && delta !== 0) {
-        const request = buildGuard.current
-        afterRestore = () => request(() => { approvedTraversal = true; window.history.go(delta) })
-        window.history.go(-delta)
-        return
-      }
-      approvedTraversal = false
-      historyIndex.current = targetIndex
+    const controller = guardedHistory(window, canLeaveBuild, () => {
       setLocation(readLocation())
-      // The browser has already swapped the URL by the time popstate fires, so
-      // the default (read location) is the page the visitor just went back to.
+      window.dispatchEvent(new Event('ro3:location-adopted'))
       trackPageview()
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
+    })
+    navigationHistory.current = controller
+    return () => { controller.dispose(); navigationHistory.current = null }
   }, [])
 
   // The phone wiki header's action slot, handed down to whichever page wants it.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null)
   // And the sidebar's, under the lit entry, for a page's own sub-pages.
   const [sidebarSlot, setSidebarSlot] = useState<HTMLElement | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const navigate = (key: NavKey) => {
     const next = locationForKey(key)
-    if (!next) return
+    if (!next || !canLeaveBuild()) return
     const href = hrefFor(next.page, next.view)
-    if (href === `${window.location.pathname}${window.location.search}`) return
-    const leave = () => {
-      historyIndex.current += 1
-      window.history.pushState({ arkivePosition: historyIndex.current }, '', href)
+    if (href !== `${window.location.pathname}${window.location.search}`) {
+      if (!navigationHistory.current?.push(href)) return
       trackPageview()
-      setLocation(next)
     }
-    if (buildGuard.current) buildGuard.current(leave)
-    else leave()
+    setLocation(next)
+    window.dispatchEvent(new Event('ro3:location-adopted'))
   }
 
   return (
@@ -187,14 +163,14 @@ function App() {
             </div>
           </EncyclopediaWorkspace>
         ) : location.page === 'builds' ? (
-          <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
+          <div className={sidebarCollapsed ? 'ro3-sidebar-layout lg:grid lg:grid-cols-[3.5rem_minmax(0,1fr)] lg:gap-4' : 'ro3-sidebar-layout lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8'}>
             <h1 className="sr-only">{pageTitle(location)}</h1>
-            <SectionSidebar entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSubSlot={setSidebarSlot} />
+            <SectionSidebar entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSubSlot={setSidebarSlot} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />
             <div className="min-w-0">
               <SectionStrip entries={BUILD_ENTRIES} active={active} onNavigate={navigate} label={content.home.tools} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>
                 <SidebarSubProvider value={sidebarSlot}>
-                  <BuildManual onGuardChange={registerBuildGuard} />
+                  <BuildManual />
                 </SidebarSubProvider>
               </HeaderActionProvider>
             </div>

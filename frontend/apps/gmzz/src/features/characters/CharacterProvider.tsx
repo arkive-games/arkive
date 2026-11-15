@@ -31,8 +31,10 @@ import { lastCharacter, workingCopyOf, type WorkingCopy } from '@/features/chara
 /**
  * Where the score page's inputs come from, and where its edits go.
  *
- * - **Local draft** (`id` null): the page as it always was — five local
+ * - **Local score draft** (`id` null, score surface): the calculator's five local
  *   drafts, nothing sent anywhere.
+ * - **Unsaved Build plan** (`id` null, build surface): temporary page state. It
+ *   becomes durable only when saved to an account or opened as a shared plan.
  * - **A saved character, owned**: a local working copy of the character, kept
  *   per character and never expiring, plus an upload to the server after
  *   edits settle (see `AutoSaver`). Every edit lands in the working copy
@@ -41,9 +43,9 @@ import { lastCharacter, workingCopyOf, type WorkingCopy } from '@/features/chara
  * - **A saved character, someone else's** (or one this page is too old to
  *   write): read-only, straight from the server.
  *
- * The local draft is never written by a saved character, nor a saved
- * character by the local draft; the two only meet when the player saves the
- * draft as a new character, which copies it.
+ * The score draft is never written by a saved character, nor a saved character
+ * by either kind of unsaved plan; the two only meet when the player saves the
+ * current work as a new account plan, which copies it.
  */
 
 export type SyncStatus =
@@ -122,7 +124,12 @@ export function CharacterProvider({ id, surface = 'score', children }: { id: str
   const [localBonds, setLocalBonds] = useMemory(LOCAL_RECORDS.bonds)
   const [localEquipment, setLocalEquipment] = useMemory(LOCAL_RECORDS.equipment)
   const [localRelics, setLocalRelics] = useMemory(LOCAL_RECORDS.relics)
-  const [localBuild, setLocalBuild] = useMemory(LOCAL_RECORDS.builds)
+  const [persistedLocalBuild, setPersistedLocalBuild] = useMemory(LOCAL_RECORDS.builds)
+  // Unsaved Build plans are account candidates, not device drafts. Saved plans
+  // still keep their per-account working copies for autosave and recovery.
+  const [temporaryBuild, setTemporaryBuild] = useState<Sections['builds']>(() => SECTIONS.builds.default())
+  const localBuild = surface === 'build' ? temporaryBuild : persistedLocalBuild
+  const setLocalBuild = surface === 'build' ? setTemporaryBuild : setPersistedLocalBuild
 
   const bound = useMemo(() => workingCopyOf(id ?? NO_CHARACTER), [id])
   const [copy] = useMemory(bound)
@@ -384,12 +391,16 @@ export function CharacterProvider({ id, surface = 'score', children }: { id: str
   }, [])
 
   const resetDraft = useCallback((professionId: number | null) => {
+    if (surface === 'build') {
+      setLocalBuild(() => SECTIONS.builds.default())
+      return
+    }
     setLocalCharacter(() => ({ ...SECTIONS.character.default(), professionId }))
     setLocalTalents(() => SECTIONS.talents.default())
     setLocalBonds(() => SECTIONS.bonds.default())
     setLocalEquipment(() => SECTIONS.equipment.default())
     setLocalRelics((prev) => ({ ...SECTIONS.relics.default(), server: readSection('relics', prev).server }))
-  }, [setLocalCharacter, setLocalTalents, setLocalBonds, setLocalEquipment, setLocalRelics])
+  }, [surface, setLocalCharacter, setLocalTalents, setLocalBonds, setLocalEquipment, setLocalRelics, setLocalBuild])
 
   const saveDraftAs = useCallback(async (name: string) => {
     if (!api) throw new Error('no API configured')

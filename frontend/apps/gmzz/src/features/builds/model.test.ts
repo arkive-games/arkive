@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { decodeShare, encodeShare, signBytes, fromBase62, toBase62 } from './codec'
-import { availableSkill, changeTalent, compatibleAction, emptyBuild, equipSkill, exportBuild, importBuild, isBuild, normalizeNodes, rememberedTalentTreeId, type BuildDraft } from './model'
+import { hasBuildEdits, activeSealed, relicServerOf, sealedGroup, availableSkill, changeTalent, compatibleAction, emptyBuild, equipSkill, exportBuild, importBuild, isBuild, normalizeNodes, rememberedTalentTreeId, type BuildDraft } from './model'
 import type { TalentTree } from '../score/talents'
 import type { Skill } from './data'
 
@@ -10,6 +10,30 @@ const draft = (): BuildDraft => ({ ...emptyBuild(), name: 'Test', slots: { '1': 
 const gameShare = '[[2jxYtI0000002Wh1xk3NWgz73UsJBw0Kmyt12T3e8O2hjHtm05uJVY0NcYoy2homg205t30w0KDNGC2hYHoE05ovzo03QRbC008kPV3ltVIW2ggO2p3orRHg3hNh9Y3l6m6v1RcVtW4PPN9Y2jpIKs4FR0g91Raw0w3l6mC72ggCFD0HgIcI4QpqLM2xGY0f1qFibL2pUuux1CF3Pd22WEU525rsJw37JDFc1viAP81mcRWc2fDHCj1ovACd21FbdK1mcYWD0azEba1CF3Pd22WELp20Cskr2OMVM328AruQ1TGQz320fl7w2hbDRx1ovACd21F3XB1qgNHu38Rbls1viAPA1mdoWz3lusax1o1Zel28AruQ1Qzdbx01mPJT1CF3Pd22WEU525rsJt37JDFc1viAP81mcRWc2fDHCj1ovACd21FbdK1mcYWD0azHGk1CF3Pd22WELp20Cskr2OMVM328AruQ1TGQz320fl7w2hoxtZ1ovACd21F3XB1qgNHu38Rbls1viAPA1mdoWz3lusap49MCFn28AruQ1Qzdbx01mPJT1CF3Pd22WEU525rsMw05ovzo37JDFc1viAP81mcRWb2fDHCj1ovACd21FbdK1mcYWD0ayA0Y1CF3Pd22WELp20Csl721bVph23gqpU3UNoKV3PFF8g2NNfM12rQfjs000000]]'
 
 describe('client one-click share codec', () => {
+  it('distinguishes a blank temporary plan from work that needs a discard confirmation', () => {
+    expect(hasBuildEdits(emptyBuild())).toBe(false)
+    expect(hasBuildEdits({ ...emptyBuild(), relicServer: 'local' })).toBe(false)
+    for (const changes of [{ name: 'Named' }, { description: 'Notes' }, { slots: { '1': 1 } }, { sealed: { '4': 1 } }, { talentTreeId: 101 }, { relicServer: 'cross' as const }, { professionId: 1200002 }]) {
+      expect(hasBuildEdits({ ...emptyBuild(), ...changes })).toBe(true)
+    }
+  })
+  it('roundtrips all six relic slots and infers strategic mode from expanded slots', () => {
+    const current = { ...draft(), relicServer: 'cross' as const, sealed: { '1': 2085001, '2': 2085010, '3': 2085021, '4': 2085002, '5': 2085011, '6': 2085022 } }
+    const imported = importBuild(exportBuild(current), emptyBuild())
+    expect(imported.sealed).toEqual(current.sealed)
+    expect(relicServerOf(imported)).toBe('cross')
+    expect([1, 2, 3, 4, 5, 6].map(sealedGroup)).toEqual([1, 2, 3, 1, 2, 3])
+    const local = { ...current, relicServer: 'local' as const }
+    expect(activeSealed(local)).toEqual({ '1': 2085001, '2': 2085010, '3': 2085021 })
+    expect(importBuild(exportBuild(local), emptyBuild()).sealed).toEqual(activeSealed(local))
+    expect(local.sealed['6']).toBe(2085022)
+    expect(isBuild({ ...current, relicServer: 'invalid' })).toBe(false)
+  })
+  it('preserves imported relic slots beyond the six editable slots', () => {
+    const current = { ...draft(), sealed: { '1': 2085001, '4': 2085002, '7': 2085010 } }
+    expect(importBuild(exportBuild(current), emptyBuild()).sealed).toEqual(current.sealed)
+    expect(importBuild(exportBuild({ ...current, relicServer: 'local' }), emptyBuild()).sealed).toEqual({ '1': 2085001, '7': 2085010 })
+  })
   it('preserves unknown nested combo fields while updating known values', () => {
     const wire = decodeShare(exportBuild(draft()))
     const combo = wire.get(10) as Map<unknown, unknown>
