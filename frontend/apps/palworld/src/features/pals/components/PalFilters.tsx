@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ChevronDown } from 'lucide-react'
 import {
   Button,
   Command,
@@ -80,7 +81,7 @@ export function PalFilters({
   const lootName = filter.loot ? (bundle.items[filter.loot] ?? filter.loot) : null
 
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-card/50 p-3">
+    <div className="space-y-3 border-y border-border py-4">
       {elements.length ? (
         <FilterRow layout="column" label={fs.elements}>
           {elements.map((e) => (
@@ -116,6 +117,12 @@ export function PalFilters({
         </FilterRow>
       ) : null}
 
+      <details className="group" open={filter.reactions.length > 0 || filter.sizes.length > 0 || filter.nocturnal || filter.loot !== null || undefined}>
+        <summary className="flex min-h-9 cursor-pointer list-none items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+          {fs.reaction} · {t('pal.stat.size')} · {fs.nocturnal} · {fs.loot}
+        </summary>
+        <div className="space-y-3 pt-3">
       {reactions.length ? (
         <FilterRow layout="column" label={fs.reaction}>
           {reactions.map((r) => (
@@ -205,6 +212,9 @@ export function PalFilters({
           </FilterChip>
         ) : null}
       </FilterRow>
+
+        </div>
+      </details>
 
       {isFilterActive(filter) ? (
         <div className="pt-1">

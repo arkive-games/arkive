@@ -18,16 +18,19 @@ const pageRecord = defineMemoryRecord({
 interface MobilePaginationOptions {
   pageSize?: number
   resetKey?: string
+  desktop?: boolean
 }
 
 export function useMobilePagination<T>(
   items: T[],
-  { pageSize = 24, resetKey = '' }: MobilePaginationOptions = {},
+  { pageSize = 24, resetKey = '', desktop = false }: MobilePaginationOptions = {},
 ) {
   const isMobile = useIsMobile()
   const pagePartition = `${typeof window === 'undefined' ? 'catalog' : window.location.pathname}:${resetKey || 'default'}:${pageSize}`
   const [page, setPage] = useMemoryState(pageRecord, { partition: pagePartition })
-  const pageCount = isMobile ? Math.max(1, Math.ceil(items.length / pageSize)) : 1
+  const enabled = isMobile || desktop
+  const pageCount = enabled ? Math.max(1, Math.ceil(items.length / pageSize)) : 1
+  const currentPage = enabled && items.length > 0 ? Math.min(page, pageCount) : page
   const previousResetKey = useRef(resetKey)
 
   useEffect(() => {
@@ -37,13 +40,13 @@ export function useMobilePagination<T>(
   }, [resetKey, setPage])
 
   useEffect(() => {
-    if (!isMobile || items.length === 0) return
+    if (!enabled || items.length === 0) return
     setPage((current) => Math.min(current, pageCount))
-  }, [isMobile, items.length, pageCount, setPage])
+  }, [enabled, items.length, pageCount, setPage])
 
   const visibleItems = useMemo(
-    () => (isMobile ? items.slice((page - 1) * pageSize, page * pageSize) : items),
-    [isMobile, items, page, pageSize],
+    () => (enabled ? items.slice((currentPage - 1) * pageSize, currentPage * pageSize) : items),
+    [enabled, items, currentPage, pageSize],
   )
 
   const goToPage = useCallback(
@@ -71,7 +74,7 @@ export function useMobilePagination<T>(
     [pageCount, setPage],
   )
 
-  return { isMobile, page, pageCount, visibleItems, goToPage }
+  return { isMobile, page: currentPage, pageCount, visibleItems, goToPage }
 }
 
 export function MobilePagination({
@@ -79,11 +82,13 @@ export function MobilePagination({
   pageCount,
   onPageChange,
   className,
+  desktop = false,
 }: {
   page: number
   pageCount: number
   onPageChange: (page: number) => void
   className?: string
+  desktop?: boolean
 }) {
   const { t } = useTranslation()
   if (pageCount <= 1) return null
@@ -100,7 +105,7 @@ export function MobilePagination({
   return (
     <nav
       aria-label={t('pagination.label')}
-      className={cn('mt-5 flex items-center justify-center gap-2 md:hidden', className)}
+      className={cn('mt-5 flex items-center justify-center gap-2', !desktop && 'md:hidden', className)}
       data-testid="mobile-pagination"
     >
       <button
@@ -108,7 +113,7 @@ export function MobilePagination({
         disabled={page === 1}
         aria-label={t('pagination.previous')}
         onClick={() => onPageChange(page - 1)}
-        className="inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-primary/35 bg-card text-foreground disabled:pointer-events-none disabled:opacity-40"
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground disabled:pointer-events-none disabled:opacity-40"
       >
         <IconChevronLeft className="size-5" stroke={1.8} />
       </button>
@@ -126,9 +131,9 @@ export function MobilePagination({
             aria-label={t('pagination.page', { page: pageNumber })}
             onClick={() => onPageChange(pageNumber)}
             className={cn(
-              'flex size-11 items-center justify-center rounded-md border text-xs font-semibold tabular-nums',
+              'flex size-11 items-center justify-center rounded-full border text-xs font-semibold tabular-nums',
               pageNumber === page
-                ? 'border-primary bg-primary text-primary-foreground'
+                ? 'border-foreground bg-foreground text-background'
                 : 'border-border bg-card text-foreground',
             )}
           >
@@ -142,7 +147,7 @@ export function MobilePagination({
         disabled={page === pageCount}
         aria-label={t('pagination.next')}
         onClick={() => onPageChange(page + 1)}
-        className="inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-primary/35 bg-card text-foreground disabled:pointer-events-none disabled:opacity-40"
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground disabled:pointer-events-none disabled:opacity-40"
       >
         <IconChevronRight className="size-5" stroke={1.8} />
       </button>

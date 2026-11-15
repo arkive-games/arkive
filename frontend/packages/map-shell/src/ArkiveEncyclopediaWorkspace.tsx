@@ -16,7 +16,7 @@ export function useEncyclopediaDesktop() {
 }
 
 /** Category navigation only; the game continues to own its records and controls. */
-export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, onCollapsedChange, collapseLabel, expandLabel, renderLink, renderSubnavigation, railClassName, railFooter, children }: {
+export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, onCollapsedChange, collapseLabel, expandLabel, renderLink, renderSubnavigation, railClassName, railFooter, appearance = 'framed', children }: {
   groups: readonly EncyclopediaGroup[]; active: string; label: string;
   collapsed: boolean; onCollapsedChange: (collapsed: boolean) => void;
   collapseLabel: string; expandLabel: string;
@@ -26,6 +26,7 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
   railClassName?: string;
   /** Optional game-owned reading history, hidden with the expanded labels. */
   railFooter?: ReactNode;
+  appearance?: 'framed' | 'quiet';
   children: ReactNode;
 }) {
   const navId = useId()
@@ -34,7 +35,8 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
     style={{ '--arkive-encyclopedia-rail-size': collapsed ? 'var(--arkive-encyclopedia-rail-collapsed)' : 'var(--arkive-encyclopedia-rail-expanded)' } as CSSProperties}>
     <aside className={cn('sticky top-0 hidden max-h-[calc(100dvh-12rem)] min-w-0 flex-col overflow-y-auto overscroll-contain [scrollbar-width:none] lg:flex', railClassName)} data-testid="encyclopedia-rail">
       <div className={cn('mb-3 flex min-h-10 items-center gap-2', collapsed ? 'justify-center' : 'justify-between px-2')}>
-        {!collapsed && <h2 className="flex items-center gap-2 text-2xl font-extrabold leading-tight"><span aria-hidden className="h-[1.15em] w-1.5 shrink-0 rounded-full bg-[image:var(--arkive-warm-search)]" />{label}</h2>}
+        {!collapsed && <h2 className={cn('flex items-center gap-2 leading-tight', appearance === 'quiet' ? 'text-lg font-bold' : 'text-2xl font-extrabold')}>
+          {appearance === 'framed' && <span aria-hidden className="h-[1.15em] w-1.5 shrink-0 rounded-full bg-[image:var(--arkive-warm-search)]" />}{label}</h2>}
         <button type="button" onClick={() => onCollapsedChange(!collapsed)} aria-expanded={!collapsed} aria-controls={navId}
           aria-label={collapsed ? expandLabel : collapseLabel} title={collapsed ? expandLabel : collapseLabel}
           className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
@@ -48,10 +50,11 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
         {groups.map(group => <div key={group.key} className="mb-4 space-y-1">
           {!collapsed && group.label !== label && <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">{group.label}</p>}
           {group.entries.map(entry => <div key={entry.key}>
-            {renderLink(entry, cn('group flex min-h-12 items-center rounded-xl px-2 text-sm font-semibold transition-colors',
+            {renderLink(entry, cn('group flex items-center px-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+              appearance === 'quiet' ? 'min-h-10 rounded-lg font-medium' : 'min-h-12 rounded-xl font-semibold',
               collapsed ? 'justify-center' : 'gap-3',
-              currentEntry(entry, active) ? 'bg-card text-[color:var(--arkive-nav-active)] shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:bg-muted hover:text-foreground'),
-              <><span className={cn('grid size-9 shrink-0 place-items-center rounded-lg', currentEntry(entry, active) ? 'bg-[color:var(--arkive-filter-active)]' : 'bg-muted group-hover:bg-card')}>{entry.icon}</span>
+              currentEntry(entry, active) ? appearance === 'quiet' ? 'bg-[color:var(--arkive-filter-active)] font-semibold text-[color:var(--arkive-nav-active)]' : 'bg-card text-[color:var(--arkive-nav-active)] shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:bg-muted hover:text-foreground'),
+              <><span className={cn('grid shrink-0 place-items-center', appearance === 'quiet' ? 'size-6' : 'size-9 rounded-lg', appearance === 'framed' && (currentEntry(entry, active) ? 'bg-[color:var(--arkive-filter-active)]' : 'bg-muted group-hover:bg-card'))}>{entry.icon}</span>
                 <span className={collapsed ? 'sr-only' : 'min-w-0 break-words'}>{entry.label}</span></>)}
             {!collapsed && currentEntry(entry, active) && entry.children && <div className="my-1 ml-6 space-y-1 border-l-2 border-border pl-2">
               {entry.children.map(child => <div key={child.key}>{renderLink(child,

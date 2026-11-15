@@ -23,9 +23,11 @@ standard-width column. Keep the shared page gutter at the viewport edges.
 Shared states come from [States](state-matrix.md);
 loading reserves geometry and errors retain query/filters.
 
-The Palworld pal catalog is filter-only and always uses its grid presentation.
-Do not add a search or grid/list toolbar above its filters, and do not apply
-legacy hidden search or list-mode preferences to that page.
+The Palworld pal catalog uses a searchable grid with 24 records per page on
+desktop and mobile. Keep search and pagination in one compact toolbar above
+the unframed filter rows; do not add a grid/list switch. Search and filter changes
+start at page one. The directory uses the shared quiet row variant without
+individual icon tiles; game records emphasize original Pal artwork and names.
 
 ## Desktop sidebar
 
