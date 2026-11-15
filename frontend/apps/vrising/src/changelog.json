@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.11.2",
+      "date": "2026-11-15",
+      "commit": "b83bb15ffec5e1e7306f99bec9f675780f480578",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep map marker filters independent in each tab and restore them when returning.",
+            "zh-CN": "地图标记筛选按标签页独立保留，返回时恢复原选择。",
+            "zh-TW": "地圖標記篩選按分頁獨立保留，返回時恢復原選擇。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.11.1",
       "date": "2026-11-15",
       "commit": "e5b99b1b156b54e250a3bbce1210201b2fe9a4b0",
