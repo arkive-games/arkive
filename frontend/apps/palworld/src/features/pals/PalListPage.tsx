@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CatalogSearchInput } from '@gamemap/ui'
+import { useEncyclopediaDesktop } from '@gamemap/map-shell'
 import { browserMemory, defineMemoryRecord, memoryPolicy, parseJson, useMemoryState } from '@gamemap/state-memory'
 import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -80,6 +81,11 @@ export default function PalListPage() {
     }
   }, [lng, t])
 
+  const desktop = useEncyclopediaDesktop()
+  const search = <CatalogSearchInput value={query} onChange={event => setQuery(event.target.value)}
+    placeholder={t('pal.searchPlaceholder')} submitLabel={t('pal.searchPlaceholder')}
+    clearLabel={fs.clear} onClear={() => setQuery('')} />
+
   const roster = useFilteredPals(bundle, filter)
   const mobilePaging = useMobilePagination(roster, {
     pageSize: 24,
@@ -92,18 +98,12 @@ export default function PalListPage() {
       active="/pals"
       title={t('pal.title')}
       heading
-      filters={bundle ? <PalFilters bundle={bundle} filter={filter} onChange={setFilter} /> : undefined}
+      filters={bundle ? <PalFilters bundle={bundle} filter={filter} onChange={setFilter} search={desktop ? search : undefined} /> : undefined}
       filtersActive={isFilterActive({ ...filter, query: '' })}
     >
         <CatalogDataProvider pals={bundle ?? undefined}>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <CatalogSearchInput value={query} onChange={event => setQuery(event.target.value)}
-              placeholder={t('pal.searchPlaceholder')} submitLabel={t('pal.searchPlaceholder')}
-              clearLabel={fs.clear} onClear={() => setQuery('')} />
-            <MobilePagination desktop page={mobilePaging.page} pageCount={mobilePaging.pageCount}
-              onPageChange={mobilePaging.goToPage} className="mt-0" />
-          </div>
-          <ContentPageFilters className="mb-6" />
+          {!desktop && <div className="mb-3">{search}</div>}
+          <ContentPageFilters className="mb-4" />
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
@@ -112,7 +112,7 @@ export default function PalListPage() {
           ) : roster.length === 0 ? (
             <div className="mt-12 text-center text-sm text-muted-foreground">{fs.noResults}</div>
           ) : (
-            <div data-pagination-anchor className="grid grid-cols-3 gap-3 min-[480px]:grid-cols-4 sm:grid-cols-4 xl:grid-cols-6">
+            <div data-pagination-anchor className="grid grid-cols-3 gap-3 min-[480px]:grid-cols-4 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
               {mobilePaging.visibleItems.map((p) => (
                 <PalCard
                   key={p.id}

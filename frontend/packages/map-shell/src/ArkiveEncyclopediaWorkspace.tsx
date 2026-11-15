@@ -1,8 +1,9 @@
-import { useId, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
+import { useId, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@gamemap/ui'
 
 export interface EncyclopediaEntry { key: string; label: string; icon: ReactNode; children?: readonly EncyclopediaEntry[] }
-export interface EncyclopediaGroup { key: string; label: string; entries: readonly EncyclopediaEntry[] }
+export interface EncyclopediaGroup { key: string; label: string; icon?: ReactNode; collapsible?: boolean; entries: readonly EncyclopediaEntry[] }
 const currentEntry = (entry: EncyclopediaEntry, active: string): boolean => entry.key === active || Boolean(entry.children?.some(child => currentEntry(child, active)))
 const desktopQuery = '(min-width: 1024px)'
 function subscribeDesktop(changed: () => void) {
@@ -13,6 +14,25 @@ function subscribeDesktop(changed: () => void) {
 /** Mount a toolbar in only one place when an app adapts its existing mobile shell. */
 export function useEncyclopediaDesktop() {
   return useSyncExternalStore(subscribeDesktop, () => window.matchMedia(desktopQuery).matches, () => false)
+}
+
+function DirectoryGroup({ group, collapsed, active, children }: { group: EncyclopediaGroup; collapsed: boolean; active: string; children: ReactNode }) {
+  const [open, setOpen] = useState(true)
+  const id = useId()
+  if (!group.collapsible || collapsed) return <div className="mb-4 space-y-1">
+    {!collapsed && group.label && <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">{group.label}</p>}
+    {children}
+  </div>
+  return <section className="mb-4">
+    <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}
+      className={cn('flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left text-sm font-semibold hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring',
+        group.entries.some(entry => currentEntry(entry, active)) ? 'text-foreground' : 'text-muted-foreground')}>
+      <span className="grid size-7 shrink-0 place-items-center" aria-hidden>{group.icon}</span>
+      <span className="min-w-0 flex-1 break-words">{group.label}</span>
+      <ChevronDown className={cn('size-4 shrink-0 transition-transform', !open && '-rotate-90')} aria-hidden />
+    </button>
+    <div id={id} hidden={!open} className="ml-5 mt-1 space-y-1 border-l border-border pl-2">{children}</div>
+  </section>
 }
 
 /** Category navigation only; the game continues to own its records and controls. */
@@ -47,8 +67,7 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
         </button>
       </div>
       <nav id={navId} aria-label={label}>
-        {groups.map(group => <div key={group.key} className="mb-4 space-y-1">
-          {!collapsed && group.label !== label && <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">{group.label}</p>}
+        {groups.map(group => <DirectoryGroup key={group.key} group={{ ...group, label: group.label === label && !group.collapsible ? '' : group.label }} collapsed={collapsed} active={active}>
           {group.entries.map(entry => <div key={entry.key}>
             {renderLink(entry, cn('group flex items-center px-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring',
               appearance === 'quiet' ? 'min-h-10 rounded-lg font-medium' : 'min-h-12 rounded-xl font-semibold',
@@ -63,7 +82,7 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
             </div>}
             {currentEntry(entry, active) && renderSubnavigation && <div hidden={collapsed}>{renderSubnavigation(entry)}</div>}
           </div>)}
-        </div>)}
+        </DirectoryGroup>)}
       </nav>
       {!collapsed && railFooter}
     </aside>

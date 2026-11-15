@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown } from 'lucide-react'
 import {
@@ -43,10 +43,12 @@ export function PalFilters({
   bundle,
   filter,
   onChange,
+  search,
 }: {
   bundle: PalsBundle
   filter: PalFilter
   onChange: (f: PalFilter) => void
+  search?: ReactNode
 }) {
   const { t, i18n } = useTranslation()
   const fs = filterStrings(i18n.resolvedLanguage ?? 'en-US')
@@ -81,7 +83,7 @@ export function PalFilters({
   const lootName = filter.loot ? (bundle.items[filter.loot] ?? filter.loot) : null
 
   return (
-    <div className="space-y-3 border-y border-border py-4">
+    <div className="space-y-3 border-b border-border pb-4">
       {elements.length ? (
         <FilterRow layout="column" label={fs.elements}>
           {elements.map((e) => (
@@ -117,6 +119,8 @@ export function PalFilters({
         </FilterRow>
       ) : null}
 
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+      <div className="min-w-0 flex-1">
       <details className="group" open={filter.reactions.length > 0 || filter.sizes.length > 0 || filter.nocturnal || filter.loot !== null || undefined}>
         <summary className="flex min-h-9 cursor-pointer list-none items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
@@ -228,6 +232,9 @@ export function PalFilters({
           </Button>
         </div>
       ) : null}
+      </div>
+      {search && <div className="w-64 shrink-0">{search}</div>}
+      </div>
     </div>
   )
 }

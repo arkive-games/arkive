@@ -38,12 +38,12 @@ export function PalCard({
             </span>
           ) : null}
         </span>
-        <div className="relative flex aspect-[4/3] min-h-0 items-center justify-center bg-[radial-gradient(ellipse_at_center,var(--arkive-filter-active),transparent_70%)] p-3">
+        <div className="relative flex h-20 min-h-0 sm:h-24 items-center justify-center bg-[radial-gradient(ellipse_at_center,var(--arkive-filter-active),transparent_70%)] p-3">
           <img
             src={palIconUrl(pal.icon)}
             alt=""
             loading="lazy"
-            className="h-full w-full max-w-28 object-contain"
+            className="size-14 object-contain sm:size-16"
           />
         </div>
         <div className="flex min-h-12 items-center justify-between gap-2 border-t border-border px-3 py-2 text-left">

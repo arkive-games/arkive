@@ -5,10 +5,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { ArkiveEncyclopediaWorkspace } from './ArkiveEncyclopediaWorkspace'
 
 afterEach(cleanup)
-function Workspace() {
+function Workspace({ collapsible = false }: { collapsible?: boolean }) {
   const [collapsed, setCollapsed] = useState(false)
   return <ArkiveEncyclopediaWorkspace
-    groups={[{ key: 'records', label: 'Records', entries: [{ key: '/items', label: 'Items', icon: <span aria-hidden>I</span> }] }]}
+    groups={[{ key: 'records', label: 'Records', collapsible, entries: [{ key: '/items', label: 'Items', icon: <span aria-hidden>I</span> }] }]}
     active="/items" label="Encyclopedia" collapsed={collapsed} onCollapsedChange={setCollapsed}
     collapseLabel="Collapse navigation" expandLabel="Expand navigation"
     railFooter={<a href="/items/ore">Recently viewed ore</a>}
@@ -18,6 +18,16 @@ function Workspace() {
   </ArkiveEncyclopediaWorkspace>
 }
 describe('encyclopedia workspace', () => {
+  it('folds a parent group without changing the selected category or reading controls', () => {
+    render(<Workspace collapsible />)
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search' }), { target: { value: 'ore' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Records' }))
+    expect(screen.getByRole('button', { name: 'Records' }).getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('link', { name: 'Items' })).toBeNull()
+    expect((screen.getByRole('textbox', { name: 'Search' }) as HTMLInputElement).value).toBe('ore')
+    fireEvent.click(screen.getByRole('button', { name: 'Records' }))
+    expect(screen.getByRole('link', { name: 'Items' }).getAttribute('aria-current')).toBe('page')
+  })
   it('shows the current branch children and retains its parent highlight when collapsed', () => {
     const renderWorkspace = (collapsed: boolean) => <ArkiveEncyclopediaWorkspace
       groups={[{ key: 'wiki', label: 'Wiki', entries: [{ key: '/fellows', label: 'Connections', icon: <span aria-hidden>C</span>, children: [{ key: '/fellows/relations', label: 'Relations', icon: <span aria-hidden>R</span> }] }] }]}

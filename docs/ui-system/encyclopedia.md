@@ -24,10 +24,13 @@ Shared states come from [States](state-matrix.md);
 loading reserves geometry and errors retain query/filters.
 
 The Palworld pal catalog uses a searchable grid with 24 records per page on
-desktop and mobile. Keep search and pagination in one compact toolbar above
-the unframed filter rows; do not add a grid/list switch. Search and filter changes
-start at page one. The directory uses the shared quiet row variant without
-individual icon tiles; game records emphasize original Pal artwork and names.
+desktop and mobile. On desktop, show the common filters across the content
+width, then secondary-filter disclosure on the left and search on the right in
+one row. Pagination belongs below the results; do not add a grid/list switch.
+Search and filter changes start at page one. Use compact original Pal thumbnails.
+The directory uses collapsible parent groups with indented child links and
+game-owned content artwork. Parent toggles change visibility, not navigation
+or the active category. Keep the shared quiet row variant without icon tiles.
 
 ## Desktop sidebar
 
