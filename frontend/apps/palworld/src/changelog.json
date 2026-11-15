@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.6",
+      "date": "2026-11-16",
+      "commit": "606d9000e018d48cd861c8f6f39ace301a8559fe",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Place compact filters before search, improve readable option grids, and keep only parent categories in the collapsed encyclopedia directory.",
+            "zh-CN": "筛选移至左侧并缩小控件，搜索置右；放大筛选文字、移除重复标题，收起目录仅保留父级入口。",
+            "zh-TW": "篩選移至左側並縮小控制項，搜尋置右；放大篩選文字、移除重複標題，收合目錄僅保留父級入口。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.5",
       "date": "2026-11-16",
       "commit": "c4d97f07262807d65ba3113d590ff27b2f29c676",
