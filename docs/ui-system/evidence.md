@@ -1,60 +1,49 @@
-# Production Evidence: 2026-11-11
+# Acceptance Evidence: 2026-11-15
 
-Optional dated snapshot, not normative inventory or a compliance report. Local
-source/remote-tracking refs can predate production. Product names and live
-observations take precedence over guesses from app directories.
+Dated observations only. Rules belong to the [task index](../ARKIVE_PRODUCT_IA_DRAFT.md);
+current completion/deferred status belongs to [Adoption](adoption.md).
+No local correction below has been deployed by this work.
 
-| Game | Production entry | Root | Top navigation |
-| --- | --- | --- | --- |
-| AION2 | <https://aion2.arkive.games/> | Map | Map; Encyclopedia. |
-| Palworld | <https://palworld.arkive.games/> | Map | Map; Breeding Routes; Pal-related; Database. |
-| Lord of Mysteries | <https://gmzz.arkive.games/> | Homepage | Home; Tools; Encyclopedia; Fool's Chess. |
-| Ragnarok 3 | <https://ro3.arkive.games/> | Homepage | Home; Encyclopedia; Build Manual. |
-| V Rising | <https://vrising.arkive.games/> | Map | Map; V-Blood Bosses; Database; Spells and Research. |
-| Phantom Blade Zero | <https://pbz.arkive.games/> | Map | Map; Weapons; Phantom Edges; Accessories; Medicines; Items; Bestiary; Skills. |
+## Production inventory and local corrections
 
-Only Lord of Mysteries and Ragnarok 3 have game homepages in this inventory.
-Lost Ark and STS2 are outside these six public game entries.
+Production All Games lists AION2, Palworld, Lord of Mysteries, Ragnarok 3,
+V Rising and Phantom Blade Zero. Only Lord of Mysteries and Ragnarok 3 have
+homepages; other roots open maps. Local development additionally exposes OSS;
+that preview is excluded from released-game acceptance. STS2 is also excluded.
 
-## Child entries observed
+The six production Tool Library entries are Palworld Breeding/Stat and GMZZ
+Build/Score/League Points/Station Planner. Ragnarok 3's live homepage/navigation
+also expose the editable Build Handbook at `/builds`, but the portal registry
+classified it as wiki. The local correction makes seven library tools and uses
+RO3's canonical category paths. The homepage retains its six editorial tool
+selections; adding a library entry does not automatically promote it.
 
-| Parent | Entries |
+The 45 corrected feature-registry destinations across the six games returned
+HTTP 200 and application HTML. This proves reload/deep-link serving, not every
+record's content. GMZZ and RO3 homepage entries were compared with navigation;
+local shared navigation inventories and existing route tests cover category
+registration. The complete registry stays in source, not a duplicate MD table.
+
+## Targeted browser acceptance
+
+| Area | Evidence and boundary |
 | --- | --- |
-| AION2 / Encyclopedia | Quests; NPCs; Items. |
-| Palworld / Pal-related | Pal Encyclopedia; Passive Skills; Active Skills; Partner Skills; Stat Simulator. |
-| Palworld / Database | Items; Buildings; Merchants; Technology; Research; Dungeons; Quests; Bases; Base Raids; Fishing. |
-| Lord of Mysteries / Tools | Build Simulator; Railway Station Planner; Extraordinary Score Calculator; League Points Planner. |
-| Lord of Mysteries / Encyclopedia | Railway Goods; Managed Trade; Fellows; Secret Partners; Utopian Theater; Reforging Gifts. |
-| Lord of Mysteries / Fool's Chess | Rules; Pieces; Resonances; Equipment; Talents. |
-| Ragnarok 3 / Homepage encyclopedia | Class Skills; Talents; Cards; Pets; Monsters; Equipment; Soul Echoes. |
-| Ragnarok 3 / Homepage tools | Build Manual. |
+| Authentication/favorites | User signed in to the real API in an isolated local browser, then signed out and back into the same account. Game/tool priority, query/type membership, independent records and reload/reauth recovery passed. Two-account persisted partitions are additionally tested automatically; a second real account and production-cookie SSO were not exercised. |
+| Favorite failure | Browser fault injection denied actual progress writes; both game/tool cards retained state/order and exposed working retry. No fictional success or identity. |
+| Account failure | Actual profile PATCH was deliberately aborted before reaching the server; edited name remained. Denying local profile persistence reproduced false success; the fix retains the draft, reports failure and permits retry. Original profile fields were restored; no test nickname was submitted successfully. |
+| Data/storage failure | Aborting Palworld's actual item JSON load retained the query and displayed failure; removing the fault/reloading recovered real records. A cold-start storage-denied page stayed usable without false favorites or a restoration promise. |
+| Visual states | Real shared color pairs and all three warm-arrow gradient stops were measured in both themes. Light selected text was 4.25:1; the corrected blue is 4.57:1. Normal text/error/metadata/primary and focus pairs meet their scoped thresholds. Game-art palettes are not covered. |
+| Long content | Tool names/descriptions/game labels were stress-tested at 1440/900/390 pixels in both themes; no document overflow or displaced favorite command. These are explicit stress strings, not production records. |
 
-Lord of Mysteries homepage/hover menus were compared. Ragnarok 3 homepage/top
-links were inspected, not every child's parity. Talents exposes Seasonal Talents
-and Star Matrix, with class/stage controls and graphs; no general search field
-was observed. The current `/talents` desktop wrapper uses an `11.5rem` left
-directory column before the main content, which is the provisional expanded
-width recorded in the encyclopedia pattern. Encyclopedia search in the topic is
-a new direction.
+## Existing regression coverage
 
-## Homepage tool destinations observed
+Six encyclopedia shells previously passed 47 category-route shell checks and
+representative collapse/query/reload/return/no-match flows. The standard browser
+checker covers 29 component/portal/map checks and seven deterministic images.
+Map labels remain dense at the existing default zoom; mobile encyclopedia
+redesign, About/credits and forum remain deferred.
 
-| Game | Tool | Direct URL |
-| --- | --- | --- |
-| Palworld | Breeding Calculator | <https://palworld.arkive.games/breeding> |
-| Palworld | Stat Simulator | <https://palworld.arkive.games/stat-simulator> |
-| Lord of Mysteries | Build Simulator | <https://gmzz.arkive.games/tools/build> |
-| Lord of Mysteries | Extraordinary Score Calculator | <https://gmzz.arkive.games/score> |
-| Lord of Mysteries | League Points Planner | <https://gmzz.arkive.games/tools/league-points> |
-| Lord of Mysteries | Railway Station Planner | <https://gmzz.arkive.games/tools/traintrade-station> |
-
-This is not the full Tool Library inventory; Ragnarok 3 Build Manual's library
-membership was not independently verified. Homepage post markup used `#forum`;
-its click handler/specific-post destination was not verified. Visible links do
-not prove every destination loads successfully.
-
-Signed-out inspection did not verify authenticated favorites/order or account
-transitions. Editorial/popularity internals, complete hidden-target search within
-the active map, and complete child coverage remain unverified. Palworld's selector exposed
-Palpagos Islands and World Tree. Screenshots support AION2 result presentation
-and the encyclopedia collapse reference, not functional acceptance across games.
+Historical fixture and artifact caveats are summarized in
+[Reconciliation](reconciliation.md#local-implementation-evidence-through-2026-11-15).
+Do not convert a scoped browser check, injected failure or unit test into a
+claim that every production page/state/account has been certified.

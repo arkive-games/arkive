@@ -1,89 +1,51 @@
-# Adoption and Remaining Acceptance
+# Current Adoption and Acceptance
 
-Updated 2026-11-15. This is the single current status list, not a product-rule
-owner. Read the [task index](../ARKIVE_PRODUCT_IA_DRAFT.md) for rules and the
-[acceptance procedure](visual-regression.md) for executable checks. Historical
-batch details are [archived](reconciliation.md#local-implementation-evidence-through-2026-11-15).
-Do not turn an old batch's unfinished action into a new task without checking
-this list and the current implementation.
-
-## Status definitions
-
-- **Implemented locally:** code exists in the active worktree; not deployed.
-- **Verified, scoped:** named checks passed; not certification of every route/state.
-- **Awaiting acceptance:** behavior is specified, but the listed evidence is incomplete.
-- **Provisional/contextual:** an adjustable value or game-owned choice, not missing work.
-- **Deferred:** intentionally excluded; do not reopen during closeout.
-- **Not started:** a later deliverable, not an implemented capability.
+Updated 2026-11-15. Single status owner; rules are routed by the
+[task index](../ARKIVE_PRODUCT_IA_DRAFT.md). All implementation is local,
+not deployed. [Evidence](evidence.md) records exact coverage/limits;
+[history](reconciliation.md) retains the earlier batch summary/Git lookup.
 
 ## Six-stage status
 
-| Stage | Current status |
+| Stage | Status |
 | --- | --- |
-| 1. Product and experience hierarchy | Confirmed in the product topics and canonical site specification |
-| 2. Page structure | Confirmed; shared desktop encyclopedia/map structures implemented locally; record layouts remain game-owned |
-| 3. Component contracts and states | Confirmed; shared primitives and state contracts exist; no promise that every legacy page was migrated |
-| 4. Code/spec reconciliation | Agreed local batches implemented; remaining acceptance is listed below; deferred work stays excluded |
-| 5. Acceptance tooling | Implemented and verified within the scope below; human visual approval remains separate |
-| 6. Team Skill | Not started; package the current rules and task-based reading router after closeout |
+| 1. Product hierarchy | Confirmed |
+| 2. Page structures | Confirmed and locally adopted for the agreed scope; game records remain contextual |
+| 3. Components/states | Contracts and shared primitives established |
+| 4. Code reconciliation | Agreed local changes implemented, including this closeout's fixes |
+| 5. Acceptance | Tooling and scoped checks complete; coverage/limits below, not universal art approval |
+| 6. Team Skill | Not started; next deliverable |
 
-## Completed local scope
+## Acceptance closeout
 
-| Surface | Implemented / verified boundary |
+| ID | Result |
 | --- | --- |
-| Portal catalogs | Type/Other filters, associated-game search, independent link/favorite targets, account-scoped favorites and confirmed-write recovery; existing homepage composition retained |
-| Encyclopedia | Six scoped game directories, shared search/toggle, current-category search, applicable browsing restoration, reduced duplicate copy and explicit no-match states; 47 route-shell checks and representative state flows passed |
-| Map | Active-map search retained; marker coordinates/silent copy and agreed detail changes; map-partitioned browsing memory, device camera/tab selection and legacy migration covered in recorded batches |
-| Tools and account | Ordinary calculators use automatic device memory; RO3 explicit-save exits verified; account UID and duplicate section introduction removed; GMZZ BUILD remains deferred |
-| Footers | Homepage sea footer preserved; ordinary game footers now include the four centered site links; six settings flows and portal About/Contact destinations verified |
-| Shared acceptance | Real-component Chinese gallery, style guard in `pnpm test`, screenshot comparison and interaction checks; disabled search actions fixed |
+| AUTH-01 | Real single-account login/logout/reauth, independent game/tool favorites, ordering and reload passed. Two-account persistence isolation is automatically tested; no second real-account or production-cookie SSO claim. |
+| FAIL-01 | Real-client profile/data failure injection and denied-storage cold start/write/retry passed. Profile storage failure now reports failure instead of false success and preserves the draft. |
+| VIS-01 | Both-theme shared contrast and 1440/900/390 long-label checks passed. Selected light text corrected from 4.25:1 to 4.57:1; original game art and mobile composition retained. |
+| IA-01 | Six live game entries and 45 feature destinations checked; RO3 handbook registered as the seventh tool and canonical links corrected. Homepage selections stay independent. |
 
-Latest recorded validation: 174 test files / 1922 tests; seven affected app
-builds; shared-package typechecks; 29 browser checks. The style guard covers
-126 chrome files plus app search-CSS ownership, with seven existing occurrences
-in six documented exceptions. Seven deterministic component images are compared;
-current portal/map images are manual references, not automatic art approval.
-The memory inventory contains 140 declared keys. These are recorded results,
-not a claim that this documentation-only closeout reran application checks.
+These scoped acceptance items are closed. A deliberate injected failure proves
+recovery of that client, not a production outage. HTTP checks do not certify
+every record; automatic identity partitions do not replace two real logins.
+Existing component/portal/map automation remains in the
+[acceptance procedure](visual-regression.md). Ordinary footer center links and
+six encyclopedia shells are locally complete, not new pending reconstruction.
+Validation: 176 test files / 1928 tests, seven app builds, Meta lint, 140 memory
+keys and the scoped browser/route checks. Documentation links are checked separately.
 
-## Remaining acceptance
+## Provisional and deferred scope
 
-| ID | Scope | Evidence still needed |
-| --- | --- | --- |
-| AUTH-01 | All Games / Tool Library | Signed-in favorite priority and game/tool/account isolation through login/logout; failure/retry leaves order and previous state intact. Existing tests are not authenticated browser evidence. |
-| FAIL-01 | Actual async data, account save and unavailable storage | Verify retained authored values/query/filters, truthful failure feedback and applicable recovery in representative real flows. Do not invent a network state for local filtering or promise restoration when storage is unavailable. |
-| VIS-01 | Changed shared chrome and catalog controls | Finish contrast, long-label/truncation, filter overflow and light/dark state review where current samples do not cover them. Preserve game art and existing mobile composition. |
-| IA-01 | Existing released game entries and tools | Refresh the dated inventory where needed, verify home/menu/tool-registry child parity and direct destinations. Exclude forum redesign and unreleased games. |
-
-These items require targeted evidence, not rebuilding finished pages or testing
-every game record. A visual difference is not permission to redesign a surface.
-Record the exact checked scope and any unavailable data/account condition.
-
-## Provisional and content-owned choices
-
-Encyclopedia rail widths, map picker grouping/long-name calibration, and existing
-mobile tool/catalog composition remain adjustable under their topic rules.
-Game record schemas, detail presentation and related-record layout remain
-content-owned. Homepage selection/empty-section treatment and future tool
-membership changes are contextual follow-ups, not new closeout blockers.
-Do not invent fixed card counts, mandatory grouping or a mobile encyclopedia
-layout to make the list look complete.
-
-## Deferred and later work
-
-About/credits generation and manual editing, forum redesign, mobile redesign,
-GMZZ BUILD exit/account-save integration, and unreleased game/OSS/STS2 work are
-deferred by the user. Previous STS2 fixture checks are historical evidence only.
-Explicit-save destinations/account needs remain editor-owned; RO3's completed
-exit guard does not establish a universal account-save backend.
-Team Skill packaging is the next deliverable after this closeout, not part of
-this document cleanup. Deferred features do not block packaging the current
-confirmed rules with their explicit boundaries.
+Adjustable directory/picker dimensions, record/detail layouts and future editorial
+or membership choices remain contextual, not missing closeout work. No fixed
+card count, universal grouping or mobile encyclopedia layout is invented.
+About/credits generation/editor, forum redesign, mobile redesign, GMZZ BUILD
+exit/account integration and unreleased games remain deferred by the user.
+Their exclusion does not block packaging the current confirmed rules.
 
 ## Delivery boundary
 
-Changes are in local signed commits in `.scratch/ui-stage4` on `codex/ui-stage4`.
-No push, pull request, merge or deployment has occurred in these batches.
-Remote handoff requires the user's instruction and the repository PR workflow.
-The production website is a visual/data reference, not proof these local fixes
-are already online. This closeout changes documentation only.
+Local signed commits remain in `.scratch/ui-stage4` on `codex/ui-stage4`.
+No push, PR, merge or deployment is authorized by this batch. Remote delivery
+requires the user's instruction and the repository workflow. The Skill is not
+yet created. Documentation links/status are validated separately from app tests.

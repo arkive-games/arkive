@@ -1,43 +1,37 @@
 # Shared State Matrix
 
-Read only for state behavior. Page topics own content and layout;
-[Contracts](component-contracts.md) owns component semantics. This is a rule
-matrix, not evidence of passing tests.
+Transitions only; [contracts](component-contracts.md) owns semantics and the
+page topics own content/layout. This matrix is a rule, not passing-test evidence.
 
 ## Common states
 
-| State | Rule |
+| State | Required response |
 | --- | --- |
-| Default/filled | Show current value and independent actions |
-| Hover/pressed/selected | Clear applicable feedback; do not change silhouette or rely on color alone |
-| Focus-visible | Visible focus, meaningful accessible name, logical keyboard order |
-| Disabled | Unavailable action, readable retained value; distinguish from pending |
-| Pending/loading | Prevent duplicate writes; retain values/control dimensions; reserve expected result slots |
-| Empty/no match | Explain applicable empty state, no invented content |
-| Request/validation failure | Preserve authored inputs/query/filters; explain failure and provide applicable retry |
+| Default/filled; hover/pressed/selected | Retain independent actions and silhouette; meaningful feedback must not rely on color alone. |
+| Focus-visible | Visible focus, accessible names and logical keyboard order. |
+| Disabled / pending | Disabled blocks unavailable actions; pending prevents duplicate writes while retaining values and control geometry. |
+| Loading / empty | Reserve expected result space; explain actual no-match/unavailable states without invented content. |
+| Request / validation failure | Retain authored input/query/filters; explain failure and offer applicable recovery. Never report a failed write as saved. |
 
-Use native semantics, shared targets/safe areas and stable media/copy slots.
-Local filtering has no artificial request failure; its data host may fail.
-A stale/partial-result policy must be declared by the surface. Loading/error
-content may wrap naturally; it must not erase controls or browsing context.
+Local filtering has no artificial network error; its data host may fail.
+Surfaces declare stale/partial-result policy. Natural error wrapping may change
+height, but must not erase controls or browsing context.
 
 ## Task transitions
 
-| Task | Transition and recovery | Retention / owner |
-| --- | --- | --- |
-| Favorite | Anonymous opens existing login. Pending blocks repeats and keeps prior appearance; only success changes state. Failure keeps item/state and offers retry, without false success or movement | Separate game/tool records; announce confirmed change. [Catalogs](catalogs.md) owns filter-before-order |
-| Pending game | Pending Launch card retains geometry with no unusable game link; differs from a pending favorite request | [Catalogs](catalogs.md) |
-| Catalog load/query | Reserve records while loading; no-match is explicit; retained query/type filters on failure | Targets, counts and ordering: Catalogs |
-| Directory | Toggle preserves branch/query/filter; child load does not collapse it. Empty/unavailable branch explains status; retry retains selection | [Encyclopedia](encyclopedia.md); map collapse is separate |
-| Map selector | Current choice remains visible/identifiable while options load; failure retains it and permits retry; no options is explicit | Destination map restores its own state; long labels readable. [Map workspace](map-workspace.md) |
-| Map search/detail | Result reveals hidden active-map target and opens detail; failure retains query/filters. Explicit link/result wins conflicting view/selection, without map switching from search | Other map preferences/progress intact; no detail record is explainable. Map workspace and [Markers](map-markers.md) |
-| About | Starts collapsed; loading/empty/error stays contextual, retry retains open section | Independent map operations untouched. [About](map-about.md) |
-| Dirty tool exit | Save pending blocks departure; failure/cancel keeps work. Discard starts next ordinary visit fresh; Continue Editing stays | Existing saved records survive; native unload best effort. [Saving](tool-saving.md) |
-| Account save | Failure/validation keeps fields and selected section; login follows existing rules | [Account](account.md) |
-| Coordinate copy | Copy displayed native tuple; no toast, message or status-icon substitution on success/failure; unknown height omitted | Accessible copy action retained. Markers |
+| Task | Transition and retention |
+| --- | --- |
+| Favorite | Anonymous opens existing login; pending retains appearance. Only confirmed success changes state/order; failure retains item/state with retry. Game/tool records are separate; announce confirmed changes. [Catalogs](catalogs.md) owns filter-before-order. |
+| Pending game | Distinct from a pending request: preserve card geometry and omit unusable links. |
+| Catalog / directory | Explicit loading/no-match/error. Loading/collapse retains branch/query/filters; applicable retry retains selection. |
+| Map selector | Retain identifiable current choice while loading/failing. Explain no options; wrap long labels. Restore destination-map state. |
+| Map search/detail | Reveal hidden active-map targets; explicit result/link wins conflicting view/selection without switching maps. Preserve unrelated state/query/filters; explain missing detail. |
+| About | Initially collapsed; contextual loading/empty/error and retry retain open section, without resetting map operations. |
+| Explicit-save tool exit | Save must succeed before leaving. Failure/cancel keeps work; discard starts the next ordinary visit fresh while preserving saved records; Continue Editing stays. Native unload is best effort. [Saving](tool-saving.md) excludes ordinary automatic-memory calculators. |
+| Account save | Validation/request/storage failure retains fields and section; login follows existing rules. |
+| Coordinate copy | Copy the displayed native tuple; unknown height omitted. No success/failure toast, message or substituted icon. Accessible action remains. |
 
-Transient hover, focus, pressed animation and open overlays are not durable
-state. Encyclopedia return restores data/reveal depth before position. Storage
-classes and lifetimes remain with [State memory](../ARKIVE_STATE_MEMORY_SPEC.yaml).
-Use [Adoption](adoption.md) for deferred mobile scope and remaining validation;
-add only new task-specific transitions rather than duplicating common states.
+Hover/focus/animation/open overlays are transient. Encyclopedia return restores
+data/reveal depth before position. Scope, lifetime, clearing and migration belong
+to [state memory](../ARKIVE_STATE_MEMORY_SPEC.yaml); current evidence and deferred
+mobile scope belong to [Adoption](adoption.md).

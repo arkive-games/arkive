@@ -14,6 +14,7 @@ import {
 
 import {
   FEATURES,
+  HOME_TOOL_IDS,
   featureHref,
   localize,
   type FeatureKind,
@@ -47,10 +48,10 @@ function gradient([from, to]: readonly [string, string], index: number): CSSProp
 
 /**
  * The homepage: a carousel of the open games, a row of round shortcuts to each
- * game and the site's own sections, then every tool in one dock.
+ * game and the site's own sections, then the editorial tool dock.
  *
- * The portal is a directory before it is anything else, so a new game adds a
- * slide and a shortcut, and a new tool a dock entry -- never a redesign.
+ * Game artwork and editorial tool selections retain the existing composition.
+ * The complete tool registry and the homepage selection are independent.
  */
 export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, onOpenFeature }: {
   /** In display order; the caller decides whether a recent game leads. */
@@ -66,7 +67,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const language = i18n.resolvedLanguage ?? i18n.language
   const [now] = useState(() => new Date())
   const games = sites.filter((site) => siteHref(site))
-  const tools = FEATURES.filter((feature) => feature.kind === 'tool'
+  const tools = FEATURES.filter((feature) => feature.kind === 'tool' && HOME_TOOL_IDS.has(feature.id)
     && games.some((site) => site.id === feature.gameId))
   const badge = t('landing.quick.badge')
 

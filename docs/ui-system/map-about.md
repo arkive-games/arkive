@@ -1,5 +1,8 @@
 # Map About
 
+Implementation is deferred. This topic records confirmed future behavior;
+[Adoption](adoption.md) owns current execution scope.
+
 Keep the existing shared panel presentation and this section order:
 
 1. About This Site.

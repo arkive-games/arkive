@@ -59,7 +59,7 @@ export interface UserSystemState {
 
 interface UserSystemContextValue {
   state: UserSystemState
-  updateLocalProfile: (profile: Partial<UserSystemState['profile']>) => void
+  updateLocalProfile: (profile: Partial<UserSystemState['profile']>) => boolean
   toggleNotificationSetting: (key: NotificationPreferenceKey) => void
   markNotificationSectionRead: (section: NotificationInboxSection) => void
   setPrivacySetting: (key: PrivacyPreferenceKey, value: boolean) => void

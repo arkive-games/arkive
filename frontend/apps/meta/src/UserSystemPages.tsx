@@ -503,7 +503,9 @@ export function AccountCenterPage({
         await auth.client.updateCurrentUser(remoteUpdate)
         await auth.refresh()
       }
-      updateLocalProfile({ bio: nextProfile.bio })
+      if (!updateLocalProfile({ bio: nextProfile.bio })) {
+        throw new Error('Profile storage is unavailable')
+      }
       skipNextDraftWrite.current = true
       browserMemory.clear(profileDraftRecord, { accountId: user.id })
       setProfile(nextProfile)
