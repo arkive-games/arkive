@@ -227,3 +227,19 @@ return through a building detail, and existing mobile page two through reload/
 breakpoint changes. Both app lints/builds and the key inventory pass; full suite:
 169 files / 1909 tests. No remote delivery. This closes the three identified
 browsing gaps, not the remaining encyclopedia shell/layout reconstruction.
+
+RO3 explicit-save editor batch: the flow handbook uses the shared unsaved-work
+dialog for editor Back, section changes, opening another/new build, top-level
+navigation and browser Back/Forward. Three choices save successfully before
+departure, discard only the unsaved draft, or stay with all inputs. Failed saves
+keep the dialog/work in place; saved records and recovery data remain intact.
+Dirty state compares the current draft with its loaded/saved baseline. Native
+refresh/close confirmation remains best effort. Indexed app history restores
+the current URL before asking about a browser traversal.
+
+Browser checks verify top-nav interception, Continue Editing, Back cancellation/
+discard, Forward, fresh input after discard, Save and Leave, simulated browser
+storage failure and saved-record preservation. RO3 lint/build and shared UI
+typecheck pass. GMZZ build/account synchronization and editor exit integration
+remain separate outstanding work; this batch does not change its autosave policy.
+Full suite: 170 files / 1913 tests pass. No remote delivery.
