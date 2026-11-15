@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.17.0",
+      "date": "2026-11-15",
+      "commit": "1ec71c228f0f881d743082dec3859bbd285927b9",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Browse the encyclopedia with a collapsible desktop category directory while keeping search, subgroup links and recent reading history.",
+            "zh-CN": "桌面百科目录支持收起为图标，保留分类搜索、下级入口和最近浏览记录。",
+            "zh-TW": "桌面百科目錄支援收起為圖示，保留分類搜尋、下級入口和最近瀏覽記錄。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.16.3",
       "date": "2026-11-15",
       "commit": "a5f1979a51aae775770063da49139154ccd101dd",
