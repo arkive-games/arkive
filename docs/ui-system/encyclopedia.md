@@ -60,8 +60,11 @@ with game-art category icons and nested roster/relations links. Its existing
 filters/search sit in the right column on desktop; tools, the trade calculator
 and existing mobile composition remain separate. AION2's overview, three type
 hubs, group lists and details now reuse the workspace while retaining taxonomy
-counts, subgroup destinations and expanded reading history. Other games still
-need desktop-shell adoption.
+counts, subgroup destinations and expanded reading history. V Rising's V Blood
+list/details and two knowledge pages reuse the directory; existing ready
+subsections move into the active desktop branch, while incomplete categories
+remain disabled and mobile category cards retain their composition. Other
+games still need desktop-shell adoption.
 
 RO3's seven wiki categories now retain session-only query/facets, subsection,
 paging, selected record and viewed levels/variants. Palworld's 14 reference
