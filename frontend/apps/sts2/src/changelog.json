@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.5.1",
+      "date": "2026-11-15",
+      "commit": "79cf077d3b4e629f45cfb33b4cb9ec298b0b7efb",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Resume card searches, filters and reference reading positions when returning.",
+            "zh-CN": "返回卡牌和角色资料时恢复搜索、筛选与阅读位置。",
+            "zh-TW": "返回卡牌與角色資料時恢復搜尋、篩選與閱讀位置。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.5.0",
       "date": "2026-08-10",
       "commit": "435e88ae26ce54b8a7029629bbe747064e0e9dc3",
