@@ -61,6 +61,10 @@ function dimensionsOf(tail) {
 function keysIn(file, text, exported) {
   const found = []
   const relative = path.relative(ROOT, file).replaceAll('\\', '/')
+  for (const match of text.matchAll(/\bcreateMapViewStore\(\s*['"]([\w-]+)['"]/g)) {
+    found.push({ key: `arkive.memory.${match[1]}.map.view`, file: relative, dims: '' })
+    found.push({ key: `arkive.memory.${match[1]}.map-context.selected-marker`, file: relative, dims: '' })
+  }
 
   // This shared factory owns a fixed record family with app-owned namespaces.
   for (const match of text.matchAll(/\bcreateMapSessionRecords\(\s*['"]([\w-]+)['"]/g)) {

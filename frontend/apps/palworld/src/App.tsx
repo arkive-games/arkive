@@ -9,7 +9,7 @@ import { Link, useSearch } from '@tanstack/react-router'
 import type { EngineMarker, GameMapViewProps, GlMapRef } from '@gamemap/map-engine-gl'
 import { worldToPixel } from '@gamemap/map-engine-gl/coords'
 const GameMapView = lazy(() => import('./features/map/GlMapView'))
-import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, markerDetailLabelsFor, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, resolveRememberedMap, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MapViewStore, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
+import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, markerDetailLabelsFor, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, resolveRememberedMap, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -45,7 +45,7 @@ import {
   useMapSession,
   defineMemoryRecord,
   isBoolean,
-  isString,
+  createMapViewStore,
   isStringArray,
   memoryPolicy,
   parseJson,
@@ -129,21 +129,7 @@ const palMapSession = createMapSessionRecords('palworld', {
   visibility: () => { const legacy = readStoredSubtypes(); return legacy === null ? null : [...legacy] },
 })
 const MAP_VIEW_KEY = 'palworld.map.view'
-const mapViewRecord = defineMemoryRecord({
-  id: 'view',
-  namespace: 'palworld',
-  surface: 'map',
-  ...memoryPolicy.recentActivity('clear-recent-map-view'),
-  schemaVersion: '1.0.0',
-  defaultValue: () => '',
-  validate: isString,
-  legacyKeys: [MAP_VIEW_KEY],
-  migrateLegacy: (raw: string) => raw,
-})
-const mapViewStore: MapViewStore = {
-  get: () => browserMemory.read(mapViewRecord) || null,
-  set: (raw) => { browserMemory.write(mapViewRecord, raw) },
-}
+const mapViewStore = createMapViewStore('palworld', { legacyKeys: [MAP_VIEW_KEY] })
 
 const showLabelsRecord = defineMemoryRecord({
   id: 'show-labels',

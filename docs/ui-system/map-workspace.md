@@ -67,6 +67,10 @@ supported completion. Hover/animation/temporary overlays remain transient.
 Use [State memory](../ARKIVE_STATE_MEMORY_SPEC.yaml) for scope, lifetime and
 precedence; no extra account/cross-device guarantee. Tool explicit saving does
 not replace map memory/progress. Closing About must not reset map operations.
+Camera history is device-local recent activity; incidental marker selection is
+tab-local. Legacy camera records remain readable without reopening a durable
+marker. AION2 adopts each map's old subtype/region filters once; later independent
+tabs start with defaults while the active tab retains its choices.
 
 ## Provisional mobile composition
 
