@@ -25,12 +25,15 @@ loading reserves geometry and errors retain query/filters.
 
 The Palworld pal catalog uses a searchable grid with 24 records per page on
 desktop and mobile. On desktop, show the common filters across the content
-width, then secondary-filter disclosure on the left and search on the right in
+width in two aligned groups for elements and work suitability, using unframed
+icon-and-label tiles. Put secondary-filter disclosure on the left and search on the right in
 one row. Pagination belongs below the results; do not add a grid/list switch.
 Search and filter changes start at page one. Use compact original Pal thumbnails.
 The directory uses collapsible parent groups with indented child links and
 game-owned content artwork. Parent toggles change visibility, not navigation
 or the active category. Keep the shared quiet row variant without icon tiles.
+Encyclopedia remains the highest directory level, with its original text-2xl
+title and orange leading bar above the collapsible parent groups.
 
 ## Desktop sidebar
 

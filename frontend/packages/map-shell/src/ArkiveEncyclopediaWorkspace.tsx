@@ -55,8 +55,8 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
     style={{ '--arkive-encyclopedia-rail-size': collapsed ? 'var(--arkive-encyclopedia-rail-collapsed)' : 'var(--arkive-encyclopedia-rail-expanded)' } as CSSProperties}>
     <aside className={cn('sticky top-0 hidden max-h-[calc(100dvh-12rem)] min-w-0 flex-col overflow-y-auto overscroll-contain [scrollbar-width:none] lg:flex', railClassName)} data-testid="encyclopedia-rail">
       <div className={cn('mb-3 flex min-h-10 items-center gap-2', collapsed ? 'justify-center' : 'justify-between px-2')}>
-        {!collapsed && <h2 className={cn('flex items-center gap-2 leading-tight', appearance === 'quiet' ? 'text-lg font-bold' : 'text-2xl font-extrabold')}>
-          {appearance === 'framed' && <span aria-hidden className="h-[1.15em] w-1.5 shrink-0 rounded-full bg-[image:var(--arkive-warm-search)]" />}{label}</h2>}
+        {!collapsed && <h2 className="flex items-center gap-2 text-2xl font-extrabold leading-tight">
+          <span aria-hidden className="h-[1.15em] w-1.5 shrink-0 rounded-full bg-[image:var(--arkive-warm-search)]" />{label}</h2>}
         <button type="button" onClick={() => onCollapsedChange(!collapsed)} aria-expanded={!collapsed} aria-controls={navId}
           aria-label={collapsed ? expandLabel : collapseLabel} title={collapsed ? expandLabel : collapseLabel}
           className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">

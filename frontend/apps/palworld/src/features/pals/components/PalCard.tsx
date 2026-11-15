@@ -26,7 +26,7 @@ export function PalCard({
         className="group flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-center transition-colors hover:border-primary/60 focus-visible:outline-2 focus-visible:outline-ring"
         data-testid="pal-card"
       >
-        <span className="flex w-full items-center justify-between gap-1 px-3 pt-3 text-xs font-medium tabular-nums text-muted-foreground">
+        <span className="flex w-full items-center justify-between gap-1 px-3 pt-1.5 text-xs leading-none font-medium tabular-nums text-muted-foreground">
           <span className="truncate">
             {pid?.text}
             {pid?.accent ? <span className="text-primary">{pid.accent}</span> : null}
@@ -38,7 +38,7 @@ export function PalCard({
             </span>
           ) : null}
         </span>
-        <div className="relative flex h-20 min-h-0 sm:h-24 items-center justify-center bg-[radial-gradient(ellipse_at_center,var(--arkive-filter-active),transparent_70%)] p-3">
+        <div className="relative flex h-16 min-h-0 sm:h-20 items-center justify-center bg-[radial-gradient(ellipse_at_center,var(--arkive-filter-active),transparent_70%)] p-2">
           <img
             src={palIconUrl(pal.icon)}
             alt=""

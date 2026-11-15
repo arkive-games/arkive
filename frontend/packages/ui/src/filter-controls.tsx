@@ -16,10 +16,12 @@ export function toggleValue<T>(list: readonly T[], value: T): T[] {
  * - `pill` — a rounded pill tinted with the primary color.
  * - `emphasis` — a pill that fills solid primary when active, for one standout toggle.
  * - `solid` — a pill that fills solid when active; `color` overrides the fill.
+ * - `tile` — an aligned icon-and-label choice with a quiet unselected surface.
  */
-export type FilterChipVariant = "tag" | "accent" | "pill" | "emphasis" | "solid"
+export type FilterChipVariant = "tag" | "accent" | "pill" | "emphasis" | "solid" | "tile"
 
 const CHIP_BASE: Record<FilterChipVariant, string> = {
+  tile: "min-h-9 rounded-lg px-2 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
   tag: "rounded-md px-2.5 py-1 text-sm transition-colors",
   accent:
     "min-h-8 rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--arkive-nav-accent)]",
@@ -29,6 +31,10 @@ const CHIP_BASE: Record<FilterChipVariant, string> = {
 }
 
 const CHIP_STATE: Record<FilterChipVariant, { on: string; off: string }> = {
+  tile: {
+    on: "border-ring bg-[color:var(--arkive-filter-active)] font-semibold text-[color:var(--arkive-nav-active)]",
+    off: "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+  },
   tag: {
     on: "border-ring bg-[color:var(--arkive-filter-active)] text-[color:var(--arkive-nav-active)]",
     off: "border-border text-muted-foreground enabled:hover:border-primary/60",

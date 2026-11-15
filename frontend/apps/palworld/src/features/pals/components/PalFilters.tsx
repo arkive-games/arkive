@@ -83,11 +83,14 @@ export function PalFilters({
   const lootName = filter.loot ? (bundle.items[filter.loot] ?? filter.loot) : null
 
   return (
-    <div className="space-y-3 border-b border-border pb-4">
+    <div className="space-y-4 border-b border-border pb-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)] lg:gap-6">
       {elements.length ? (
-        <FilterRow layout="column" label={fs.elements}>
+        <fieldset className="min-w-0">
+          <legend className="mb-2 text-xs font-semibold text-muted-foreground">{fs.elements}</legend>
+          <div className="grid grid-cols-3 gap-1">
           {elements.map((e) => (
-            <FilterChip variant="pill"
+            <FilterChip variant="tile"
               key={e}
               active={filter.elements.includes(e)}
               onClick={() => onChange({ ...filter, elements: toggleValue(filter.elements, e) })}
@@ -99,13 +102,16 @@ export function PalFilters({
               {bundle.enums.elements[e] ?? e}
             </FilterChip>
           ))}
-        </FilterRow>
+          </div>
+        </fieldset>
       ) : null}
 
       {works.length ? (
-        <FilterRow layout="column" label={fs.col.work}>
+        <fieldset className="min-w-0">
+          <legend className="mb-2 text-xs font-semibold text-muted-foreground">{fs.col.work}</legend>
+          <div className="grid grid-cols-3 gap-1 sm:grid-cols-4">
           {works.map((w) => (
-            <FilterChip variant="pill"
+            <FilterChip variant="tile"
               key={w}
               active={filter.works.includes(w)}
               onClick={() => onChange({ ...filter, works: toggleValue(filter.works, w) })}
@@ -116,10 +122,12 @@ export function PalFilters({
               {bundle.enums.work[w] ?? w}
             </FilterChip>
           ))}
-        </FilterRow>
+          </div>
+        </fieldset>
       ) : null}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+      </div>
+      <div className="flex flex-col gap-4 border-t border-border pt-3 lg:flex-row lg:items-start">
       <div className="min-w-0 flex-1">
       <details className="group" open={filter.reactions.length > 0 || filter.sizes.length > 0 || filter.nocturnal || filter.loot !== null || undefined}>
         <summary className="flex min-h-9 cursor-pointer list-none items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
