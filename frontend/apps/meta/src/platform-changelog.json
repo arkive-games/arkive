@@ -2,6 +2,28 @@
   "entries": [
     {
       "date": "2026-11-15",
+      "commit": "3767493791756889fc44bb248936fa0abfd082d2",
+      "targets": [
+        "aion2",
+        "palworld",
+        "gmzz",
+        "vrising",
+        "ro3",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Improve selected-label readability, keep failed profile saves retryable, and list Ragnarok 3's Build Handbook in the Tool Library without changing homepage selections.",
+            "zh-CN": "改善选中文字的可读性，资料保存失败时保留输入以便重试，并将仙境传说3流派手册补入工具库，首页精选保持不变。",
+            "zh-TW": "改善選取文字的可讀性，資料儲存失敗時保留輸入以便重試，並將仙境傳說3流派手冊補入工具庫，首頁精選維持不變。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
       "commit": "c04e3b8ea67cc4b356f805261aa4b77e3c2da742",
       "targets": [
         "aion2",
