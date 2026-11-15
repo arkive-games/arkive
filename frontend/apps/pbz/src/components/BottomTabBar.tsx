@@ -6,8 +6,9 @@ import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } f
 import { SiteInfo } from './SiteInfo'
 import { useSettingsConfig } from '../lib/settings'
 import type { NavKey } from './TopNav'
+import { REFERENCE_ENTRIES } from './encyclopediaNavigation'
 
-const WIKI_PAGES = ['/weapons', '/phantom-edges', '/accessories', '/medicines', '/items', '/enemies', '/skills'] as const
+const WIKI_PAGES = REFERENCE_ENTRIES.map(entry => entry.key)
 
 function activeKey(pathname: string): NavKey {
   if (pathname.startsWith('/changelog')) return '/changelog'

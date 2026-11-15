@@ -73,6 +73,7 @@ arkive.memory.palworld.stat-simulator.entered-values	-	apps/palworld/src/feature
 arkive.memory.palworld.stat-simulator.iv	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
 arkive.memory.palworld.stat-simulator.passives	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
 arkive.memory.palworld.stat-simulator.souls	-	apps/palworld/src/features/simulator/StatSimulatorPage.tsx
+arkive.memory.pbz.encyclopedia.rail-collapsed	-	apps/pbz/src/components/EncyclopediaLayout.tsx
 arkive.memory.pbz.map-context.collapsed-categories	partition	apps/pbz/src/features/map/MapPage.tsx
 arkive.memory.pbz.map-context.query	partition	apps/pbz/src/features/map/MapPage.tsx
 arkive.memory.pbz.map-context.selected-marker	-	apps/pbz/src/lib/storage.ts

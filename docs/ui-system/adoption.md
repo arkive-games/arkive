@@ -345,3 +345,21 @@ build exclusion and the existing 390-pixel strip without overflow. Shared slot
 tests verify hidden controls keep their state. RO3 lint/build, map-shell
 typecheck, memory inventory and the full suite pass: 173 files / 1917 tests.
 No remote delivery; the final Chinese screenshot is the visual review artifact.
+
+PBZ directory adoption: seven encyclopedia categories and six existing detail
+families use the shared expanded/collapsed widths and toggle, with tab-local
+collapse. The top navigation and directory share their inventory; directory
+symbols reuse the existing mobile menu. Duplicate desktop category headings
+are visually hidden. Game-owned tiles, images, rarity borders, filters, detail
+documents, skill sections, header, footer and mobile composition retain their
+existing layout. No search is added to the existing skill document.
+
+The live and local unfiltered weapon lists both contain 27 records. Browser
+checks cover all seven category routes, six detail families, collapsed reload,
+query/type preservation through reload and detail return, narrow desktop tiles,
+390-pixel composition and changelog exclusion without document overflow. QA uses
+the actual production data/resource URLs through temporary dev-server variables
+on port 15182; repository deployment configuration is unchanged. App lint/build,
+memory inventory and the full suite pass: 173 files / 1917 tests. No remote
+delivery. This completes the six scoped directory integrations; their final
+cross-game visual review remains open.
