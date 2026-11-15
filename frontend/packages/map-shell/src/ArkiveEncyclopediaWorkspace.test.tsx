@@ -16,6 +16,21 @@ function Workspace() {
   </ArkiveEncyclopediaWorkspace>
 }
 describe('encyclopedia workspace', () => {
+  it('shows the current branch children and retains its parent highlight when collapsed', () => {
+    const renderWorkspace = (collapsed: boolean) => <ArkiveEncyclopediaWorkspace
+      groups={[{ key: 'wiki', label: 'Wiki', entries: [{ key: '/fellows', label: 'Connections', icon: <span aria-hidden>C</span>, children: [{ key: '/fellows/relations', label: 'Relations', icon: <span aria-hidden>R</span> }] }] }]}
+      active="/fellows/relations" label="Encyclopedia" collapsed={collapsed} onCollapsedChange={() => {}}
+      collapseLabel="Collapse" expandLabel="Expand"
+      renderLink={(entry, className, children) => <a href={entry.key} className={className}>{children}</a>}>
+      <p>Records</p>
+    </ArkiveEncyclopediaWorkspace>
+    const { rerender } = render(renderWorkspace(false))
+    expect(screen.getByRole('link', { name: 'Relations' })).toBeTruthy()
+    rerender(renderWorkspace(true))
+    expect(screen.queryByRole('link', { name: 'Relations' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Connections' }).className).toContain('ring-border')
+    expect(screen.getByText('Records')).toBeTruthy()
+  })
   it('retains reading controls and accessible category links when the rail folds', () => {
     render(<Workspace />)
     fireEvent.change(screen.getByRole('textbox', { name: 'Search' }), { target: { value: 'ore' } })

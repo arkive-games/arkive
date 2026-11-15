@@ -136,7 +136,7 @@ export default function TrainTradeGoodsPage() {
   return (
     <ContentPage active="/traintrade" title={t("trainTrade.title")} heading wide browsing={{ scope: 'traintrade', ready: true }} resultsKey={JSON.stringify([query, category, quality, view, currentPage])} filtersActive={Boolean(query) || category !== "all" || quality !== "all"} toolbarLead={<header className="mb-3 grid gap-4 border-b border-border pb-4 md:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] md:items-end">
         <div className="min-w-0">
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+          <p className="lg:hidden max-w-3xl text-sm leading-6 text-muted-foreground">
             {t("trainTrade.description", { count: goods.length })}
           </p>
         </div>

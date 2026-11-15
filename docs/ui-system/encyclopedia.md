@@ -55,7 +55,11 @@ desktop workspace. The rail reuses the top navigation's category inventory,
 retains icon-only category links when collapsed and preserves tab-local collapse
 across routes. Shared width tokens remain provisional. Category headings are
 visually hidden on desktop; game-owned detail headings and existing mobile
-composition remain intact. Other games still need desktop-shell adoption.
+composition remain intact. GMZZ's 12 reference routes reuse the same workspace,
+with game-art category icons and nested roster/relations links. Its existing
+filters/search sit in the right column on desktop; tools, the trade calculator
+and existing mobile composition remain separate. Other games still need
+desktop-shell adoption.
 
 RO3's seven wiki categories now retain session-only query/facets, subsection,
 paging, selected record and viewed levels/variants. Palworld's 14 reference

@@ -147,7 +147,7 @@ export default function AutoChessRulesPage() {
 
   return (
     <ContentPage active="/autochess" title={t('autochess.title')} heading wide browsing={{ scope: 'chess-rules', ready: true }}>
-      <p className="mb-4 text-sm text-muted-foreground">{t('autochess.description')}</p>
+      <p className="lg:hidden mb-4 text-sm text-muted-foreground">{t('autochess.description')}</p>
 
       {/* A two-column grid, so the cards side by side share a top and a bottom
           edge. Flowing columns packed tighter but staggered every edge across
