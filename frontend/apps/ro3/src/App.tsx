@@ -18,7 +18,7 @@ import { EquipmentWiki } from './EquipmentWiki'
 import { SoulWiki } from './SoulWiki'
 import { BuildManual } from './BuildManual'
 import { ContentPage } from './components/ContentPage'
-import { HeaderActionProvider, SectionSidebar, SectionStrip, SidebarSubProvider, type SectionNavEntry } from './components/SectionNav'
+import { EncyclopediaWorkspace, HeaderActionProvider, SectionSidebar, SectionStrip, SidebarSubProvider, type SectionNavEntry } from './components/SectionNav'
 import {
   hrefFor,
   hrefForKey,
@@ -175,9 +175,8 @@ function App() {
         version={SITE_VERSION}
       >
         {location.page === 'wiki' ? (
-          <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
+          <EncyclopediaWorkspace entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSubSlot={setSidebarSlot}>
             <h1 className="sr-only">{pageTitle(location)}</h1>
-            <SectionSidebar entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSubSlot={setSidebarSlot} />
             <div className="min-w-0">
               <SectionStrip entries={WIKI_ENTRIES} active={active} onNavigate={navigate} label={content.nav.wiki} onSlot={setHeaderSlot} />
               <HeaderActionProvider value={headerSlot}>
@@ -186,7 +185,7 @@ function App() {
                 </SidebarSubProvider>
               </HeaderActionProvider>
             </div>
-          </div>
+          </EncyclopediaWorkspace>
         ) : location.page === 'builds' ? (
           <div className="lg:grid lg:grid-cols-[11.5rem_minmax(0,1fr)] lg:gap-8">
             <h1 className="sr-only">{pageTitle(location)}</h1>

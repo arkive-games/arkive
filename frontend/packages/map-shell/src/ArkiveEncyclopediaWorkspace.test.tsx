@@ -12,6 +12,7 @@ function Workspace() {
     active="/items" label="Encyclopedia" collapsed={collapsed} onCollapsedChange={setCollapsed}
     collapseLabel="Collapse navigation" expandLabel="Expand navigation"
     railFooter={<a href="/items/ore">Recently viewed ore</a>}
+    renderSubnavigation={() => <input aria-label="Subsection choice" defaultValue="season" />}
     renderLink={(entry, className, children) => <a href={entry.key} className={className} aria-current="page" title={entry.label}>{children}</a>}>
     <input aria-label="Search" defaultValue="" />
   </ArkiveEncyclopediaWorkspace>
@@ -36,13 +37,16 @@ describe('encyclopedia workspace', () => {
     render(<Workspace />)
     expect(screen.getByRole('link', { name: 'Recently viewed ore' })).toBeTruthy()
     fireEvent.change(screen.getByRole('textbox', { name: 'Search' }), { target: { value: 'ore' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Subsection choice' }), { target: { value: 'patron' } })
     fireEvent.click(screen.getByRole('button', { name: 'Collapse navigation' }))
     expect(screen.queryByRole('link', { name: 'Recently viewed ore' })).toBeNull()
-    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('ore')
+    expect(screen.queryByRole('textbox', { name: 'Subsection choice' })).toBeNull()
+    expect((screen.getByRole('textbox', { name: 'Search' }) as HTMLInputElement).value).toBe('ore')
     expect(screen.getByRole('link', { name: 'Items' }).getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('button', { name: 'Expand navigation' }).getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(screen.getByRole('button', { name: 'Expand navigation' }))
     expect(screen.getByRole('link', { name: 'Recently viewed ore' })).toBeTruthy()
-    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('ore')
+    expect((screen.getByRole('textbox', { name: 'Subsection choice' }) as HTMLInputElement).value).toBe('patron')
+    expect((screen.getByRole('textbox', { name: 'Search' }) as HTMLInputElement).value).toBe('ore')
   })
 })

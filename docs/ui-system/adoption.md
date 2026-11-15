@@ -330,3 +330,18 @@ configuration stays unchanged. Some captures timed out waiting for webfonts,
 stable geometry or navigation; restarting the named session on explicit IPv4
 completed final capture. Capture serially after builds and retain only the final
 correction screenshot. No remote delivery.
+
+RO3 directory adoption: seven encyclopedia categories now use the shared width
+tokens and panel-frame toggle, with tab-local collapse. Original category art,
+hover motion, selected-row shadow/color/radius/height and the sticky offset are
+retained. A mounted subsection slot preserves the existing season/star talent
+controls while hidden. The game-owned right column, header, footer, mobile strip
+and build-manual layout retain their existing composition.
+
+Live comparison confirms the selected row's computed visual properties match.
+Browser checks cover all seven category selections, collapsed icon links,
+search/collapse reload, star-board selection through collapse/reload/navigation,
+build exclusion and the existing 390-pixel strip without overflow. Shared slot
+tests verify hidden controls keep their state. RO3 lint/build, map-shell
+typecheck, memory inventory and the full suite pass: 173 files / 1917 tests.
+No remote delivery; the final Chinese screenshot is the visual review artifact.

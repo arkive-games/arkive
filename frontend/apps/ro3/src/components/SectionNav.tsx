@@ -2,7 +2,10 @@ import { createContext, Fragment, useContext, useEffect, useRef, useState, type 
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@gamemap/ui'
+import { ArkiveEncyclopediaWorkspace } from '@gamemap/map-shell'
+import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
 import { hrefForKey, navigateOnClick, type NavKey } from '../navigation'
+import content from '../locales/zh-CN.json'
 
 export interface SectionNavEntry {
   key: NavKey
@@ -15,6 +18,31 @@ interface SectionNavProps {
   active: NavKey
   onNavigate: (key: NavKey) => void
   label: string
+}
+
+const encyclopediaRailRecord = defineMemoryRecord({
+  id: 'rail-collapsed', namespace: 'ro3', surface: 'encyclopedia',
+  ...memoryPolicy.sessionContext('reset-encyclopedia-navigation'), schemaVersion: '1.0.0',
+  defaultValue: () => false, validate: isBoolean,
+})
+
+/** Shared directory geometry; original game artwork and row styling stay local. */
+export function EncyclopediaWorkspace({ entries, active, onNavigate, label, onSubSlot, children }: SectionNavProps & {
+  onSubSlot: (node: HTMLElement | null) => void
+  children: ReactNode
+}) {
+  const [collapsed, setCollapsed] = useMemoryState(encyclopediaRailRecord)
+  return <ArkiveEncyclopediaWorkspace
+    groups={[{ key: 'wiki', label, entries: entries.map(entry => ({
+      key: entry.key, label: entry.label, icon: <img src={entry.art} alt="" className="size-7 object-contain" />,
+    })) }]}
+    active={active} label={label} collapsed={collapsed} onCollapsedChange={setCollapsed}
+    collapseLabel={content.wiki.collapseDirectory} expandLabel={content.wiki.expandDirectory}
+    railClassName="top-4"
+    renderLink={entry => <SectionLink entry={entries.find(candidate => candidate.key === entry.key)!}
+      active={active} onNavigate={onNavigate} collapsed={collapsed} />}
+    renderSubnavigation={() => <div ref={onSubSlot} className="empty:hidden" />}
+  >{children}</ArkiveEncyclopediaWorkspace>
 }
 
 /**
@@ -74,32 +102,47 @@ export function SectionSidebar({ entries, active, onNavigate, label, onSubSlot }
         const current = entry.key === active
         return (
           <Fragment key={entry.key}>
-          <a
-            href={hrefForKey(entry.key)}
-            onClick={navigateOnClick(entry.key, onNavigate)}
-            aria-current={current ? 'page' : undefined}
-            className={cn(
-              'group flex h-12 items-center gap-3 rounded-xl px-2 text-sm font-semibold transition-[background-color,color,box-shadow]',
-              current
-                ? 'bg-card text-[color:var(--arkive-nav-active)] shadow-[0_0.25rem_0.9rem_rgba(13,116,206,0.1),0_0_0_1px_var(--border)]'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-            )}
-          >
-            <span
-              className={cn(
-                'grid size-9 shrink-0 place-items-center rounded-[0.6rem] transition-[background-color,transform] duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:scale-105',
-                current ? 'bg-[color:var(--arkive-filter-active)]' : 'bg-muted group-hover:bg-card',
-              )}
-            >
-              <img src={entry.art} alt="" className="size-7 object-contain" />
-            </span>
-            <span className="truncate">{entry.label}</span>
-          </a>
+          <SectionLink entry={entry} active={active} onNavigate={onNavigate} />
           {current ? <div ref={onSubSlot} className="empty:hidden" /> : null}
           </Fragment>
         )
       })}
     </nav>
+  )
+}
+
+/** The same original category row is used in the wiki and build directories. */
+function SectionLink({ entry, active, onNavigate, collapsed = false }: {
+  entry: SectionNavEntry
+  active: NavKey
+  onNavigate: (key: NavKey) => void
+  collapsed?: boolean
+}) {
+  const current = entry.key === active
+  return (
+    <a
+      href={hrefForKey(entry.key)}
+      onClick={navigateOnClick(entry.key, onNavigate)}
+      aria-current={current ? 'page' : undefined}
+      title={collapsed ? entry.label : undefined}
+      className={cn(
+        'group flex h-12 items-center rounded-xl px-2 text-sm font-semibold transition-[background-color,color,box-shadow]',
+        collapsed ? 'justify-center' : 'gap-3',
+        current
+          ? 'bg-card text-[color:var(--arkive-nav-active)] shadow-[0_0.25rem_0.9rem_rgba(13,116,206,0.1),0_0_0_1px_var(--border)]'
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+      )}
+    >
+      <span
+        className={cn(
+          'grid size-9 shrink-0 place-items-center rounded-[0.6rem] transition-[background-color,transform] duration-300 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:scale-105',
+          current ? 'bg-[color:var(--arkive-filter-active)]' : 'bg-muted group-hover:bg-card',
+        )}
+      >
+        <img src={entry.art} alt="" className="size-7 object-contain" />
+      </span>
+      <span className={collapsed ? 'sr-only' : 'truncate'}>{entry.label}</span>
+    </a>
   )
 }
 
