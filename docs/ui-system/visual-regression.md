@@ -5,6 +5,56 @@ the component gallery and the live routes as two separate checks:
 the gallery isolates shared geometry and states; live routes confirm that page
 composition does not override those decisions.
 
+## Executable checks
+
+The maintained gallery is the development-only
+[shared component review](http://localhost:15172/ui-review.html), served by the
+existing Meta dev server. If it is stopped, run `pnpm dev:meta` from `frontend/`.
+It renders the real UI and encyclopedia components with Chinese specimen copy;
+the older `component-gallery.html` is historical, not a second implementation.
+The gallery is not a production route or a replacement homepage.
+
+From `frontend/`:
+
+- `pnpm check:ui` rejects new pixel typography, custom radii, numeric overlay
+  layers and literal colors in shared chrome. It also protects shared catalog
+  sizing and rail-token ownership, including app CSS search overrides. This guard
+  runs automatically in `pnpm test` through the existing test command.
+- `pnpm ui:verify --update-baseline --routes` records a candidate screenshot set
+  only if every check passes. Review it before treating it as the local reference.
+- `pnpm ui:verify` compares real components against that local reference and
+  checks interaction, keyboard focus, disabled actions, geometry, both themes,
+  reduced motion and narrow overflow. Differences do not update the reference.
+- `pnpm ui:verify --routes` additionally checks portal search/empty states and
+  map shells, and captures the current portal/map references. Remote game data
+  is not used as a deterministic pixel baseline.
+
+Artifacts stay in ignored `output/playwright/ui-acceptance/`: current images,
+baseline images and `report.json`. The report identifies commit/browser; the
+baseline environment record also identifies the platform. Use the same browser,
+platform and fonts for comparison. A pixel channel tolerance of 16 and a maximum
+changed-pixel ratio of 0.1 percent accommodate small rasterization differences;
+geometry and state checks remain independent. Inspect highlighted diff images
+instead of accepting every changed baseline. A baseline is evidence, not human
+design approval. Other computers explicitly record their own reviewed reference
+or copy a compatible reviewed artifact set; generated images are not committed.
+
+The script uses installed Chrome on Windows and Playwright Chromium elsewhere.
+`UI_REVIEW_BROWSER_CHANNEL` overrides the channel; `UI_REVIEW_URL` overrides the
+portal origin. No profile, login or production writes are needed. Missing dev
+servers, data or images fail the applicable check rather than substituting
+invented records. Install a browser with `pnpm exec playwright install chromium`
+if none is available. The script closes its own browser on completion.
+
+The style guard covers shared UI/shell and the six scoped games' component
+chrome, plus portal component chrome; it does not claim to lint all game-record
+renderers or prove color contrast. Seven existing occurrences in six named
+exceptions are documented in `frontend/scripts/ui-guard-baseline.json` with
+their reasons. Matching is file/content/count based: copying or changing an
+exception is rejected. Regenerating this file is an explicit review action,
+never part of test execution. Do not blanket-normalize game artwork to satisfy
+the guard.
+
 ## Required captures
 
 | Surface | Desktop | Narrow viewport | States |
