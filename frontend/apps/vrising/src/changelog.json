@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.11.1",
+      "date": "2026-11-15",
+      "commit": "e5b99b1b156b54e250a3bbce1210201b2fe9a4b0",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Keep independent searches, loaded records, expanded passive effects and reading positions in recipe, passive, building and research sections when switching or reloading.",
+            "zh-CN": "配方、被动、建筑和研究分类分别记住搜索、已加载记录、被动展开状态和浏览位置，切换页面或刷新后继续浏览。",
+            "zh-TW": "配方、被動、建築和研究分類分別記住搜尋、已載入記錄、被動展開狀態和瀏覽位置，切換頁面或重新整理後繼續瀏覽。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.11.0",
       "date": "2026-08-12",
       "commit": "37bf311d01b76346cfa835b77a07e5a5cc1b8e11",
