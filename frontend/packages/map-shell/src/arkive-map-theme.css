@@ -1021,4 +1021,6 @@ a:focus-visible > .arkive-wordmark {
 .catalog-search .catalog-search-clear { display: grid; place-items: center; min-height: 2rem; width: 2rem; padding: 0; color: var(--muted-foreground); background: var(--muted); }
 
 .catalog-search input:focus-visible { outline: none; box-shadow: none; }
+.catalog-search[aria-disabled="true"] { opacity: .5; }
+.catalog-search button:disabled { cursor: not-allowed; transform: none; }
 @media (prefers-reduced-motion: reduce) { .catalog-search button, .catalog-search button svg { transition: none; } }

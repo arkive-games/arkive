@@ -1,6 +1,6 @@
 # Adoption and Remaining Work
 
-Updated 2026-11-15. Current scope: approved stage 4 local code/spec reconciliation.
+Updated 2026-11-15. Current scope: local reconciliation and stage 5 acceptance tooling.
 Hierarchy, page rules, component/state contracts and shared visual roles are
 recorded in the [index](../ARKIVE_PRODUCT_IA_DRAFT.md); production compliance is
 not implied. Preserve existing homepage design. Forum redesign/Skill are deferred.
@@ -26,8 +26,9 @@ Do not call the whole stage complete from the catalog/map-detail batch.
 
 ## Validation after implementation
 
-The copied older gallery and [acceptance plan](visual-regression.md) are
-reference artifacts, not complete acceptance. The new baseline has no token guard script yet. Run affected checks and real flows;
+The older gallery is historical. The real-component gallery, scoped style guard
+and screenshot checker are documented in the [acceptance plan](visual-regression.md).
+They do not certify the entire site. Run affected checks and real flows;
 compare matched viewports/themes with reviewed live references. Verify applicable
 auth/favorite failure, save/discard, map memory and direct routes. Local filtering
 needs no invented network error. Keep final evidence and state actual limitations.
@@ -395,3 +396,33 @@ source are unchanged. Game version, GitHub and legal links are retained.
 Six game settings flows and both portal dialog destinations passed browser
 checks; 1440/900/390-pixel footer checks show no document overflow. All seven
 affected app builds/lints and map-shell typecheck pass. No remote delivery.
+
+## Stage 5: executable local acceptance
+
+The development-only Meta gallery now renders real shared controls, directory,
+dialog and ordinary footer with Chinese specimen copy. It replaces the old
+standalone HTML as the maintained acceptance surface; the production homepage
+and its entry bundle do not import it. A disabled-search specimen exposed a
+real defect: submit/clear remained enabled. The shared control now disables
+those actions and prevents programmatic submission while disabled.
+
+`pnpm test` now includes the scoped UI guard. It covers 126 shared/chrome files
+and checks app CSS ownership of search geometry. Seven pre-existing occurrences
+in six documented exceptions retain existing game art/local layers; new copies
+or changed values fail. This is not a whole-repository style or contrast audit.
+
+`pnpm ui:verify --routes` passes 29 checks: shared geometry and state transitions,
+keyboard focus/return, reduced motion, light/dark desktop/narrow captures,
+portal search/empty/footer/control parity, portal references in both themes,
+and desktop/mobile AION2/Palworld map-shell references. Seven deterministic
+component images can be compared without rewriting their reference. A deliberate
+reference-size mismatch was rejected, then the original reference was restored.
+Dynamic portal/map imagery remains a manual comparison; dense map labels are
+unchanged. Authenticated favorite recovery and account failures remain outside this new
+browser certification; existing regression tests still run.
+
+All seven affected app builds, Meta lint, shared package typechecks, and the
+full suite pass: 174 files / 1922 tests. The gallery is absent from production
+output. Candidate images/environment and the report live only in ignored
+`output/playwright/ui-acceptance/`. They are not final art approval or approval
+of deferred mobile composition. No Skill, push, PR or deployment in this batch.
