@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-11-15",
+      "commit": "27513879d26d33164d56cf28a1e031a082ee77f4",
+      "targets": [
+        "aion2",
+        "palworld",
+        "gmzz",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Keep homepage banners at the correct size and choose mobile artwork from the first paint, without growing after a refresh.",
+            "zh-CN": "首页轮播首屏即适配屏幕大小和手机图片，修复刷新后先小后大的跳动。",
+            "zh-TW": "首頁輪播首屏即適配螢幕大小和手機圖片，修復重新整理後先小後大的跳動。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
       "commit": "2bd773f76cb75d1960e5d55c222a5151da86549d",
       "targets": [
         "oss"
