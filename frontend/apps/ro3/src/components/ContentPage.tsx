@@ -1,8 +1,8 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
 import { useWikiScrollRestoration } from '../wikiMemory'
 import type { ReactNode } from 'react'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveContentPage, ArkiveMobileHeader } from '@gamemap/map-shell'
-import { SiteFooter } from '@gamemap/ui'
 import content from '../locales/zh-CN.json'
 import { HOME_URL, SETTINGS } from '../lib/brand'
 import { navigateOnClick, type NavigationProps } from '../navigation'
@@ -42,6 +42,8 @@ export function ContentPage({ active, onNavigate, title, heading = false, wide =
       }
       footer={
         <SiteFooter
+          locale={'zh-CN'}
+          settings={SETTINGS}
           className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
           homeUrl={HOME_URL}
           githubUrl={import.meta.env.VITE_GITHUB_URL}

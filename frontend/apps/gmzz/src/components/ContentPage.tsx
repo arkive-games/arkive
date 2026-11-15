@@ -1,8 +1,8 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
 import type { ReactNode } from 'react'
 import { Link, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { SiteFooter } from '@gamemap/ui'
 import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName, useEncyclopediaDesktop } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
@@ -67,6 +67,8 @@ export function ContentPage({ active, title, heading = false, wide = false, tool
       }
       footer={
         <SiteFooter
+          locale={lng}
+          settings={settings}
           className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
           homeUrl={ARKIVE_HOME_URL}
           githubUrl={import.meta.env.VITE_GITHUB_URL}

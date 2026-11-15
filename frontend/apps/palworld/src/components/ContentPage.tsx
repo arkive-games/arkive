@@ -1,8 +1,9 @@
+import { ArkiveSiteFooter as SiteFooter } from '@gamemap/map-shell'
 import { createContext, useContext, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArkiveAccountControl } from '@gamemap/auth'
-import { FilterDisclosure, SiteFooter } from '@gamemap/ui'
+import { FilterDisclosure } from '@gamemap/ui'
 import { ArkiveContentPage, ArkiveMobileHeader, getArkiveBrandName } from '@gamemap/map-shell'
 import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
@@ -109,6 +110,8 @@ export function ContentPage({
         // rather than falling back to the public-web defaults.
         footer={
           <SiteFooter
+          locale={lng}
+          settings={settings}
             className="pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4"
             homeUrl={ARKIVE_HOME_URL}
             homeLinkProps={ARKIVE_HOME_LINK_PROPS}

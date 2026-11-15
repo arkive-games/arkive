@@ -384,3 +384,14 @@ pass: 173 files / 1917 tests. Final screenshots wait for actual records and
 visible images rather than treating a mounted search input as data readiness.
 Chinese comparison evidence is retained in ignored output/playwright. Changes
 remain local; no push, pull request or deployment is part of this review.
+
+Ordinary-footer correction: preserving each deployed game footer left the
+confirmed center navigation empty. The six scoped game shells now reuse
+`ArkiveSiteFooter` around the original `SiteFooter` geometry and voyage layer.
+About and Contact link to the portal's existing dialogs through a consumed
+query parameter; Updates opens the shared platform history; Settings opens
+the current game's existing settings panel. The homepage sea footer and its
+source are unchanged. Game version, GitHub and legal links are retained.
+Six game settings flows and both portal dialog destinations passed browser
+checks; 1440/900/390-pixel footer checks show no document overflow. All seven
+affected app builds/lints and map-shell typecheck pass. No remote delivery.
