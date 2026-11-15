@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-11-15",
+      "commit": "a5f1979a51aae775770063da49139154ccd101dd",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Remember map camera positions across visits while keeping selected markers separate in each tab.",
+            "zh-CN": "地图视角跨访问恢复，选中标记按标签页独立保留。",
+            "zh-TW": "地圖視角跨造訪恢復，選取標記按分頁獨立保留。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
       "commit": "65c8b78951a794e3667a4f77e164b7c1e39878a6",
       "targets": [
         "pbz",
