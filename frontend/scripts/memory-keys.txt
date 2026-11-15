@@ -48,6 +48,7 @@ arkive.memory.palworld.catalog-context.scroll	-	apps/palworld/src/features/catal
 arkive.memory.palworld.catalog.page	-	apps/palworld/src/components/MobilePagination.tsx
 arkive.memory.palworld.catalog.reveal-depth	-	apps/palworld/src/features/catalog/useIncrementalList.ts
 arkive.memory.palworld.catalog.view-mode	-	apps/palworld/src/features/pals/PalListPage.tsx
+arkive.memory.palworld.encyclopedia.rail-collapsed	-	apps/palworld/src/components/EncyclopediaLayout.tsx
 arkive.memory.palworld.map-context.collapsed-categories	partition	apps/palworld/src/App.tsx
 arkive.memory.palworld.map-context.query	partition	apps/palworld/src/App.tsx
 arkive.memory.palworld.map-context.selected-marker	-	apps/palworld/src/App.tsx

@@ -50,6 +50,13 @@ reconstruction, not finished standards or authorization to implement now.
 
 ## Local integration
 
+Palworld's 14 reference categories and their detail pages now use the shared
+desktop workspace. The rail reuses the top navigation's category inventory,
+retains icon-only category links when collapsed and preserves tab-local collapse
+across routes. Shared width tokens remain provisional. Category headings are
+visually hidden on desktop; game-owned detail headings and existing mobile
+composition remain intact. Other games still need desktop-shell adoption.
+
 RO3's seven wiki categories now retain session-only query/facets, subsection,
 paging, selected record and viewed levels/variants. Palworld's 14 reference
 categories retain their applicable searches/facets and scroll; item/building

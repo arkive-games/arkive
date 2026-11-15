@@ -8,6 +8,8 @@ import { TopNav, type NavKey } from './TopNav'
 import { SITE_VERSION } from '../lib/siteVersion'
 import { useSettingsConfig } from '../lib/settings'
 import { useCatalogScroll, type CatalogBrowsingContext } from '../features/catalog/catalogMemory'
+import { EncyclopediaLayout } from './EncyclopediaLayout'
+import { isEncyclopediaSection } from './encyclopediaNavigation'
 import {
   ARKIVE_HOME_LINK_PROPS,
   ARKIVE_HOME_URL,
@@ -86,6 +88,7 @@ export function ContentPage({
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
   const scrollRestoration = useCatalogScroll(browsing)
+  const encyclopedia = isEncyclopediaSection(active)
 
   return (
     <FiltersContext.Provider value={{ node: filters ?? null, active: filtersActive }}>
@@ -116,11 +119,12 @@ export function ContentPage({
         }
         title={title}
         heading={heading}
+        headingClassName={encyclopedia ? 'lg:sr-only' : undefined}
         backToTopLabel={t('backToTop')}
         hideMobileFooter={hideMobileFooter}
         scrollRestoration={scrollRestoration}
       >
-        {children}
+        {encyclopedia ? <EncyclopediaLayout active={active}>{children}</EncyclopediaLayout> : children}
       </ArkiveContentPage>
     </FiltersContext.Provider>
   )

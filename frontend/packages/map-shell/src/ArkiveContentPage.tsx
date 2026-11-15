@@ -15,6 +15,7 @@ export interface ArkiveContentPageProps {
   /** The desktop `<h1>` when `heading` is set. */
   title?: ReactNode
   heading?: boolean
+  headingClassName?: string
   /** `wide` for dense grids; `standard` everywhere else. */
   width?: "standard" | "wide"
   /**
@@ -80,6 +81,7 @@ export function ArkiveContentPage({
   bottomNav,
   title,
   heading = false,
+  headingClassName,
   width = "standard",
   toolbar,
   toolbarLead,
@@ -100,7 +102,7 @@ export function ArkiveContentPage({
   const contentWidth = WIDTH[width]
   const hasToolbar = toolbar != null || toolbarLead != null
   useContentScrollRestoration(scrollRef, scrollRestoration)
-  const headingNode = heading ? <h1 className="mb-4 hidden text-3xl font-bold md:block">{title}</h1> : null
+  const headingNode = heading ? <h1 className={cn('mb-4 hidden text-3xl font-bold md:block', headingClassName)}>{title}</h1> : null
 
   useLayoutEffect(() => {
     if (resetScroll && !scrollRestoration && scrollRef.current) scrollRef.current.scrollTop = 0

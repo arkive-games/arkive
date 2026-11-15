@@ -47,6 +47,8 @@ needs no invented network error. Keep final evidence and state actual limitation
 Package a team Skill only after canonical adoption and validation mature.
 About/credits implementation is deferred at the user's request on 2026-11-15.
 Further adoption work is limited to released games at the user's request.
+GMZZ BUILD exit protection is deferred at the user's request; continue with
+encyclopedia desktop-shell adoption and acceptance instead.
 STS2, OSS preview and other unreleased surfaces are deferred; the earlier STS2
 local batch remains recorded as historical work, not a reason to extend it.
 
@@ -243,3 +245,20 @@ storage failure and saved-record preservation. RO3 lint/build and shared UI
 typecheck pass. GMZZ build/account synchronization and editor exit integration
 remain separate outstanding work; this batch does not change its autosave policy.
 Full suite: 170 files / 1913 tests pass. No remote delivery.
+
+Encyclopedia desktop-shell pilot: audited the live RO3 Talents reference and
+preserved Arkive chrome, palette, typography, routes and game-owned content.
+Palworld's 14 reference categories/details now use one shared workspace with
+the agreed 11.5rem/4rem rail tokens, a tab-local collapse control, accessible
+icon-only links and one primary scroller. Top navigation and the rail share
+the category inventory. The desktop category heading is visually hidden;
+existing mobile pages and calculators keep their composition. Sidebar height
+reserves footer space so short/empty pages retain a bottom-aligned footer.
+
+Browser checks cover all 14 route selections, collapse width/query retention,
+collapse across category navigation, return-memory preservation, short-page
+footer position, light/dark selection state, unchanged calculator composition
+and narrow-page overflow.
+Palworld lint/build, map-shell typecheck, inventory and full suite pass:
+171 files / 1914 tests. Other games' desktop shells and broader visual
+acceptance remain open; this is local implementation, not remote delivery.
