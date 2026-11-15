@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.36.2",
+      "date": "2026-11-15",
+      "commit": "dbe1f4a8f1c830e0cf83165cac380a5062a03446",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Automatically remember league, station and trade-profit calculator inputs on this device, with reset support.",
+            "zh-CN": "联赛、站点和贸易利润计算器自动记住本机输入，支持重置。",
+            "zh-TW": "聯賽、站點與貿易利潤計算器自動記住本機輸入，支援重設。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.36.1",
       "date": "2026-11-15",
       "commit": "77018ab7e40368a740becada29dcdc52079be48f",
