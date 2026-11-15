@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.3",
+      "date": "2026-11-16",
+      "commit": "9fd0e6f3c1cdf558050d3cf61996d5432fc8a84f",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Use folding parent categories and game artwork in the encyclopedia directory, reduce Pal thumbnails, and place search beside secondary filters.",
+            "zh-CN": "百科目录支持父级展开收起并使用游戏图片，缩小帕鲁缩略图，将搜索整合到次要筛选旁。",
+            "zh-TW": "百科目錄支援父級展開收合並使用遊戲圖片，縮小帕魯縮圖，將搜尋整合至次要篩選旁。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.2",
       "date": "2026-11-16",
       "commit": "780b8883ca988d8c399036aa1fc9e2f3448cafeb",
