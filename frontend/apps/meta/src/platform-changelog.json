@@ -2,6 +2,28 @@
   "entries": [
     {
       "date": "2026-11-15",
+      "commit": "7678a26be4e13e6f07c01c9ff12fcfd9df5ee954",
+      "targets": [
+        "aion2",
+        "palworld",
+        "gmzz",
+        "ro3",
+        "vrising",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Catalog searches share the rounded field and arrow action, encyclopedia directory toggles are consistent, and reference pages omit interface explanations and result-total summaries.",
+            "zh-CN": "统一百科搜索框与目录收起图标，移除页面操作说明、实现说明和结果总数提示。",
+            "zh-TW": "統一百科搜尋框與目錄收起圖示，移除頁面操作說明、實作說明和結果總數提示。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
       "commit": "a5f1979a51aae775770063da49139154ccd101dd",
       "targets": [
         "aion2",
