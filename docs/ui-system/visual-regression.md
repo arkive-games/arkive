@@ -1,121 +1,60 @@
 # Visual Regression Acceptance
 
-This is an acceptance plan, not a report that all checks passed. Stage 5 uses
-the component gallery and the live routes as two separate checks:
-the gallery isolates shared geometry and states; live routes confirm that page
-composition does not override those decisions.
+Use real components and current page references; screenshots are evidence, not
+final art approval. Preserve page/game design outside confirmed shared rules.
 
 ## Executable checks
 
-The maintained gallery is the development-only
-[shared component review](http://localhost:15172/ui-review.html), served by the
-existing Meta dev server. If it is stopped, run `pnpm dev:meta` from `frontend/`.
-It renders the real UI and encyclopedia components with Chinese specimen copy;
-the older `component-gallery.html` is historical, not a second implementation.
-The gallery is not a production route or a replacement homepage.
+Open [the Chinese component gallery](http://localhost:15172/ui-review.html).
+If the Meta dev server is stopped, run `pnpm dev:meta` from `frontend/`.
+The gallery is development-only; the old standalone HTML is historical.
 
-From `frontend/`:
+| Command, from frontend/ | Purpose |
+| --- | --- |
+| `pnpm check:ui` | Reject new raw type/radius/layer/color values in shared chrome and app overrides of shared search geometry/token ownership. Also runs in `pnpm test`. |
+| `pnpm test --maxWorkers=2` | Regression tests, including scoped contrast, account partitioning and failure recovery. |
+| `pnpm ui:verify --update-baseline --routes` | Explicitly record candidate component images only if every check passes; review them before adoption. |
+| `pnpm ui:verify` | Compare existing component references and check states, geometry, keyboard focus, reduced motion and narrow overflow. Never updates the reference. |
+| `pnpm ui:verify --routes` | Also check/capture portal and AION2/Palworld map references; dynamic remote imagery is not a deterministic pixel baseline. |
 
-- `pnpm check:ui` rejects new pixel typography, custom radii, numeric overlay
-  layers and literal colors in shared chrome. It also protects shared catalog
-  sizing and rail-token ownership, including app CSS search overrides. This guard
-  runs automatically in `pnpm test` through the existing test command.
-- `pnpm ui:verify --update-baseline --routes` records a candidate screenshot set
-  only if every check passes. Review it before treating it as the local reference.
-- `pnpm ui:verify` compares real components against that local reference and
-  checks interaction, keyboard focus, disabled actions, geometry, both themes,
-  reduced motion and narrow overflow. Differences do not update the reference.
-- `pnpm ui:verify --routes` additionally checks portal search/empty states and
-  map shells, and captures the current portal/map references. Remote game data
-  is not used as a deterministic pixel baseline.
+Seven deterministic images cover light/dark desktop/narrow components, hover,
+focus and dialog. Pixel channel tolerance is 16 with at most 0.1 percent changed
+pixels; geometry/state checks are independent. Inspect highlighted differences,
+not just exit codes. Same browser/platform/fonts are required; environment and
+commit/dirty-state metadata explain capture context. Other computers record a
+reviewed compatible baseline or copy compatible reviewed artifacts.
 
 Artifacts stay in ignored `output/playwright/ui-acceptance/`: current images,
-baseline images and `report.json`. The report identifies commit/browser; the
-baseline environment record also identifies the platform. Use the same browser,
-platform and fonts for comparison. A pixel channel tolerance of 16 and a maximum
-changed-pixel ratio of 0.1 percent accommodate small rasterization differences;
-geometry and state checks remain independent. Inspect highlighted diff images
-instead of accepting every changed baseline. A baseline is evidence, not human
-design approval. Other computers explicitly record their own reviewed reference
-or copy a compatible reviewed artifact set; generated images are not committed.
-
-The script uses installed Chrome on Windows and Playwright Chromium elsewhere.
-`UI_REVIEW_BROWSER_CHANNEL` overrides the channel; `UI_REVIEW_URL` overrides the
-portal origin. No profile, login or production writes are needed. Missing dev
-servers, data or images fail the applicable check rather than substituting
-invented records. Install a browser with `pnpm exec playwright install chromium`
-if none is available. The script closes its own browser on completion.
-
-The style guard covers shared UI/shell and the six scoped games' component
-chrome, plus portal component chrome; it does not claim to lint all game-record
-renderers or prove color contrast. Seven existing occurrences in six named
-exceptions are documented in `frontend/scripts/ui-guard-baseline.json` with
-their reasons. Matching is file/content/count based: copying or changing an
-exception is rejected. Regenerating this file is an explicit review action,
-never part of test execution. Do not blanket-normalize game artwork to satisfy
-the guard.
+baseline/environment and `report.json`. No generated images are committed.
+The script closes its own browser; missing servers/data/images fail the check.
+Windows uses installed Chrome, other platforms Playwright Chromium. Override
+`UI_REVIEW_BROWSER_CHANNEL`/`UI_REVIEW_URL` when needed; install a missing browser
+with `pnpm exec playwright install chromium`. Authenticated acceptance additionally
+uses the development-only `acceptance.html` and a user-entered real login; never
+record credentials or substitute a fixture identity for real-login evidence.
 
 ## Required captures
 
-| Surface | Desktop | Narrow viewport | States |
-| --- | --- | --- | --- |
-| Shared component gallery | 1440 × 1000 | 390 × 844 | Light and dark, default/focus/selected/invalid/disabled/loading/error |
-| Portal home | 1440 × 1000 | 390 × 844 | Light and dark, short and long content |
-| All Games | 1440 × 1000 | 390 × 844 | Search, type filter, empty result, favorite action |
-| Tool Library | 1440 × 1000 | 390 × 844 | All/Other filters, game-name query, empty result, favorite failure |
-| AION2 map | 1440 × 1000 | 390 × 844 | Expanded/collapsed sidebar, map selector, search, About closed/open |
-| Palworld map | 1440 × 1000 | 390 × 844 | Expanded/collapsed sidebar, map switch, search, completion counts |
-
-Below `md`, encyclopedia composition remains deferred by product decision. A
-mobile encyclopedia capture is therefore not an acceptance requirement until
-that redesign is opened.
+Use 1440 x 1000 desktop and 390 x 844 narrow references. Cover real component
+states, both portal themes, catalog search/type/empty/favorite behavior, and
+map sidebar/search/switch/progress where changed. Mobile encyclopedia redesign
+is deferred; retaining its existing no-overflow behavior does not approve a new
+mobile layout. Load actual records/images before capture; a mounted input is
+not proof that data or map tiles are ready.
 
 ## Acceptance rules
 
-- No page creates document-level horizontal overflow at either viewport.
-- One surface owns each boundary line; a toolbar and its result region do not
-  draw duplicate separators.
-- Search and filter controls use the shared radius, input fill, focus ring, and
-  selected-filter roles.
-- Loading reserves expected card/toolbar space. Errors retain the page structure;
-  natural wrapping or a different result count may change document height.
-- A failed search preserves its query and filters. A failed favorite preserves
-  the previous state and exposes retry.
-- Short pages place the compact footer at the viewport bottom while keeping it
-  in normal document flow.
-- Light/dark changes preserve text, control-boundary, and focus contrast.
-- Reduced motion removes decorative transforms without hiding state changes.
+No document overflow, duplicate boundary lines or overlapping controls. Keep
+shared geometry, independent hit targets, visible focus and safe areas; short
+pages place ordinary footers at the bottom in normal flow. Disabled controls
+cannot act; pending blocks duplicate writes. Failures retain input/state and
+report truthfully; successful retry remains available where supported.
+Verify long labels and normal/selected/error text in both themes. Required text
+contrast is 4.5:1 (3:1 for large text); meaningful focus/boundaries require 3:1.
+Decorative dividers and original game-art semantics have separate roles.
 
-## Evidence
-
-Desktop reference observations are recorded in [live visual audit](live-visual-audit.md).
-Use the [shared visual roles](visual-direction.md) and the directly
-[copied homepage footer](home-footer-copy.html) to interpret those captures.
-They do not certify every listed surface, viewport, theme or functional state.
-
-Keep only the final capture set for a review. Store temporary screenshots and
-Playwright logs in ignored output directories and remove intermediate variants
-after acceptance. The browser smoke check is a functional gate; this matrix is
-the visual gate and requires a human comparison against the accepted reference.
-
-## First baseline observations
-
-The first desktop and narrow captures on 2026-11-12 established these findings:
-
-- Tool Library footer placement, desktop three-column cards, mobile one-column
-  cards, search, and filter controls are structurally usable. The mobile bottom
-  navigation overlays the viewport while the page remains scrollable; the final
-  safe-area pass should confirm that the last card and footer can be brought
-  fully above it.
-- AION2 and Palworld keep the agreed map control positions: search at the top,
-  coordinates at lower left, zoom at lower right, and mobile map actions above
-  the bottom navigation. No document-level horizontal overflow appeared in the
-  captures.
-- AION2 and Palworld marker labels become visually dense at the loaded default
-  zoom. This is a map data-density and LOD decision, not a shared radius/color
-  decision; it remains a follow-up for each game's map configuration.
-- Palworld tiles arrive after the data and shell. Capture baselines after tiles
-  settle so a loading frame is not mistaken for a blank-map regression.
-
-These observations do not freeze the visual style. They identify which issues
-belong to page/map configuration and which belong to the shared component layer.
+The style guard covers shared UI/shell and released-game/portal component chrome,
+not every game-record renderer. Its six reviewed legacy exceptions retain seven
+existing occurrences; new copies or changed values fail. Baseline regeneration
+requires review and is never automatic. See [Adoption](adoption.md) for current
+coverage and [dated evidence](evidence.md) for authenticated/fault-injection limits.

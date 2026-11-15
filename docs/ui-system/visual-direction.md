@@ -1,84 +1,51 @@
 # Arkive Shared Visual Foundations
 
-Updated 2026-11-15. Confirmed visual rules, scoped reference dimensions and open
-items; no production conformance is claimed; scoped canonical migration is recorded below.
+Preserve the accepted [live homepage](https://arkive.games/) and actual deployed
+chrome. Copy existing structure/assets; apply explicit product decisions only
+where needed. Game art/data layouts remain game-owned. AION2's identity is sky
+fantasy; other game identities are contextual, not new universal chrome.
 
-## Authority and reading scope
-
-Preserve the accepted [live homepage](https://arkive.games/); copy deployed
-structure/styles rather than stale local code or a lookalike. Explicit product
-decisions govern intentional differences. Read only the needed canonical
-[UI foundation](../ARKIVE_UI_FOUNDATIONS_SPEC.yaml) or
-[color](../ARKIVE_SITE_COLOR_SYSTEM.yaml) sections. Unaffected rules stand;
-the approved stage 4 local batch reconciles the scoped rules below.
-
-## Identity, typography and color
-
-- Warm, youthful, reliable, information-dense. Game logos/artwork/schemas may
-  differ; shared controls keep common meaning. AION2: sky fantasy; other game
-  personalities open. Use real [wordmark assets](assets/arkive/README.md).
-- Keep 17px root, Noto Sans SC/TC Variable and Tailwind type scale/role defaults;
-  content floor `text-xs`. Dense content must not shrink text to fit. A type
-  role does not require a visible heading.
-- Quiet neutral surfaces; preserve reviewed neutral active navigation/filter
-  states and warm login/search-arrow accents in their contexts. Decoration does
-  not define feedback colors. Existing semantic roles, contrast and light/dark
-  legibility apply; no new universal palette. Preserve meaningful focus.
+Canonical owners: [UI foundations](../ARKIVE_UI_FOUNDATIONS_SPEC.yaml) for type,
+spacing, shape, layers and motion; [color system](../ARKIVE_SITE_COLOR_SYSTEM.yaml)
+for values/contrast. Read only relevant sections. Use the real
+[wordmark](assets/arkive/README.md), not recreated text or artwork.
 
 ## Shape, height and spacing
 
-| Role | Decision / reference | Scope |
-| --- | --- | --- |
-| Catalog search + filter | Equal outer height, 3.2rem in sample; pill radius | Reviewed desktop composites, not all fields/selects |
-| Internal options/arrow | 2.5rem sample | Visual size; keep adequate hit targets |
-| States of one control | Same radius/height/reserved slots | No silhouette shift on hover/focus/selection/disabled/pending |
-| All Games cards | 1.25rem radius/gap; 4:3 cover | Desktop reference, not all cards/tools |
-| Catalog toolbar to All Games cards | 1.5rem clear sample gap | No overlapping controls/lines |
-| Ordinary fields, popups, dense panels | Existing foundation defaults | Shared Card does not globally become 1.25rem |
-| Homepage composition | Preserve deployed artwork/tray/shelf/carousel geometry | No universal decorative template |
+| Role | Confirmed scope |
+| --- | --- |
+| Catalog search + filter | Same outer height (3.2rem reference), pill silhouette; round warm arrow (2.5rem reference). Not a rule for every form field/select. |
+| One control across states | Same radius/height/reserved slots; no silhouette change on hover, focus, selection, disabled or pending. |
+| All Games cards | Desktop reference: 1.25rem radius/gap, 4:3 cover and 1.5rem clear toolbar-to-card gap. Not universal tool/card geometry. |
+| Ordinary fields/popups/dense panels | Foundation defaults; shared Card does not inherit the catalog-card radius globally. |
+| Homepage | Existing carousel, artwork, mixed shelf and decoration retain their composition. |
 
-Existing spacing steps/content-width roles remain the only scales. Layout owns
-inter-region gaps; controls own padding. Preserve real alignment/right clearance.
-Measured widths at one viewport are not fixed widths for every screen.
-Catalog search implementation comes from `CatalogSearchInput`, including its
-round arrow action; encyclopedia collapse uses the shared panel-frame icon.
-Do not recreate either control in individual game pages. Omit interface
-instructions, implementation notes and visible result-total summaries site-wide.
+Layout owns region gaps; controls own padding. Use existing spacing/content-width
+roles and preserve right clearance. One viewport's measured width is not a
+universal fixed width. Reuse `CatalogSearchInput` and the shared panel-frame
+encyclopedia toggle. Omit interface tutorials, implementation commentary and
+visible result-total summaries; retain actual game facts, taxonomy/progress and
+errors. A type role does not require displaying a redundant heading.
 
 ## Shells, footers and boundaries
 
-| Surface | Rule |
+| Surface | Confirmed rule |
 | --- | --- |
-| Portal header | Preserve floating capsule and utility grouping |
-| Game header | Flush top; wordmark/game chip + label-sized game links left, utilities right. Desktop reference: 3.5rem height, 2rem horizontal padding, 2.5rem chip |
-| Root homepage footer | Blue filled-wave/sea, white wordmark, centered About/Contact/Updates/Settings, right legal metadata; use [copied HTML/CSS](home-footer-copy.html) |
-| Ordinary footer | Neutral; original wordmark, centered same four links, legal metadata; includes `#games`, Tool Library and ordinary game pages |
-| Fullscreen map | No ordinary footer; filing in About |
+| Portal header | Existing floating capsule and utility grouping. |
+| Game header | Flush-top wordmark/game chip and label-sized links left, utilities right; retain existing spacing. |
+| Root homepage footer | Existing blue sea/waves, white wordmark, four center links and legal metadata. [Copied reference](home-footer-copy.html); do not redraw. |
+| Ordinary footer | Neutral, original wordmark, centered About/Contact/Updates/Settings, legal metadata and applicable game version. |
+| Fullscreen map | No page footer; filing belongs in About. |
 
-Exactly two footer designs; map omission is not a third. Root `/` differs from
-`#games`. The footer copy is static, excluding original dialogs/scroll voyage.
-[Page skeleton](page-skeleton.md) owns bottom placement, scrolling and optional
-single-owner dividers; do not add a toolbar line or redraw the homepage footer.
-Exact surface measurements remain in [Live audit](live-visual-audit.md).
-
-## Stage 4 migration map
-
-The scoped canonical wording below has been reconciled locally. This table is
-an ownership map, not a list of changes still awaiting stage 4 approval.
-
-| Canonical owner | Current local reconciliation |
-| --- | --- |
-| Foundations `shape.rules` / `control_geometry` | Reviewed pill/equal-height catalog and All Games card roles, preserving ordinary form/popup/touch defaults |
-| Foundations `shared_component_contracts.desktop_brand_block` | Deployed wordmark/game-chip shells, not old two-line brand |
-| Site `product_model.home_page.footer`; foundations `compact_site_footer` | Two reviewed footer roles, replacing old four-track home/metadata-only ordinary wording; no mandatory separator |
-| Color `brand_direction` / navigation tokens | Scope neutral active chrome/warm decoration separately from semantic feedback; retain contrast |
-| Older galleries/reconciliation records | Historical/behavior evidence, not final art baseline or new implementation authorization |
+Exactly two footer designs. Root `/` differs from `#games`/Tools; the static
+homepage copy excludes runtime dialogs/voyage. [Page skeleton](page-skeleton.md)
+owns bottom placement, scrolling and single-owner boundaries; no mandatory
+separator or duplicate toolbar line. Shared ordinary footer behavior reuses the
+real components, including its thin voyage layer.
 
 ## Open scope and handoff
 
-Sidebar dimensions remain adjustable in [Encyclopedia](encyclopedia.md) and
-[Map workspace](map-workspace.md). Encyclopedia content/detail is contextual;
-its mobile composition is deferred. Map mobile and tool-card reflow/truncation
-remain provisional. Shared acceptance tooling is implemented; uncovered visual
-and state cases are listed only in [Adoption](adoption.md#remaining-acceptance).
-Adoption also owns deferred scope and the local/remote delivery boundary.
+Rail/picker dimensions stay adjustable; encyclopedia content/details stay
+contextual. Encyclopedia mobile redesign is deferred; existing map/catalog
+mobile composition remains provisional. [Adoption](adoption.md) alone owns
+current implementation, scoped acceptance, deferrals and delivery status.

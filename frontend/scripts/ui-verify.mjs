@@ -102,9 +102,17 @@ try {
     await input.fill('帕鲁球')
   })
   await check('directory collapses to icon links without resetting selection', async () => {
-    const rail = page.getByTestId('encyclopedia-rail'); const expanded = await rail.boundingBox()
+    const rail = page.getByTestId('encyclopedia-rail')
+    const waitForWidth = rem => page.waitForFunction(({ rem }) => {
+      const rail = document.querySelector('[data-testid=encyclopedia-rail]')
+      return rail && Math.abs(rail.getBoundingClientRect().width - rem * parseFloat(getComputedStyle(document.documentElement).fontSize)) < 1
+    }, { rem })
+    await waitForWidth(11.5)
+    const expanded = await rail.boundingBox()
     await rail.getByRole('button', { name: /收起/ }).click()
     await page.locator('[data-encyclopedia-workspace][data-collapsed=true]').waitFor()
+    // React's state attribute can settle before the next layout frame.
+    await waitForWidth(4)
     const collapsed = await rail.boundingBox()
     const scale = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
     assert.ok(Math.abs(expanded.width - 11.5 * scale) < 1)
@@ -112,6 +120,7 @@ try {
     assert.equal(await rail.getByRole('button', { name: '道具', exact: true }).getAttribute('aria-current'), 'page')
     await rail.getByRole('button', { name: /展开/ }).click()
     await page.locator('[data-encyclopedia-workspace][data-collapsed=false]').waitFor()
+    await waitForWidth(11.5)
     return { expanded: expanded.width, collapsed: collapsed.width }
   })
   await check('dialog focus stays inside and returns to its trigger', async () => {

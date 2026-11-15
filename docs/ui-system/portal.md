@@ -15,7 +15,8 @@ the complete game directory. Carousel/shelf selections are independent; catalog
 favorites/order are not automatically inherited. Tool/post counts are unfixed;
 homepage selections are not the complete Tool Library even when inventories match.
 No data stays empty; do not invent entries. Remove expired/deleted/inaccessible
-selections. Empty-section treatment and mobile shelf overflow remain open.
+selections. Retain current empty-section/mobile shelf treatment until explicitly
+reviewed; these contextual choices do not reopen the completed page layout.
 
 ## Live portal footer reference
 

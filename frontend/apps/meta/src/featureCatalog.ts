@@ -42,6 +42,12 @@ const text = (en: string, zhCN: string, zhTW: string): LocalizedText => ({
   'zh-TW': zhTW,
 })
 
+/** Editorial selection, independent of the full tool directory. */
+export const HOME_TOOL_IDS = new Set([
+  'palworld-breeding', 'palworld-stat-simulator', 'gmzz-build',
+  'gmzz-score', 'gmzz-league-points', 'gmzz-traintrade-station',
+])
+
 export const FEATURES: readonly GameFeature[] = [
   { id: 'oss-map', gameId: 'oss', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },
   // Palworld
@@ -106,16 +112,15 @@ export const FEATURES: readonly GameFeature[] = [
   { id: 'gmzz-utopia', gameId: 'gmzz', kind: 'wiki', path: '/utopia', name: text('Utopian Theater', '乌托邦剧场', '烏托邦劇場') },
   { id: 'gmzz-reforge', gameId: 'gmzz', kind: 'wiki', path: '/reforge', name: text('Reforge Graces', '重塑恩赐', '重塑恩賜') },
 
-  // Ragnarok Online 3 -- the app routes on `?view=` / `?wiki=`, and a bare
-  // root is its class-skills view.
-  { id: 'ro3-builds', gameId: 'ro3', kind: 'wiki', path: '/?view=builds', name: text('Build Handbook', '流派手册', '流派手冊'), keywords: ['build', '配装', '配裝'] },
-  { id: 'ro3-skills', gameId: 'ro3', kind: 'wiki', path: '/', name: text('Class Skills', '职业技能', '職業技能') },
-  { id: 'ro3-talents', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=talents', name: text('Talents', '天赋系统', '天賦系統') },
-  { id: 'ro3-cards', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=cards', name: text('Cards', '卡片图鉴', '卡片圖鑑') },
-  { id: 'ro3-pets', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=pets', name: text('Pets', '宠物图鉴', '寵物圖鑑') },
-  { id: 'ro3-monsters', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=monsters', name: text('Monsters', '魔物图鉴', '魔物圖鑑') },
-  { id: 'ro3-equipment', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=equipment', name: text('Equipment', '装备图鉴', '裝備圖鑑') },
-  { id: 'ro3-souls', gameId: 'ro3', kind: 'wiki', path: '/?view=wiki&wiki=souls', name: text('Soul Echoes', '灵魂残响', '靈魂殘響') },
+  // Ragnarok Online 3 uses canonical paths; legacy query links remain aliases.
+  { id: 'ro3-builds', gameId: 'ro3', kind: 'tool', path: '/builds', name: text('Build Handbook', '流派手册', '流派手冊'), description: text('Create and save character builds.', '编辑并保存角色流派配置。', '編輯並儲存角色流派配置。'), keywords: ['build', '配装', '配裝'] },
+  { id: 'ro3-skills', gameId: 'ro3', kind: 'wiki', path: '/skills', name: text('Class Skills', '职业技能', '職業技能') },
+  { id: 'ro3-talents', gameId: 'ro3', kind: 'wiki', path: '/talents', name: text('Talents', '天赋系统', '天賦系統') },
+  { id: 'ro3-cards', gameId: 'ro3', kind: 'wiki', path: '/cards', name: text('Cards', '卡片图鉴', '卡片圖鑑') },
+  { id: 'ro3-pets', gameId: 'ro3', kind: 'wiki', path: '/pets', name: text('Pets', '宠物图鉴', '寵物圖鑑') },
+  { id: 'ro3-monsters', gameId: 'ro3', kind: 'wiki', path: '/monsters', name: text('Monsters', '魔物图鉴', '魔物圖鑑') },
+  { id: 'ro3-equipment', gameId: 'ro3', kind: 'wiki', path: '/equipment', name: text('Equipment', '装备图鉴', '裝備圖鑑') },
+  { id: 'ro3-souls', gameId: 'ro3', kind: 'wiki', path: '/souls', name: text('Soul Echoes', '灵魂残响', '靈魂殘響') },
 
   // Phantom Blade Zero
   { id: 'pbz-map', gameId: 'pbz', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },

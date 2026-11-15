@@ -66,4 +66,5 @@ pill controls, arrow, card and toolbar-gap roles. Exact 1440px measurements are
 in [Live audit](live-visual-audit.md), not universal widths or tool-card tokens.
 Mobile catalog reflow remains contextual/provisional: keep controls and separate
 actions reachable, no horizontal overflow, and clear bottom navigation. Tool
-truncation, filter overflow and final narrow layouts remain in [Adoption](adoption.md).
+long-label/overflow checks are recorded in [Evidence](evidence.md); broader mobile
+redesign remains deferred in [Adoption](adoption.md).

@@ -18,6 +18,21 @@ function memoryStorage(refuseWrite?: (key: string) => boolean) {
 }
 
 describe('user system state persistence', () => {
+  it('keeps game and tool favorites independent across two persisted account partitions', () => {
+    const storage = memoryStorage()
+    const first = createDefaultUserSystemState()
+    first.favoriteGameIds = ['palworld']
+    first.favoriteToolIds = ['gmzz-league-points']
+    const second = createDefaultUserSystemState()
+    second.favoriteGameIds = ['vrising']
+    second.favoriteToolIds = ['ro3-builds']
+    expect(writeUserSystemState(storage, 'user-a', first)).toBe(true)
+    expect(writeUserSystemState(storage, 'user-b', second)).toBe(true)
+    expect(readUserSystemState(storage, 'user-a')).toMatchObject({ favoriteGameIds: ['palworld'], favoriteToolIds: ['gmzz-league-points'] })
+    expect(readUserSystemState(storage, 'user-b')).toMatchObject({ favoriteGameIds: ['vrising'], favoriteToolIds: ['ro3-builds'] })
+    expect(readUserSystemState(storage, 'anonymous').favoriteGameIds).toEqual([])
+    expect(readUserSystemState(storage, 'anonymous').favoriteToolIds).toEqual([])
+  })
   it('keeps data isolated by authenticated user id', () => {
     const storage = memoryStorage()
     const first = createDefaultUserSystemState()
