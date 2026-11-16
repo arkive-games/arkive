@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.15",
+      "date": "2026-11-17",
+      "commit": "8515cf838c6ee3a37504778123e55b0d85d6291b",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Unify encyclopedia spacing, localized selected filters, parent navigation and breeding mode controls.",
+            "zh-CN": "统一百科间距、已选筛选本地化、一级导航和配种模式控件。",
+            "zh-TW": "統一百科間距、已選篩選本地化、頂級導覽和配種模式控制項。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.14",
       "date": "2026-11-17",
       "commit": "037c7b4e84b8d32470105b284acf570d238c8a77",
