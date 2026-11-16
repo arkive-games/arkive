@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.11",
+      "date": "2026-11-16",
+      "commit": "18b3a060dea01c1da044ceceef8c0f57e4317e19",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Unify Active Skills and Paldeck filter menus, typography and hover behavior.",
+            "zh-CN": "统一主动技能与帕鲁图鉴的筛选菜单、字号和悬停交互。",
+            "zh-TW": "統一主動技能與帕魯圖鑑的篩選選單、字級和懸停互動。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.10",
       "date": "2026-11-16",
       "commit": "3f86e91ebc5ac39eccd661934ebfc4e62466c532",
