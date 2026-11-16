@@ -107,7 +107,7 @@ export default function ItemListPage() {
   // Category chips — inline on desktop, behind the mobile header's filter icon
   // (see ContentPage). The search box stays on the page: it is not a filter.
   const filters = bundle ? (
-    <CatalogFacetTrack className="bg-transparent p-0">
+    <CatalogFacetTrack>
       {categories.map((c) => (
         <CatalogFacetChoice
           key={c}
