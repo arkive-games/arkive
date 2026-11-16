@@ -3,7 +3,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, Hint, CatalogSearchInput, toggleValue, TooltipProvider } from '@gamemap/ui'
+import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, CatalogSelectedFilters, Hint, CatalogSearchInput, toggleValue, TooltipProvider } from '@gamemap/ui'
 import { ArrowRight, Coins, Dna, Dices, PawPrint, Sparkles, Stethoscope, TreePine } from 'lucide-react'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -18,6 +18,7 @@ import {
   type PassiveSource,
 } from '../../lib/pals'
 import { palIconUrl } from '../../lib/assets'
+import { filterStrings } from './filterStrings'
 import { CatalogDataProvider, ItemGlyph, ItemHover, PalHover } from '../catalog/components'
 import { PalPageLoading, PassiveRarity, PassiveText, PassiveTitleBar } from './components'
 
@@ -159,6 +160,7 @@ function rarityScore(key: string): number {
 export default function PassivesPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const fs = filterStrings(lng)
 
   const [bundle, setBundle] = useState<PalsBundle | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -272,6 +274,7 @@ export default function PassivesPage() {
   // toggles the filter, so the hint gets its own ⓘ button instead of stealing it.
   // The desktop tooltips stay lifted above the filter sheet's stacking context.
   const filters = bundle ? (
+    <>
     <CatalogFacetTrack>
       <CatalogFacetGroup label={t('filters.rarity')} testId="passive-rarity-filter" count={raritySel.length}>
         {rarities.map((key) => (
@@ -338,6 +341,13 @@ export default function PassivesPage() {
         ) : null}
       </CatalogFacetGroup>
     </CatalogFacetTrack>
+    <CatalogSelectedFilters label={fs.filters} clearLabel={fs.clear} choices={[
+      ...raritySel.map(value => ({ key: `rarity-${value}`, label: value, onRemove: () => setRaritySel(current => current.filter(item => item !== value)) })),
+      ...categorySel.map(value => ({ key: `category-${value}`, label: t(`passive.category.${value}`), onRemove: () => setCategorySel(current => current.filter(item => item !== value)) })),
+      ...(innateOnly ? [{ key: 'innate', label: t('passive.innate'), onRemove: () => setInnateOnly(false) }] : []),
+      ...(mutationOnly ? [{ key: 'mutation', label: t('passive.mutation'), onRemove: () => setMutationOnly(false) }] : []),
+    ]} onClear={() => { setRaritySel([]); setCategorySel([]); setInnateOnly(false); setMutationOnly(false) }} />
+    </>
   ) : undefined
 
   return (
