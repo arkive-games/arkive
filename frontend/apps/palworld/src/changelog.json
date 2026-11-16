@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.8",
+      "date": "2026-11-16",
+      "commit": "a6390bbfae0ad40d6ff46843755ab8b27d8a4309",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Align encyclopedia search beside filters and give hovered Pal filters a clear dark active treatment.",
+            "zh-CN": "统一百科页面筛选在左、搜索在右，并为帕鲁筛选悬停状态加入清晰的深色强调。",
+            "zh-TW": "統一百科頁面篩選在左、搜尋在右，並為帕魯篩選懸停狀態加入清晰的深色強調。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.7",
       "date": "2026-11-16",
       "commit": "b1616963aea72b5a4d6a8bcd5b6b19539b100683",
