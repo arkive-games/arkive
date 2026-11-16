@@ -49,7 +49,7 @@ function FacetMenu({ label, count, testId, open, onOpenChange, contentClassName,
           event.preventDefault(); hoverOpen.current = false; onOpenChange(true)
           setTimeout(() => contentRef.current?.querySelector<HTMLElement>('button, input')?.focus(), 0)
         }}
-        className={cn('flex min-h-[var(--arkive-catalog-control-inner-height)] items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-card data-[state=open]:text-foreground',
+        className={cn('flex min-h-[var(--arkive-catalog-control-inner-height)] items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:!bg-foreground hover:!text-background focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:!bg-foreground data-[state=open]:!text-background',
           count > 0 && 'bg-card text-foreground')}>
         <span className="min-w-0 whitespace-nowrap">{label}</span>
         {count > 0 && <span className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-xs tabular-nums text-background">{count}</span>}
@@ -71,7 +71,9 @@ function FacetOption({ active, label, icon, onClick, testId }: {
   active: boolean; label: string; icon?: ReactNode; onClick: () => void; testId?: string;
 }) {
   return <FilterChip variant="tile" active={active} onClick={onClick} testId={testId}
-    className={cn('min-h-11 gap-2 px-3 text-sm', active ? 'border-ring' : 'border-border bg-card hover:bg-muted')}>
+    className={cn('min-h-11 gap-2 px-3 text-sm', active
+      ? 'border-foreground bg-foreground text-background'
+      : 'border-border bg-card text-foreground hover:border-foreground hover:!bg-foreground hover:!text-background')}>
     {icon}<span className="min-w-0 flex-1 break-words text-left">{label}</span>
     {active ? <Check className="size-4 shrink-0" aria-hidden /> : <span className="size-4 shrink-0" aria-hidden />}
   </FilterChip>
