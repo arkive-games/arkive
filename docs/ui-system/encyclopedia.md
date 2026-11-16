@@ -22,6 +22,10 @@ matching the RO3 skills page rather than centering the directory in a narrower
 standard-width column. Keep the shared page gutter at the viewport edges.
 Shared states come from [States](state-matrix.md);
 loading reserves geometry and errors retain query/filters.
+The complete filter region, including any selected-condition row, ends one
+`space-4` below the first result surface. This 1rem/17px rhythm is calibrated
+from the production Paldeck and applies to every encyclopedia page; page-owned
+tables, cards and detail panels must not add a second top margin.
 
 The Palworld pal catalog shows 64 records per desktop page and 24 per phone
 page, with independent resumable paging. Desktop facets share one muted pill

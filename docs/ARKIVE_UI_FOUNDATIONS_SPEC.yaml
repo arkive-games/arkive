@@ -222,6 +222,7 @@ spacing:
   rhythm:
     compact_control_gap: "space-2"
     related_content_gap: "space-3 or space-4"
+    encyclopedia_filter_to_content: "space-4 (1rem, 17px at the Arkive root size) below the complete filter region, measured from the region's bottom edge to the first content surface. This is calibrated from the production Paldeck at https://palworld.arkive.games/pals and is the fixed cross-page encyclopedia standard."
     section_gap: "space-6 on mobile; space-8 on desktop"
   rules:
     - "Use an approved step before introducing a new spacing value."
