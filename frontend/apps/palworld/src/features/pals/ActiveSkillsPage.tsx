@@ -1,10 +1,10 @@
 import { CatalogNoResults } from '../catalog/components'
 import { useCatalogState } from '../catalog/catalogMemory'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
-import { FilterChip, FilterRow, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
+import { FilterChip, CatalogSearchInput, toggleValue, useIsMobile, Popover, PopoverContent, PopoverTrigger, cn } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -17,6 +17,24 @@ import {
 } from '../../lib/pals'
 import { elementIconUrl, hasElementIcon } from '../../lib/assets'
 import { PalPageLoading, formatSkillRange } from './components'
+
+function SkillFacet({ label, children }: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const close = () => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(false), 160) }
+  return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger asChild>
+      <button type="button" onPointerEnter={() => { if (timer.current) clearTimeout(timer.current); setOpen(true) }} onPointerLeave={close}
+        onFocus={() => setOpen(true)} className={cn('min-h-9 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:!bg-foreground hover:!text-background data-[state=open]:!bg-foreground data-[state=open]:!text-background', open && 'bg-foreground text-background')}>
+        {label}
+      </button>
+    </PopoverTrigger>
+    <PopoverContent align="start" sideOffset={8} onPointerEnter={() => { if (timer.current) clearTimeout(timer.current) }} onPointerLeave={close}
+      className="w-96 p-4" onOpenAutoFocus={event => event.preventDefault()}>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{children}</div>
+    </PopoverContent>
+  </Popover>
+}
 
 export default function ActiveSkillsPage() {
   const { t, i18n } = useTranslation()
@@ -86,8 +104,8 @@ export default function ActiveSkillsPage() {
   // header's filter icon (see ContentPage). The search box stays on the page: it
   // is not a filter.
   const filters = bundle ? (
-    <>
-      <FilterRow label={t('activeSkill.element')} testId="active-skill-element-filter">
+    <div className="flex min-h-[var(--arkive-catalog-control-height)] items-center gap-1 rounded-full bg-muted p-1">
+      <SkillFacet label={t('activeSkill.element')}>
         {elements.map((e) => (
           <FilterChip
             variant="pill"
@@ -102,8 +120,8 @@ export default function ActiveSkillsPage() {
             </span>
           </FilterChip>
         ))}
-      </FilterRow>
-      <FilterRow label={t('pal.type')} testId="active-skill-type-filter">
+      </SkillFacet>
+      <SkillFacet label={t('pal.type')}>
         {(['melee', 'ranged'] as const).map((tp) => (
           <FilterChip
             variant="pill"
@@ -115,8 +133,8 @@ export default function ActiveSkillsPage() {
             {t(tp === 'melee' ? 'pal.melee' : 'pal.ranged')}
           </FilterChip>
         ))}
-      </FilterRow>
-      <FilterRow label={t('activeSkill.fruit')} testId="active-skill-source-filter">
+      </SkillFacet>
+      <SkillFacet label={t('activeSkill.fruit')}>
         {(['fruit', 'default'] as const).map((src) => (
           <FilterChip
             variant="pill"
@@ -128,8 +146,8 @@ export default function ActiveSkillsPage() {
             {t(src === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot')}
           </FilterChip>
         ))}
-      </FilterRow>
-    </>
+      </SkillFacet>
+    </div>
   ) : undefined
 
   return (
@@ -294,3 +312,4 @@ export default function ActiveSkillsPage() {
     </ContentPage>
   )
 }
+
