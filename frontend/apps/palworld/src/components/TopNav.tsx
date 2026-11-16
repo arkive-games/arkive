@@ -20,7 +20,7 @@ export function TopNav({ active }: { active: NavKey }) {
     { key: '/', label: t('breeding.navMap'), active: active === '/' },
     { key: '/breeding', label: t('breeding.navBreeding'), active: active === '/breeding' },
     {
-      key: 'pals',
+      key: '/pals',
       label: t('nav.pals'),
       children: [
         ...PAL_REFERENCE_ENTRIES.map(entry => ({ key: entry.key, label: t(entry.labelKey), active: active === entry.key })),
@@ -28,7 +28,7 @@ export function TopNav({ active }: { active: NavKey }) {
       ],
     },
     {
-      key: 'database',
+      key: '/items',
       label: t('nav.database'),
       children: [
         ...DATABASE_REFERENCE_ENTRIES.map(entry => ({ key: entry.key, label: t(entry.labelKey), active: active === entry.key })),

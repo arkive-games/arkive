@@ -71,7 +71,7 @@ export function ContentPageFilters({ className }: { className?: string }) {
 
 /** Desktop filters lead; search stays at the right edge. Phones retain search-first flow. */
 export function EncyclopediaToolbar({ search, children }: { search: ReactNode; children?: ReactNode }) {
-  return <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+  return <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
     <div className="order-2 min-w-0 flex-1 lg:order-1">{children}</div>
     <div className="order-1 min-w-0 shrink-0 lg:order-2 lg:ml-auto">{search}</div>
   </div>

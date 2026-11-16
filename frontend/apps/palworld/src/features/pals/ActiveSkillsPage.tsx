@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
-import { CatalogSearchInput, toggleValue, useIsMobile, CatalogFacetMenu, CatalogFacetOption, CatalogFacetTrack, CatalogFacetGrid, useCatalogFacetMenus } from '@gamemap/ui'
+import { CatalogSearchInput, toggleValue, useIsMobile, CatalogFacetMenu, CatalogFacetOption, CatalogFacetTrack, CatalogFacetGrid, CatalogSelectedFilters, useCatalogFacetMenus } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -84,6 +84,7 @@ export default function ActiveSkillsPage() {
 
   const menuProps = useCatalogFacetMenus()
   const filters = bundle ? (
+    <>
     <CatalogFacetTrack>
       <CatalogFacetMenu {...menuProps('elements')} label={t('activeSkill.element')}
         count={elementSel.length} testId="active-skill-element-filter">
@@ -111,6 +112,12 @@ export default function ActiveSkillsPage() {
         </CatalogFacetGrid>
       </CatalogFacetMenu>
     </CatalogFacetTrack>
+    <CatalogSelectedFilters label={t('filter')} clearLabel={t('clear')} choices={[
+      ...elementSel.map(value => ({ key: `element-${value}`, label: bundle.enums.elements[value] ?? value, onRemove: () => setElementSel(current => current.filter(item => item !== value)) })),
+      ...typeSel.map(value => ({ key: `type-${value}`, label: t(value === 'melee' ? 'pal.melee' : 'pal.ranged'), onRemove: () => setTypeSel(current => current.filter(item => item !== value)) })),
+      ...sourceSel.map(value => ({ key: `source-${value}`, label: t(value === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot'), onRemove: () => setSourceSel(current => current.filter(item => item !== value)) })),
+    ]} onClear={() => { setElementSel([]); setTypeSel([]); setSourceSel([]) }} />
+    </>
   ) : undefined
 
   return (
@@ -200,7 +207,7 @@ export default function ActiveSkillsPage() {
                 <th className="px-2 py-2 text-right">{t('pal.power')}</th>
                 <th className="px-2 py-2 text-right">{t('pal.cooldown')}</th>
                 <th className="px-2 py-2 text-right">{t('pal.range')}</th>
-                <th className="px-2 py-2 text-center">{t('activeSkill.fruit')}</th>
+                <th className="whitespace-nowrap px-2 py-2 text-center">{t('activeSkill.fruit')}</th>
               </tr>
             </thead>
             <tbody>
@@ -246,7 +253,7 @@ export default function ActiveSkillsPage() {
                   <td className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums text-muted-foreground">
                     {formatSkillRange(s.minRange, s.maxRange, lng)}
                   </td>
-                  <td className="px-2 py-1.5 text-center">
+                  <td className="whitespace-nowrap px-2 py-1.5 text-center">
                     {s.isFruit ? (
                       <Check
                         className="mx-auto size-4 text-emerald-600 dark:text-emerald-400"

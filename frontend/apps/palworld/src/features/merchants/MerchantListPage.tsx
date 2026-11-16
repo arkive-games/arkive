@@ -96,7 +96,7 @@ export default function MerchantListPage() {
       ) : list.length === 0 ? (
         <CatalogNoResults />
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5">
           {mobilePaging.visibleItems.map((m) => {
             const curIcon = items.byId.get(m.currency)?.icon
             return (
