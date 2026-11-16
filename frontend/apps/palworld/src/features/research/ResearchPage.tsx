@@ -14,7 +14,6 @@ import {
   type TechBundle,
 } from '../../lib/catalog'
 import { loadPals, type PalsBundle, type WorkType } from '../../lib/pals'
-import { workIconUrl } from '../../lib/assets'
 import { buildResearchTrees, type ResearchTreeNode } from '../../lib/researchTree'
 import {
   CatalogDataProvider,
@@ -22,7 +21,6 @@ import {
   ItemGlyph,
   ItemHover,
 } from '../catalog/components'
-import { IconImg } from '../pals/components/atoms'
 
 /** Compact material cost chip for tree nodes: item icon + count only (the
  *  name shows in the hover card / on the linked item page). */
@@ -306,7 +304,6 @@ export default function ResearchPage() {
                 {trees.map(({ category, roots }) => <CatalogFacetOption key={category}
                   active={category === current?.category} onClick={() => setActiveCat(category)} testId={`research-category-${category}`}
                   label={<span className="inline-flex items-center gap-2">
-                    <IconImg src={workIconUrl(category as WorkType)} alt="" size={16} />
                     {pals.enums.work[category as WorkType] ?? category}
                     <span className="text-xs tabular-nums opacity-70">{roots.reduce((sum, r) => sum + countNodes(r), 0)}</span>
                   </span>}

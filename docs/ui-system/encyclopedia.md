@@ -32,7 +32,8 @@ keep the drop picker as a peer entry. Mouse hover opens a facet without stealing
 input focus, and leaving the trigger/panel closes it after a short transit delay.
 Keyboard focus, Arrow Down and Escape work, while touch opens by activation.
 Only one facet panel opens at a time. Show aligned options and selection checks,
-without redundant visible panel titles. Selected facets remain visible below
+without redundant visible panel titles. Inline options have no decorative icons,
+checkmarks, label borders or local button variants. Selected facets remain visible below
 with individual removal and Clear filters. Pagination belongs below the results;
 search and filter changes start at page one. Do not add a grid/list switch.
 Keep original Pal thumbnails and compact metadata/name regions.
@@ -46,7 +47,10 @@ Facet popover sizing and balanced row layout follow
 `catalog_controls_and_copy.facet_popovers` in the
 [UI foundations](../ARKIVE_UI_FOUNDATIONS_SPEC.yaml): content-sized surfaces,
 a 22rem outer width cap, and automatic row counts instead of per-facet columns.
-Searchable drop results use the documented large-set exception.
+Searchable drop results use the documented large-set exception. The current
+single-facet rule is authoritative: item, building, merchant and research pages
+render their options directly in the shared track and omit the repeated facet
+label; multi-facet pages keep first-level labels as their menu controls.
 The directory uses collapsible parent groups with indented child links and
 game-owned artwork. When the quiet directory collapses, retain each parent's
 artwork and directly available child icon links with accessible names/tooltips.
