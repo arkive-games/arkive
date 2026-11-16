@@ -20,7 +20,6 @@ import {
 } from '../../lib/pals'
 import { elementIconUrl, hasElementIcon, palIconUrl } from '../../lib/assets'
 import { zukanOrder } from '../../lib/palId'
-import { filterStrings } from './filterStrings'
 import { PalPageLoading } from './components'
 
 /**
@@ -32,7 +31,6 @@ import { PalPageLoading } from './components'
 export default function PartnerSkillsPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
-  const fs = filterStrings(lng)
   const fs = filterStrings(lng)
   // Phones get stacked cards instead of the 720px-wide table.
   const isMobile = useIsMobile()
