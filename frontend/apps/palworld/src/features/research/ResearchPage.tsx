@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { cn, useIsMobile, CatalogFacetTrack, CatalogFacetGroup, CatalogFacetChoice } from '@gamemap/ui'
+import { cn, useIsMobile, CatalogFacetTrack, CatalogFacetOption } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadItems,
@@ -301,19 +301,16 @@ export default function ResearchPage() {
         <CatalogPageLoading />
       ) : (
         <CatalogDataProvider items={items} tech={tech} pals={pals}>
-          <p className="mb-4 text-sm text-muted-foreground">{t('research.caption')}</p>
           <div className="mb-5">
             <CatalogFacetTrack>
-              <CatalogFacetGroup label={t('filters.category')} count={0} testId="research-category-filter">
-                {trees.map(({ category, roots }) => <CatalogFacetChoice key={category}
-                  active={category === current?.category} onClick={() => setActiveCat(category)} testId={`research-category-${category}`}>
-                  <span className="inline-flex items-center gap-2">
+                {trees.map(({ category, roots }) => <CatalogFacetOption key={category}
+                  active={category === current?.category} onClick={() => setActiveCat(category)} testId={`research-category-${category}`}
+                  label={<span className="inline-flex items-center gap-2">
                     <IconImg src={workIconUrl(category as WorkType)} alt="" size={16} />
                     {pals.enums.work[category as WorkType] ?? category}
                     <span className="text-xs tabular-nums opacity-70">{roots.reduce((sum, r) => sum + countNodes(r), 0)}</span>
-                  </span>
-                </CatalogFacetChoice>)}
-              </CatalogFacetGroup>
+                  </span>}
+                />)}
             </CatalogFacetTrack>
           </div>
           {current ? (
