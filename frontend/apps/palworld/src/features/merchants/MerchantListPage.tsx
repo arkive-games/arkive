@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { FilterChip, FilterRow, CatalogSearchInput } from '@gamemap/ui'
 import { MapPin } from 'lucide-react'
-import { ContentPage } from '../../components/ContentPage'
+import { EncyclopediaToolbar, ContentPage } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadItems, type ItemsBundle } from '../../lib/catalog'
 import { loadMerchants, type MerchantsBundle } from '../../lib/merchants'
@@ -65,16 +65,13 @@ export default function MerchantListPage() {
 
   return (
     <ContentPage browsing={{ section: 'merchants', ready: !!merchants && !!items, resultsKey: JSON.stringify([query,category]) }} active="/merchants" title={t('merchant.title')} heading>
-      <div className="mb-3 flex flex-wrap items-center gap-3">
-        <CatalogSearchInput
+      <EncyclopediaToolbar search={<CatalogSearchInput
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('merchant.searchPlaceholder')}
           className=""
-        />
-
-      </div>
+        />}>
       {merchants ? (
         <FilterRow label={t('filters.category')} testId="merchant-category-filter">
           {['all', ...categories].map((key) => (
@@ -90,6 +87,7 @@ export default function MerchantListPage() {
           ))}
         </FilterRow>
       ) : null}
+      </EncyclopediaToolbar>
 
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>

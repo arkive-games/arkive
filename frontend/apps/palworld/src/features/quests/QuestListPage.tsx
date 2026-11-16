@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { CatalogSearchInput } from '@gamemap/ui'
-import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
 import { CatalogPageLoading, CatalogNoResults } from '../catalog/components'
@@ -85,17 +85,13 @@ export default function QuestListPage() {
       filters={filters}
       filtersActive={type !== 'all'}
     >
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <CatalogSearchInput
+          <EncyclopediaToolbar search={<CatalogSearchInput
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('quest.searchPlaceholder')}
               className=""
-            />
-            <ContentPageFilters />
-
-          </div>
+            />}><ContentPageFilters /></EncyclopediaToolbar>
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>
