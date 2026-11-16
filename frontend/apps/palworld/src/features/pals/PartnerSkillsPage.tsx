@@ -264,11 +264,11 @@ export default function PartnerSkillsPage() {
                 <th className="w-44 px-2 py-2">{fs.col.name}</th>
                 <th className="w-full px-2 py-2">{t('pal.section.partnerSkill')}</th>
                 <th className="px-2 py-2">{t('filters.category')}</th>
-                <th className="px-2 py-2 text-right">
+                <th className="whitespace-nowrap px-2 py-2 text-right">
                   <button
                     type="button"
                     onClick={() => setPowerSort((s) => (s === 'desc' ? 'asc' : 'desc'))}
-                    className="inline-flex items-center gap-0.5 hover:text-foreground"
+                    className="inline-flex whitespace-nowrap items-center gap-0.5 hover:text-foreground"
                     data-testid="partner-skill-power-sort"
                   >
                     {t('pal.power')}
