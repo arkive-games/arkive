@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
+import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, CatalogSelectedFilters, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -115,6 +115,7 @@ export default function PartnerSkillsPage() {
   // filter icon (see ContentPage). The search box and the power-sort control stay
   // on the page: neither is a filter.
   const filters = bundle ? (
+    <>
     <CatalogFacetTrack>
       <CatalogFacetGroup label={t('filters.category')} testId="partner-skill-category-filter" count={categorySel.length}>
         {categories.map((c) => (
@@ -144,6 +145,11 @@ export default function PartnerSkillsPage() {
         ))}
       </CatalogFacetGroup>
     </CatalogFacetTrack>
+    <CatalogSelectedFilters label={t('filter')} clearLabel={t('clear')} choices={[
+      ...categorySel.map(value => ({ key: `category-${value}`, label: t(`partner.category.${value}`), onRemove: () => setCategorySel(current => current.filter(item => item !== value)) })),
+      ...elementSel.map(value => ({ key: `element-${value}`, label: bundle.enums.elements[value] ?? value, onRemove: () => setElementSel(current => current.filter(item => item !== value)) })),
+    ]} onClear={() => { setCategorySel([]); setElementSel([]) }} />
+    </>
   ) : undefined
 
   return (
