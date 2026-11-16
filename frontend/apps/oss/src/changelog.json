@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.0",
+      "date": "2026-11-17",
+      "commit": "c8541d8d8a491219bad6a33de4ac3e4c73549933",
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Added 52 searchable ground wardrobes, updated two prop positions and removed one obsolete boulder marker.",
+            "zh-CN": "新增52个可搜索的地面换装柜，更新两处道具坐标并移除一个过期巨石标记。",
+            "zh-TW": "新增52個可搜尋的地面換裝櫃，更新兩處道具座標並移除一個過期巨石標記。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-10-29",
       "commit": "c6e1dc42a17617724c2147db2c7986e0bef9051a",

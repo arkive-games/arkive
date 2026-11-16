@@ -9,7 +9,7 @@ host `oss.arkive.games`. The local app port is 15181; PBZ owns 15180.
 The frontend cannot render a map without the separate exported datasets:
 
 - `data-oss`: `map-display.json`, `tile-overrides.json`,
-  `collections.json`, and `props-ground-26006400.json`.
+  `collections.json`, and `props-ground-26466613.json`.
 - `resource-oss`: every tile referenced by those documents, including the
   expanded base layers and any tile overrides.
 
@@ -89,6 +89,16 @@ public homepage and deployment workflow only after they land and deploy.
 ## Execution Record
 
 ### Prepared map-loading optimization (November 17, 2026)
+
+Ground-prop follow-up: data commit `fa0bd7a` adds
+`props-ground-26466613.json` with 52 wardrobes, two corrected prop positions
+and one obsolete boulder removed (1,562 prop markers). Publish that data
+document before the frontend feature commit `c8541d8d`, which switches its
+request to the new filename and adds wardrobe filtering, icons and search.
+Keep the previous document available for older clients. Default visibility
+of the existing auxiliary categories is unchanged. Their names are legacy
+export labels: `Spawner` does not establish what is spawned, and `Tower`
+does not establish camera-control behavior.
 
 This optimization is verified locally and is not yet published. Publish
 resource commit `126d8bf` before data commit `1e51333`, both on
