@@ -452,10 +452,12 @@ export default function BreedingPage() {
     <TooltipProvider delayDuration={200}>
       <ContentPage active="/breeding" title={t('breeding.navBreeding')} hideMobileFooter>
         <CatalogDataProvider pals={pals ?? undefined}>
+          <div className="mb-4">
           <CatalogFacetTrack>
             <CatalogFacetOption active={gen == null} label={t('breeding.modeRecipes')} onClick={() => setMode('recipes')} testId="breeding-mode-recipes" inline />
             <CatalogFacetOption active={gen != null} label={t('breeding.modeChains')} onClick={() => setMode('chains')} testId="breeding-mode-chains" inline />
           </CatalogFacetTrack>
+          </div>
           {isMobile ? (
             // Recipes retain the familiar A + B = C equation. Planner mode
             // gives the source and target enough width for full Pal identity,
