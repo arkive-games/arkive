@@ -20,6 +20,23 @@ it('paginates desktop results and resets the page when the search changes', () =
   expect(result.result.current.visibleItems[0]).toBe(0)
 })
 
+it('uses the larger desktop page size while keeping mobile pages independently resumable', () => {
+  viewport.mobile = false
+  const items = Array.from({ length: 100 }, (_, id) => id)
+  const result = renderHook(() => useMobilePagination(items, { pageSize: 24, desktop: true, desktopPageSize: 64 }))
+  expect(result.result.current.visibleItems).toHaveLength(64)
+  expect(result.result.current.pageCount).toBe(2)
+  act(() => result.result.current.goToPage(2))
+  expect(result.result.current.visibleItems).toEqual(items.slice(64))
+  viewport.mobile = true
+  result.rerender()
+  expect(result.result.current.visibleItems).toHaveLength(24)
+  expect(result.result.current.page).toBe(1)
+  viewport.mobile = false
+  result.rerender()
+  expect(result.result.current.page).toBe(2)
+})
+
 it('keeps the mobile page through loading and desktop visits, clamping only after data arrives', () => {
   const items = Array.from({ length: 100 }, (_, id) => id)
   const first = renderHook(({ list }) => useMobilePagination(list, { pageSize: 10 }), { initialProps: { list: items } })

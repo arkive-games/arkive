@@ -23,26 +23,27 @@ standard-width column. Keep the shared page gutter at the viewport edges.
 Shared states come from [States](state-matrix.md);
 loading reserves geometry and errors retain query/filters.
 
-The Palworld pal catalog uses a searchable grid with 24 records per page on
-desktop and mobile. Desktop facet selectors sit on the left and search on the
-right. Both use the shared compact desktop height and text-sm control labels.
-Elements and work suitability open aligned icon grids with text-sm labels and
-a reserved selection-check slot; omit redundant visible panel titles. The third
-selector contains reaction, size, sleeplessness and drop filters. Selected facets
-remain visible below the toolbar with individual removal and Clear filters.
-The drop picker stays inside that third surface rather than opening a nested
-popover. Pagination belongs below the results; do not add a grid/list switch.
-Search and filter changes start at page one. Keep original Pal thumbnails and
-compact metadata/name regions.
+The Palworld pal catalog shows 64 records per desktop page and 24 per phone
+page, with independent resumable paging. Desktop facets share one muted pill
+track on the left, with the shared capsule search on the right. Both use the
+catalog control geometry and text-sm labels. Elements, work suitability,
+reaction, size and sleeplessness remain directly available on the same row;
+keep the drop picker as a peer entry. Mouse hover opens a facet without stealing
+input focus, and leaving the trigger/panel closes it after a short transit delay.
+Keyboard focus, Arrow Down and Escape work, while touch opens by activation.
+Only one facet panel opens at a time. Show aligned options and selection checks,
+without redundant visible panel titles. Selected facets remain visible below
+with individual removal and Clear filters. Pagination belongs below the results;
+search and filter changes start at page one. Do not add a grid/list switch.
+Keep original Pal thumbnails and compact metadata/name regions.
 The directory uses collapsible parent groups with indented child links and
-game-owned content artwork. Parent toggles change visibility, not navigation
-or the active category. The quiet collapsed variant retains only primary group
-artwork, with labelled
-child links in a side popover. Use a simple directional chevron for the overall
-expand/collapse control, without a boxed sidebar glyph or a frame around the rail.
+game-owned artwork. When the quiet directory collapses, retain each parent's
+artwork and directly available child icon links with accessible names/tooltips.
+Parent toggles still fold their own children, without navigation or filter reset.
+Use a simple directional chevron for the overall expand/collapse control.
 Encyclopedia remains the highest directory level, with its original text-2xl
-title and orange leading bar. Align that title box with the top of the desktop
-toolbar; both inherit the shared content-page top-space token below navigation.
+title and orange leading bar. Align that title box with the desktop toolbar top;
+both inherit the shared content-page top-space token below navigation.
 
 ## Desktop sidebar
 

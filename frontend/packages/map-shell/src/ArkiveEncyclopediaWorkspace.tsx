@@ -1,6 +1,6 @@
-import { useEffect, useId, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
+import { useId, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import { cn, Popover, PopoverContent, PopoverTrigger, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
+import { cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@gamemap/ui'
 
 export interface EncyclopediaEntry { key: string; label: string; icon: ReactNode; children?: readonly EncyclopediaEntry[] }
 export interface EncyclopediaGroup { key: string; label: string; icon?: ReactNode; collapsible?: boolean; entries: readonly EncyclopediaEntry[] }
@@ -16,31 +16,17 @@ export function useEncyclopediaDesktop() {
   return useSyncExternalStore(subscribeDesktop, () => window.matchMedia(desktopQuery).matches, () => false)
 }
 
-function DirectoryGroup({ group, collapsed, active, parentFlyout, children }: { group: EncyclopediaGroup; collapsed: boolean; active: string; parentFlyout: boolean; children: ReactNode }) {
+function DirectoryGroup({ group, collapsed, active, compactGroups, children }: { group: EncyclopediaGroup; collapsed: boolean; active: string; compactGroups: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(true)
-  const [flyoutOpen, setFlyoutOpen] = useState(false)
   const id = useId()
-  useEffect(() => {
-    if (!flyoutOpen || typeof window.matchMedia !== 'function') return
-    const media = window.matchMedia(desktopQuery)
-    const closeOnMobile = () => { if (!media.matches) setFlyoutOpen(false) }
-    media.addEventListener('change', closeOnMobile)
-    closeOnMobile()
-    return () => media.removeEventListener('change', closeOnMobile)
-  }, [flyoutOpen])
-  if (collapsed && parentFlyout && group.collapsible) return <Popover open={flyoutOpen} onOpenChange={setFlyoutOpen}>
-    <PopoverTrigger asChild>
-      <button type="button" aria-label={group.label} title={group.label}
-        className={cn('mx-auto mb-3 grid size-11 place-items-center rounded-lg border-l-2 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring',
-          group.entries.some(entry => currentEntry(entry, active)) ? 'border-[color:var(--arkive-nav-accent)] bg-muted' : 'border-transparent')}>
-        <span className="grid size-8 place-items-center" aria-hidden>{group.icon}</span>
-      </button>
-    </PopoverTrigger>
-    <PopoverContent side="right" align="start" sideOffset={12} collisionPadding={16} aria-label={group.label}
-      className="w-60 space-y-1 p-2" onClick={event => {
-        if ((event.target as HTMLElement).closest('a')) setFlyoutOpen(false)
-      }}>{children}</PopoverContent>
-  </Popover>
+  if (collapsed && compactGroups && group.collapsible) return <section className="mb-4">
+    <button type="button" aria-label={group.label} title={group.label} aria-expanded={open} aria-controls={id}
+      onClick={() => setOpen(value => !value)}
+      className="mx-auto mb-2 grid size-9 place-items-center rounded-lg hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
+      <span className="grid size-7 place-items-center" aria-hidden>{group.icon}</span>
+    </button>
+    <div id={id} hidden={!open} className="space-y-1">{children}</div>
+  </section>
   if (!group.collapsible || collapsed) return <div className="mb-4 space-y-1">
     {!collapsed && group.label && <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">{group.label}</p>}
     {children}
@@ -99,9 +85,9 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
         </button>
       </div>
       <nav id={navId} aria-label={label}>
-        {groups.map(group => <DirectoryGroup key={group.key} group={{ ...group, label: group.label === label && !group.collapsible ? '' : group.label }} collapsed={collapsed} active={active} parentFlyout={appearance === 'quiet'}>
+        {groups.map(group => <DirectoryGroup key={group.key} group={{ ...group, label: group.label === label && !group.collapsible ? '' : group.label }} collapsed={collapsed} active={active} compactGroups={appearance === 'quiet'}>
           {group.entries.map(entry => {
-            const iconOnly = collapsed && !(appearance === 'quiet' && group.collapsible)
+            const iconOnly = collapsed
             return <div key={entry.key}>
             {entryLink(entry, cn('group flex items-center px-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring',
               appearance === 'quiet' ? 'min-h-10 rounded-lg font-medium' : 'min-h-12 rounded-xl font-semibold',

@@ -19,17 +19,19 @@ interface MobilePaginationOptions {
   pageSize?: number
   resetKey?: string
   desktop?: boolean
+  desktopPageSize?: number
 }
 
 export function useMobilePagination<T>(
   items: T[],
-  { pageSize = 24, resetKey = '', desktop = false }: MobilePaginationOptions = {},
+  { pageSize = 24, resetKey = '', desktop = false, desktopPageSize = pageSize }: MobilePaginationOptions = {},
 ) {
   const isMobile = useIsMobile()
-  const pagePartition = `${typeof window === 'undefined' ? 'catalog' : window.location.pathname}:${resetKey || 'default'}:${pageSize}`
+  const activePageSize = isMobile ? pageSize : desktopPageSize
+  const pagePartition = `${typeof window === 'undefined' ? 'catalog' : window.location.pathname}:${resetKey || 'default'}:${activePageSize}`
   const [page, setPage] = useMemoryState(pageRecord, { partition: pagePartition })
   const enabled = isMobile || desktop
-  const pageCount = enabled ? Math.max(1, Math.ceil(items.length / pageSize)) : 1
+  const pageCount = enabled ? Math.max(1, Math.ceil(items.length / activePageSize)) : 1
   const currentPage = enabled && items.length > 0 ? Math.min(page, pageCount) : page
   const previousResetKey = useRef(resetKey)
 
@@ -45,8 +47,8 @@ export function useMobilePagination<T>(
   }, [enabled, items.length, pageCount, setPage])
 
   const visibleItems = useMemo(
-    () => (enabled ? items.slice((currentPage - 1) * pageSize, currentPage * pageSize) : items),
-    [enabled, items, currentPage, pageSize],
+    () => (enabled ? items.slice((currentPage - 1) * activePageSize, currentPage * activePageSize) : items),
+    [enabled, items, currentPage, activePageSize],
   )
 
   const goToPage = useCallback(

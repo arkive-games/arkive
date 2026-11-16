@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { useState } from 'react'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ArkiveEncyclopediaWorkspace } from './ArkiveEncyclopediaWorkspace'
 
@@ -18,17 +18,15 @@ function Workspace({ collapsible = false, appearance = 'framed' }: { collapsible
   </ArkiveEncyclopediaWorkspace>
 }
 describe('encyclopedia workspace', () => {
-  it('keeps the collapsed quiet directory at the parent level and opens labelled child links on demand', async () => {
+  it('retains child navigation under each parent when the quiet directory is collapsed', () => {
     render(<Workspace collapsible appearance="quiet" />)
     fireEvent.change(screen.getByRole('textbox', { name: 'Search' }), { target: { value: 'ore' } })
     fireEvent.click(screen.getByRole('button', { name: 'Collapse navigation' }))
+    expect(screen.getByRole('link', { name: 'Items' }).getAttribute('aria-current')).toBe('page')
+    fireEvent.click(screen.getByRole('button', { name: 'Records' }))
     expect(screen.queryByRole('link', { name: 'Items' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Records' }))
-    const link = await screen.findByRole('link', { name: 'Items' })
-    expect(link.getAttribute('aria-current')).toBe('page')
-    link.addEventListener('click', event => event.preventDefault())
-    fireEvent.click(link)
-    await waitFor(() => expect(screen.queryByRole('link', { name: 'Items' })).toBeNull())
+    expect(screen.getByRole('link', { name: 'Items' })).toBeTruthy()
     expect((screen.getByRole('textbox', { name: 'Search' }) as HTMLInputElement).value).toBe('ore')
   })
   it('folds a parent group without changing the selected category or reading controls', () => {

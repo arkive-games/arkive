@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
   Popover, PopoverContent, PopoverTrigger, FilterChip, toggleValue, cn,
@@ -17,24 +17,53 @@ function Glyph({ src, size = 20 }: { src: string; size?: number }) {
     onError={() => setOk(false)} className="shrink-0 object-contain" />
 }
 
-/** Each selector owns one focus-managed surface; selecting a facet keeps it open. */
-function FacetMenu({ label, count, testId, children }: {
-  label: string; count: number; testId: string; children: ReactNode;
+/** Pointer hover opens without stealing input focus; keyboard and touch remain supported. */
+function FacetMenu({ label, count, testId, open, onOpenChange, contentClassName, children }: {
+  label: string; count: number; testId: string; open: boolean;
+  onOpenChange: (open: boolean) => void; contentClassName?: string; children: ReactNode;
 }) {
-  return <Popover>
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hoverOpen = useRef(false)
+  const skipFocusOpen = useRef(false)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const cancelClose = () => { if (closeTimer.current) clearTimeout(closeTimer.current) }
+  const leave = () => {
+    cancelClose()
+    if (hoverOpen.current) closeTimer.current = setTimeout(() => onOpenChange(false), 160)
+  }
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current) }, [])
+  return <Popover open={open} onOpenChange={onOpenChange}>
     <PopoverTrigger asChild>
       <button type="button" aria-label={label} data-testid={testId}
-        className="flex min-h-11 items-center justify-center gap-1 rounded-lg border border-border bg-card px-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:border-ring data-[state=open]:bg-muted lg:min-h-9 lg:gap-2 lg:px-3">
+        onPointerEnter={event => {
+          if (event.pointerType !== 'mouse') return
+          cancelClose(); hoverOpen.current = true; onOpenChange(true)
+        }} onPointerLeave={leave}
+        onFocus={event => {
+          if (skipFocusOpen.current) { skipFocusOpen.current = false; return }
+          if (!event.currentTarget.matches(':focus-visible')) return
+          hoverOpen.current = false; onOpenChange(true)
+        }}
+        onKeyDown={event => {
+          if (event.key !== 'ArrowDown') return
+          event.preventDefault(); hoverOpen.current = false; onOpenChange(true)
+          setTimeout(() => contentRef.current?.querySelector<HTMLElement>('button, input')?.focus(), 0)
+        }}
+        className={cn('flex min-h-[var(--arkive-catalog-control-inner-height)] items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-card data-[state=open]:text-foreground',
+          count > 0 && 'bg-card text-foreground')}>
         <span className="min-w-0 whitespace-nowrap">{label}</span>
-        {count > 0 && <span className="hidden size-5 shrink-0 place-items-center rounded-full bg-foreground text-xs tabular-nums text-background sm:grid">{count}</span>}
-        <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        {count > 0 && <span className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-xs tabular-nums text-background">{count}</span>}
       </button>
     </PopoverTrigger>
-    <PopoverContent align="start" sideOffset={8} collisionPadding={16}
-      className="z-[var(--arkive-layer-nested-overlay)] max-h-[min(70dvh,var(--radix-popover-content-available-height))] w-112 max-w-[calc(100vw-2rem)] overflow-y-auto p-4"
-      aria-label={label}>
-      {children}
-    </PopoverContent>
+    <PopoverContent ref={contentRef} align="start" sideOffset={8} collisionPadding={16}
+      onPointerEnter={cancelClose} onPointerLeave={leave}
+      onOpenAutoFocus={event => { if (hoverOpen.current) event.preventDefault() }}
+      onCloseAutoFocus={event => {
+        if (hoverOpen.current) event.preventDefault()
+        else skipFocusOpen.current = true
+      }}
+      className={cn('z-[var(--arkive-layer-nested-overlay)] max-h-[min(70dvh,var(--radix-popover-content-available-height))] w-112 max-w-[calc(100vw-2rem)] overflow-y-auto p-4', contentClassName)}
+      aria-label={label}>{children}</PopoverContent>
   </Popover>
 }
 
@@ -61,7 +90,10 @@ export function PalFilters({ bundle, filter, onChange, search }: {
     return [...ids].map(id => ({ id, name: bundle.items[id] ?? id, icon: bundle.itemIcon[id] }))
       .sort((a, b) => (bundle.itemOrder[a.id] ?? last) - (bundle.itemOrder[b.id] ?? last) || a.id.localeCompare(b.id))
   }, [bundle])
-  const secondaryCount = filter.reactions.length + filter.sizes.length + Number(filter.nocturnal) + Number(filter.loot !== null)
+  const [openFacet, setOpenFacet] = useState<string | null>(null)
+  const menuProps = (id: string) => ({ open: openFacet === id, onOpenChange: (next: boolean) => {
+    setOpenFacet(current => next ? id : current === id ? null : current)
+  } })
   const choices = [
     ...filter.elements.map(value => ({ key: `element-${value}`, label: bundle.enums.elements[value] ?? value,
       icon: elementIconUrl(value), remove: () => onChange({ ...filter, elements: toggleValue(filter.elements, value) }) })),
@@ -78,9 +110,9 @@ export function PalFilters({ bundle, filter, onChange, search }: {
       remove: () => onChange({ ...filter, loot: null }) }] : []),
   ]
   return <div data-testid="pal-filter-toolbar" className="space-y-3">
-    <div className="flex flex-col items-start gap-3 lg:flex-row lg:justify-between">
-      <div className="flex flex-wrap gap-2">
-        <FacetMenu label={fs.elements} count={filter.elements.length} testId="pal-filter-elements">
+    <div className="flex flex-col items-start gap-3 lg:flex-row lg:flex-wrap lg:justify-between">
+      <div className="flex min-h-[var(--arkive-catalog-control-height)] flex-wrap items-center gap-1 rounded-2xl bg-muted p-1 lg:h-[var(--arkive-catalog-control-height)] lg:flex-nowrap lg:rounded-full">
+        <FacetMenu {...menuProps('elements')} label={fs.elements} count={filter.elements.length} testId="pal-filter-elements">
           <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 sm:grid-cols-3">
             {elements.map(value => <FacetOption key={value} active={filter.elements.includes(value)}
               onClick={() => onChange({ ...filter, elements: toggleValue(filter.elements, value) })}
@@ -88,7 +120,7 @@ export function PalFilters({ bundle, filter, onChange, search }: {
               icon={<Glyph src={elementIconUrl(value)} />} />)}
           </div>
         </FacetMenu>
-        <FacetMenu label={fs.col.work} count={filter.works.length} testId="pal-filter-works">
+        <FacetMenu {...menuProps('works')} label={fs.col.work} count={filter.works.length} testId="pal-filter-works">
           <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 sm:grid-cols-3">
             {works.map(value => <FacetOption key={value} active={filter.works.includes(value)}
               onClick={() => onChange({ ...filter, works: toggleValue(filter.works, value) })}
@@ -96,32 +128,30 @@ export function PalFilters({ bundle, filter, onChange, search }: {
               icon={<Glyph src={workIconUrl(value)} />} />)}
           </div>
         </FacetMenu>
-        <FacetMenu label={fs.filters} count={secondaryCount} testId="pal-filter-other">
-          <div className="space-y-4">
-            <fieldset><legend className="mb-2 text-sm font-semibold text-muted-foreground">{fs.reaction}</legend>
-              <div className="grid grid-cols-2 gap-2">{reactions.map(value => <FacetOption key={value}
-                active={filter.reactions.includes(value)} onClick={() => onChange({ ...filter, reactions: toggleValue(filter.reactions, value) })}
-                label={fs.reactions[value] ?? value} />)}</div>
-            </fieldset>
-            <fieldset><legend className="mb-2 text-sm font-semibold text-muted-foreground">{t('pal.stat.size')}</legend>
-              <div className="flex flex-wrap gap-2">{sizes.map(value => <FilterChip key={value} variant="pill" className="min-h-9 text-sm"
-                active={filter.sizes.includes(value)} onClick={() => onChange({ ...filter, sizes: toggleValue(filter.sizes, value) })}>{value}</FilterChip>)}</div>
-            </fieldset>
-            {bundle.filters.nocturnal && <FacetOption active={filter.nocturnal}
-              onClick={() => onChange({ ...filter, nocturnal: !filter.nocturnal })} label={fs.nocturnalOnly} />}
-            <fieldset><legend className="mb-2 text-sm font-semibold text-muted-foreground">{fs.loot}</legend>
-              <Command><CommandInput placeholder={fs.lootPlaceholder} />
-                <CommandList className="max-h-40"><CommandEmpty>{fs.lootEmpty}</CommandEmpty><CommandGroup>
-                  {lootItems.map(item => <CommandItem key={item.id} value={`${item.name} ${item.id}`}
-                    onSelect={() => onChange({ ...filter, loot: filter.loot === item.id ? null : item.id })} className="gap-2"
-                    data-selected-loot={filter.loot === item.id || undefined}>
-                    {item.icon && <Glyph src={itemIconUrl(item.icon)} />}<span className="min-w-0 flex-1 truncate">{item.name}</span>
-                    {filter.loot === item.id && <Check className="size-4 shrink-0" aria-hidden />}
-                  </CommandItem>)}
-                </CommandGroup></CommandList>
-              </Command>
-            </fieldset>
-          </div>
+        <FacetMenu {...menuProps('reactions')} label={fs.reaction} count={filter.reactions.length} testId="pal-filter-reactions">
+          <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 sm:grid-cols-3">{reactions.map(value => <FacetOption key={value}
+            active={filter.reactions.includes(value)} onClick={() => onChange({ ...filter, reactions: toggleValue(filter.reactions, value) })}
+            label={fs.reactions[value] ?? value} />)}</div>
+        </FacetMenu>
+        <FacetMenu {...menuProps('sizes')} label={t('pal.stat.size')} count={filter.sizes.length} testId="pal-filter-sizes" contentClassName="w-80">
+          <div className="grid grid-cols-3 gap-2">{sizes.map(value => <FacetOption key={value}
+            active={filter.sizes.includes(value)} onClick={() => onChange({ ...filter, sizes: toggleValue(filter.sizes, value) })} label={value} />)}</div>
+        </FacetMenu>
+        {bundle.filters.nocturnal && <FacetMenu {...menuProps('nocturnal')} label={fs.nocturnalOnly} count={Number(filter.nocturnal)}
+          testId="pal-filter-nocturnal" contentClassName="w-56">
+          <FacetOption active={filter.nocturnal} onClick={() => onChange({ ...filter, nocturnal: !filter.nocturnal })} label={fs.nocturnalOnly} />
+        </FacetMenu>}
+        <FacetMenu {...menuProps('loot')} label={fs.loot} count={Number(filter.loot !== null)} testId="pal-filter-loot" contentClassName="w-96">
+          <Command><CommandInput placeholder={fs.lootPlaceholder} />
+            <CommandList className="max-h-60"><CommandEmpty>{fs.lootEmpty}</CommandEmpty><CommandGroup>
+              {lootItems.map(item => <CommandItem key={item.id} value={`${item.name} ${item.id}`}
+                onSelect={() => onChange({ ...filter, loot: filter.loot === item.id ? null : item.id })} className="gap-2"
+                data-selected-loot={filter.loot === item.id || undefined}>
+                {item.icon && <Glyph src={itemIconUrl(item.icon)} />}<span className="min-w-0 flex-1 truncate">{item.name}</span>
+                {filter.loot === item.id && <Check className="size-4 shrink-0" aria-hidden />}
+              </CommandItem>)}
+            </CommandGroup></CommandList>
+          </Command>
         </FacetMenu>
       </div>
       {search && <div className="min-w-0 lg:ml-auto">{search}</div>}
