@@ -179,6 +179,10 @@ export default function DungeonDetailPage() {
 
       body = (
         <div className="space-y-6">
+          <Link to="/dungeons" data-testid="dungeon-back" className={NAV_LINK}>
+            <ChevronLeft className="size-4" aria-hidden />
+            {t('dungeon.backToList')}
+          </Link>
           <div data-testid="dungeon-header" className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-3xl font-bold">{name}</h1>
