@@ -17,10 +17,12 @@ import {
 } from '../../lib/pals'
 import { elementIconUrl, hasElementIcon } from '../../lib/assets'
 import { PalPageLoading, formatSkillRange } from './components'
+import { filterStrings } from './filterStrings'
 
 export default function ActiveSkillsPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const fs = filterStrings(lng)
   // Phones get stacked cards instead of the 720px-wide table.
   const isMobile = useIsMobile()
 
@@ -112,7 +114,7 @@ export default function ActiveSkillsPage() {
         </CatalogFacetGrid>
       </CatalogFacetMenu>
     </CatalogFacetTrack>
-    <CatalogSelectedFilters label={t('filter')} clearLabel={t('clear')} choices={[
+    <CatalogSelectedFilters label={fs.filters} clearLabel={fs.clear} choices={[
       ...elementSel.map(value => ({ key: `element-${value}`, label: bundle.enums.elements[value] ?? value, onRemove: () => setElementSel(current => current.filter(item => item !== value)) })),
       ...typeSel.map(value => ({ key: `type-${value}`, label: t(value === 'melee' ? 'pal.melee' : 'pal.ranged'), onRemove: () => setTypeSel(current => current.filter(item => item !== value)) })),
       ...sourceSel.map(value => ({ key: `source-${value}`, label: t(value === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot'), onRemove: () => setSourceSel(current => current.filter(item => item !== value)) })),

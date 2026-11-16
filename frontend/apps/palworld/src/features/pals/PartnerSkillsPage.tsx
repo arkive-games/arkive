@@ -1,4 +1,5 @@
 import { CatalogNoResults } from '../catalog/components'
+import { filterStrings } from './filterStrings'
 import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +32,7 @@ import { PalPageLoading } from './components'
 export default function PartnerSkillsPage() {
   const { t, i18n } = useTranslation()
   const lng = i18n.resolvedLanguage ?? 'en-US'
+  const fs = filterStrings(lng)
   const fs = filterStrings(lng)
   // Phones get stacked cards instead of the 720px-wide table.
   const isMobile = useIsMobile()
@@ -145,7 +147,7 @@ export default function PartnerSkillsPage() {
         ))}
       </CatalogFacetGroup>
     </CatalogFacetTrack>
-    <CatalogSelectedFilters label={t('filter')} clearLabel={t('clear')} choices={[
+    <CatalogSelectedFilters label={fs.filters} clearLabel={fs.clear} choices={[
       ...categorySel.map(value => ({ key: `category-${value}`, label: t(`partner.category.${value}`), onRemove: () => setCategorySel(current => current.filter(item => item !== value)) })),
       ...elementSel.map(value => ({ key: `element-${value}`, label: bundle.enums.elements[value] ?? value, onRemove: () => setElementSel(current => current.filter(item => item !== value)) })),
     ]} onClear={() => { setCategorySel([]); setElementSel([]) }} />
