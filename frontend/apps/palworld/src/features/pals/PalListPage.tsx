@@ -104,7 +104,7 @@ export default function PalListPage() {
     >
         <CatalogDataProvider pals={bundle ?? undefined}>
           {(!desktop || !bundle) && <div className="mb-3">{search}</div>}
-          <ContentPageFilters />
+          <div className="mb-4"><ContentPageFilters /></div>
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>

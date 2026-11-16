@@ -160,7 +160,7 @@ export default function PartnerSkillsPage() {
       filters={filters}
       filtersActive={categorySel.length > 0 || elementSel.length > 0}
     >
-      <EncyclopediaToolbar search={<div className="mb-3 flex flex-wrap items-center gap-3">
+      <EncyclopediaToolbar search={<div className="flex flex-wrap items-center gap-3">
         <CatalogSearchInput
           type="search"
           value={query}
