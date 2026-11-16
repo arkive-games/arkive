@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.7",
+      "date": "2026-11-16",
+      "commit": "b1616963aea72b5a4d6a8bcd5b6b19539b100683",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Show 64 Pals per desktop page, retain child navigation when the directory collapses, and expose peer filters with hover selection panels.",
+            "zh-CN": "桌面每页展示64只帕鲁，目录收起后仍可直接访问子项；常用筛选同排展示，支持悬停展开选择。",
+            "zh-TW": "桌面每頁展示64隻帕魯，目錄收合後仍可直接存取子項；常用篩選同排展示，支援懸停展開選擇。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.6",
       "date": "2026-11-16",
       "commit": "606d9000e018d48cd861c8f6f39ace301a8559fe",
