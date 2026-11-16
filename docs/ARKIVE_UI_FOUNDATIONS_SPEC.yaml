@@ -223,6 +223,7 @@ spacing:
     compact_control_gap: "space-2"
     related_content_gap: "space-3 or space-4"
     encyclopedia_filter_to_content: "space-4 (1rem, 17px at the Arkive root size) below the complete filter region, measured from the region's bottom edge to the first content surface. This is calibrated from the production Paldeck at https://palworld.arkive.games/pals and is the fixed cross-page encyclopedia standard."
+    encyclopedia_filter_region: "The filter region includes the fixed track and, when any multi-facet selection is active, the selected-condition summary row. The summary row uses the current site locale for its clear action and does not create an extra page-level gap."
     section_gap: "space-6 on mobile; space-8 on desktop"
   rules:
     - "Use an approved step before introducing a new spacing value."
@@ -440,5 +441,6 @@ catalog_controls_and_copy:
     narrow_viewports: "The viewport budget takes precedence. Wrap an individual label only when that option cannot fit on its own; prevent horizontal overflow and retain readable labels."
     searchable_sets: "Large searchable sets such as dropped items are exempt from the finite-set row algorithm. Use a compact search field and a vertically scrollable result area, content-sized up to the same width cap. Size result pills to their content; constrain long labels to the available width."
   search: "Use the shared CatalogSearchInput or its SearchInput adapter: the reviewed portal pill, leading magnifier, and round warm arrow. Keep one outer focus treatment and the catalog height tokens. Dense embedded pickers are a separate size role."
+  breeding_mode_selector: "Recipe and multi-generation modes use the same fixed muted filter track and inline option styling as encyclopedia filters. The track is followed by exactly one space-4 gap before the breeding pickers."
   directory_toggle: "Encyclopedia directories use ArkiveEncyclopediaWorkspace's panel-frame icon with its internal directional arrow; no app-local chevron substitute."
   copy: "Across the site, omit interface tutorials, implementation explanations and visible result-total summaries such as Showing N records. Keep game facts, taxonomy counts, progress, useful field labels, actions, errors and empty states."

@@ -41,6 +41,8 @@ local button variants; opened popover options retain their thin surface border.
 Selected facets remain visible below
 with individual removal and Clear filters. Pagination belongs below the results;
 search and filter changes start at page one. Do not add a grid/list switch.
+When multiple facets are selected, show the localized selected-condition summary
+inside the same filter region; its Clear action follows the active site locale.
 Keep original Pal thumbnails and compact metadata/name regions.
 Palworld finite filter groups reuse the catalog facet primitives from
 `@gamemap/ui` across Paldeck, skills, items, buildings, merchants, quests,
