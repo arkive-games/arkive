@@ -158,6 +158,7 @@ shared_component_contracts:
     docked: "Full-width 3.5rem bar on game, map, and content pages"
     floating: "A 4rem capsule with pill_radius on portal discovery, All Games, Tools, and Forum views"
     navigation: "Pill tabs inside one rounded track, with a sliding indicator under the active or hovered tab"
+    parent_links: "Top-level tabs with children link directly to an explicit default child on activation; their menu remains available from hover/focus or a separate menu affordance. Never require a second menu click to reach the default destination."
     utilities: "Round 2.5rem icon buttons for language and theme, a gradient login pill, and a ringed 2.5rem avatar"
   popup_surfaces:
     surface: "Use the shared floating or modal surface class from frontend/packages/ui/src/popup-styles.ts."

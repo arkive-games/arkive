@@ -216,6 +216,8 @@ global_shell:
     game_pages: "Routes and labels are game-owned; geometry and interaction are shared."
     active_state: "Use one shared active indicator and restore it after hover leaves."
     dropdowns: "Open on pointer hover or keyboard focus; do not show a decorative chevron."
+    parent_activation: "A top-level navigation label with children is also a direct link. Activate it to open that section's declared default child; open the menu from hover, keyboard focus, or the separate menu affordance. Do not force a second click through the menu before navigating."
+    default_child: "The default child is product-owned and must be explicit. For Palworld, 'Pal-related' defaults to the Paldeck. If a section later receives its own landing page, the label links to that page instead."
   utilities:
     order:
       - "Language"
