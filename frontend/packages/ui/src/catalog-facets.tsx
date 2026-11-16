@@ -61,7 +61,7 @@ export function CatalogFacetOption({ active, label, icon, onClick, testId }: {
   return <FilterChip variant="tile" active={active} onClick={onClick} testId={testId}
     className={cn('min-h-11 max-w-full gap-2 rounded-full border-transparent px-3 text-sm', active
       ? 'border-transparent bg-foreground text-background'
-      : 'border-transparent bg-muted/60 text-foreground hover:!bg-foreground hover:!text-background')}>
+      : 'border-border/70 bg-secondary text-foreground shadow-xs hover:!border-foreground hover:!bg-foreground hover:!text-background')}>
     {icon}<span className="min-w-0 break-words text-left">{label}</span>
     {active ? <Check className="size-4 shrink-0" aria-hidden /> : null}
   </FilterChip>
@@ -98,28 +98,28 @@ export function CatalogFacetChoice({ children, ...props }: {
   return <CatalogFacetOption {...props} label={children} />
 }
 
-/** Quiet summaries stay distinct from the solid controls that open facet menus. */
+/** Selected tickets have a warm leading edge and a distinct removal area. */
 export function CatalogSelectedFilters({ label, clearLabel, choices, onClear }: {
   label: string; clearLabel: string; onClear: () => void;
   choices: { key: string; label: string; icon?: ReactNode; onRemove: () => void }[];
 }) {
   if (!choices.length) return null
   return <div role="group" aria-label={label} data-testid="catalog-selected-filters"
-    className="flex flex-wrap items-start gap-x-4 gap-y-2">
-    <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+    className="flex flex-wrap items-center gap-2 py-1">
       {choices.map(choice => <button key={choice.key} type="button"
         aria-label={`${clearLabel}: ${choice.label}`} onClick={choice.onRemove}
         data-testid={`catalog-selected-${choice.key}`}
-        className="group inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-border bg-background py-1 pl-2 pr-2 text-sm font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring md:min-h-9">
-        {choice.icon && <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted">{choice.icon}</span>}
-        <span className={cn('min-w-0 break-words text-left', !choice.icon && 'pl-1')}>{choice.label}</span>
-        <span className="ml-1 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground transition-colors group-hover:bg-foreground group-hover:text-background group-focus-visible:bg-foreground group-focus-visible:text-background">
-          <X className="size-3" aria-hidden />
+        className="group inline-flex min-h-11 max-w-full items-stretch overflow-hidden rounded-md border border-border border-l-2 border-l-[var(--arkive-nav-accent)] bg-card text-sm font-semibold text-foreground shadow-xs transition-colors hover:border-foreground/40 hover:border-l-[var(--arkive-nav-accent)] focus-visible:outline-2 focus-visible:outline-ring md:min-h-9">
+        <span className="flex min-w-0 items-center gap-2 py-1 pl-3 pr-3">
+          {choice.icon && <span className="flex size-5 shrink-0 items-center justify-center">{choice.icon}</span>}
+          <span className="min-w-0 break-words text-left">{choice.label}</span>
+        </span>
+        <span className="grid w-8 shrink-0 place-items-center border-l border-dashed border-border bg-muted/35 text-muted-foreground transition-colors group-hover:bg-foreground group-hover:text-background group-focus-visible:bg-foreground group-focus-visible:text-background">
+          <X className="size-3.5" aria-hidden />
         </span>
       </button>)}
-    </div>
     <button type="button" onClick={onClear} data-testid="catalog-clear-filters"
-      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-muted/60 px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-ring md:min-h-9">
+      className="ml-2 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring md:min-h-9">
       <RotateCcw className="size-4" aria-hidden />{clearLabel}
     </button>
   </div>
