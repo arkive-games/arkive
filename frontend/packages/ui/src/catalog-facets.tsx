@@ -77,9 +77,9 @@ export function useCatalogFacetMenus() {
 
 const FacetTrackContext = createContext<ReturnType<typeof useCatalogFacetMenus> | null>(null)
 
-export function CatalogFacetTrack({ children }: { children: ReactNode }) {
+export function CatalogFacetTrack({ children, className }: { children: ReactNode; className?: string }) {
   const menus = useCatalogFacetMenus()
-  return <FacetTrackContext.Provider value={menus}><div className="flex w-fit max-w-full min-h-[var(--arkive-catalog-control-height)] flex-wrap items-center gap-1 rounded-2xl bg-muted p-1 lg:h-[var(--arkive-catalog-control-height)] lg:flex-nowrap lg:rounded-full">{children}</div></FacetTrackContext.Provider>
+  return <FacetTrackContext.Provider value={menus}><div className={cn('flex w-fit max-w-full min-h-[var(--arkive-catalog-control-height)] flex-wrap items-center gap-1 rounded-2xl bg-muted p-1 lg:h-[var(--arkive-catalog-control-height)] lg:flex-nowrap lg:rounded-full', className)}>{children}</div></FacetTrackContext.Provider>
 }
 
 export function CatalogFacetGroup({ label, count = 0, testId, children }: {
