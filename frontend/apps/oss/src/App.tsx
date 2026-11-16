@@ -20,7 +20,7 @@ const propKinds: { id: string; color: string }[] = [
   { id: 'gem', color: '#E93D82' }, { id: 'gemslot', color: '#B04577' }, { id: 'gate', color: '#D08B2C' },
   { id: 'button', color: '#C7A400' }, { id: 'pusher', color: '#6E56CF' }, { id: 'teleporter', color: '#0090FF' },
   { id: 'reset', color: '#12A594' }, { id: 'freezer', color: '#5EB1EF' }, { id: 'spawner', color: '#8D4E3B' },
-  { id: 'camera', color: '#687076' }, { id: 'elevator', color: '#3E63DD' },
+  { id: 'camera', color: '#687076' }, { id: 'elevator', color: '#3E63DD' }, { id: 'wardrobe', color: '#6E56CF' },
 ]
 const gamePropIcons = new Set(['gem', 'gemslot', 'mirror', 'laser', 'elevator', 'reset', 'spawner'])
 const propIcon = (kind: string) => gamePropIcons.has(kind) ? `/props-game/${kind}.png` : `/props/${kind}.svg`
@@ -80,7 +80,7 @@ export function App() {
       .then(response => { if (!response.ok) throw new Error('Collections unavailable'); return response.json() as Promise<Record<string, Collection[]>> })
       .then(setCollections)
       .catch(error => { if (error.name !== 'AbortError') setFailed(true) })
-    fetch(`${DATA_BASE}/props-ground-26006400.json`, { signal: controller.signal })
+    fetch(`${DATA_BASE}/props-ground-26466613.json`, { signal: controller.signal })
       .then(response => { if (!response.ok) throw new Error('Props unavailable'); return response.json() as Promise<{ props: Prop[] }> })
       .then(value => setProps(value.props))
       .catch(error => { if (error.name !== 'AbortError') setFailed(true) })
