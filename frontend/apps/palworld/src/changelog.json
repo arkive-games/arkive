@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.12",
+      "date": "2026-11-16",
+      "commit": "1440f810b26c7281441bb57e32debf6c41a5c006",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Unify encyclopedia filters with content-sized panels, balanced automatic rows and compact searchable drop choices.",
+            "zh-CN": "统一百科筛选，弹层随内容收紧并自动均衡分行，优化掉落物搜索与选项样式。",
+            "zh-TW": "統一百科篩選，彈層隨內容收緊並自動均衡分行，優化掉落物搜尋與選項樣式。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.11",
       "date": "2026-11-16",
       "commit": "18b3a060dea01c1da044ceceef8c0f57e4317e19",
