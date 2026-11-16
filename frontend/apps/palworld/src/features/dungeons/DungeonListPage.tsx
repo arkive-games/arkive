@@ -62,7 +62,7 @@ export default function DungeonListPage() {
       ) : !b ? (
         <CatalogPageLoading />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {mobilePaging.visibleItems.map((d) => {
             const range = dungeonLevelRange(d)
             const bosses = (d.enemies?.boss ?? []).slice(0, BOSS_PREVIEW_MAX)
@@ -72,14 +72,14 @@ export default function DungeonListPage() {
                   to="/dungeons/$id"
                   params={{ id: d.id }}
                   data-testid="dungeon-row"
-                  className="group flex min-h-36 flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                  className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 font-semibold text-lg group-hover:text-primary">{b.dungeons.text[d.id]?.name ?? d.id}</div>
-                    {range ? <span className="shrink-0 rounded-md bg-secondary px-2 py-1 text-xs tabular-nums text-muted-foreground">Lv. {range.min}–{range.max}</span> : null}
+                    <div className="min-w-0 font-semibold text-base group-hover:text-primary">{b.dungeons.text[d.id]?.name ?? d.id}</div>
+                    {range ? <span className="shrink-0 rounded-md bg-secondary px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">Lv. {range.min}–{range.max}</span> : null}
                   </div>
                   <div className="flex items-end justify-between gap-3">
-                    <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                    <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
                       {t('dungeon.expBonus', { rate: d.bonusExpRate })}
                     </span>
                     {bosses.length ? (
