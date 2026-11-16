@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, CatalogSearchInput } from '@gamemap/ui'
+import { CatalogFacetOption, CatalogFacetTrack, CatalogSearchInput } from '@gamemap/ui'
 import { MapPin } from 'lucide-react'
 import { EncyclopediaToolbar, ContentPage } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -73,18 +73,17 @@ export default function MerchantListPage() {
           className=""
         />}>
       {merchants ? (
-        <CatalogFacetTrack><CatalogFacetGroup label={t('filters.category')} testId="merchant-category-filter" count={Number(category !== 'all')}>
+        <CatalogFacetTrack>
           {['all', ...categories].map((key) => (
-            <CatalogFacetChoice
+            <CatalogFacetOption
               key={key}
               active={category === key}
               onClick={() => setCategory(key)}
               testId={`merchant-category-${key}`}
-            >
-              {key === 'all' ? t('raids.all') : merchantName(key, key)}
-            </CatalogFacetChoice>
+              label={key === 'all' ? t('raids.all') : merchantName(key, key)}
+            />
           ))}
-        </CatalogFacetGroup></CatalogFacetTrack>
+        </CatalogFacetTrack>
       ) : null}
       </EncyclopediaToolbar>
 
