@@ -36,4 +36,5 @@ export * from "./page-status"
 export * from "./use-document-title"
 export * from "./filter-controls"
 export * from "./catalog-search-input"
+export * from "./catalog-facets"
 export * from './use-unsaved-changes'

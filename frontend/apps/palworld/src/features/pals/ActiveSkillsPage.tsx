@@ -1,10 +1,10 @@
 import { CatalogNoResults } from '../catalog/components'
 import { useCatalogState } from '../catalog/catalogMemory'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Check, Minus } from 'lucide-react'
-import { FilterChip, CatalogSearchInput, toggleValue, useIsMobile, Popover, PopoverContent, PopoverTrigger, cn } from '@gamemap/ui'
+import { CatalogSearchInput, toggleValue, useIsMobile, CatalogFacetMenu, CatalogFacetOption, CatalogFacetTrack, CatalogFacetGrid, useCatalogFacetMenus } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -17,24 +17,6 @@ import {
 } from '../../lib/pals'
 import { elementIconUrl, hasElementIcon } from '../../lib/assets'
 import { PalPageLoading, formatSkillRange } from './components'
-
-function SkillFacet({ label, children }: { label: string; children: ReactNode }) {
-  const [open, setOpen] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const close = () => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(false), 160) }
-  return <Popover open={open} onOpenChange={setOpen}>
-    <PopoverTrigger asChild>
-      <button type="button" onPointerEnter={() => { if (timer.current) clearTimeout(timer.current); setOpen(true) }} onPointerLeave={close}
-        onFocus={() => setOpen(true)} className={cn('min-h-9 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:!bg-foreground hover:!text-background data-[state=open]:!bg-foreground data-[state=open]:!text-background', open && 'bg-foreground text-background')}>
-        {label}
-      </button>
-    </PopoverTrigger>
-    <PopoverContent align="start" sideOffset={8} onPointerEnter={() => { if (timer.current) clearTimeout(timer.current) }} onPointerLeave={close}
-      className="w-96 p-4" onOpenAutoFocus={event => event.preventDefault()}>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{children}</div>
-    </PopoverContent>
-  </Popover>
-}
 
 export default function ActiveSkillsPage() {
   const { t, i18n } = useTranslation()
@@ -100,54 +82,35 @@ export default function ActiveSkillsPage() {
     resetKey: `${query}|${elementSel.join(',')}|${typeSel.join(',')}|${sourceSel.join(',')}`,
   })
 
-  // Element / type / source chips — inline on desktop, behind the mobile
-  // header's filter icon (see ContentPage). The search box stays on the page: it
-  // is not a filter.
+  const menuProps = useCatalogFacetMenus()
   const filters = bundle ? (
-    <div className="flex min-h-[var(--arkive-catalog-control-height)] items-center gap-1 rounded-full bg-muted p-1">
-      <SkillFacet label={t('activeSkill.element')}>
-        {elements.map((e) => (
-          <FilterChip
-            variant="pill"
-            key={e}
-            active={elementSel.includes(e)}
-            onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}
-            testId={`element-${e}`}
-          >
-            <span className="inline-flex items-center gap-1">
-              <img src={elementIconUrl(e)} alt="" width={16} height={16} className="size-4 object-contain" />
-              {bundle.enums.elements[e] ?? e}
-            </span>
-          </FilterChip>
-        ))}
-      </SkillFacet>
-      <SkillFacet label={t('pal.type')}>
-        {(['melee', 'ranged'] as const).map((tp) => (
-          <FilterChip
-            variant="pill"
-            key={tp}
-            active={typeSel.includes(tp)}
-            onClick={() => setTypeSel((s) => toggleValue(s, tp))}
-            testId={`type-${tp}`}
-          >
-            {t(tp === 'melee' ? 'pal.melee' : 'pal.ranged')}
-          </FilterChip>
-        ))}
-      </SkillFacet>
-      <SkillFacet label={t('activeSkill.fruit')}>
-        {(['fruit', 'default'] as const).map((src) => (
-          <FilterChip
-            variant="pill"
-            key={src}
-            active={sourceSel.includes(src)}
-            onClick={() => setSourceSel((s) => toggleValue(s, src))}
-            testId={`source-${src}`}
-          >
-            {t(src === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot')}
-          </FilterChip>
-        ))}
-      </SkillFacet>
-    </div>
+    <CatalogFacetTrack>
+      <CatalogFacetMenu {...menuProps('elements')} label={t('activeSkill.element')}
+        count={elementSel.length} testId="active-skill-element-filter">
+        <CatalogFacetGrid>
+          {elements.map(element => <CatalogFacetOption key={element}
+            active={elementSel.includes(element)} label={bundle.enums.elements[element] ?? element}
+            icon={<img src={elementIconUrl(element)} alt="" className="size-5 shrink-0 object-contain" />}
+            onClick={() => setElementSel(current => toggleValue(current, element))} testId={`element-${element}`} />)}
+        </CatalogFacetGrid>
+      </CatalogFacetMenu>
+      <CatalogFacetMenu {...menuProps('types')} label={t('pal.type')}
+        count={typeSel.length} testId="active-skill-type-filter" contentClassName="w-80">
+        <CatalogFacetGrid columns={2}>
+          {(['melee', 'ranged'] as const).map(type => <CatalogFacetOption key={type}
+            active={typeSel.includes(type)} label={t(type === 'melee' ? 'pal.melee' : 'pal.ranged')}
+            onClick={() => setTypeSel(current => toggleValue(current, type))} testId={`type-${type}`} />)}
+        </CatalogFacetGrid>
+      </CatalogFacetMenu>
+      <CatalogFacetMenu {...menuProps('sources')} label={t('activeSkill.fruit')}
+        count={sourceSel.length} testId="active-skill-source-filter" contentClassName="w-80">
+        <CatalogFacetGrid columns={2}>
+          {(['fruit', 'default'] as const).map(source => <CatalogFacetOption key={source}
+            active={sourceSel.includes(source)} label={t(source === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot')}
+            onClick={() => setSourceSel(current => toggleValue(current, source))} testId={`source-${source}`} />)}
+        </CatalogFacetGrid>
+      </CatalogFacetMenu>
+    </CatalogFacetTrack>
   ) : undefined
 
   return (
@@ -312,4 +275,3 @@ export default function ActiveSkillsPage() {
     </ContentPage>
   )
 }
-
