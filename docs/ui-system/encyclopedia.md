@@ -36,9 +36,17 @@ without redundant visible panel titles. Selected facets remain visible below
 with individual removal and Clear filters. Pagination belongs below the results;
 search and filter changes start at page one. Do not add a grid/list switch.
 Keep original Pal thumbnails and compact metadata/name regions.
-Paldeck and Active Skills reuse the catalog facet primitives from `@gamemap/ui`.
+Palworld finite filter groups reuse the catalog facet primitives from
+`@gamemap/ui` across Paldeck, skills, items, buildings, merchants, quests,
+raids, research and fishing. Row counts follow measured localized content,
+including selection indicators, rather than category-specific column counts.
 Active Skills supplies element, type and skill-fruit choices on the left and
 keeps category search on the right; it must not fork the interaction or styling.
+Facet popover sizing and balanced row layout follow
+`catalog_controls_and_copy.facet_popovers` in the
+[UI foundations](../ARKIVE_UI_FOUNDATIONS_SPEC.yaml): content-sized surfaces,
+a 22rem outer width cap, and automatic row counts instead of per-facet columns.
+Searchable drop results use the documented large-set exception.
 The directory uses collapsible parent groups with indented child links and
 game-owned artwork. When the quiet directory collapses, retain each parent's
 artwork and directly available child icon links with accessible names/tooltips.

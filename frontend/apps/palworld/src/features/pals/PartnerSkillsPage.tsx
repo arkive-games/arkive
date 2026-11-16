@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import { FilterChip, FilterRow, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
+import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -115,24 +115,22 @@ export default function PartnerSkillsPage() {
   // filter icon (see ContentPage). The search box and the power-sort control stay
   // on the page: neither is a filter.
   const filters = bundle ? (
-    <>
-      <FilterRow label={t('filters.category')} testId="partner-skill-category-filter">
+    <CatalogFacetTrack>
+      <CatalogFacetGroup label={t('filters.category')} testId="partner-skill-category-filter" count={categorySel.length}>
         {categories.map((c) => (
-          <FilterChip
-            variant="pill"
+          <CatalogFacetChoice
             key={c}
             active={categorySel.includes(c)}
             onClick={() => setCategorySel((s) => toggleValue(s, c) as PartnerCategory[])}
             testId={`category-${c}`}
           >
             {t(`partner.category.${c}`)}
-          </FilterChip>
+          </CatalogFacetChoice>
         ))}
-      </FilterRow>
-      <FilterRow label={t('activeSkill.element')} testId="partner-skill-element-filter">
+      </CatalogFacetGroup>
+      <CatalogFacetGroup label={t('activeSkill.element')} testId="partner-skill-element-filter" count={elementSel.length}>
         {elements.map((e) => (
-          <FilterChip
-            variant="pill"
+          <CatalogFacetChoice
             key={e}
             active={elementSel.includes(e)}
             onClick={() => setElementSel((s) => toggleValue(s, e) as Element[])}
@@ -142,10 +140,10 @@ export default function PartnerSkillsPage() {
               <img src={elementIconUrl(e)} alt="" width={16} height={16} className="size-4 object-contain" />
               {bundle.enums.elements[e] ?? e}
             </span>
-          </FilterChip>
+          </CatalogFacetChoice>
         ))}
-      </FilterRow>
-    </>
+      </CatalogFacetGroup>
+    </CatalogFacetTrack>
   ) : undefined
 
   return (

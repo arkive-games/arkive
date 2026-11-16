@@ -427,6 +427,14 @@ maintenance:
     - "Update this file before introducing a new global token or foundation rule."
 
 catalog_controls_and_copy:
+  facet_popovers:
+    scope: "Finite option sets in encyclopedia and catalog filters; use the same shared layout across categories and games."
+    width: "Content-sized outer surface, capped at 22rem and the viewport width minus 2rem, whichever is smaller. Include padding, borders and option gaps in this budget. Do not stretch the surface to the cap when its content is narrower."
+    rows: "Use one row when all options fit. Otherwise start with two rows; if no ordered arrangement fits the width budget, increase to three rows, then further rows only as needed. Never assign a fixed column count per facet."
+    balance: "Preserve source order and partition consecutive options into rows. For the smallest feasible row count, minimize the longest row width, then minimize differences between row widths. Avoid a lone final option when a more balanced arrangement fits. The longest resulting row determines the surface width plus its padding and borders."
+    options: "Size each pill to its localized label, icon, selection indicator and padding; do not stretch pills into equal-width cells. Retain the shared text-sm typography, control target size, hover contrast and focus treatment. Recalculate when locale, options, selection indicators or available width change."
+    narrow_viewports: "The viewport budget takes precedence. Wrap an individual label only when that option cannot fit on its own; prevent horizontal overflow and retain readable labels."
+    searchable_sets: "Large searchable sets such as dropped items are exempt from the finite-set row algorithm. Use a compact search field and a vertically scrollable result area, content-sized up to the same width cap. Size result pills to their content; constrain long labels to the available width."
   search: "Use the shared CatalogSearchInput or its SearchInput adapter: the reviewed portal pill, leading magnifier, and round warm arrow. Keep one outer focus treatment and the catalog height tokens. Dense embedded pickers are a separate size role."
   directory_toggle: "Encyclopedia directories use ArkiveEncyclopediaWorkspace's panel-frame icon with its internal directional arrow; no app-local chevron substitute."
   copy: "Across the site, omit interface tutorials, implementation explanations and visible result-total summaries such as Showing N records. Keep game facts, taxonomy counts, progress, useful field labels, actions, errors and empty states."

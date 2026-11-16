@@ -1,3 +1,4 @@
+import { CatalogFacetTrack, CatalogFacetGroup, CatalogFacetChoice } from '@gamemap/ui'
 import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -135,23 +136,14 @@ export default function RaidsPage() {
           <p className="mb-3 text-sm text-muted-foreground">
             {t('raids.caption')}
           </p>
-          <div className="mb-4 flex flex-wrap gap-1.5">
-            {['all', ...biomes].map((b) => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => setBiome(b)}
-                className={
-                  'rounded-md px-3 py-1.5 text-sm transition ' +
-                  (biome === b
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-accent')
-                }
-              >
-                {b === 'all' ? t('raids.all') : t(`raids.biome.${b}`, { defaultValue: b })}
-              </button>
-            ))}
-            <span className="self-center text-sm text-muted-foreground">{list.length}</span>
+          <div className="mb-4">
+            <CatalogFacetTrack>
+              <CatalogFacetGroup label={t('mapRegion')} count={Number(biome !== 'all')} testId="raid-biome-filter">
+                {['all', ...biomes].map(b => <CatalogFacetChoice key={b} active={biome === b} onClick={() => setBiome(b)} testId={`raid-biome-${b}`}>
+                  {b === 'all' ? t('raids.all') : t(`raids.biome.${b}`, { defaultValue: b })}
+                </CatalogFacetChoice>)}
+              </CatalogFacetGroup>
+            </CatalogFacetTrack>
           </div>
           <div className="space-y-3">
             {mobilePaging.visibleItems.map((r) => (

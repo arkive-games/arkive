@@ -1,7 +1,7 @@
 import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FilterChip, FilterRow, CatalogSearchInput, toggleValue } from '@gamemap/ui'
+import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, CatalogSearchInput, toggleValue } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -102,19 +102,18 @@ export default function BuildingListPage() {
   // Category chips — inline on desktop, behind the mobile header's filter icon
   // (see ContentPage). The search box stays on the page: it is not a filter.
   const filters = bundle ? (
-    <FilterRow label={t('filters.category')} testId="building-category-filter">
+    <CatalogFacetTrack><CatalogFacetGroup label={t('filters.category')} testId="building-category-filter" count={cats.length}>
       {categories.map((c) => (
-        <FilterChip
-          variant="pill"
+        <CatalogFacetChoice
           key={c}
           active={cats.includes(c)}
           onClick={() => setCats((s) => toggleValue(s, c))}
           testId={`building-cat-${c}`}
         >
           {buildingTypeLabel(c, bundle.typeLabels)}
-        </FilterChip>
+        </CatalogFacetChoice>
       ))}
-    </FilterRow>
+    </CatalogFacetGroup></CatalogFacetTrack>
   ) : undefined
 
   return (

@@ -95,16 +95,16 @@ export default function ActiveSkillsPage() {
         </CatalogFacetGrid>
       </CatalogFacetMenu>
       <CatalogFacetMenu {...menuProps('types')} label={t('pal.type')}
-        count={typeSel.length} testId="active-skill-type-filter" contentClassName="w-80">
-        <CatalogFacetGrid columns={2}>
+        count={typeSel.length} testId="active-skill-type-filter">
+        <CatalogFacetGrid>
           {(['melee', 'ranged'] as const).map(type => <CatalogFacetOption key={type}
             active={typeSel.includes(type)} label={t(type === 'melee' ? 'pal.melee' : 'pal.ranged')}
             onClick={() => setTypeSel(current => toggleValue(current, type))} testId={`type-${type}`} />)}
         </CatalogFacetGrid>
       </CatalogFacetMenu>
       <CatalogFacetMenu {...menuProps('sources')} label={t('activeSkill.fruit')}
-        count={sourceSel.length} testId="active-skill-source-filter" contentClassName="w-80">
-        <CatalogFacetGrid columns={2}>
+        count={sourceSel.length} testId="active-skill-source-filter">
+        <CatalogFacetGrid>
           {(['fruit', 'default'] as const).map(source => <CatalogFacetOption key={source}
             active={sourceSel.includes(source)} label={t(source === 'fruit' ? 'activeSkill.has' : 'activeSkill.hasNot')}
             onClick={() => setSourceSel(current => toggleValue(current, source))} testId={`source-${source}`} />)}

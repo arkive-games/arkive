@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { CatalogSearchInput } from '@gamemap/ui'
+import { CatalogSearchInput, CatalogFacetTrack, CatalogFacetGroup, CatalogFacetChoice } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadQuests, type QuestsBundle } from '../../lib/catalog'
@@ -53,30 +53,16 @@ export default function QuestListPage() {
   const tabs = ['all', ...types]
   const mobilePaging = useMobilePagination(list, { pageSize: 20, resetKey: `${query}|${type}` })
 
-  // Quest-type filter — inline on desktop, behind the mobile header's filter icon
-  // (see ContentPage). The node carries its own row wrapper so the desktop markup
-  // is unchanged; the search box and the result count stay on the page.
   const filters = (
-    <div className="flex flex-wrap gap-1.5" data-testid="quest-type-filter">
-      {tabs.map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          onClick={() => setType(tab)}
-          data-testid={`quest-type-${tab}`}
-          className={
-            'rounded-md px-3 py-1.5 text-sm transition ' +
-            (type === tab
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-secondary text-secondary-foreground hover:bg-accent')
-          }
-        >
+    <CatalogFacetTrack>
+      <CatalogFacetGroup label={t('pal.type')} testId="quest-type-filter" count={Number(type !== 'all')}>
+        {tabs.map(tab => <CatalogFacetChoice key={tab} active={type === tab}
+          onClick={() => setType(tab)} testId={`quest-type-${tab}`}>
           {tab === 'all' ? t('quest.all') : questTypeLabel(tab, t)}
-        </button>
-      ))}
-    </div>
+        </CatalogFacetChoice>)}
+      </CatalogFacetGroup>
+    </CatalogFacetTrack>
   )
-
   return (
     <ContentPage browsing={{ section: 'quests', ready: !!bundle, resultsKey: JSON.stringify([query,type]) }}
       active="/quests"

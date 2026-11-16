@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { cn, useIsMobile } from '@gamemap/ui'
+import { cn, useIsMobile, CatalogFacetTrack, CatalogFacetGroup, CatalogFacetChoice } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import {
   loadItems,
@@ -302,40 +302,19 @@ export default function ResearchPage() {
       ) : (
         <CatalogDataProvider items={items} tech={tech} pals={pals}>
           <p className="mb-4 text-sm text-muted-foreground">{t('research.caption')}</p>
-          <div
-            className="-mx-4 mb-5 flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 touch-pan-x md:mx-0 md:mb-6 md:flex-wrap md:px-0"
-            role="tablist"
-          >
-            {trees.map(({ category, roots }) => {
-              const active = category === current?.category
-              const count = roots.reduce((sum, r) => sum + countNodes(r), 0)
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setActiveCat(category)}
-                  className={
-                    'inline-flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition ' +
-                    (active
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10')
-                  }
-                >
-                  <IconImg src={workIconUrl(category as WorkType)} alt="" size={16} />
-                  {pals.enums.work[category as WorkType] ?? category}
-                  <span
-                    className={
-                      'text-xs tabular-nums ' +
-                      (active ? 'text-primary-foreground/70' : 'text-muted-foreground')
-                    }
-                  >
-                    {count}
+          <div className="mb-5">
+            <CatalogFacetTrack>
+              <CatalogFacetGroup label={t('filters.category')} count={0} testId="research-category-filter">
+                {trees.map(({ category, roots }) => <CatalogFacetChoice key={category}
+                  active={category === current?.category} onClick={() => setActiveCat(category)} testId={`research-category-${category}`}>
+                  <span className="inline-flex items-center gap-2">
+                    <IconImg src={workIconUrl(category as WorkType)} alt="" size={16} />
+                    {pals.enums.work[category as WorkType] ?? category}
+                    <span className="text-xs tabular-nums opacity-70">{roots.reduce((sum, r) => sum + countNodes(r), 0)}</span>
                   </span>
-                </button>
-              )
-            })}
+                </CatalogFacetChoice>)}
+              </CatalogFacetGroup>
+            </CatalogFacetTrack>
           </div>
           {current ? (
             isMobile ? (

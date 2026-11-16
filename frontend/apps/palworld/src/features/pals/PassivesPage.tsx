@@ -3,7 +3,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { FilterChip, FilterRow, Hint, CatalogSearchInput, toggleValue, TooltipProvider } from '@gamemap/ui'
+import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, Hint, CatalogSearchInput, toggleValue, TooltipProvider } from '@gamemap/ui'
 import { ArrowRight, Coins, Dna, Dices, PawPrint, Sparkles, Stethoscope, TreePine } from 'lucide-react'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
@@ -272,31 +272,29 @@ export default function PassivesPage() {
   // toggles the filter, so the hint gets its own ⓘ button instead of stealing it.
   // The desktop tooltips stay lifted above the filter sheet's stacking context.
   const filters = bundle ? (
-    <>
-      <FilterRow label={t('filters.rarity')} testId="passive-rarity-filter">
+    <CatalogFacetTrack>
+      <CatalogFacetGroup label={t('filters.rarity')} testId="passive-rarity-filter" count={raritySel.length}>
         {rarities.map((key) => (
-          <FilterChip
+          <CatalogFacetChoice
             key={key}
             active={raritySel.includes(key)}
             onClick={() => setRaritySel((s) => toggleValue(s, key))}
-            variant="emphasis"
             testId={`rarity-${key}`}
           >
             <PassiveRarity rank={repRank(key)} />
-          </FilterChip>
+          </CatalogFacetChoice>
         ))}
-      </FilterRow>
-      <FilterRow label={t('filters.category')} testId="passive-category-filter">
+      </CatalogFacetGroup>
+      <CatalogFacetGroup label={t('filters.category')} testId="passive-category-filter" count={categorySel.length + Number(innateOnly) + Number(mutationOnly)}>
         {categories.map((c) => (
-          <FilterChip
+          <CatalogFacetChoice
             key={c}
             active={categorySel.includes(c)}
             onClick={() => setCategorySel((s) => toggleValue(s, c))}
-            variant="emphasis"
             testId={`category-${c}`}
           >
             {t(`passive.category.${c}`)}
-          </FilterChip>
+          </CatalogFacetChoice>
         ))}
         {hasInnate ? (
           <Hint
@@ -307,15 +305,14 @@ export default function PassivesPage() {
             iconTestId="category-innate-hint"
           >
             <span className="inline-flex">
-              <FilterChip
+              <CatalogFacetChoice
                 active={innateOnly}
                 onClick={() => setInnateOnly((v) => !v)}
-                variant="emphasis"
                 testId="category-innate"
               >
                 <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
                 {t('passive.innate')}
-              </FilterChip>
+              </CatalogFacetChoice>
             </span>
           </Hint>
         ) : null}
@@ -328,20 +325,19 @@ export default function PassivesPage() {
             iconTestId="category-mutation-hint"
           >
             <span className="inline-flex">
-              <FilterChip
+              <CatalogFacetChoice
                 active={mutationOnly}
                 onClick={() => setMutationOnly((v) => !v)}
-                variant="emphasis"
                 testId="category-mutation"
               >
                 <span className="inline-block size-1.5 rounded-full bg-violet-500" />
                 {t('passive.mutation')}
-              </FilterChip>
+              </CatalogFacetChoice>
             </span>
           </Hint>
         ) : null}
-      </FilterRow>
-    </>
+      </CatalogFacetGroup>
+    </CatalogFacetTrack>
   ) : undefined
 
   return (

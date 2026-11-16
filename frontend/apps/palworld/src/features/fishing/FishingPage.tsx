@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Moon } from 'lucide-react'
-import { useIsMobile } from '@gamemap/ui'
+import { useIsMobile, CatalogFacetTrack, CatalogFacetGroup, CatalogFacetChoice } from '@gamemap/ui'
 import { ContentPage } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import { loadFishing, type FishingFile, type FishingSpot } from '../../lib/fishing'
@@ -293,48 +293,15 @@ export default function FishingPage() {
 
           {!isMobile || mobileSection === 'regions' ? (
             <section>
-              {isMobile ? (
-                <div className="mb-4">
-                  <label
-                    htmlFor="fishing-region"
-                    className="mb-1.5 block text-xs font-semibold text-muted-foreground"
-                  >
-                    {t('mapRegion')}
-                  </label>
-                  <select
-                    id="fishing-region"
-                    value={area}
-                    onChange={(event) => setArea(event.target.value)}
-                    className="h-11 w-full rounded-lg border border-primary bg-card px-3 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-primary/25"
-                  >
-                    <option value="all">{t('fishing.all')}</option>
-                    {areas.map((candidate) => (
-                      <option key={candidate} value={candidate}>
-                        {areaLabel(candidate)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="mb-4 flex flex-wrap gap-1.5">
-                  {['all', ...areas].map((a) => (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => setArea(a)}
-                      className={
-                        'rounded-md px-3 py-1.5 text-sm transition ' +
-                        (area === a
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-accent')
-                      }
-                    >
+              <div className="mb-4">
+                <CatalogFacetTrack>
+                  <CatalogFacetGroup label={t('mapRegion')} count={Number(area !== 'all')} testId="fishing-area-filter">
+                    {['all', ...areas].map(a => <CatalogFacetChoice key={a} active={area === a} onClick={() => setArea(a)} testId={`fishing-area-${a}`}>
                       {a === 'all' ? t('fishing.all') : areaLabel(a)}
-                    </button>
-                  ))}
-                </div>
-              )}
-
+                    </CatalogFacetChoice>)}
+                  </CatalogFacetGroup>
+                </CatalogFacetTrack>
+              </div>
               <div className="space-y-8">
                 {displayedAreas.map((a) => (
                   <section key={a}>

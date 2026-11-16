@@ -70,21 +70,21 @@ export function PalFilters({ bundle, filter, onChange, search }: {
             active={filter.reactions.includes(value)} onClick={() => onChange({ ...filter, reactions: toggleValue(filter.reactions, value) })}
             label={fs.reactions[value] ?? value} />)}</CatalogFacetGrid>
         </CatalogFacetMenu>
-        <CatalogFacetMenu {...menuProps('sizes')} label={t('pal.stat.size')} count={filter.sizes.length} testId="pal-filter-sizes" contentClassName="w-80">
-          <div className="grid grid-cols-3 gap-2">{sizes.map(value => <CatalogFacetOption key={value}
-            active={filter.sizes.includes(value)} onClick={() => onChange({ ...filter, sizes: toggleValue(filter.sizes, value) })} label={value} />)}</div>
+        <CatalogFacetMenu {...menuProps('sizes')} label={t('pal.stat.size')} count={filter.sizes.length} testId="pal-filter-sizes">
+          <CatalogFacetGrid>{sizes.map(value => <CatalogFacetOption key={value}
+            active={filter.sizes.includes(value)} onClick={() => onChange({ ...filter, sizes: toggleValue(filter.sizes, value) })} label={value} />)}</CatalogFacetGrid>
         </CatalogFacetMenu>
         {bundle.filters.nocturnal && <CatalogFacetMenu {...menuProps('nocturnal')} label={fs.nocturnalOnly} count={Number(filter.nocturnal)}
-          testId="pal-filter-nocturnal" contentClassName="w-56">
+          testId="pal-filter-nocturnal">
           <CatalogFacetOption active={filter.nocturnal} onClick={() => onChange({ ...filter, nocturnal: !filter.nocturnal })} label={fs.nocturnalOnly} />
         </CatalogFacetMenu>}
-        <CatalogFacetMenu {...menuProps('loot')} label={fs.loot} count={Number(filter.loot !== null)} testId="pal-filter-loot" contentClassName="w-96">
-          <Command><CommandInput placeholder={fs.lootPlaceholder} />
-            <CommandList className="max-h-60"><CommandEmpty>{fs.lootEmpty}</CommandEmpty><CommandGroup>
+        <CatalogFacetMenu {...menuProps('loot')} label={fs.loot} count={Number(filter.loot !== null)} testId="pal-filter-loot" contentClassName="w-max [&_[data-slot=command-input]]:min-w-0">
+          <Command className="w-max max-w-full gap-3 bg-transparent [&_[data-slot=command-input-wrapper]]:h-11 [&_[data-slot=command-input-wrapper]]:rounded-full [&_[data-slot=command-input-wrapper]]:border-0 [&_[data-slot=command-input-wrapper]]:bg-muted"><CommandInput placeholder={fs.lootPlaceholder} />
+            <CommandList className="max-h-60 w-max max-w-full"><CommandEmpty>{fs.lootEmpty}</CommandEmpty><CommandGroup className="w-max max-w-full p-0 [&_[cmdk-group-items]]:max-w-[calc(min(22rem,100vw-2rem)-2rem-2px)] [&_[cmdk-group-items]]:flex [&_[cmdk-group-items]]:flex-wrap [&_[cmdk-group-items]]:gap-2">
               {lootItems.map(item => <CommandItem key={item.id} value={`${item.name} ${item.id}`}
-                onSelect={() => onChange({ ...filter, loot: filter.loot === item.id ? null : item.id })} className="gap-2"
+                onSelect={() => onChange({ ...filter, loot: filter.loot === item.id ? null : item.id })} className="min-h-11 w-fit max-w-full gap-2 rounded-full bg-muted/60 px-3 text-sm font-medium hover:!bg-foreground hover:!text-background data-[selected=true]:!bg-foreground data-[selected=true]:!text-background data-[selected-loot=true]:bg-foreground data-[selected-loot=true]:text-background"
                 data-selected-loot={filter.loot === item.id || undefined}>
-                {item.icon && <Glyph src={itemIconUrl(item.icon)} />}<span className="min-w-0 flex-1 truncate">{item.name}</span>
+                {item.icon && <Glyph src={itemIconUrl(item.icon)} />}<span className="min-w-0 break-words">{item.name}</span>
                 {filter.loot === item.id && <Check className="size-4 shrink-0" aria-hidden />}
               </CommandItem>)}
             </CommandGroup></CommandList>
