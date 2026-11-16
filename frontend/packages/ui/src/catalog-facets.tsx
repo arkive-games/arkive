@@ -1,5 +1,5 @@
 import { Children, createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { Check, RotateCcw, X } from 'lucide-react'
+import { RotateCcw, X } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 import { FilterChip } from './filter-controls'
 import { cn } from './utils'
@@ -59,11 +59,10 @@ export function CatalogFacetOption({ active, label, icon, onClick, testId }: {
   active: boolean; label: ReactNode; icon?: ReactNode; onClick: () => void; testId?: string;
 }) {
   return <FilterChip variant="tile" active={active} onClick={onClick} testId={testId}
-    className={cn('min-h-11 max-w-full gap-2 rounded-full border-transparent px-3 text-sm', active
-      ? 'border-transparent bg-foreground text-background'
-      : 'border-border/70 bg-secondary text-foreground shadow-xs hover:!border-foreground hover:!bg-foreground hover:!text-background')}>
+    className={cn('min-h-11 max-w-full gap-2 rounded-full border-0 px-3 text-sm', active
+      ? 'bg-foreground text-background'
+      : 'bg-transparent text-foreground hover:!bg-[color:var(--foreground)] hover:!text-[color:var(--background)]')}>
     {icon}<span className="min-w-0 break-words text-left">{label}</span>
-    {active ? <Check className="size-4 shrink-0" aria-hidden /> : null}
   </FilterChip>
 }
 
