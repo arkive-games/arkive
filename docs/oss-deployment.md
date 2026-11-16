@@ -88,6 +88,25 @@ public homepage and deployment workflow only after they land and deploy.
 
 ## Execution Record
 
+### Prepared map-loading optimization (November 17, 2026)
+
+This optimization is verified locally and is not yet published. Publish
+resource commit `126d8bf` before data commit `1e51333`, both on
+`codex/map-loading` in their respective artifact repositories. The reusable
+generator and pixel-preservation test are in `tools/apps/oss/` and
+`tools/tests/test_oss_tile_optimization.py` in the monorepo.
+
+The original 32 by 28 tile grid has no overview levels and uses 512-pixel
+PNG textures for each 128 logical-pixel tile. Production browser requests
+included individual tile durations of approximately ten seconds. The new
+grid keeps the same logical dimensions, world bounds and point data, keeps
+all level-zero source pixels, and adds three overview levels. Local browser
+checks requested one overview per layer: ground 133,532 bytes, upper 56,642
+bytes and underground 30,686 bytes. Local timings do not predict CDN latency.
+All three layers and detail-level requests were checked without browser
+errors. The OSS build, pixel-preservation test, 42 focused frontend tests,
+and complete frontend suite (1,983 tests) passed.
+
 - November 3, 2026: authenticated CLI access, Pages zone discovery, and Aliyun
   DNS read access verified. No OSS DNS record or Pages project existed.
 - Frontend upload succeeded using EdgeOne CLI 1.6.46, Tencent CLI
