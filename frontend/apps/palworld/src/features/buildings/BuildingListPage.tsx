@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FilterChip, FilterRow, CatalogSearchInput, toggleValue } from '@gamemap/ui'
-import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
   loadItems,
@@ -125,7 +125,7 @@ export default function BuildingListPage() {
       filters={filters}
       filtersActive={cats.length > 0}
     >
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+          <EncyclopediaToolbar search={<div className="mb-3 flex flex-wrap items-center gap-3">
             <CatalogSearchInput
               type="search"
               value={query}
@@ -134,8 +134,9 @@ export default function BuildingListPage() {
               className=""
             />
 
-          </div>
-          <ContentPageFilters className="mb-4" />
+          </div>}>
+        <ContentPageFilters  />
+      </EncyclopediaToolbar>
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { FilterChip, FilterRow, HoverCard, HoverCardTrigger, CatalogSearchInput, toggleValue } from '@gamemap/ui'
-import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
   loadItems,
@@ -140,7 +140,7 @@ export default function ItemListPage() {
       filtersActive={cats.length > 0 || noSourceActive}
       hideMobileFooter
     >
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+          <EncyclopediaToolbar search={<div className="mb-3 flex flex-wrap items-center gap-3">
             <CatalogSearchInput
               type="search"
               value={query}
@@ -149,8 +149,9 @@ export default function ItemListPage() {
               className=""
             />
 
-          </div>
-          <ContentPageFilters className="mb-4" />
+          </div>}>
+        <ContentPageFilters  />
+      </EncyclopediaToolbar>
 
           {loadError ? (
             <div className="mt-8 text-center text-destructive">{loadError}</div>

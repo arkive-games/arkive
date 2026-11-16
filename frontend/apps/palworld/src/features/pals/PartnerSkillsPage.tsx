@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp } from 'lucide-react'
 import { FilterChip, FilterRow, CatalogSearchInput, toggleValue, useIsMobile } from '@gamemap/ui'
-import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
   loadPals,
@@ -156,7 +156,7 @@ export default function PartnerSkillsPage() {
       filters={filters}
       filtersActive={categorySel.length > 0 || elementSel.length > 0}
     >
-      <div className="mb-3 flex flex-wrap items-center gap-3">
+      <EncyclopediaToolbar search={<div className="mb-3 flex flex-wrap items-center gap-3">
         <CatalogSearchInput
           type="search"
           value={query}
@@ -166,9 +166,9 @@ export default function PartnerSkillsPage() {
           data-testid="partner-skill-search"
         />
 
-      </div>
-
-      <ContentPageFilters className="mb-4 space-y-1.5" />
+      </div>}>
+        <ContentPageFilters className="space-y-1.5" />
+      </EncyclopediaToolbar>
 
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { FilterChip, FilterRow, Hint, CatalogSearchInput, toggleValue, TooltipProvider } from '@gamemap/ui'
 import { ArrowRight, Coins, Dna, Dices, PawPrint, Sparkles, Stethoscope, TreePine } from 'lucide-react'
-import { ContentPage, ContentPageFilters } from '../../components/ContentPage'
+import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
   loadPals,
@@ -356,7 +356,7 @@ export default function PassivesPage() {
         raritySel.length > 0 || categorySel.length > 0 || innateOnly || mutationOnly
       }
     >
-      <div className="mb-3 flex flex-wrap items-center gap-3">
+      <EncyclopediaToolbar search={<div className="mb-3 flex flex-wrap items-center gap-3">
         <CatalogSearchInput
           type="search"
           value={query}
@@ -366,8 +366,9 @@ export default function PassivesPage() {
           data-testid="passive-search"
         />
 
-      </div>
-      <ContentPageFilters className="mb-4 space-y-1.5" />
+      </div>}>
+        <ContentPageFilters className="space-y-1.5" />
+      </EncyclopediaToolbar>
 
       {loadError ? (
         <div className="mt-8 text-center text-destructive">{loadError}</div>
