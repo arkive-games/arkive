@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import { ArkiveMapTopBar, getArkiveBrandName, type ShellNavItem } from '@gamemap/map-shell'
 import gameIcon from '../assets/palworld-icon.webp'
@@ -15,6 +15,7 @@ export function TopNav({ active }: { active: NavKey }) {
   const lng = i18n.resolvedLanguage ?? 'en-US'
   const brandName = getArkiveBrandName(lng, t('brand'))
   const settings = useSettingsConfig()
+  const navigate = useNavigate()
 
   const items: ShellNavItem[] = [
     { key: '/', label: t('breeding.navMap'), active: active === '/' },
@@ -44,6 +45,7 @@ export function TopNav({ active }: { active: NavKey }) {
       game={{ name: t('siteInfo.gameName'), icon: gameIcon }}
       nav={{
         items,
+        onDropdownTriggerClick: (item) => { void navigate({ to: item.key as NavKey }) },
         renderItem: (item, className, labelClassName) => (
           <Link to={item.key as NavKey} className={className}>
             {labelClassName ? (

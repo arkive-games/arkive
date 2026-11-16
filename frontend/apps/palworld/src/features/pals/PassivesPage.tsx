@@ -373,7 +373,7 @@ export default function PassivesPage() {
         />
 
       </div>}>
-        <ContentPageFilters className="space-y-1.5" />
+        <ContentPageFilters />
       </EncyclopediaToolbar>
 
       {loadError ? (

@@ -138,7 +138,7 @@ export default function ActiveSkillsPage() {
           className=""
           data-testid="active-skill-search"
         />}>
-            <ContentPageFilters className="space-y-1.5" />
+            <ContentPageFilters />
           </EncyclopediaToolbar>
 
       {loadError ? (

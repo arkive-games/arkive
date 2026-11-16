@@ -171,7 +171,7 @@ export default function PartnerSkillsPage() {
         />
 
       </div>}>
-        <ContentPageFilters className="space-y-1.5" />
+        <ContentPageFilters />
       </EncyclopediaToolbar>
 
       {loadError ? (
