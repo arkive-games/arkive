@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { CatalogFacetChoice, CatalogFacetGroup, CatalogFacetTrack, HoverCard, HoverCardTrigger, CatalogSearchInput, toggleValue } from '@gamemap/ui'
+import { FilterChip, FilterRow, HoverCard, HoverCardTrigger, CatalogSearchInput, toggleValue } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -107,27 +107,28 @@ export default function ItemListPage() {
   // Category chips — inline on desktop, behind the mobile header's filter icon
   // (see ContentPage). The search box stays on the page: it is not a filter.
   const filters = bundle ? (
-    <CatalogFacetTrack><CatalogFacetGroup label={t('filters.category')} testId="item-category-filter" count={cats.length + Number(noSourceActive)}>
+    <FilterRow label={t('filters.category')} testId="item-category-filter">
       {categories.map((c) => (
-        <CatalogFacetChoice
+        <FilterChip
           key={c}
           active={cats.includes(c)}
           onClick={() => setCats((s) => toggleValue(s, c))}
           testId={`item-cat-${c}`}
+          variant="pill"
         >
           {itemTypeLabel(c, bundle.typeLabels)}
-        </CatalogFacetChoice>
+        </FilterChip>
       ))}
       {cats.includes('Blueprint') ? (
-        <CatalogFacetChoice
+        <FilterChip
           active={noSourceOnly}
           onClick={() => setNoSourceOnly((v) => !v)}
           testId="item-nosource-filter"
         >
           {t('bp.noSourceFilter')}
-        </CatalogFacetChoice>
+        </FilterChip>
       ) : null}
-    </CatalogFacetGroup></CatalogFacetTrack>
+    </FilterRow>
   ) : undefined
 
   return (
