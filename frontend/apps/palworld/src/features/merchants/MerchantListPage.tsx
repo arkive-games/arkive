@@ -43,6 +43,8 @@ export default function MerchantListPage() {
   }, [lng, t])
 
   const merchantName = (nameKey: string, id: string) => t(`merchant.name.${nameKey}`, id)
+  const merchantFilterName = (nameKey: string, id: string) =>
+    merchantName(nameKey, id).replace(/\s*(商人|Merchant)\s*$/i, '').trim()
 
   const list = useMemo(() => {
     if (!merchants) return []
@@ -80,7 +82,7 @@ export default function MerchantListPage() {
               active={category === key}
               onClick={() => setCategory(key)}
               testId={`merchant-category-${key}`}
-              label={key === 'all' ? t('raids.all') : merchantName(key, key)}
+              label={key === 'all' ? t('raids.all') : merchantFilterName(key, key)}
             />
           ))}
         </CatalogFacetTrack>
