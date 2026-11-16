@@ -1,5 +1,5 @@
 import { Children, createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { Check } from 'lucide-react'
+import { Check, RotateCcw, X } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 import { FilterChip } from './filter-controls'
 import { cn } from './utils'
@@ -96,6 +96,33 @@ export function CatalogFacetChoice({ children, ...props }: {
   active: boolean; onClick: () => void; testId?: string; children: ReactNode;
 }) {
   return <CatalogFacetOption {...props} label={children} />
+}
+
+/** Quiet summaries stay distinct from the solid controls that open facet menus. */
+export function CatalogSelectedFilters({ label, clearLabel, choices, onClear }: {
+  label: string; clearLabel: string; onClear: () => void;
+  choices: { key: string; label: string; icon?: ReactNode; onRemove: () => void }[];
+}) {
+  if (!choices.length) return null
+  return <div role="group" aria-label={label} data-testid="catalog-selected-filters"
+    className="flex flex-wrap items-start gap-x-4 gap-y-2">
+    <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+      {choices.map(choice => <button key={choice.key} type="button"
+        aria-label={`${clearLabel}: ${choice.label}`} onClick={choice.onRemove}
+        data-testid={`catalog-selected-${choice.key}`}
+        className="group inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-border bg-background py-1 pl-2 pr-2 text-sm font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring md:min-h-9">
+        {choice.icon && <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted">{choice.icon}</span>}
+        <span className={cn('min-w-0 break-words text-left', !choice.icon && 'pl-1')}>{choice.label}</span>
+        <span className="ml-1 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground transition-colors group-hover:bg-foreground group-hover:text-background group-focus-visible:bg-foreground group-focus-visible:text-background">
+          <X className="size-3" aria-hidden />
+        </span>
+      </button>)}
+    </div>
+    <button type="button" onClick={onClear} data-testid="catalog-clear-filters"
+      className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-muted/60 px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-ring md:min-h-9">
+      <RotateCcw className="size-4" aria-hidden />{clearLabel}
+    </button>
+  </div>
 }
 
 export function CatalogFacetGrid({ children }: { children: ReactNode }) {

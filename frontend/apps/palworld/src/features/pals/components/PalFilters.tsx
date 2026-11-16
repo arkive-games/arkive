@@ -1,9 +1,9 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, X } from 'lucide-react'
+import { Check } from 'lucide-react'
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
-  toggleValue, CatalogFacetMenu, CatalogFacetOption, CatalogFacetTrack, CatalogFacetGrid, useCatalogFacetMenus,
+  toggleValue, CatalogFacetMenu, CatalogFacetOption, CatalogFacetTrack, CatalogFacetGrid, CatalogSelectedFilters, useCatalogFacetMenus,
 } from '@gamemap/ui'
 import { elementIconUrl, itemIconUrl, workIconUrl } from '../../../lib/assets'
 import { SIZE_ORDER, type PalsBundle } from '../../../lib/pals'
@@ -93,13 +93,9 @@ export function PalFilters({ bundle, filter, onChange, search }: {
       </CatalogFacetTrack>
       {search && <div className="min-w-0 lg:ml-auto">{search}</div>}
     </div>
-    {choices.length > 0 && <div className="flex flex-wrap items-center gap-2" aria-label={fs.filters}>
-      {choices.map(choice => <button key={choice.key} type="button" aria-label={`${fs.clear}: ${choice.label}`} onClick={choice.remove}
-        className="inline-flex min-h-8 items-center gap-2 rounded-full bg-muted px-3 text-sm font-medium text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
-        {choice.icon && <Glyph src={choice.icon} size={16} />}{choice.label}<X className="size-3" aria-hidden />
-      </button>)}
-      <button type="button" className="min-h-8 px-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-        onClick={() => onChange({ ...filter, elements: [], works: [], reactions: [], sizes: [], nocturnal: false, loot: null })}>{fs.clear}</button>
-    </div>}
+    <CatalogSelectedFilters label={fs.filters} clearLabel={fs.clear}
+      choices={choices.map(choice => ({ key: choice.key, label: choice.label, onRemove: choice.remove,
+        icon: choice.icon ? <Glyph src={choice.icon} size={16} /> : undefined }))}
+      onClear={() => onChange({ ...filter, elements: [], works: [], reactions: [], sizes: [], nocturnal: false, loot: null })} />
   </div>
 }
