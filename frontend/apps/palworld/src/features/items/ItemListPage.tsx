@@ -113,7 +113,7 @@ export default function ItemListPage() {
           key={c}
           active={cats.includes(c)}
           onClick={() => setCats((s) => toggleValue(s, c))}
-          testId={`item-cat-${c}`}
+          testId={`item-cat-${c}`} inline
           label={itemTypeLabel(c, bundle.typeLabels)}
         />
       ))}
@@ -121,7 +121,7 @@ export default function ItemListPage() {
         <CatalogFacetOption
           active={noSourceOnly}
           onClick={() => setNoSourceOnly((v) => !v)}
-          testId="item-nosource-filter"
+          testId="item-nosource-filter" inline
           label={t('bp.noSourceFilter')}
         />
       ) : null}

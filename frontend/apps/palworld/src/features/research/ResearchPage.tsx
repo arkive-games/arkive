@@ -302,7 +302,7 @@ export default function ResearchPage() {
           <div className="mb-5">
             <CatalogFacetTrack>
                 {trees.map(({ category, roots }) => <CatalogFacetOption key={category}
-                  active={category === current?.category} onClick={() => setActiveCat(category)} testId={`research-category-${category}`}
+                  active={category === current?.category} onClick={() => setActiveCat(category)} testId={`research-category-${category}`} inline
                   label={<span className="inline-flex items-center gap-2">
                     {pals.enums.work[category as WorkType] ?? category}
                     <span className="text-xs tabular-nums opacity-70">{roots.reduce((sum, r) => sum + countNodes(r), 0)}</span>

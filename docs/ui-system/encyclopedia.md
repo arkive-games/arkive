@@ -31,9 +31,10 @@ reaction, size and sleeplessness remain directly available on the same row;
 keep the drop picker as a peer entry. Mouse hover opens a facet without stealing
 input focus, and leaving the trigger/panel closes it after a short transit delay.
 Keyboard focus, Arrow Down and Escape work, while touch opens by activation.
-Only one facet panel opens at a time. Show aligned options and selection checks,
-without redundant visible panel titles. Inline options have no decorative icons,
-checkmarks, label borders or local button variants. Selected facets remain visible below
+Only one facet panel opens at a time. Show aligned options without redundant visible
+panel titles. Inline options have no decorative icons, checkmarks, label borders or
+local button variants; opened popover options retain their thin surface border.
+Selected facets remain visible below
 with individual removal and Clear filters. Pagination belongs below the results;
 search and filter changes start at page one. Do not add a grid/list switch.
 Keep original Pal thumbnails and compact metadata/name regions.

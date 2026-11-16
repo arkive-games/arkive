@@ -81,7 +81,7 @@ export default function MerchantListPage() {
               key={key}
               active={category === key}
               onClick={() => setCategory(key)}
-              testId={`merchant-category-${key}`}
+              testId={`merchant-category-${key}`} inline
               label={key === 'all' ? t('raids.all') : merchantFilterName(key, key)}
             />
           ))}

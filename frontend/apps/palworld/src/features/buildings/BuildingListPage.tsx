@@ -108,7 +108,7 @@ export default function BuildingListPage() {
           key={c}
           active={cats.includes(c)}
           onClick={() => setCats((s) => toggleValue(s, c))}
-          testId={`building-cat-${c}`}
+          testId={`building-cat-${c}`} inline
           label={buildingTypeLabel(c, bundle.typeLabels)}
         />
       ))}

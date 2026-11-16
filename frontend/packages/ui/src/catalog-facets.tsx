@@ -55,13 +55,15 @@ export function CatalogFacetMenu({ label, count, testId, open, onOpenChange, res
   </Popover>
 }
 
-export function CatalogFacetOption({ active, label, icon, onClick, testId }: {
-  active: boolean; label: ReactNode; icon?: ReactNode; onClick: () => void; testId?: string;
+export function CatalogFacetOption({ active, label, icon, onClick, testId, inline = false }: {
+  active: boolean; label: ReactNode; icon?: ReactNode; onClick: () => void; testId?: string; inline?: boolean;
 }) {
   return <FilterChip variant="tile" active={active} onClick={onClick} testId={testId}
-    className={cn('min-h-11 max-w-full gap-2 rounded-full border-0 px-3 text-sm', active
+    className={cn('min-h-11 max-w-full gap-2 rounded-full px-3 text-sm', inline ? 'border-0' : 'border-border/70 shadow-xs', active
       ? 'bg-foreground text-background'
-      : 'bg-transparent text-foreground hover:!bg-[color:var(--foreground)] hover:!text-[color:var(--background)]')}>
+      : inline
+        ? 'bg-transparent text-foreground hover:!bg-[color:var(--foreground)] hover:!text-[color:var(--background)]'
+        : 'bg-secondary text-foreground hover:!border-foreground hover:!bg-[color:var(--foreground)] hover:!text-[color:var(--background)]')}>
     {icon}<span className="min-w-0 break-words text-left">{label}</span>
   </FilterChip>
 }
