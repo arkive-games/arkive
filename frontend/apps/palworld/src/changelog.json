@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.13",
+      "date": "2026-11-16",
+      "commit": "f482e18611b0c00fa4cb7abbc3e6cf73826961ff",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Refine selected Paldeck filters with outlined tags, clearer remove controls and a compact reset action.",
+            "zh-CN": "优化帕鲁图鉴已选筛选条件的描边标签、移除控件和重置按钮。",
+            "zh-TW": "優化帕魯圖鑑已選篩選條件的描邊標籤、移除控制項和重設按鈕。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.12",
       "date": "2026-11-16",
       "commit": "1440f810b26c7281441bb57e32debf6c41a5c006",
