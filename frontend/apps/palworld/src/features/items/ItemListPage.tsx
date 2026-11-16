@@ -2,7 +2,7 @@ import { useCatalogState } from '../catalog/catalogMemory'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
-import { CatalogFacetChoice, CatalogFacetTrack, HoverCard, HoverCardTrigger, CatalogSearchInput, toggleValue } from '@gamemap/ui'
+import { FilterChip, CatalogFacetTrack, HoverCard, HoverCardTrigger, CatalogSearchInput, toggleValue } from '@gamemap/ui'
 import { EncyclopediaToolbar, ContentPage, ContentPageFilters } from '../../components/ContentPage'
 import { MobilePagination, useMobilePagination } from '../../components/MobilePagination'
 import {
@@ -109,23 +109,27 @@ export default function ItemListPage() {
   const filters = bundle ? (
     <CatalogFacetTrack>
       {categories.map((c) => (
-        <CatalogFacetChoice
+        <FilterChip
           key={c}
           active={cats.includes(c)}
           onClick={() => setCats((s) => toggleValue(s, c))}
           testId={`item-cat-${c}`}
+          variant="pill"
+          className="min-h-10 px-3 text-sm"
         >
           {itemTypeLabel(c, bundle.typeLabels)}
-        </CatalogFacetChoice>
+        </FilterChip>
       ))}
       {cats.includes('Blueprint') ? (
-        <CatalogFacetChoice
+        <FilterChip
           active={noSourceOnly}
           onClick={() => setNoSourceOnly((v) => !v)}
           testId="item-nosource-filter"
+          variant="pill"
+          className="min-h-10 px-3 text-sm"
         >
           {t('bp.noSourceFilter')}
-        </CatalogFacetChoice>
+        </FilterChip>
       ) : null}
     </CatalogFacetTrack>
   ) : undefined
