@@ -37,6 +37,9 @@ On Windows, stop the entire task-owned process tree before restarting an
 interrupted check. Stopping only the test runner can leave its parent shell
 running later build commands. Keep one full-suite run and one affected-app build
 active at a time; run focused checks first and use bounded worker counts.
+If fork workers time out during startup, rerun the unchanged suite with
+`pnpm exec vitest run --pool=threads --maxWorkers=2`; do not mark skipped worker
+files as passing or reduce the test scope to obtain a green result.
 
 ## Required captures
 
