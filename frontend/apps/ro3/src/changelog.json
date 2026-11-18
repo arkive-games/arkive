@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.26.1",
+      "date": "2026-11-19",
+      "commit": "36d45ba6d4759781c2a61aa3b1c4c6d39e6ab818",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Match the Palworld encyclopedia rail and keep single-facet soul quality filters on one line.",
+            "zh-CN": "百科左侧目录与幻兽帕鲁统一，并将灵魂残响的单一品质筛选项保持在同一行。",
+            "zh-TW": "百科左側目錄與幻獸帕魯統一，並將靈魂殘響的單一品質篩選項保持在同一列。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.26.0",
       "date": "2026-11-19",
       "commit": "0c6e32b3ab8fa83589ada80603838aa28c08fd32",
