@@ -67,6 +67,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const language = i18n.resolvedLanguage ?? i18n.language
   const [now] = useState(() => new Date())
   const games = sites.filter((site) => siteHref(site))
+  const shortcutGames = games.filter((site) => site.id !== 'oss')
   const tools = FEATURES.filter((feature) => feature.kind === 'tool' && HOME_TOOL_IDS.has(feature.id)
     && games.some((site) => site.id === feature.gameId))
   const badge = t('landing.quick.badge')
@@ -92,7 +93,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
 
       <div className="home-shell">
         <nav className="home-quick" aria-label={t('landing.quick.label')}>
-          {games.map((site, index) => (
+          {shortcutGames.map((site, index) => (
             <a key={site.id} href={siteHref(site)} draggable={false} style={{ '--i': index, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
               <span className="home-quick-tile">
                 <span className="home-quick-icon is-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" draggable={false} /></span>
@@ -102,7 +103,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
             </a>
           ))}
           {entries.map(({ href, label, icon: EntryIcon, colors, fresh }, index) => (
-            <a key={href} href={href} style={gradient(colors, games.length + 1 + index)}>
+            <a key={href} href={href} style={gradient(colors, shortcutGames.length + 1 + index)}>
               <span className="home-quick-tile">
                 <span className="home-quick-icon"><EntryIcon stroke={1.9} aria-hidden="true" /></span>
                 {fresh && <b>{badge}</b>}
