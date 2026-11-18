@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.mobile-experience"
 title: "Arkive Mobile Web Experience Specification"
 status: "canonical"
-last_reviewed: "2026-10-27"
+last_reviewed: "2026-11-18"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -148,10 +148,11 @@ map_workspace:
     trigger: "Use routine primary interaction styling, plus a non-color indicator when filters are active."
     content: "Omit empty groups and options that produce no results."
   marker_detail:
-    maximum_width: "Viewport width minus twice the mobile page gutter"
-    maximum_height: "The smaller of 72dvh and 32rem"
-    overflow: "Scroll inside the detail surface"
-    content: "Use the desktop map specification's shared marker-detail contract."
+    surface: "Content-sized full-width bottom sheet positioned above the bottom safe area, rounded on the top corners only (standard_radius), with no pointer"
+    maximum_height: "The smaller of 60dvh, 34rem, and 100dvh minus 5rem and env(safe-area-inset-bottom) so the top-right menu button stays reachable and selected-marker map context stays visible"
+    drag_affordance: "Show a drag handle above the identity header; dragging past one quarter of the sheet height (120px at most) or a fast downward swipe dismisses it while keeping the explicit close button"
+    overflow: "Clip the outer sheet and scroll only inside the middle detail viewport"
+    content: "Use the desktop map specification's shared marker-detail regions, sections, and footer contract."
   status_overlay:
     color: "Use map_overlay from the color-system specification."
     content: "Keep coordinates and essential status compact and readable over any map imagery."
@@ -179,8 +180,8 @@ portal_home:
 
 catalogs_and_lists:
   toolbar:
-    default: "Place search and view mode on one row."
-    narrow: "Move result count below when the controls cannot preserve their minimum width."
+    default: "Place search and view-mode or filter-sheet controls on one row when each preserves its minimum width; wrap cleanly onto a second row on narrower phones."
+    result_totals: "Follow the UI-foundations copy rule: omit visible Showing N records result-total rows on catalog and encyclopedia pages."
   filters:
     style: "Peer filters use the same geometry and state language."
     active: "Use color plus text, icon, count, or shape to expose an active result scope."
@@ -200,7 +201,7 @@ catalogs_and_lists:
     touch: "All controls use the shared minimum touch target."
     behavior:
       - "Reset to page one when query, filters, mode, or data scope changes."
-      - "Changing page returns the content scroller to the result heading, marked with `data-pagination-anchor` (see known_gaps)."
+      - "Changing page returns the content scroller to the result container's top edge, marked with `data-pagination-anchor` on the persistent results wrapper (not on a removable result-count row or desktop-only filter bar)."
     page_size: "Choose from record density; do not force one value across unlike catalogs."
 
 detail_pages:
@@ -319,12 +320,10 @@ verification:
 
 known_gaps:
   - >-
-    Only the four catalogs that render a result count (pals, items, buildings,
-    merchants) carry `data-pagination-anchor`; the other eleven paginated
-    palworld views fall back to the top of the scroller. The shared filters
-    row cannot serve as the anchor — it returns null once the filters move
-    into the mobile sheet, which is exactly when pagination is active — so the
-    remaining pages each need a decision about what their result heading is.
+    Several paginated Palworld views still fall back to the top of the scroller
+    until `data-pagination-anchor` is attached directly to each page's persistent
+    results container (the shared filters row unmounts into the mobile sheet
+    when mobile pagination is active, and visible result-count rows are omitted).
 
 maintenance:
   rules:

@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.state-memory"
 title: "Arkive State Memory Specification"
 status: "canonical"
-last_reviewed: "2026-11-15"
+last_reviewed: "2026-11-18"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -268,7 +268,7 @@ surface_contracts:
       controls: "No Save button or leave reminder; Reset/Clear replaces remembered inputs with defaults."
       retention: "Use the shared local-draft retention and limits; recompute results from current data."
     explicit_saving:
-      owner: "docs/ui-system/tool-saving.md"
+      topic_detail: "docs/ui-system/tool-saving.md"
       applicability: "Build, loadout and other editors that manage saved schemes."
       exit: "Save and Leave, Leave Without Saving, or Continue Editing on app-controlled dirty exit."
       failed_save: "Keep work and stay; do not silently save or discard."

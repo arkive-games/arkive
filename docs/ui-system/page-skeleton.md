@@ -36,8 +36,9 @@ duplicate lines. Use layout gaps, not lines, to separate controls and results.
 
 ## Responsive boundary
 
-Ordinary mobile pages use the shared mobile shell and clear safe areas/bottom
-navigation. Reflow is content-driven, with reachable independent actions. Map
+Ordinary mobile pages use the shared mobile header, top-right menu drawer, and
+safe-area clearance (the mobile website uses no bottom tab bar; see
+[mobile experience](../ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml)). Reflow is content-driven, with reachable independent actions. Map
 mobile is provisional in [Map workspace](map-workspace.md). Encyclopedia mobile
 is deferred; do not derive a drawer or rail from the desktop specification.
 Exact content layouts and sidebar/sticky dimensions belong to the page topic.

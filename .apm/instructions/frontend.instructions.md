@@ -18,7 +18,7 @@ The workspace-wide conventions apply here too.
 - **TypeScript is held at `~5.9.3` deliberately — do not bump it to 7.** TypeScript 7 (the
   native port) ships with **no JS API**; a new one is expected in 7.1. Every tool that consumes
   the compiler API therefore breaks on it, `typescript-eslint` included, which fails hard with
-  "does not support TS 7.0" and takes the lint script of all six apps down with it
+  "does not support TS 7.0" and takes the lint script of every app down with it
   (typescript-eslint#10940). The apps *build* fine on 7 — it is only the tooling around it that
   cannot follow yet. Revisit once 7.1 ships a stable API and typescript-eslint supports it.
 - **Vite:** the apps track `vite` proper (8.x). The old `vite → rolldown-vite` alias/override is
@@ -147,9 +147,11 @@ requests a deep link precisely to catch this.
   `scripts/seo.test.mjs` fails if the extra rules would pass EdgeOne's 100-rewrite cap.
 
 ## Production deploys (EdgeOne, built here)
-`.github/workflows/deploy.yml` builds `meta`, `aion2`, `palworld`, `vrising`, `ro3` and `gmzz` on
-a push touching `frontend/**`, then uploads each `dist/` with `edgeone makers deploy -n <project>`.
-`sts2` and `lostark` are still built and linted by CI but not deployed — they have no project.
+`.github/workflows/deploy.yml` is the authoritative deployment matrix: it builds each deployed app
+(`meta`, `aion2`, `palworld`, `vrising`, `ro3`, `gmzz`, `pbz`, and `oss`) on a push touching
+`frontend/**`, then uploads each `dist/` with `edgeone makers deploy -n <project>`.
+Unlaunched workspace apps (`sts2` and `lostark`) are still built and linted by CI (`.github/workflows/ci.yml`)
+but not deployed — they have no EdgeOne project yet.
 EdgeOne itself runs **no build** for this repo — that is the point: its free tier caps builds at
 500/month, while this repo is public so standard-runner Actions minutes are unmetered. The
 `data`/`resource` repos still use EdgeOne's own Git integration; this is per-project.

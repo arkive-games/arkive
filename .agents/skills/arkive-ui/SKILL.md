@@ -17,7 +17,7 @@ If the checkout lacks the linked specifications, identify that missing context
 instead of inventing Arkive rules.
 
 Read the required [site specification](../../../docs/ARKIVE_SITE_SPEC.yaml),
-then use the matching row in the [task index](../../../docs/ARKIVE_PRODUCT_IA_DRAFT.md).
+then use the matching row in the [task index](../../../docs/ARKIVE_UI_INDEX.md).
 Read only that topic and the specialist sections needed for the change:
 foundations for geometry/type, colors for themes/contrast, memory for retention.
 Do not preload every topic, historical audit or screenshot. Use

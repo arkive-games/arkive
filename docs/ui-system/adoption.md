@@ -1,7 +1,7 @@
 # Current Adoption and Acceptance
 
 Updated 2026-11-15. Single status owner; rules are routed by the
-[task index](../ARKIVE_PRODUCT_IA_DRAFT.md). All implementation is local,
+[task index](../ARKIVE_UI_INDEX.md). All implementation is local,
 not deployed. [Evidence](evidence.md) records exact coverage/limits;
 [history](reconciliation.md) retains the earlier batch summary/Git lookup.
 

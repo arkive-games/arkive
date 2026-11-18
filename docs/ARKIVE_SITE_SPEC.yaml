@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.site"
 title: "Arkive Site Specification"
 status: "canonical"
-last_reviewed: "2026-11-15"
+last_reviewed: "2026-11-18"
 
 purpose:
   summary: >-
@@ -15,7 +15,7 @@ purpose:
 specification_router:
   always_read: "docs/ARKIVE_SITE_SPEC.yaml"
   read_when_needed:
-    confirmed_page_and_product_rules: "docs/ARKIVE_PRODUCT_IA_DRAFT.md"
+    confirmed_page_and_product_rules: "docs/ARKIVE_UI_INDEX.md"
     ui_foundations: "docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml"
     color_or_theme: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
     interactive_map_desktop_ui: "docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml"
@@ -34,7 +34,8 @@ specification_router:
     - "The color-system specification owns every color value and color role."
     - "The interactive-map specification owns map-only layout and interaction rules."
     - "The state-memory specification owns persistence classes, precedence, retention, clearing, synchronization, and migration."
-    - "A specialist specification may add detail within its scope but must not restate a parent rule."
+    - "Confirmed topic modules routed by docs/ARKIVE_UI_INDEX.md (under docs/ui-system/*.md) own surface-specific page structure, registration, and state transitions within these canonical contracts; docs/ui-system/adoption.md, docs/ui-system/evidence.md, docs/ui-system/reconciliation.md, and docs/ui-system/live-visual-audit.md record status and dated evidence only."
+    - "A specialist specification or topic module may add detail within its scope but must not restate or contradict a parent rule."
 
 brand_identity:
   brand_key: "Arkive"
@@ -166,10 +167,9 @@ product_model:
     rule: >-
       A game may provide maps, encyclopedias, tools, routes, languages, data,
       and artwork. It must reuse the cross-site shell and brand identity.
-    inventory_owner: "frontend/apps/meta/src/sites.ts (SITES, VISIBLE_SITES)"
-    live_order: ["aion2", "palworld", "gmzz", "ro3", "vrising"]
-    display_order: "SITES defines default order. All Games filters first, then places signed-in favorites first with stable order in both groups; homepage selection remains editorial."
-    unlaunched: "sts2 and lostark stay out of the home page, the game menu, All Games and the forum cabins until they open."
+    inventory_owner: "frontend/apps/meta/src/sites.ts (SITES, VISIBLE_SITES) and .github/workflows/deploy.yml; do not copy a parallel game list into specifications."
+    display_order: "VISIBLE_SITES in frontend/apps/meta/src/sites.ts defines the live catalog inventory and default order. All Games filters first, then places signed-in favorites first with stable order in both groups; homepage selection remains editorial."
+    unlaunched: "Workspace apps marked comingSoon or not yet registered in VISIBLE_SITES (such as sts2 and lostark) stay out of the home page, the game menu, All Games, and the forum cabins until they open."
     game_colour: "Each game's colour tints only that game's own icon, card hover and menu row."
   game_about:
     scope: "Every current and future game has an About panel with its own version history."
@@ -216,7 +216,7 @@ global_shell:
     game_pages: "Routes and labels are game-owned; geometry and interaction are shared."
     active_state: "Use one shared active indicator and restore it after hover leaves."
     dropdowns: "Open on pointer hover or keyboard focus; do not show a decorative chevron."
-    parent_activation: "A top-level navigation label with children is also a direct link. Activate it to open that section's declared default child; open the menu from hover, keyboard focus, or the separate menu affordance. Do not force a second click through the menu before navigating."
+    parent_activation: "A top-level navigation label with children is also a direct link when the host supplies a default child destination. Activating the label opens that declared default child; hover, keyboard focus, or an explicit menu affordance opens the child menu without forcing a second click for the default destination. On coarse-pointer viewports at md and above without hover, if no separate menu button is rendered, every child route must remain reachable from the section landing page, encyclopedia directory, or an explicit touch disclosure."
     default_child: "The default child is product-owned and must be explicit. For Palworld, 'Pal-related' defaults to the Paldeck. If a section later receives its own landing page, the label links to that page instead."
   utilities:
     order:

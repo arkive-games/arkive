@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.interactive-map.desktop-ui"
 title: "Arkive Interactive Map Desktop UI Specification"
 status: "canonical"
-last_reviewed: "2026-11-15"
+last_reviewed: "2026-11-18"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -20,7 +20,7 @@ purpose:
     data, localization, and artwork; they do not create another shell.
   outcomes:
     - "A new map reuses navigation, sidebars, search, controls, and marker details."
-    - "A shared change is implemented once for every map and rendering engine."
+    - "A shared change is implemented once across every map application on map-engine-gl."
     - "Each map surface has one discoverable owner."
 
 scope:
@@ -207,13 +207,12 @@ marker_detail:
   component: "MarkerDetailDrawer"
   surface:
     desktop: "A compact marker-anchored surface, 22rem maximum width and 34rem maximum height, always centered above the selected marker."
-    mobile: "A content-sized full-width bottom sheet capped at 60dvh and 34rem, positioned above the bottom safe area so the menu button stays reachable and selected-marker map context stays visible."
-    radius: "Use standard_radius; mobile rounds only the top corners."
+    mobile_owner: "Below-md bottom-sheet geometry, safe-area clearance, and drag dismissal are owned by docs/ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml map_workspace.marker_detail."
+    radius: "Use standard_radius on desktop."
     overflow: "The outer surface clips overflow and never scrolls."
     elevation: "Use the shared elevated-surface shadow without obscuring the remaining map."
     placement: "Never switch to the marker's left, right, or below on desktop. If the surface would cross the map boundary or overlap a registered control, smoothly pan the map horizontally and/or vertically until the centered-above placement fits. Repeat the correction when visible content changes the surface height."
-    pointer: "Desktop shows a surface-colored pointer at the bottom center, aligned to the selected marker. Mobile has no pointer."
-    drag_affordance: "Mobile shows a drag handle above the identity header. Dragging the handle downward moves the sheet with the pointer; crossing one quarter of the sheet height, 120px at most, or making a deliberate fast downward swipe closes it. Short or cancelled drags animate back into place. The explicit close action remains available."
+    pointer: "Desktop shows a surface-colored pointer at the bottom center, aligned to the selected marker."
   regions:
     - "Fixed identity header with close action"
     - "Fixed Details and Comments tab list"
@@ -242,9 +241,9 @@ marker_detail:
     placement: "Details footer lower-left: location icon, tuple, copy icon; no visible labels or Add Image entry."
     copy:
       copied_value: "Exactly the visible coordinate string"
-      idle: "Copy icon"
-      success: "Keep the copy icon unchanged; no visible status or toast"
-      failure: "Keep the copy icon unchanged; no visible status or toast"
+      idle: "Copy icon with localized accessible action label"
+      success: "Keep the copy icon unchanged; show no visible status label or toast"
+      failure: "Keep the copy icon unchanged; show no visible status label or toast"
       transport: "navigator.clipboard.writeText on secure origins"
   description:
     role: "dense_body"
@@ -268,8 +267,8 @@ marker_detail:
   empty_states:
     rule: "Use one compact horizontal row with an icon and a short localized status. Do not repeat contribution guidance already represented by the visible footer actions."
   footer:
-    details: "Use one compact row: marker-gallery image action on the left and Mark as completed on the right when supported."
-    comments: "Keep the comment composer visible whenever the comments surface exists."
+    details: "Use one compact row: location icon, plain coordinate tuple, and copy action on the left (replacing the retired footer Add Image action), and Mark as completed on the right when supported."
+    comments: "Keep the comment composer visible whenever the comments surface exists; omit the comment-total and Popular/Latest sort row (see docs/ui-system/map-markers.md)."
   narrow_behavior:
     at_350px: "Hide drop probability before item name or quantity, use a one-column gallery, and keep footer commands on one row."
   extensions: >-
@@ -285,8 +284,7 @@ interaction_contracts:
   individual_filter: "Active combines text, opacity, surface, border, and indicator; inactive is visibly quieter."
   category_visibility: "Eye off appears only when all child subtypes are hidden."
   sidebar_collapse: "Use localized labels and the shared chevron."
-  marker_selection: "Keep map-engine selection and highlighting as the source of truth, then open MarkerDetailDrawer above the map canvas."
-  engine_consistency: "Leaflet and WebGL expose the same content, controls, and states."
+  marker_selection: "Keep map-engine-gl selection and highlighting as the source of truth, then open MarkerDetailDrawer above the map canvas."
   coordinate_copy: "Desktop secondary click opens the shared copy-position menu."
   navigation_dropdown: "Pointer hover or keyboard focus opens; no decorative dropdown chevron."
   overflow_text: "Reveal complete clipped content only when clipping is detected."
@@ -296,19 +294,17 @@ localization_and_accessibility:
   localization:
     - "No shared visible string is hard-coded."
     - "Every shared action ships for every locale supported by the host game."
-    - "Copy success and failure have localized visible and accessible labels."
+    - "Coordinate copy actions ship a localized accessible name; marker-detail coordinate copy stays visually silent (see marker_detail.coordinates.copy)."
   map_specific_accessibility:
     - "Keyboard users can reach the map selector, filters, search, controls, markers, detail tabs, scroll viewport, disclosures, and actions."
     - "Dropdowns open on focus and close with Escape."
-    - "Copy feedback uses an aria-live polite status."
-    - "Both engines expose equivalent accessible names and selected states."
+    - "Marker-detail coordinate copy keeps a focusable button and localized accessible label; surfaces that announce clipboard status use aria-live polite without changing control geometry."
     - "State does not rely on marker or control color alone."
 
 new_map_contract:
-  - "Use every required owner in component_registry; optional SiteInfoPanel may be omitted."
+  - "Use every required owner in component_registry with map-engine-gl; optional SiteInfoPanel may be omitted."
   - "Provide game-owned configuration without copying shared source."
-  - "Configure localized routes, languages, map data, filters, icons, coordinate display, and popup extensions."
-  - "Verify at least one Leaflet and one WebGL consumer for shared engine changes."
+  - "Configure localized routes, languages, map data, filters, icons, coordinate display, and MarkerDetailDrawer extensions."
 
 verification:
   viewports:
@@ -318,17 +314,16 @@ verification:
     - "light"
     - "dark"
   application_scope: >-
-    Verify against every app that mounts ShellLayout: aion2, palworld, vrising. There
-    is no registry to discover them from -- the previous wording deferred to one that
-    does not exist, which made the scope unverifiable. `git grep -l ShellLayout` is
-    the check; update this list when an app gains or loses a map. (The list this
-    replaced also named sts2, which has no map.)
+    Discover the current map consumers dynamically with `git grep -l ShellLayout -- frontend/apps/`
+    (currently `aion2`, `palworld`, `vrising`, `pbz`, `oss`, and unlaunched `lostark`) rather than
+    trusting a copied list. Verify every launched map app affected by a shared map-shell or
+    map-engine-gl change.
   interaction_checks:
     - "Arkive home remains reachable on narrow desktop."
     - "Active navigation returns after hover or focus leaves."
     - "Sidebar scrolling reaches the final category."
     - "Search preserves its minimum width and returns results without a scope selector."
-    - "Filter, popup, copy, empty-description, and memory states match across engines."
+    - "Filter, marker-detail, silent coordinate copy, empty-description, and memory states behave consistently across map apps."
     - "Optional rails collapse before the map becomes unusable."
   automated:
     - "Run focused map-shell and engine tests."
@@ -350,4 +345,4 @@ maintenance:
 
 confirmed_detail_exceptions:
   comment_toolbar: "Remove the comment total / Popular / Latest row; preserve composer, attachments and other comment interactions."
-  rule_owner: "docs/ui-system/map-markers.md"
+  topic_detail: "docs/ui-system/map-markers.md"

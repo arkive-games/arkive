@@ -3,7 +3,7 @@ description: Arkive monorepo layout, the data-flow contract, and the workspace-w
 applyTo: "**"
 ---
 
-**Arkive** — the multi-game interactive-map platform (AION2, Palworld, STS2, V Rising).
+**Arkive** — the multi-game interactive-map, encyclopedia, and tool platform.
 
 **This file is generated — do not edit it.** `CLAUDE.md` and `AGENTS.md` are both compiled by
 [APM](https://github.com/microsoft/apm) from `.apm/instructions/*.instructions.md`. Edit the
@@ -28,10 +28,11 @@ messages rescoped to `type(scope):`). The derived-artifact repos `data/` and `re
 their per-game variants) remain **separate**, pulled over HTTP.
 
 ## Layout
-- `frontend/` — pnpm workspace: `apps/` (aion2, palworld, sts2, vrising) + `packages/` (ui,
-  map-engine-gl, map-shell, data-contract, auth, api-core, state-memory). React 19 / Vite /
-  Tailwind / shadcn, with maps drawn by `map-engine-gl` (three.js) — the only renderer since
-  Leaflet was retired.
+- `frontend/` — pnpm workspace: `apps/` (`meta` plus per-game apps; see `frontend/apps/meta/src/sites.ts`
+  and `.github/workflows/ci.yml` for the current list) + `packages/` (ui, map-engine-gl,
+  map-shell, data-contract, auth, api-core, state-memory). React 19 / Vite / Tailwind /
+  shadcn, with maps drawn by `map-engine-gl` (three.js) — the only renderer since Leaflet
+  was retired.
 - `backend/`  — **RETIRED (2026-08-16). Read-only reference; do not deploy it.** The
   FastAPI service that `backend-go` replaced. Its container was removed from the server
   and its published port closed; the last genuine API request was 2026-08-09. The source
@@ -46,14 +47,14 @@ their per-game variants) remain **separate**, pulled over HTTP.
   implemented; comments on map markers, progress, feedback and the aion2 abyss-artifact
   module are not yet. See its `README.md` and
   `docs/superpowers/specs/2026-08-08-go-backend-architecture-design.md`.
-- `tools/`    — Python (uv): `apps/` (aion2, gmzz, lostark, palworld, sts2, vrising pipelines) + `packages/` (shared
+- `tools/`    — Python (uv): `apps/` (aion2, gmzz, lostark, palworld, pbz, ro3, sts2, vrising pipelines) + `packages/` (shared
   framework `tools`, generated `backend-client`). Transforms the raw game export into the
   `data/` + `resource/` artifacts.
 - `docs/`, `.apm/`, `apm.yml`, `.claude/`, `BOOTSTRAP.md` — workspace meta (also here).
 
 Separate artifact repos (NOT in this monorepo; served over HTTP):
-- `resource/` (+`resource-gmzz/`, `resource-palworld/`, `resource-ro3/`, `resource-sts2/`, `resource-vrising/`) — derived WebP image set under a `UI/` root.
-- `data/` (+`data-gmzz/`, `data-lostark/`, `data-palworld/`, `data-ro3/`, `data-sts2/`, `data-vrising/`) — derived parsed dataset (markers, regions, tables, locales).
+- `resource/` (+`resource-<game>/` per game; see `.github/workflows/deploy.yml` for live hosts) — derived image and tile set.
+- `data/` (+`data-<game>/` per game; see `.github/workflows/deploy.yml` for live hosts) — derived parsed dataset (markers, regions, tables, locales).
 
 ## Data-flow contract
 Raw game export (`E:\Exports\AION2\Content\`, Perforce later)
@@ -183,7 +184,7 @@ backend-go  --HTTP (accounts, authentication, avatars, the forum)-->  frontend
 ## Project board
 Every issue and pull request is tracked on the [Arkive Roadmap](https://github.com/orgs/arkive-games/projects/1),
 with two multi-select fields: **Layer** (`frontend` / `backend` / `tools` / `workspace`) and
-**App** (`aion2` / `palworld` / `sts2` / `vrising` / `lostark` / `meta` / `shared`). Both accept
+**App** (`meta`, `shared`, plus one option per app directory under `frontend/apps/` or `tools/apps/`). Both accept
 several values, because most changes here span more than one — a single-value field would have to
 throw most of that away.
 
@@ -216,7 +217,8 @@ What automation cannot do, and therefore belongs to you:
 ## Notes
 - **Canonical site specifications:** Start with `docs/ARKIVE_SITE_SPEC.yaml` for
   brand identity, cross-site experience rules, and the specification reading
-  router. Read `docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml` for framework-facing design,
+  router, and `docs/ARKIVE_UI_INDEX.md` for task-by-task page and product rules.
+  Read `docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml` for framework-facing design,
   typography, spacing, shape, responsive, motion, layer, and shared component work.
   Read `docs/ARKIVE_SITE_COLOR_SYSTEM.yaml` for color or theme work,
   `docs/ARKIVE_MOBILE_EXPERIENCE_SPEC.yaml` for below-`md` composition,

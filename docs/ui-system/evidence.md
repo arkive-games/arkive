@@ -1,6 +1,6 @@
 # Acceptance Evidence: 2026-11-15
 
-Dated observations only. Rules belong to the [task index](../ARKIVE_PRODUCT_IA_DRAFT.md);
+Dated observations only. Rules belong to the [task index](../ARKIVE_UI_INDEX.md);
 current completion/deferred status belongs to [Adoption](adoption.md).
 No local correction below has been deployed by this work.
 

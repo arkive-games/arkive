@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.ui-foundations"
 title: "Arkive UI Foundations Specification"
 status: "canonical"
-last_reviewed: "2026-11-15"
+last_reviewed: "2026-11-18"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -443,4 +443,4 @@ catalog_controls_and_copy:
   search: "Use the shared CatalogSearchInput or its SearchInput adapter: the reviewed portal pill, leading magnifier, and round warm arrow. Keep one outer focus treatment and the catalog height tokens. Dense embedded pickers are a separate size role."
   breeding_mode_selector: "Recipe and multi-generation modes use the same fixed muted filter track and inline option styling as encyclopedia filters. The track is followed by exactly one space-4 gap before the breeding pickers."
   directory_toggle: "Encyclopedia directories use ArkiveEncyclopediaWorkspace's panel-frame icon with its internal directional arrow; no app-local chevron substitute."
-  copy: "Across the site, omit interface tutorials, implementation explanations and visible result-total summaries such as Showing N records. Keep game facts, taxonomy counts, progress, useful field labels, actions, errors and empty states."
+  copy: "Across catalogs, encyclopedias, tools, and content pages, omit interface tutorials, implementation explanations, and visible result-total summaries such as Showing N records. Keep game facts, taxonomy counts, progress, useful field labels, actions, errors, and empty states. Compact floating map-search overlays may show an active-map match count as defined by docs/ARKIVE_INTERACTIVE_MAP_UI_SPEC.yaml."
