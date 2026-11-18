@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.26.2",
+      "date": "2026-11-19",
+      "commit": "9799021747867a842865e2438ae700bffe534493",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Align encyclopedia rails and normalize filter-to-content spacing across catalog pages.",
+            "zh-CN": "对齐百科左右栏顶部，并统一各图鉴筛选区到内容面的间距。",
+            "zh-TW": "對齊百科左右欄頂部，並統一各圖鑑篩選區到內容面的間距。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.26.1",
       "date": "2026-11-19",
       "commit": "36d45ba6d4759781c2a61aa3b1c4c6d39e6ab818",
