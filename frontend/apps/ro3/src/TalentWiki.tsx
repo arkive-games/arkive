@@ -138,7 +138,7 @@ export function TalentWiki() {
     ))
 
   return (
-    <div className="talent-wiki flex flex-col gap-3 md:gap-4">
+    <div className="talent-wiki flex flex-col gap-4">
       <HeaderAction>{modeSwitch(true)}</HeaderAction>
       <SidebarSub>{systemList}</SidebarSub>
 

@@ -181,7 +181,7 @@ export function CardWiki() {
   ]
 
   return (
-    <div className="card-wiki flex flex-col gap-3 md:gap-4">
+    <div className="card-wiki flex flex-col gap-4">
       <HeaderAction>
         <button
           type="button"

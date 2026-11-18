@@ -46,7 +46,7 @@ export function SoulWiki() {
   }, [souls, quality, query])
   const resonance = useMemo(() => (data?.souls.resonance ?? []).filter((row) => row.name?.['zh-CN']), [data])
   return (
-    <div className="flex flex-col gap-3 md:gap-4">
+    <div className="flex flex-col gap-4">
       <HeaderAction>
         <SearchToggle
           open={searchOpen}

@@ -224,6 +224,9 @@ spacing:
     related_content_gap: "space-3 or space-4"
     encyclopedia_filter_to_content: "space-4 (1rem, 17px at the Arkive root size) below the complete filter region, measured from the region's bottom edge to the first content surface. This is calibrated from the production Paldeck at https://palworld.arkive.games/pals and is the fixed cross-page encyclopedia standard."
     encyclopedia_filter_region: "The filter region includes the fixed track and, when any multi-facet selection is active, the selected-condition summary row. The summary row uses the current site locale for its clear action and does not create an extra page-level gap."
+    encyclopedia_toolbar_alignment: "At desktop, the top edge of the shared encyclopedia directory title box and the top edge of the first right-side filter control share the same content-page start; the directory rail does not add a local top offset."
+    encyclopedia_surface_spacing: "Every encyclopedia page uses space-4 between the complete filter region and its first result surface, including a page-owned tab row when one exists. Page-owned cards, grids, and detail panels do not replace this gap with a local variant."
+    encyclopedia_page_start: "The shared arkive-content-page utility owns the encyclopedia top-space token. Game pages must not add a local top padding or margin before their first filter, tab, or content surface."
     section_gap: "space-6 on mobile; space-8 on desktop"
   rules:
     - "Use an approved step before introducing a new spacing value."

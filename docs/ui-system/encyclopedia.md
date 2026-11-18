@@ -68,6 +68,13 @@ Use a simple directional chevron for the overall expand/collapse control.
 Encyclopedia remains the highest directory level, with its original text-2xl
 title and orange leading bar. Align that title box with the desktop toolbar top;
 both inherit the shared content-page top-space token below navigation.
+The directory rail uses the content-page start directly and does not add a local
+top offset. Every page uses `space-4` between the complete filter region and its
+first result surface, including any page-owned tab row; cards and detail panels
+must not introduce a second page-level gap.
+The shared `arkive-content-page` utility owns the top-space token. Game-owned
+encyclopedia wrappers must not add local top padding or margin before their first
+filter, tab, or content surface.
 
 ## Desktop sidebar
 

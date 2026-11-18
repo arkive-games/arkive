@@ -39,7 +39,6 @@ export function EncyclopediaWorkspace({ entries, active, onNavigate, label, onSu
     active={active} label={label} collapsed={collapsed} onCollapsedChange={setCollapsed}
     collapseLabel={content.wiki.collapseDirectory} expandLabel={content.wiki.expandDirectory}
     appearance="quiet"
-    railClassName="top-4"
     renderLink={(entry, className, children) => <a href={hrefForKey(entry.key)}
       onClick={navigateOnClick(entry.key as NavKey, onNavigate)} className={className}>{children}</a>}
     renderSubnavigation={() => <div ref={onSubSlot} className="empty:hidden" />}
