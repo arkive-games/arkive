@@ -1,6 +1,6 @@
 import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { CatalogFacetGrid, CatalogFacetMenu, CatalogFacetOption, CatalogFacetTrack, CatalogSearchInput, CatalogSelectedFilters, cn, useCatalogFacetMenus } from '@gamemap/ui'
+import { CatalogFacetOption, CatalogFacetTrack, CatalogSearchInput, CatalogSelectedFilters, cn } from '@gamemap/ui'
 import { Notice } from './components/wiki'
 import { HeaderAction } from './components/SectionNav'
 import { LevelStepper } from './components/LevelStepper'
@@ -45,8 +45,6 @@ export function SoulWiki() {
     return souls.filter((soul) => (quality === null || soul.quality === quality) && (!needle || (soul.name?.['zh-CN'] ?? '').toLowerCase().includes(needle)))
   }, [souls, quality, query])
   const resonance = useMemo(() => (data?.souls.resonance ?? []).filter((row) => row.name?.['zh-CN']), [data])
-  const facetMenus = useCatalogFacetMenus()
-
   return (
     <div className="flex flex-col gap-3 md:gap-4">
       <HeaderAction>
@@ -63,12 +61,8 @@ export function SoulWiki() {
 
       <div className="flex flex-col items-start gap-3 lg:flex-row lg:flex-wrap lg:justify-between">
         <CatalogFacetTrack>
-          <CatalogFacetMenu {...facetMenus('quality')} label={text.qualityTabsLabel} count={quality === null ? 0 : 1} testId="ro3-soul-filter-quality">
-            <CatalogFacetGrid>
-              <CatalogFacetOption active={quality === null} onClick={() => setQuality(null)} label={text.all} testId="ro3-soul-quality-all" />
-              {QUALITIES.map((value) => <CatalogFacetOption key={value} active={quality === value} onClick={() => setQuality(value)} label={qualityLabel(value)} testId={`ro3-soul-quality-${value}`} icon={<span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(value) }} />} />)}
-            </CatalogFacetGrid>
-          </CatalogFacetMenu>
+          <CatalogFacetOption inline active={quality === null} onClick={() => setQuality(null)} label={text.all} testId="ro3-soul-quality-all" />
+          {QUALITIES.map((value) => <CatalogFacetOption inline key={value} active={quality === value} onClick={() => setQuality(value)} label={qualityLabel(value)} testId={`ro3-soul-quality-${value}`} />)}
         </CatalogFacetTrack>
         <div className={cn('w-full lg:ml-auto lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
           <CatalogSearchInput value={query} onChange={(event) => setQuery(event.target.value)}
