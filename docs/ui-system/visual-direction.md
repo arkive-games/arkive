@@ -22,10 +22,11 @@ for values/contrast. Read only relevant sections. Use the real
 
 Layout owns region gaps; controls own padding. Use existing spacing/content-width
 roles and preserve right clearance. One viewport's measured width is not a
-universal fixed width. Reuse `CatalogSearchInput` and the shared panel-frame
-encyclopedia toggle. Omit interface tutorials, implementation commentary and
-visible result-total summaries; retain actual game facts, taxonomy/progress and
-errors. A type role does not require displaying a redundant heading.
+universal fixed width. Reuse `CatalogSearchInput` and the shared quiet
+encyclopedia toggle. The framed directory appearance is a reviewed legacy
+exception. Omit interface tutorials, implementation commentary and visible
+result-total summaries; retain actual game facts, taxonomy/progress and errors.
+A type role does not require displaying a redundant heading.
 
 ## Shells, footers and boundaries
 

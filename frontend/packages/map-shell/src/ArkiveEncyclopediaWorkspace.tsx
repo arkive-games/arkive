@@ -44,7 +44,7 @@ function DirectoryGroup({ group, collapsed, active, compactGroups, children }: {
 }
 
 /** Category navigation only; the game continues to own its records and controls. */
-export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, onCollapsedChange, collapseLabel, expandLabel, renderLink, renderSubnavigation, railClassName, railFooter, appearance = 'framed', children }: {
+export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, onCollapsedChange, collapseLabel, expandLabel, renderLink, renderSubnavigation, railClassName, railFooter, appearance = 'quiet', children }: {
   groups: readonly EncyclopediaGroup[]; active: string; label: string;
   collapsed: boolean; onCollapsedChange: (collapsed: boolean) => void;
   collapseLabel: string; expandLabel: string;

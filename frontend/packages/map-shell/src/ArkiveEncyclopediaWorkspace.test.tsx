@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { ArkiveEncyclopediaWorkspace } from './ArkiveEncyclopediaWorkspace'
 
 afterEach(cleanup)
-function Workspace({ collapsible = false, appearance = 'framed' }: { collapsible?: boolean; appearance?: 'framed' | 'quiet' }) {
+function Workspace({ collapsible = false, appearance = 'quiet' }: { collapsible?: boolean; appearance?: 'framed' | 'quiet' }) {
   const [collapsed, setCollapsed] = useState(false)
   return <ArkiveEncyclopediaWorkspace
     groups={[{ key: 'records', label: 'Records', collapsible, entries: [{ key: '/items', label: 'Items', icon: <span aria-hidden>I</span> }] }]}
@@ -51,7 +51,7 @@ describe('encyclopedia workspace', () => {
     expect(screen.getByRole('link', { name: 'Relations' })).toBeTruthy()
     rerender(renderWorkspace(true))
     expect(screen.queryByRole('link', { name: 'Relations' })).toBeNull()
-    expect(screen.getByRole('link', { name: 'Connections' }).className).toContain('ring-border')
+    expect(screen.getByRole('link', { name: 'Connections' }).className).toContain('bg-[color:var(--arkive-filter-active)]')
     expect(screen.getByText('Records')).toBeTruthy()
   })
   it('retains reading controls and accessible category links when the rail folds', () => {

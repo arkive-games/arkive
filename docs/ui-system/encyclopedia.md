@@ -7,9 +7,11 @@ After shared top navigation: left category/subsection directory beside right
 category filters/search, then game-owned content. Do not repeat the selected
 category as a right-side title/intro. Search only the current category, e.g.
 Talents searches talents, not the whole encyclopedia.
-Use the shared capsule search and panel-frame directory toggle from the visual
-foundations. Do not add click/hover tutorials, implementation commentary or
-visible result-total summaries. Actual game descriptions and progress remain.
+Use the shared capsule search and quiet directory toggle from the visual
+foundations. Every new game encyclopedia uses the shared quiet directory
+appearance by default; the framed appearance is a reviewed legacy exception.
+Do not add click/hover tutorials, implementation commentary or visible
+result-total summaries. Actual game descriptions and progress remain.
 
 Reuse the actual game shell, not an older local approximation: wordmark, game
 icon/name chip, then game-owned links (RO3: Home, Encyclopedia, Build Manual),
@@ -84,6 +86,12 @@ filters. Hide the directory scrollbar while retaining wheel, touch and keyboard
 scrolling so long game directories remain fully reachable.
 Structural reference: supplied [ZCOOL](https://www.zcool.com.cn/recommend#tab_anchor)
 screenshots; do not borrow its branding.
+
+The shared owner is `frontend/packages/map-shell/src/ArkiveEncyclopediaWorkspace.tsx`.
+The component owns rail geometry, selected state, collapse behavior, and the
+quiet appearance. Each game owns only its directory inventory, localized labels,
+artwork, and link renderer. A new game must use the quiet appearance and may use
+the framed appearance only after an explicit reviewed exception is added here.
 
 ## Details and returning
 
