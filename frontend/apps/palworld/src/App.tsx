@@ -1,3 +1,4 @@
+import { CommunityMarkerDetail } from '@gamemap/map-community'
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearch } from '@tanstack/react-router'
@@ -9,7 +10,7 @@ import { Link, useSearch } from '@tanstack/react-router'
 import type { EngineMarker, GameMapViewProps, GlMapRef } from '@gamemap/map-engine-gl'
 import { worldToPixel } from '@gamemap/map-engine-gl/coords'
 const GameMapView = lazy(() => import('./features/map/GlMapView'))
-import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, MarkerDetailDrawer, markerDetailLabelsFor, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, resolveRememberedMap, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
+import { ArkiveMobileMapControls, canUseLodTiers, FilterPanel, MarkerDetailCollapsibleSection, markerDetailLabelsFor, SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, formatCoords, resolveRememberedMap, readMapView, useMapViewMemory, type FilterCategory, type MapViewState, type MarkerDetailLabels, type SearchItem } from '@gamemap/map-shell'
 import type { MarkerTypeSubtype, RegionInstance } from '@gamemap/data-contract'
 import {
   loadStatic, loadMarkers, loadRegions,
@@ -159,7 +160,6 @@ export default function App() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [searchSheetOpen, setSearchSheetOpen] = useState(false)
   const [clearCompletedOpen, setClearCompletedOpen] = useState(false)
-  const [markerCommentSort, setMarkerCommentSort] = useState<'popular' | 'latest'>('popular')
   // Deep-link params (?map=… & ?q=…): open a given map with the search box
   // prefilled — used by the Paldeck "view on full map" link.
   const { q: initialQuery, map: mapParam, x: positionX, y: positionY } = useSearch({ from: '/' })
@@ -646,8 +646,8 @@ export default function App() {
     const lootKind = markerLootKind(marker.subtype)
     const iconName = marker.icon || marker.subtypeMeta?.icon || ''
     const iconUrl = iconName && map ? palworldAssets.markerIconUrl(iconName, map) : undefined
-    // Palworld's own catalogue covers the strings it renders; the shared set fills the
-    // comment-action labels (edit, report, …) that Palworld does not wire yet.
+    // Palworld supplies its marker copy; shared labels cover account and
+    // moderation actions for persistent contributions.
     const detailLabels: MarkerDetailLabels = {
       ...markerDetailLabelsFor(lng),
       close: t('markerDetail.close'), position: t('position'), copyPosition: t('copyPosition'), copied: t('copied'), copyFailed: t('copyFailed'),
@@ -671,7 +671,7 @@ export default function App() {
     ) : undefined
     const hasGameExtensions = isPal || isEffigy || marker.reward || marker.warpTo || marker.dungeonArea
     return (
-      <MarkerDetailDrawer
+      <CommunityMarkerDetail game="palworld" mapId={mapId} markerId={marker.id} language={lng}
         idLabel={idLabel}
         name={marker.localizedName || t('unnamed')}
         icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
@@ -681,7 +681,6 @@ export default function App() {
         description={marker.localizedDescription}
         facts={facts}
         gallery={{ markerId: marker.id, images: marker.image ? [{ id: `${marker.id}-image`, markerId: marker.id, url: noteImageUrl(marker.image), alt: marker.localizedName || t('unnamed'), moderationStatus: 'published' }] : [] }}
-        comments={{ markerId: marker.id, items: [], sort: markerCommentSort, onSortChange: setMarkerCommentSort }}
         completeAction={marker.subtypeMeta?.canComplete ? { completed: Boolean(marker.completed), label: t('markerActions.markCompleted'), completedLabel: t('markerActions.completed'), onToggle: () => toggleCompleted(marker.id) } : undefined}
         labels={detailLabels}
         onClose={() => setSelectedMarkerId(null)}
@@ -745,9 +744,9 @@ export default function App() {
         ) : null}
         </div> : null}
         {lootKind && marker.lootArea ? <MarkerLootSummary lootArea={marker.lootArea} kind={lootKind} /> : null}
-      </MarkerDetailDrawer>
+      </CommunityMarkerDetail>
     )
-  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName, markerCommentSort, isMobile, lng])
+  }, [staticData, t, mapId, map, palsBundle, toggleCompleted, markerRowById, followWarpLink, regionName, isMobile, lng])
 
   if (loadError) {
     return (

@@ -57,6 +57,7 @@ export type MarkerCommentAttachment = {
   commentId: string
   url: string
   alt: string
+  moderationLabel?: string
 }
 
 export type MarkerComment = {
@@ -140,6 +141,16 @@ export type MarkerDetailLabels = {
   guestAuthor: string
   justNow: string
   awaitingReview: string
+  signInRequired: string
+  loadFailed: string
+  imageTooLarge: string
+  imageRejected: string
+  reviewImages: string
+  approveImage: string
+  rejectImage: string
+  noPendingImages: string
+  loadMore: string
+  retry: string
 }
 
 export type MarkerDetailSection = {
@@ -159,6 +170,7 @@ export type MarkerGalleryConfig = {
   markerId: string
   images: MarkerGalleryImage[]
   onUpload?: (markerId: string, files: File[]) => void | Promise<void>
+  loading?: boolean
 }
 
 export type MarkerCommentsConfig = {
@@ -176,6 +188,9 @@ export type MarkerCommentsConfig = {
    * indistinguishable from a marker nobody has commented on.
    */
   loading?: boolean
+  onLoadMore?: () => Promise<void>
+  error?: string | null
+  onRetry?: () => void
 
   // The author's and the reporter's actions. Each is offered per comment — edit and
   // delete only on one the reader wrote, report only on one they did not — and each
@@ -294,6 +309,11 @@ function useAnchoredPlacement(enabled: boolean, placementKey: string) {
     }
 
     const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update)
+    const recheckAfterPan = () => {
+      lastPanRequest = null
+      update()
+    }
+    mapRoot.addEventListener("marker-detail-pan-settled", recheckAfterPan)
     resizeObserver?.observe(detail)
     resizeObserver?.observe(mapRoot)
     const anchorObserver = typeof MutationObserver === "undefined" ? null : new MutationObserver(update)
@@ -315,6 +335,7 @@ function useAnchoredPlacement(enabled: boolean, placementKey: string) {
     return () => {
       window.cancelAnimationFrame(initialFrame)
       resizeObserver?.disconnect()
+      mapRoot.removeEventListener("marker-detail-pan-settled", recheckAfterPan)
       anchorObserver?.disconnect()
       mapStateObserver?.disconnect()
       window.removeEventListener("resize", update)
@@ -372,8 +393,21 @@ export function MarkerDetailCollapsibleSection({ section, labels }: { section: M
 }
 
 function GallerySection({ config, labels }: { config: MarkerGalleryConfig; labels: MarkerDetailLabels }) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const hasContent = config.images.length > 0
-  if (!hasContent) return null
+  if (!hasContent && !config.onUpload) return null
+
+  const upload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.currentTarget.files ?? []).slice(0, 3)
+    event.currentTarget.value = ""
+    if (!files.length || !config.onUpload) return
+    setUploading(true)
+    setError(null)
+    try { await config.onUpload(config.markerId, files) }
+    catch (failure) { setError(failure instanceof Error ? failure.message : labels.commentFailed) }
+    finally { setUploading(false) }
+  }
 
   return (
     <MarkerDetailCollapsibleSection
@@ -383,8 +417,15 @@ function GallerySection({ config, labels }: { config: MarkerGalleryConfig; label
         title: labels.gallery,
         accessibleTitle: labels.gallery,
         description: labels.galleryDescription,
+        headerAction: config.onUpload ? (
+          <label className={cn("inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-md px-2 text-xs text-primary hover:bg-accent", (uploading || config.loading) && "pointer-events-none opacity-50")}>
+            <IconPhoto className="size-4" aria-hidden="true" />{labels.uploadImage}
+            <input data-testid="marker-gallery-upload" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple disabled={uploading || config.loading} className="sr-only" onChange={(event) => void upload(event)} />
+          </label>
+        ) : undefined,
         content: (
           <>
+            {error ? <p role="alert" className="mb-2 text-xs text-destructive">{error}</p> : null}
             {config.images.length ? (
               <div className="grid grid-cols-2 gap-2 max-[350px]:grid-cols-1" data-testid="marker-gallery">
                 {config.images.map((image) => (
@@ -460,8 +501,10 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
 
   return (
     <div className="min-h-full bg-card" data-testid="marker-comments" aria-busy={config.loading || undefined}>
-      {error ? (
-        <p role="alert" data-testid="marker-comment-error" className="border-b border-border bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p>
+      {error || config.error ? (
+        <p role="alert" data-testid="marker-comment-error" className="border-b border-border bg-destructive/10 px-3 py-2 text-xs text-destructive">{error || config.error}
+          {config.error && config.onRetry ? <button type="button" className="ml-2 min-h-8 underline" onClick={config.onRetry}>{labels.retry}</button> : null}
+        </p>
       ) : null}
       {!config.items.length && config.loading ? (
         <div role="status" className="flex min-h-12 items-center justify-center gap-2 px-4 py-3 text-center text-muted-foreground" data-testid="marker-comments-loading">
@@ -509,7 +552,10 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
             {comment.attachments.length ? (
               <div className="mt-2 grid max-w-60 grid-cols-2 gap-2">
                 {comment.attachments.map((attachment) => (
-                  <img key={attachment.id} src={attachment.url} alt={attachment.alt} loading="lazy" className="aspect-video w-full rounded-lg object-cover" />
+                  <figure key={attachment.id}>
+                    <a href={attachment.url} target="_blank" rel="noreferrer"><img src={attachment.url} alt={attachment.alt} loading="lazy" className="aspect-video w-full rounded-lg object-cover" /></a>
+                    {attachment.moderationLabel ? <figcaption className="mt-1 text-xs text-muted-foreground">{attachment.moderationLabel}</figcaption> : null}
+                  </figure>
                 ))}
               </div>
             ) : null}
@@ -594,6 +640,7 @@ function CommentList({ config, labels }: { config: MarkerCommentsConfig; labels:
           </div>
         </article>
       ))}
+      {config.onLoadMore ? <button type="button" disabled={busy != null} className="min-h-10 w-full text-sm font-semibold text-primary disabled:opacity-50" onClick={() => void run("load-more", config.onLoadMore!)}>{labels.loadMore}</button> : null}
     </div>
   )
 }
@@ -698,7 +745,7 @@ function CommentComposer({ config, labels }: { config: MarkerCommentsConfig; lab
             <span className="text-xs text-muted-foreground max-[350px]:hidden">{labels.attachmentLimit}</span>
           </>
         ) : null}
-        <Button size="sm" className="ml-auto" disabled={!body.trim() || config.submitting} onClick={() => void submit()}>{labels.publish}</Button>
+        <Button size="sm" className="ml-auto" disabled={!config.onSubmit || !body.trim() || config.submitting} onClick={() => void submit()}>{labels.publish}</Button>
       </div>
     </div>
   )
@@ -730,10 +777,6 @@ export function MarkerDetailDrawer({
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [activeTab, setActiveTab] = useState<"details" | "comments">("details")
-  const [sessionImages, setSessionImages] = useState<MarkerGalleryImage[]>([])
-  const [sessionComments, setSessionComments] = useState<MarkerComment[]>([])
-  const [commentLikeOverrides, setCommentLikeOverrides] = useState<Record<string, boolean>>({})
-  const ownedObjectUrls = useRef(new Set<string>())
   const detailsTabId = useId()
   const commentsTabId = useId()
   const detailsPanelId = useId()
@@ -773,13 +816,6 @@ export function MarkerDetailDrawer({
 
   useEffect(() => {
     setActiveTab("details")
-    setSessionImages([])
-    setSessionComments([])
-    setCommentLikeOverrides({})
-    return () => {
-      ownedObjectUrls.current.forEach((url) => URL.revokeObjectURL(url))
-      ownedObjectUrls.current.clear()
-    }
   }, [sessionKey])
 
   const copyPosition = useCallback(async () => {
@@ -792,70 +828,8 @@ export function MarkerDetailDrawer({
     }
   }, [positionCopyValue])
 
-  const createOwnedObjectUrl = useCallback((file: File) => {
-    const url = URL.createObjectURL(file)
-    ownedObjectUrls.current.add(url)
-    return url
-  }, [])
-
-  const effectiveGallery = gallery ? {
-    ...gallery,
-    images: [...gallery.images, ...sessionImages],
-    onUpload: gallery.onUpload ?? ((markerId: string, files: File[]) => {
-      setSessionImages((current) => [
-        ...current,
-        ...files.map((file, index) => ({
-          id: `session-gallery-${markerId}-${file.lastModified}-${index}`,
-          markerId,
-          url: createOwnedObjectUrl(file),
-          alt: file.name,
-          moderationStatus: "awaiting-review" as const,
-          moderationLabel: labels.awaitingReview,
-        })),
-      ])
-    }),
-  } : undefined
-  const effectiveComments = comments ? {
-    ...comments,
-    items: [...sessionComments, ...comments.items].map((comment) => {
-      const liked = commentLikeOverrides[comment.id]
-      if (liked == null || liked === Boolean(comment.liked)) return comment
-      return {
-        ...comment,
-        liked,
-        likeCount: Math.max(0, comment.likeCount + (liked ? 1 : -1)),
-      }
-    }),
-    onSubmit: comments.onSubmit ?? ((markerId: string, body: string, attachments: File[]) => {
-      const commentId = `session-comment-${markerId}-${Date.now()}`
-      setSessionComments((current) => [{
-        id: commentId,
-        markerId,
-        authorName: labels.guestAuthor,
-        authorInitial: labels.guestAuthor.slice(0, 1),
-        createdLabel: labels.justNow,
-        body,
-        attachments: attachments.map((file, index) => ({
-          id: `${commentId}-attachment-${index}`,
-          commentId,
-          url: createOwnedObjectUrl(file),
-          alt: file.name,
-        })),
-        likeCount: 0,
-        replyCount: 0,
-      }, ...current])
-    }),
-    onLike: comments.onLike ?? ((commentId: string) => {
-      const source = [...sessionComments, ...comments.items].find((comment) => comment.id === commentId)
-      setCommentLikeOverrides((current) => ({
-        ...current,
-        [commentId]: !(current[commentId] ?? source?.liked ?? false),
-      }))
-    }),
-    onReply: comments.onReply ?? (() => {
-      detailRef.current?.querySelector<HTMLTextAreaElement>("[data-testid='marker-comment-body']")?.focus()
-    }),
-  } : undefined
+  const effectiveGallery = gallery
+  const effectiveComments = comments
   const detailSections: MarkerDetailSection[] = [
     ...(description?.trim() || facts ? [{ id: "description", title: labels.description, accessibleTitle: labels.description, content: <>{description?.trim() ? <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/85">{description}</p> : null}{facts ? <div className={description?.trim() ? "mt-3" : undefined}>{facts}</div> : null}</> }] : []),
     ...sections.filter((section) => section.content != null),

@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
@@ -22,6 +23,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
+	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
 )
 
 // Service implements the marker-comment use cases.
@@ -32,6 +34,14 @@ type Service struct {
 	notifier Notifier
 	markers  MarkerIndex
 	logger   *slog.Logger
+	pool     *pgxpool.Pool
+	blobs    blob.Store
+}
+
+// WithImages supplies the transaction pool and the existing object store.
+func (s *Service) WithImages(pool *pgxpool.Pool, store blob.Store) *Service {
+	s.pool, s.blobs = pool, store
+	return s
 }
 
 // Notifier receives the events a marker comment causes.
@@ -63,13 +73,11 @@ func NewService(q *coredb.Queries, authors AuthorSource, authz Authorizer, notif
 
 // Shape patterns for the two opaque location keys.
 //
-// They mirror the CHECK constraints on the table, so the caller gets a field-level
-// 422 instead of a constraint violation surfacing as a 500. The bounds come from the
-// data: PBZ's 2,476 marker ids are lowercase-plus-hyphen and at most 30 characters,
-// and its map ids are PascalCase (DengDingShanDao).
+// These mirror the database constraints. AION2 and Palworld include underscores,
+// and V Rising boss identifiers exceed PBZ's original forty-character bound.
 var (
 	mapShape    = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
-	markerShape = regexp.MustCompile(`^[A-Za-z0-9-]{1,40}$`)
+	markerShape = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 )
 
 // Create adds a top-level comment or a reply.

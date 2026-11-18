@@ -431,7 +431,19 @@ export class MapEngine {
     const center = baseView?.center ?? this.camera.center;
     const zoom = baseView?.zoom ?? this.camera.zoom;
     const scale = Math.pow(2, zoom);
-    const target = { x: center.x + x / scale, y: center.y + y / scale };
+    const target = {
+      x: Math.min(mapWidthOf(this.map), Math.max(0, center.x + x / scale)),
+      y: Math.min(mapHeightOf(this.map), Math.max(0, center.y + y / scale)),
+    };
+    const current = this.camera.center;
+    if (target.x === current.x && target.y === current.y && zoom === this.camera.zoom) {
+      // A drawer cannot pan past a map boundary. Do not start an unchanged
+      // animation whose settled event would request that same impossible pan.
+      this.camera.cancelAnimation();
+      this.markerDetailPanAnimating = false;
+      this.report();
+      return;
+    }
     this.markerDetailPanAnimating = true;
     this.camera.flyTo(target, zoom, seconds);
     this.renderer.invalidate();
@@ -580,6 +592,10 @@ export class MapEngine {
       this.markerFlyAnimating = false;
       this.setMarkerFlyTarget(null);
       this.report();
+      // Server-loaded images can resize a drawer during this correction. Its
+      // intermediate pan requests were ignored while the camera was moving;
+      // let the drawer measure its final size and request one fresh correction.
+      this.opts.root.dispatchEvent(new Event("marker-detail-pan-settled"));
       return;
     }
     this.markerFlyAnimating = false;

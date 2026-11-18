@@ -195,7 +195,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	// the same state as an unreachable artifact, which is a deliberate way to run
 	// without the check.
 	markerIndex := comments.NewHTTPMarkerIndex(d.Config.Data.BaseURLs, d.Config.Data.Timeout, d.Logger)
-	commentsService := comments.NewService(queries, service, rolesService, notifyService, markerIndex, d.Logger)
+	commentsService := comments.NewService(queries, service, rolesService, notifyService, markerIndex, d.Logger).WithImages(d.Pool, blobs)
 
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided
@@ -252,6 +252,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterNotificationRoutes(a)
 	handlers.RegisterPostImageRoutes(a)
 	handlers.RegisterMarkerCommentRoutes(a)
+	handlers.RegisterMarkerImageRoutes(a)
 	return nil
 }
 

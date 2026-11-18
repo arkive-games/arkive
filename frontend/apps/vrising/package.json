@@ -23,7 +23,8 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.11",
-    "zod": "^4.6.6"
+    "zod": "^4.6.6",
+    "@gamemap/map-community": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

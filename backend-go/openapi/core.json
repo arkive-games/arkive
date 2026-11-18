@@ -227,7 +227,7 @@
           },
           "marker": {
             "description": "The marker to comment on",
-            "pattern": "^[A-Za-z0-9-]{1,40}$",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$",
             "type": "string"
           },
           "parentId": {
@@ -808,6 +808,38 @@
         ],
         "type": "object"
       },
+      "EnvelopeListMarkerImageRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListMarkerImageRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeListPostRead": {
         "additionalProperties": false,
         "properties": {
@@ -973,6 +1005,70 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/MarkerCommentRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeMarkerCommentWithImagesRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MarkerCommentWithImagesRead",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
+      "EnvelopeMarkerImageRead": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MarkerImageRead",
             "description": "The payload"
           },
           "errorCode": {
@@ -1606,6 +1702,31 @@
         ],
         "type": "object"
       },
+      "ListMarkerImageRead": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/MarkerImageRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
       "ListPostRead": {
         "additionalProperties": false,
         "properties": {
@@ -1847,6 +1968,28 @@
         ],
         "type": "object"
       },
+      "MarkerCommentWithImagesRead": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "$ref": "#/components/schemas/MarkerCommentRead"
+          },
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/MarkerImageRead"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "comment",
+          "images"
+        ],
+        "type": "object"
+      },
       "MarkerHiddenRead": {
         "additionalProperties": false,
         "properties": {
@@ -1891,6 +2034,78 @@
           "body",
           "reason",
           "hiddenAt"
+        ],
+        "type": "object"
+      },
+      "MarkerImageRead": {
+        "additionalProperties": false,
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/UserPublic"
+          },
+          "canReview": {
+            "type": "boolean"
+          },
+          "commentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "game": {
+            "type": "string"
+          },
+          "height": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "map": {
+            "type": "string"
+          },
+          "marker": {
+            "type": "string"
+          },
+          "position": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "published",
+              "rejected"
+            ],
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "game",
+          "map",
+          "marker",
+          "commentId",
+          "position",
+          "url",
+          "width",
+          "height",
+          "status",
+          "author",
+          "createdAt",
+          "canReview"
         ],
         "type": "object"
       },
@@ -2445,6 +2660,19 @@
         },
         "required": [
           "state"
+        ],
+        "type": "object"
+      },
+      "ReviewMarkerImageInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "publish": {
+            "description": "Approve for public display, or reject/withdraw it",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "publish"
         ],
         "type": "object"
       },
@@ -5988,7 +6216,7 @@
             "required": true,
             "schema": {
               "description": "The marker whose thread to read",
-              "pattern": "^[A-Za-z0-9-]{1,40}$",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$",
               "type": "string"
             }
           },
@@ -6138,6 +6366,175 @@
           }
         },
         "summary": "Comment on a marker",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/map-markers/comments/with-images": {
+      "post": {
+        "description": "Text publishes immediately. Images are stored together with the comment and become public only after review. A failed upload publishes neither a partial comment nor partial attachments.",
+        "operationId": "createMarkerCommentWithImages",
+        "parameters": [
+          {
+            "description": "A game the platform serves",
+            "explode": false,
+            "in": "query",
+            "name": "game",
+            "required": true,
+            "schema": {
+              "description": "A game the platform serves",
+              "enum": [
+                "aion2",
+                "gmzz",
+                "palworld",
+                "vrising",
+                "sts2",
+                "ro3",
+                "pbz",
+                "oss"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "map",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "marker",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "body": {
+                  "contentType": "text/plain"
+                },
+                "files": {
+                  "contentType": "application/octet-stream"
+                },
+                "parentId": {
+                  "contentType": "text/plain"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "body": {
+                    "maxLength": 2000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "files": {
+                    "items": {
+                      "contentEncoding": "binary",
+                      "contentMediaType": "application/octet-stream",
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "parentId": {
+                    "description": "Optional top-level comment to reply to",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "body",
+                  "files"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkerCommentWithImagesRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Publish a comment with up to three images",
         "tags": [
           "comments"
         ]
@@ -6753,6 +7150,355 @@
         ]
       }
     },
+    "/map-markers/images": {
+      "get": {
+        "operationId": "listMarkerImages",
+        "parameters": [
+          {
+            "description": "The game the marker belongs to",
+            "explode": false,
+            "in": "query",
+            "name": "game",
+            "required": true,
+            "schema": {
+              "description": "The game the marker belongs to",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The map the marker is on",
+            "explode": false,
+            "in": "query",
+            "name": "map",
+            "required": true,
+            "schema": {
+              "description": "The map the marker is on",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The marker whose thread to read",
+            "explode": false,
+            "in": "query",
+            "name": "marker",
+            "required": true,
+            "schema": {
+              "description": "The marker whose thread to read",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "latest is newest first; popular is most-liked first",
+            "explode": false,
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "latest",
+              "description": "latest is newest first; popular is most-liked first",
+              "enum": [
+                "latest",
+                "popular"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Comments per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Comments per page",
+              "format": "int64",
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListMarkerImageRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Read a marker's images",
+        "tags": [
+          "comments"
+        ]
+      },
+      "post": {
+        "operationId": "uploadMarkerImage",
+        "parameters": [
+          {
+            "description": "A game the platform serves",
+            "explode": false,
+            "in": "query",
+            "name": "game",
+            "required": true,
+            "schema": {
+              "description": "A game the platform serves",
+              "enum": [
+                "aion2",
+                "gmzz",
+                "palworld",
+                "vrising",
+                "sts2",
+                "ro3",
+                "pbz",
+                "oss"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "map",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,64}$",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "marker",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9_-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": "application/octet-stream"
+                }
+              },
+              "schema": {
+                "properties": {
+                  "file": {
+                    "contentEncoding": "binary",
+                    "contentMediaType": "application/octet-stream",
+                    "description": "JPEG, PNG, GIF or WebP, up to 4 MB. Re-encoded to discard metadata.",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkerImageRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Submit a player image for review",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/map-markers/images/{id}/review": {
+      "put": {
+        "operationId": "reviewMarkerImage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewMarkerImageInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMarkerImageRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Approve or reject a player image",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
     "/map-markers/moderation/hidden-comments": {
       "get": {
         "description": "Moderator only, scoped to the games you moderate. Most recently hidden first.",
@@ -6839,6 +7585,96 @@
           }
         },
         "summary": "Hidden comments you may restore",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
+    "/map-markers/moderation/images": {
+      "get": {
+        "operationId": "listPendingMarkerImages",
+        "parameters": [
+          {
+            "description": "1-based page number",
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "description": "1-based page number",
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows per page",
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "description": "Rows per page",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListMarkerImageRead"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Player images awaiting your review",
         "tags": [
           "moderation"
         ]

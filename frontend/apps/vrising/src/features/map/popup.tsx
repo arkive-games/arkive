@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { CommunityMarkerDetail } from '@gamemap/map-community'
+import { useMemo } from 'react'
 import { ArrowRightLeft } from 'lucide-react'
 import type { EngineMarker } from '@gamemap/map-engine-gl'
-import { MarkerDetailDrawer, formatCoords, markerDetailLabelsFor } from '@gamemap/map-shell'
+import { formatCoords, markerDetailLabelsFor } from '@gamemap/map-shell'
 
 type VrisingMarker = EngineMarker & {
   resourceKind?: string
@@ -28,7 +29,6 @@ export interface PopupDeps {
 
 export function VrisingMarkerDetail({ marker, deps, anchored = false }: { marker: EngineMarker; deps: PopupDeps; anchored?: boolean }) {
   const { t, language, regionName, categoryName, iconUrl, onClose, onSelectMarker } = deps
-  const [commentSort, setCommentSort] = useState<'popular' | 'latest'>('popular')
   const labels = useMemo(() => markerDetailLabelsFor(language), [language])
   const vrising = marker as VrisingMarker
   const catId = marker.subtypeMeta?.category ?? marker.category
@@ -49,7 +49,7 @@ export function VrisingMarkerDetail({ marker, deps, anchored = false }: { marker
   ].filter((fact): fact is { label: string; value: string } => fact != null)
 
   return (
-    <MarkerDetailDrawer
+    <CommunityMarkerDetail game="vrising" mapId={'Vardoran'} markerId={marker.id} language={language}
       name={name}
       icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
       eyebrow={metaLine}
@@ -76,7 +76,6 @@ export function VrisingMarkerDetail({ marker, deps, anchored = false }: { marker
           moderationStatus: 'published' as const,
         })),
       }}
-      comments={{ markerId: marker.id, items: [], sort: commentSort, onSortChange: setCommentSort }}
       labels={labels}
       onClose={onClose}
       anchored={anchored}
@@ -102,6 +101,6 @@ export function VrisingMarkerDetail({ marker, deps, anchored = false }: { marker
           </button>
         </section>
       ) : null}
-    </MarkerDetailDrawer>
+    </CommunityMarkerDetail>
   )
 }

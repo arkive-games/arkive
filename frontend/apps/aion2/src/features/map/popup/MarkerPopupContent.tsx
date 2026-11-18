@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
+import { CommunityMarkerDetail } from "@gamemap/map-community";
 import { IconBook2 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { EngineMarker } from "@gamemap/map-engine-gl";
-import { MarkerDetailDrawer, markerDetailLabelsFor } from "@gamemap/map-shell";
+import { markerDetailLabelsFor } from "@gamemap/map-shell";
 import { useGameMap } from "@/context/GameMapContext";
 import { useMarkers } from "@/context/MarkersContext";
 import { getStaticUrl, parseIconUrl } from "@/lib/url";
@@ -22,7 +23,6 @@ const MarkerPopupContent: React.FC<Props> = ({ marker, onClose, anchored = false
   const { types, selectedMap } = useGameMap();
   const { completedBySubtype, toggleMarkerCompleted } = useMarkers();
   const { t, i18n } = useTranslation(["common", "types"]);
-  const [commentSort, setCommentSort] = useState<"popular" | "latest">("popular");
 
   const sub = types
     .flatMap((category) => category.subtypes)
@@ -53,7 +53,11 @@ const MarkerPopupContent: React.FC<Props> = ({ marker, onClose, anchored = false
   );
 
   return (
-    <MarkerDetailDrawer
+    <CommunityMarkerDetail
+      game="aion2"
+      mapId={selectedMap?.name ?? ""}
+      markerId={marker.id}
+      language={i18n.resolvedLanguage ?? i18n.language}
       name={name}
       icon={iconUrl ? <img src={iconUrl} alt="" className="size-7 object-contain" /> : undefined}
       eyebrow={metaLine}
@@ -70,7 +74,6 @@ const MarkerPopupContent: React.FC<Props> = ({ marker, onClose, anchored = false
           moderationStatus: "published" as const,
         })),
       }}
-      comments={{ markerId: marker.id, items: [], sort: commentSort, onSortChange: setCommentSort }}
       completeAction={canComplete ? {
         completed: isCompleted,
         label: t("common:markerActions.markCompleted", "Mark as completed"),
@@ -94,7 +97,7 @@ const MarkerPopupContent: React.FC<Props> = ({ marker, onClose, anchored = false
           </Link>
         </div>
       ) : null}
-    </MarkerDetailDrawer>
+    </CommunityMarkerDetail>
   );
 };
 

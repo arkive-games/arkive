@@ -452,6 +452,25 @@ export type EnvelopeListMarkerHiddenRead = {
     showType: number;
 };
 
+export type EnvelopeListMarkerImageRead = {
+    /**
+     * The payload
+     */
+    data: ListMarkerImageRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListPostRead = {
     /**
      * The payload
@@ -552,6 +571,44 @@ export type EnvelopeMarkerCommentRead = {
      * The payload
      */
     data: MarkerCommentRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeMarkerCommentWithImagesRead = {
+    /**
+     * The payload
+     */
+    data: MarkerCommentWithImagesRead;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
+export type EnvelopeMarkerImageRead = {
+    /**
+     * The payload
+     */
+    data: MarkerImageRead;
     /**
      * Always "Success" on a 2xx response
      */
@@ -897,6 +954,17 @@ export type ListMarkerHiddenRead = {
     results: Array<MarkerHiddenRead> | null;
 };
 
+export type ListMarkerImageRead = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<MarkerImageRead> | null;
+};
+
 export type ListPostRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -1024,6 +1092,11 @@ export type MarkerCommentReportBody = {
     reason: 'spam' | 'abuse' | 'offtopic' | 'illegal' | 'other';
 };
 
+export type MarkerCommentWithImagesRead = {
+    comment: MarkerCommentRead;
+    images: Array<MarkerImageRead> | null;
+};
+
 export type MarkerHiddenRead = {
     /**
      * What it said, so a moderator can judge a restore
@@ -1053,6 +1126,22 @@ export type MarkerHiddenRead = {
      * Why it was hidden, or null
      */
     reason: string | null;
+};
+
+export type MarkerImageRead = {
+    author: UserPublic;
+    canReview: boolean;
+    commentId: string | null;
+    createdAt: string;
+    game: string;
+    height: number;
+    id: string;
+    map: string;
+    marker: string;
+    position: number;
+    status: 'pending' | 'published' | 'rejected';
+    url: string;
+    width: number;
 };
 
 export type NotificationPreferencesBody = {
@@ -1347,6 +1436,13 @@ export type ResolveReportBody = {
      * The decision
      */
     state: 'upheld' | 'rejected';
+};
+
+export type ReviewMarkerImageInputBody = {
+    /**
+     * Approve for public display, or reject/withdraw it
+     */
+    publish: boolean;
 };
 
 export type RoleBody = {
@@ -3256,6 +3352,65 @@ export type CreateMarkerCommentResponses = {
 
 export type CreateMarkerCommentResponse = CreateMarkerCommentResponses[keyof CreateMarkerCommentResponses];
 
+export type CreateMarkerCommentWithImagesData = {
+    body?: {
+        body: string;
+        files: Array<Blob | File>;
+        /**
+         * Optional top-level comment to reply to
+         */
+        parentId?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * A game the platform serves
+         */
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
+        map: string;
+        marker: string;
+    };
+    url: '/map-markers/comments/with-images';
+};
+
+export type CreateMarkerCommentWithImagesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Request Entity Too Large
+     */
+    413: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Too Many Requests
+     */
+    429: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+    /**
+     * Service Unavailable
+     */
+    503: Error;
+};
+
+export type CreateMarkerCommentWithImagesError = CreateMarkerCommentWithImagesErrors[keyof CreateMarkerCommentWithImagesErrors];
+
+export type CreateMarkerCommentWithImagesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkerCommentWithImagesRead;
+};
+
+export type CreateMarkerCommentWithImagesResponse = CreateMarkerCommentWithImagesResponses[keyof CreateMarkerCommentWithImagesResponses];
+
 export type DeleteMarkerCommentData = {
     body?: never;
     path: {
@@ -3571,6 +3726,156 @@ export type ReportMarkerCommentResponses = {
 
 export type ReportMarkerCommentResponse = ReportMarkerCommentResponses[keyof ReportMarkerCommentResponses];
 
+export type ListMarkerImagesData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The game the marker belongs to
+         */
+        game: string;
+        /**
+         * The map the marker is on
+         */
+        map: string;
+        /**
+         * The marker whose thread to read
+         */
+        marker: string;
+        /**
+         * latest is newest first; popular is most-liked first
+         */
+        sort?: 'latest' | 'popular';
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Comments per page
+         */
+        pageSize?: number;
+    };
+    url: '/map-markers/images';
+};
+
+export type ListMarkerImagesErrors = {
+    /**
+     * Error
+     */
+    default: Error;
+};
+
+export type ListMarkerImagesError = ListMarkerImagesErrors[keyof ListMarkerImagesErrors];
+
+export type ListMarkerImagesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListMarkerImageRead;
+};
+
+export type ListMarkerImagesResponse = ListMarkerImagesResponses[keyof ListMarkerImagesResponses];
+
+export type UploadMarkerImageData = {
+    body?: {
+        /**
+         * JPEG, PNG, GIF or WebP, up to 4 MB. Re-encoded to discard metadata.
+         */
+        file: Blob | File;
+    };
+    path?: never;
+    query: {
+        /**
+         * A game the platform serves
+         */
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
+        map: string;
+        marker: string;
+    };
+    url: '/map-markers/images';
+};
+
+export type UploadMarkerImageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Request Entity Too Large
+     */
+    413: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Too Many Requests
+     */
+    429: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+    /**
+     * Service Unavailable
+     */
+    503: Error;
+};
+
+export type UploadMarkerImageError = UploadMarkerImageErrors[keyof UploadMarkerImageErrors];
+
+export type UploadMarkerImageResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkerImageRead;
+};
+
+export type UploadMarkerImageResponse = UploadMarkerImageResponses[keyof UploadMarkerImageResponses];
+
+export type ReviewMarkerImageData = {
+    body: ReviewMarkerImageInputBody;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/map-markers/images/{id}/review';
+};
+
+export type ReviewMarkerImageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Not Found
+     */
+    404: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ReviewMarkerImageError = ReviewMarkerImageErrors[keyof ReviewMarkerImageErrors];
+
+export type ReviewMarkerImageResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeMarkerImageRead;
+};
+
+export type ReviewMarkerImageResponse = ReviewMarkerImageResponses[keyof ReviewMarkerImageResponses];
+
 export type ListHiddenMarkerCommentsData = {
     body?: never;
     path?: never;
@@ -3616,6 +3921,52 @@ export type ListHiddenMarkerCommentsResponses = {
 };
 
 export type ListHiddenMarkerCommentsResponse = ListHiddenMarkerCommentsResponses[keyof ListHiddenMarkerCommentsResponses];
+
+export type ListPendingMarkerImagesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * 1-based page number
+         */
+        page?: number;
+        /**
+         * Rows per page
+         */
+        pageSize?: number;
+    };
+    url: '/map-markers/moderation/images';
+};
+
+export type ListPendingMarkerImagesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListPendingMarkerImagesError = ListPendingMarkerImagesErrors[keyof ListPendingMarkerImagesErrors];
+
+export type ListPendingMarkerImagesResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListMarkerImageRead;
+};
+
+export type ListPendingMarkerImagesResponse = ListPendingMarkerImagesResponses[keyof ListPendingMarkerImagesResponses];
 
 export type ListNotificationsData = {
     body?: never;

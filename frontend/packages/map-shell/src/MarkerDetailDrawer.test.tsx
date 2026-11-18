@@ -9,7 +9,10 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+import { markerDetailLabelsFor } from "./markerDetailLabels"
+
 const labels: MarkerDetailLabels = {
+  ...markerDetailLabelsFor("en-US"),
   close: "Close",
   position: "Position",
   copyPosition: "Copy",
@@ -151,7 +154,7 @@ describe("MarkerDetailDrawer", () => {
     expect(getByTestId("marker-detail-collapse-drops").getAttribute("aria-expanded")).toBe("false")
   })
 
-  it("removes the Details upload entry while retaining comment attachments", () => {
+  it("keeps gallery uploads separate from comment attachments", () => {
     const onGalleryUpload = vi.fn()
     const onSubmit = vi.fn()
     const { getByTestId, getByRole, queryByTestId } = render(
@@ -161,7 +164,7 @@ describe("MarkerDetailDrawer", () => {
         comments={{ markerId: "marker-1", items: [], sort: "popular", onSortChange: vi.fn(), onSubmit }}
       />,
     )
-    expect(queryByTestId("marker-gallery-upload")).toBeNull()
+    expect(queryByTestId("marker-gallery-upload")).not.toBeNull()
 
     fireEvent.click(getByRole("tab", { name: /Comments/ }))
     const commentFile = new File(["comment"], "comment.png", { type: "image/png" })
@@ -242,43 +245,14 @@ describe("MarkerDetailDrawer", () => {
     expect(queryByText("Exploration tip")).toBeNull()
   })
 
-  it("preserves current-session comment attachments and releases them on marker change", async () => {
-    let objectUrlIndex = 0
-    vi.spyOn(URL, "createObjectURL").mockImplementation((file) => `blob:${++objectUrlIndex}-${(file as File).name}`)
-    const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined)
-    const { getByAltText, getByTestId, getByRole, getByText, rerender, unmount } = render(
-      <MarkerDetailDrawer
-        {...baseProps}
-        positionCopyValue="10, 20"
-        gallery={{ markerId: "marker-1", images: [] }}
-        comments={{ markerId: "marker-1", items: [], sort: "latest", onSortChange: vi.fn() }}
-      />,
+  it("does not publish a local-only comment when no persistence callback exists", () => {
+    const { getByTestId, getByRole, queryByText } = render(
+      <MarkerDetailDrawer {...baseProps} comments={{ markerId: "marker-1", items: [], sort: "latest", onSortChange: vi.fn() }} />,
     )
-
     fireEvent.click(getByRole("tab", { name: /Comments/ }))
-    const commentFile = new File(["comment"], "comment.png", { type: "image/png" })
-    fireEvent.change(getByTestId("marker-comment-attachment"), { target: { files: [commentFile] } })
-    fireEvent.change(getByTestId("marker-comment-body"), { target: { value: "Useful route" } })
-    fireEvent.click(getByRole("button", { name: "Publish" }))
-    await waitFor(() => expect(getByText("Useful route")).not.toBeNull())
-    const commentImage = getByAltText("comment.png")
-    const commentUrl = commentImage.getAttribute("src")
-    expect(commentImage.closest("article")).not.toBeNull()
-    expect(revokeObjectURL).not.toHaveBeenCalledWith(commentUrl)
-
-    rerender(
-      <MarkerDetailDrawer
-        {...baseProps}
-        name="Lamball"
-        positionCopyValue="30, 40"
-        gallery={{ markerId: "marker-2", images: [] }}
-        comments={{ markerId: "marker-2", items: [], sort: "latest", onSortChange: vi.fn() }}
-      />,
-    )
-    await waitFor(() => {
-      expect(revokeObjectURL).toHaveBeenCalledWith(commentUrl)
-    })
-    unmount()
+    fireEvent.change(getByTestId("marker-comment-body"), { target: { value: "Must reach the server" } })
+    expect((getByRole("button", { name: "Publish" }) as HTMLButtonElement).disabled).toBe(true)
+    expect(queryByText("Must reach the server", { selector: "article p" })).toBeNull()
   })
 
   it("offers edit and delete on your own comment and report on somebody else's", async () => {

@@ -116,6 +116,23 @@ type CoreMarkerCommentLike struct {
 	CreatedAt time.Time
 }
 
+type CoreMarkerImage struct {
+	ID         uuid.UUID
+	GameKey    string
+	MapID      string
+	MarkerID   string
+	AuthorID   uuid.UUID
+	CommentID  *uuid.UUID
+	Position   int16
+	ObjectKey  string
+	Width      int32
+	Height     int32
+	Status     string
+	ReviewedBy *uuid.UUID
+	ReviewedAt pgtype.Timestamptz
+	CreatedAt  time.Time
+}
+
 type CoreNotification struct {
 	ID              uuid.UUID
 	RecipientID     uuid.UUID

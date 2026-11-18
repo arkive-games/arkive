@@ -619,6 +619,48 @@ describe("selected popup", () => {
     await flushFrames(250);
     expect(handle().getCenter()).toEqual({ x: 452, y: 542 });
   });
+
+  it("remeasures a detail that grows while its first correction is moving", async () => {
+    const marker = makeMarker({ id: "m1", x: 512, y: 512, localizedName: "Alpha" });
+    const { container } = render(
+      <GameMapView {...baseProps({ markers: [marker], selectedMarkerId: "m1", suppressInitialFlyForId: "m1", initialView: { x: 512, y: 512, zoom: 0 }, exposeTestHandle: true })} />,
+    );
+    const root = container.querySelector<HTMLElement>(".gmgl-map-root")!;
+    const anchor = container.querySelector<HTMLElement>("[data-marker-detail-anchor]")!;
+    const remeasure = vi.fn(() => {
+      // The loaded image needs another correction after the first one settles.
+      anchor.dispatchEvent(new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 0, y: -70 } }));
+    });
+    root.addEventListener("marker-detail-pan-settled", remeasure, { once: true });
+    act(() => {
+      anchor.dispatchEvent(new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 0, y: -40 } }));
+    });
+    await flushFrames(500);
+    expect(remeasure).toHaveBeenCalledTimes(1);
+    expect(handle().getCenter()).toEqual({ x: 512, y: 402 });
+  });
+
+  it("stops corrective flies when a tall detail reaches a map boundary", async () => {
+    const marker = makeMarker({ id: "m1", x: 512, y: 0, localizedName: "North edge" });
+    const { container } = render(
+      <GameMapView {...baseProps({ markers: [marker], selectedMarkerId: "m1", suppressInitialFlyForId: "m1", initialView: { x: 512, y: 20, zoom: 0 }, exposeTestHandle: true })} />,
+    );
+    const root = container.querySelector<HTMLElement>(".gmgl-map-root")!;
+    const anchor = container.querySelector<HTMLElement>("[data-marker-detail-anchor]")!;
+    const remeasure = vi.fn(() => {
+      anchor.dispatchEvent(new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 0, y: -70 } }));
+    });
+    root.addEventListener("marker-detail-pan-settled", remeasure);
+    act(() => {
+      anchor.dispatchEvent(new CustomEvent("marker-detail-pan", { bubbles: true, detail: { x: 0, y: -40 } }));
+    });
+    await flushFrames(600);
+    expect(remeasure).toHaveBeenCalledTimes(1);
+    expect(handle().getCenter()).toEqual({ x: 512, y: 0 });
+    const renders = backend.renders;
+    await flushFrames(600);
+    expect(backend.renders).toBe(renders);
+  });
 });
 
 describe("hover tooltip", () => {

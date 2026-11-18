@@ -46,7 +46,8 @@
     "tailwind-variants": "^3.3.1",
     "tailwindcss": "^4.3.3",
     "uuid": "^14.0.1",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.0",
+    "@gamemap/map-community": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

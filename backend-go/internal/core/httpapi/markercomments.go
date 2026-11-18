@@ -23,7 +23,7 @@ import (
 type CreateMarkerCommentBody struct {
 	Game     GameKey    `json:"game" doc:"The game the marker belongs to"`
 	Map      string     `json:"map" pattern:"^[A-Za-z0-9_-]{1,64}$" doc:"The map the marker is on"`
-	Marker   string     `json:"marker" pattern:"^[A-Za-z0-9-]{1,40}$" doc:"The marker to comment on"`
+	Marker   string     `json:"marker" pattern:"^[A-Za-z0-9_-]{1,128}$" doc:"The marker to comment on"`
 	Body     string     `json:"body" minLength:"1" maxLength:"2000" doc:"Raw markdown"`
 	ParentID *uuid.UUID `json:"parentId,omitempty" doc:"Reply to this comment; omit for a top-level comment"`
 }
@@ -53,7 +53,7 @@ type MarkerCommentHideBody struct {
 type listMarkerCommentsInput struct {
 	Game     string `query:"game" required:"true" doc:"The game the marker belongs to"`
 	Map      string `query:"map" required:"true" pattern:"^[A-Za-z0-9_-]{1,64}$" doc:"The map the marker is on"`
-	Marker   string `query:"marker" required:"true" pattern:"^[A-Za-z0-9-]{1,40}$" doc:"The marker whose thread to read"`
+	Marker   string `query:"marker" required:"true" pattern:"^[A-Za-z0-9_-]{1,128}$" doc:"The marker whose thread to read"`
 	Sort     string `query:"sort" default:"latest" enum:"latest,popular" doc:"latest is newest first; popular is most-liked first"`
 	Page     int    `query:"page" default:"1" minimum:"1" doc:"1-based page number"`
 	PageSize int    `query:"pageSize" default:"20" minimum:"1" maximum:"50" doc:"Comments per page"`

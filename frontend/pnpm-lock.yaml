@@ -32,6 +32,9 @@ importers:
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
+      '@gamemap/map-community':
+        specifier: workspace:*
+        version: link:../../packages/map-community
       '@gamemap/map-engine-gl':
         specifier: workspace:*
         version: link:../../packages/map-engine-gl
@@ -532,6 +535,9 @@ importers:
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
+      '@gamemap/map-community':
+        specifier: workspace:*
+        version: link:../../packages/map-community
       '@gamemap/map-engine-gl':
         specifier: workspace:*
         version: link:../../packages/map-engine-gl
@@ -626,6 +632,9 @@ importers:
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
+      '@gamemap/map-community':
+        specifier: workspace:*
+        version: link:../../packages/map-community
       '@gamemap/map-engine-gl':
         specifier: workspace:*
         version: link:../../packages/map-engine-gl
@@ -857,6 +866,9 @@ importers:
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
+      '@gamemap/map-community':
+        specifier: workspace:*
+        version: link:../../packages/map-community
       '@gamemap/map-engine-gl':
         specifier: workspace:*
         version: link:../../packages/map-engine-gl
@@ -1008,6 +1020,37 @@ importers:
       '@types/node':
         specifier: ^26.1.2
         version: 26.1.2
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/map-community:
+    dependencies:
+      '@gamemap/api-core':
+        specifier: workspace:*
+        version: link:../api-core
+      '@gamemap/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@gamemap/map-shell':
+        specifier: workspace:*
+        version: link:../map-shell
+    devDependencies:
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.4
+        version: 19.2.4(@types/react@19.2.18)
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
       typescript:
         specifier: ~5.9.3
         version: 5.9.3

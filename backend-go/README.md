@@ -6,10 +6,12 @@ the `tools` pipeline and shipped as the static `data/` artifacts.
 
 Design: `docs/superpowers/specs/2026-08-08-go-backend-architecture-design.md`.
 
-Status: the `core` module (accounts + authentication) is implemented, and so is the
-`gmzz` module (saved Lord of Mysteries score-page characters) — the first game module. Comments, progress,
-feedback and the aion2 abyss-artifact module are not yet. Avatars are, on S3-compatible
-object storage: MinIO locally via docker-compose, Tencent COS in production.
+Status: the `core` module implements accounts, authentication, the forum, map
+comments, and reviewed player images. The `gmzz` module implements saved Lord of
+Mysteries score-page characters. Progress, feedback and the aion2 abyss-artifact
+module are not yet implemented. Avatars, forum images and map images use
+S3-compatible storage: MinIO locally and Tencent COS in production. See
+[persistent map contributions](../docs/map-community.md) for visibility and rollout.
 
 ## Layout
 

@@ -1,0 +1,22 @@
+{
+  "name": "@gamemap/map-community",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "check": "tsc --noEmit" },
+  "dependencies": {
+    "@gamemap/api-core": "workspace:*",
+    "@gamemap/auth": "workspace:*",
+    "@gamemap/map-shell": "workspace:*"
+  },
+  "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "~5.9.3"
+  }
+}
