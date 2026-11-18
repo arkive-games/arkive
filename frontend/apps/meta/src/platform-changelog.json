@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-11-19",
-      "commit": "521bc1abb9502df3f0e70adf03ed128eda2fd097",
+      "commit": "0db851899393a7ccf966555e63c58c69ffee94aa",
       "targets": [
         "aion2",
         "gmzz",
@@ -26,7 +26,7 @@
     },
     {
       "date": "2026-11-19",
-      "commit": "fa4b976c8c98cdf1c185cb90006e870e2c652c57",
+      "commit": "99ec6c88fd1d594ffc3bed05e872be41b9a2b281",
       "targets": [
         "aion2",
         "palworld",
