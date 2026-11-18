@@ -12,6 +12,7 @@ const rules = [
   ['numeric-layer', /(?:\bz-\[-?\d+\]|\bz-(?:10|20|30|40|50)\b|\bz-index\s*:\s*-?\d+|\bzIndex\s*:\s*-?\d+)/g],
   ['custom-radius', /(?:rounded(?:-[trblse]{1,2})?-\[\d+(?:\.\d+)?(?:px|rem)\]|border-radius\s*:\s*\d+(?:\.\d+)?(?:px|rem)|borderRadius\s*:\s*(?:\d+|['"]\d+(?:\.\d+)?(?:px|rem)['"]))/g],
   ['literal-color', /#[\da-fA-F]{3,8}\b|\b(?:rgb|hsl)a?\(\s*[\d.]+/g],
+  ['viewport-unit', /(?:\b(?:min-h|max-h|h)-screen\b|\b100vh\b)/g],
 ]
 
 export function inScope(file) {
@@ -21,10 +22,14 @@ export function inScope(file) {
     || /^apps\/(?:meta|aion2|palworld|gmzz|vrising|ro3|pbz)\/src\/components\//.test(file)
 }
 
-export function findings(file, source) {
+function withoutComments(source) {
   // Preserve offsets for actionable line numbers; never lint comments as code.
-  const code = source.replace(/(["'`])(?:\\[\s\S]|(?!\1)[^\\])*?\1|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g,
+  return source.replace(/(["'`])(?:\\[\s\S]|(?!\1)[^\\])*?\1|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g,
     value => value.startsWith('/') ? value.replace(/[^\n]/g, ' ') : value)
+}
+
+export function findings(file, source) {
+  const code = withoutComments(source)
   const result = []
   for (const [rule, regex] of rules) {
     if (file === tokenOwner) continue
@@ -49,18 +54,22 @@ export function newFindings(current, baseline) {
 }
 
 export function checkTokenOwnership(files) {
-  const owner = files[tokenOwner] ?? ''
+  const owner = withoutComments(files[tokenOwner] ?? '')
   const declared = new Set([...owner.matchAll(/(--arkive-[\w-]+)\s*:/g)].map(match => match[1]))
   const protectedTokens = ['--arkive-catalog-control-height', '--arkive-catalog-control-inner-height', '--arkive-encyclopedia-rail-expanded', '--arkive-encyclopedia-rail-collapsed']
   const errors = protectedTokens.filter(token => !declared.has(token)).map(token => `${tokenOwner}: missing ${token}`)
-  for (const [file, source] of Object.entries(files)) {
+  for (const [file, raw] of Object.entries(files)) {
     if (file === tokenOwner) continue
+    const source = withoutComments(raw)
     for (const token of protectedTokens) {
       if (source.includes(`${token}:`) || new RegExp(`${token}\\s*:`).test(source)) errors.push(`${file}: ${token} must be defined only in ${tokenOwner}`)
     }
     if (file.endsWith('.css')) {
       for (const block of source.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
         if (block[1].includes('.catalog-search') && /(?:^|;)\s*(?:height|min-height|color|border(?:-radius|-color)?|background(?:-color)?|padding(?:-\w+)?|box-shadow|font-size)\s*:/.test(block[2])) errors.push(`${file}: catalog search styling belongs to ${tokenOwner}`)
+      }
+      if (/^apps\/[^/]+\/src\/index\.css$/.test(file) && /@import\s+['"]@gamemap\/map-shell\/arkive-map-theme\.css['"]/.test(source) && !/@custom-variant\s+dark\s+\(\s*&:is\(\s*\.dark\s+\*\s*\)\s*\)\s*;/.test(source)) {
+        errors.push(`${file}: must declare @custom-variant dark (&:is(.dark *)); when importing arkive-map-theme.css`)
       }
     }
   }
@@ -73,7 +82,7 @@ function main() {
   const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', 'packages', 'apps'], { cwd: root, encoding: 'utf8' }).split('\0').filter(inScope)
   const files = Object.fromEntries([...new Set(tracked)].sort().map(file => [file, readFileSync(path.join(root, file), 'utf8')]))
   const current = Object.entries(files).flatMap(([file, source]) => findings(file, source))
-  const appCss = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', 'apps'], { cwd: root, encoding: 'utf8' }).split('\0').filter(file => /^apps\/(?:meta|aion2|palworld|gmzz|vrising|ro3|pbz)\/src\/.*\.css$/.test(file))
+  const appCss = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', 'apps'], { cwd: root, encoding: 'utf8' }).split('\0').filter(file => /^apps\/[^/]+\/src\/.*\.css$/.test(file))
   const ownershipFiles = { ...files, ...Object.fromEntries(appCss.map(file => [file, readFileSync(path.join(root, file), 'utf8')])) }
   const errors = checkTokenOwnership(ownershipFiles)
   if (args.includes('--write-baseline')) {

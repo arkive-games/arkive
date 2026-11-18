@@ -11,8 +11,8 @@ The gallery is development-only; the old standalone HTML is historical.
 
 | Command, from frontend/ | Purpose |
 | --- | --- |
-| `pnpm check:ui` | Reject new raw type/radius/layer/color values in shared chrome and app overrides of shared search geometry/token ownership. Also runs in `pnpm test`. |
-| `pnpm test --maxWorkers=2` | Regression tests, including scoped contrast, account partitioning and failure recovery. |
+| `pnpm check:ui` | Reject new raw type/radius/layer/color/`100vh`/`*-screen` values in shared chrome, missing `@custom-variant dark` declarations on app `index.css` entries, and app overrides of shared search geometry/token ownership. Also runs in `pnpm test`. |
+| `pnpm test --maxWorkers=2` | Regression tests, including canonical YAML/Markdown link checks, scoped contrast, account partitioning and failure recovery. |
 | `pnpm ui:verify --update-baseline --routes` | Explicitly record candidate component images only if every check passes; review them before adoption. |
 | `pnpm ui:verify` | Compare existing component references and check states, geometry, keyboard focus, reduced motion and narrow overflow. Never updates the reference. |
 | `pnpm ui:verify --routes` | Also check/capture portal and AION2/Palworld map references; dynamic remote imagery is not a deterministic pixel baseline. |
@@ -32,6 +32,11 @@ Windows uses installed Chrome, other platforms Playwright Chromium. Override
 with `pnpm exec playwright install chromium`. Authenticated acceptance additionally
 uses the development-only `acceptance.html` and a user-entered real login; never
 record credentials or substitute a fixture identity for real-login evidence.
+
+On Windows, stop the entire task-owned process tree before restarting an
+interrupted check. Stopping only the test runner can leave its parent shell
+running later build commands. Keep one full-suite run and one affected-app build
+active at a time; run focused checks first and use bounded worker counts.
 
 ## Required captures
 
