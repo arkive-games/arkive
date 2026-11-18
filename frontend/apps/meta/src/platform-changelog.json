@@ -1,6 +1,23 @@
 {
   "entries": [
     {
+      "date": "2026-11-19",
+      "commit": "c45e2c16be7804c46ad6ab644346fac46628805c",
+      "targets": [
+        "oss"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Remove Order of the Sinking Star from homepage game shortcuts while keeping it in the game directory.",
+            "zh-CN": "移除首页游戏方块中的沉星之序，保留全部游戏中的入口。",
+            "zh-TW": "移除首頁遊戲方塊中的沉星之序，保留全部遊戲中的入口。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-16",
       "commit": "e58e7f350dc132b6c79768cf13e6b0c3df6d3c4b",
       "targets": [
