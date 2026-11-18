@@ -2,6 +2,26 @@
   "entries": [
     {
       "date": "2026-11-19",
+      "commit": "fa4b976c8c98cdf1c185cb90006e870e2c652c57",
+      "targets": [
+        "aion2",
+        "palworld",
+        "vrising",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Map comments and player images now survive reloads and sync across devices, with images published after moderator review.",
+            "zh-CN": "地图留言和玩家图片现在会保存到服务器，刷新或更换设备后仍可查看；图片审核通过后公开。",
+            "zh-TW": "地圖留言和玩家圖片現在會儲存至伺服器，重新整理或更換裝置後仍可查看；圖片審核通過後公開。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
       "commit": "c45e2c16be7804c46ad6ab644346fac46628805c",
       "targets": [
         "oss"
