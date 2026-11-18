@@ -1,12 +1,22 @@
 import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, LayoutGrid, PenTool, Search, Sparkles, X } from 'lucide-react'
-import { CatalogSearchInput, cn } from '@gamemap/ui'
+import { Search } from 'lucide-react'
+import {
+  CatalogFacetGrid,
+  CatalogFacetMenu,
+  CatalogFacetOption,
+  CatalogFacetTrack,
+  CatalogSearchInput,
+  CatalogSelectedFilters,
+  cn,
+  toggleValue,
+  useCatalogFacetMenus,
+} from '@gamemap/ui'
 import { Notice } from './components/wiki'
 import { HeaderAction } from './components/SectionNav'
 import { GameText } from './components/GameText'
 import { LevelStepper } from './components/LevelStepper'
-import { Badge, CostList, DetailPanel, Facet, FacetGroup, UnderlineTab, ValueList } from './components/Board'
+import { Badge, CostList, DetailPanel, ValueList } from './components/Board'
 import { useFit, usePointer, useWide } from './components/boardHooks'
 import {
   cardFrameVariant,
@@ -115,8 +125,6 @@ export function CardWiki() {
     return (data?.cards.attributes ?? []).filter((attribute) => (attribute.type === BASE_TYPE || attribute.type === PRIMARY_TYPE) && carried.has(attribute.id))
   }, [data, categoryCards])
   const countBy = (key: 'part' | 'quality', value: number) => categoryCards.filter((card) => card[key] === value).length
-  const facetCount = filters.qualities.length + filters.baseAttributes.length + filters.primaryAttributes.length
-
   // A selection the new kind of card cannot offer would filter by a chip that is no longer shown.
   const switchCategory = (previous: CardFilters, category: CardCategory): CardFilters => {
     const pool = category === 'collection' ? allCards.filter((card) => collectionIds.has(card.id)) : allCards
@@ -132,10 +140,45 @@ export function CardWiki() {
     }
   }
 
-  const toggle = (key: 'qualities' | 'baseAttributes' | 'primaryAttributes', value: number) => setFilters((previous) => ({
+  const toggle = (key: 'parts' | 'qualities' | 'baseAttributes' | 'primaryAttributes', value: number) => setFilters((previous) => ({
     ...previous,
-    [key]: previous[key].includes(value) ? previous[key].filter((candidate) => candidate !== value) : [...previous[key], value],
+    [key]: toggleValue(previous[key], value),
   }))
+
+  const facetMenus = useCatalogFacetMenus()
+  const attributeLabelById = (id: number) => {
+    const attribute = data?.cards.attributes.find((candidate) => candidate.id === id)
+    return attribute ? attributeName(attribute) : text.attributeId.replace('{id}', String(id))
+  }
+  const selectedChoices = [
+    ...(filters.category === 'collection' ? [{
+      key: 'category-collection',
+      label: text.categories.collection,
+      onRemove: () => setFilters((previous) => switchCategory(previous, 'ordinary')),
+    }] : []),
+    ...filters.parts.map((part) => ({
+      key: `part-${part}`,
+      label: partLabel(part),
+      onRemove: () => toggle('parts', part),
+      icon: PART_ICONS[part] ? <img src={resourceUrl(PART_ICONS[part])} alt="" className="size-4 object-contain" /> : undefined,
+    })),
+    ...filters.qualities.map((quality) => ({
+      key: `quality-${quality}`,
+      label: qualityLabel(quality),
+      onRemove: () => toggle('qualities', quality),
+      icon: <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: QUALITY_COLORS[quality] }} />,
+    })),
+    ...filters.baseAttributes.map((id) => ({
+      key: `base-attribute-${id}`,
+      label: attributeLabelById(id),
+      onRemove: () => toggle('baseAttributes', id),
+    })),
+    ...filters.primaryAttributes.map((id) => ({
+      key: `primary-attribute-${id}`,
+      label: attributeLabelById(id),
+      onRemove: () => toggle('primaryAttributes', id),
+    })),
+  ]
 
   return (
     <div className="card-wiki flex flex-col gap-3 md:gap-4">
@@ -160,101 +203,88 @@ export function CardWiki() {
         </button>
       </HeaderAction>
 
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        {/* The kind of card is the page's main choice: a muted track whose lit pill is filled. */}
-        <div role="tablist" aria-label={text.filterLabel} className="grid w-full grid-cols-2 gap-0.5 rounded-full bg-muted p-1 md:flex md:w-fit">
-          {(['ordinary', 'collection'] as const).map((category: CardCategory) => {
-            const selected = category === filters.category
-            const Icon = category === 'collection' ? Sparkles : BookOpen
-            const count = category === 'collection' ? collectionIds.size : allCards.length
-            return (
-              <button
-                key={category}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setFilters((previous) => switchCategory(previous, category))}
-                className={cn(
-                  'flex min-h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors',
-                  selected ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Icon aria-hidden="true" className="size-4" />
-                {text.categories[category]}
-                {data ? <span className={cn('text-xs tabular-nums', selected ? 'opacity-70' : 'opacity-80')}>{count}</span> : null}
-              </button>
-            )
-          })}
-        </div>
-        <div className={cn('w-full lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
+      <div className="flex flex-col items-start gap-3 lg:flex-row lg:flex-wrap lg:justify-between">
+        <CatalogFacetTrack>
+          <CatalogFacetMenu {...facetMenus('category')} label={text.filters.tier} count={filters.category === 'collection' ? 1 : 0} testId="ro3-card-filter-category">
+            <CatalogFacetGrid>
+              {(['ordinary', 'collection'] as const).map((category: CardCategory) => (
+                <CatalogFacetOption
+                  key={category}
+                  active={filters.category === category}
+                  onClick={() => setFilters((previous) => switchCategory(previous, category))}
+                  testId={`ro3-card-category-${category}`}
+                  label={text.categories[category]}
+                />
+              ))}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('parts')} label={text.filters.part} count={filters.parts.length} testId="ro3-card-filter-parts">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filters.parts.length === 0} onClick={() => setFilters((previous) => ({ ...previous, parts: [] }))} label={text.all} testId="ro3-card-part-all" />
+              {PARTS.filter((part) => countBy('part', part) > 0).map((part) => (
+                <CatalogFacetOption
+                  key={part}
+                  active={filters.parts.includes(part)}
+                  onClick={() => toggle('parts', part)}
+                  testId={`ro3-card-part-${part}`}
+                  label={partLabel(part)}
+                  icon={PART_ICONS[part] ? <img src={resourceUrl(PART_ICONS[part])} alt="" className="size-5 object-contain" /> : undefined}
+                />
+              ))}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('qualities')} label={text.filters.quality} count={filters.qualities.length} testId="ro3-card-filter-qualities">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filters.qualities.length === 0} onClick={() => setFilters((previous) => ({ ...previous, qualities: [] }))} label={text.all} testId="ro3-card-quality-all" />
+              {QUALITIES.filter((quality) => countBy('quality', quality) > 0).map((quality) => (
+                <CatalogFacetOption
+                  key={quality}
+                  active={filters.qualities.includes(quality)}
+                  onClick={() => toggle('qualities', quality)}
+                  testId={`ro3-card-quality-${quality}`}
+                  label={qualityLabel(quality)}
+                  icon={<span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: QUALITY_COLORS[quality] }} />}
+                />
+              ))}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('attributes')} label={text.filters.attribute} count={filters.baseAttributes.length + filters.primaryAttributes.length} testId="ro3-card-filter-attributes">
+            <CatalogFacetGrid>
+              <CatalogFacetOption
+                active={filters.baseAttributes.length === 0 && filters.primaryAttributes.length === 0}
+                onClick={() => setFilters((previous) => ({ ...previous, baseAttributes: [], primaryAttributes: [] }))}
+                label={text.all}
+                testId="ro3-card-attribute-all"
+              />
+              {attributes.map((attribute) => {
+                const key = attribute.type === BASE_TYPE ? 'baseAttributes' : 'primaryAttributes'
+                return (
+                  <CatalogFacetOption
+                    key={attribute.id}
+                    active={filters[key].includes(attribute.id)}
+                    onClick={() => toggle(key, attribute.id)}
+                    testId={`ro3-card-attribute-${attribute.id}`}
+                    label={attributeName(attribute)}
+                  />
+                )
+              })}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+        </CatalogFacetTrack>
+        <div className={cn('w-full lg:ml-auto lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
           <CatalogSearchInput inputRef={searchInput} value={query} onChange={event => setQuery(event.target.value)}
-            aria-label={text.searchLabel} submitLabel={text.searchLabel} placeholder={text.searchPlaceholder} />
+            aria-label={text.searchLabel} submitLabel={text.searchLabel} clearLabel={content.search.clear} onClear={() => setQuery('')} placeholder={text.searchPlaceholder} />
         </div>
       </div>
 
+      <CatalogSelectedFilters
+        label={text.filters.panelTitle}
+        clearLabel={text.filters.clear}
+        choices={selectedChoices}
+        onClear={() => setFilters({ category: 'ordinary', ...NO_FILTERS })}
+      />
+
       <section aria-label={text.title} className="rounded-lg border border-border bg-card">
-        {/* The slot is the board's own sub choice, so it reads as tabs on the board's edge. */}
-        <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">
-          <div role="group" aria-label={text.partLabel} className="flex min-w-0 overflow-x-auto [scrollbar-width:none]">
-            <UnderlineTab className="items-center gap-1 pt-1" selected={filters.parts.length === 0} onClick={() => setFilters((previous) => ({ ...previous, parts: [] }))}>
-              <LayoutGrid aria-hidden="true" className="size-4" />
-              {text.all}
-            </UnderlineTab>
-            {PARTS.filter((part) => countBy('part', part) > 0).map((part) => (
-              <UnderlineTab
-                key={part}
-                className="items-center gap-1 pt-1"
-                selected={filters.parts.length === 1 && filters.parts[0] === part}
-                onClick={() => setFilters((previous) => ({ ...previous, parts: [part] }))}
-              >
-                {PART_ICONS[part]
-                  ? <img src={resourceUrl(PART_ICONS[part])} alt="" className="size-5 object-contain" />
-                  : <PenTool aria-hidden="true" className="size-4" />}
-                {partLabel(part)}
-              </UnderlineTab>
-            ))}
-          </div>
-
-        </div>
-
-        {/* The finer facets stay on the board, one quiet line under the tabs. */}
-        <div className="flex items-center gap-x-3 gap-y-1.5 overflow-x-auto border-b border-dashed border-border px-2.5 py-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-3.5">
-          <FacetGroup label={text.qualityLabel}>
-            {QUALITIES.map((quality) => (
-              <Facet
-                key={quality}
-                selected={filters.qualities.includes(quality)}
-                disabled={countBy('quality', quality) === 0}
-                onClick={() => toggle('qualities', quality)}
-              >
-                <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: QUALITY_COLORS[quality] }} />
-                {qualityLabel(quality)}
-              </Facet>
-            ))}
-          </FacetGroup>
-          <span aria-hidden="true" className="h-5 w-px shrink-0 bg-border" />
-          <FacetGroup label={text.attributeLabel}>
-            {attributes.map((attribute) => {
-              const key = attribute.type === BASE_TYPE ? 'baseAttributes' : 'primaryAttributes'
-              return (
-                <Facet key={attribute.id} selected={filters[key].includes(attribute.id)} onClick={() => toggle(key, attribute.id)}>
-                  {attributeName(attribute)}
-                </Facet>
-              )
-            })}
-          </FacetGroup>
-          {facetCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => setFilters((previous) => ({ ...previous, ...NO_FILTERS, parts: previous.parts }))}
-              className="flex h-9 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold text-[color:var(--arkive-nav-active)] transition-colors hover:bg-[color:var(--arkive-filter-active)] md:h-8"
-            >
-              <X aria-hidden="true" className="size-3.5" />
-              {text.filters.clear}
-            </button>
-          ) : null}
-        </div>
-
         {dataError ? <div className="p-3"><Notice>{content.wiki.dataError}</Notice></div> : !data ? <div className="p-3"><Notice>{content.wiki.loading}</Notice></div> : (
           <CardBoard key={filters.category} cards={cards} data={data} collection={collection} />
         )}

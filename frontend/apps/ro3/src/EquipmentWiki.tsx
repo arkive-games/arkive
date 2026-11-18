@@ -1,10 +1,18 @@
 import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { X } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import {
+  CatalogFacetGrid,
+  CatalogFacetMenu,
+  CatalogFacetOption,
+  CatalogFacetTrack,
+  CatalogSearchInput,
+  CatalogSelectedFilters,
+  cn,
+  useCatalogFacetMenus,
+} from '@gamemap/ui'
 import { Notice } from './components/wiki'
 import { HeaderAction } from './components/SectionNav'
-import { Badge, Chip, DetailBlock, DetailPanel, Facet, FacetGroup, PillTab, PillTrack, SearchBox, SearchToggle, UnderlineTab, ValueList } from './components/Board'
+import { Badge, Chip, DetailBlock, DetailPanel, SearchToggle, ValueList } from './components/Board'
 import { useFit, usePointer, useWide } from './components/boardHooks'
 import { loadEquipmentWikiData, type EquipmentAttributeRecord, type EquipmentRecord } from './wikiData'
 import {
@@ -52,6 +60,14 @@ export function EquipmentWiki() {
   const filtered = useMemo(() => filterEquipmentGroups(groups, filter), [groups, filter])
   const change = (next: Partial<EquipmentFilter>) => setFilter((previous) => ({ ...previous, ...next }))
   const slotCount = (slot: string) => groups.filter((group) => group.slot === slot).length
+  const levelOptions = LEVELS.filter((level) => groups.some((group) => group.level === level))
+  const qualityOptions = QUALITIES.filter((quality) => groups.some((group) => group.qualities.includes(quality)))
+  const facetMenus = useCatalogFacetMenus()
+  const selectedChoices = [
+    ...(filter.slot !== 'all' ? [{ key: `slot-${filter.slot}`, label: text.slots[filter.slot], onRemove: () => change({ slot: 'all' }) }] : []),
+    ...(filter.level !== null ? [{ key: `level-${filter.level}`, label: filter.level === SPECIAL_LEVEL ? text.special : fill(text.level, { level: filter.level }), onRemove: () => change({ level: null }) }] : []),
+    ...(filter.quality !== null ? [{ key: `quality-${filter.quality}`, label: qualityLabel(filter.quality), onRemove: () => change({ quality: null }), icon: <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(filter.quality) }} /> }] : []),
+  ]
 
   return (
     <div className="flex flex-col gap-3 md:gap-4">
@@ -67,55 +83,47 @@ export function EquipmentWiki() {
         />
       </HeaderAction>
 
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <PillTrack label={text.slotLabel}>
-          <PillTab selected={filter.slot === 'all'} onClick={() => change({ slot: 'all' })} count={data ? groups.length : undefined}>
-            {text.all}
-          </PillTab>
-          {EQUIPMENT_SLOTS.map((slot) => (
-            <PillTab key={slot} selected={filter.slot === slot} onClick={() => change({ slot })} count={data ? slotCount(slot) : undefined}>
-              <img src={slotIcon(slot)} alt="" className="hidden size-5 object-contain md:block" />
-              {text.slots[slot]}
-            </PillTab>
-          ))}
-        </PillTrack>
-        <SearchBox open={searchOpen} query={filter.query} onQuery={(query) => change({ query })} label={text.searchLabel} placeholder={text.searchPlaceholder} />
+      <div className="flex flex-col items-start gap-3 lg:flex-row lg:flex-wrap lg:justify-between">
+        <CatalogFacetTrack>
+          <CatalogFacetMenu {...facetMenus('slot')} label={text.slotLabel} count={filter.slot === 'all' ? 0 : 1} testId="ro3-equipment-filter-slot">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.slot === 'all'} onClick={() => change({ slot: 'all' })} label={text.all} testId="ro3-equipment-slot-all" />
+              {EQUIPMENT_SLOTS.filter((slot) => slotCount(slot) > 0).map((slot) => (
+                <CatalogFacetOption key={slot} active={filter.slot === slot} onClick={() => change({ slot })} label={text.slots[slot]} testId={`ro3-equipment-slot-${slot}`} icon={<img src={slotIcon(slot)} alt="" className="size-5 object-contain" />} />
+              ))}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('level')} label={text.levelLabel} count={filter.level === null ? 0 : 1} testId="ro3-equipment-filter-level">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.level === null} onClick={() => change({ level: null })} label={text.levelAll} testId="ro3-equipment-level-all" />
+              {levelOptions.map((level) => (
+                <CatalogFacetOption key={level} active={filter.level === level} onClick={() => change({ level })} label={level === SPECIAL_LEVEL ? text.special : fill(text.level, { level })} testId={`ro3-equipment-level-${level}`} />
+              ))}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('quality')} label={text.qualityLabel} count={filter.quality === null ? 0 : 1} testId="ro3-equipment-filter-quality">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.quality === null} onClick={() => change({ quality: null })} label={text.all} testId="ro3-equipment-quality-all" />
+              {qualityOptions.map((quality) => (
+                <CatalogFacetOption key={quality} active={filter.quality === quality} onClick={() => change({ quality: filter.quality === quality ? null : quality })} label={qualityLabel(quality)} testId={`ro3-equipment-quality-${quality}`} icon={<span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(quality) }} />} />
+              ))}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+        </CatalogFacetTrack>
+        <div className={cn('w-full lg:ml-auto lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
+          <CatalogSearchInput value={filter.query} onChange={(event) => change({ query: event.target.value })}
+            aria-label={text.searchLabel} submitLabel={text.searchLabel} clearLabel={content.search.clear} onClear={() => change({ query: '' })} placeholder={text.searchPlaceholder} />
+        </div>
       </div>
 
+      <CatalogSelectedFilters
+        label={text.title}
+        clearLabel={text.clear}
+        choices={selectedChoices}
+        onClear={() => setFilter({ slot: 'all', level: null, quality: null, query: filter.query })}
+      />
+
       <section aria-label={text.title} className="rounded-lg border border-border bg-card">
-        <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">
-          <div role="group" aria-label={text.levelLabel} className="flex min-w-0 overflow-x-auto [scrollbar-width:none]">
-            <UnderlineTab selected={filter.level === null} onClick={() => change({ level: null })}>{text.levelAll}</UnderlineTab>
-            {LEVELS.map((level) => (
-              <UnderlineTab key={level} selected={filter.level === level} onClick={() => change({ level })}>
-                {level === SPECIAL_LEVEL ? text.special : fill(text.level, { level })}
-              </UnderlineTab>
-            ))}
-          </div>
-
-        </div>
-
-        <div className="flex items-center gap-x-3 gap-y-1.5 overflow-x-auto border-b border-dashed border-border px-2.5 py-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-3.5">
-          <FacetGroup label={text.qualityLabel}>
-            {QUALITIES.map((quality) => (
-              <Facet key={quality} selected={filter.quality === quality} onClick={() => change({ quality: filter.quality === quality ? null : quality })}>
-                <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(quality) }} />
-                {qualityLabel(quality)}
-              </Facet>
-            ))}
-          </FacetGroup>
-          {filter.quality !== null ? (
-            <button
-              type="button"
-              onClick={() => change({ quality: null })}
-              className="flex h-9 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold text-[color:var(--arkive-nav-active)] transition-colors hover:bg-[color:var(--arkive-filter-active)] md:h-8"
-            >
-              <X aria-hidden="true" className="size-3.5" />
-              {text.clear}
-            </button>
-          ) : null}
-        </div>
-
         {dataError ? <div className="p-3"><Notice>{content.wiki.dataError}</Notice></div> : !data ? <div className="p-3"><Notice>{content.wiki.loading}</Notice></div> : (
           <EquipmentBoard groups={filtered} data={data} quality={filter.quality} />
         )}

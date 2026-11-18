@@ -1,10 +1,10 @@
 import { useWikiState, useWikiReady, useWikiOptional } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { cn } from '@gamemap/ui'
+import { CatalogFacetGrid, CatalogFacetMenu, CatalogFacetOption, CatalogFacetTrack, CatalogSearchInput, CatalogSelectedFilters, cn, useCatalogFacetMenus } from '@gamemap/ui'
 import { Notice } from './components/wiki'
 import { HeaderAction } from './components/SectionNav'
 import { LevelStepper } from './components/LevelStepper'
-import { Badge, Chip, DetailBlock, DetailPanel, PillTab, PillTrack, SearchBox, SearchToggle, UnderlineTab } from './components/Board'
+import { Badge, Chip, DetailBlock, DetailPanel, SearchToggle, UnderlineTab } from './components/Board'
 import { useFit, usePointer, useWide } from './components/boardHooks'
 import { loadSoulWikiData, type EquipmentAttributeRecord, type SoulRecord } from './wikiData'
 import { attributeFormat, attributeValue, DEFAULT_SOUL_CAP, PLACEHOLDER_NAME, soulLevelCaps, soulPrimaryAt, soulSubPool } from './wikiBoards'
@@ -45,6 +45,7 @@ export function SoulWiki() {
     return souls.filter((soul) => (quality === null || soul.quality === quality) && (!needle || (soul.name?.['zh-CN'] ?? '').toLowerCase().includes(needle)))
   }, [souls, quality, query])
   const resonance = useMemo(() => (data?.souls.resonance ?? []).filter((row) => row.name?.['zh-CN']), [data])
+  const facetMenus = useCatalogFacetMenus()
 
   return (
     <div className="flex flex-col gap-3 md:gap-4">
@@ -60,18 +61,27 @@ export function SoulWiki() {
         />
       </HeaderAction>
 
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <PillTrack label={text.qualityTabsLabel}>
-          <PillTab selected={quality === null} onClick={() => setQuality(null)} count={data ? souls.length : undefined}>{text.all}</PillTab>
-          {QUALITIES.map((value) => (
-            <PillTab key={value} selected={quality === value} onClick={() => setQuality(value)} count={data ? souls.filter((soul) => soul.quality === value).length : undefined}>
-              <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(value) }} />
-              {qualityLabel(value)}
-            </PillTab>
-          ))}
-        </PillTrack>
-        <SearchBox open={searchOpen} query={query} onQuery={setQuery} label={text.searchLabel} placeholder={text.searchPlaceholder} />
+      <div className="flex flex-col items-start gap-3 lg:flex-row lg:flex-wrap lg:justify-between">
+        <CatalogFacetTrack>
+          <CatalogFacetMenu {...facetMenus('quality')} label={text.qualityTabsLabel} count={quality === null ? 0 : 1} testId="ro3-soul-filter-quality">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={quality === null} onClick={() => setQuality(null)} label={text.all} testId="ro3-soul-quality-all" />
+              {QUALITIES.map((value) => <CatalogFacetOption key={value} active={quality === value} onClick={() => setQuality(value)} label={qualityLabel(value)} testId={`ro3-soul-quality-${value}`} icon={<span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(value) }} />} />)}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+        </CatalogFacetTrack>
+        <div className={cn('w-full lg:ml-auto lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
+          <CatalogSearchInput value={query} onChange={(event) => setQuery(event.target.value)}
+            aria-label={text.searchLabel} submitLabel={text.searchLabel} clearLabel={content.search.clear} onClear={() => setQuery('')} placeholder={text.searchPlaceholder} />
+        </div>
       </div>
+
+      <CatalogSelectedFilters
+        label={text.title}
+        clearLabel={text.clear}
+        choices={quality === null ? [] : [{ key: `quality-${quality}`, label: qualityLabel(quality), onRemove: () => setQuality(null), icon: <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: qualityColor(quality) }} /> }]}
+        onClear={() => setQuality(null)}
+      />
 
       <section aria-label={text.title} className="rounded-lg border border-border bg-card">
         <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">

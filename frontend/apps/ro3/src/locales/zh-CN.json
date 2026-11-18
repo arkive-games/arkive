@@ -402,8 +402,10 @@
         "panelTitle": "筛选当前卡片列表",
         "clear": "清空",
         "close": "关闭筛选",
+        "tier": "品阶",
         "part": "部位",
         "quality": "品质",
+        "attribute": "属性",
         "baseAttribute": "基础属性",
         "primaryAttribute": "一级属性"
       },
@@ -673,6 +675,7 @@
       "searchToggle": "搜索灵魂残响",
       "qualityTabsLabel": "品质",
       "all": "全部",
+      "clear": "清除筛选",
       "viewLabel": "分类",
       "views": {
         "souls": "残响",

@@ -1,11 +1,20 @@
 import { useWikiState, useWikiReady, useWikiOptional, validMonsterFilter } from './wikiMemory'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Crown, LayoutGrid, Skull, Sparkles, Swords, X } from 'lucide-react'
-import { cn } from '@gamemap/ui'
+import { Crown, LayoutGrid, Skull, Sparkles, Swords } from 'lucide-react'
+import {
+  CatalogFacetGrid,
+  CatalogFacetMenu,
+  CatalogFacetOption,
+  CatalogFacetTrack,
+  CatalogSearchInput,
+  CatalogSelectedFilters,
+  cn,
+  useCatalogFacetMenus,
+} from '@gamemap/ui'
 import { Notice } from './components/wiki'
 import { HeaderAction } from './components/SectionNav'
 import { LevelStepper } from './components/LevelStepper'
-import { Badge, Chip, DetailBlock, DetailPanel, Facet, FacetGroup, Pager, PillTab, PillTrack, SearchBox, SearchToggle, UnderlineTab, ValueList } from './components/Board'
+import { Badge, Chip, DetailBlock, DetailPanel, Pager, SearchToggle, ValueList } from './components/Board'
 import { useFit, usePointer, useWide } from './components/boardHooks'
 import { loadDropPool, loadMonsterWikiData, type DropPool, type MonsterRank, type MonsterWikiData, type MvpRecord } from './creatureData'
 import { loadItems, type ItemSummary } from './wikiData'
@@ -73,8 +82,16 @@ export function MonsterWiki() {
   const shown = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const change = (next: Partial<MonsterFilter>) => setFilter((previous) => ({ ...previous, ...next }))
-  const facetCount = [filter.element, filter.race, filter.size].filter((value) => value !== null).length
-  const rankCount = (rank: MonsterRank) => groups.filter((group) => group.rank === rank).length
+  const facetMenus = useCatalogFacetMenus()
+  const elementLabel = (element: number) => (text.elementShort as Record<string, string>)[String(element)]
+  const sizeLabel = (size: number) => (text.sizeShort as Record<string, string>)[String(size)]
+  const selectedChoices = [
+    ...(filter.rank !== 'all' ? [{ key: `rank-${filter.rank}`, label: text.rankTabs[filter.rank], onRemove: () => change({ rank: 'all' }) }] : []),
+    ...(filter.band ? [{ key: `band-${filter.band[0]}-${filter.band[1]}`, label: `${filter.band[0]}–${filter.band[1]}`, onRemove: () => change({ band: null }) }] : []),
+    ...(filter.element !== null ? [{ key: `element-${filter.element}`, label: elementLabel(filter.element), onRemove: () => change({ element: null }), icon: <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: ELEMENT_COLORS[filter.element] }} /> }] : []),
+    ...(filter.race !== null ? [{ key: `race-${filter.race}`, label: races.find(([id]) => id === filter.race)?.[1] ?? String(filter.race), onRemove: () => change({ race: null }) }] : []),
+    ...(filter.size !== null ? [{ key: `size-${filter.size}`, label: sizeLabel(filter.size), onRemove: () => change({ size: null }) }] : []),
+  ]
 
   const turnPage = (next: number) => {
     setPaging({ key: filterKey, page: next })
@@ -97,76 +114,56 @@ export function MonsterWiki() {
         />
       </HeaderAction>
 
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <PillTrack label={text.rankLabel}>
-          <PillTab selected={filter.rank === 'all'} onClick={() => change({ rank: 'all' })} count={data ? groups.length : undefined}>
-            {text.all}
-          </PillTab>
-          {RANKS.map((rank) => {
-            const Icon = RANK_ICONS[rank]
-            return (
-              <PillTab key={rank} selected={filter.rank === rank} onClick={() => change({ rank })} count={data ? rankCount(rank) : undefined}>
-                <Icon aria-hidden="true" className="hidden size-4 md:block" />
-                {text.rankTabs[rank]}
-              </PillTab>
-            )
-          })}
-        </PillTrack>
-        <SearchBox open={searchOpen} query={filter.query} onQuery={(query) => change({ query })} label={text.searchLabel} placeholder={text.searchPlaceholder} />
+      <div className="flex flex-col items-start gap-3 lg:flex-row lg:flex-wrap lg:justify-between">
+        <CatalogFacetTrack>
+          <CatalogFacetMenu {...facetMenus('rank')} label={text.rankLabel} count={filter.rank === 'all' ? 0 : 1} testId="ro3-monster-filter-rank">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.rank === 'all'} onClick={() => change({ rank: 'all' })} label={text.all} testId="ro3-monster-rank-all" />
+              {RANKS.map((rank) => {
+                const Icon = RANK_ICONS[rank]
+                return <CatalogFacetOption key={rank} active={filter.rank === rank} onClick={() => change({ rank })} label={text.rankTabs[rank]} testId={`ro3-monster-rank-${rank}`} icon={<Icon aria-hidden="true" className="size-4" />} />
+              })}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('band')} label={text.bandLabel} count={filter.band ? 1 : 0} testId="ro3-monster-filter-band">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.band === null} onClick={() => change({ band: null })} label={text.allLevels} testId="ro3-monster-band-all" />
+              {text.bands.map((band) => <CatalogFacetOption key={band.label} active={filter.band?.[0] === band.min && filter.band[1] === band.max} onClick={() => change({ band: [band.min, band.max] })} label={band.label} testId={`ro3-monster-band-${band.min}-${band.max}`} />)}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('element')} label={text.element} count={filter.element === null ? 0 : 1} testId="ro3-monster-filter-element">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.element === null} onClick={() => change({ element: null })} label={text.allElements} testId="ro3-monster-element-all" />
+              {ELEMENTS.map((element) => <CatalogFacetOption key={element} active={filter.element === element} onClick={() => change({ element: filter.element === element ? null : element })} label={elementLabel(element)} testId={`ro3-monster-element-${element}`} icon={<span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: ELEMENT_COLORS[element] }} />} />)}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('race')} label={text.race} count={filter.race === null ? 0 : 1} testId="ro3-monster-filter-race">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.race === null} onClick={() => change({ race: null })} label={text.allRaces} testId="ro3-monster-race-all" />
+              {races.map(([race, name]) => <CatalogFacetOption key={race} active={filter.race === race} onClick={() => change({ race: filter.race === race ? null : race })} label={name} testId={`ro3-monster-race-${race}`} />)}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+          <CatalogFacetMenu {...facetMenus('size')} label={text.size} count={filter.size === null ? 0 : 1} testId="ro3-monster-filter-size">
+            <CatalogFacetGrid>
+              <CatalogFacetOption active={filter.size === null} onClick={() => change({ size: null })} label={text.allSizes} testId="ro3-monster-size-all" />
+              {SIZES.map((size) => <CatalogFacetOption key={size} active={filter.size === size} onClick={() => change({ size: filter.size === size ? null : size })} label={sizeLabel(size)} testId={`ro3-monster-size-${size}`} />)}
+            </CatalogFacetGrid>
+          </CatalogFacetMenu>
+        </CatalogFacetTrack>
+        <div className={cn('w-full lg:ml-auto lg:w-[23rem]', searchOpen ? 'block' : 'hidden lg:block')}>
+          <CatalogSearchInput value={filter.query} onChange={(event) => change({ query: event.target.value })}
+            aria-label={text.searchLabel} submitLabel={text.searchLabel} clearLabel={content.search.clear} onClear={() => change({ query: '' })} placeholder={text.searchPlaceholder} />
+        </div>
       </div>
 
+      <CatalogSelectedFilters
+        label={text.title}
+        clearLabel={text.clear}
+        choices={selectedChoices}
+        onClear={() => setFilter({ rank: 'all', band: null, element: null, race: null, size: null, query: filter.query })}
+      />
+
       <section ref={board} aria-label={text.title} className="scroll-mt-4 rounded-lg border border-border bg-card">
-        <div className="flex items-center gap-3 border-b border-border pr-2.5 md:px-1.5 md:pr-3.5">
-          <div role="group" aria-label={text.bandLabel} className="flex min-w-0 overflow-x-auto [scrollbar-width:none]">
-            <UnderlineTab selected={filter.band === null} onClick={() => change({ band: null })}>{text.allLevels}</UnderlineTab>
-            {text.bands.map((band) => (
-              <UnderlineTab
-                key={band.label}
-                selected={filter.band?.[0] === band.min && filter.band[1] === band.max}
-                onClick={() => change({ band: [band.min, band.max] })}
-              >
-                {band.label}
-              </UnderlineTab>
-            ))}
-          </div>
-
-        </div>
-
-        <div className="flex items-center gap-x-3 gap-y-1.5 overflow-x-auto border-b border-dashed border-border px-2.5 py-2 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-3.5">
-          <FacetGroup label={text.element}>
-            {ELEMENTS.map((element) => (
-              <Facet key={element} selected={filter.element === element} onClick={() => change({ element: filter.element === element ? null : element })}>
-                <span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: ELEMENT_COLORS[element] }} />
-                {(text.elementShort as Record<string, string>)[String(element)]}
-              </Facet>
-            ))}
-          </FacetGroup>
-          <span aria-hidden="true" className="h-5 w-px shrink-0 bg-border" />
-          <FacetGroup label={text.race}>
-            {races.map(([race, name]) => (
-              <Facet key={race} selected={filter.race === race} onClick={() => change({ race: filter.race === race ? null : race })}>{name}</Facet>
-            ))}
-          </FacetGroup>
-          <span aria-hidden="true" className="h-5 w-px shrink-0 bg-border" />
-          <FacetGroup label={text.size}>
-            {SIZES.map((size) => (
-              <Facet key={size} selected={filter.size === size} onClick={() => change({ size: filter.size === size ? null : size })}>
-                {(text.sizeShort as Record<string, string>)[String(size)]}
-              </Facet>
-            ))}
-          </FacetGroup>
-          {facetCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => change({ element: null, race: null, size: null })}
-              className="flex h-9 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold text-[color:var(--arkive-nav-active)] transition-colors hover:bg-[color:var(--arkive-filter-active)] md:h-8"
-            >
-              <X aria-hidden="true" className="size-3.5" />
-              {text.clear}
-            </button>
-          ) : null}
-        </div>
-
         {dataError ? <div className="p-3"><Notice>{content.wiki.dataError}</Notice></div> : !data ? <div className="p-3"><Notice>{content.wiki.loading}</Notice></div> : (
           <>
             <MonsterBoard groups={shown} data={data} mvps={mvps} items={items} wideCards={filter.rank === 'mvp'} />
