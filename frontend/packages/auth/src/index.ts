@@ -19,6 +19,7 @@ export {
   type AuthStatus,
 } from "./AuthProvider"
 export { CoreClient, asAuthError, normaliseCode, type CoreClientOptions } from "./client"
+export { useModerationAccess, type ModerationAccessStatus } from './useModerationAccess'
 export {
   ARKIVE_PRODUCTION_API_URL,
   CORE_API_PREFIX,

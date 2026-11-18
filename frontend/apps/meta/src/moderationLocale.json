@@ -1,0 +1,26 @@
+{
+  "en-US": {
+    "title": "Image moderation", "back": "Back to my account", "scope": "Review player images for the games you moderate.",
+    "checking": "Checking moderation access…", "loading": "Loading images…", "signIn": "Sign in", "signInRequired": "Sign in with a moderator or administrator account.",
+    "forbidden": "This account does not have image moderation permission.", "unavailable": "The account service is unavailable.",
+    "loadFailed": "Could not load the review queue.", "reviewFailed": "The review was not saved. The image is still in the queue.", "retry": "Retry", "refresh": "Refresh",
+    "empty": "No images awaiting review.", "count": "{{count}} images awaiting review", "approve": "Approve", "reject": "Reject", "preview": "View full image",
+    "previewAlt": "Player image uploaded by {{author}}", "location": "Map / marker", "previous": "Previous", "next": "Next", "pagination": "Page {{page}} of {{pages}}", "paginationLabel": "Review queue pages"
+  },
+  "zh-CN": {
+    "title": "图片审核", "back": "返回个人中心", "scope": "集中审核你负责游戏的玩家图片。",
+    "checking": "正在检查审核权限…", "loading": "正在加载图片…", "signIn": "登录", "signInRequired": "请使用版主或管理员账号登录。",
+    "forbidden": "此账号没有图片审核权限。", "unavailable": "账号服务暂不可用。",
+    "loadFailed": "加载审核队列失败。", "reviewFailed": "审核结果未保存，图片仍在待审核队列中。", "retry": "重试", "refresh": "刷新",
+    "empty": "暂无待审核图片。", "count": "{{count}} 张图片待审核", "approve": "通过", "reject": "拒绝", "preview": "查看原图",
+    "previewAlt": "{{author}} 上传的玩家图片", "location": "地图 / 点位", "previous": "上一页", "next": "下一页", "pagination": "第 {{page}} / {{pages}} 页", "paginationLabel": "审核队列分页"
+  },
+  "zh-TW": {
+    "title": "圖片審核", "back": "返回個人中心", "scope": "集中審核你負責遊戲的玩家圖片。",
+    "checking": "正在檢查審核權限…", "loading": "正在載入圖片…", "signIn": "登入", "signInRequired": "請使用版主或管理員帳號登入。",
+    "forbidden": "此帳號沒有圖片審核權限。", "unavailable": "帳號服務暫不可用。",
+    "loadFailed": "載入審核佇列失敗。", "reviewFailed": "審核結果未儲存，圖片仍在待審核佇列中。", "retry": "重試", "refresh": "重新整理",
+    "empty": "暫無待審核圖片。", "count": "{{count}} 張圖片待審核", "approve": "通過", "reject": "拒絕", "preview": "檢視原圖",
+    "previewAlt": "{{author}} 上傳的玩家圖片", "location": "地圖 / 點位", "previous": "上一頁", "next": "下一頁", "pagination": "第 {{page}} / {{pages}} 頁", "paginationLabel": "審核佇列分頁"
+  }
+}

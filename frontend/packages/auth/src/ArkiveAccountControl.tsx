@@ -14,7 +14,8 @@ import { AccountDialog } from "./AccountDialog"
 import { useAuth } from "./AuthProvider"
 import { authStringsFor } from "./locales"
 import type { AuthStrings } from "./strings"
-import { accountMenuCopy, accountProfileHref } from './accountMenuCopy'
+import { accountMenuCopy, accountModerationHref, accountProfileHref } from './accountMenuCopy'
+import { useModerationAccess } from './useModerationAccess'
 
 export interface ArkiveAccountControlProps {
   /**
@@ -69,6 +70,7 @@ export function ArkiveAccountControl({
   onOpenSettings,
 }: ArkiveAccountControlProps) {
   const auth = useAuth()
+  const moderation = useModerationAccess()
   const [open, setOpen] = useState(false)
   // The provider owns the token; this only reacts to it. Opening on a token the
   // provider already stripped is what makes the emailed link land on the form.
@@ -141,7 +143,11 @@ export function ArkiveAccountControl({
     onSignOut: () => {
       void auth.logout()
     },
-    items: [{ key: 'profile', label: menuCopy.profile, onSelect: () => { window.location.assign(accountProfileHref(homeUrl)) } }, ...(items ?? [])],
+    items: [
+      { key: 'profile', label: menuCopy.profile, onSelect: () => { window.location.assign(accountProfileHref(homeUrl)) } },
+      ...(moderation.status === 'allowed' ? [{ key: 'moderation', label: menuCopy.moderation, onSelect: () => { window.location.assign(accountModerationHref(homeUrl)) } }] : []),
+      ...(items ?? []),
+    ],
     settings: settings || onOpenSettings
       ? { label: menuCopy.settings, onSelect: onOpenSettings ?? (() => setSettingsOpen(true)) }
       : undefined,

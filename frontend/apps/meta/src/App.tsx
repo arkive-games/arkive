@@ -6,6 +6,7 @@ import {
   authStringsFor,
   createLocalTokenStorage,
   useAuth,
+  useModerationAccess,
 } from '@gamemap/auth'
 import { createApiClient, listForumPosts, result, type PostRead } from '@gamemap/api-core'
 import {
@@ -47,6 +48,7 @@ import {
   type PublicProfileSection,
 } from './UserSystemPages'
 import { PlatformUpdatesPage } from './PlatformUpdatesPage'
+import { MarkerImageModerationPage } from './MarkerImageModerationPage'
 import { useSettingsConfig } from './lib/settings'
 import { AUTH_CONFIG } from './lib/auth'
 import { HomeFooter } from './HomeFooter'
@@ -85,6 +87,7 @@ type HomeRoute =
   | { view: 'allGames' }
   | { view: 'tools' }
   | { view: 'platformUpdates' }
+  | { view: 'moderation' }
   | { view: 'forum'; composer: boolean }
   | { view: 'notifications'; section: NotificationSection }
   | { view: 'account'; section: AccountSection }
@@ -149,6 +152,7 @@ function hashForRoute(route: HomeRoute): string {
     case 'allGames': return '#games'
     case 'tools': return '#tools'
     case 'platformUpdates': return '#updates'
+    case 'moderation': return '#moderation/images'
     case 'forum': return route.composer ? '#forum/new' : '#forum'
     case 'notifications': return `#notifications/${route.section}`
     case 'account': return `#account/${route.section}`
@@ -163,6 +167,7 @@ function routeFromHash(): HomeRoute {
   if (root === 'games') return { view: 'allGames' }
   if (root === 'tools' && HAS_TOOLS) return { view: 'tools' }
   if (root === 'updates') return { view: 'platformUpdates' }
+  if (root === 'moderation') return { view: 'moderation' }
   if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
     const section = NOTIFICATION_SECTIONS.has(value as NotificationSection)
@@ -255,6 +260,7 @@ export default function App() {
   const auth = useAuth()
   const [accountOpen, setAccountOpen] = useState(false)
   const authStrings = authStringsFor(i18n.language)
+  const moderationAccess = useModerationAccess()
   const isSignedIn = auth.status === 'authenticated'
   const footerKind = resolveMetaFooterKind(activeRoute.view, isSignedIn)
   // Every view that renders the homepage, including a protected route a
@@ -355,6 +361,7 @@ export default function App() {
         actions={
           <HomeMobileActions
             isSignedIn={isSignedIn}
+            moderationHref={moderationAccess.status === 'allowed' ? '#moderation/images' : undefined}
             hasTools={HAS_TOOLS}
             language={lng}
             theme={theme}
@@ -430,7 +437,9 @@ export default function App() {
           holds are needed in both states. */}
       <ArkiveSettingsDialog {...settingsProps} open={settingsOpen} onOpenChange={setSettingsOpen} />
 
-      {activeRoute.view === 'platformUpdates' ? (
+      {activeRoute.view === 'moderation' ? (
+        <MarkerImageModerationPage onSignIn={() => setAccountOpen(true)} />
+      ) : activeRoute.view === 'platformUpdates' ? (
         <PlatformUpdatesPage />
       ) : activeRoute.view === 'allGames' ? (
         <AllGamesPage

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { accountMenuCopy, accountProfileHref } from './accountMenuCopy'
+import { accountMenuCopy, accountModerationHref, accountProfileHref } from './accountMenuCopy'
 
 describe('account menu destinations', () => {
   it.each([
@@ -17,5 +17,13 @@ describe('account menu destinations', () => {
       expect(copy.profile).toBeTruthy()
       expect(copy.settings).toBeTruthy()
     }
+  })
+  it.each([
+    ['', '#moderation/images'],
+    ['http://localhost:15172', 'http://localhost:15172#moderation/images'],
+    ['https://arkive.games/#games', 'https://arkive.games/#moderation/images'],
+    ['/toy/arkive/index.html', '/toy/arkive/index.html#moderation/images'],
+  ])('routes moderation through the configured portal %s', (base, expected) => {
+    expect(accountModerationHref(base)).toBe(expected)
   })
 })

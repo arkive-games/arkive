@@ -23,8 +23,9 @@ const THEME_ICONS = { auto: IconSunMoon, light: IconSun, dark: IconMoon } as con
  * menu, as three round buttons. The phone site has no bottom tab bar, so the
  * menu sheet carries the sections, the account once signed in, and settings.
  */
-export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLanguageChange, onThemeChange, onLogin, onOpenSettings }: {
+export function HomeMobileActions({ isSignedIn, moderationHref, hasTools, language, theme, onLanguageChange, onThemeChange, onLogin, onOpenSettings }: {
   isSignedIn: boolean
+  moderationHref?: string
   hasTools: boolean
   language: string
   theme: ArkiveMapTheme
@@ -138,6 +139,7 @@ export function HomeMobileActions({ isSignedIn, hasTools, language, theme, onLan
             <>
               <a href="#account/edit" onClick={close}>{t('landing.menu.account')}</a>
               <a href="#notifications/settings" onClick={close}>{t('landing.menu.notifications')}</a>
+              {moderationHref ? <a href={moderationHref} onClick={close}>{t('moderation.title')}</a> : null}
             </>
           )}
           {/* Signed out too: clearing local data lives nowhere else on a phone. */}

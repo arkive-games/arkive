@@ -23,10 +23,15 @@ controls discovery in the API and site, not access to a URL already known to
 the uploader. Hiding or deleting a comment also withdraws its attachments and
 its replies' attachments from marker-image reads.
 
-Game moderators and site administrators can open **Review player images** in
-any marker's Details view. The queue includes all pending images within their
-moderation scope. Approving or rejecting a contribution refreshes the current
-marker. The review API also supports withdrawing an already approved image.
+Game moderators and site administrators open **Image moderation** from their
+account menu on any site. It leads to the portal's dedicated
+`#moderation/images` page; there are no moderation controls inside map markers.
+The phone portal also exposes the same destination in its site menu. The queue
+includes all pending images within the account's moderation scope, with image
+previews, uploader, game, map and marker identifiers, and paging. Failed reviews
+keep their item; confirmed approvals or rejections refresh the queue. Signed-out
+visitors are prompted to sign in, and ordinary accounts see an access-denied
+state. The review API also supports withdrawing an already approved image.
 
 Deploy the backend before the frontend. The backend applies
 `20261119000001_create_marker_images.sql` through the normal migration stream;
@@ -50,6 +55,14 @@ existing underscore and long boss identifiers, and separate guests read the
 saved comments. The 390-pixel mobile composer remains visible without horizontal
 overflow. Async image loading remeasures desktop placement after a corrective
 pan; a map-boundary regression checks that impossible corrections stop rendering.
+
+The standalone moderation follow-up passed 2017 frontend tests and builds/lint
+for the portal and Palworld. A real ordinary local account was denied the queue
+and had no moderation menu item. After assigning the local administrator role,
+the game's account menu opened the portal review route. The standalone page
+approved one image, rejected another, and emptied its queue; a separate guest
+read only the approved image. Desktop light/dark and 390-pixel phone views were
+checked, including the phone menu entry and absence of point-level review controls.
 
 For Windows browser checks, use Playwright CLI `run-code --filename` for scripts
 containing URLs or selectors rather than passing JavaScript through a `.cmd`

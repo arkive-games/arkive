@@ -5,6 +5,7 @@ export type MetaFooterRoute =
   | 'forum'
   | 'notifications'
   | 'account'
+  | 'moderation'
   | 'publicProfile'
   // Landed on master while this branch was open. It is a content page, so it
   // takes the compact footer like its siblings.
