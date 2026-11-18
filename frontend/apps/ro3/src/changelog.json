@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.25.1",
+      "date": "2026-11-18",
+      "commit": "19e911f1901ca6a4461a82c424be3d72a7d5e1d8",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Form controls and version labels now follow the selected dark theme independently of the system appearance.",
+            "zh-CN": "表单控件和版本标签现在跟随站内选择的深色主题，不再受系统外观影响。",
+            "zh-TW": "表單控制項和版本標籤現在跟隨站內選擇的深色主題，不再受系統外觀影響。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.25.0",
       "date": "2026-11-16",
       "commit": "6975c5631f4f1387876e597a90df9c8eeee47098",
