@@ -4,6 +4,8 @@
 @source "../../../packages/map-shell/src";
 @source "../../../packages/auth/src";
 
+@custom-variant dark (&:is(.dark *));
+
 @media (min-width: 64rem) {
   .ro3-section-sidebar.is-collapsed > a { box-shadow: none; background: transparent; }
   .ro3-section-sidebar.is-collapsed > a > span:first-child { background: var(--muted); }
