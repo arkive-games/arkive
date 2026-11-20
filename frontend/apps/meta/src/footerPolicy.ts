@@ -10,6 +10,7 @@ export type MetaFooterRoute =
   // Landed on master while this branch was open. It is a content page, so it
   // takes the compact footer like its siblings.
   | 'platformUpdates'
+  | 'glimmithTutorial'
 
 export type MetaFooterKind = 'home' | 'compact'
 

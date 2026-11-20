@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AccountDialog,
@@ -82,11 +82,16 @@ const HAS_TOOLS = FEATURES.some((feature) => feature.kind === 'tool'
 const NAV_KEYS = (['discoverGames', 'allGames', 'tools', 'forum'] as const)
   .filter((key) => key !== 'tools' || HAS_TOOLS)
 
+const GlimmithTutorial = import.meta.env.DEV
+  ? lazy(() => import('./GlimmithTutorialPrototype').then(({ GlimmithTutorialPrototype }) => ({ default: GlimmithTutorialPrototype })))
+  : null
+
 type HomeRoute =
   | { view: 'discoverGames' }
   | { view: 'allGames' }
   | { view: 'tools' }
   | { view: 'platformUpdates' }
+  | { view: 'glimmithTutorial' }
   | { view: 'moderation' }
   | { view: 'forum'; composer: boolean }
   | { view: 'notifications'; section: NotificationSection }
@@ -152,6 +157,7 @@ function hashForRoute(route: HomeRoute): string {
     case 'allGames': return '#games'
     case 'tools': return '#tools'
     case 'platformUpdates': return '#updates'
+    case 'glimmithTutorial': return '#glimmith/tutorial'
     case 'moderation': return '#moderation'
     case 'forum': return route.composer ? '#forum/new' : '#forum'
     case 'notifications': return `#notifications/${route.section}`
@@ -167,6 +173,7 @@ function routeFromHash(): HomeRoute {
   if (root === 'games') return { view: 'allGames' }
   if (root === 'tools' && HAS_TOOLS) return { view: 'tools' }
   if (root === 'updates') return { view: 'platformUpdates' }
+  if (GlimmithTutorial && root === 'glimmith' && value === 'tutorial') return { view: 'glimmithTutorial' }
   if (root === 'moderation') return { view: 'moderation' }
   if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
@@ -346,6 +353,10 @@ export default function App() {
     window.history.replaceState(null, '', destination)
     setActiveRoute(routeFromHash())
     window.scrollTo({ top: 0 })
+  }
+
+  if (activeRoute.view === 'glimmithTutorial' && GlimmithTutorial) {
+    return <Suspense fallback={null}><GlimmithTutorial /></Suspense>
   }
 
   return (

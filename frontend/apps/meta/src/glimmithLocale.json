@@ -1,0 +1,31 @@
+{
+  "home": "返回藏舟首页",
+  "account": "账号",
+  "language": "简体中文",
+  "languageMenu": "语言",
+  "theme": "主题",
+  "themes": { "auto": "跟随系统", "light": "浅色", "dark": "深色" },
+  "map": "教学区地图",
+  "intro": "开场区域",
+  "collapse": "收起地图侧栏",
+  "expand": "展开地图侧栏",
+  "note": "教学说明",
+  "puzzle": "玻璃谜题",
+  "show": "显示全部",
+  "hide": "隐藏全部",
+  "coverage": "点位来自游戏场景坐标；底图为开场区域地板和平台的俯视示意，不含完整地形。",
+  "search": "搜索点位",
+  "unnamed": "未命名",
+  "noDescription": "暂无说明",
+  "noBoard": "这是游戏中的说明页，没有独立棋盘或格子答案。",
+  "openFirst": "查看这处说明解锁的第一道谜题",
+  "board": "原始棋盘",
+  "solution": "游戏文件中的解法",
+  "engine": { "copyPosition": "复制坐标", "noMapSelected": "未选择地图", "zoomIn": "放大", "zoomOut": "缩小" },
+  "entries": {
+    "Tutorial-1": { "title": "教学 1：形状与颜色", "description": "按规则划分每块玻璃的形状；颜色可自由选择。" },
+    "0049.puz": { "title": "第一道玻璃谜题", "description": "将棋盘分成三块 2×2 的正方形。" },
+    "Tutorial-2": { "title": "教学 2：修复窗户", "description": "解开玻璃谜题会推进窗户修复；完成窗户后可以继续前进。" },
+    "Tutorial-3": { "title": "教学 3：金属化窗框", "description": "额外完成玻璃谜题可让窗框金属化，并揭示额外挑战。" }
+  }
+}

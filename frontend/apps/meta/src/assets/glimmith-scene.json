@@ -1,0 +1,86 @@
+{
+  "bounds": {
+    "min": {
+      "x": -5500,
+      "y": -6500
+    },
+    "max": {
+      "x": 18500,
+      "y": 5500
+    }
+  },
+  "width": 2048,
+  "height": 1024,
+  "sources": [
+    "Welcome",
+    "Zone01_Intro_Bridge",
+    "Zone01_Intro_Gate_Revised"
+  ],
+  "surfaceCount": 250,
+  "actors": [
+    {
+      "id": "Tutorial-1",
+      "actor": "PuzzleTutorialCube_2",
+      "x": 16109.693359375,
+      "y": 2571.04736328125,
+      "z": 152.7928466796875,
+      "widget": "WBP_Note_Welcome_C",
+      "unlocks": [
+        "0049.puz"
+      ]
+    },
+    {
+      "id": "0049.puz",
+      "actor": "PuzzleCube_01",
+      "x": 13618.6787109375,
+      "y": 1456.35546875,
+      "z": 152.1458740234375,
+      "widget": null,
+      "unlocks": []
+    },
+    {
+      "id": "Tutorial-2",
+      "actor": "PuzzleTutorialCube2",
+      "x": 3793.012451171875,
+      "y": -1781.4842529296875,
+      "z": -524.7622680664062,
+      "widget": "WBP_Note_Windows_C",
+      "unlocks": []
+    },
+    {
+      "id": "Tutorial-3",
+      "actor": "PuzzleTutorialCube6",
+      "x": -3042.319091796875,
+      "y": -3962.379150390625,
+      "z": 504.976806640625,
+      "widget": "WBP_Note_Metallicize_C",
+      "unlocks": []
+    }
+  ],
+  "puzzle": {
+    "columns": 4,
+    "rows": 4,
+    "board": [
+      "   +--+--+   ",
+      "   |..|..|   ",
+      "   +--+--+   ",
+      "   |..|..|   ",
+      "+--+--+--+--+",
+      "|..|..|..|..|",
+      "+--+--+--+--+",
+      "|..|..|..|..|",
+      "+--+--+--+--+"
+    ],
+    "solution": [
+      "   +##+##+   ",
+      "   #     #   ",
+      "   +  +  +   ",
+      "   #     #   ",
+      "+##+##+##+##+",
+      "#     #     #",
+      "+  +  +  +  +",
+      "#     #     #",
+      "+##+##+##+##+"
+    ]
+  }
+}
