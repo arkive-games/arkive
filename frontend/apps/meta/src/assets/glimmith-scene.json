@@ -16,7 +16,7 @@
     "Zone01_Intro_Bridge",
     "Zone01_Intro_Gate_Revised"
   ],
-  "surfaceCount": 250,
+  "surfaceCount": 520,
   "actors": [
     {
       "id": "Tutorial-1",
@@ -27,6 +27,10 @@
       "widget": "WBP_Note_Welcome_C",
       "unlocks": [
         "0049.puz"
+      ],
+      "supportMeshes": [
+        "SM_Flatrock_02",
+        "sm_RuinSetPiece_CircularA"
       ]
     },
     {
@@ -36,7 +40,10 @@
       "y": 1456.35546875,
       "z": 152.1458740234375,
       "widget": null,
-      "unlocks": []
+      "unlocks": [],
+      "supportMeshes": [
+        "sm_RuinFloor_TileLargeA"
+      ]
     },
     {
       "id": "Tutorial-2",
@@ -45,7 +52,10 @@
       "y": -1781.4842529296875,
       "z": -524.7622680664062,
       "widget": "WBP_Note_Windows_C",
-      "unlocks": []
+      "unlocks": [],
+      "supportMeshes": [
+        "sm_RuinWall_FullShortA_BrokenA_Top"
+      ]
     },
     {
       "id": "Tutorial-3",
@@ -54,7 +64,10 @@
       "y": -3962.379150390625,
       "z": 504.976806640625,
       "widget": "WBP_Note_Metallicize_C",
-      "unlocks": []
+      "unlocks": [],
+      "supportMeshes": [
+        "sm_RuinFloor_TileLargeA"
+      ]
     }
   ],
   "puzzle": {
