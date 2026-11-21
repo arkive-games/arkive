@@ -71,9 +71,9 @@ export function EnemyListPage() {
                       className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition hover:border-primary/60"
                     >
                       <WikiImage name={e.bust || e.picture} contain={false} className="aspect-[3/4] w-full" />
-                      <span className="flex items-center justify-between gap-1 p-2">
-                        <span className="line-clamp-2 text-xs font-medium leading-tight">{data.text[e.id]?.name ?? e.id}</span>
-                        {e.boss ? <Tag rarity="Legendary">{t('wiki.boss')}</Tag> : null}
+                      <span className="flex flex-wrap items-center gap-1 p-2">
+                        <span className="line-clamp-2 min-w-0 flex-auto text-xs font-medium leading-tight">{data.text[e.id]?.name ?? e.id}</span>
+                        {e.boss ? <Tag rarity="Legendary" className="max-w-full shrink-0">{t('wiki.boss')}</Tag> : null}
                       </span>
                     </Link>
                   ))}
