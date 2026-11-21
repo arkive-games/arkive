@@ -101,8 +101,17 @@ const silhouettes = surfaces.sort((a, b) => a.zMax - b.zMax).map(({ outline, mes
 for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004']]) {
   const { vertices, indices } = meshes[mesh]
   const topZ = Math.max(...vertices.map((point) => point[2]))
-  const view = transform({ X: 0, Y: 0, Z: 0 }, { Yaw: 43, Pitch: 0, Roll: 36 })
-  const points = vertices.map(view)
+  // Yaw around world up first, then tilt the camera without rolling the icon.
+  const yaw = id === 'note' ? 0 : Math.PI / 4
+  const elevation = Math.PI / 6
+  const points = vertices.map(([x, y, z]) => {
+    const depth = -x * Math.sin(yaw) + y * Math.cos(yaw)
+    return [
+      x * Math.cos(yaw) + y * Math.sin(yaw),
+      depth * Math.cos(elevation) - z * Math.sin(elevation),
+      depth * Math.sin(elevation) + z * Math.cos(elevation),
+    ]
+  })
   const extrema = [0, 2].map((axis) => {
     const values = points.map((p) => p[axis])
     return [Math.min(...values), Math.max(...values)]

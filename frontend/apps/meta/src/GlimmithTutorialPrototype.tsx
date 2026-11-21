@@ -13,6 +13,7 @@ import terrainSouthwest from './assets/glimmith-terrain-2.svg'
 import terrainSoutheast from './assets/glimmith-terrain-3.svg'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import noteIcon from './assets/glimmith-marker-note.svg'
+import headerArt from './assets/glimmith-steam-header.jpg'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
 
@@ -83,6 +84,32 @@ export function GlimmithTutorialPrototype() {
   const { theme, setTheme } = useTheme()
   const select = (id: string) => setSelected(id)
   const marker = markers.find(({ id }) => id === selected)
+  const renderMarkerDetail = (marker: EngineMarker) => {
+    const actor = scene.actors.find(({ id }) => id === marker.id)
+    const puzzle = puzzles.get(marker.id)
+    const linked = actor?.unlocks[0]
+    const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
+    return (
+      <MarkerDetailDrawer key={marker.id} anchored={!mobile} name={marker.localizedName}
+        icon={<img className="size-8 object-contain" src={marker.icon} alt="" />} eyebrow={marker.subtypeLabel}
+        positionValue={coordinate} positionCopyValue={coordinate}
+        labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
+        description={marker.localizedDescription}
+        sections={puzzle ? [{
+          id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
+          content: <div className="grid grid-cols-2 gap-3 text-center text-xs">
+            <figure><figcaption className="mb-2">{copy.board}</figcaption><PuzzleBoard puzzle={puzzle} solved={false} /></figure>
+            <figure><figcaption className="mb-2">{copy.solution}</figcaption><PuzzleBoard puzzle={puzzle} solved /></figure>
+          </div>,
+        }] : [{
+          id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
+          content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&
+            <button type="button" className="justify-self-start text-primary underline" onClick={() => select(linked)}>
+              {copy.openFirst}
+            </button>}</div>,
+        }]} />
+    )
+  }
   return (
     <ShellLayout topBar={<ArkiveMapTopBar className="max-md:flex" homeUrl="#top" homeLabel={copy.home}
       brandName="Arkive" variant="docked" loginLabel={copy.account}
@@ -99,7 +126,7 @@ export function GlimmithTutorialPrototype() {
           collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
           content: 'pb-2',
         }}
-        headerSlot={<ShellGameHeader backgroundUrl={terrainSouthwest} logo={null} gameName="The Artisan of Glimmith" subtitle={copy.map} />}
+        headerSlot={<ShellGameHeader backgroundUrl={headerArt} backgroundPosition="center top" logo={null} gameName="The Artisan of Glimmith" subtitle={copy.map} />}
         mapSelectorSlot={<div className="px-3 py-3 max-md:pr-8"><ShellMapSelect
           classNames={{
             trigger: 'min-h-11 rounded-xl border-border bg-card px-3 text-base font-semibold shadow-none hover:border-primary/40 hover:bg-card data-[state=open]:bg-card',
@@ -129,7 +156,6 @@ export function GlimmithTutorialPrototype() {
             className="flex min-h-10 items-center gap-2 rounded-md px-2 text-left text-sm hover:bg-muted aria-pressed:bg-muted"
             onClick={() => select(marker.id)}><img className="size-6 shrink-0 object-contain" src={marker.icon} alt="" />{marker.localizedName}</button>)}
         </div>
-        <p className="border-t px-3 py-2 text-xs text-muted-foreground">{copy.coverage}</p>
       </ShellSidebar>
     }>
       <main className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>
@@ -138,35 +164,14 @@ export function GlimmithTutorialPrototype() {
           showLabels showBorders={false} lodEnabled={false} selectedMarkerId={selected} selectedPosition={null}
           onToggleMarker={setSelected} subzoneAt={() => copy.intro} flyToDuration={0.35} mapRef={ref} assets={assets}
           exposeTestHandle={import.meta.env.DEV} labels={copy.engine} displayCoords={displayCoords}
-          renderPopupContent={() => null}
+          renderPopupContent={mobile ? () => null : renderMarkerDetail}
         />
-        {marker && (() => {
-            const actor = scene.actors.find(({ id }) => id === marker.id)
-            const puzzle = puzzles.get(marker.id)
-            const linked = actor?.unlocks[0]
-            const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
-            return <MarkerDetailDrawer key={marker.id} name={marker.localizedName}
-              className="md:top-20"
-              icon={<img className="size-8 object-contain" src={marker.icon} alt="" />} eyebrow={marker.subtypeLabel}
-              positionValue={coordinate} positionCopyValue={coordinate}
-              labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
-              description={marker.localizedDescription}
-              sections={puzzle ? [{
-                id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
-                content: <div className="grid grid-cols-2 gap-3 text-center text-xs">
-                  <figure><figcaption className="mb-2">{copy.board}</figcaption><PuzzleBoard puzzle={puzzle} solved={false} /></figure>
-                  <figure><figcaption className="mb-2">{copy.solution}</figcaption><PuzzleBoard puzzle={puzzle} solved /></figure>
-                </div>,
-              }] : [{
-                id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
-                content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&
-                  <button type="button" className="justify-self-start text-primary underline" onClick={() => select(linked)}>
-                    {copy.openFirst}
-                  </button>}</div>,
-              }]} />
-        })()}
+        {mobile && marker && renderMarkerDetail(marker)}
         <SearchPanel items={searchItems} searchFields={['name', 'idLabel']} onSelect={select} displayCoords={displayCoords}
-          classNames={mobileSidebarOpen ? { root: 'max-md:hidden' } : undefined}
+          classNames={{ root: [
+            mobileSidebarOpen && 'max-md:hidden',
+            selected && 'md:max-lg:invisible',
+          ].filter(Boolean).join(' ') }}
           onFlyTo={({ x, y }) => ref.current?.flyTo(x, y)}
           labels={{ search: copy.search, resultsCount: (count) => String(count), unnamed: copy.unnamed, noDescription: copy.noDescription }} />
       </main>
