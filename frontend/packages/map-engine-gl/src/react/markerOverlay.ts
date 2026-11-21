@@ -61,7 +61,10 @@ export const LABEL_OFFSET_Y = 18;
  * The marker fields a label needs. `EngineMarker` satisfies it structurally, so
  * this module never imports the React-layer prop types.
  */
+export type MarkerHoverBadge = { src: string; alt: string };
+
 export interface LabelMarker extends LayerMarker {
+  hoverBadge?: MarkerHoverBadge | null;
   localizedName?: string;
   name?: string;
   subtypeLabel?: string;
@@ -173,6 +176,7 @@ interface TooltipState {
   text: string;
   x: number;
   y: number;
+  badgeSrc?: string;
 }
 
 /**
@@ -219,7 +223,7 @@ export class MarkerOverlay {
    * hide it with `null`. Idempotent, so a pointermove that stays on the same
    * marker costs nothing.
    */
-  setTooltip(text: string | null, position: Point | null): void {
+  setTooltip(text: string | null, position: Point | null, badgeSrc?: string): void {
     if (this.disposed) return;
     if (!text || !position) {
       if (!this.tooltip) return;
@@ -232,13 +236,22 @@ export class MarkerOverlay {
       current &&
       current.text === text &&
       current.x === position.x &&
-      current.y === position.y
+      current.y === position.y &&
+      current.badgeSrc === badgeSrc
     ) {
       return;
     }
-    this.tooltip = { text, x: position.x, y: position.y };
+    this.tooltip = { text, x: position.x, y: position.y, badgeSrc };
     const node = this.ensureTooltipNode();
-    node.textContent = text;
+    node.toggleAttribute("data-hover-badge", Boolean(badgeSrc));
+    if (badgeSrc) {
+      const image = this.doc.createElement("img");
+      image.src = badgeSrc;
+      image.alt = text;
+      node.replaceChildren(image);
+    } else {
+      node.textContent = text;
+    }
     node.style.display = "";
   }
 

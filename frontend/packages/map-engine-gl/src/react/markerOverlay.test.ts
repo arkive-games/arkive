@@ -168,6 +168,19 @@ describe("MarkerOverlay", () => {
     expect(node.style.display).toBe("none");
   });
 
+  it("replaces an image-only hover badge with the next text tooltip", () => {
+    const position = { x: 500, y: 500 };
+    overlay.setTooltip("Difficulty 2", position, "/badge-2.png");
+    const node = container.querySelector(".gmgl-tooltip") as HTMLElement;
+    expect(node.hasAttribute("data-hover-badge")).toBe(true);
+    expect(node.querySelector("img")?.getAttribute("alt")).toBe("Difficulty 2");
+    expect(node.textContent).toBe("");
+    overlay.setTooltip("Difficulty 2", position);
+    expect(node.hasAttribute("data-hover-badge")).toBe(false);
+    expect(node.querySelector("img")).toBeNull();
+    expect(node.textContent).toBe("Difficulty 2");
+  });
+
   it("draws no labels until they are enabled", () => {
     overlay.setLabelSources([{ id: "a", text: "A", x: 500, y: 500 }]);
     overlay.reposition(camera);

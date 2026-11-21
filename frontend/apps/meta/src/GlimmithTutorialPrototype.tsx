@@ -13,6 +13,9 @@ import terrainSouthwest from './assets/glimmith-terrain-2.svg'
 import terrainSoutheast from './assets/glimmith-terrain-3.svg'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import noteIcon from './assets/glimmith-marker-note.svg'
+import windowIcon from './assets/glimmith-marker-window.svg'
+import difficultyOne from './assets/glimmith-difficulty-1.png'
+import difficultyTwo from './assets/glimmith-difficulty-2.png'
 import headerArt from './assets/glimmith-steam-header.jpg'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
@@ -23,19 +26,31 @@ const map: GameMapMeta = {
   tilesCountX: scene.width / scene.tileSize, tilesCountY: scene.height / scene.tileSize,
 }
 const entries = new Map(Object.entries(copy.entries))
+const puzzles = new Map(Object.entries(scene.puzzles))
+const windows = new Map(scene.windows.map((window) => [window.id, window]))
+const difficultyArt = new Map([[1, difficultyOne], [2, difficultyTwo]])
+const puzzleNumber = (id: string) => id.replace(/\.puz$/, '')
 const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, index) => {
   const subtype = widget ? 'note' : 'puzzle'
   const icon = widget ? noteIcon : puzzleIcon
+  const difficulty = puzzles.get(id)?.difficulty
+  const badge = difficulty == null ? undefined : difficultyArt.get(difficulty)
   return {
     id, ...pixel, z, subtype, icon, positionPrecision: 'authored-transform', indexInSubtype: index,
-    images: [], contributors: [], localizedName: entries.get(id)?.title ?? id,
-    localizedDescription: entries.get(id)?.description,
+    images: [], contributors: [], localizedName: puzzleNumber(id),
+    localizedDescription: entries.get(id),
+    hoverBadge: badge ? { src: badge, alt: copy.difficulty + ' ' + difficulty } : null,
     subtypeLabel: copy[subtype], subtypeMeta: { id: subtype, name: copy[subtype], icon, pinVariant: 'image' },
   }
 })
+markers.push(...scene.windows.map((window, index): EngineMarker => ({
+  id: window.id, ...window.pixel, z: window.z, subtype: 'window', icon: windowIcon,
+  positionPrecision: 'authored-transform', indexInSubtype: index, images: [], contributors: [],
+  localizedName: window.name, subtypeLabel: copy.window, hoverBadge: null,
+  subtypeMeta: { id: 'window', name: copy.window, icon: windowIcon, pinVariant: 'image' },
+})))
 const terrainTiles = [terrainWest, terrainEast, terrainSouthwest, terrainSoutheast]
 const assets = { tileUrl: (_map: GameMapMeta, x: number, y: number) => terrainTiles[y * map.tilesCountX + x], markerIconUrl: (icon?: string) => icon ?? '' }
-const puzzles = new Map(Object.entries(scene.puzzles))
 const angle = scene.projection.degrees * Math.PI / 180
 const displayCoords = (x: number, y: number) => {
   const dx = (x - scene.width / 2) / scene.projection.scale
@@ -45,9 +60,10 @@ const displayCoords = (x: number, y: number) => {
     y: scene.projection.centerY - (-dx * Math.sin(angle) + dy * Math.cos(angle)),
   }
 }
-const subtypes = ['note', 'puzzle'] as const
+const subtypes = ['note', 'puzzle', 'window'] as const
 const mapOptions = [{ id: map.id, label: map.name }]
 const searchItems = markers.map((marker) => ({ ...marker, name: marker.localizedName, idLabel: marker.id }))
+const visiblePuzzleIds = new Set(puzzles.keys())
 
 function PuzzleBoard({ puzzle, solved }: { puzzle: (typeof scene.puzzles)['0049.puz']; solved: boolean }) {
   const { columns, rows, board, solution } = puzzle
@@ -85,17 +101,31 @@ export function GlimmithTutorialPrototype() {
   const select = (id: string) => setSelected(id)
   const marker = markers.find(({ id }) => id === selected)
   const renderMarkerDetail = (marker: EngineMarker) => {
-    const actor = scene.actors.find(({ id }) => id === marker.id)
+    const window = windows.get(marker.id)
+    const actor = window ?? scene.actors.find(({ id }) => id === marker.id)
     const puzzle = puzzles.get(marker.id)
-    const linked = actor?.unlocks[0]
+    const linked = actor && 'unlocks' in actor ? actor.unlocks[0] : undefined
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
     return (
       <MarkerDetailDrawer key={marker.id} anchored={!mobile} name={marker.localizedName}
         icon={<img className="size-8 object-contain" src={marker.icon} alt="" />} eyebrow={marker.subtypeLabel}
+        metaLine={marker.hoverBadge && <img className="size-6 object-contain" src={marker.hoverBadge.src} alt={marker.hoverBadge.alt} />}
         positionValue={coordinate} positionCopyValue={coordinate}
         labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
         description={marker.localizedDescription}
-        sections={puzzle ? [{
+        sections={window ? [{
+          id: 'window-requirements', title: copy.requirements, accessibleTitle: copy.requirements,
+          content: <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
+            {copy.milestones.map((label, i) => <div key={label} className="contents"><dt>{label}</dt><dd className="tabular-nums">{window.thresholds[i]}</dd></div>)}
+          </dl>,
+        }, {
+          id: 'window-puzzles', title: copy.related, accessibleTitle: copy.related,
+          content: <ul className="flex flex-wrap gap-2 text-sm tabular-nums">
+            {window.prerequisites.map((id) => <li key={id}>{visiblePuzzleIds.has(id)
+              ? <button type="button" className="text-primary underline" onClick={() => select(id)}>{puzzleNumber(id)}</button>
+              : <span className="text-muted-foreground">{puzzleNumber(id)}</span>}</li>)}
+          </ul>,
+        }] : puzzle ? [{
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
           content: <div className="grid grid-cols-2 gap-3 text-center text-xs">
             <figure><figcaption className="mb-2">{copy.board}</figcaption><PuzzleBoard puzzle={puzzle} solved={false} /></figure>
@@ -161,7 +191,7 @@ export function GlimmithTutorialPrototype() {
       <main className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>
         <GameMapView map={map} markers={markers} regions={[]} visibleSubtypes={visible}
           initialView={mobile ? undefined : { x: 1024, y: 1050, zoom: -0.94 }}
-          showLabels showBorders={false} lodEnabled={false} selectedMarkerId={selected} selectedPosition={null}
+          showLabels={false} showBorders={false} lodEnabled={false} selectedMarkerId={selected} selectedPosition={null}
           onToggleMarker={setSelected} subzoneAt={() => copy.intro} flyToDuration={0.35} mapRef={ref} assets={assets}
           exposeTestHandle={import.meta.env.DEV} labels={copy.engine} displayCoords={displayCoords}
           renderPopupContent={mobile ? () => null : renderMarkerDetail}

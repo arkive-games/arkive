@@ -118,6 +118,24 @@
   border-top: 6px solid var(--card, #F9F9F9);
 }
 
+.gmgl-map-root .gmgl-tooltip[data-hover-badge] {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.gmgl-map-root .gmgl-tooltip[data-hover-badge]::after {
+  display: none;
+}
+
+.gmgl-tooltip[data-hover-badge] img {
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: contain;
+}
+
 /* The hovered marker's name must stay readable inside a dense cluster. */
 .gmgl-tooltip {
   z-index: var(--arkive-layer-map-control, 1900);

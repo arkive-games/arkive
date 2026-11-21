@@ -208,10 +208,73 @@
       ]
     }
   ],
+  "windows": [
+    {
+      "id": "window-bridge",
+      "actor": "BP_StainedGlassPlinth_Bridge",
+      "x": 4049.638916015625,
+      "y": -851.5787353515625,
+      "z": -569.212646484375,
+      "name": "Glimmith Bridge",
+      "thresholds": [
+        7,
+        9,
+        10
+      ],
+      "prerequisites": [
+        "0049.puz",
+        "0643.puz",
+        "0050.puz",
+        "0067B.puz",
+        "0066.puz",
+        "0009.puz",
+        "0008.puz",
+        "0527.puz",
+        "0053.puz",
+        "0012.puz",
+        "0054.puz"
+      ],
+      "pixel": {
+        "x": 1153.1058416388448,
+        "y": 865.5035490213486
+      }
+    },
+    {
+      "id": "window-gate",
+      "actor": "BP_StainedGlassPlinth_Gate",
+      "x": -1496.1912841796875,
+      "y": -3239.61962890625,
+      "z": 498.74151611328125,
+      "name": "Glimmith Overlook",
+      "thresholds": [
+        6,
+        9,
+        10
+      ],
+      "prerequisites": [
+        "0051.puz",
+        "0052.puz",
+        "0059.puz",
+        "0422.puz",
+        "0426.puz",
+        "0072.puz",
+        "0057.puz",
+        "0058.puz",
+        "0115.puz",
+        "0425.puz",
+        "1393.puz"
+      ],
+      "pixel": {
+        "x": 1558.0205690117414,
+        "y": 574.5081575803553
+      }
+    }
+  ],
   "puzzles": {
     "0049.puz": {
       "columns": 4,
       "rows": 4,
+      "difficulty": 1,
       "board": [
         "   +--+--+   ",
         "   |..|..|   ",
@@ -238,6 +301,7 @@
     "0643.puz": {
       "columns": 4,
       "rows": 4,
+      "difficulty": 1,
       "board": [
         "      +--+   ",
         "      |..|   ",
@@ -264,6 +328,7 @@
     "0050.puz": {
       "columns": 4,
       "rows": 4,
+      "difficulty": 1,
       "board": [
         "   +--+      ",
         "   |..|      ",
@@ -290,6 +355,7 @@
     "0067B.puz": {
       "columns": 3,
       "rows": 4,
+      "difficulty": 1,
       "board": [
         "+--+--+--+",
         "|..|..|..|",
@@ -316,6 +382,7 @@
     "0066.puz": {
       "columns": 3,
       "rows": 4,
+      "difficulty": 1,
       "board": [
         "+--+--+--+",
         "|..|..|..|",
@@ -342,6 +409,7 @@
     "0008.puz": {
       "columns": 5,
       "rows": 6,
+      "difficulty": 1,
       "board": [
         "                ",
         "                ",
@@ -376,6 +444,7 @@
     "0527.puz": {
       "columns": 7,
       "rows": 8,
+      "difficulty": 2,
       "board": [
         "                      ",
         "                      ",

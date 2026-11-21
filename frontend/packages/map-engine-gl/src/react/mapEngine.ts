@@ -690,9 +690,10 @@ export class MapEngine {
         // of ALWAYS-ON labels only, and hovering such a marker still reveals its
         // name (Leaflet: `permanent={showLabels && !hideTooltip}` — the tooltip
         // itself is always bound).
-        const text = marker ? markerLabelText(marker) : "";
+        const badge = marker?.hoverBadge;
+        const text = badge === null ? "" : badge?.alt ?? (marker ? markerLabelText(marker) : "");
         const anchor = this.markerLayer.positionOf(tooltipId);
-        this.overlay.setTooltip(text || null, anchor);
+        this.overlay.setTooltip(text || null, anchor, badge?.src);
       }
     }
 

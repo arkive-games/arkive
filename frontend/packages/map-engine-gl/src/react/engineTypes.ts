@@ -15,6 +15,7 @@
 import type { ReactNode, RefObject } from "react";
 import type { MapAssets } from "../core/assets.ts";
 import type { MapTheme } from "./theme.ts";
+import type { MarkerHoverBadge } from "./markerOverlay.ts";
 import type {
   GameMapMeta,
   MarkerInstance,
@@ -65,6 +66,8 @@ export interface GlMapRef {
  * i18n or the marker-type taxonomy.
  */
 export interface EngineMarker extends MarkerInstance {
+  /** An image-only hover badge. Null suppresses hover without affecting labels. */
+  hoverBadge?: MarkerHoverBadge | null;
   /**
    * Localized marker name. May be "" for unnamed markers — consumers apply
    * their own fallback chain (`localizedName || name || subtypeLabel`).

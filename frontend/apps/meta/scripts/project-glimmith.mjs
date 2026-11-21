@@ -26,6 +26,19 @@ const actors = ids.map((id) => {
   const unlocks = (prop(entry, 'puzzleUnlocks') ?? []).map(({ Value }) => prop(scene.Exports[Value - 1], 'PuzzleFile'))
   return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory: prop(entry, 'PuzzleDirectory') ?? null, unlocks: unlocks.filter((id) => ids.includes(id)) }
 })
+const windows = ['Bridge', 'Gate'].map((key) => {
+  const actor = 'BP_StainedGlassPlinth_' + key
+  const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
+  const component = scene.Exports[prop(entry, 'RootComponent') - 1]
+  const { X: x, Y: y, Z: z } = vector(component, 'RelativeLocation')
+  if (prop(component, 'AttachParent') || ![x, y, z].every(Number.isFinite)) throw new Error('Invalid window root: ' + actor)
+  const prerequisites = prop(entry, 'prerequisites').map(({ Value }) => prop(scene.Exports[Value - 1], 'PuzzleFile'))
+  const thresholds = ['minObjective', 'silverObjective', 'gildObjective'].map((key) => prop(entry, key))
+  if (prerequisites.some((id) => !id) || thresholds.some((n) => !Number.isInteger(n) || n > prerequisites.length)) throw new Error('Invalid window requirements: ' + actor)
+  const name = entry.Data.find(({ Name }) => Name === 'AreaName')?.CultureInvariantString
+  if (!name) throw new Error('Missing source window name: ' + actor)
+  return { id: 'window-' + key.toLowerCase(), actor, x, y, z, name, thresholds, prerequisites }
+})
 const width = 2048
 const height = 2048
 const tileSize = 1024
@@ -94,11 +107,16 @@ for (const actor of actors) {
   actor.pixel = { x: point[0], y: point[1] }
   actor.supportMeshes = [...new Set(support.map(({ mesh }) => mesh))].sort()
 }
+for (const window of windows) {
+  const [x, y] = project(window.x, window.y)
+  if (x < 0 || x >= width || y < 0 || y >= height) throw new Error('Window outside projection: ' + window.id)
+  window.pixel = { x, y }
+}
 const silhouettes = surfaces.sort((a, b) => a.zMax - b.zMax).map(({ outline, mesh }) =>
   `<polygon points="${pointList(outline)}" fill="${/Wooden/i.test(mesh) ? '#ad9878' : '#c0c6b8'}" stroke="#788c8b" stroke-width="1.2"/>`)
 
 // Orthographic web marker renders of the exact scene mesh assets.
-for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004']]) {
+for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004'], ['window', 'sm_RuinMomument_LargeA']]) {
   const { vertices, indices } = meshes[mesh]
   const topZ = Math.max(...vertices.map((point) => point[2]))
   // Yaw around world up first, then tilt the camera without rolling the icon.
@@ -131,7 +149,7 @@ for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004'
     const shade = 0.70 + 0.29 * Math.abs((normal[0] * 0.35 + normal[1] * 0.72 + normal[2] * 0.6) / Math.hypot(...normal))
     const original = indices.slice(i, i + 3).map((index) => vertices[index])
     const top = original.every((p) => p[2] > 0.78 * topZ)
-    const light = id === 'note' ? [237, 203, 141] : top ? [252, 217, 157] : [226, 235, 239]
+    const light = id === 'window' ? [224, 181, 104] : id === 'note' ? [237, 203, 141] : top ? [252, 217, 157] : [226, 235, 239]
     faces.push({ depth: (a[1] + b[1] + c[1]) / 3, fill: light.map((value) => Math.round(value * shade)).join(','), polygon })
   }
   const art = faces.sort((a, b) => b.depth - a.depth).map(({ fill, polygon }) =>
@@ -144,9 +162,11 @@ const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).m
   const board = puzzle.split(/\r?\nPUZZLE\r?\n/)[1].split(/\r?\nSOLUTION\r?\n/)
   const frames = board.map((part) => part.split(/\r?\n/).slice(0, 2 * rows + 1).map((line) => line.padEnd(3 * columns + 1)))
   if (frames.length !== 2 || frames.some((frame) => frame.length !== 2 * rows + 1)) throw new Error('Invalid puzzle dimensions: ' + id)
-  return [id, { columns, rows, board: frames[0], solution: frames[1] }]
+  const difficulty = Number(puzzle.match(/^DIFFICULTY (\d+)\r?$/m)?.[1])
+  if (!Number.isInteger(difficulty) || difficulty < 1) throw new Error('Missing puzzle difficulty: ' + id)
+  return [id, { columns, rows, difficulty, board: frames[0], solution: frames[1] }]
 }))
-writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, puzzles }, null, 2) + '\n')
+writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, windows, puzzles }, null, 2) + '\n')
 for (let row = 0; row < height / tileSize; row++) {
   for (let column = 0; column < width / tileSize; column++) {
     const x = column * tileSize
