@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.26.3",
+      "date": "2026-11-22",
+      "commit": "1da5cba45bf07b41ae3a176e1d8251ceddb9e244",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Encyclopedia and build pages load on demand, with thumbnail-first card and pet art and full-size fallback.",
+            "zh-CN": "百科与流派页面改为按需加载，卡片和宠物图鉴优先使用缩略图并保留原图回退。",
+            "zh-TW": "百科與流派頁面改為按需載入，卡片與寵物圖鑑優先使用縮圖並保留原圖回退。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.26.2",
       "date": "2026-11-19",
       "commit": "1ea69a871b1d4894b7db15f0d65e44dc93400054",

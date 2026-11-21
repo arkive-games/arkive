@@ -1,6 +1,30 @@
 {
   "entries": [
     {
+      "date": "2026-11-22",
+      "commit": "1da5cba45bf07b41ae3a176e1d8251ceddb9e244",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Home carousel art now loads only the active slide and its neighbours for a faster first paint.",
+            "zh-CN": "首页轮播只加载当前页及相邻页图片，首屏打开更快。",
+            "zh-TW": "首頁輪播只載入目前頁及相鄰頁圖片，首屏開啟更快。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-19",
       "commit": "0db851899393a7ccf966555e63c58c69ffee94aa",
       "targets": [

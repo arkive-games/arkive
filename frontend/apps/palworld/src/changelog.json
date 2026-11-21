@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.16",
+      "date": "2026-11-22",
+      "commit": "1da5cba45bf07b41ae3a176e1d8251ceddb9e244",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Map pages now prioritize the map and defer the encyclopedia bundle, while non-map tools load on demand.",
+            "zh-CN": "地图页优先加载地图并延后百科数据，其他工具页面改为按需加载。",
+            "zh-TW": "地圖頁優先載入地圖並延後百科資料，其他工具頁面改為按需載入。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.15",
       "date": "2026-11-17",
       "commit": "8515cf838c6ee3a37504778123e55b0d85d6291b",
