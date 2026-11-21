@@ -16,7 +16,7 @@ import noteIcon from './assets/glimmith-marker-note.svg'
 import windowIcon from './assets/glimmith-marker-window.svg'
 import difficultyOne from './assets/glimmith-difficulty-1.png'
 import difficultyTwo from './assets/glimmith-difficulty-2.png'
-import headerArt from './assets/glimmith-steam-header.jpg'
+import headerArt from './assets/glimmith-steam-scenery.jpg'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
 
@@ -25,7 +25,7 @@ const map: GameMapMeta = {
   tileWidth: scene.tileSize, tileHeight: scene.tileSize,
   tilesCountX: scene.width / scene.tileSize, tilesCountY: scene.height / scene.tileSize,
 }
-const entries = new Map(Object.entries(copy.entries))
+const windowNames = new Map(Object.entries(copy.windows))
 const puzzles = new Map(Object.entries(scene.puzzles))
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
 const difficultyArt = new Map([[1, difficultyOne], [2, difficultyTwo]])
@@ -37,8 +37,8 @@ const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, inde
   const badge = difficulty == null ? undefined : difficultyArt.get(difficulty)
   return {
     id, ...pixel, z, subtype, icon, positionPrecision: 'authored-transform', indexInSubtype: index,
-    images: [], contributors: [], localizedName: puzzleNumber(id),
-    localizedDescription: entries.get(id),
+    images: [], contributors: [],
+    localizedName: widget ? id.replace(/^Tutorial-/, copy.note + ' ') : puzzleNumber(id),
     hoverBadge: badge ? { src: badge, alt: copy.difficulty + ' ' + difficulty } : null,
     subtypeLabel: copy[subtype], subtypeMeta: { id: subtype, name: copy[subtype], icon, pinVariant: 'image' },
   }
@@ -46,7 +46,7 @@ const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, inde
 markers.push(...scene.windows.map((window, index): EngineMarker => ({
   id: window.id, ...window.pixel, z: window.z, subtype: 'window', icon: windowIcon,
   positionPrecision: 'authored-transform', indexInSubtype: index, images: [], contributors: [],
-  localizedName: window.name, subtypeLabel: copy.window, hoverBadge: null,
+  localizedName: windowNames.get(window.id) ?? copy.window, subtypeLabel: copy.window, hoverBadge: null,
   subtypeMeta: { id: 'window', name: copy.window, icon: windowIcon, pinVariant: 'image' },
 })))
 const terrainTiles = [terrainWest, terrainEast, terrainSouthwest, terrainSoutheast]
@@ -62,14 +62,17 @@ const displayCoords = (x: number, y: number) => {
 }
 const subtypes = ['note', 'puzzle', 'window'] as const
 const mapOptions = [{ id: map.id, label: map.name }]
-const searchItems = markers.map((marker) => ({ ...marker, name: marker.localizedName, idLabel: marker.id }))
+const searchItems = markers.map((marker) => ({
+  ...marker,
+  name: marker.localizedName,
+  idLabel: marker.subtype === 'puzzle' ? marker.localizedName : undefined,
+}))
 const visiblePuzzleIds = new Set(puzzles.keys())
 
-function PuzzleBoard({ puzzle, solved }: { puzzle: (typeof scene.puzzles)['0049.puz']; solved: boolean }) {
+function PuzzleSolution({ puzzle }: { puzzle: (typeof scene.puzzles)['0049.puz'] }) {
   const { columns, rows, board, solution } = puzzle
-  const frame = solved ? solution : board
   return (
-    <svg role="img" aria-label={solved ? copy.solution : copy.board}
+    <svg role="img" aria-label={copy.solution}
       viewBox={`-2 -2 ${columns * 24 + 4} ${rows * 24 + 4}`} className="mx-auto w-full max-w-48">
       {Array.from({ length: rows * columns }, (_, index) => {
         const x = index % columns
@@ -79,12 +82,11 @@ function PuzzleBoard({ puzzle, solved }: { puzzle: (typeof scene.puzzles)['0049.
           : null
       })}
       {Array.from({ length: rows + 1 }, (_, y) => Array.from({ length: columns }, (_, x) => {
-        const horizontal = frame[2 * y].slice(3 * x + 1, 3 * x + 3)
-        return (solved ? horizontal === '##' : horizontal === '--') &&
+        return solution[2 * y].slice(3 * x + 1, 3 * x + 3) === '##' &&
           <path key={`h${x}`} d={`M${x * 24},${y * 24}h24`} className="stroke-foreground" strokeWidth="1.8" />
       }))}
       {Array.from({ length: rows }, (_, y) => Array.from({ length: columns + 1 }, (_, x) => (
-        frame[2 * y + 1][3 * x] === (solved ? '#' : '|') &&
+        solution[2 * y + 1][3 * x] === '#' &&
         <path key={`v${x}`} d={`M${x * 24},${y * 24}v24`} className="stroke-foreground" strokeWidth="1.8" />
       )))}
     </svg>
@@ -107,12 +109,13 @@ export function GlimmithTutorialPrototype() {
     const linked = actor && 'unlocks' in actor ? actor.unlocks[0] : undefined
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
     return (
-      <MarkerDetailDrawer key={marker.id} anchored={!mobile} name={marker.localizedName}
-        icon={<img className="size-8 object-contain" src={marker.icon} alt="" />} eyebrow={marker.subtypeLabel}
-        metaLine={marker.hoverBadge && <img className="size-6 object-contain" src={marker.hoverBadge.src} alt={marker.hoverBadge.alt} />}
-        positionValue={coordinate} positionCopyValue={coordinate}
+      <MarkerDetailDrawer key={marker.id} anchored={!mobile} compact={Boolean(puzzle)}
+        name={puzzle ? copy.puzzle + ' ' + marker.localizedName : marker.localizedName}
+        icon={<img className={puzzle ? 'size-6 object-contain' : 'size-8 object-contain'} src={marker.icon} alt="" />}
+        eyebrow={puzzle ? undefined : marker.subtypeLabel}
+        titleAccessory={marker.hoverBadge && <img className="size-5 object-contain" src={marker.hoverBadge.src} alt={marker.hoverBadge.alt} />}
+        positionValue={puzzle ? undefined : coordinate} positionCopyValue={puzzle ? undefined : coordinate}
         labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
-        description={marker.localizedDescription}
         sections={window ? [{
           id: 'window-requirements', title: copy.requirements, accessibleTitle: copy.requirements,
           content: <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
@@ -127,10 +130,7 @@ export function GlimmithTutorialPrototype() {
           </ul>,
         }] : puzzle ? [{
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
-          content: <div className="grid grid-cols-2 gap-3 text-center text-xs">
-            <figure><figcaption className="mb-2">{copy.board}</figcaption><PuzzleBoard puzzle={puzzle} solved={false} /></figure>
-            <figure><figcaption className="mb-2">{copy.solution}</figcaption><PuzzleBoard puzzle={puzzle} solved /></figure>
-          </div>,
+          content: <PuzzleSolution puzzle={puzzle} />,
         }] : [{
           id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
           content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&
@@ -156,7 +156,7 @@ export function GlimmithTutorialPrototype() {
           collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
           content: 'pb-2',
         }}
-        headerSlot={<ShellGameHeader backgroundUrl={headerArt} backgroundPosition="center top" logo={null} gameName="The Artisan of Glimmith" subtitle={copy.map} />}
+        headerSlot={<ShellGameHeader backgroundUrl={headerArt} logo={null} gameName={copy.game} subtitle={copy.map} />}
         mapSelectorSlot={<div className="px-3 py-3 max-md:pr-8"><ShellMapSelect
           classNames={{
             trigger: 'min-h-11 rounded-xl border-border bg-card px-3 text-base font-semibold shadow-none hover:border-primary/40 hover:bg-card data-[state=open]:bg-card',
@@ -181,11 +181,6 @@ export function GlimmithTutorialPrototype() {
           subtypeButton: 'h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--arkive-divider)] hover:bg-card hover:text-foreground hover:opacity-100',
           subtypeButtonActive: 'border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]',
         }} />
-        <div className="grid gap-1 px-3 pb-3">
-          {markers.map((marker) => <button key={marker.id} type="button" aria-pressed={selected === marker.id}
-            className="flex min-h-10 items-center gap-2 rounded-md px-2 text-left text-sm hover:bg-muted aria-pressed:bg-muted"
-            onClick={() => select(marker.id)}><img className="size-6 shrink-0 object-contain" src={marker.icon} alt="" />{marker.localizedName}</button>)}
-        </div>
       </ShellSidebar>
     }>
       <main className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>

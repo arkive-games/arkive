@@ -116,7 +116,7 @@ const silhouettes = surfaces.sort((a, b) => a.zMax - b.zMax).map(({ outline, mes
   `<polygon points="${pointList(outline)}" fill="${/Wooden/i.test(mesh) ? '#ad9878' : '#c0c6b8'}" stroke="#788c8b" stroke-width="1.2"/>`)
 
 // Orthographic web marker renders of the exact scene mesh assets.
-for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004'], ['window', 'sm_RuinMomument_LargeA']]) {
+for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004']]) {
   const { vertices, indices } = meshes[mesh]
   const topZ = Math.max(...vertices.map((point) => point[2]))
   // Yaw around world up first, then tilt the camera without rolling the icon.
@@ -149,7 +149,7 @@ for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004'
     const shade = 0.70 + 0.29 * Math.abs((normal[0] * 0.35 + normal[1] * 0.72 + normal[2] * 0.6) / Math.hypot(...normal))
     const original = indices.slice(i, i + 3).map((index) => vertices[index])
     const top = original.every((p) => p[2] > 0.78 * topZ)
-    const light = id === 'window' ? [224, 181, 104] : id === 'note' ? [237, 203, 141] : top ? [252, 217, 157] : [226, 235, 239]
+    const light = id === 'note' ? [237, 203, 141] : top ? [252, 217, 157] : [226, 235, 239]
     faces.push({ depth: (a[1] + b[1] + c[1]) / 3, fill: light.map((value) => Math.round(value * shade)).join(','), polygon })
   }
   const art = faces.sort((a, b) => b.depth - a.depth).map(({ fill, polygon }) =>

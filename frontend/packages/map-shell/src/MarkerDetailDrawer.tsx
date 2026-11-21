@@ -229,6 +229,10 @@ export type MarkerDetailDrawerProps = {
   icon?: ReactNode
   eyebrow?: ReactNode
   metaLine?: ReactNode
+  /** Compact, details-only surface for points without a comment workflow. */
+  compact?: boolean
+  /** Small inline indicator beside the heading, such as a difficulty badge. */
+  titleAccessory?: ReactNode
   positionValue?: ReactNode
   positionCopyValue?: string
   description?: string
@@ -757,6 +761,8 @@ export function MarkerDetailDrawer({
   icon,
   eyebrow,
   metaLine,
+  compact = false,
+  titleAccessory,
   positionValue,
   positionCopyValue,
   description,
@@ -829,7 +835,8 @@ export function MarkerDetailDrawer({
   }, [positionCopyValue])
 
   const effectiveGallery = gallery
-  const effectiveComments = comments
+  const effectiveComments = compact ? undefined : comments
+  const panelTab = compact ? "details" : activeTab
   const detailSections: MarkerDetailSection[] = [
     ...(description?.trim() || facts ? [{ id: "description", title: labels.description, accessibleTitle: labels.description, content: <>{description?.trim() ? <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/85">{description}</p> : null}{facts ? <div className={description?.trim() ? "mt-3" : undefined}>{facts}</div> : null}</> }] : []),
     ...sections.filter((section) => section.content != null),
@@ -869,26 +876,28 @@ export function MarkerDetailDrawer({
         <span className="h-1 w-10 rounded-full bg-muted-foreground/40" aria-hidden="true" />
       </div>
       <header className="shrink-0 border-b border-border bg-card">
-        <div className="grid grid-cols-[2.75rem_minmax(0,1fr)_2.25rem] items-center gap-2.5 px-3 py-2.5 max-md:grid-cols-[2.5rem_minmax(0,1fr)_2.25rem] max-md:py-2">
-          <span className="flex size-11 items-center justify-center overflow-hidden rounded-md border border-border bg-primary/10 text-primary max-md:size-10">
+        <div className={cn("grid items-center gap-2.5 px-3", compact
+          ? "grid-cols-[2rem_minmax(0,1fr)_2.25rem] py-1.5"
+          : "grid-cols-[2.75rem_minmax(0,1fr)_2.25rem] py-2.5 max-md:grid-cols-[2.5rem_minmax(0,1fr)_2.25rem] max-md:py-2")}>
+          <span className={cn("flex items-center justify-center overflow-hidden rounded-md border border-border bg-primary/10 text-primary", compact ? "size-8" : "size-11 max-md:size-10")}>
             {icon ?? <IconMapPin className="size-6" stroke={1.8} />}
           </span>
           <div className="min-w-0">
             {eyebrow ? <div className="truncate text-xs font-semibold text-muted-foreground">{eyebrow}</div> : null}
-            <div className="flex min-w-0 items-baseline gap-2"><h2 className="truncate text-lg font-bold leading-normal max-md:text-base">{name}</h2>{idLabel ? <IdLabel value={idLabel} className="shrink-0" /> : null}</div>
+            <div className={cn("flex min-w-0 gap-2", titleAccessory ? "items-center" : "items-baseline")}><h2 className={cn("truncate font-bold leading-normal", compact ? "text-base" : "text-lg max-md:text-base")}>{name}</h2>{idLabel ? <IdLabel value={idLabel} className="shrink-0" /> : null}{titleAccessory ? <span className="shrink-0">{titleAccessory}</span> : null}</div>
             {metaLine ? <div className="mt-0.5 truncate text-xs text-muted-foreground">{metaLine}</div> : null}
           </div>
           <button type="button" aria-label={labels.close} title={labels.close} onClick={onClose} className="inline-flex size-8 items-center justify-center justify-self-end rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><IconX className="size-5" stroke={1.8} /></button>
         </div>
       </header>
 
-      <div className="grid shrink-0 grid-cols-2 border-b border-border bg-card" role="tablist" aria-label={name}>
+      {!compact ? <div className="grid shrink-0 grid-cols-2 border-b border-border bg-card" role="tablist" aria-label={name}>
         <button id={detailsTabId} type="button" role="tab" aria-selected={activeTab === "details"} aria-controls={detailsPanelId} onClick={() => setActiveTab("details")} className={cn("relative min-h-10 text-sm font-semibold text-muted-foreground after:absolute after:inset-x-4 after:bottom-[-1px] after:h-0.5 after:bg-transparent", activeTab === "details" && "text-primary after:bg-primary")}>{labels.details}</button>
         <button id={commentsTabId} type="button" role="tab" aria-selected={activeTab === "comments"} aria-controls={commentsPanelId} onClick={() => setActiveTab("comments")} className={cn("relative min-h-10 text-sm font-semibold text-muted-foreground after:absolute after:inset-x-4 after:bottom-[-1px] after:h-0.5 after:bg-transparent", activeTab === "comments" && "text-primary after:bg-primary")}>{labels.comments}{effectiveComments ? <span className="ml-1.5 inline-flex min-w-5 justify-center rounded-full bg-muted px-1.5 text-xs">{commentCount}</span> : null}</button>
-      </div>
+      </div> : null}
 
       <div data-testid="marker-detail-scroll" tabIndex={0} aria-label={labels.scrollArea} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div id={detailsPanelId} role="tabpanel" aria-labelledby={detailsTabId} hidden={activeTab !== "details"}>
+        <div id={detailsPanelId} role={compact ? undefined : "tabpanel"} aria-labelledby={compact ? undefined : detailsTabId} hidden={panelTab !== "details"}>
           {detailsEmpty ? (
             <div className="flex min-h-12 items-center justify-center gap-2 px-4 py-3 text-center text-muted-foreground" data-testid="marker-details-empty">
               <IconMapPin className="size-5" stroke={1.8} />
@@ -899,14 +908,14 @@ export function MarkerDetailDrawer({
           {children}
           {effectiveGallery ? <GallerySection config={effectiveGallery} labels={labels} /> : null}
         </div>
-        <div id={commentsPanelId} role="tabpanel" aria-labelledby={commentsTabId} hidden={activeTab !== "comments"}>
+        {!compact ? <div id={commentsPanelId} role="tabpanel" aria-labelledby={commentsTabId} hidden={panelTab !== "comments"}>
           {effectiveComments ? <CommentList config={effectiveComments} labels={labels} /> : null}
-        </div>
+        </div> : null}
       </div>
 
-      {(activeTab === "details" ? positionValue || completeAction : effectiveComments) ? (
+      {(panelTab === "details" ? positionValue || completeAction : effectiveComments) ? (
         <footer className="shrink-0 border-t border-border bg-card px-3 py-2 shadow-[0_-0.75rem_1.5rem_rgba(35,47,51,0.05)]">
-          {activeTab === "details" ? (
+          {panelTab === "details" ? (
             <div className="flex items-center justify-between gap-2">
               {positionValue ? <div data-testid="marker-detail-coordinates" className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                 <IconMapPin className="size-4 shrink-0" aria-hidden="true" />

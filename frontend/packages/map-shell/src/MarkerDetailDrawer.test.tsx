@@ -84,6 +84,18 @@ describe("MarkerDetailDrawer", () => {
     expect(queryByTestId("marker-detail-section-description")).not.toBeNull()
   })
 
+  it("keeps the heading and its accessory together in compact details-only mode", () => {
+    const { getByRole, queryByRole } = render(
+      <MarkerDetailDrawer {...baseProps} compact name="Puzzle 0049" titleAccessory={<img alt="Difficulty 1" />}>
+        <p>Solution</p>
+      </MarkerDetailDrawer>,
+    )
+    expect(getByRole("heading", { name: "Puzzle 0049" }).parentElement?.contains(getByRole("img", { name: "Difficulty 1" }))).toBe(true)
+    expect(queryByRole("tablist")).toBeNull()
+    expect(queryByRole("tabpanel")).toBeNull()
+    expect(getByRole("paragraph").textContent).toBe("Solution")
+  })
+
   it("uses the same accessible disclosure control for every details section", () => {
     const { getByTestId } = render(
       <MarkerDetailDrawer {...baseProps} sections={[{ id: "drops", title: "Drops", accessibleTitle: "Drops", content: <div>Leather</div> }]} />,
