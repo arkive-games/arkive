@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.1",
+      "date": "2026-11-22",
+      "commit": "aeb6c2a3f35edb46a45100353e99c4c5767752de",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The Boss badge stays on one line and moves below the enemy name when the card is narrow.",
+            "zh-CN": "敌人卡片较窄时，首领徽标保持横排，并在需要时移到名称下一行。",
+            "zh-TW": "敵人卡片較窄時，首領徽章維持橫排，並在需要時移到名稱下一列。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.0",
       "date": "2026-11-15",
       "commit": "998c8e8ded6888edff4926839a26a53f91c86d7e",

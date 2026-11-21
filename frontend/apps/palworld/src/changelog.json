@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.17",
+      "date": "2026-11-22",
+      "commit": "85645bfa7357f001c24bcfe817b07c3cd01ab0d0",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Raid enemy labels stay readable when a lineup wraps on narrow screens.",
+            "zh-CN": "窄屏下团体战的敌人标签会整颗换行，名称不再被挤成竖排。",
+            "zh-TW": "窄螢幕下團體戰的敵人標籤會整個換行，名稱不再被擠成直排。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.16",
       "date": "2026-11-22",
       "commit": "1da5cba45bf07b41ae3a176e1d8251ceddb9e244",

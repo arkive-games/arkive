@@ -2,6 +2,30 @@
   "entries": [
     {
       "date": "2026-11-22",
+      "commit": "099a46df86758a871d32315a4232ab67eb12b55b",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Forum feed tabs stay readable on narrow screens; the following filter moves to another row when needed.",
+            "zh-CN": "窄屏下论坛标签保持横排，仅看关注按钮在空间不足时移到下一行。",
+            "zh-TW": "窄螢幕下論壇標籤維持橫排，只看追蹤按鈕在空間不足時移到下一列。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-22",
       "commit": "dcd0c978f69fa82fbd208c4a0039a2186c48d9c1",
       "targets": [
         "palworld",
