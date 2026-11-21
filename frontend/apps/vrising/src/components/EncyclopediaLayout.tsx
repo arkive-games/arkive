@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ArkiveEncyclopediaWorkspace } from '@gamemap/map-shell'
 import { defineMemoryRecord, isBoolean, memoryPolicy, useMemoryState } from '@gamemap/state-memory'
+import { cn } from '@gamemap/ui'
 import { KNOWLEDGE_SECTIONS, REFERENCE_ENTRIES, type KnowledgeDirectory } from './encyclopediaNavigation'
 import type { NavKey } from './TopNav'
 import type { SectionKey } from '../features/knowledge/memory'
@@ -33,11 +34,12 @@ export function EncyclopediaLayout({ active, directory, children }: { active: Na
       if (section && directory) {
         const available = directory.available.includes(section)
         return <button type="button" disabled={!available} onClick={() => directory.onSelect(section)}
-          className={`${className} w-full text-left disabled:cursor-default disabled:opacity-50`}
+          className={cn(className, 'w-full text-left disabled:cursor-default disabled:opacity-50',
+            !available && 'grid grid-cols-[auto_minmax(0,1fr)] gap-y-0 py-1')}
           aria-pressed={directory.selected === section} data-testid={`encyclopedia-section-${section}`}
           title={available ? entry.label : `${entry.label} · ${t(directory.loading ? 'loading' : 'knowledge.extracting')}`}>
           {content}
-          {!available && <span className="ml-auto shrink-0 text-xs">{t(directory.loading ? 'loading' : 'knowledge.extracting')}</span>}
+          {!available && <span className="col-start-2 text-xs">{t(directory.loading ? 'loading' : 'knowledge.extracting')}</span>}
         </button>
       }
       return <Link to={entry.key as NavKey} className={className} title={entry.label}
