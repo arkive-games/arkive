@@ -14,7 +14,7 @@ for (const name of [...sources, 'Overworld_Campaign']) {
   const stream = overview.Exports.find((entry) => prop(entry, 'WorldAsset')?.AssetPath?.AssetName?.endsWith('/' + name + '.' + name))
   if (!stream || prop(stream, 'LevelTransform')) throw new Error('Expected identity streaming transform: ' + name)
 }
-const ids = ['Tutorial-1', '0049.puz', 'Tutorial-2', 'Tutorial-3']
+const ids = ['Tutorial-1', '0049.puz', '0643.puz', '0050.puz', '0067B.puz', '0066.puz', '0008.puz', '0527.puz', 'Tutorial-2', 'Tutorial-3']
 const actors = ids.map((id) => {
   const matches = scene.Exports.filter((entry) => prop(entry, 'PuzzleFile') === id)
   if (matches.length !== 1) throw new Error('Expected one actor: ' + id)
@@ -24,13 +24,18 @@ const actors = ids.map((id) => {
   if (prop(component, 'AttachParent') || ![x, y, z].every(Number.isFinite)) throw new Error('Invalid root: ' + id)
   const widget = scene.Imports[-prop(entry, 'TutorialWidgetClass') - 1]
   const unlocks = (prop(entry, 'puzzleUnlocks') ?? []).map(({ Value }) => prop(scene.Exports[Value - 1], 'PuzzleFile'))
-  return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, unlocks: unlocks.filter((id) => ids.includes(id)) }
+  return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory: prop(entry, 'PuzzleDirectory') ?? null, unlocks: unlocks.filter((id) => ids.includes(id)) }
 })
-const bounds = { min: { x: -5500, y: -6500 }, max: { x: 18500, y: 5500 } }
 const width = 2048
-const height = 1024
-const scale = width / (bounds.max.x - bounds.min.x)
-const project = (x, y) => [(bounds.max.x - x) * scale, (bounds.max.y - y) * scale]
+const height = 2048
+const tileSize = 1024
+const projection = { centerX: 6500, centerY: -500, degrees: -59, scale: width / 24800 }
+const angle = projection.degrees * Math.PI / 180
+const project = (x, y) => {
+  const dx = (projection.centerX - x) * projection.scale
+  const dy = (projection.centerY - y) * projection.scale
+  return [width / 2 + dx * Math.cos(angle) - dy * Math.sin(angle), height / 2 + dx * Math.sin(angle) + dy * Math.cos(angle)]
+}
 const cross = ([ax, ay], [bx, by], [cx, cy]) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
 function hull(points) {
   const sorted = points.toSorted(([ax, ay], [bx, by]) => ax - bx || ay - by)
@@ -85,15 +90,18 @@ for (const actor of actors) {
     actor.z >= zMin - 70 && actor.z <= zMax + 110 &&
     outline.every((a, i) => cross(a, outline[(i + 1) % outline.length], point) >= -0.01))
   if (!support.length) throw new Error('Marker has no nearby-height mesh footprint: ' + actor.id)
+  if (point[0] < 0 || point[0] >= width || point[1] < 0 || point[1] >= height) throw new Error('Marker outside projection: ' + actor.id)
+  actor.pixel = { x: point[0], y: point[1] }
   actor.supportMeshes = [...new Set(support.map(({ mesh }) => mesh))].sort()
 }
 const silhouettes = surfaces.sort((a, b) => a.zMax - b.zMax).map(({ outline, mesh }) =>
   `<polygon points="${pointList(outline)}" fill="${/Wooden/i.test(mesh) ? '#ad9878' : '#c0c6b8'}" stroke="#788c8b" stroke-width="1.2"/>`)
 
 // Orthographic web marker renders of the exact scene mesh assets.
-for (const [id, mesh, light] of [['note', 'SM_Scroll_001', [237, 203, 141]], ['puzzle', 'SM_Plinth_V004', [181, 169, 129]]]) {
+for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004']]) {
   const { vertices, indices } = meshes[mesh]
-  const view = transform({ X: 0, Y: 0, Z: 0 }, { Yaw: 35, Pitch: -18, Roll: 32 })
+  const topZ = Math.max(...vertices.map((point) => point[2]))
+  const view = transform({ X: 0, Y: 0, Z: 0 }, { Yaw: 43, Pitch: 0, Roll: 36 })
   const points = vertices.map(view)
   const extrema = [0, 2].map((axis) => {
     const values = points.map((p) => p[axis])
@@ -111,20 +119,29 @@ for (const [id, mesh, light] of [['note', 'SM_Scroll_001', [237, 203, 141]], ['p
     const u = b.map((val, j) => val - a[j])
     const v = c.map((val, j) => val - a[j])
     const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
-    const shade = 0.65 + 0.38 * Math.abs((normal[0] * 0.35 + normal[1] * 0.72 + normal[2] * 0.6) / Math.hypot(...normal))
+    const shade = 0.70 + 0.29 * Math.abs((normal[0] * 0.35 + normal[1] * 0.72 + normal[2] * 0.6) / Math.hypot(...normal))
+    const original = indices.slice(i, i + 3).map((index) => vertices[index])
+    const top = original.every((p) => p[2] > 0.78 * topZ)
+    const light = id === 'note' ? [237, 203, 141] : top ? [252, 217, 157] : [226, 235, 239]
     faces.push({ depth: (a[1] + b[1] + c[1]) / 3, fill: light.map((value) => Math.round(value * shade)).join(','), polygon })
   }
   const art = faces.sort((a, b) => b.depth - a.depth).map(({ fill, polygon }) =>
     `<polygon points="${pointList(polygon)}" fill="rgb(${fill})" stroke="rgb(${fill})" stroke-width=".35"/>`).join('')
   writeFileSync(join(output, `glimmith-marker-${id}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><title>${mesh}</title>${art}</svg>\n`)
 }
-const puzzle = readFileSync(join(root, 'Puzzles/Zone1/1-single-shape/0049.puz'), 'utf8')
-const [columns, rows] = puzzle.match(/^DIMENSIONS (\d+) (\d+)\r?$/m).slice(1).map(Number)
-const board = puzzle.split(/\r?\nPUZZLE\r?\n/)[1].split(/\r?\nSOLUTION\r?\n/)
-const frames = board.map((part) => part.split(/\r?\n/).slice(0, 2 * rows + 1).map((line) => line.padEnd(3 * columns + 1)))
-if (frames.some((frame) => frame.length !== 2 * rows + 1)) throw new Error('Invalid puzzle dimensions')
-writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ bounds, width, height, sources, surfaceCount: surfaces.length, actors, puzzle: { columns, rows, board: frames[0], solution: frames[1] } }, null, 2) + '\n')
-for (let tile = 0; tile < width / height; tile++) {
-  const x = tile * height
-  writeFileSync(join(output, `glimmith-terrain-${tile}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" width="${height}" height="${height}" viewBox="${x} 0 ${height} ${height}"><rect x="${x}" width="${height}" height="${height}" fill="#243e4c"/>${silhouettes.join('')}</svg>\n`)
+const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map(({ id, directory }) => {
+  const puzzle = readFileSync(join(root, '..', directory, id), 'utf8')
+  const [columns, rows] = puzzle.match(/^DIMENSIONS (\d+) (\d+)\r?$/m).slice(1).map(Number)
+  const board = puzzle.split(/\r?\nPUZZLE\r?\n/)[1].split(/\r?\nSOLUTION\r?\n/)
+  const frames = board.map((part) => part.split(/\r?\n/).slice(0, 2 * rows + 1).map((line) => line.padEnd(3 * columns + 1)))
+  if (frames.length !== 2 || frames.some((frame) => frame.length !== 2 * rows + 1)) throw new Error('Invalid puzzle dimensions: ' + id)
+  return [id, { columns, rows, board: frames[0], solution: frames[1] }]
+}))
+writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, puzzles }, null, 2) + '\n')
+for (let row = 0; row < height / tileSize; row++) {
+  for (let column = 0; column < width / tileSize; column++) {
+    const x = column * tileSize
+    const y = row * tileSize
+    writeFileSync(join(output, `glimmith-terrain-${row * (width / tileSize) + column}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" width="${tileSize}" height="${tileSize}" viewBox="${x} ${y} ${tileSize} ${tileSize}"><rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="#243e4c"/>${silhouettes.join('')}</svg>\n`)
+  }
 }

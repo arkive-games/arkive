@@ -13,7 +13,7 @@
   "puzzle": "玻璃谜题",
   "show": "显示全部",
   "hide": "隐藏全部",
-  "coverage": "开场区域俯视图 · 地表轮廓与点位来自游戏模型和场景坐标。",
+  "coverage": "开场区域俯视图 · 按参考视角调整方向 · 不含后续关卡与隐藏谜题",
   "search": "搜索点位",
   "unnamed": "未命名",
   "noDescription": "暂无说明",
@@ -25,6 +25,12 @@
   "entries": {
     "Tutorial-1": { "title": "教学 1：形状与颜色", "description": "按规则划分每块玻璃的形状；颜色可自由选择。" },
     "0049.puz": { "title": "第一道玻璃谜题", "description": "将棋盘分成三块 2×2 的正方形。" },
+    "0643.puz": { "title": "谜题 2：擦除", "description": "按住鼠标右键拖动可擦除。" },
+    "0050.puz": { "title": "谜题 3：旋转形状", "description": "拼图形状可以旋转。" },
+    "0067B.puz": { "title": "谜题 4：撤销与重做", "description": "按 Z 撤销，Y 重做，R 重置。" },
+    "0066.puz": { "title": "谜题 5：选择颜色", "description": "可以自由换色，解开后也能更改。" },
+    "0008.puz": { "title": "谜题 6：镜像形状", "description": "也可以使用给定形状的镜像。" },
+    "0527.puz": { "title": "谜题 7：画出边界", "description": "从角点沿虚线拖动，标记确定的金属边界。" },
     "Tutorial-2": { "title": "教学 2：修复窗户", "description": "解开玻璃谜题会推进窗户修复；完成窗户后可以继续前进。" },
     "Tutorial-3": { "title": "教学 3：金属化窗框", "description": "额外完成玻璃谜题可让窗框金属化，并揭示额外挑战。" }
   }

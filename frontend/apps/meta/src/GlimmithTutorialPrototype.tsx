@@ -9,6 +9,8 @@ import { useIsMobile } from '@gamemap/ui'
 import scene from './assets/glimmith-scene.json'
 import terrainWest from './assets/glimmith-terrain-0.svg'
 import terrainEast from './assets/glimmith-terrain-1.svg'
+import terrainSouthwest from './assets/glimmith-terrain-2.svg'
+import terrainSoutheast from './assets/glimmith-terrain-3.svg'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import noteIcon from './assets/glimmith-marker-note.svg'
 import copy from './glimmithLocale.json'
@@ -16,27 +18,38 @@ import '@gamemap/map-engine-gl/engine-gl.css'
 
 const map: GameMapMeta = {
   id: 'intro', name: copy.intro, type: 'world', isVisible: true,
-  tileWidth: scene.height, tileHeight: scene.height, tilesCountX: scene.width / scene.height, tilesCountY: 1,
-  worldBounds: scene.bounds, orientation: { pxAxis: 'X', flipX: true, flipY: true },
+  tileWidth: scene.tileSize, tileHeight: scene.tileSize,
+  tilesCountX: scene.width / scene.tileSize, tilesCountY: scene.height / scene.tileSize,
 }
 const entries = new Map(Object.entries(copy.entries))
-const markers: EngineMarker[] = scene.actors.map(({ id, x, y, z, widget }, index) => {
+const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, index) => {
   const subtype = widget ? 'note' : 'puzzle'
   const icon = widget ? noteIcon : puzzleIcon
   return {
-    id, x, y, z, subtype, icon, positionPrecision: 'authored-transform', indexInSubtype: index,
+    id, ...pixel, z, subtype, icon, positionPrecision: 'authored-transform', indexInSubtype: index,
     images: [], contributors: [], localizedName: entries.get(id)?.title ?? id,
     localizedDescription: entries.get(id)?.description,
     subtypeLabel: copy[subtype], subtypeMeta: { id: subtype, name: copy[subtype], icon, pinVariant: 'image' },
   }
 })
-const assets = { tileUrl: (_map: GameMapMeta, x: number) => x === 0 ? terrainWest : terrainEast, markerIconUrl: (icon?: string) => icon ?? '' }
+const terrainTiles = [terrainWest, terrainEast, terrainSouthwest, terrainSoutheast]
+const assets = { tileUrl: (_map: GameMapMeta, x: number, y: number) => terrainTiles[y * map.tilesCountX + x], markerIconUrl: (icon?: string) => icon ?? '' }
+const puzzles = new Map(Object.entries(scene.puzzles))
+const angle = scene.projection.degrees * Math.PI / 180
+const displayCoords = (x: number, y: number) => {
+  const dx = (x - scene.width / 2) / scene.projection.scale
+  const dy = (y - scene.height / 2) / scene.projection.scale
+  return {
+    x: scene.projection.centerX - (dx * Math.cos(angle) + dy * Math.sin(angle)),
+    y: scene.projection.centerY - (-dx * Math.sin(angle) + dy * Math.cos(angle)),
+  }
+}
 const subtypes = ['note', 'puzzle'] as const
 const mapOptions = [{ id: map.id, label: map.name }]
 const searchItems = markers.map((marker) => ({ ...marker, name: marker.localizedName, idLabel: marker.id }))
 
-function PuzzleBoard({ solved }: { solved: boolean }) {
-  const { columns, rows, board, solution } = scene.puzzle
+function PuzzleBoard({ puzzle, solved }: { puzzle: (typeof scene.puzzles)['0049.puz']; solved: boolean }) {
+  const { columns, rows, board, solution } = puzzle
   const frame = solved ? solution : board
   return (
     <svg role="img" aria-label={solved ? copy.solution : copy.board}
@@ -44,7 +57,7 @@ function PuzzleBoard({ solved }: { solved: boolean }) {
       {Array.from({ length: rows * columns }, (_, index) => {
         const x = index % columns
         const y = Math.floor(index / columns)
-        return board[2 * y + 1][3 * x + 1] === '.'
+        return board[2 * y + 1].slice(3 * x + 1, 3 * x + 3).trim()
           ? <rect key={index} x={24 * x} y={24 * y} width={24} height={24} className="fill-muted stroke-border" strokeWidth=".6" />
           : null
       })}
@@ -86,7 +99,7 @@ export function GlimmithTutorialPrototype() {
           collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
           content: 'pb-2',
         }}
-        headerSlot={<ShellGameHeader backgroundUrl={terrainWest} logo={null} gameName="The Artisan of Glimmith" subtitle={copy.map} />}
+        headerSlot={<ShellGameHeader backgroundUrl={terrainSouthwest} logo={null} gameName="The Artisan of Glimmith" subtitle={copy.map} />}
         mapSelectorSlot={<div className="px-3 py-3 max-md:pr-8"><ShellMapSelect
           classNames={{
             trigger: 'min-h-11 rounded-xl border-border bg-card px-3 text-base font-semibold shadow-none hover:border-primary/40 hover:bg-card data-[state=open]:bg-card',
@@ -121,27 +134,28 @@ export function GlimmithTutorialPrototype() {
     }>
       <main className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>
         <GameMapView map={map} markers={markers} regions={[]} visibleSubtypes={visible}
+          initialView={mobile ? undefined : { x: 1024, y: 1050, zoom: -0.94 }}
           showLabels showBorders={false} lodEnabled={false} selectedMarkerId={selected} selectedPosition={null}
           onToggleMarker={setSelected} subzoneAt={() => copy.intro} flyToDuration={0.35} mapRef={ref} assets={assets}
-          exposeTestHandle={import.meta.env.DEV} labels={copy.engine}
+          exposeTestHandle={import.meta.env.DEV} labels={copy.engine} displayCoords={displayCoords}
           renderPopupContent={() => null}
         />
         {marker && (() => {
             const actor = scene.actors.find(({ id }) => id === marker.id)
-            const isPuzzle = marker.id === '0049.puz'
+            const puzzle = puzzles.get(marker.id)
             const linked = actor?.unlocks[0]
-            const coordinate = [marker.x, marker.y, marker.z ?? 0].map((value) => value.toFixed(1)).join(', ')
+            const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
             return <MarkerDetailDrawer key={marker.id} name={marker.localizedName}
               className="md:top-20"
               icon={<img className="size-8 object-contain" src={marker.icon} alt="" />} eyebrow={marker.subtypeLabel}
               positionValue={coordinate} positionCopyValue={coordinate}
               labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
               description={marker.localizedDescription}
-              sections={isPuzzle ? [{
+              sections={puzzle ? [{
                 id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
                 content: <div className="grid grid-cols-2 gap-3 text-center text-xs">
-                  <figure><figcaption className="mb-2">{copy.board}</figcaption><PuzzleBoard solved={false} /></figure>
-                  <figure><figcaption className="mb-2">{copy.solution}</figcaption><PuzzleBoard solved /></figure>
+                  <figure><figcaption className="mb-2">{copy.board}</figcaption><PuzzleBoard puzzle={puzzle} solved={false} /></figure>
+                  <figure><figcaption className="mb-2">{copy.solution}</figcaption><PuzzleBoard puzzle={puzzle} solved /></figure>
                 </div>,
               }] : [{
                 id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
@@ -151,7 +165,7 @@ export function GlimmithTutorialPrototype() {
                   </button>}</div>,
               }]} />
         })()}
-        <SearchPanel items={searchItems} searchFields={['name', 'idLabel']} onSelect={select}
+        <SearchPanel items={searchItems} searchFields={['name', 'idLabel']} onSelect={select} displayCoords={displayCoords}
           classNames={mobileSidebarOpen ? { root: 'max-md:hidden' } : undefined}
           onFlyTo={({ x, y }) => ref.current?.flyTo(x, y)}
           labels={{ search: copy.search, resultsCount: (count) => String(count), unnamed: copy.unnamed, noDescription: copy.noDescription }} />
