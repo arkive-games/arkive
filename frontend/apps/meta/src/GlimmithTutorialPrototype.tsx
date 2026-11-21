@@ -63,6 +63,7 @@ function PuzzleBoard({ solved }: { solved: boolean }) {
 
 export function GlimmithTutorialPrototype() {
   const [selected, setSelected] = useState<string | null>(null)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [visible, setVisible] = useState<Set<string>>(() => new Set(subtypes))
   const ref = useRef<GlMapRef>(null)
   const mobile = useIsMobile()
@@ -76,10 +77,22 @@ export function GlimmithTutorialPrototype() {
       languageSwitcher={{ languages: [{ code: 'zh-CN', label: copy.language }], current: 'zh-CN', onChange: () => {}, menuLabel: copy.languageMenu }}
       themeSwitcher={{ current: theme, onChange: setTheme, menuLabel: copy.theme, labels: copy.themes }}
     />} sidebar={
-      <ShellSidebar key={mobile ? 'mobile' : 'desktop'} defaultCollapsed={mobile}
+      <ShellSidebar key={mobile ? 'mobile' : 'desktop'} defaultCollapsed={mobile} width="20rem"
+        collapsed={mobile ? !mobileSidebarOpen : undefined}
+        onCollapsedChange={mobile ? (collapsed) => setMobileSidebarOpen(!collapsed) : undefined}
         label={copy.map} collapseLabel={copy.collapse} expandLabel={copy.expand}
+        classNames={{
+          root: 'border-r border-border bg-[color:var(--arkive-sidebar)] font-sans text-sm text-foreground',
+          collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
+          content: 'pb-2',
+        }}
         headerSlot={<ShellGameHeader backgroundUrl={terrainWest} logo={null} gameName="The Artisan of Glimmith" subtitle={copy.map} />}
-        mapSelectorSlot={<div className="px-3 py-2"><ShellMapSelect maps={mapOptions} activeMapId={map.id} onSelectMap={() => setSelected(null)} /></div>}>
+        mapSelectorSlot={<div className="px-3 py-3 max-md:pr-8"><ShellMapSelect
+          classNames={{
+            trigger: 'min-h-11 rounded-xl border-border bg-card px-3 text-base font-semibold shadow-none hover:border-primary/40 hover:bg-card data-[state=open]:bg-card',
+            content: 'border-border bg-popover',
+          }}
+          maps={mapOptions} activeMapId={map.id} onSelectMap={() => setSelected(null)} /></div>}>
         <FilterPanel categories={[{ id: 'intro', label: copy.intro, subtypes: subtypes.map((id) => ({
           id, label: copy[id], active: visible.has(id), count: markers.filter((marker) => marker.subtype === id).length,
         })) }]} onToggleSubtype={(id) => setVisible((prev) => {
@@ -88,7 +101,16 @@ export function GlimmithTutorialPrototype() {
           else next.add(id)
           return next
         })} onSetCategory={(_, enabled) => setVisible(new Set(enabled ? subtypes : []))}
-        categoryToggleLabels={{ show: copy.show, hide: copy.hide }} classNames={{ root: 'px-3' }} />
+        categoryToggleLabels={{ show: copy.show, hide: copy.hide }}
+        classNames={{
+          root: 'px-3 pb-4',
+          category: 'border-b border-[color:var(--arkive-divider)] py-1.5 last:border-b-0',
+          categoryHeader: 'min-h-10 pt-0 pb-0 text-foreground [&>svg]:size-5 [&>svg]:text-foreground/55',
+          categoryEyeToggle: 'text-foreground/55 hover:bg-[color:var(--arkive-filter-hover)] hover:text-primary',
+          subtypeGrid: 'gap-x-2 gap-y-1.5 pb-2',
+          subtypeButton: 'h-auto min-h-9 rounded-md border border-transparent bg-transparent px-2 text-xs font-medium text-muted-foreground opacity-65 hover:border-[color:var(--arkive-divider)] hover:bg-card hover:text-foreground hover:opacity-100',
+          subtypeButtonActive: 'border-primary/20 bg-[color:var(--arkive-filter-active)] font-semibold text-foreground opacity-100 shadow-[inset_0.18rem_0_0_var(--arkive-orange)]',
+        }} />
         <div className="grid gap-1 px-3 pb-3">
           {markers.map((marker) => <button key={marker.id} type="button" aria-pressed={selected === marker.id}
             className="flex min-h-10 items-center gap-2 rounded-md px-2 text-left text-sm hover:bg-muted aria-pressed:bg-muted"
@@ -130,6 +152,7 @@ export function GlimmithTutorialPrototype() {
               }]} />
         })()}
         <SearchPanel items={searchItems} searchFields={['name', 'idLabel']} onSelect={select}
+          classNames={mobileSidebarOpen ? { root: 'max-md:hidden' } : undefined}
           onFlyTo={({ x, y }) => ref.current?.flyTo(x, y)}
           labels={{ search: copy.search, resultsCount: (count) => String(count), unnamed: copy.unnamed, noDescription: copy.noDescription }} />
       </main>
