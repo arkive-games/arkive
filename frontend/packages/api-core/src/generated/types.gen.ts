@@ -135,7 +135,7 @@ export type CreateMarkerCommentBody = {
     /**
      * The game the marker belongs to
      */
-    game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
+    game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss' | 'glimmith';
     /**
      * The map the marker is on
      */
@@ -3437,9 +3437,9 @@ export type CreateMarkerCommentWithImagesData = {
     path?: never;
     query: {
         /**
-         * A game the platform serves
+         * A game or map preview that supports marker contributions
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss' | 'glimmith';
         map: string;
         marker: string;
     };
@@ -3859,9 +3859,9 @@ export type UploadMarkerImageData = {
     path?: never;
     query: {
         /**
-         * A game the platform serves
+         * A game or map preview that supports marker contributions
          */
-        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss';
+        game: 'aion2' | 'gmzz' | 'palworld' | 'vrising' | 'sts2' | 'ro3' | 'pbz' | 'oss' | 'glimmith';
         map: string;
         marker: string;
     };

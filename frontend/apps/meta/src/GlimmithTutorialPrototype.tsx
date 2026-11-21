@@ -1,10 +1,13 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import { ArkiveAccountControl } from '@gamemap/auth'
 import type { GameMapMeta } from '@gamemap/data-contract'
+import { CommunityMarkerDetail } from '@gamemap/map-community'
 import { GameMapView, type EngineMarker, type GlMapRef } from '@gamemap/map-engine-gl'
 import {
-  ArkiveMapTopBar, FilterPanel, MarkerDetailDrawer, markerDetailLabelsFor,
+  ArkiveMapTopBar, FilterPanel, markerDetailLabelsFor,
   SearchPanel, ShellGameHeader, ShellLayout, ShellMapSelect, ShellSidebar, useTheme,
 } from '@gamemap/map-shell'
+import { browserMemory, defineMemoryRecord, memoryPolicy } from '@gamemap/state-memory'
 import { useIsMobile } from '@gamemap/ui'
 import scene from './assets/glimmith-scene.json'
 import terrainWest from './assets/glimmith-terrain-0.svg'
@@ -31,6 +34,17 @@ const puzzles = new Map(Object.entries(scene.puzzles))
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
 const difficultyArt = new Map([[1, difficultyOne], [2, difficultyTwo], [3, difficultyThree]])
 const puzzleNumber = (id: string) => id.replace(/\.puz$/, '')
+const completedRecord = defineMemoryRecord({
+  id: 'completed-markers',
+  namespace: 'glimmith',
+  surface: 'map',
+  ...memoryPolicy.durableProgress('clear-map-progress'),
+  schemaVersion: '1.0.0',
+  defaultValue: () => [] as string[],
+  validate: (value: unknown): value is string[] =>
+    Array.isArray(value) && value.length <= 10_000 && value.every((id) => typeof id === 'string'),
+})
+const progressScope = { partition: map.id }
 const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, index) => {
   const subtype = widget ? 'note' : 'puzzle'
   const icon = widget ? noteIcon : puzzleIcon
@@ -97,6 +111,18 @@ export function GlimmithTutorialPrototype() {
   const [selected, setSelected] = useState<string | null>(null)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [visible, setVisible] = useState<Set<string>>(() => new Set(subtypes))
+  const [completed, setCompleted] = useState(() => new Set(browserMemory.read(completedRecord, progressScope)))
+  const mapMarkers = useMemo(() => markers.map((marker) => ({
+    ...marker, completed: completed.has(marker.id),
+  })), [completed])
+  const completedCount = [...completed].filter((id) => puzzles.has(id)).length
+  const toggleCompleted = (id: string) => {
+    const next = new Set(completed)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    browserMemory.write(completedRecord, [...next], progressScope)
+    setCompleted(next)
+  }
   const ref = useRef<GlMapRef>(null)
   const mobile = useIsMobile()
   const { theme, setTheme } = useTheme()
@@ -118,12 +144,17 @@ export function GlimmithTutorialPrototype() {
     const unlocker = isPostGame ? scene.actors.find(({ directory, unlocks }) => directory && unlocks.some((id) => id === marker.id)) : undefined
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
     return (
-      <MarkerDetailDrawer key={marker.id} anchored={!mobile} compact={Boolean(puzzle)}
+      <CommunityMarkerDetail key={marker.id} game="glimmith" mapId={map.id} markerId={puzzleNumber(marker.id)}
+        language="zh-CN" anchored={!mobile} denseHeader={Boolean(puzzle)}
         name={puzzle ? copy.puzzle + ' ' + marker.localizedName : marker.localizedName}
         icon={<img className={puzzle ? 'size-6 object-contain' : 'size-8 object-contain'} src={marker.icon} alt="" />}
         eyebrow={puzzle ? undefined : marker.subtypeLabel}
         titleAccessory={marker.hoverBadge && <img className="size-5 object-contain" src={marker.hoverBadge.src} alt={marker.hoverBadge.alt} />}
         positionValue={coordinate} positionCopyValue={coordinate}
+        completeAction={puzzle ? {
+          completed: completed.has(marker.id), label: copy.markCompleted,
+          completedLabel: copy.completed, onToggle: () => toggleCompleted(marker.id),
+        } : undefined}
         labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
         sections={window ? [{
           id: 'window-requirements', title: copy.requirements, accessibleTitle: copy.requirements,
@@ -166,6 +197,7 @@ export function GlimmithTutorialPrototype() {
   return (
     <ShellLayout topBar={<ArkiveMapTopBar className="max-md:flex" homeUrl="#top" homeLabel={copy.home}
       brandName="Arkive" variant="docked" loginLabel={copy.account}
+      accountSlot={<ArkiveAccountControl language="zh-CN" homeUrl="" />}
       nav={{ items: [], renderItem: () => null }}
       languageSwitcher={{ languages: [{ code: 'zh-CN', label: copy.language }], current: 'zh-CN', onChange: () => {}, menuLabel: copy.languageMenu }}
       themeSwitcher={{ current: theme, onChange: setTheme, menuLabel: copy.theme, labels: copy.themes }}
@@ -187,7 +219,9 @@ export function GlimmithTutorialPrototype() {
           }}
           maps={mapOptions} activeMapId={map.id} onSelectMap={() => setSelected(null)} /></div>}>
         <FilterPanel categories={[{ id: 'intro', label: copy.intro, subtypes: subtypes.map((id) => ({
-          id, label: copy[id], active: visible.has(id), count: markers.filter((marker) => marker.subtype === id).length,
+          id, label: copy[id], active: visible.has(id),
+          ...(id === 'puzzle' ? { badge: `${completedCount}/${puzzles.size}` }
+            : { count: markers.filter((marker) => marker.subtype === id).length }),
         })) }]} onToggleSubtype={(id) => setVisible((prev) => {
           const next = new Set(prev)
           if (next.has(id)) next.delete(id)
@@ -207,7 +241,7 @@ export function GlimmithTutorialPrototype() {
       </ShellSidebar>
     }>
       <main className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>
-        <GameMapView map={map} markers={markers} regions={[]} visibleSubtypes={visible}
+        <GameMapView map={map} markers={mapMarkers} regions={[]} visibleSubtypes={visible}
           initialView={mobile ? undefined : { x: 1024, y: 1050, zoom: -0.94 }}
           showLabels={false} showBorders={false} lodEnabled={false} selectedMarkerId={selected} selectedPosition={null}
           onToggleMarker={setSelected} subzoneAt={() => copy.intro} flyToDuration={0.35} mapRef={ref} assets={assets}

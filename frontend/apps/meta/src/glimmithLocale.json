@@ -25,6 +25,8 @@
   "noBoard": "这是游戏中的说明页，没有独立棋盘或格子答案。",
   "openFirst": "查看这处说明解锁的第一道谜题",
   "solution": "解法",
+  "markCompleted": "标为完成",
+  "completed": "已完成",
   "unlock": "解锁条件",
   "postGameUnlock": "通关后解锁",
   "postGameStep": "完成最终挑战，阅读终点提到红色台座的信，再回开场飞船。",

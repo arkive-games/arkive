@@ -96,6 +96,22 @@ describe("MarkerDetailDrawer", () => {
     expect(getByRole("paragraph").textContent).toBe("Solution")
   })
 
+  it("keeps the standard comment composer accessible with a dense heading", () => {
+    const { getByRole, getByTestId } = render(
+      <MarkerDetailDrawer
+        {...baseProps}
+        denseHeader
+        name="Puzzle 0049"
+        titleAccessory={<img alt="Difficulty 1" />}
+        comments={{ markerId: "0049", items: [], sort: "latest", onSortChange: vi.fn() }}
+      />,
+    )
+    expect(getByRole("heading", { name: "Puzzle 0049" }).parentElement?.contains(getByRole("img", { name: "Difficulty 1" }))).toBe(true)
+    fireEvent.click(getByRole("tab", { name: /^Comments/ }))
+    expect(getByTestId("marker-comment-composer").closest("footer")).not.toBeNull()
+    expect(getByTestId("marker-comment-attachment")).not.toBeNull()
+  })
+
   it("uses the same accessible disclosure control for every details section", () => {
     const { getByTestId } = render(
       <MarkerDetailDrawer {...baseProps} sections={[{ id: "drops", title: "Drops", accessibleTitle: "Drops", content: <div>Leather</div> }]} />,

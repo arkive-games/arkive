@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -485,7 +486,7 @@ func (s *Service) HiddenComments(ctx context.Context, principal auth.Principal, 
 
 // validateTarget checks the three location keys, in the order that fails cheapest.
 func validateTarget(gameKey, mapID, markerID string) (Target, error) {
-	if !games.Valid(gameKey) {
+	if !slices.Contains(games.MarkerKeys, gameKey) {
 		return Target{}, apierr.New(apierr.Validation, fmt.Sprintf("%q is not a game", gameKey))
 	}
 	if !mapShape.MatchString(mapID) {
@@ -602,8 +603,8 @@ func (s *Service) moderationScope(ctx context.Context, principal auth.Principal)
 	if principal.IsSuperuser {
 		return nil, nil
 	}
-	scope := make([]string, 0, len(games.Keys))
-	for _, key := range games.Keys {
+	scope := make([]string, 0, len(games.MarkerKeys))
+	for _, key := range games.MarkerKeys {
 		ok, err := s.authz.CanAny(ctx, principal, roles.HideContent, []string{key})
 		if err != nil {
 			return nil, err

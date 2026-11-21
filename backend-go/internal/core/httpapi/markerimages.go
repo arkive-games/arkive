@@ -25,16 +25,16 @@ type markerCommentImagesForm struct {
 }
 
 type uploadMarkerImageInput struct {
-	Game    GameKey `query:"game" required:"true"`
-	Map     string  `query:"map" required:"true" pattern:"^[A-Za-z0-9_-]{1,64}$"`
-	Marker  string  `query:"marker" required:"true" pattern:"^[A-Za-z0-9_-]{1,128}$"`
+	Game    MarkerGameKey `query:"game" required:"true"`
+	Map     string        `query:"map" required:"true" pattern:"^[A-Za-z0-9_-]{1,64}$"`
+	Marker  string        `query:"marker" required:"true" pattern:"^[A-Za-z0-9_-]{1,128}$"`
 	RawBody huma.MultipartFormFiles[markerImageForm]
 }
 
 type createMarkerCommentImagesInput struct {
-	Game    GameKey `query:"game" required:"true"`
-	Map     string  `query:"map" required:"true" pattern:"^[A-Za-z0-9_-]{1,64}$"`
-	Marker  string  `query:"marker" required:"true" pattern:"^[A-Za-z0-9_-]{1,128}$"`
+	Game    MarkerGameKey `query:"game" required:"true"`
+	Map     string        `query:"map" required:"true" pattern:"^[A-Za-z0-9_-]{1,64}$"`
+	Marker  string        `query:"marker" required:"true" pattern:"^[A-Za-z0-9_-]{1,128}$"`
 	RawBody huma.MultipartFormFiles[markerCommentImagesForm]
 }
 

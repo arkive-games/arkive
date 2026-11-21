@@ -274,7 +274,8 @@
               "sts2",
               "ro3",
               "pbz",
-              "oss"
+              "oss",
+              "glimmith"
             ],
             "type": "string"
           },
@@ -6600,13 +6601,13 @@
         "operationId": "createMarkerCommentWithImages",
         "parameters": [
           {
-            "description": "A game the platform serves",
+            "description": "A game or map preview that supports marker contributions",
             "explode": false,
             "in": "query",
             "name": "game",
             "required": true,
             "schema": {
-              "description": "A game the platform serves",
+              "description": "A game or map preview that supports marker contributions",
               "enum": [
                 "aion2",
                 "gmzz",
@@ -6615,7 +6616,8 @@
                 "sts2",
                 "ro3",
                 "pbz",
-                "oss"
+                "oss",
+                "glimmith"
               ],
               "type": "string"
             }
@@ -7487,13 +7489,13 @@
         "operationId": "uploadMarkerImage",
         "parameters": [
           {
-            "description": "A game the platform serves",
+            "description": "A game or map preview that supports marker contributions",
             "explode": false,
             "in": "query",
             "name": "game",
             "required": true,
             "schema": {
-              "description": "A game the platform serves",
+              "description": "A game or map preview that supports marker contributions",
               "enum": [
                 "aion2",
                 "gmzz",
@@ -7502,7 +7504,8 @@
                 "sts2",
                 "ro3",
                 "pbz",
-                "oss"
+                "oss",
+                "glimmith"
               ],
               "type": "string"
             }

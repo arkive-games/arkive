@@ -49,6 +49,23 @@ func withTarget(body map[string]any) map[string]any {
 // Writing and reading
 // ---------------------------------------------------------------------------
 
+func TestGlimmithPreviewHasIndependentMarkerComments(t *testing.T) {
+	h := newHarness(t)
+	author := h.registerAndLogin("preview-author", "preview-author@example.com", "hunter2hunter2")
+	h.mustCommentOnMarker(author, map[string]any{
+		"game": "glimmith", "map": "intro", "marker": "0049", "body": "Preview puzzle note.",
+	})
+	for _, tt := range []struct {
+		game, marker string
+		want         float64
+	}{{"glimmith", "0049", 1}, {"glimmith", "0054", 0}, {"pbz", "0049", 0}} {
+		res := h.do(http.MethodGet, markerCommentPath("?game="+tt.game+"&map=intro&marker="+tt.marker), nil)
+		if got := res.data(t)["count"]; res.status != http.StatusOK || got != tt.want {
+			t.Errorf("%s/%s: status %d count %v, want %v", tt.game, tt.marker, res.status, got, tt.want)
+		}
+	}
+}
+
 func TestMarkerCommentRoundTrip(t *testing.T) {
 	h := newHarness(t)
 	author := h.registerAndLogin("marker-author", "marker-author@example.com", "hunter2hunter2")

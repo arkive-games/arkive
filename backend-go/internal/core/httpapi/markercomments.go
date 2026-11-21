@@ -9,9 +9,20 @@ import (
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/comments"
+	"github.com/arkive-games/arkive/backend-go/internal/core/games"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
+
+type MarkerGameKey string
+
+func (MarkerGameKey) Schema(huma.Registry) *huma.Schema {
+	enum := make([]any, 0, len(games.MarkerKeys))
+	for _, game := range games.MarkerKeys {
+		enum = append(enum, game)
+	}
+	return &huma.Schema{Type: huma.TypeString, Enum: enum, Description: "A game or map preview that supports marker contributions"}
+}
 
 // CreateMarkerCommentBody is a new comment under a map marker.
 //
@@ -21,11 +32,11 @@ import (
 // that exist only to be copied into a row are segments every handler has to
 // remember to compare against it.
 type CreateMarkerCommentBody struct {
-	Game     GameKey    `json:"game" doc:"The game the marker belongs to"`
-	Map      string     `json:"map" pattern:"^[A-Za-z0-9_-]{1,64}$" doc:"The map the marker is on"`
-	Marker   string     `json:"marker" pattern:"^[A-Za-z0-9_-]{1,128}$" doc:"The marker to comment on"`
-	Body     string     `json:"body" minLength:"1" maxLength:"2000" doc:"Raw markdown"`
-	ParentID *uuid.UUID `json:"parentId,omitempty" doc:"Reply to this comment; omit for a top-level comment"`
+	Game     MarkerGameKey `json:"game" doc:"The game the marker belongs to"`
+	Map      string        `json:"map" pattern:"^[A-Za-z0-9_-]{1,64}$" doc:"The map the marker is on"`
+	Marker   string        `json:"marker" pattern:"^[A-Za-z0-9_-]{1,128}$" doc:"The marker to comment on"`
+	Body     string        `json:"body" minLength:"1" maxLength:"2000" doc:"Raw markdown"`
+	ParentID *uuid.UUID    `json:"parentId,omitempty" doc:"Reply to this comment; omit for a top-level comment"`
 }
 
 // UpdateMarkerCommentBody is an edit. Unlike a forum edit, the target never changes,

@@ -231,6 +231,8 @@ export type MarkerDetailDrawerProps = {
   metaLine?: ReactNode
   /** Compact, details-only surface for points without a comment workflow. */
   compact?: boolean
+  /** Tighten the identity row without removing the standard tabs and actions. */
+  denseHeader?: boolean
   /** Small inline indicator beside the heading, such as a difficulty badge. */
   titleAccessory?: ReactNode
   positionValue?: ReactNode
@@ -762,6 +764,7 @@ export function MarkerDetailDrawer({
   eyebrow,
   metaLine,
   compact = false,
+  denseHeader = false,
   titleAccessory,
   positionValue,
   positionCopyValue,
@@ -778,6 +781,7 @@ export function MarkerDetailDrawer({
   className,
 }: MarkerDetailDrawerProps) {
   const sessionKey = gallery?.markerId ?? comments?.markerId ?? positionCopyValue ?? name
+  const smallHeader = compact || denseHeader
   const detailRef = useAnchoredPlacement(anchored, sessionKey)
   const dragStartRef = useRef<{ y: number; at: number } | null>(null)
   const [dragOffset, setDragOffset] = useState(0)
@@ -876,15 +880,15 @@ export function MarkerDetailDrawer({
         <span className="h-1 w-10 rounded-full bg-muted-foreground/40" aria-hidden="true" />
       </div>
       <header className="shrink-0 border-b border-border bg-card">
-        <div className={cn("grid items-center gap-2.5 px-3", compact
+        <div className={cn("grid items-center gap-2.5 px-3", smallHeader
           ? "grid-cols-[2rem_minmax(0,1fr)_2.25rem] py-1.5"
           : "grid-cols-[2.75rem_minmax(0,1fr)_2.25rem] py-2.5 max-md:grid-cols-[2.5rem_minmax(0,1fr)_2.25rem] max-md:py-2")}>
-          <span className={cn("flex items-center justify-center overflow-hidden rounded-md border border-border bg-primary/10 text-primary", compact ? "size-8" : "size-11 max-md:size-10")}>
+          <span className={cn("flex items-center justify-center overflow-hidden rounded-md border border-border bg-primary/10 text-primary", smallHeader ? "size-8" : "size-11 max-md:size-10")}>
             {icon ?? <IconMapPin className="size-6" stroke={1.8} />}
           </span>
           <div className="min-w-0">
             {eyebrow ? <div className="truncate text-xs font-semibold text-muted-foreground">{eyebrow}</div> : null}
-            <div className={cn("flex min-w-0 gap-2", titleAccessory ? "items-center" : "items-baseline")}><h2 className={cn("truncate font-bold leading-normal", compact ? "text-base" : "text-lg max-md:text-base")}>{name}</h2>{idLabel ? <IdLabel value={idLabel} className="shrink-0" /> : null}{titleAccessory ? <span className="shrink-0">{titleAccessory}</span> : null}</div>
+            <div className={cn("flex min-w-0 gap-2", titleAccessory ? "items-center" : "items-baseline")}><h2 className={cn("truncate font-bold leading-normal", smallHeader ? "text-base" : "text-lg max-md:text-base")}>{name}</h2>{idLabel ? <IdLabel value={idLabel} className="shrink-0" /> : null}{titleAccessory ? <span className="shrink-0">{titleAccessory}</span> : null}</div>
             {metaLine ? <div className="mt-0.5 truncate text-xs text-muted-foreground">{metaLine}</div> : null}
           </div>
           <button type="button" aria-label={labels.close} title={labels.close} onClick={onClose} className="inline-flex size-8 items-center justify-center justify-self-end rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><IconX className="size-5" stroke={1.8} /></button>

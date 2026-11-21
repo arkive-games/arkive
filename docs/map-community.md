@@ -11,6 +11,11 @@ map publication policy.
 drawers to the shared Go API. The map shell renders data and calls callbacks;
 it no longer fabricates successful local comments or uploads.
 
+The local Glimmith tutorial uses the same drawer and API under the marker-only
+`glimmith` game key and the `intro` map key. This does not register a public
+game or a forum tag. Its puzzle header is dense, but still has the standard
+details and comments tabs. Completion is browser-local, not game-save progress.
+
 Signed-in accounts can publish, edit, delete, reply, like and report marker
 comments. Text is public immediately. Targets include the game, artifact map
 name and full marker identifier, so identical identifiers on different games or

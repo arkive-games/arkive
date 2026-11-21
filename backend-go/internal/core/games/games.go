@@ -9,6 +9,8 @@
 // docs/superpowers/specs/2026-08-08-go-backend-architecture-design.md.
 package games
 
+import "slices"
+
 // Keys is every game the platform serves, in the order the portal lists them.
 //
 // A key is permanent. It is already baked into an app directory, a pipeline, two
@@ -20,6 +22,9 @@ package games
 // Adding a game means updating core.game_keys() in a migration to match. The test
 // alongside this file is what stops the two from drifting.
 var Keys = []string{"aion2", "gmzz", "palworld", "vrising", "sts2", "ro3", "pbz", "oss"}
+
+// MarkerKeys also includes map previews that are not listed in the forum.
+var MarkerKeys = append(slices.Clone(Keys), "glimmith")
 
 // Valid reports whether key names a game the platform serves.
 //

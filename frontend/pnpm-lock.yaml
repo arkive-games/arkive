@@ -377,6 +377,9 @@ importers:
       '@gamemap/data-contract':
         specifier: workspace:*
         version: link:../../packages/data-contract
+      '@gamemap/map-community':
+        specifier: workspace:*
+        version: link:../../packages/map-community
       '@gamemap/map-engine-gl':
         specifier: workspace:*
         version: link:../../packages/map-engine-gl
