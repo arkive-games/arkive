@@ -123,7 +123,7 @@ export function GlimmithTutorialPrototype() {
         icon={<img className={puzzle ? 'size-6 object-contain' : 'size-8 object-contain'} src={marker.icon} alt="" />}
         eyebrow={puzzle ? undefined : marker.subtypeLabel}
         titleAccessory={marker.hoverBadge && <img className="size-5 object-contain" src={marker.hoverBadge.src} alt={marker.hoverBadge.alt} />}
-        positionValue={puzzle ? undefined : coordinate} positionCopyValue={puzzle ? undefined : coordinate}
+        positionValue={coordinate} positionCopyValue={coordinate}
         labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
         sections={window ? [{
           id: 'window-requirements', title: copy.requirements, accessibleTitle: copy.requirements,
