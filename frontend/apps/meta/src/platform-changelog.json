@@ -2,6 +2,24 @@
   "entries": [
     {
       "date": "2026-11-22",
+      "commit": "dcd0c978f69fa82fbd208c4a0039a2186c48d9c1",
+      "targets": [
+        "palworld",
+        "ro3"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Encyclopedia category buttons move onto new rows when space is tight, keeping their labels readable.",
+            "zh-CN": "百科分类按钮在空间不足时会整颗换行，分类名称保持易读。",
+            "zh-TW": "百科分類按鈕在空間不足時會整顆換行，分類名稱保持易讀。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-22",
       "commit": "1da5cba45bf07b41ae3a176e1d8251ceddb9e244",
       "targets": [
         "aion2",
