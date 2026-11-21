@@ -61,6 +61,12 @@ Verify long labels and normal/selected/error text in both themes. Required text
 contrast is 4.5:1 (3:1 for large text); meaningful focus/boundaries require 3:1.
 Decorative dividers and original game-art semantics have separate roles.
 
+For compact control groups, also test the narrowest desktop width and just
+before and after the group reflows. Use CJK and long translated labels, an
+expanded directory where available, and any conditional option that adds
+width. Check that controls move as units and neither overlap neighboring
+controls nor cover the first result.
+
 The style guard covers shared UI/shell and released-game/portal component chrome,
 not every game-record renderer. Its six reviewed legacy exceptions retain seven
 existing occurrences; new copies or changed values fail. Baseline regeneration

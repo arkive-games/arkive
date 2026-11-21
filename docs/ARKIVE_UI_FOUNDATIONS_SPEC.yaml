@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.ui-foundations"
 title: "Arkive UI Foundations Specification"
 status: "canonical"
-last_reviewed: "2026-11-18"
+last_reviewed: "2026-11-22"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -82,6 +82,10 @@ responsive_system:
     - "Document-level horizontal overflow is forbidden."
     - "Use CSS Grid for multi-column page structure and stable tracks for repeated records."
     - "Use content-driven collapse rules; do not assume a desktop grid can simply shrink."
+  compact_control_labels:
+    scope: "Filters, tabs, navigation links, toolbar actions, and other compact controls in horizontal groups."
+    priority: "Use the group's available container width, including when a sidebar, adjacent search field, zoom, or localization reduces it. Keep each control at its readable content width. When the group no longer fits, wrap whole controls or use the surface's existing responsive disclosure or scrolling pattern. Do not change the control order or hide actions."
+    sizing: "Let wrapped rows increase the group's height and push subsequent content down. Only wrap a label itself when its control is wider than the entire available row; use natural line breaks. Do not squeeze CJK labels into one-character columns, clip controls, or mask document overflow."
 
 typography:
   root_size: "17px"
@@ -418,6 +422,7 @@ verification:
     - "Test the viewports required by the owning mobile or desktop specification."
     - "Test light, dark, keyboard, touch, reduced motion, and 200 percent zoom."
     - "Confirm there is no document-level horizontal overflow or content overlap."
+    - "For horizontal control groups, resize across the point where the group stops fitting. Check long and CJK labels with adjacent controls and expanded sidebars. Confirm the group reflows before its labels fragment and the next surface stays below it."
 
 known_gaps:
   - >-
@@ -433,6 +438,7 @@ maintenance:
     - "Update this file before introducing a new global token or foundation rule."
 
 catalog_controls_and_copy:
+  inline_track: "Apply responsive_system.compact_control_labels. Keep a single track, let whole options wrap within it, and let its height grow. Fit adjacent search within the remaining space only while it stays usable; otherwise give it a separate row."
   facet_popovers:
     scope: "Finite option sets in encyclopedia and catalog filters; use the same shared layout across categories and games."
     width: "Content-sized outer surface, capped at 22rem and the viewport width minus 2rem, whichever is smaller. Include padding, borders and option gaps in this budget. Do not stretch the surface to the cap when its content is narrower."
