@@ -114,6 +114,8 @@ export function GlimmithTutorialPrototype() {
     const actor = window ?? scene.actors.find(({ id }) => id === marker.id)
     const puzzle = puzzles.get(marker.id)
     const linked = actor && 'unlocks' in actor ? actor.unlocks[0] : undefined
+    const isPostGame = actor && 'unlockCategory' in actor && actor.unlockCategory === 'GameCompletion'
+    const unlocker = isPostGame ? scene.actors.find(({ directory, unlocks }) => directory && unlocks.some((id) => id === marker.id)) : undefined
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
     return (
       <MarkerDetailDrawer key={marker.id} anchored={!mobile} compact={Boolean(puzzle)}
@@ -138,7 +140,17 @@ export function GlimmithTutorialPrototype() {
               ? <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(id)}>{puzzleNumber(id)}</button>
               : <span className="text-muted-foreground">{puzzleNumber(id)}</span>}</li>)}
           </ul>,
-        }] : puzzle ? [{
+        }] : puzzle ? [...(isPostGame ? [{
+          id: 'unlock', title: copy.unlock, accessibleTitle: copy.unlock, defaultExpanded: true,
+          content: <div className="grid gap-1 text-sm">
+            <p className="font-medium">{copy.postGameUnlock}</p>
+            {unlocker && <p className="text-muted-foreground">
+              <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(unlocker.id)}>
+                {puzzleNumber(unlocker.id)}
+              </button>{copy.linkedUnlockUnverified}
+            </p>}
+          </div>,
+        }] : []), {
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
           content: <PuzzleSolution puzzle={puzzle} />,
         }] : [{

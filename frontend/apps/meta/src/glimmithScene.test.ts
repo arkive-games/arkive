@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest'
 import scene from './assets/glimmith-scene.json'
 
 describe('Glimmith tutorial scene', () => {
+  it('preserves the game-completion category and the separate puzzle unlock reference', () => {
+    const postGame = scene.actors.filter(({ unlockCategory }) => unlockCategory === 'GameCompletion')
+    expect(postGame.map(({ id }) => id)).toEqual(['0054.puz'])
+    expect(scene.actors.filter(({ unlocks }) => unlocks.some((id) => id === '0054.puz')).map(({ id }) => id)).toEqual(['0527.puz'])
+  })
+
   it('has a map marker and source solution for every bridge prerequisite', () => {
     const bridge = scene.windows.find(({ id }) => id === 'window-bridge')
     expect(bridge?.prerequisites).toHaveLength(11)

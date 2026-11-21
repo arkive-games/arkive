@@ -40,7 +40,8 @@ const actors = [...ids].map((id) => {
   const directory = prop(entry, 'PuzzleDirectory') ?? null
   if (Boolean(widget) === Boolean(directory)) throw new Error('Expected a tutorial widget or puzzle file: ' + id)
   const unlocks = (prop(entry, 'puzzleUnlocks') ?? []).map(({ Value }) => prop(scene.Exports[Value - 1], 'PuzzleFile'))
-  return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory, unlocks: unlocks.filter((id) => ids.has(id)) }
+  const unlockCategory = prop(entry, 'UnlockCategory')?.replace(/^EUnlockCategory::/, '') ?? null
+  return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory, unlocks: unlocks.filter((id) => ids.has(id)), unlockCategory }
 })
 const width = 2048
 const height = 2048
@@ -83,31 +84,88 @@ function transform(loc, rot, scale) {
 }
 
 const platformMeshes = /RuinFloor|WoodenPlatform|Brick_Floor|CircularA|Flatrock|RuinWall.*_Top|RuinTrim/i
-const vesselMeshes = new Set(['Base_Ship_Full_Static_SM', 'Boarding_Plank_W_Rails_SM'])
+const passageMeshes = new Set(['SM_Bridge', 'Boarding_Plank_W_Rails_SM', 'Ladder_SM'])
+const dockPlanks = /^SM_WoodenPlank_0[1-3]$/
 const rockMeshes = new Set(['SM_Rock_01', 'SM_Rock_01_cut', 'Rock_01_SM'])
+const dockRockMeshes = new Set(['SM_Rock_05', 'SM_Rock_06_cut'])
+const shipMesh = 'Base_Ship_Full_Static_SM'
+const shipMaterials = {
+  Main_Hull_MI: 'ship',
+  Deck_MI: 'deck',
+  Rear_Deck_MI: 'deck',
+  Rails_Ramp_MI: 'deck',
+  Back_Room_MI: 'cabin',
+}
 const surfaces = sources.flatMap((name) => {
   const map = readMap('OverworldSubmaps/' + name)
   return map.Exports.flatMap((entry) => {
     const mesh = map.Imports[-prop(entry, 'StaticMesh') - 1]?.ObjectName
     const loc = vector(entry, 'RelativeLocation')
     if (!loc || !mesh || prop(entry, 'AttachParent')) return []
-    if (!platformMeshes.test(mesh) && !rockMeshes.has(mesh) && !vesselMeshes.has(mesh)) return []
+    const isDockPlank = name === 'Welcome' && dockPlanks.test(mesh)
+    const isRock = rockMeshes.has(mesh) || (name === 'Welcome' && dockRockMeshes.has(mesh)) || /Flatrock/i.test(mesh)
+    const isLadder = mesh === 'Ladder_SM'
+    if (!platformMeshes.test(mesh) && !isRock && !passageMeshes.has(mesh) && !isDockPlank && mesh !== shipMesh) return []
     const model = meshes[mesh]
     if (!model) throw new Error('Missing mesh: ' + mesh)
     const vertices = model.vertices.map(transform(loc, vector(entry, 'RelativeRotation'), vector(entry, 'RelativeScale3D')))
     const points = vertices.map(([x, y]) => project(x, y))
     if (points.every(([x]) => x < 0) || points.every(([x]) => x > width) ||
         points.every(([, y]) => y < 0) || points.every(([, y]) => y > height)) return []
-    const outline = hull(points)
-    if (outline.length < 3) return []
-    return [{ outline, mesh, zMin: Math.min(...vertices.map((v) => v[2])), zMax: Math.max(...vertices.map((v) => v[2])) }]
+    const surface = (kind, indices, faces = []) => {
+      const outline = hull(indices ? indices.map((i) => points[i]) : points)
+      if (outline.length < 3) return []
+      const heights = indices ? indices.map((i) => vertices[i][2]) : vertices.map((v) => v[2])
+      return [{ outline, mesh, kind, faces, zMin: Math.min(...heights), zMax: Math.max(...heights) }]
+    }
+    const triangles = (indices, include = () => true) => {
+      const faces = []
+      for (let i = 0; i < indices.length; i += 3) {
+        const triangle = indices.slice(i, i + 3)
+        if (!include(triangle)) continue
+        const face = triangle.map((i) => points[i])
+        const area = cross(...face)
+        if (Math.abs(area) > 0.01) faces.push(area < 0 ? face.reverse() : face)
+      }
+      return faces
+    }
+    if (mesh === shipMesh) {
+      if (!model.sections?.some(({ material }) => material === 'Main_Hull_MI') || !model.indices.length) {
+        throw new Error('Missing source ship material sections')
+      }
+      return model.sections.flatMap(({ material, FirstIndex, NumTriangles }) => {
+        const indices = model.indices.slice(FirstIndex, FirstIndex + 3 * NumTriangles)
+        if (material === 'Cloth_Sail_M') {
+          // Draw the two wings independently so their convex hull cannot cover the open air between them.
+          return [-1, 1].flatMap((side) => surface('sail', indices.filter((i) => side * model.vertices[i][1] > 650)))
+        }
+        if (material === 'Wing_Socket_MI' || material === 'Ship_Parts_Wood_MI' || material === 'Ship_Parts_Metal_MI') {
+          // Keep the low wing frame without projecting the overhead balloon rigging onto the deck.
+          const faces = triangles(indices, (triangle) => {
+            const local = triangle.map((i) => model.vertices[i])
+            return local.every(([x, , z]) => x >= -130 && x <= 790 && z <= 430) &&
+              local.some(([, y]) => Math.abs(y) >= 410)
+          })
+          return faces.length ? surface('wing-frame', indices, faces) : []
+        }
+        const kind = shipMaterials[material]
+        return kind ? surface(kind, indices) : []
+      })
+    }
+    const kind = isLadder ? 'ladder'
+      : isRock ? 'rock'
+      : passageMeshes.has(mesh) || isDockPlank || /Wooden/i.test(mesh) ? 'wood'
+      : 'stone'
+    if (isLadder && !model.indices.length) throw new Error('Missing ladder triangles')
+    return surface(kind, undefined, isLadder ? triangles(model.indices) : [])
   })
 })
 if (!surfaces.length) throw new Error('No source geometry found')
 const pointList = (points) => points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')
 for (const actor of actors) {
   const point = project(actor.x, actor.y)
-  const support = surfaces.filter(({ outline, zMin, zMax }) =>
+  const support = surfaces.filter(({ outline, zMin, zMax, kind }) =>
+    kind !== 'sail' && kind !== 'wing-frame' && kind !== 'ladder' &&
     actor.z >= zMin - 70 && actor.z <= zMax + 110 &&
     outline.every((a, i) => cross(a, outline[(i + 1) % outline.length], point) >= -0.01))
   if (!support.length) throw new Error('Marker has no nearby-height mesh footprint: ' + actor.id)
@@ -120,8 +178,31 @@ for (const window of windows) {
   if (x < 0 || x >= width || y < 0 || y >= height) throw new Error('Window outside projection: ' + window.id)
   window.pixel = { x, y }
 }
-const silhouettes = surfaces.sort((a, b) => a.zMax - b.zMax).map(({ outline, mesh }) =>
-  `<polygon points="${pointList(outline)}" fill="${/Wooden/i.test(mesh) || vesselMeshes.has(mesh) ? '#ad9878' : '#c0c6b8'}" stroke="#788c8b" stroke-width="1.2"/>`)
+const terrainStyle = {
+  rock: ['#7d9391', '#536e72', 1.15],
+  sail: ['#829295', '#405963', 1.4],
+  ship: ['#9e8061', '#5b483b', 1.8],
+  deck: ['#bda788', '#826c55', 1.2],
+  cabin: ['#89694e', '#5b483b', 1.6],
+  stone: ['#c9cbbd', '#879893', 0.95],
+  wood: ['#d5b481', '#80694d', 1.1],
+}
+const terrainLayer = { rock: 0, sail: 0, 'wing-frame': 1, ship: 2, deck: 3, cabin: 4, stone: 5, wood: 5, ladder: 6 }
+const silhouettes = surfaces
+  .sort((a, b) => terrainLayer[a.kind] - terrainLayer[b.kind] || a.zMax - b.zMax)
+  .map(({ outline, kind, faces }) => {
+    if (kind === 'ladder') {
+      // Keep open rungs rather than implying a solid floor beneath them.
+      const path = faces.map((face) => 'M' + pointList(face) + 'Z').join('')
+      return `<path d="${path}" fill="#e0bf8a" stroke="#614c36" stroke-width="1" paint-order="stroke"/>`
+    }
+    if (kind === 'wing-frame') {
+      const path = faces.map((face) => 'M' + pointList(face) + 'Z').join('')
+      return `<path d="${path}" fill="#78807c"/>`
+    }
+    const [fill, stroke, thickness] = terrainStyle[kind]
+    return `<polygon points="${pointList(outline)}" fill="${fill}" stroke="${stroke}" stroke-width="${thickness}"/>`
+  })
 
 const puzzleFile = ({ id, directory }) => readFileSync(join(root, '..', directory, id), 'utf8')
 const sample = actors.find(({ id }) => id === '0049.puz')

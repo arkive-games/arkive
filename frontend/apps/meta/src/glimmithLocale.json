@@ -25,6 +25,9 @@
   "noBoard": "这是游戏中的说明页，没有独立棋盘或格子答案。",
   "openFirst": "查看这处说明解锁的第一道谜题",
   "solution": "解法",
+  "unlock": "解锁条件",
+  "postGameUnlock": "通关后解锁",
+  "linkedUnlockUnverified": " 的解锁清单也包含本题，是否必须先完成该题尚未实测。",
   "engine": { "copyPosition": "复制坐标", "noMapSelected": "未选择地图", "zoomIn": "放大", "zoomOut": "缩小" },
   "windows": {
     "window-bridge": "格里米斯桥",

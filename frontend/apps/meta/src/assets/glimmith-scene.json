@@ -13,7 +13,7 @@
     "Zone01_Intro_Bridge",
     "Zone01_Intro_Gate_Revised"
   ],
-  "surfaceCount": 560,
+  "surfaceCount": 673,
   "actors": [
     {
       "id": "Tutorial-1",
@@ -26,6 +26,7 @@
       "unlocks": [
         "0049.puz"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 687.6973688078432,
         "y": 1378.8779406586668
@@ -46,6 +47,7 @@
       "unlocks": [
         "0643.puz"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 838.0034348674343,
         "y": 1274.0534084903404
@@ -65,6 +67,7 @@
       "unlocks": [
         "0050.puz"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 904.2764894461536,
         "y": 1196.448456379624
@@ -87,6 +90,7 @@
       "unlocks": [
         "0067B.puz"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 964.1002558800069,
         "y": 1134.487572997496
@@ -108,6 +112,7 @@
       "unlocks": [
         "0066.puz"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 1040.7369652878697,
         "y": 1089.662079561776
@@ -127,6 +132,7 @@
       "unlocks": [
         "0008.puz"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 1114.6712251177012,
         "y": 1046.5004782638882
@@ -145,6 +151,7 @@
       "widget": null,
       "directory": "AGeri/Puzzles/Zone1/1-single-shape",
       "unlocks": [],
+      "unlockCategory": null,
       "pixel": {
         "x": 1168.6755756483988,
         "y": 1011.6182946156823
@@ -166,6 +173,7 @@
         "0009.puz",
         "Tutorial-2"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 1260.6479824487262,
         "y": 1003.7896637799793
@@ -187,6 +195,7 @@
         "0012.puz",
         "0054.puz"
       ],
+      "unlockCategory": null,
       "pixel": {
         "x": 1383.6887407088361,
         "y": 1004.2895029143145
@@ -204,6 +213,7 @@
       "widget": null,
       "directory": "AGeri/Puzzles/Zone1/1-single-shape",
       "unlocks": [],
+      "unlockCategory": null,
       "pixel": {
         "x": 1506.0944988375384,
         "y": 1110.5371623765197
@@ -221,6 +231,7 @@
       "widget": null,
       "directory": "AGeri/Puzzles/Zone1/1-single-shape",
       "unlocks": [],
+      "unlockCategory": null,
       "pixel": {
         "x": 1504.942863370166,
         "y": 912.8717443226091
@@ -238,6 +249,7 @@
       "widget": null,
       "directory": "AGeri/Puzzles/Zone1/1-single-shape",
       "unlocks": [],
+      "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 208.31634410478836,
         "y": 1543.8457880822298
@@ -255,6 +267,7 @@
       "widget": "WBP_Note_Windows_C",
       "directory": null,
       "unlocks": [],
+      "unlockCategory": null,
       "pixel": {
         "x": 1364.1690526473724,
         "y": 820.4966749504982
@@ -272,6 +285,7 @@
       "widget": "WBP_Note_Metallicize_C",
       "directory": null,
       "unlocks": [],
+      "unlockCategory": null,
       "pixel": {
         "x": 1726.084078131531,
         "y": 502.50077533045936
