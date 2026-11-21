@@ -59,7 +59,7 @@ export function CatalogFacetOption({ active, label, icon, onClick, testId, inlin
   active: boolean; label: ReactNode; icon?: ReactNode; onClick: () => void; testId?: string; inline?: boolean;
 }) {
   return <FilterChip variant="tile" active={active} onClick={onClick} testId={testId}
-    className={cn('min-h-11 max-w-full gap-2 rounded-full px-3 text-sm', inline ? 'border-0' : 'border-border/70 shadow-xs', active
+    className={cn('min-h-11 max-w-full gap-2 rounded-full px-3 text-sm', inline ? 'w-max shrink-0 border-0' : 'border-border/70 shadow-xs', active
       ? 'bg-foreground text-background'
       : inline
         ? 'bg-transparent text-foreground hover:!bg-[color:var(--foreground)] hover:!text-[color:var(--background)]'
@@ -80,7 +80,7 @@ const FacetTrackContext = createContext<ReturnType<typeof useCatalogFacetMenus> 
 
 export function CatalogFacetTrack({ children, className }: { children: ReactNode; className?: string }) {
   const menus = useCatalogFacetMenus()
-  return <FacetTrackContext.Provider value={menus}><div className={cn('flex w-fit max-w-full min-h-[var(--arkive-catalog-control-height)] flex-wrap items-center gap-1 rounded-2xl bg-muted p-1 lg:h-[var(--arkive-catalog-control-height)] lg:flex-nowrap lg:rounded-full', className)}>{children}</div></FacetTrackContext.Provider>
+  return <FacetTrackContext.Provider value={menus}><div className={cn('flex w-fit max-w-full min-h-[var(--arkive-catalog-control-height)] flex-wrap items-center gap-1 rounded-2xl bg-muted p-1 lg:rounded-[calc(var(--arkive-catalog-control-height)/2)]', className)}>{children}</div></FacetTrackContext.Provider>
 }
 
 export function CatalogFacetGroup({ label, count = 0, testId, children }: {
