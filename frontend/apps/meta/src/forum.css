@@ -4210,6 +4210,13 @@
 }
 
 /* Feed, personal and cabin tabs: the All Games capsule switch. */
+.forum-feed-toolbar {
+  flex-wrap: wrap;
+  column-gap: 0.5rem;
+  row-gap: 0.25rem;
+  padding-block: 0.25rem;
+}
+
 .forum-feed-toolbar,
 .forum-personal-tabs,
 .forum-cabin-tabs {
@@ -4224,12 +4231,21 @@
 }
 
 .forum-feed-toolbar > div[role='tablist'] {
+  width: fit-content;
+  max-width: 100%;
   min-height: 0;
   padding: 0.25rem;
   border-radius: 999rem;
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   background: var(--muted);
+}
+
+.forum-feed-toolbar > div > button,
+.forum-following-filter {
+  flex: none;
+  max-width: 100%;
 }
 
 .forum-feed-toolbar > div > button,
