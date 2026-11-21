@@ -24,6 +24,7 @@ function siblingRepo(name: string): string {
 }
 const DATA_DIR = process.env.PALWORLD_DATA_DIR ?? siblingRepo('data-palworld')
 const RES_DIR = process.env.PALWORLD_RES_DIR ?? siblingRepo('resource-palworld')
+const SITE_VERSION = (JSON.parse(fs.readFileSync(path.resolve(__dirname, 'src/changelog.json'), 'utf8')) as { entries?: { version?: string }[] }).entries?.[0]?.version ?? '0.0.0'
 
 const MIME: Record<string, string> = {
   '.json': 'application/json',
@@ -67,5 +68,6 @@ export default defineConfig({
   define: {
     __BUILD_TIME__: JSON.stringify(process.env.BUILD_TIME ?? Date.now().toString()),
     __BUILD_GIT_COMMIT__: JSON.stringify(execSync('git rev-parse HEAD').toString().trim()),
+    __SITE_VERSION__: JSON.stringify(SITE_VERSION),
   },
 })

@@ -50,3 +50,14 @@ export function resourceUrl(path: string): string {
   if (/^(?:\/|https?:\/\/|data:)/.test(path)) return path
   return `${RES_BASE}/${path.replace(/^\/+/, '')}`
 }
+
+/**
+ * Optional 256px-ish art emitted beside catalogue images. The resource repo
+ * may be older than the frontend, so callers must keep the full-size URL as a
+ * fallback when this path is not present yet.
+ */
+export function resourceThumbnailUrl(path: string): string {
+  const url = resourceUrl(path)
+  if (/^(?:data:|\/)/.test(path)) return url
+  return url.replace(/\.webp(?=($|\?))/i, '.thumb.webp')
+}

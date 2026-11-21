@@ -17,6 +17,7 @@ function siblingRepo(name: string): string {
 
 const DATA_DIR = process.env.RO3_DATA_DIR ?? siblingRepo('data-ro3')
 const RES_DIR = process.env.RO3_RES_DIR ?? siblingRepo('resource-ro3')
+const SITE_VERSION = (JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, 'src/changelog.json'), 'utf8')) as { entries?: { version?: string }[] }).entries?.[0]?.version ?? '0.0.0'
 
 const MIME: Record<string, string> = {
   '.json': 'application/json',
@@ -59,4 +60,5 @@ export default defineConfig({
     staticDirPlugin('ro3-res', '/ro3res', RES_DIR),
   ],
   resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
+  define: { __SITE_VERSION__: JSON.stringify(SITE_VERSION) },
 })

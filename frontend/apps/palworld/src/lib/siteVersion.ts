@@ -1,12 +1,6 @@
-import { currentVersion, type ChangelogFile } from '@gamemap/ui'
-
-import raw from '../changelog.json'
-
-export const changelog = raw as ChangelogFile
-
 /**
- * Current site version — the newest changelog entry. Read from here (not from
- * the page component) so ContentPage / TopNav / ChangelogPage don't form an
- * import cycle.
+ * The current version is injected by Vite from changelog.json. Keeping the
+ * history out of this module lets the map entry load a short string while the
+ * changelog route fetches its large history chunk only when visited.
  */
-export const SITE_VERSION = currentVersion(changelog)
+export const SITE_VERSION = __SITE_VERSION__

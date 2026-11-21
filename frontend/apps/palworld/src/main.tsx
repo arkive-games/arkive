@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { lazy, Suspense, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   createHashHistory,
@@ -18,33 +18,36 @@ import { AUTH_CONFIG } from './lib/auth'
 import './index.css'
 import './i18n'
 import App from './App'
-import BreedingPage from './features/breeding/BreedingPage'
 import { parseTreeParam, type BreedTreeNode } from './lib/breeding'
-import PalListPage from './features/pals/PalListPage'
-import PalDetailPage from './features/pals/PalDetailPage'
-import ItemListPage from './features/items/ItemListPage'
-import ItemDetailPage from './features/items/ItemDetailPage'
-import BuildingListPage from './features/buildings/BuildingListPage'
-import BuildingDetailPage from './features/buildings/BuildingDetailPage'
-import MerchantListPage from './features/merchants/MerchantListPage'
-import MerchantDetailPage from './features/merchants/MerchantDetailPage'
-import TechnologyPage from './features/technology/TechnologyPage'
-import DungeonListPage from './features/dungeons/DungeonListPage'
-import DungeonDetailPage from './features/dungeons/DungeonDetailPage'
-import DungeonLayoutPage from './features/dungeons/DungeonLayoutPage'
-import QuestListPage from './features/quests/QuestListPage'
-import QuestDetailPage from './features/quests/QuestDetailPage'
-import BaseCampPage from './features/basecamp/BaseCampPage'
-import ResearchPage from './features/research/ResearchPage'
-import RaidsPage from './features/raids/RaidsPage'
-import FishingPage from './features/fishing/FishingPage'
-import RegionDetailPage from './features/regions/RegionDetailPage'
-import StatSimulatorPage from './features/simulator/StatSimulatorPage'
-import PassivesPage from './features/pals/PassivesPage'
-import ActiveSkillsPage from './features/pals/ActiveSkillsPage'
-import ActiveSkillDetailPage from './features/pals/ActiveSkillDetailPage'
-import PartnerSkillsPage from './features/pals/PartnerSkillsPage'
-import ChangelogPage from './features/changelog/ChangelogPage'
+// Non-map routes are independent surfaces. Keep their code out of the map
+// entry chunk; the root Suspense boundary below displays the map shell while
+// the selected page is fetched.
+const BreedingPage = lazy(() => import('./features/breeding/BreedingPage'))
+const PalListPage = lazy(() => import('./features/pals/PalListPage'))
+const PalDetailPage = lazy(() => import('./features/pals/PalDetailPage'))
+const ItemListPage = lazy(() => import('./features/items/ItemListPage'))
+const ItemDetailPage = lazy(() => import('./features/items/ItemDetailPage'))
+const BuildingListPage = lazy(() => import('./features/buildings/BuildingListPage'))
+const BuildingDetailPage = lazy(() => import('./features/buildings/BuildingDetailPage'))
+const MerchantListPage = lazy(() => import('./features/merchants/MerchantListPage'))
+const MerchantDetailPage = lazy(() => import('./features/merchants/MerchantDetailPage'))
+const TechnologyPage = lazy(() => import('./features/technology/TechnologyPage'))
+const DungeonListPage = lazy(() => import('./features/dungeons/DungeonListPage'))
+const DungeonDetailPage = lazy(() => import('./features/dungeons/DungeonDetailPage'))
+const DungeonLayoutPage = lazy(() => import('./features/dungeons/DungeonLayoutPage'))
+const QuestListPage = lazy(() => import('./features/quests/QuestListPage'))
+const QuestDetailPage = lazy(() => import('./features/quests/QuestDetailPage'))
+const BaseCampPage = lazy(() => import('./features/basecamp/BaseCampPage'))
+const ResearchPage = lazy(() => import('./features/research/ResearchPage'))
+const RaidsPage = lazy(() => import('./features/raids/RaidsPage'))
+const FishingPage = lazy(() => import('./features/fishing/FishingPage'))
+const RegionDetailPage = lazy(() => import('./features/regions/RegionDetailPage'))
+const StatSimulatorPage = lazy(() => import('./features/simulator/StatSimulatorPage'))
+const PassivesPage = lazy(() => import('./features/pals/PassivesPage'))
+const ActiveSkillsPage = lazy(() => import('./features/pals/ActiveSkillsPage'))
+const ActiveSkillDetailPage = lazy(() => import('./features/pals/ActiveSkillDetailPage'))
+const PartnerSkillsPage = lazy(() => import('./features/pals/PartnerSkillsPage'))
+const ChangelogPage = lazy(() => import('./features/changelog/ChangelogPage'))
 import { BottomTabBar } from './components/BottomTabBar'
 import { initDataVersion } from './lib/urls'
 
@@ -53,7 +56,9 @@ const themeStorage = createArkiveThemeStorage({ legacyKeys: ['palworld.theme'] }
 const rootRoute = createRootRoute({
   component: () => (
     <>
-      <Outlet />
+      <Suspense fallback={<div className="min-h-dvh bg-background" aria-busy="true" />}>
+        <Outlet />
+      </Suspense>
       <BottomTabBar />
     </>
   ),

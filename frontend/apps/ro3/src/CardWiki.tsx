@@ -29,7 +29,7 @@ import {
   type WikiCard,
 } from './cardCatalog'
 import { loadWikiData, type WikiData } from './wikiData'
-import { resourceUrl } from './lib/urls'
+import { resourceThumbnailUrl, resourceUrl } from './lib/urls'
 import cardFrame01 from './assets/native-ui/card_img_item_01_01.webp'
 import cardFrame02 from './assets/native-ui/card_img_item_02_01.webp'
 import cardFrame03 from './assets/native-ui/card_img_item_03_01.webp'
@@ -378,9 +378,21 @@ function CardFace({ card, collection }: { card: WikiCard; collection: boolean })
   const frame = variant ? FRAMES[variant] : null
   const nameplate = variant ? NAMEPLATES[variant] : null
   const name = localizedText(card.name)
+  const fullImage = resourceUrl(card.icon)
+  const [imageSrc, setImageSrc] = useState(() => resourceThumbnailUrl(card.icon))
   return (
     <span className={cn('card-game-frame', collection && 'is-collection')}>
-      <span className="card-game-frame-art"><img src={resourceUrl(card.icon)} alt="" loading="lazy" /></span>
+      <span className="card-game-frame-art">
+        <img
+          src={imageSrc}
+          alt=""
+          width={512}
+          height={512}
+          loading="lazy"
+          decoding="async"
+          onError={() => setImageSrc((current) => current === fullImage ? current : fullImage)}
+        />
+      </span>
       {frame ? <img className="card-game-frame-rarity" src={frame} alt="" aria-hidden="true" /> : null}
       {nameplate ? (
         <>

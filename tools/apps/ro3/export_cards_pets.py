@@ -431,6 +431,15 @@ def export_art(rows: dict[str, list], stage: Path, work: Path, res_out: Path,
             target = res_out / out / f"{art.safe_name(name)}.webp"
             target.parent.mkdir(parents=True, exist_ok=True)
             image.save(target, "WEBP", quality=quality, method=6)
+            # Catalogue grids render pet/card art at roughly 100px. Keep the
+            # original for detail views, and emit a small sibling that the web
+            # client can request without changing the data contract. Existing
+            # resource deployments remain valid because the client falls back
+            # to the original URL when this optional file is absent.
+            if out in {"icons/pets", "icons/cards"}:
+                thumb = image.copy()
+                thumb.thumbnail((256, 256), Image.Resampling.LANCZOS)
+                thumb.save(target.with_name(f"{target.stem}.thumb.webp"), "WEBP", quality=82, method=6)
             report["written"] += 1
             done += 1
             if done % 100 == 0:

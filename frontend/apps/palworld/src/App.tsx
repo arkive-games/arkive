@@ -86,6 +86,22 @@ function MarkerDetailBridge({ marker, render }: { marker: EngineMarker; render: 
   return render(marker)
 }
 
+type IdleWindow = Window & {
+  requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number
+  cancelIdleCallback?: (id: number) => void
+}
+
+/** Start non-critical encyclopedia work after the map's first frame. */
+function scheduleIdle(callback: () => void, timeout = 2500): () => void {
+  const idleWindow = window as IdleWindow
+  if (idleWindow.requestIdleCallback) {
+    const id = idleWindow.requestIdleCallback(callback, { timeout })
+    return () => idleWindow.cancelIdleCallback?.(id)
+  }
+  const id = window.setTimeout(callback, Math.min(timeout, 1200))
+  return () => window.clearTimeout(id)
+}
+
 // Categories that start collapsed in the filter sidebar (stable identity so the
 // FilterPanel sync effect doesn't re-run each render).
 const PAL_COLLAPSED_CATEGORIES = ['pal']
@@ -205,6 +221,7 @@ export default function App() {
   // a hit shows even when its subtype filter is off (see SearchPanel).
   const [searchResultIds, setSearchResultIds] = useState<string[]>([])
   const [palsBundle, setPalsBundle] = useState<PalsBundle | null>(null)
+  const palsLoadId = useRef(0)
   // `mapId` records which map the loaded markers belong to — the selection
   // persistence below must not write while markers and mapId disagree (the
   // one-commit window right after a map switch).
@@ -250,14 +267,33 @@ export default function App() {
     return () => { cancelled = true }
   }, [lng, t])
 
-  // Encyclopedia data (elements/best-work) for enriching pal marker popups.
-  useEffect(() => {
-    let cancelled = false
+  // Encyclopedia data is useful for marker enrichment, but its full bundle
+  // includes multi-megabyte item and skill catalogs. Let the map and its first
+  // tiles win the initial network/parse budget, then fill this in during idle
+  // time. Selecting a marker below makes the same request immediately.
+  const ensurePalsBundle = useCallback(() => {
+    const loadId = ++palsLoadId.current
     loadPals(lng)
-      .then((b) => { if (!cancelled) setPalsBundle(b) })
+      .then((b) => { if (loadId === palsLoadId.current) setPalsBundle(b) })
       .catch((err) => console.error(err))
-    return () => { cancelled = true }
+    return () => {
+      if (loadId === palsLoadId.current) palsLoadId.current += 1
+    }
   }, [lng])
+
+  useEffect(() => {
+    setPalsBundle(null)
+    const cancelIdle = scheduleIdle(() => { void ensurePalsBundle() })
+    return () => {
+      cancelIdle()
+      palsLoadId.current += 1
+    }
+  }, [ensurePalsBundle])
+
+  useEffect(() => {
+    if (!selectedMarkerId || palsBundle) return
+    return ensurePalsBundle()
+  }, [ensurePalsBundle, palsBundle, selectedMarkerId])
 
   // A marker to select once the NEXT map's markers finish loading — set when
   // following a cross-map warp-altar link (the map switch below clears the

@@ -214,6 +214,10 @@ export function HomeCarousel({ sites, onOpenSite }: {
         >
           {slides.map((slide, index) => {
             const d = slotOf(index, active, length)
+            // Keep the active slide and its two neighbours mounted so the next
+            // swipe has an image ready, but do not make every hidden slide
+            // compete with the first paint for bandwidth and decode time.
+            const shouldRenderArt = Math.abs(d) <= 1
             // A slide jumping more than one slot is wrapping round the loop: it
             // fades in at its new place instead of flying across the stage.
             const wrapped = Math.abs(d - slotOf(index, from % length, length)) > 1
@@ -238,15 +242,20 @@ export function HomeCarousel({ sites, onOpenSite }: {
             }
             const content = (
               <>
-                <picture className="home-slide-art">
-                  {slide.phoneBanner && <source media="(max-width: 760px)" srcSet={slide.phoneBanner} />}
-                  <img
-                    src={slide.banner}
-                    alt=""
-                    draggable={false}
-                    style={{ objectPosition: slide.bannerPosition }}
-                  />
-                </picture>
+                {shouldRenderArt ? (
+                  <picture className="home-slide-art">
+                    {slide.phoneBanner && <source media="(max-width: 760px)" srcSet={slide.phoneBanner} />}
+                    <img
+                      src={slide.banner}
+                      alt=""
+                      draggable={false}
+                      loading={d === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      fetchPriority={d === 0 ? 'high' : 'low'}
+                      style={{ objectPosition: slide.bannerPosition }}
+                    />
+                  </picture>
+                ) : <span className="home-slide-art" aria-hidden="true" />}
                 <span className="home-slide-caption">
                   <img className="home-slide-icon" src={slide.icon} alt="" />
                   <span className="home-slide-text">

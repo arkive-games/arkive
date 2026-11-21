@@ -9,7 +9,7 @@ import { Notice } from './components/wiki'
 import { GameText } from './components/GameText'
 import { LevelStepper } from './components/LevelStepper'
 import { HeaderAction } from './components/SectionNav'
-import { resourceUrl } from './lib/urls'
+import { resourceThumbnailUrl, resourceUrl } from './lib/urls'
 import content from './locales/zh-CN.json'
 
 const text = content.wiki.pets
@@ -254,6 +254,8 @@ function QualityGroup({ quality, pets, selectedId, onSelect }: {
 
 function PetTile({ pet, selected, onSelect }: { pet: PetRecord; selected: boolean; onSelect: () => void }) {
   const name = localizedText(pet.name)
+  const fullImage = resourceUrl(pet.art.fightField)
+  const [imageSrc, setImageSrc] = useState(() => resourceThumbnailUrl(pet.art.fightField))
   return (
     <button
       type="button"
@@ -272,7 +274,16 @@ function PetTile({ pet, selected, onSelect }: { pet: PetRecord; selected: boolea
           selected ? 'ring-2 ring-[color:var(--arkive-nav-active)]' : 'ring-1 ring-inset ring-black/5',
         )}
       >
-        <img src={resourceUrl(pet.art.fightField)} alt="" loading="lazy" className="size-full object-cover" />
+        <img
+          src={imageSrc}
+          alt=""
+          width={512}
+          height={512}
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover"
+          onError={() => setImageSrc((current) => current === fullImage ? current : fullImage)}
+        />
       </span>
       <span className={cn('max-w-full truncate text-xs', selected ? 'font-bold text-[color:var(--arkive-nav-active)]' : 'text-foreground/80')}>
         {name}

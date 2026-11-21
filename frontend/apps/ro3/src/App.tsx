@@ -1,21 +1,19 @@
 import { WikiSessionProvider } from './WikiSessionProvider'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { BookOpen, Wrench } from 'lucide-react'
 import { trackPageview } from '@gamemap/map-shell'
-import {
-  currentVersion,
-  resolveChangelog,
-  VersionHistory,
-  type ChangelogFile,
-} from '@gamemap/ui'
-import { PetWiki } from './PetWiki'
-import { MonsterWiki } from './MonsterWiki'
-import { ProfessionWiki } from './ProfessionWiki'
-import { TalentWiki } from './TalentWiki'
-import { CardWiki } from './CardWiki'
-import { EquipmentWiki } from './EquipmentWiki'
-import { SoulWiki } from './SoulWiki'
-import { BuildManual } from './BuildManual'
+// Encyclopedias are independent entry points. Keeping them behind lazy
+// boundaries prevents the home page from downloading every catalog and its
+// data-loader code before the visitor has chosen a section.
+const PetWiki = lazy(() => import('./PetWiki').then(({ PetWiki }) => ({ default: PetWiki })))
+const MonsterWiki = lazy(() => import('./MonsterWiki').then(({ MonsterWiki }) => ({ default: MonsterWiki })))
+const ProfessionWiki = lazy(() => import('./ProfessionWiki').then(({ ProfessionWiki }) => ({ default: ProfessionWiki })))
+const TalentWiki = lazy(() => import('./TalentWiki').then(({ TalentWiki }) => ({ default: TalentWiki })))
+const CardWiki = lazy(() => import('./CardWiki').then(({ CardWiki }) => ({ default: CardWiki })))
+const EquipmentWiki = lazy(() => import('./EquipmentWiki').then(({ EquipmentWiki }) => ({ default: EquipmentWiki })))
+const SoulWiki = lazy(() => import('./SoulWiki').then(({ SoulWiki }) => ({ default: SoulWiki })))
+const BuildManual = lazy(() => import('./BuildManual').then(({ BuildManual }) => ({ default: BuildManual })))
+const ChangelogPage = lazy(() => import('./ChangelogPage'))
 import { ContentPage } from './components/ContentPage'
 import { EncyclopediaWorkspace, HeaderActionProvider, SectionSidebar, SectionStrip, SidebarSubProvider, type SectionNavEntry } from './components/SectionNav'
 import {
@@ -40,13 +38,10 @@ import homeEquipment from './assets/home/equipment.webp'
 import homeSouls from './assets/home/souls.webp'
 import homeBuilds from './assets/home/builds.webp'
 import content from './locales/zh-CN.json'
-import changelogRaw from './changelog.json'
 
 import { canLeaveBuild } from './lib/buildNavigation'
 import { guardedHistory } from './lib/guardedHistory'
-
-const CHANGELOG = changelogRaw as ChangelogFile
-const SITE_VERSION = currentVersion(CHANGELOG)
+import { SITE_VERSION } from './lib/siteVersion'
 
 const HOME_ART: Record<WikiView | 'builds', string> = {
   skills: homeSkills,
@@ -234,26 +229,13 @@ function HomePage({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
   )
 }
 
-function ChangelogPage() {
-  const entries = useMemo(() => resolveChangelog(CHANGELOG, 'zh-CN'), [])
-
-  return (
-    <VersionHistory
-      entries={entries}
-      labels={{
-        current: content.changelog.current,
-        empty: content.changelog.empty,
-        kinds: content.changelog.kinds,
-      }}
-    />
-  )
-}
-
 function WikiPage({ view }: { view: WikiView }) {
   return (
-    <div className="wiki-page">
-      {view === 'skills' ? <ProfessionWiki /> : view === 'talents' ? <TalentWiki /> : view === 'cards' ? <CardWiki /> : view === 'pets' ? <PetWiki /> : view === 'monsters' ? <MonsterWiki /> : view === 'equipment' ? <EquipmentWiki /> : <SoulWiki />}
-    </div>
+    <Suspense fallback={<div className="min-h-80" aria-busy="true" />}>
+      <div className="wiki-page">
+        {view === 'skills' ? <ProfessionWiki /> : view === 'talents' ? <TalentWiki /> : view === 'cards' ? <CardWiki /> : view === 'pets' ? <PetWiki /> : view === 'monsters' ? <MonsterWiki /> : view === 'equipment' ? <EquipmentWiki /> : <SoulWiki />}
+      </div>
+    </Suspense>
   )
 }
 

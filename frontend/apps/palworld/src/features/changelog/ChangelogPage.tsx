@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { VersionHistory, changelogLabels, resolveChangelog } from '@gamemap/ui'
 
 import { ContentPage } from '../../components/ContentPage'
-import { changelog } from '../../lib/siteVersion'
+import { changelog } from '../../lib/changelog'
 import { REPO_URL } from '../../lib/brand'
 
 export default function ChangelogPage() {
