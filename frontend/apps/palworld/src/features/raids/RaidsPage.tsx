@@ -42,7 +42,7 @@ function EnemyChip({
   const otomo = e.otomo ? pals.byId.get(e.otomo) : undefined
   const humanIcon = humans[e.char]?.icon
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="inline-flex max-w-full flex-wrap items-center gap-1.5">
       {pal ? (
         <PalLink id={pal.id} name={pals.text[pal.id]?.name ?? pal.id} icon={pal.icon} />
       ) : (
@@ -66,7 +66,7 @@ function EnemyChip({
       {otomo ? (
         <PalLink id={otomo.id} name={pals.text[otomo.id]?.name ?? otomo.id} icon={otomo.icon} />
       ) : null}
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
         ×{e.count} · Lv{e.lvMin === e.lvMax ? e.lvMin : `${e.lvMin}–${e.lvMax}`}
       </span>
     </span>
