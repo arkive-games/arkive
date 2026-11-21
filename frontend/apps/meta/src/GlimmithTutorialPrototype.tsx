@@ -16,6 +16,7 @@ import noteIcon from './assets/glimmith-marker-note.svg'
 import windowIcon from './assets/glimmith-marker-window.svg'
 import difficultyOne from './assets/glimmith-difficulty-1.png'
 import difficultyTwo from './assets/glimmith-difficulty-2.png'
+import difficultyThree from './assets/glimmith-difficulty-3.png'
 import headerArt from './assets/glimmith-steam-scenery.jpg'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
@@ -28,7 +29,7 @@ const map: GameMapMeta = {
 const windowNames = new Map(Object.entries(copy.windows))
 const puzzles = new Map(Object.entries(scene.puzzles))
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
-const difficultyArt = new Map([[1, difficultyOne], [2, difficultyTwo]])
+const difficultyArt = new Map([[1, difficultyOne], [2, difficultyTwo], [3, difficultyThree]])
 const puzzleNumber = (id: string) => id.replace(/\.puz$/, '')
 const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, index) => {
   const subtype = widget ? 'note' : 'puzzle'
@@ -67,7 +68,6 @@ const searchItems = markers.map((marker) => ({
   name: marker.localizedName,
   idLabel: marker.subtype === 'puzzle' ? marker.localizedName : undefined,
 }))
-const visiblePuzzleIds = new Set(puzzles.keys())
 
 function PuzzleSolution({ puzzle }: { puzzle: (typeof scene.puzzles)['0049.puz'] }) {
   const { columns, rows, board, solution } = puzzle
@@ -101,6 +101,13 @@ export function GlimmithTutorialPrototype() {
   const mobile = useIsMobile()
   const { theme, setTheme } = useTheme()
   const select = (id: string) => setSelected(id)
+  const openLinkedPuzzle = (id: string) => {
+    const target = markers.find((marker) => marker.id === id)
+    if (!target) return
+    setVisible((prev) => prev.has('puzzle') ? prev : new Set([...prev, 'puzzle']))
+    select(id)
+    ref.current?.flyTo(target.x, target.y)
+  }
   const marker = markers.find(({ id }) => id === selected)
   const renderMarkerDetail = (marker: EngineMarker) => {
     const window = windows.get(marker.id)
@@ -118,14 +125,17 @@ export function GlimmithTutorialPrototype() {
         labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
         sections={window ? [{
           id: 'window-requirements', title: copy.requirements, accessibleTitle: copy.requirements,
-          content: <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
-            {copy.milestones.map((label, i) => <div key={label} className="contents"><dt>{label}</dt><dd className="tabular-nums">{window.thresholds[i]}</dd></div>)}
+          content: <dl className="grid grid-cols-3 gap-x-2 text-sm">
+            {copy.milestones.map((label, i) => <div key={label} className="flex items-baseline gap-1.5 whitespace-nowrap">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="font-semibold tabular-nums">{window.thresholds[i]}</dd>
+            </div>)}
           </dl>,
         }, {
           id: 'window-puzzles', title: copy.related, accessibleTitle: copy.related,
           content: <ul className="flex flex-wrap gap-2 text-sm tabular-nums">
-            {window.prerequisites.map((id) => <li key={id}>{visiblePuzzleIds.has(id)
-              ? <button type="button" className="text-primary underline" onClick={() => select(id)}>{puzzleNumber(id)}</button>
+            {window.prerequisites.map((id) => <li key={id}>{puzzles.has(id)
+              ? <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(id)}>{puzzleNumber(id)}</button>
               : <span className="text-muted-foreground">{puzzleNumber(id)}</span>}</li>)}
           </ul>,
         }] : puzzle ? [{
@@ -134,7 +144,7 @@ export function GlimmithTutorialPrototype() {
         }] : [{
           id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
           content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&
-            <button type="button" className="justify-self-start text-primary underline" onClick={() => select(linked)}>
+            <button type="button" className="justify-self-start text-primary underline" onClick={() => openLinkedPuzzle(linked)}>
               {copy.openFirst}
             </button>}</div>,
         }]} />

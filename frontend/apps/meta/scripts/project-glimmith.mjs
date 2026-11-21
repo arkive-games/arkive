@@ -14,18 +14,6 @@ for (const name of [...sources, 'Overworld_Campaign']) {
   const stream = overview.Exports.find((entry) => prop(entry, 'WorldAsset')?.AssetPath?.AssetName?.endsWith('/' + name + '.' + name))
   if (!stream || prop(stream, 'LevelTransform')) throw new Error('Expected identity streaming transform: ' + name)
 }
-const ids = ['Tutorial-1', '0049.puz', '0643.puz', '0050.puz', '0067B.puz', '0066.puz', '0008.puz', '0527.puz', 'Tutorial-2', 'Tutorial-3']
-const actors = ids.map((id) => {
-  const matches = scene.Exports.filter((entry) => prop(entry, 'PuzzleFile') === id)
-  if (matches.length !== 1) throw new Error('Expected one actor: ' + id)
-  const [entry] = matches
-  const component = scene.Exports[prop(entry, 'RootComponent') - 1]
-  const { X: x, Y: y, Z: z } = vector(component, 'RelativeLocation')
-  if (prop(component, 'AttachParent') || ![x, y, z].every(Number.isFinite)) throw new Error('Invalid root: ' + id)
-  const widget = scene.Imports[-prop(entry, 'TutorialWidgetClass') - 1]
-  const unlocks = (prop(entry, 'puzzleUnlocks') ?? []).map(({ Value }) => prop(scene.Exports[Value - 1], 'PuzzleFile'))
-  return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory: prop(entry, 'PuzzleDirectory') ?? null, unlocks: unlocks.filter((id) => ids.includes(id)) }
-})
 const windows = ['Bridge', 'Gate'].map((key) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -39,10 +27,25 @@ const windows = ['Bridge', 'Gate'].map((key) => {
   if (!name) throw new Error('Missing source window name: ' + actor)
   return { id: 'window-' + key.toLowerCase(), actor, x, y, z, name, thresholds, prerequisites }
 })
+// The bridge window defines the puzzle scope; the gate's later puzzles are references only.
+const ids = new Set(['Tutorial-1', ...windows[0].prerequisites, 'Tutorial-2', 'Tutorial-3'])
+const actors = [...ids].map((id) => {
+  const matches = scene.Exports.filter((entry) => prop(entry, 'PuzzleFile') === id)
+  if (matches.length !== 1) throw new Error('Expected one actor: ' + id)
+  const [entry] = matches
+  const component = scene.Exports[prop(entry, 'RootComponent') - 1]
+  const { X: x, Y: y, Z: z } = vector(component, 'RelativeLocation')
+  if (prop(component, 'AttachParent') || ![x, y, z].every(Number.isFinite)) throw new Error('Invalid root: ' + id)
+  const widget = scene.Imports[-prop(entry, 'TutorialWidgetClass') - 1]
+  const directory = prop(entry, 'PuzzleDirectory') ?? null
+  if (Boolean(widget) === Boolean(directory)) throw new Error('Expected a tutorial widget or puzzle file: ' + id)
+  const unlocks = (prop(entry, 'puzzleUnlocks') ?? []).map(({ Value }) => prop(scene.Exports[Value - 1], 'PuzzleFile'))
+  return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory, unlocks: unlocks.filter((id) => ids.has(id)) }
+})
 const width = 2048
 const height = 2048
 const tileSize = 1024
-const projection = { centerX: 6500, centerY: -500, degrees: -59, scale: width / 24800 }
+const projection = { centerX: 9000, centerY: 1000, degrees: -59, scale: width / 30500 }
 const angle = projection.degrees * Math.PI / 180
 const project = (x, y) => {
   const dx = (projection.centerX - x) * projection.scale
@@ -79,18 +82,23 @@ function transform(loc, rot, scale) {
   }
 }
 
+const platformMeshes = /RuinFloor|WoodenPlatform|Brick_Floor|CircularA|Flatrock|RuinWall.*_Top|RuinTrim/i
+const vesselMeshes = new Set(['Base_Ship_Full_Static_SM', 'Boarding_Plank_W_Rails_SM'])
+const rockMeshes = new Set(['SM_Rock_01', 'SM_Rock_01_cut', 'Rock_01_SM'])
 const surfaces = sources.flatMap((name) => {
   const map = readMap('OverworldSubmaps/' + name)
   return map.Exports.flatMap((entry) => {
     const mesh = map.Imports[-prop(entry, 'StaticMesh') - 1]?.ObjectName
     const loc = vector(entry, 'RelativeLocation')
-    if (!loc || !/RuinFloor|WoodenPlatform|Brick_Floor|CircularA|Flatrock|RuinWall.*_Top|RuinTrim/i.test(mesh ?? '') || prop(entry, 'AttachParent')) return []
-    const [x, y] = project(loc.X, loc.Y)
-    if (x < 0 || x > width || y < 0 || y > height) return []
+    if (!loc || !mesh || prop(entry, 'AttachParent')) return []
+    if (!platformMeshes.test(mesh) && !rockMeshes.has(mesh) && !vesselMeshes.has(mesh)) return []
     const model = meshes[mesh]
     if (!model) throw new Error('Missing mesh: ' + mesh)
     const vertices = model.vertices.map(transform(loc, vector(entry, 'RelativeRotation'), vector(entry, 'RelativeScale3D')))
-    const outline = hull(vertices.map(([x, y]) => project(x, y)))
+    const points = vertices.map(([x, y]) => project(x, y))
+    if (points.every(([x]) => x < 0) || points.every(([x]) => x > width) ||
+        points.every(([, y]) => y < 0) || points.every(([, y]) => y > height)) return []
+    const outline = hull(points)
     if (outline.length < 3) return []
     return [{ outline, mesh, zMin: Math.min(...vertices.map((v) => v[2])), zMax: Math.max(...vertices.map((v) => v[2])) }]
   })
@@ -113,51 +121,76 @@ for (const window of windows) {
   window.pixel = { x, y }
 }
 const silhouettes = surfaces.sort((a, b) => a.zMax - b.zMax).map(({ outline, mesh }) =>
-  `<polygon points="${pointList(outline)}" fill="${/Wooden/i.test(mesh) ? '#ad9878' : '#c0c6b8'}" stroke="#788c8b" stroke-width="1.2"/>`)
+  `<polygon points="${pointList(outline)}" fill="${/Wooden/i.test(mesh) || vesselMeshes.has(mesh) ? '#ad9878' : '#c0c6b8'}" stroke="#788c8b" stroke-width="1.2"/>`)
 
-// Orthographic web marker renders of the exact scene mesh assets.
-for (const [id, mesh] of [['note', 'SM_Scroll_001'], ['puzzle', 'SM_Plinth_V004']]) {
-  const { vertices, indices } = meshes[mesh]
-  const topZ = Math.max(...vertices.map((point) => point[2]))
-  // Yaw around world up first, then tilt the camera without rolling the icon.
-  const yaw = id === 'note' ? 0 : Math.PI / 4
-  const elevation = Math.PI / 6
-  const points = vertices.map(([x, y, z]) => {
+const puzzleFile = ({ id, directory }) => readFileSync(join(root, '..', directory, id), 'utf8')
+const sample = actors.find(({ id }) => id === '0049.puz')
+const sampleShape = puzzleFile(sample).match(/^SHAPE 1 2\r?\n([# ]+)\r?\n([# ]+)\r?$/m)?.slice(1)
+if (!sampleShape) throw new Error('Missing the sample puzzle piece')
+
+// Upright orthographic renders of the scene meshes, shaded for map-size legibility.
+for (const id of ['note', 'puzzle']) {
+  const plinth = meshes.SM_Plinth_V004
+  const parts = [{ vertices: plinth.vertices.map((point) => point.map((n) => n * 0.5)), indices: plinth.indices, scroll: false }]
+  if (id === 'note') {
+    const scroll = meshes.SM_Scroll_001
+    // PuzzleTutorialCube uses a half-size BaseMesh and attaches ScrollMesh to TableTopProxy.
+    parts.push({ vertices: scroll.vertices.map(([x, y, z]) => [-y, x, z + 111.94874572753906]), indices: scroll.indices, scroll: true })
+  }
+  const yaw = Math.PI / 6
+  const elevation = Math.PI / 4
+  const projectIcon = ([x, y, z]) => {
     const depth = -x * Math.sin(yaw) + y * Math.cos(yaw)
     return [
       x * Math.cos(yaw) + y * Math.sin(yaw),
       depth * Math.cos(elevation) - z * Math.sin(elevation),
       depth * Math.sin(elevation) + z * Math.cos(elevation),
     ]
-  })
+  }
+  const points = parts.flatMap(({ vertices }) => vertices.map(projectIcon))
   const extrema = [0, 2].map((axis) => {
     const values = points.map((p) => p[axis])
     return [Math.min(...values), Math.max(...values)]
   })
-  const zoom = 54 / Math.max(...extrema.map(([min, max]) => max - min))
+  const zoom = 58 / Math.max(...extrema.map(([min, max]) => max - min))
   const centered = ([x, , z]) => [32 + zoom * (x - (extrema[0][0] + extrema[0][1]) / 2), 32 - zoom * (z - (extrema[1][0] + extrema[1][1]) / 2)]
-  const faces = []
-  for (let i = 0; i < indices.length; i += 3) {
-    const points3d = indices.slice(i, i + 3).map((index) => points[index])
-    const polygon = points3d.map(centered)
-    const area = cross(...polygon)
-    if (Math.abs(area) < 0.015) continue
-    const [a, b, c] = points3d
-    const u = b.map((val, j) => val - a[j])
-    const v = c.map((val, j) => val - a[j])
-    const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
-    const shade = 0.70 + 0.29 * Math.abs((normal[0] * 0.35 + normal[1] * 0.72 + normal[2] * 0.6) / Math.hypot(...normal))
-    const original = indices.slice(i, i + 3).map((index) => vertices[index])
-    const top = original.every((p) => p[2] > 0.78 * topZ)
-    const light = id === 'note' ? [237, 203, 141] : top ? [252, 217, 157] : [226, 235, 239]
-    faces.push({ depth: (a[1] + b[1] + c[1]) / 3, fill: light.map((value) => Math.round(value * shade)).join(','), polygon })
+  const renderPart = ({ vertices, indices, scroll }) => {
+    const view = vertices.map(projectIcon)
+    const faces = []
+    for (let i = 0; i < indices.length; i += 3) {
+      const face = indices.slice(i, i + 3)
+      const [a, b, c] = face.map((index) => view[index])
+      const polygon = [a, b, c].map(centered)
+      if (Math.abs(cross(...polygon)) < 0.015) continue
+      const u = b.map((val, j) => val - a[j])
+      const v = c.map((val, j) => val - a[j])
+      const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+      const shade = 0.58 + 0.42 * Math.abs((normal[0] * 0.32 - normal[1] * 0.54 + normal[2] * 0.73) / Math.hypot(...normal))
+      const top = face.every((index) => vertices[index][2] > 99)
+      const light = scroll ? [249, 225, 171]
+        : !top ? [238, 236, 219] : id === 'note' ? [146, 80, 49] : [255, 222, 152]
+      faces.push({ depth: (a[1] + b[1] + c[1]) / 3, fill: light.map((value) => Math.round(value * shade)).join(','), polygon })
+    }
+    return faces.sort((a, b) => b.depth - a.depth).map(({ fill, polygon }) =>
+      `<polygon points="${pointList(polygon)}" fill="rgb(${fill})" stroke="rgb(${fill})" stroke-width=".35"/>`).join('')
   }
-  const art = faces.sort((a, b) => b.depth - a.depth).map(({ fill, polygon }) =>
-    `<polygon points="${pointList(polygon)}" fill="rgb(${fill})" stroke="rgb(${fill})" stroke-width=".35"/>`).join('')
-  writeFileSync(join(output, `glimmith-marker-${id}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><title>${mesh}</title>${art}</svg>\n`)
+  const glass = [['#2e98d1', '#1372aa'], ['#64c8b7', '#1b8c85'], ['#e57857', '#b74744'], ['#ffc95d', '#dd8c32']]
+  const inset = id === 'puzzle' ? sampleShape.flatMap((line, row) => [...line].map((mark, column) => {
+    if (mark !== '#') return ''
+    const size = 29
+    const x = (column - 1) * size
+    const y = (row - 1) * size
+    const panel = [[x, y], [x + size, y], [x + size, y + size], [x, y + size]]
+      .map(([x, y]) => centered(projectIcon([x, y, 113])))
+    const [light, shadow] = glass[row * 2 + column]
+    return `<polygon points="${pointList(panel)}" fill="${shadow}" stroke="#4f4333" stroke-width="1.35" stroke-linejoin="round"/><polygon points="${pointList(panel.slice(0, 3))}" fill="${light}"/>`
+  })).join('') : ''
+  const title = id === 'note' ? 'SM_Plinth_V004 + SM_Scroll_001' : 'SM_Plinth_V004'
+  writeFileSync(join(output, `glimmith-marker-${id}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><title>${title}</title>${parts.map(renderPart).join('')}${inset}</svg>\n`)
 }
-const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map(({ id, directory }) => {
-  const puzzle = readFileSync(join(root, '..', directory, id), 'utf8')
+const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map((actor) => {
+  const { id } = actor
+  const puzzle = puzzleFile(actor)
   const [columns, rows] = puzzle.match(/^DIMENSIONS (\d+) (\d+)\r?$/m).slice(1).map(Number)
   const board = puzzle.split(/\r?\nPUZZLE\r?\n/)[1].split(/\r?\nSOLUTION\r?\n/)
   const frames = board.map((part) => part.split(/\r?\n/).slice(0, 2 * rows + 1).map((line) => line.padEnd(3 * columns + 1)))
