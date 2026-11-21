@@ -144,10 +144,11 @@ export function GlimmithTutorialPrototype() {
           id: 'unlock', title: copy.unlock, accessibleTitle: copy.unlock, defaultExpanded: true,
           content: <div className="grid gap-1 text-sm">
             <p className="font-medium">{copy.postGameUnlock}</p>
+            <p>{copy.postGameStep}</p>
             {unlocker && <p className="text-muted-foreground">
               <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(unlocker.id)}>
                 {puzzleNumber(unlocker.id)}
-              </button>{copy.linkedUnlockUnverified}
+              </button>{copy.linkedUnlockInsufficient}
             </p>}
           </div>,
         }] : []), {
