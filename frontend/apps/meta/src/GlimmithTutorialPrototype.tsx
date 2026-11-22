@@ -13,6 +13,11 @@ import scene from './assets/glimmith-scene.json'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import noteIcon from './assets/glimmith-marker-note.svg'
 import windowIcon from './assets/glimmith-marker-window.svg'
+import circleClue from './assets/glimmith-cell-clue-circle.png'
+import squareClue from './assets/glimmith-cell-clue-square.png'
+import triangleClue from './assets/glimmith-cell-clue-triangle.png'
+import diamondClue from './assets/glimmith-cell-clue-diamond.png'
+import hexagonClue from './assets/glimmith-cell-clue-hexagon.png'
 import headerArt from './assets/glimmith-steam-scenery.jpg'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
@@ -24,6 +29,9 @@ const map: GameMapMeta = {
 }
 const windowNames = new Map(Object.entries(copy.windows))
 const puzzles = new Map(Object.entries(scene.puzzles))
+const cellClueImages = new Map([
+  ['P1', circleClue], ['P2', squareClue], ['P3', triangleClue], ['P4', diamondClue], ['P5', hexagonClue],
+])
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
 const difficultyArt = import.meta.glob<string>('./assets/glimmith-difficulty-*.png', {
   eager: true, import: 'default', query: '?url',
@@ -137,12 +145,9 @@ function PuzzleSolution({ puzzle }: { puzzle: (typeof scene.puzzles)['0049.puz']
         const x = index % columns
         const y = Math.floor(index / columns)
         const clue = board[2 * y + 1].slice(3 * x + 1, 3 * x + 3)
-        if (!/^P[1-5]$/.test(clue)) return null
-        return <g key={index} data-cell-clue={clue}>
-          <circle cx={24 * x + 12} cy={24 * y + 12} r="7.5" className="fill-primary/15 stroke-primary" strokeWidth="1" />
-          <text x={24 * x + 12} y={24 * y + 16} textAnchor="middle" fontSize="12" fontWeight="700"
-            className="fill-foreground">{clue[1]}</text>
-        </g>
+        const image = cellClueImages.get(clue)
+        return image ? <image key={index} data-cell-clue={clue} href={image}
+          x={24 * x} y={24 * y} width={24} height={24} /> : null
       })}
       {Array.from({ length: rows + 1 }, (_, y) => Array.from({ length: columns }, (_, x) => (
         <RelationClue key={x} x={24 * x + 12} y={24 * y} mark={board[2 * y][3 * x + 1]} />
