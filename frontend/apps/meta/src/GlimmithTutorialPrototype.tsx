@@ -10,16 +10,9 @@ import {
 import { browserMemory, defineMemoryRecord, memoryPolicy } from '@gamemap/state-memory'
 import { useIsMobile } from '@gamemap/ui'
 import scene from './assets/glimmith-scene.json'
-import terrainWest from './assets/glimmith-terrain-0.svg'
-import terrainEast from './assets/glimmith-terrain-1.svg'
-import terrainSouthwest from './assets/glimmith-terrain-2.svg'
-import terrainSoutheast from './assets/glimmith-terrain-3.svg'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import noteIcon from './assets/glimmith-marker-note.svg'
 import windowIcon from './assets/glimmith-marker-window.svg'
-import difficultyOne from './assets/glimmith-difficulty-1.png'
-import difficultyTwo from './assets/glimmith-difficulty-2.png'
-import difficultyThree from './assets/glimmith-difficulty-3.png'
 import headerArt from './assets/glimmith-steam-scenery.jpg'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
@@ -32,7 +25,9 @@ const map: GameMapMeta = {
 const windowNames = new Map(Object.entries(copy.windows))
 const puzzles = new Map(Object.entries(scene.puzzles))
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
-const difficultyArt = new Map([[1, difficultyOne], [2, difficultyTwo], [3, difficultyThree]])
+const difficultyArt = import.meta.glob<string>('./assets/glimmith-difficulty-*.png', {
+  eager: true, import: 'default', query: '?url',
+})
 const puzzleNumber = (id: string) => id.replace(/\.puz$/, '')
 const completedRecord = defineMemoryRecord({
   id: 'completed-markers',
@@ -49,7 +44,7 @@ const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, inde
   const subtype = widget ? 'note' : 'puzzle'
   const icon = widget ? noteIcon : puzzleIcon
   const difficulty = puzzles.get(id)?.difficulty
-  const badge = difficulty == null ? undefined : difficultyArt.get(difficulty)
+  const badge = difficultyArt[`./assets/glimmith-difficulty-${difficulty}.png`]
   return {
     id, ...pixel, z, subtype, icon, positionPrecision: 'authored-transform', indexInSubtype: index,
     images: [], contributors: [],
@@ -64,8 +59,13 @@ markers.push(...scene.windows.map((window, index): EngineMarker => ({
   localizedName: windowNames.get(window.id) ?? copy.window, subtypeLabel: copy.window, hoverBadge: null,
   subtypeMeta: { id: 'window', name: copy.window, icon: windowIcon, pinVariant: 'image' },
 })))
-const terrainTiles = [terrainWest, terrainEast, terrainSouthwest, terrainSoutheast]
-const assets = { tileUrl: (_map: GameMapMeta, x: number, y: number) => terrainTiles[y * map.tilesCountX + x], markerIconUrl: (icon?: string) => icon ?? '' }
+const terrainTiles = import.meta.glob<string>('./assets/glimmith-terrain-*.svg', {
+  eager: true, import: 'default', query: '?url',
+})
+const assets = {
+  tileUrl: (_map: GameMapMeta, x: number, y: number) => terrainTiles[`./assets/glimmith-terrain-${y * map.tilesCountX + x}.svg`],
+  markerIconUrl: (icon?: string) => icon ?? '',
+}
 const angle = scene.projection.degrees * Math.PI / 180
 const displayCoords = (x: number, y: number) => {
   const dx = (x - scene.width / 2) / scene.projection.scale
@@ -76,18 +76,48 @@ const displayCoords = (x: number, y: number) => {
   }
 }
 const subtypes = ['note', 'puzzle', 'window'] as const
-const mapOptions = [{ id: map.id, label: map.name }]
+const mapOptions = [{ id: map.id, label: copy.overview }, ...scene.windows.map((window) => ({
+  id: window.id, label: windowNames.get(window.id) ?? copy.window,
+}))]
 const searchItems = markers.map((marker) => ({
   ...marker,
   name: marker.localizedName,
   idLabel: marker.subtype === 'puzzle' ? marker.localizedName : undefined,
 }))
 
+function framePoints(points: readonly EngineMarker[], width: number, height: number) {
+  const xs = points.map(({ x }) => x)
+  const ys = points.map(({ y }) => y)
+  const left = Math.min(...xs)
+  const right = Math.max(...xs)
+  const top = Math.min(...ys)
+  const bottom = Math.max(...ys)
+  const zoom = Math.min(0.65, Math.log2(Math.min(
+    Math.max(1, width - 96) / Math.max(200, right - left),
+    Math.max(1, height - 150) / Math.max(200, bottom - top),
+  )))
+  return { x: (left + right) / 2, y: (top + bottom) / 2, zoom }
+}
+
+const desktopView = framePoints(markers, 1050, 780)
+
+function RelationClue({ x, y, mark }: { x: number; y: number; mark: string }) {
+  if (mark !== '=' && mark !== '!') return null
+  return (
+    <g data-edge-clue={mark}>
+      <circle cx={x} cy={y} r="6.5" className="fill-card stroke-border" strokeWidth=".5" />
+      <text x={x} y={y + 3.5} textAnchor="middle" fontSize="10" fontWeight="700"
+        className={mark === '!' ? 'fill-destructive' : 'fill-primary'}>{mark === '!' ? '\u2260' : '='}</text>
+    </g>
+  )
+}
+
 function PuzzleSolution({ puzzle }: { puzzle: (typeof scene.puzzles)['0049.puz'] }) {
   const { columns, rows, board, solution } = puzzle
   return (
     <svg role="img" aria-label={copy.solution}
-      viewBox={`-2 -2 ${columns * 24 + 4} ${rows * 24 + 4}`} className="mx-auto w-full max-w-48">
+      viewBox={`-7 -7 ${columns * 24 + 14} ${rows * 24 + 14}`}
+      className={`mx-auto w-full ${Math.max(columns, rows) > 7 ? 'max-w-64' : 'max-w-48'}`}>
       {Array.from({ length: rows * columns }, (_, index) => {
         const x = index % columns
         const y = Math.floor(index / columns)
@@ -103,18 +133,38 @@ function PuzzleSolution({ puzzle }: { puzzle: (typeof scene.puzzles)['0049.puz']
         solution[2 * y + 1][3 * x] === '#' &&
         <path key={`v${x}`} d={`M${x * 24},${y * 24}v24`} className="stroke-foreground" strokeWidth="1.8" />
       )))}
+      {Array.from({ length: rows * columns }, (_, index) => {
+        const x = index % columns
+        const y = Math.floor(index / columns)
+        const clue = board[2 * y + 1].slice(3 * x + 1, 3 * x + 3)
+        if (!/^P[1-5]$/.test(clue)) return null
+        return <g key={index} data-cell-clue={clue}>
+          <circle cx={24 * x + 12} cy={24 * y + 12} r="7.5" className="fill-primary/15 stroke-primary" strokeWidth="1" />
+          <text x={24 * x + 12} y={24 * y + 16} textAnchor="middle" fontSize="12" fontWeight="700"
+            className="fill-foreground">{clue[1]}</text>
+        </g>
+      })}
+      {Array.from({ length: rows + 1 }, (_, y) => Array.from({ length: columns }, (_, x) => (
+        <RelationClue key={x} x={24 * x + 12} y={24 * y} mark={board[2 * y][3 * x + 1]} />
+      )))}
+      {Array.from({ length: rows }, (_, y) => Array.from({ length: columns + 1 }, (_, x) => (
+        <RelationClue key={x} x={24 * x} y={24 * y + 12} mark={board[2 * y + 1][3 * x]} />
+      )))}
     </svg>
   )
 }
 
 export function GlimmithTutorialPrototype() {
   const [selected, setSelected] = useState<string | null>(null)
+  const [activeArea, setActiveArea] = useState(map.id)
+  const [pinSize, setPinSize] = useState(0.56)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [visible, setVisible] = useState<Set<string>>(() => new Set(subtypes))
   const [completed, setCompleted] = useState(() => new Set(browserMemory.read(completedRecord, progressScope)))
   const mapMarkers = useMemo(() => markers.map((marker) => ({
     ...marker, completed: completed.has(marker.id),
-  })), [completed])
+    pinScale: marker.subtype === 'puzzle' ? pinSize : 0.88,
+  })), [completed, pinSize])
   const completedCount = [...completed].filter((id) => puzzles.has(id)).length
   const toggleCompleted = (id: string) => {
     const next = new Set(completed)
@@ -124,9 +174,24 @@ export function GlimmithTutorialPrototype() {
     setCompleted(next)
   }
   const ref = useRef<GlMapRef>(null)
+  const mapViewport = useRef<HTMLElement>(null)
   const mobile = useIsMobile()
   const { theme, setTheme } = useTheme()
   const select = (id: string) => setSelected(id)
+  const focusArea = (id: string) => {
+    const area = windows.get(id)
+    const viewport = mapViewport.current
+    if (!viewport) return
+    const ids = area ? new Set([id, ...area.prerequisites]) : null
+    const points = ids ? markers.filter((marker) => ids.has(marker.id)) : markers
+    // On phones the selector closes the sidebar; fit the reclaimed map width.
+    const width = mobile ? document.documentElement.clientWidth : viewport.clientWidth
+    const view = framePoints(points, width, viewport.clientHeight)
+    setActiveArea(id)
+    setSelected(null)
+    setMobileSidebarOpen(false)
+    ref.current?.flyTo(view.x, view.y, view.zoom)
+  }
   const openLinkedPuzzle = (id: string) => {
     const target = markers.find((marker) => marker.id === id)
     if (!target) return
@@ -144,7 +209,7 @@ export function GlimmithTutorialPrototype() {
     const unlocker = isPostGame ? scene.actors.find(({ directory, unlocks }) => directory && unlocks.some((id) => id === marker.id)) : undefined
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
     return (
-      <CommunityMarkerDetail key={marker.id} game="glimmith" mapId={map.id} markerId={puzzleNumber(marker.id)}
+      <CommunityMarkerDetail key={marker.id} game="glimmith" mapId={map.id} markerId={puzzleNumber(marker.id)} hideGallery
         language="zh-CN" anchored={!mobile} denseHeader={Boolean(puzzle)}
         name={puzzle ? copy.puzzle + ' ' + marker.localizedName : marker.localizedName}
         icon={<img className={puzzle ? 'size-6 object-contain' : 'size-8 object-contain'} src={marker.icon} alt="" />}
@@ -217,8 +282,8 @@ export function GlimmithTutorialPrototype() {
             trigger: 'min-h-11 rounded-xl border-border bg-card px-3 text-base font-semibold shadow-none hover:border-primary/40 hover:bg-card data-[state=open]:bg-card',
             content: 'border-border bg-popover',
           }}
-          maps={mapOptions} activeMapId={map.id} onSelectMap={() => setSelected(null)} /></div>}>
-        <FilterPanel categories={[{ id: 'intro', label: copy.intro, subtypes: subtypes.map((id) => ({
+          maps={mapOptions} activeMapId={activeArea} onSelectMap={focusArea} /></div>}>
+        <FilterPanel categories={[{ id: 'intro', label: copy.filters, subtypes: subtypes.map((id) => ({
           id, label: copy[id], active: visible.has(id),
           ...(id === 'puzzle' ? { badge: `${completedCount}/${puzzles.size}` }
             : { count: markers.filter((marker) => marker.subtype === id).length }),
@@ -240,11 +305,12 @@ export function GlimmithTutorialPrototype() {
         }} />
       </ShellSidebar>
     }>
-      <main className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>
+      <main ref={mapViewport} className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>
         <GameMapView map={map} markers={mapMarkers} regions={[]} visibleSubtypes={visible}
-          initialView={mobile ? undefined : { x: 1024, y: 1050, zoom: -0.94 }}
+          initialView={mobile ? undefined : desktopView}
+          onViewChange={({ zoom }) => setPinSize(zoom < -1.2 ? 0.49 : zoom < 0.25 ? 0.66 : 0.9)}
           showLabels={false} showBorders={false} lodEnabled={false} selectedMarkerId={selected} selectedPosition={null}
-          onToggleMarker={setSelected} subzoneAt={() => copy.intro} flyToDuration={0.35} mapRef={ref} assets={assets}
+          onToggleMarker={setSelected} subzoneAt={() => ''} flyToDuration={0.35} mapRef={ref} assets={assets}
           exposeTestHandle={import.meta.env.DEV} labels={copy.engine} displayCoords={displayCoords}
           renderPopupContent={mobile ? () => null : renderMarkerDetail}
         />

@@ -5,9 +5,11 @@
   "languageMenu": "语言",
   "theme": "主题",
   "themes": { "auto": "跟随系统", "light": "浅色", "dark": "深色" },
-  "map": "教学区地图",
+  "map": "区域地图",
   "game": "格里米斯工匠",
   "intro": "开场区域",
+  "overview": "区域总览",
+  "filters": "点位筛选",
   "collapse": "收起",
   "expand": "展开",
   "note": "教学说明",
@@ -34,6 +36,8 @@
   "engine": { "copyPosition": "复制坐标", "noMapSelected": "未选择地图", "zoomIn": "放大", "zoomOut": "缩小" },
   "windows": {
     "window-bridge": "格里米斯桥",
-    "window-gate": "格里米斯瞭望台"
+    "window-gate": "格里米斯瞭望台",
+    "window-gemini-delta": "双生与异生",
+    "window-rose-windows": "玫瑰窗"
   }
 }

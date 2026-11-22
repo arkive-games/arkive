@@ -4,20 +4,22 @@ import scene from './assets/glimmith-scene.json'
 describe('Glimmith tutorial scene', () => {
   it('preserves the game-completion category and the separate puzzle unlock reference', () => {
     const postGame = scene.actors.filter(({ unlockCategory }) => unlockCategory === 'GameCompletion')
-    expect(postGame.map(({ id }) => id)).toEqual(['0054.puz'])
+    expect(postGame.map(({ id }) => id)).toContain('0054.puz')
     expect(scene.actors.filter(({ unlocks }) => unlocks.some((id) => id === '0054.puz')).map(({ id }) => id)).toEqual(['0527.puz'])
   })
 
-  it('has a map marker and source solution for every bridge prerequisite', () => {
-    const bridge = scene.windows.find(({ id }) => id === 'window-bridge')
-    expect(bridge?.prerequisites).toHaveLength(11)
-    expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(bridge?.prerequisites)
-    expect(Object.keys(scene.puzzles)).toEqual(bridge?.prerequisites)
+  it('has a map marker and source solution for every listed window prerequisite', () => {
+    expect(scene.windows.map(({ id, prerequisites }) => [id, prerequisites.length])).toEqual([
+      ['window-bridge', 11], ['window-gate', 11], ['window-gemini-delta', 41], ['window-rose-windows', 41],
+    ])
+    const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
+    expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
+    expect(Object.keys(scene.puzzles)).toEqual(ids)
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
       expect(solution.join('')).toContain('#')
-      expect([1, 2, 3]).toContain(difficulty)
+      expect([1, 2, 3, 4, 5, 6, 7]).toContain(difficulty)
     }
   })
 
