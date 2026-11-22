@@ -88,6 +88,26 @@ public homepage and deployment workflow only after they land and deploy.
 
 ## Execution Record
 
+### Prepared Ruby floor restoration (November 23, 2026)
+
+The user-located missing red square in Heroes1 is centered at world `(83, 93)`.
+Current build `26825502` identifies it as `ARCH_Order_RedRoom_Tile_A`, using
+`goal_room_Ruby` / `crystal_general`, outside the historical ordinary-floor
+shader support. The artifact `redroom-floors-26825502.json` records 72 ground
+instances, world-space source triangles, entity IDs, scene and mesh hashes,
+and the authored linear `color_core`. The flat guide-map treatment converts
+that color to sRGB `(173, 0, 19)` without crystal texture, lighting or effects.
+This restores authored floor color rather than inferring runtime unlock state.
+
+Resource commit `490121d` replaces 16 referenced pyramid tiles. Publish those
+resources before data commit `0c05685`, which switches the override references.
+The previous tile files remain available. No frontend renderer or runtime
+request count changes are required. The generator and projection tests live
+in `tools/apps/oss/restore_redroom_floors.py` and
+`tools/tests/test_oss_redroom_floors.py`. Local browser verification loaded
+the overview and detail tiles with HTTP 200 and no console errors. These
+changes have not been pushed or deployed.
+
 ### Prepared map-loading optimization (November 17, 2026)
 
 Ground-prop follow-up: data commit `fa0bd7a` adds
