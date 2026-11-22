@@ -12,7 +12,8 @@ const overview = readMap('OverworldMap')
 const townMain = 'Zone01_Town_Main'
 const townLower = 'Zone1_Town_Main_Underneath'
 const countryside = 'Zone01_Countryside'
-const sources = ['Welcome', 'Zone01_Intro_Bridge', 'Zone01_Intro_Gate_Revised', 'Zone01_Hamlet', 'Zone01_Cathedral', 'Zone01_Market1', townMain, townLower, countryside]
+const forestMain = 'Zone02_Forest_Main'
+const sources = ['Welcome', 'Zone01_Intro_Bridge', 'Zone01_Intro_Gate_Revised', 'Zone01_Hamlet', 'Zone01_Cathedral', 'Zone01_Market1', townMain, townLower, countryside, forestMain]
 for (const name of [...sources, 'Overworld_Campaign']) {
   const stream = overview.Exports.find((entry) => prop(entry, 'WorldAsset')?.AssetPath?.AssetName?.endsWith('/' + name + '.' + name))
   if (!stream || prop(stream, 'LevelTransform')) throw new Error('Expected identity streaming transform: ' + name)
@@ -20,7 +21,7 @@ for (const name of [...sources, 'Overworld_Campaign']) {
 const windows = [
   ['Bridge', 'bridge'], ['Gate', 'gate'], ['GeminiDelta', 'gemini-delta'], ['SlashPack', 'rose-windows'], ['ShapeBank', 'shape-bank'],
   ['Precision', 'precision'], ['Polyomino', 'polyomino'],
-  ['Mingle', 'mingle'],
+  ['Mingle', 'mingle'], ['ForestTrailhead', 'forest-trailhead'],
 ].map(([key, id]) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -49,7 +50,7 @@ const actors = [...ids].map((id) => {
   const unlockCategory = prop(entry, 'UnlockCategory')?.replace(/^EUnlockCategory::/, '') ?? null
   return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory, unlocks: unlocks.filter((id) => ids.has(id)), unlockCategory }
 })
-const width = 3072
+const width = 4096
 const height = 4096
 const tileSize = 1024
 const projection = { centerX: 4300, centerY: -3000, originX: 1536, originY: 2560, degrees: -59, scale: 2048 / 30500 }
@@ -120,6 +121,7 @@ const moduleParts = new Map(floorModules.map(([name, dir]) => {
   }))]
 }))
 const identity = (point) => point
+const forestApproach = actors.find(({ id }) => id === '0230.puz')
 const surfaces = sources.flatMap((name) => {
   const map = readMap('OverworldSubmaps/' + name)
   const components = map.Exports.flatMap((entry) => {
@@ -143,15 +145,21 @@ const surfaces = sources.flatMap((name) => {
   return components.flatMap(({ entry, mesh, parentTransform, localTransform }) => {
     const loc = vector(entry, 'RelativeLocation')
     if ((!loc && !localTransform) || !mesh || (!localTransform && prop(entry, 'AttachParent'))) return []
+    if (name === forestMain) {
+      // Only project the entrance clearing around this slice's forest anchor.
+      const [x, y] = localTransform ? parentTransform(localTransform([0, 0, 0])) : [loc.X, loc.Y]
+      if (Math.hypot(x - forestApproach.x, y - forestApproach.y) > 2400) return []
+    }
     const isDockPlank = name === 'Welcome' && dockPlanks.test(mesh)
     const isRock = rockMeshes.has(mesh) || (name === 'Welcome' && dockRockMeshes.has(mesh)) || /Flatrock/i.test(mesh)
     const isLadder = mesh === 'Ladder_SM'
     const isMarketWalkway = name === 'Zone01_Market1' && marketWalkways.has(mesh)
     const isTownWalkway = (name === townMain || name === townLower || name === countryside) && townWalkways.test(mesh)
     const isTownBrickWall = name === townMain && townBrickWalls.test(mesh)
+    const isForestPlatform = name === forestMain && mesh === 'Brick_Circle_01_SM'
     const isLandmark = (name !== 'Welcome' && landmarkMeshes.test(mesh)) ||
       (name === 'Zone01_Cathedral' && mesh === 'Cube' && ['Cube_8', 'Cube14'].includes(map.Exports[entry.OuterIndex - 1]?.ObjectName))
-    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !isTownBrickWall && !localTransform && mesh !== shipMesh) return []
+    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !isTownBrickWall && !isForestPlatform && !localTransform && mesh !== shipMesh) return []
     const model = meshes[mesh]
     if (!model) throw new Error('Missing mesh: ' + mesh)
     const place = localTransform ?? componentTransform(entry)
@@ -464,7 +472,8 @@ function readShapeClues(headerText, board, columns, id, bank, wide) {
   }))
 }
 
-const minglePuzzleIds = new Set(windows.find(({ id }) => id === 'window-mingle').prerequisites)
+const shapeBankWindowIds = new Set(['window-mingle', 'window-forest-trailhead'])
+const shapeBankPuzzleIds = new Set(windows.filter(({ id }) => shapeBankWindowIds.has(id)).flatMap(({ prerequisites }) => prerequisites))
 const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map((actor) => {
   const { id } = actor
   const puzzle = puzzleFile(actor)
@@ -477,7 +486,7 @@ const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).m
   const [board, solution] = frames
   const wideShapeClues = normalizeWideShapeClues(board, columns, id)
   if (frames.some((frame) => frame.some((line) => line.slice(3 * columns + 1).trim()))) throw new Error('Overwide puzzle frame: ' + id)
-  const bank = minglePuzzleIds.has(id) ? /^SHAPE_BANK ([\d \t]+)\r?$/m.exec(header)?.[1].trim() : undefined
+  const bank = shapeBankPuzzleIds.has(id) ? /^SHAPE_BANK ([\d \t]+)\r?$/m.exec(header)?.[1].trim() : undefined
   const shapeBank = bank ? bank.split(/\s+/).map((number) => 'S' + number) : []
   const shapeClues = readShapeClues(header, board, columns, id, shapeBank, wideShapeClues)
   return [id, { columns, rows, difficulty, board, solution, ...(shapeClues && { shapeClues }),
