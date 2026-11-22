@@ -1,6 +1,30 @@
 {
   "entries": [
     {
+      "date": "2026-11-23",
+      "commit": "608360c6508bf3c028b51ba3638aa363ac9692fe",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Image review pairs a large preview with upload details, clearer queue states, and a matching account-menu icon.",
+            "zh-CN": "图片审核采用大图与来源信息并排布局，完善队列状态说明，并为头像菜单补齐审核图标。",
+            "zh-TW": "圖片審核採用大圖與來源資訊並排配置，完善佇列狀態說明，並為頭像選單補齊審核圖示。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-22",
       "commit": "099a46df86758a871d32315a4232ab67eb12b55b",
       "targets": [
