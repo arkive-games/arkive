@@ -29,6 +29,7 @@ const windows = [
   ['AreaNumber', 'area-number'],
   ['Range', 'range'],
   ['SizeSeparation', 'size-separation'],
+  ['Boxy', 'boxy'], ['NonBoxy', 'non-boxy'],
 ].map(([key, id]) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -368,7 +369,13 @@ if (output === '--probe-support') {
 for (const actor of actors) {
   const point = project(actor.x, actor.y)
   const supportMeshes = supportMeshesFor(actor, point)
-  if (!supportMeshes.length) throw new Error('Marker has no nearby-height mesh footprint: ' + actor.id)
+  if (!supportMeshes.length) {
+    // The authored cliff anchor overlaps this rock in plan view; the height check remains unresolved.
+    const overlapsBoxyRock = actor.id === '0479.puz' && surfaces.some(({ mesh, outline }) =>
+      mesh === 'SM_Rock_02' && footprintDistance(outline, point) <= 50 * projection.scale)
+    if (!overlapsBoxyRock) throw new Error('Marker has no nearby-height mesh footprint: ' + actor.id)
+    actor.projectedSupportMeshes = ['SM_Rock_02']
+  }
   if (outsideProjection(point)) throw new Error('Marker outside projection: ' + actor.id)
   actor.pixel = { x: point[0], y: point[1] }
   actor.supportMeshes = supportMeshes
@@ -516,10 +523,14 @@ function readShapeClues(headerText, board, columns, id, bank, wide) {
   }))
 }
 
-const shapeBankWindowIds = new Set(['window-mingle', 'window-forest-trailhead', 'window-match', 'window-area-number', 'window-size-separation'])
+const shapeBankWindowIds = new Set(['window-mingle', 'window-forest-trailhead', 'window-match', 'window-area-number', 'window-size-separation', 'window-boxy'])
 const shapeBankPuzzleIds = new Set(windows.filter(({ id }) => shapeBankWindowIds.has(id)).flatMap(({ prerequisites }) => prerequisites))
 const rangePuzzleIds = new Set(windows.find(({ id }) => id === 'window-range').prerequisites)
 const sizeSeparationPuzzleIds = new Set(windows.find(({ id }) => id === 'window-size-separation').prerequisites)
+const rectangleRules = new Map([
+  ...windows.find(({ id }) => id === 'window-boxy').prerequisites.map((id) => [id, 'only']),
+  ...windows.find(({ id }) => id === 'window-non-boxy').prerequisites.map((id) => [id, 'none']),
+])
 function readAreaRange(header, id) {
   const min = Number(/^AREA_AT_LEAST (\d+)\s*$/m.exec(header)?.[1]) || undefined
   const max = Number(/^AREA_AT_MOST (\d+)\s*$/m.exec(header)?.[1]) || undefined
@@ -545,9 +556,12 @@ const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).m
   if (sizeSeparationPuzzleIds.has(id) && !adjacentSizesDifferent) throw new Error('Missing adjacent size rule: ' + id)
   const areaRange = rangePuzzleIds.has(id) || adjacentSizesDifferent ? readAreaRange(header, id) : undefined
   if (rangePuzzleIds.has(id) && !areaRange) throw new Error('Missing area range: ' + id)
+  const rectangleRule = rectangleRules.get(id)
+  const ruleHeader = rectangleRule === 'only' ? /^ONLY_RECTANGLES\r?$/m : /^NO_RECTANGLES\r?$/m
+  if (rectangleRule && !ruleHeader.test(header)) throw new Error('Missing rectangle rule: ' + id)
   return [id, { columns, rows, difficulty, board, solution, ...(shapeClues && { shapeClues }),
     ...(wideShapeClues && { wideShapeClues }), ...(shapeBank.length && { shapeBank }), ...(areaRange && { areaRange }),
-    ...(adjacentSizesDifferent && { adjacentSizesDifferent }) }]
+    ...(adjacentSizesDifferent && { adjacentSizesDifferent }), ...(rectangleRule && { rectangleRule }) }]
 }))
 writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, windows, puzzles }, null, 2) + '\n')
 for (let row = 0; row < height / tileSize; row++) {

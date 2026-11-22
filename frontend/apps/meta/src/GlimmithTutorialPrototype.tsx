@@ -18,6 +18,11 @@ import squareClue from './assets/glimmith-cell-clue-square.png'
 import triangleClue from './assets/glimmith-cell-clue-triangle.png'
 import diamondClue from './assets/glimmith-cell-clue-diamond.png'
 import hexagonClue from './assets/glimmith-cell-clue-hexagon.png'
+import palisadeF0 from './assets/glimmith-cell-palisade-f0.png'
+import palisadeF1 from './assets/glimmith-cell-palisade-f1.png'
+import palisadeF2 from './assets/glimmith-cell-palisade-f2.png'
+import palisadeF3 from './assets/glimmith-cell-palisade-f3.png'
+import palisadeF7 from './assets/glimmith-cell-palisade-f7.png'
 import headerArt from './assets/glimmith-steam-scenery.jpg'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
@@ -31,6 +36,7 @@ const windowNames = new Map(Object.entries(copy.windows))
 const puzzles = new Map(Object.entries(scene.puzzles))
 const cellClueImages = new Map([
   ['P1', circleClue], ['P2', squareClue], ['P3', triangleClue], ['P4', diamondClue], ['P5', hexagonClue],
+  ['F0', palisadeF0], ['F1', palisadeF1], ['F2', palisadeF2], ['F3', palisadeF3], ['F7', palisadeF7],
 ])
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
 const difficultyArt = import.meta.glob<string>('./assets/glimmith-difficulty-*.png', {
@@ -305,6 +311,11 @@ export function GlimmithTutorialPrototype() {
         }] : []), {
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
           content: <>
+            {'rectangleRule' in puzzle && (
+              <p className="text-center text-sm text-muted-foreground">
+                {puzzle.rectangleRule === 'only' ? copy.onlyRectangles : copy.noRectangles}
+              </p>
+            )}
             {'adjacentSizesDifferent' in puzzle && puzzle.adjacentSizesDifferent && (
               <p className="text-center text-sm text-muted-foreground">{copy.adjacentSizesDifferent}</p>
             )}

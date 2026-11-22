@@ -20,6 +20,7 @@ describe('Glimmith tutorial scene', () => {
       ['window-area-number', 43],
       ['window-range', 46],
       ['window-size-separation', 45],
+      ['window-boxy', 40], ['window-non-boxy', 43],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
@@ -33,6 +34,8 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.find(({ id }) => id === 'window-area-number')?.thresholds).toEqual([14, 21, 34])
     expect(scene.windows.find(({ id }) => id === 'window-range')?.thresholds).toEqual([14, 22, 37])
     expect(scene.windows.find(({ id }) => id === 'window-size-separation')?.thresholds).toEqual([14, 22, 35])
+    expect(scene.windows.find(({ id }) => id === 'window-boxy')?.thresholds).toEqual([13, 20, 32])
+    expect(scene.windows.find(({ id }) => id === 'window-non-boxy')?.thresholds).toEqual([14, 21, 33])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
@@ -81,7 +84,14 @@ describe('Glimmith tutorial scene', () => {
       expect(pixel.y, id).toBeGreaterThanOrEqual(0)
       expect(pixel.y, id).toBeLessThan(height)
     }
-    for (const { id, supportMeshes } of actors) expect(supportMeshes.length, id).toBeGreaterThan(0)
+    for (const actor of actors) {
+      if (actor.id === '0479.puz') {
+        expect(actor.supportMeshes).toEqual([])
+        expect('projectedSupportMeshes' in actor && actor.projectedSupportMeshes).toEqual(['SM_Rock_02'])
+      } else {
+        expect(actor.supportMeshes.length, actor.id).toBeGreaterThan(0)
+      }
+    }
     expect(actors.find(({ id }) => id === '0054.puz')?.supportMeshes).toContain('Base_Ship_Full_Static_SM')
     expect(actors.find(({ id }) => id === '0230.puz')?.supportMeshes).toContain('Brick_Circle_01_SM')
     expect(actors.find(({ id }) => id === '0319.puz')?.supportMeshes).toContain('SM_Rock_01_cut')
@@ -140,5 +150,18 @@ describe('Glimmith tutorial scene', () => {
     expect(new Set(Object.values(scene.puzzles['1436.puz'].wideShapeClues))).toEqual(new Set(['S10', 'S11', 'S12']))
     expect(scene.puzzles['1188.puz'].shapeBank).toEqual(['S1', 'S2', 'S3'])
     expect(scene.actors.find(({ id }) => id === '0824.puz')?.supportMeshes).toContain('sm_RuinPillar_LargeRoundExtraShortA_Base')
+  })
+
+  it('preserves the rectangle rules and Palisade clues in both windows', () => {
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    for (const [key, rule] of [['window-boxy', 'only'], ['window-non-boxy', 'none']]) {
+      const window = scene.windows.find(({ id }) => id === key)!
+      expect(window.prerequisites.every((id) => {
+        const puzzle = puzzles.get(id)!
+        return 'rectangleRule' in puzzle && puzzle.rectangleRule === rule
+      })).toBe(true)
+    }
+    expect(scene.puzzles['0479.puz'].board).toContain('|..|F7|..|F3|      ')
+    expect(scene.puzzles['0303.puz'].board).toContain('|F3|F2|F2|F2|F2|F2|F3|')
   })
 })

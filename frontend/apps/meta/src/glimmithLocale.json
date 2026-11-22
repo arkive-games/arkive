@@ -31,6 +31,8 @@
   "areaRangeMin": "每块至少 {min} 格",
   "areaRangeMax": "每块至多 {max} 格",
   "adjacentSizesDifferent": "相邻区域的面积不同",
+  "onlyRectangles": "所有区域都必须是矩形",
+  "noRectangles": "所有区域都不能是矩形",
   "shapeBank": "形状池",
   "markCompleted": "标为完成",
   "completed": "已完成",
@@ -54,6 +56,8 @@
     "window-match": "相同",
     "window-area-number": "面积",
     "window-range": "范围",
-    "window-size-separation": "同大不邻"
+    "window-size-separation": "同大不邻",
+    "window-boxy": "方块",
+    "window-non-boxy": "非方块"
   }
 }
