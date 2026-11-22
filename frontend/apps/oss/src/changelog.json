@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.2",
+      "date": "2026-11-23",
+      "commit": "1f26e511feda80cc905f699e9250348146acb7da",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Restored the full Heroes1 ruby floor grid and added source-model icons for selected wardrobes and a boulder.",
+            "zh-CN": "补齐搬运英雄红宝石地板的完整格子，并为部分换装柜和巨石使用游戏模型图标。",
+            "zh-TW": "補齊搬運英雄紅寶石地板的完整格子，並為部分換裝櫃和巨石使用遊戲模型圖示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.1",
       "date": "2026-11-23",
       "commit": "903fed4f2cba67cd70e4191e873b14c196bd9ea4",

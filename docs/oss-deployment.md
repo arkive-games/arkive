@@ -88,6 +88,24 @@ public homepage and deployment workflow only after they land and deploy.
 
 ## Execution Record
 
+### Heroes1 calibration follow-up (November 23, 2026)
+
+The center-only Ruby extraction was incomplete. The source at `(83, 93)`
+also has four edge and four corner meshes with Ruby material slots. Data
+commit `75aa054` adds the local border slots and unit guide footprints;
+resource commit `6688dbc` includes the corrected pyramid tiles and five
+static thumbnails used by nine regional props (eight wardrobes, one boulder).
+Publish resources first, then data, then frontend feature `1f26e511` to
+enable the optional per-prop resource icon. Other marker categories retain
+their previous icons; crystal runtime colors, transparent gates and animated
+buttons have not been faithfully reconstructed. This remains a local
+calibration, not a claim of complete map fidelity or public deployment.
+
+Validation: three Python extraction/baking tests, OSS build and lint,
+1,983 frontend tests, and local browser checks of the nine-cell footprint
+and all five icon URLs. The color blocks are flattened per placed unit
+model to avoid adding crystal border detail to the guide map.
+
 ### Prepared Ruby floor restoration (November 23, 2026)
 
 The user-located missing red square in Heroes1 is centered at world `(83, 93)`.

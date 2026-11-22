@@ -64,3 +64,18 @@ Resources use content-addressed paths, and old tiles remain available. Publish
 resources before the updated override manifest. This adds no runtime layers or
 requests. Run `test_oss_redroom_floors.py` to verify world-to-tile projection,
 texture density, pyramid coverage, and preservation outside the footprint.
+
+The Heroes1 correction includes Ruby material slots from both border and
+corner models, not only the center tile. At `(83, 93)`, the source comprises
+one center, four edge and four corner objects. For this local calibration,
+`guide_cell` records each source object's unit footprint; the baker renders
+flat cells with a thin seam, without copying the crystal border's spikes.
+This optional footprint is based on the placed unit models, not a scaled-up
+center mesh. The regression test checks all nine cell centers.
+
+Regional prop records may contain an optional resource-relative `icon`.
+The first reviewed set contains five static model thumbnails for nine
+markers: eight wardrobes and one boulder. Other props use their existing
+icons. The accompanying artifact `heroes1-icon-provenance.json` records
+source meshes/materials and the approximate shading limitation. Crystal
+runtime colors, transparent gates and animated buttons are not covered.
