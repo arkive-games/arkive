@@ -30,6 +30,8 @@
   "markCompleted": "标为完成",
   "completed": "已完成",
   "unlock": "解锁条件",
+  "gameCompletionUnlock": "通关后解锁",
+  "areaCompletionUnlock": "完成区域后解锁",
   "postGameUnlock": "通关后解锁：",
   "postGameStep": "完成最终挑战，阅读终点提到红色台座的信，再回开场飞船。",
   "linkedUnlockInsufficient": " 与本题有关，但单独解开它不会让本题出现。",
@@ -38,6 +40,7 @@
     "window-bridge": "格里米斯桥",
     "window-gate": "格里米斯瞭望台",
     "window-gemini-delta": "双生与异生",
-    "window-rose-windows": "玫瑰窗"
+    "window-rose-windows": "玫瑰窗",
+    "window-shape-bank": "形状池"
   }
 }

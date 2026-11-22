@@ -210,8 +210,11 @@ export function GlimmithTutorialPrototype() {
     const actor = window ?? scene.actors.find(({ id }) => id === marker.id)
     const puzzle = puzzles.get(marker.id)
     const linked = actor && 'unlocks' in actor ? actor.unlocks[0] : undefined
-    const isPostGame = actor && 'unlockCategory' in actor && actor.unlockCategory === 'GameCompletion'
-    const unlocker = isPostGame ? scene.actors.find(({ directory, unlocks }) => directory && unlocks.some((id) => id === marker.id)) : undefined
+    const unlockCategory = actor && 'unlockCategory' in actor ? actor.unlockCategory : undefined
+    const unlockMessage = unlockCategory === 'GameCompletion' ? copy.gameCompletionUnlock
+      : unlockCategory === 'AreaCompletion' ? copy.areaCompletionUnlock : undefined
+    const hasBridgeSecretSteps = marker.id === '0054.puz' && unlockCategory === 'GameCompletion'
+    const unlocker = hasBridgeSecretSteps ? scene.actors.find(({ directory, unlocks }) => directory && unlocks.some((id) => id === marker.id)) : undefined
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
     return (
       <CommunityMarkerDetail key={marker.id} game="glimmith" mapId={map.id} markerId={puzzleNumber(marker.id)} hideGallery
@@ -241,10 +244,12 @@ export function GlimmithTutorialPrototype() {
               ? <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(id)}>{puzzleNumber(id)}</button>
               : <span className="text-muted-foreground">{puzzleNumber(id)}</span>}</li>)}
           </ul>,
-        }] : puzzle ? [...(isPostGame ? [{
+        }] : puzzle ? [...(unlockMessage ? [{
           id: 'unlock', title: copy.unlock, accessibleTitle: copy.unlock, defaultExpanded: true,
           content: <div className="grid gap-1 text-sm">
-            <p><span className="whitespace-nowrap font-medium">{copy.postGameUnlock}</span>{copy.postGameStep}</p>
+            {hasBridgeSecretSteps ? (
+              <p><span className="whitespace-nowrap font-medium">{copy.postGameUnlock}</span>{copy.postGameStep}</p>
+            ) : <p>{unlockMessage}</p>}
             {unlocker && <p className="text-muted-foreground">
               <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(unlocker.id)}>
                 {puzzleNumber(unlocker.id)}

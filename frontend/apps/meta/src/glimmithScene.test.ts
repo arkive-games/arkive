@@ -11,10 +11,12 @@ describe('Glimmith tutorial scene', () => {
   it('has a map marker and source solution for every listed window prerequisite', () => {
     expect(scene.windows.map(({ id, prerequisites }) => [id, prerequisites.length])).toEqual([
       ['window-bridge', 11], ['window-gate', 11], ['window-gemini-delta', 41], ['window-rose-windows', 41],
+      ['window-shape-bank', 32],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
     expect(Object.keys(scene.puzzles)).toEqual(ids)
+    expect(scene.windows.find(({ id }) => id === 'window-shape-bank')?.thresholds).toEqual([8, 14, 23])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
