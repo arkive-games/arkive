@@ -5,7 +5,16 @@
 - Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
 - Preview: http://127.0.0.1:15172/#glimmith/tutorial. Probe the actual Vite page before starting another server. This is a dev-only route; no release is implied by a local commit.
 - Last completed slice: SizeSeparation, signed commit `6e4738bc6c71fe912705f8c0da28e824eec64d1d`. Thirteen windows, 471 puzzles, three notes; 754 placed puzzles remain. Local preview only; no push or deployment.
-- Next slice: audit Boxy only (40 source references), the closest remaining window to the mapped anchors by the distance check. Run the inventory helper with the `Boxy` key. Check the authored points against existing terrain first, then inspect the official localization, board headers, and source clues before enabling new terrain.
+- Next slice: integrate Boxy only, after checking the unsupported `0479.puz` anchor and identifying the source artwork or semantics for the `F0`, `F1`, `F2`, `F3`, and `F7` cell clues. The 40 original puzzle files are already extracted. Do not infer the missing support or draw substitute digits.
+
+## Boxy preflight checkpoint
+
+- Audit only; no new marker, terrain tile, or solution has been added to the preview. Verified the Simplified Chinese name from the installed LocRes. Thresholds: 13 / 20 / 32. All 40 files were found and inspected; no malformed frames or out-of-canvas anchors were reported.
+- All 40 files declare `ONLY_RECTANGLES`; one declares `SHAPE_BANK`. In addition to existing clues the audit found five distinct `F` tokens. The terrain probe checked all 40 anchors using the production generator; only `0479.puz` lacks a nearby support witness. This is not a placement error until the authored geometry is checked.
+- One local full audit took 6.56 seconds with the raw inputs present. Regenerating the current preview yielded 38 byte-identical files. The focused tests and full frontend suite (192 files / 2,033 tests) passed.
+- Re-run from `frontend/apps/meta` using PowerShell:
+
+      node scripts/glimmith-inventory.mjs "$env:TEMP/glimmith-arkive-source/Geri/Content/AGeri" src/assets/glimmith-scene.json Boxy --audit "$env:TEMP/glimmith-audit-terrain.json"
 
 ## SizeSeparation checkpoint
 
@@ -89,6 +98,31 @@ Run the inventory helper to recompute the counts after a game update or a comple
     node scripts/glimmith-inventory.mjs <AGeri directory> <current glimmith-scene.json> [window key]
 
 The optional key prints only that window's puzzle package paths for selective extraction.
+
+Append `--audit` after the window key for a read-only JSON report. It includes the
+official Simplified Chinese name, thresholds, missing or malformed puzzle files,
+clue inventory, and unknown or out-of-canvas anchors. A valid JSON report is
+not a pass by itself; check the reported issues. The report does not extract
+files, update the preview, or validate runtime unlock conditions.
+
+Pass a terrain manifest after `--audit` to probe all valid puzzle anchors using
+the same support check as the generator. Without it the terrain status is
+`not-requested`; absent or mismatched inputs give `blocked`; `checked` reports
+the total tested and all unsupported anchors. Paths are absolute or relative to
+the manifest directory. The current local manifest is
+%TEMP%/glimmith-audit-terrain.json:
+
+    {
+      "meshFile": "glimmith-size-separation-meshes.json",
+      "hamlet": "hamlet-terrain.raw",
+      "market": "glimmith-market-terrain",
+      "town": "glimmith-town-terrain",
+      "countryside": "glimmith-countryside-terrain",
+      "sideIsland": "glimmith-match-terrain",
+      "forestMain": "glimmith-forest-main-terrain",
+      "forestFragments": "glimmith-range-terrain",
+      "forestPartTwo": "glimmith-size-separation-terrain"
+    }
 
 ## Local inputs
 

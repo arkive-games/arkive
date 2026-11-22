@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { auditWindow } from './glimmith-audit.mjs'
 
-const [root, sceneFile, windowKey] = process.argv.slice(2)
-if (!root || !sceneFile) {
-  throw new Error('Usage: node glimmith-inventory.mjs <AGeri directory> <scene JSON> [window key]')
+const [root, sceneFile, windowKey, mode, terrainManifest, ...extra] = process.argv.slice(2)
+if (!root || !sceneFile || (mode && mode !== '--audit') || extra.length) {
+  throw new Error('Usage: node glimmith-inventory.mjs <AGeri directory> <scene JSON> [window key [--audit [terrain manifest]]]')
 }
 
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'))
@@ -31,7 +32,12 @@ const windows = source.Exports
 if (windowKey) {
   const window = windows.find(({ key }) => key === windowKey)
   if (!window) throw new Error('Unknown campaign window: ' + windowKey)
-  console.log(window.paths.map((path) => 'Geri/Content/' + path).join('\n'))
+  if (mode === '--audit') {
+    const entry = source.Exports.find((entry) => entry.ObjectName === prefix + windowKey)
+    console.log(JSON.stringify(auditWindow({ root, window, entry, source, preview, terrainManifest }), null, 2))
+  } else {
+    console.log(window.paths.map((path) => 'Geri/Content/' + path).join('\n'))
+  }
 } else {
   const referenced = new Set(windows.flatMap(({ paths }) => paths))
   console.log(JSON.stringify({

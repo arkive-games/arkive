@@ -344,8 +344,7 @@ function placedPuzzleFootprint(actor) {
   return hull(meshes.SM_Plinth_V004.vertices.filter(([, , z]) => z < 2)
     .map((v) => project(...place(v.map((n) => n * plinthScale)))))
 }
-for (const actor of actors) {
-  const point = project(actor.x, actor.y)
+function supportMeshesFor(actor, point) {
   const nearbyHeight = surfaces.filter(({ zMin, zMax, kind }) =>
     kind !== 'sail' && kind !== 'wing-frame' && kind !== 'ladder' &&
     actor.z >= zMin - 70 && actor.z <= zMax + 110)
@@ -355,10 +354,24 @@ for (const actor of actors) {
     const distance = footprintDistance(outline, point)
     return distance <= 50 * projection.scale || (distance <= reach && overlaps(outline, base))
   })
-  if (!support.length) throw new Error('Marker has no nearby-height mesh footprint: ' + actor.id)
-  if (point[0] < 0 || point[0] >= width || point[1] < 0 || point[1] >= height) throw new Error('Marker outside projection: ' + actor.id)
+  return [...new Set(support.map(({ mesh }) => mesh))].sort()
+}
+const outsideProjection = ([x, y]) => x < 0 || x >= width || y < 0 || y >= height
+if (output === '--probe-support') {
+  // The audit sends one window's authored anchors; leave before any asset writes.
+  const { anchors } = JSON.parse(readFileSync(0, 'utf8'))
+  const failures = anchors.flatMap((actor) =>
+    supportMeshesFor(actor, project(actor.x, actor.y)).length ? [] : [{ id: actor.id, position: [actor.x, actor.y, actor.z] }])
+  writeFileSync(1, JSON.stringify({ width, height, projection, checked: anchors.length, failures }) + '\n')
+  process.exit(0)
+}
+for (const actor of actors) {
+  const point = project(actor.x, actor.y)
+  const supportMeshes = supportMeshesFor(actor, point)
+  if (!supportMeshes.length) throw new Error('Marker has no nearby-height mesh footprint: ' + actor.id)
+  if (outsideProjection(point)) throw new Error('Marker outside projection: ' + actor.id)
   actor.pixel = { x: point[0], y: point[1] }
-  actor.supportMeshes = [...new Set(support.map(({ mesh }) => mesh))].sort()
+  actor.supportMeshes = supportMeshes
 }
 for (const window of windows) {
   const [x, y] = project(window.x, window.y)
