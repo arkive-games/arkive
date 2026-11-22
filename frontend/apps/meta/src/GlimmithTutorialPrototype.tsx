@@ -134,13 +134,18 @@ function ShapeClue({ x, y, clue, cells }: { x: number; y: number; clue: string; 
   )
 }
 
-type GlimmithPuzzle = (typeof scene.puzzles)['0049.puz'] & { shapeClues?: Record<string, string[]> }
+type GlimmithPuzzle = (typeof scene.puzzles)['0049.puz'] & {
+  shapeClues?: Record<string, string[]>
+  wideShapeClues?: Partial<Record<number, string>>
+  shapeBank?: string[]
+}
 
 function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
-  const { columns, rows, board, solution, shapeClues } = puzzle
+  const { columns, rows, board, solution, shapeClues, wideShapeClues, shapeBank } = puzzle
+  const bankHeight = shapeBank?.length ? 28 : 0
   return (
     <svg role="img" aria-label={copy.solution}
-      viewBox={`-7 -7 ${columns * 24 + 14} ${rows * 24 + 14}`}
+      viewBox={`-7 -7 ${columns * 24 + 14} ${rows * 24 + 14 + bankHeight}`}
       className={`mx-auto w-full ${Math.max(columns, rows) > 7 ? 'max-w-64' : 'max-w-48'}`}>
       {Array.from({ length: rows * columns }, (_, index) => {
         const x = index % columns
@@ -160,7 +165,7 @@ function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
       {Array.from({ length: rows * columns }, (_, index) => {
         const x = index % columns
         const y = Math.floor(index / columns)
-        const clue = board[2 * y + 1].slice(3 * x + 1, 3 * x + 3)
+        const clue = wideShapeClues?.[index] ?? board[2 * y + 1].slice(3 * x + 1, 3 * x + 3)
         const image = cellClueImages.get(clue)
         const cells = shapeClues?.[clue]
         if (cells) return <ShapeClue key={index} x={24 * x} y={24 * y} clue={clue} cells={cells} />
@@ -173,6 +178,13 @@ function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
       {Array.from({ length: rows }, (_, y) => Array.from({ length: columns + 1 }, (_, x) => (
         <RelationClue key={x} x={24 * x} y={24 * y + 12} mark={board[2 * y + 1][3 * x]} />
       )))}
+      {shapeBank && <g data-shape-bank="" aria-label={copy.shapeBank}>
+        {shapeBank.map((clue, index) => {
+          const cells = shapeClues?.[clue]
+          return cells && <ShapeClue key={index} clue={clue} cells={cells}
+            x={(columns - shapeBank.length) * 12 + index * 24} y={rows * 24 + 4} />
+        })}
+      </g>}
     </svg>
   )
 }

@@ -20,6 +20,7 @@ for (const name of [...sources, 'Overworld_Campaign']) {
 const windows = [
   ['Bridge', 'bridge'], ['Gate', 'gate'], ['GeminiDelta', 'gemini-delta'], ['SlashPack', 'rose-windows'], ['ShapeBank', 'shape-bank'],
   ['Precision', 'precision'], ['Polyomino', 'polyomino'],
+  ['Mingle', 'mingle'],
 ].map(([key, id]) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -418,8 +419,24 @@ for (const id of ['note', 'puzzle']) {
   const title = id === 'note' ? 'SM_Plinth_V004 + SM_Scroll_001' : 'SM_Plinth_V004'
   writeFileSync(join(output, `glimmith-marker-${id}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><title>${title}</title>${parts.map(renderPart).join('')}${inset}</svg>\n`)
 }
-function readShapeClues(puzzle, board, columns, id) {
-  const used = new Set()
+function normalizeWideShapeClues(board, columns, id) {
+  const wideShapeClues = {}
+  for (let y = 1; y < board.length; y += 2) {
+    let extra = 0
+    // The renderer uses two-character cells. Keep longer source IDs by cell index.
+    board[y] = board[y].replace(/S\d{2,}/g, (clue, offset) => {
+      const x = (offset - extra - 1) / 3
+      if (!Number.isInteger(x) || x < 0 || x >= columns) throw new Error('Misaligned shape clue: ' + id)
+      wideShapeClues[((y - 1) / 2) * columns + x] = clue
+      extra += clue.length - 2
+      return 'S*'
+    }).padEnd(3 * columns + 1)
+  }
+  return Object.keys(wideShapeClues).length ? wideShapeClues : undefined
+}
+
+function readShapeClues(headerText, board, columns, id, bank, wide) {
+  const used = new Set([...bank, ...Object.values(wide ?? {})])
   for (let y = 1; y < board.length; y += 2) {
     for (let x = 0; x < columns; x++) {
       const clue = board[y].slice(3 * x + 1, 3 * x + 3)
@@ -428,7 +445,7 @@ function readShapeClues(puzzle, board, columns, id) {
   }
   if (!used.size) return undefined
   const shapes = new Map()
-  const lines = puzzle.split(/\r?\nDIMENSIONS /)[0].split(/\r?\n/)
+  const lines = headerText.split(/\r?\n/)
   for (let i = 0; i < lines.length; i++) {
     if (!lines[i].startsWith('SHAPE ')) continue
     const header = /^SHAPE (\d+) (\d+)\s*$/.exec(lines[i])
@@ -447,17 +464,24 @@ function readShapeClues(puzzle, board, columns, id) {
   }))
 }
 
+const minglePuzzleIds = new Set(windows.find(({ id }) => id === 'window-mingle').prerequisites)
 const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map((actor) => {
   const { id } = actor
   const puzzle = puzzleFile(actor)
   const [columns, rows] = puzzle.match(/^DIMENSIONS (\d+) (\d+)\r?$/m).slice(1).map(Number)
-  const board = puzzle.split(/\r?\nPUZZLE\r?\n/)[1].split(/\r?\nSOLUTION\r?\n/)
-  const frames = board.map((part) => part.split(/\r?\n/).slice(0, 2 * rows + 1).map((line) => line.padEnd(3 * columns + 1)))
+  const [header, ...body] = puzzle.split(/\r?\n(?:PUZZLE|SOLUTION)\r?\n/)
+  const frames = body.map((part) => part.split(/\r?\n/).slice(0, 2 * rows + 1).map((line) => line.padEnd(3 * columns + 1)))
   if (frames.length !== 2 || frames.some((frame) => frame.length !== 2 * rows + 1)) throw new Error('Invalid puzzle dimensions: ' + id)
   const difficulty = Number(puzzle.match(/^DIFFICULTY (\d+)\r?$/m)?.[1])
   if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 7) throw new Error('Invalid puzzle difficulty: ' + id)
-  const shapeClues = readShapeClues(puzzle, frames[0], columns, id)
-  return [id, { columns, rows, difficulty, board: frames[0], solution: frames[1], ...(shapeClues && { shapeClues }) }]
+  const [board, solution] = frames
+  const wideShapeClues = normalizeWideShapeClues(board, columns, id)
+  if (frames.some((frame) => frame.some((line) => line.slice(3 * columns + 1).trim()))) throw new Error('Overwide puzzle frame: ' + id)
+  const bank = minglePuzzleIds.has(id) ? /^SHAPE_BANK ([\d \t]+)\r?$/m.exec(header)?.[1].trim() : undefined
+  const shapeBank = bank ? bank.split(/\s+/).map((number) => 'S' + number) : []
+  const shapeClues = readShapeClues(header, board, columns, id, shapeBank, wideShapeClues)
+  return [id, { columns, rows, difficulty, board, solution, ...(shapeClues && { shapeClues }),
+    ...(wideShapeClues && { wideShapeClues }), ...(shapeBank.length && { shapeBank }) }]
 }))
 writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, windows, puzzles }, null, 2) + '\n')
 for (let row = 0; row < height / tileSize; row++) {

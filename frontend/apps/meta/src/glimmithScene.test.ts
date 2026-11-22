@@ -14,6 +14,7 @@ describe('Glimmith tutorial scene', () => {
       ['window-shape-bank', 32],
       ['window-precision', 44],
       ['window-polyomino', 39],
+      ['window-mingle', 41],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
@@ -21,6 +22,7 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.find(({ id }) => id === 'window-shape-bank')?.thresholds).toEqual([8, 14, 23])
     expect(scene.windows.find(({ id }) => id === 'window-precision')?.thresholds).toEqual([12, 20, 35])
     expect(scene.windows.find(({ id }) => id === 'window-polyomino')?.thresholds).toEqual([13, 20, 31])
+    expect(scene.windows.find(({ id }) => id === 'window-mingle')?.thresholds).toEqual([12, 20, 31])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
@@ -43,6 +45,17 @@ describe('Glimmith tutorial scene', () => {
         expect(Array.isArray(cells) && cells.join(''), id).toMatch(/^[# ]*#[# ]*$/)
       }
     }
+  })
+
+  it('preserves Mingle shape banks and multi-digit clues without shifting cells', () => {
+    const puzzle = scene.puzzles['1435.puz']
+    expect(puzzle.board[9]).toBe('|..|..|S*|..|..|..|..|S6|S*|S2|S4|..|')
+    expect(puzzle.wideShapeClues).toMatchObject({ 50: 'S10', 56: 'S11', 103: 'S12', 135: 'S13' })
+    expect(puzzle.shapeClues.S10).toEqual(['  #', ' ##', '##', '#'])
+    expect(scene.puzzles['0331.puz'].wideShapeClues).toEqual({ 97: 'S10', 101: 'S11', 107: 'S10' })
+    const bank = scene.puzzles['0080.puz']
+    expect(bank.shapeBank).toEqual(['S1', 'S2'])
+    expect(Object.keys(bank.shapeClues)).toEqual(bank.shapeBank)
   })
 
   it('keeps authored anchors on the map with source terrain support', () => {
