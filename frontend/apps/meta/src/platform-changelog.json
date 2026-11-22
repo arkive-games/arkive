@@ -2,6 +2,30 @@
   "entries": [
     {
       "date": "2026-11-23",
+      "commit": "34d5284779040f32bbbb29ac9defd44d253f5f53",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Content moderation brings complete submissions, decision history, reports, appeals and account trust into one workspace, with clear availability feedback until the unified service is enabled.",
+            "zh-CN": "内容审核整合整条图文、处理记录、举报、申诉与用户信用；统一服务启用前明确显示待启用状态。",
+            "zh-TW": "內容審核整合整條圖文、處理紀錄、檢舉、申訴與使用者信用；統一服務啟用前明確顯示待啟用狀態。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-23",
       "commit": "c651268ab033af23516517ca047ad41900cf615c",
       "targets": [
         "aion2",
