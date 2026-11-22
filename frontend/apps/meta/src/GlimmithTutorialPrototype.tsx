@@ -244,8 +244,7 @@ export function GlimmithTutorialPrototype() {
         }] : puzzle ? [...(isPostGame ? [{
           id: 'unlock', title: copy.unlock, accessibleTitle: copy.unlock, defaultExpanded: true,
           content: <div className="grid gap-1 text-sm">
-            <p className="font-medium">{copy.postGameUnlock}</p>
-            <p>{copy.postGameStep}</p>
+            <p><span className="whitespace-nowrap font-medium">{copy.postGameUnlock}</span>{copy.postGameStep}</p>
             {unlocker && <p className="text-muted-foreground">
               <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(unlocker.id)}>
                 {puzzleNumber(unlocker.id)}

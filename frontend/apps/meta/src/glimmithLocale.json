@@ -30,7 +30,7 @@
   "markCompleted": "标为完成",
   "completed": "已完成",
   "unlock": "解锁条件",
-  "postGameUnlock": "通关后解锁",
+  "postGameUnlock": "通关后解锁：",
   "postGameStep": "完成最终挑战，阅读终点提到红色台座的信，再回开场飞船。",
   "linkedUnlockInsufficient": " 与本题有关，但单独解开它不会让本题出现。",
   "engine": { "copyPosition": "复制坐标", "noMapSelected": "未选择地图", "zoomIn": "放大", "zoomOut": "缩小" },
