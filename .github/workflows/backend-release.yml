@@ -1,0 +1,45 @@
+name: Publish backend image
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-image-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # workflow_run has access to secrets, including after untrusted PR runs.
+    # Only consume the tested commit from this repository's master push.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      vars.BACKEND_IMAGE_REPOSITORY != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: backend-registry
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Publish and promote the tested image
+        env:
+          IMAGE_REPOSITORY: ${{ vars.BACKEND_IMAGE_REPOSITORY }}
+          REGISTRY_USERNAME: ${{ vars.BACKEND_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.BACKEND_REGISTRY_PASSWORD }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: bash .github/scripts/backend-release.sh

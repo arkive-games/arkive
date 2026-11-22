@@ -64,6 +64,13 @@ no Redis (the Go service uses none of them), the database is named `arkive` rath
 `aion2`, and the API is published on **19000** because 9000 collides with MinIO on a typical
 dev box.
 
+## Production releases
+
+GitHub Actions publishes CI-tested images and Komodo manages the API on the
+existing Docker host. See the [Komodo runbook](../docs/backend-komodo.md) for
+setup, staging, and rollback. The legacy PostgreSQL/Redis project is not part
+of the API deployment.
+
 ## Working with production data locally
 
 Restore the production database alongside the new one, then import the accounts:

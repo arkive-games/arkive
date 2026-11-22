@@ -6,10 +6,8 @@
 # green-looking without any of them having been run.
 #
 # Deploying stays separate and stays narrow. This workflow runs for every commit;
-# deploy.yml keeps its `paths: [frontend/**]` filter, so a tools/, docs/ or
-# backend commit is built and checked here without redeploying four production
-# sites. Building is cheap and public-repo runner minutes are unmetered; a deploy
-# is neither.
+# deploy.yml keeps its `paths: [frontend/**]` filter, while backend-release.yml
+# only publishes new backend revisions after successful master CI.
 #
 # What is deliberately NOT here:
 #
@@ -220,6 +218,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check the Komodo Compose model
+        working-directory: backend-go
+        env:
+          ARKIVE_BACKEND_IMAGE: ghcr.io/arkive-games/backend-go:komodo
+          POSTGRES_USERNAME: fixture
+          POSTGRES_PASSWORD: fixture
+          POSTGRES_DATABASE: fixture
+          JWT_SECRET_KEY: fixture
+          ALTCHA_HMAC_KEY: fixture
+          ALLOWED_ORIGINS: https://example.com
+          S3_ENDPOINT: https://s3.example.com
+          S3_REGION: fixture
+          S3_BUCKET: fixture
+          S3_ACCESS_KEY_ID: fixture
+          S3_SECRET_ACCESS_KEY: fixture
+        run: |
+          docker compose -f docker-compose.prod.yml -f docker-compose.komodo.yml config --format json |
+            jq -e '
+              (.services | keys == ["core", "migrate"]) and
+              (.services.core.image == env.ARKIVE_BACKEND_IMAGE) and
+              (.services.migrate.image == .services.core.image) and
+              (.services.migrate.environment == .services.core.environment) and
+              (.services.core.build == null and .services.migrate.build == null) and
+              (.services.core.ports | length == 1 and .[0].host_ip == "127.0.0.1") and
+              (.services.migrate.ports | length == 0) and
+              (.services.migrate.command == ["migrate"]) and
+              (.services.core.depends_on.migrate.condition == "service_completed_successfully") and
+              (.networks.shared.external == true)'
 
       - name: Setup Go
         uses: actions/setup-go@v5
