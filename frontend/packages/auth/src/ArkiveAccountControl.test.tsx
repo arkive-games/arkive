@@ -32,4 +32,5 @@ it.each([true, false])('offers moderation to an administrator or game moderator 
   await waitFor(() => expect(view.getByTestId('account-menu')).toBeTruthy())
   fireEvent.click(view.getByTestId('account-menu'))
   await waitFor(() => expect(view.getByRole('menuitem', { name: 'Image moderation' })).toBeTruthy())
+  expect(view.getByRole('menuitem', { name: 'Image moderation' }).querySelector('svg.tabler-icon-photo-check')).toBeTruthy()
 })

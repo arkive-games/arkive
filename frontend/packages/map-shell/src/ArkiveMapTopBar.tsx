@@ -8,6 +8,7 @@ import {
 import {
   IconLogout,
   IconMoon,
+  IconPhotoCheck,
   IconSettings,
   IconSun,
   IconSunMoon,
@@ -310,6 +311,7 @@ export function ShellAccountMenu({ account }: { account: ArkiveMapTopBarAccount 
           }}
         >
           {entry.key === "profile" && <IconUser className="size-4" stroke={1.8} />}
+          {entry.key === "moderation" && <IconPhotoCheck className="size-4" stroke={1.8} aria-hidden="true" />}
           {entry.key === "settings" && <IconSettings className="size-4" stroke={1.8} />}
           {entry.key === "sign-out" && <IconLogout className="size-4" stroke={1.8} />}
           <span className="flex-1">{entry.label}</span>

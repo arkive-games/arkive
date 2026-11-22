@@ -33,6 +33,18 @@ keep their item; confirmed approvals or rejections refresh the queue. Signed-out
 visitors are prompted to sign in, and ordinary accounts see an access-denied
 state. The review API also supports withdrawing an already approved image.
 
+The pending queue has no upload-date cutoff. It includes pending database records
+within the reviewer's game scope, excluding attachments on hidden or deleted
+comments. Approved and rejected images leave this queue. Built-in artifact images
+and earlier browser-only previews have no contribution record to review and are
+not imported automatically. An empty queue alone cannot establish which of these
+conditions applies to a particular account.
+
+The review workspace pairs a thumbnail queue with a full image preview, uploader,
+upload time and marker location. Approval waits for the selected preview to load;
+loading or failed previews cannot be approved. Confirmed decisions advance to the
+next image, while failed decisions retain the selected contribution for retry.
+
 Deploy the backend before the frontend. The backend applies
 `20261119000001_create_marker_images.sql` through the normal migration stream;
 no new storage credentials or bucket are required. A reverse proxy must allow
