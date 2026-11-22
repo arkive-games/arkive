@@ -4,8 +4,15 @@
 
 - Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
 - Preview: http://127.0.0.1:15172/#glimmith/tutorial. Probe the actual Vite page before starting another server. This is a dev-only route; no release is implied by a local commit.
-- Last completed slice: Precision, signed commit `e13ff75bbd63ab4b4972c90fe0a7c3f56ee7f098`. Six windows, 180 puzzles, three notes; 1,045 placed puzzles remain. Local preview only; no push or deployment.
-- Next slice: audit Polyomino only (39 source references). Run the inventory helper with the `Polyomino` key, extract its puzzle files, and compare its authored anchors with the existing Town, lower-level, and Countryside terrain before adding any other submaps. Decode the matching Simplified Chinese location name from the installed localization. Split the input audit from generation if new geometry is required.
+- Last completed slice: Polyomino, signed commit `8c2ac48efa6efa7df645f20a89cce4c9f6f5ab2f`. Seven windows, 219 puzzles, three notes; 1,006 placed puzzles remain. Local preview only; no push or deployment.
+- Next slice: audit Mingle only (41 source references). Run the inventory helper with the `Mingle` key, extract its original puzzle files, and inspect their cell/edge clue syntax and the localized window name before registering it. Check the authored anchors against the existing Town, lower-level, and Countryside geometry. If another export is needed, checkpoint the inputs before projecting terrain.
+
+## Polyomino checkpoint
+
+- Source: `BP_StainedGlassPlinth_Polyomino`, its Simplified Chinese localization entry, and 39 puzzle files from the installed game. Window thresholds are 13 / 20 / 31. The original 39 sets of puzzle clues resolve to `SHAPE` definitions within the same files; the SVG draws the shape cells in their authored orientation.
+- Added the three Town Main brick-wall mesh types to the projection. They supply nearby-height support for `1049` and `1245`; all 39 new anchors passed the existing footprint rule. No streaming map or projection origin changed. Prior anchors, boards, and solutions match the previous scene.
+- Desktop: clicked the map window, counted 39 links, verified thresholds, and opened `0379`. Mobile: area selection closed the sidebar, and tapping `0379` directly showed the solution. Verified visible shape glyphs, solution borders, and shared tools; no authenticated write was attempted. Both map viewports passed nonblank pixel sampling.
+- Verification: four focused scene tests, Meta build, UI guard, and full frontend suite (191 files / 2,024 tests) passed. Nine puzzles declare AreaCompletion and five GameCompletion; exact triggers remain unverified.
 
 ## Precision checkpoint
 
@@ -45,5 +52,5 @@ The optional key prints only that window's puzzle package paths for selective ex
 - Installed pak root: E:/SteamLibrary/steamapps/common/The Artisan of Glimmith/Geri/Content/Paks.
 - Existing Unreal 4.27 exports: %TEMP%/glimmith-arkive-source/Geri/Content/AGeri. This is disposable; the cooked pak is authoritative.
 - Existing local tools: repak-bin/repak.exe in the worktree, plus %TEMP%/glimmith-uasset-reader and %TEMP%/glimmith-mesh-reader. These are not tracked. See glimmith-projection.md for tool roles and required export structure if the cache is missing.
-- The base mesh inventory/geometry is %TEMP%/glimmith-mesh-paths.txt and %TEMP%/glimmith-meshes.json. The cumulative geometry through Precision is %TEMP%/glimmith-precision-meshes.json; its extra package paths are in %TEMP%/glimmith-town-mesh-paths.txt, %TEMP%/glimmith-town-brick-paths.txt, and %TEMP%/glimmith-countryside-mesh-paths.txt. The extractor appends the monument automatically, so deduplicate mesh paths if combining lists.
+- The base mesh inventory/geometry is %TEMP%/glimmith-mesh-paths.txt and %TEMP%/glimmith-meshes.json. The cumulative geometry through Polyomino is %TEMP%/glimmith-polyomino-meshes.json. Extra package paths are in %TEMP%/glimmith-town-mesh-paths.txt, %TEMP%/glimmith-town-brick-paths.txt, %TEMP%/glimmith-countryside-mesh-paths.txt, and %TEMP%/glimmith-polyomino-mesh-paths.txt. The extractor appends the monument automatically, so deduplicate mesh paths if combining lists.
 - Use %TEMP%/hamlet-terrain.raw and the %TEMP%/glimmith-market-terrain, %TEMP%/glimmith-town-terrain, and %TEMP%/glimmith-countryside-terrain directories in that order. Do not store the raw campaign export, game saves, or credentials in the repository.
