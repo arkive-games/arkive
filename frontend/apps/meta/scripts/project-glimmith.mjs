@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Input: cooked AGeri assets exported to JSON with UAssetAPI (UE 4.27).
-const [root, output, meshFile, terrainFile, marketTerrainDir, townTerrainDir, countrysideTerrainDir, sideIslandTerrainDir, forestTerrainDir, fragmentsTerrainDir] = process.argv.slice(2)
+const [root, output, meshFile, terrainFile, marketTerrainDir, townTerrainDir, countrysideTerrainDir, sideIslandTerrainDir, forestTerrainDir, fragmentsTerrainDir, forestPartTwoTerrainDir] = process.argv.slice(2)
 const meshes = JSON.parse(readFileSync(meshFile, 'utf8'))
 const readMap = (path) => JSON.parse(readFileSync(join(root, 'Maps', path + '.umap.json'), 'utf8'))
 const prop = (entry, name) => entry.Data?.find?.((item) => item.Name === name)?.Value
@@ -15,7 +15,8 @@ const countryside = 'Zone01_Countryside'
 const forestMain = 'Zone02_Forest_Main'
 const sideIsland = 'Zone02_SideIsland'
 const forestFragments = 'Zone02_ForestFragments'
-const sources = ['Welcome', 'Zone01_Intro_Bridge', 'Zone01_Intro_Gate_Revised', 'Zone01_Hamlet', 'Zone01_Cathedral', 'Zone01_Market1', townMain, townLower, countryside, forestMain, sideIsland, forestFragments]
+const forestPartTwo = 'Zone02_Forest_Main_Part2'
+const sources = ['Welcome', 'Zone01_Intro_Bridge', 'Zone01_Intro_Gate_Revised', 'Zone01_Hamlet', 'Zone01_Cathedral', 'Zone01_Market1', townMain, townLower, countryside, forestMain, sideIsland, forestFragments, forestPartTwo]
 for (const name of [...sources, 'Overworld_Campaign']) {
   const stream = overview.Exports.find((entry) => prop(entry, 'WorldAsset')?.AssetPath?.AssetName?.endsWith('/' + name + '.' + name))
   if (!stream || prop(stream, 'LevelTransform')) throw new Error('Expected identity streaming transform: ' + name)
@@ -27,6 +28,7 @@ const windows = [
   ['Match', 'match'],
   ['AreaNumber', 'area-number'],
   ['Range', 'range'],
+  ['SizeSeparation', 'size-separation'],
 ].map(([key, id]) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -56,9 +58,9 @@ const actors = [...ids].map((id) => {
   return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory, unlocks: unlocks.filter((id) => ids.has(id)), unlockCategory }
 })
 const width = 5120
-const height = 6144
+const height = 7168
 const tileSize = 1024
-const projection = { centerX: 4300, centerY: -3000, originX: 1536, originY: 4608, degrees: -59, scale: 2048 / 30500 }
+const projection = { centerX: 4300, centerY: -3000, originX: 1536, originY: 5632, degrees: -59, scale: 2048 / 30500 }
 const angle = projection.degrees * Math.PI / 180
 const project = (x, y) => {
   const dx = (projection.centerX - x) * projection.scale
@@ -151,7 +153,7 @@ const surfaces = sources.flatMap((name) => {
     if ((!loc && !localTransform) || !mesh || (!localTransform && prop(entry, 'AttachParent'))) return []
     const isDockPlank = name === 'Welcome' && dockPlanks.test(mesh)
     const isIslandRock = name === sideIsland && /^(?:SM_SquareRock_0[123]|SM_Rock_06)$/.test(mesh)
-    const isForest = name === forestMain || name === forestFragments
+    const isForest = name === forestMain || name === forestFragments || name === forestPartTwo
     const isForestRock = isForest && /^(?:SM_SquareRock_0[123]|SM_Rock_05|SM_Rock_0[26]_cut)$/.test(mesh)
     const isRock = rockMeshes.has(mesh) || (name === 'Welcome' && dockRockMeshes.has(mesh)) || /Flatrock/i.test(mesh) || isIslandRock || isForestRock
     const isLadder = mesh === 'Ladder_SM'
@@ -161,9 +163,10 @@ const surfaces = sources.flatMap((name) => {
     const isForestPlatform = (isForest || name === sideIsland) && mesh === 'Brick_Circle_01_SM'
     const isBrickStep = (name === sideIsland || isForest) && mesh === 'Brick_09_SM'
     const isForestBridge = isForest && /^(?:Bridge_SM|sm_RuinwoodenPlanks_PathA)$/i.test(mesh)
+    const isForestPedestal = name === forestPartTwo && mesh === 'sm_RuinPillar_LargeRoundExtraShortA_Base'
     const isLandmark = (name !== 'Welcome' && landmarkMeshes.test(mesh)) ||
       (name === 'Zone01_Cathedral' && mesh === 'Cube' && ['Cube_8', 'Cube14'].includes(map.Exports[entry.OuterIndex - 1]?.ObjectName))
-    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !isBrickWall && !isForestPlatform && !isBrickStep && !isForestBridge && !localTransform && mesh !== shipMesh) return []
+    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !isBrickWall && !isForestPlatform && !isBrickStep && !isForestBridge && !isForestPedestal && !localTransform && mesh !== shipMesh) return []
     const model = meshes[mesh]
     if (!model) throw new Error('Missing mesh: ' + mesh)
     const place = localTransform ?? componentTransform(entry)
@@ -264,18 +267,19 @@ addLandscape({
 
 const materialLayers = ['Grass_LayerInfo', 'Sand_LayerInfo', 'Stone_LayerInfo', 'Dirt_LayerInfo', 'Forest_LayerInfo']
 const rgbaToBgra = [2, 1, 0, 3]
-function addTiledLandscape(mapName, textureDir) {
+function addTiledLandscape(mapName, textureDir, indexed = false) {
   const map = readMap('OverworldSubmaps/' + mapName)
   const planes = new Map()
   function plane(ref) {
     const name = map.Exports[ref - 1]?.ObjectName
     if (!name) throw new Error('Missing landscape texture reference: ' + mapName)
-    if (!planes.has(name)) {
-      const data = readFileSync(join(textureDir, name + '.raw'))
+    if (!planes.has(ref)) {
+      const file = indexed ? `${ref}-${name}` : name
+      const data = readFileSync(join(textureDir, file + '.raw'))
       if (data.length !== 64 * 64 * 4) throw new Error('Expected 64 by 64 BGRA8 plane: ' + name)
-      planes.set(name, data)
+      planes.set(ref, data)
     }
-    return planes.get(name)
+    return planes.get(ref)
   }
   for (const component of map.Exports.filter((entry) => map.Imports[-entry.ClassIndex - 1]?.ObjectName === 'LandscapeComponent')) {
     const root = map.Exports[prop(component, 'AttachParent') - 1]
@@ -312,6 +316,7 @@ addTiledLandscape(countryside, countrysideTerrainDir)
 addTiledLandscape(sideIsland, sideIslandTerrainDir)
 addTiledLandscape(forestMain, forestTerrainDir)
 addTiledLandscape(forestFragments, fragmentsTerrainDir)
+addTiledLandscape(forestPartTwo, forestPartTwoTerrainDir, true)
 if (!surfaces.length) throw new Error('No source geometry found')
 const pointList = (points) => points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')
 const plinthScale = 0.5
@@ -498,14 +503,15 @@ function readShapeClues(headerText, board, columns, id, bank, wide) {
   }))
 }
 
-const shapeBankWindowIds = new Set(['window-mingle', 'window-forest-trailhead', 'window-match', 'window-area-number'])
+const shapeBankWindowIds = new Set(['window-mingle', 'window-forest-trailhead', 'window-match', 'window-area-number', 'window-size-separation'])
 const shapeBankPuzzleIds = new Set(windows.filter(({ id }) => shapeBankWindowIds.has(id)).flatMap(({ prerequisites }) => prerequisites))
 const rangePuzzleIds = new Set(windows.find(({ id }) => id === 'window-range').prerequisites)
+const sizeSeparationPuzzleIds = new Set(windows.find(({ id }) => id === 'window-size-separation').prerequisites)
 function readAreaRange(header, id) {
   const min = Number(/^AREA_AT_LEAST (\d+)\s*$/m.exec(header)?.[1]) || undefined
   const max = Number(/^AREA_AT_MOST (\d+)\s*$/m.exec(header)?.[1]) || undefined
-  if ((!min && !max) || (min && max && min > max)) throw new Error('Invalid area range: ' + id)
-  return { min, max }
+  if (min && max && min > max) throw new Error('Invalid area range: ' + id)
+  return min || max ? { min, max } : undefined
 }
 const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map((actor) => {
   const { id } = actor
@@ -522,9 +528,13 @@ const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).m
   const bank = shapeBankPuzzleIds.has(id) ? /^SHAPE_BANK ([\d \t]+)\r?$/m.exec(header)?.[1].trim() : undefined
   const shapeBank = bank ? bank.split(/\s+/).map((number) => 'S' + number) : []
   const shapeClues = readShapeClues(header, board, columns, id, shapeBank, wideShapeClues)
-  const areaRange = rangePuzzleIds.has(id) ? readAreaRange(header, id) : undefined
+  const adjacentSizesDifferent = sizeSeparationPuzzleIds.has(id) && /^ADJACENT_SIZES_DIFFERENT\r?$/m.test(header)
+  if (sizeSeparationPuzzleIds.has(id) && !adjacentSizesDifferent) throw new Error('Missing adjacent size rule: ' + id)
+  const areaRange = rangePuzzleIds.has(id) || adjacentSizesDifferent ? readAreaRange(header, id) : undefined
+  if (rangePuzzleIds.has(id) && !areaRange) throw new Error('Missing area range: ' + id)
   return [id, { columns, rows, difficulty, board, solution, ...(shapeClues && { shapeClues }),
-    ...(wideShapeClues && { wideShapeClues }), ...(shapeBank.length && { shapeBank }), ...(areaRange && { areaRange }) }]
+    ...(wideShapeClues && { wideShapeClues }), ...(shapeBank.length && { shapeBank }), ...(areaRange && { areaRange }),
+    ...(adjacentSizesDifferent && { adjacentSizesDifferent }) }]
 }))
 writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, windows, puzzles }, null, 2) + '\n')
 for (let row = 0; row < height / tileSize; row++) {

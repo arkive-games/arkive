@@ -30,6 +30,7 @@
   "areaRangeBetween": "每块 {min} 至 {max} 格",
   "areaRangeMin": "每块至少 {min} 格",
   "areaRangeMax": "每块至多 {max} 格",
+  "adjacentSizesDifferent": "相邻区域的面积不同",
   "shapeBank": "形状池",
   "markCompleted": "标为完成",
   "completed": "已完成",
@@ -52,6 +53,7 @@
     "window-forest-trailhead": "林间小径入口",
     "window-match": "相同",
     "window-area-number": "面积",
-    "window-range": "范围"
+    "window-range": "范围",
+    "window-size-separation": "同大不邻"
   }
 }

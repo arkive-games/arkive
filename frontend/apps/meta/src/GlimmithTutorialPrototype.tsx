@@ -304,7 +304,13 @@ export function GlimmithTutorialPrototype() {
           </div>,
         }] : []), {
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
-          content: <><PuzzleAreaRange areaRange={'areaRange' in puzzle ? puzzle.areaRange : undefined} /><PuzzleSolution puzzle={puzzle} /></>,
+          content: <>
+            {'adjacentSizesDifferent' in puzzle && puzzle.adjacentSizesDifferent && (
+              <p className="text-center text-sm text-muted-foreground">{copy.adjacentSizesDifferent}</p>
+            )}
+            <PuzzleAreaRange areaRange={'areaRange' in puzzle ? puzzle.areaRange : undefined} />
+            <PuzzleSolution puzzle={puzzle} />
+          </>,
         }] : [{
           id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
           content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&

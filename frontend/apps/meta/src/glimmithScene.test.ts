@@ -19,6 +19,7 @@ describe('Glimmith tutorial scene', () => {
       ['window-match', 28],
       ['window-area-number', 43],
       ['window-range', 46],
+      ['window-size-separation', 45],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
@@ -31,6 +32,7 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.find(({ id }) => id === 'window-match')?.thresholds).toEqual([9, 13, 22])
     expect(scene.windows.find(({ id }) => id === 'window-area-number')?.thresholds).toEqual([14, 21, 34])
     expect(scene.windows.find(({ id }) => id === 'window-range')?.thresholds).toEqual([14, 22, 37])
+    expect(scene.windows.find(({ id }) => id === 'window-size-separation')?.thresholds).toEqual([14, 22, 35])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
@@ -125,5 +127,18 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.puzzles['0286.puz'].areaRange).toEqual({ min: 4 })
     expect(scene.puzzles['0768.puz'].areaRange).toEqual({ max: 2 })
     expect(scene.puzzles['0779.puz'].areaRange).toEqual({ min: 3, max: 5 })
+  })
+
+  it('preserves the Size Separation rule and mixed authored clues', () => {
+    const window = scene.windows.find(({ id }) => id === 'window-size-separation')!
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    expect(window.prerequisites.every((id) => {
+      const puzzle = puzzles.get(id)!
+      return 'adjacentSizesDifferent' in puzzle && puzzle.adjacentSizesDifferent
+    })).toBe(true)
+    expect(scene.puzzles['1436.puz'].areaRange).toEqual({ min: 3, max: 5 })
+    expect(new Set(Object.values(scene.puzzles['1436.puz'].wideShapeClues))).toEqual(new Set(['S10', 'S11', 'S12']))
+    expect(scene.puzzles['1188.puz'].shapeBank).toEqual(['S1', 'S2', 'S3'])
+    expect(scene.actors.find(({ id }) => id === '0824.puz')?.supportMeshes).toContain('sm_RuinPillar_LargeRoundExtraShortA_Base')
   })
 })
