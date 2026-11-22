@@ -29,6 +29,7 @@ height, but must not erase controls or browsing context.
 | About | Initially collapsed; contextual loading/empty/error and retry retain open section, without resetting map operations. |
 | Explicit-save tool exit | Save must succeed before leaving. Failure/cancel keeps work; discard starts the next ordinary visit fresh while preserving saved records; Continue Editing stays. Native unload is best effort. [Saving](tool-saving.md) excludes ordinary automatic-memory calculators. |
 | Account save | Validation/request/storage failure retains fields and section; login follows existing rules. |
+| Public user-content submission, edit or appeal | Use the publication, revision-visibility and recovery rules in [Content moderation](../ARKIVE_CONTENT_MODERATION_SPEC.yaml); every surface presents the server-confirmed result. |
 | Coordinate copy | Copy the displayed native tuple; unknown height omitted. No success/failure toast, message or substituted icon. Accessible action remains. |
 
 Hover/focus/animation/open overlays are transient. Encyclopedia return restores

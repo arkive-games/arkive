@@ -43,6 +43,19 @@ About/credits generation/editor, forum redesign, mobile redesign, GMZZ BUILD
 exit/account integration and unreleased games remain deferred by the user.
 Their exclusion does not block packaging the current confirmed rules.
 
+## Content moderation policy
+
+Confirmed on 2026-11-23: [the unified content-moderation
+specification](../ARKIVE_CONTENT_MODERATION_SPEC.yaml) owns the selected
+new-user review and trusted-user publication model for maps, forum content,
+public tool snapshots and public profiles. Its thresholds, complete-submission
+decisions and appeals are product rules. Backend, frontend, private-media access and migration adoption
+remain pending; this documentation change does not enable them in production.
+The existing image-only moderation implementation is not conformance with this
+policy. A candidate review-page redesign is separate local UI work and does not
+implement global publication policy. Record future implementation and rollout
+evidence here before claiming conformance.
+
 ## Delivery boundary
 
 The user subsequently authorized formal PR submission of `codex/ui-stage4`.

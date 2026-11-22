@@ -2,6 +2,13 @@
 
 Status: frontend preparation only. Backend implementation and integration belong to tc-imba. No backend routes or database changes are included in this change.
 
+Public build snapshots follow the canonical
+[content-moderation policy](ARKIVE_CONTENT_MODERATION_SPEC.yaml); private saves
+remain outside its review queue. Before integration, extend the adapter's
+result/state contract to distinguish pending, rejected and published outcomes.
+A queued publication request must not be reported as a public snapshot. Rollout
+status belongs in [Adoption](ui-system/adoption.md).
+
 ## Integration point
 
 `frontend/apps/ro3/src/lib/buildGateway.ts` defines the transport-independent `BuildGateway`. `BuildManual` accepts a gateway prop; the production default is `pendingBuildGateway`, which is explicitly unavailable and rejects every operation. Replace that default through an API adapter after agreeing and implementing the server contract. Do not enable a mock, localStorage fallback, or success-only placeholder in production.
@@ -15,7 +22,7 @@ Reuse the account session from `@gamemap/auth` and the shared API transport, fol
 - `list({collection, search, root, branch, page, pageSize})`: collection is public/mine/favorites; return `{items,total}`. Filtering precedes pagination. Page is one-based, pageSize currently 20. List items currently carry the full payload; an adapter can hydrate summaries before returning.
 - `getPublic(id)`: public snapshot only, even for its owner. Return editable=false for this representation unless the adapter explicitly fetches the private owner draft before enabling editing. Public view must not accidentally overwrite a newer private draft.
 - `save({id?,revision?,requestId,data})`: create or revision-checked update, private by default. Return the authoritative saved record. requestId identifies a create attempt and must deduplicate retries within the account; ignore it for updates. A lost response must not create duplicates.
-- `publish(id,revision)`: publish precisely the indicated saved revision, atomically. A stale revision is a conflict, not permission to publish a newer private draft. Snapshot title/summary/filter metadata along with payload.
+- `publish(id,revision)`: request publication of precisely the indicated saved revision under the shared moderation policy. Advance the public snapshot atomically only for a published outcome. A stale revision is a conflict, not permission to publish a newer private draft. Snapshot title/summary/filter metadata along with payload.
 - `unpublish(id,revision)`: owner-only, revision-checked, return authoritative private record.
 - `remove(id,revision)`: owner-only, revision-checked; remove public visibility and bookmarks.
 - `favorite(id,enabled)`: idempotent account bookmark of a published build.
@@ -25,7 +32,7 @@ No HTTP paths are prescribed here: the adapter is the boundary for the backend o
 
 ## Privacy and state
 
-Save never updates the published snapshot. Publish is a separate confirmed operation. Another reader receives only the snapshot. Private or unpublished records must be inaccessible to nonowners. Public lists and favorites must stop returning withdrawn/deleted records. Server must enforce ownership, schema/size limits, pagination limits, write limits, and revisions independently of client flags.
+Save never updates the published snapshot. A publication request is a separate confirmed intent; only a published outcome updates the public snapshot. Another reader receives only the snapshot. Private or unpublished records must be inaccessible to nonowners other than authorized reviewers inspecting a submitted candidate. Public lists and favorites must stop returning withdrawn/deleted records. Server must enforce ownership, schema/size limits, pagination limits, write limits, and revisions independently of client flags.
 
 Account change clears private frontend state; anonymous login can retain an unsaved in-memory draft. Save acknowledgements do not overwrite edits made while the request was pending. The client retains the submitted revision on a publish failure, allowing retry without falsely reporting publication.
 

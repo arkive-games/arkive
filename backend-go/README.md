@@ -13,6 +13,12 @@ module are not yet implemented. Avatars, forum images and map images use
 S3-compatible storage: MinIO locally and Tencent COS in production. See
 [persistent map contributions](../docs/map-community.md) for visibility and rollout.
 
+Site-wide public-content and trust rules are owned by the
+[content-moderation specification](../docs/ARKIVE_CONTENT_MODERATION_SPEC.yaml).
+Implementation and rollout evidence belong in
+[Adoption](../docs/ui-system/adoption.md); the legacy image-only behavior is not
+the unified policy.
+
 ## Layout
 
 ```

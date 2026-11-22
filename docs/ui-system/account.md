@@ -1,5 +1,9 @@
 # Login and Account
 
+Public profile publication, trust progression and review feedback follow the
+[content-moderation specification](../ARKIVE_CONTENT_MODERATION_SPEC.yaml).
+That policy does not turn private account settings into public review content.
+
 - Keep existing login-dialog rules and behavior.
 - Account menu: remove visible UID only; retain other content/actions. Account
   identifiers and their use on other surfaces are unchanged.

@@ -1,6 +1,6 @@
 # Arkive UI: Reading Index
 
-Updated 2026-11-18. Canonical task reading router for Arkive UI topic modules
+Updated 2026-11-23. Canonical task reading router for Arkive UI topic modules
 under `docs/ui-system/`. `docs/ARKIVE_PRODUCT_IA_DRAFT.md` is retained only as a
 compatibility redirect. Topic decisions are confirmed unless marked provisional
 or deferred. Local implementation and acceptance status live only in
@@ -22,6 +22,7 @@ only the matching topic. Do not read every document for each task.
 | Map layout, sidebar, search and memory | [Map workspace](ui-system/map-workspace.md) |
 | Marker details / About | [Markers](ui-system/map-markers.md) / [About](ui-system/map-about.md) |
 | Unsaved tool work / login and personal center | [Saving](ui-system/tool-saving.md) / [Account](ui-system/account.md) |
+| User-content publication, trust, review, appeals and moderation feedback | [Content moderation](ARKIVE_CONTENT_MODERATION_SPEC.yaml) |
 | Shared component semantics / state transitions | [Contracts](ui-system/component-contracts.md) / [States](ui-system/state-matrix.md) |
 | Remaining work and permission boundary | [Adoption](ui-system/adoption.md) |
 

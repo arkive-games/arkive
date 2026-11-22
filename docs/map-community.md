@@ -1,5 +1,12 @@
 # Persistent map contributions
 
+Implementation snapshot from 2026-11-23. This document describes the existing
+adapter and its earlier image-only review behavior. The canonical
+[content-moderation specification](ARKIVE_CONTENT_MODERATION_SPEC.yaml) owns
+the replacement site-wide trust and publication rules; its rollout status lives
+in [Adoption](ui-system/adoption.md). This snapshot does not authorize a separate
+map publication policy.
+
 `@gamemap/map-community` connects the AION2, Palworld, V Rising and PBZ marker
 drawers to the shared Go API. The map shell renders data and calls callbacks;
 it no longer fabricates successful local comments or uploads.

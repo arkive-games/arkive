@@ -1,0 +1,291 @@
+schema_version: "1.0.0"
+spec_id: "arkive.content-moderation"
+
+title: "Arkive Unified Content Moderation Specification"
+status: "canonical"
+last_reviewed: "2026-11-23"
+
+references:
+  parent: "docs/ARKIVE_SITE_SPEC.yaml"
+  interaction_states: "docs/ui-system/state-matrix.md"
+  account_experience: "docs/ui-system/account.md"
+  layout_and_controls: "docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml"
+  implementation_and_rollout_status: "docs/ui-system/adoption.md"
+  legacy_map_behavior: "docs/map-community.md"
+  shared_tool_contract: "docs/ro3-build-cloud-frontend-contract.md"
+
+purpose:
+  decision: "New users require approval; trusted users publish directly."
+  authority: >-
+    This is the single owner of publication eligibility, trust, review units,
+    revision visibility, decisions and appeals for public user content. Game,
+    forum, account and client implementations must not define separate rules.
+  boundaries:
+    - "The site specification owns brand and cross-site experience; this specification owns content publication policy."
+    - "Layout and shared control appearance remain with the existing UI specifications."
+    - "Canonical status confirms the product rule, not an implementation or production deployment. Adoption owns rollout status."
+
+scope:
+  included:
+    - "Map comments, replies, standalone player-image submissions and their attachments, in every game."
+    - "Forum posts, comments, replies, attached images, embedded media and authored link text."
+    - "User-authored public display names, biographies and custom avatars."
+    - "Public tool/build snapshots and share links, including an explicit publish action on an otherwise private save."
+    - "Existing and future user submissions made public by an Arkive product, whether listed or accessible through a share link."
+  excluded:
+    - "Private tool saves, unpublished drafts, account credentials, email addresses and private account preferences."
+    - "Repository-reviewed editorial pages, game exports and preset artwork published through the existing repository/data pipeline. Staff-authored forum and profile submissions remain included."
+    - "Reactions, favorites and follows; their existing authorization and abuse limits still apply."
+  consistency:
+    - "A user has one publication tier across the portal and all games."
+    - "Neither the game, page, text-versus-image format nor browser/API client changes the publication decision."
+    - "Authentication, technical validation, rate limits and permission to use a channel are required independently of publication tier."
+    - "This version introduces no automatic content classifier or image-only review exception. Future risk triggers need a revision here and must apply across surfaces."
+
+defaults:
+  qualifying_approvals: 3
+  minimum_account_age_hours: 72
+  verified_email_required_for_trust: true
+  violation_lookback_days: 30
+  ordinary_violations_before_restriction: 2
+  restriction_clean_period_days: 30
+  appeal_window_days: 14
+  review_target_hours: 24
+  review_overdue_hours: 48
+  configuration: "These are platform-wide policy values. Apps and games cannot override them."
+  time: "Use elapsed server time for age and rolling windows; browsing dates and local time zones do not change eligibility."
+
+publication_tiers:
+  new:
+    entry: "Default for an account without a valid trusted grant or promotion."
+    submission: "Save a pending revision; publish only after human approval."
+  trusted:
+    entry: "Automatic promotion under trust.promotion, or an explicit site-administrator grant."
+    submission: "Publish a valid, finalized revision without human approval while email verification remains current; otherwise queue it under trust.verification_changes."
+  restricted:
+    entry: "A confirmed violation threshold or an explicit administrator restriction with a recorded reason."
+    submission: "Require human approval regardless of earlier trusted status."
+  account_access:
+    - "Anonymous users cannot submit public user content."
+    - "Suspended or deactivated accounts cannot submit, even if a previous trusted grant exists."
+    - "Publication tier grants no moderation, administration, official-channel or game-management permissions."
+    - "A moderator or administrator role does not silently bypass the publication tier."
+
+trust:
+  promotion:
+    all_conditions:
+      - "The account is active, has verified its email and meets the minimum account age."
+      - "The account has the configured number of qualifying approvals."
+      - "There are no confirmed content violations in the rolling violation lookback window. For younger accounts, inspect their entire history."
+      - "No unresolved administrator hold prevents promotion. A restricted account also satisfies the restriction recovery requirements."
+    evaluation: >-
+      Re-evaluate after approval, email verification and a server request that
+      observes an age or window boundary. Promotion is idempotent and does not
+      depend on a particular page being opened or on a client-side counter.
+    pending_work: >-
+      Promotion applies to future eligible submissions. It does not automatically
+      approve existing pending, rejected or hidden content, including their edits.
+    durability: "Once granted, trust persists until a restriction trigger or an audited administrator decision. A changed historical credit count alone does not demote a trusted account."
+  qualifying_approvals:
+    eligible: "A substantive community contribution first approved by an authorized reviewer other than its author. Map and forum contributions share the same ledger."
+    unit: "At most one credit per publication unit, including its complete image batch; later revisions and repeated decisions cannot earn another credit."
+    excluded:
+      - "Automatic publication by a trusted account."
+      - "Self-review, public-profile changes, avatars, preset selection, reactions, withdrawn drafts and technical upload failures."
+      - "Duplicate submissions, repeated acknowledgements, empty or deliberately split submissions intended to accumulate credit."
+      - "Legacy public content without a qualifying review record."
+    decision: "Record whether an approval earns credit. Harmless conversation may be approved without credit; show the author the resulting progress and any nonqualifying reason."
+    integrity:
+      - "Count credits once across all games and clients, using server records."
+      - "Deleting one's own legitimately approved contribution does not erase its audit record or permit earning the credit again."
+      - "Overturning an approval for a confirmed violation invalidates its credit, applies the restriction rules and updates eligibility for future promotion."
+  administrator_grants:
+    authority: "Only a site administrator may manually grant or restore global trusted status, or impose a manual global restriction."
+    requirements: "An active account, a verified email, clean confirmed-violation history for the shared lookback window, and an explicit decision, actor, timestamp and reason are required."
+    overrides: "A manual grant may waive age or approval-count requirements. Resolve any administrator hold explicitly before restoration; a suspended account remains unable to publish."
+    staff_accounts: "Staff who need direct publication use an explicit trusted grant with the same audit requirements; their role alone is insufficient."
+  verification_changes:
+    - "Changing an email address or revoking its verification pauses direct publication for every account, including manual grants and staff."
+    - "Retain the trust grant and qualification ledger; this is not a content violation and does not reset earned credit."
+    - "While unverified, new public submissions and edits require review. Existing public revisions remain available."
+    - "Successful re-verification restores eligibility for future submissions if the account is still trusted and unrestricted; already queued work still requires its review decision."
+  restriction:
+    triggers:
+      - "One confirmed serious violation."
+      - "The configured number of confirmed ordinary violations within the rolling lookback window."
+      - "An explicit site-administrator restriction based on documented evidence."
+    effects: >-
+      Change the tier to restricted across all games, invalidate qualification
+      progress for recovery, and require review for subsequent submissions and
+      edits. Existing public content is hidden only by a separate content decision.
+    recovery: >-
+      Automatic recovery from violation-triggered restrictions requires the
+      configured clean restriction period since
+      the most recent confirmed violation or manual restriction, fresh qualifying
+      approvals earned after the restriction, and the normal active-account and
+      email requirements. Use the shared qualifying-approval threshold. Time alone
+      never restores trust. An unresolved administrator hold never expires
+      automatically. An administrator may resolve an appealed or reassessed hold
+      through an audited restoration that satisfies administrator_grants.
+    evidence: "A raw report, rejection for quality, popularity score or automated suspicion alone is not a confirmed violation."
+
+publication_units:
+  map_comment: "One comment or reply together with every attached image and authored text."
+  map_gallery: "One user submission containing its selected image batch, even when storage uses several file requests."
+  forum_post: "One post with its title, body, tags, attached images and embedded media."
+  forum_reply: "One comment or reply with any media it contains."
+  public_profile: "The public fields and custom avatar changed in one save operation. Private credentials and preferences are separate operations."
+  shared_tool_output: "One explicitly published saved revision with its title, summary, structured payload and media. A private autosave creates neither a public unit nor a review task."
+  shared_rules:
+    - "A submission has one review decision and public revision; text and images cannot be approved or exposed separately."
+    - "Finish upload processing, validation and persistence for every required component before accepting or publishing the revision."
+    - "A failed component fails the submission; retain the authored draft and offer retry. Do not publish a text-only fragment."
+    - "Forum create-then-attach APIs must stage the complete intent; a partially assembled post must not become public."
+    - "An embedded image or link belongs to the same reviewed body; selecting another upload or markdown route cannot bypass the rule."
+    - "Existing per-surface file counts, file sizes and structural validation limits remain technical limits, not a separate approval policy."
+
+publication_decision:
+  order:
+    - "Reject an unauthenticated, inactive, unauthorized or technically invalid write using the existing error vocabulary."
+    - "Keep an already pending, rejected or hidden unit on its required review/restoration path; changing tier does not release it."
+    - "For a valid new unit or eligible edit of a public unit, publish the finalized revision if the author is trusted and currently email-verified; otherwise queue it."
+  authority: "The backend makes and records the decision. UI labels, role flags, URLs, user-supplied status fields and direct API calls cannot override it."
+  concurrency: >-
+    Re-check account access, email verification, tier, review scope and the exact submitted revision
+    when committing a decision. A concurrent demotion or edit cannot publish
+    using a stale client snapshot. Record the applicable policy version.
+
+revision_states:
+  draft: "Private, incomplete or not yet submitted; not in the moderation queue."
+  pending: "Accepted for review; the candidate revision is visible only to its author and authorized reviewers."
+  published: "The complete revision is public, whether published through a human decision or trusted-user publication."
+  rejected: "A reviewer declined the candidate; the author can read the reason and submit a correction for review."
+  hidden: "Staff withdrew a previously public revision; restoration requires an authorized decision."
+  withdrawn: "The author cancelled an unpublished submission; remove it from the queue."
+  deleted: "The author or authorized staff deleted the unit; it must not remain publicly discoverable."
+  processing: "Uploading, processing and technical failure are transport states, not approval or successful publication."
+
+editing_and_visibility:
+  new_content: "A new pending unit has no public text, thumbnail, media URL, search result or public count contribution."
+  published_content: >-
+    Keep the current public revision available while a replacement is pending.
+    The author previews the candidate separately. Approval atomically replaces
+    the complete public revision; rejection leaves the previous one unchanged.
+    Staff may hide the current revision separately if it is itself a violation.
+  tier_changes: "A demoted author's next edit is reviewed. Editing an existing pending unit preserves its review requirement even if the author has since become trusted."
+  superseding_edits: "Editing a pending unit replaces its queued candidate without creating an additional credit opportunity. A decision must target the exact current candidate; stale decisions fail with a recoverable conflict."
+  restoration: "Editing or re-uploading a rejected or hidden unit cannot restore it automatically. Corrected candidates return to review, including for trusted authors."
+  reply_targets: "New public replies and reactions require a currently public parent. Author/reviewer access to a pending candidate does not make that candidate a public interaction target."
+  first_profile: >-
+    Before a custom public identity is approved, expose a neutral account-number
+    name and a site-owned preset avatar. A proposed nickname, biography or avatar
+    can appear in the author's private preview but not in public author cards.
+  existing_profile: "Keep the approved public profile while a replacement is pending, using the same revision rule as other content."
+  projections:
+    - "Feeds, direct links, replies, profiles, search, counts and public notifications use only the public revision."
+    - "A reply or attachment also requires publicly visible ancestors; hiding or deleting a parent withdraws its descendants from public projections."
+    - "Pending content must not leak through mentions, previews, exports, cached responses or a different game frontend."
+    - "Notify mentioned users and followers only after publication. Send review receipts and reasons privately to the author and authorized reviewers."
+    - "Separate author/reviewer responses from public cache entries, and invalidate relevant public projections when publishing, hiding or deleting."
+    - "Clear private candidate state when the account changes, logs out or loses permission."
+  hosted_media: >-
+    Unpublished Arkive-hosted media requires authorized access, such as a private
+    object prefix with short-lived authorized URLs. An unlisted public object URL
+    is not private. Publish or withdraw media access with the parent revision;
+    preserve access needed by the previous public revision until replacement.
+  external_media: "Do not expose a pending body's external links through Arkive public responses. This does not make an independently hosted external asset private."
+
+review_decisions:
+  approve: "Publish the exact complete candidate, remove it from the pending queue, notify its author and evaluate qualification credit."
+  reject: "Retain the candidate privately with a specific reason and a correction path. Do not silently discard an attachment or rewrite the author's meaning."
+  quality_reasons:
+    - "Wrong marker, game or topic; insufficient context; unreadable media; a duplicate; or material factual errors requiring correction."
+    - "A quality rejection does not by itself create a violation or revoke trust."
+  approval_standard:
+    - "The contribution is relevant and understandable in its target context, and the full text/media set can be inspected."
+    - "There is no spam, prohibited promotion, targeted abuse, exposed private information, fraudulent or malicious material, or unlawful content."
+    - "Criticism, disagreement, beginner mistakes or a lack of professional presentation alone are not abuse."
+    - "A reviewer cannot approve an image or video submission whose required preview failed to load."
+  ordinary_violations: "Confirmed repeated unsolicited promotion, non-severe harassment, or deliberate disruptive flooding; record evidence and the violated rule."
+  serious_violations: "Confirmed fraud, phishing or malware, publication of private information to target someone, credible threats, unlawful exploitation, or organized malicious spam."
+  classification: "A violation is an explicit adjudicated finding with severity and evidence, not an automatic interpretation of every rejection."
+  visibility_after_report: "A report enters a case queue. Reporting alone does not hide content or demote its author; staff can explicitly hide content while investigating."
+
+reviewer_access:
+  site_administrator: "May review all public-content types and manage global trust decisions."
+  game_moderator: "May review game-associated units within the existing server-enforced game scope. A unit associated with several games is reviewable by a moderator of an associated game."
+  global_content: "Untagged forum content and public-profile changes are site-administrator scope. A game role does not grant access to unrelated profile candidates."
+  stored_scope: "Derive scope from stored subject/candidate context; verify it again at decision time, including after a tag or target change."
+  self_review: "An otherwise authorized staff member may review their own unit, with self-review recorded explicitly; it earns no qualification credit."
+  authorization: "Queue reads, candidate media and each decision use the same server-enforced scope; hiding a menu entry is not authorization."
+
+queue_and_feedback:
+  entrance: "Use one protected content-moderation entrance from the account menu, with type filters for maps, forum, shared tool snapshots and public profiles as permissions allow."
+  item: "One row per publication unit with its candidate revision, uploader's public identity, context, age, status and applicable review reason. Open the complete content before deciding."
+  ordering: "Show pending work across all submission dates, oldest first by default. Appeals and reports are separate case types in the same management area."
+  filters: "Apply type, game and status filters on the server before paging; scoped empty results must not imply the entire site has no pending work."
+  timing: "Aim for the configured review target and flag overdue work at the configured overdue threshold. These are operational targets, not a user-facing guaranteed deadline."
+  no_timeout_approval: "Neither age in the queue, administrator absence nor a request timeout approves content automatically."
+  author_feedback:
+    - "Distinguish submitted-for-review, published, rejected, hidden and failed-to-submit with localized status and applicable recovery."
+    - "Show qualification progress and unmet promotion conditions privately to the account owner."
+    - "Do not promise automatic detection or an immediate review result when no such service exists."
+  interaction_owner: "Use docs/ARKIVE_UI_INDEX.md for page layout and shared control rules; this policy does not create another visual system."
+
+appeals:
+  entitlement: "The author may appeal a rejection, content removal, confirmed violation or trust restriction within the configured window."
+  deadline: >-
+    Start the elapsed-time window when the decision and its reason are committed
+    and made available in the author's private decision history. Persist that
+    server timestamp and the resulting deadline. Email/push delivery retries and
+    opening the notice do not start or reset the window; display the exact
+    deadline to the author. An inaccessible or missing decision notice cannot
+    silently consume the appeal window.
+  limit: "One appeal case per moderation decision; attach additional evidence to that case. An appeal outcome does not create another appeal quota for the original decision; a decision on a corrected new revision does."
+  access: "Appeals and their evidence are private to the author and authorized reviewers. Profiles and global trust appeals require a site administrator."
+  account_restrictions: "A publication restriction or account suspension must preserve an identity-verified private route to the author's decision history and appeal; it does not restore public posting rights."
+  reviewer: "Use a different authorized reviewer when available. If none is available, the original authorized reviewer may reassess, explicitly recording that fact."
+  pending_effect: "An appeal does not publish content, restore hidden material or remove a restriction before a decision."
+  outcome: "Record upheld or overturned with a reason. An overturn re-evaluates visibility, invalidated credits and trust eligibility from the corrected decision history; it does not duplicate publication or notifications."
+
+audit:
+  records:
+    - "Submission/unit and revision identifiers, author, publication tier and policy version at the decision."
+    - "Actor, timestamp, old/new states, reason and evidence reference for human decisions, appeals, restrictions and manual trust changes."
+    - "Decision source: human review, trusted-user direct publication, or legacy import. Automatic publication must not be recorded as human approval."
+    - "Qualification credits, exclusions, invalidations and idempotency keys needed to prevent repeated promotion credit."
+  access: "Audit and pending snapshots are scoped staff data, not part of public content responses."
+
+cutover:
+  unit_of_release: "Switch every public write, edit, read projection and moderation route to the shared policy in one coordinated rollout; do not ship only the map or only the forum rule."
+  existing_public_content: "Retain already public revisions as legacy published snapshots without inventing human-approval history or qualification credits."
+  existing_accounts: "Do not infer trust from account age alone, UID, likes, a game role or legacy post counts. Use normal eligibility or an audited administrator grant."
+  pending_map_attachments: >-
+    Preserve the already public text as the legacy public revision. Convert its
+    pending attachments and full text into a pending replacement of the same
+    unit. Approval publishes that complete replacement; rejection leaves the old
+    text-only revision. This migration exception does not authorize splitting
+    text and images in future submissions.
+  other_pending_media: "Map existing pending gallery records to pending units without guessing lost upload-batch relationships. Preserve existing rejected and hidden decisions."
+  browser_only_previews: "Do not claim to recover or import a contribution that was never saved to the server."
+  readiness: "Public-revision reads, staged uploads, private media access, global trust, review audit, author feedback, appeals and migration checks must all be ready before enabling the policy."
+  failure: "Keep unfinished candidates private. A failed rollout must not release pending content through the legacy endpoints or revert new content to an image-only approval rule."
+  status_owner: "Record implementation and rollout evidence in docs/ui-system/adoption.md, separately from the normative rules."
+
+acceptance:
+  required_cases:
+    - "The same new account submits text-only and media-containing units through map, forum and public-profile routes; all require review."
+    - "Private tool saves remain private and unqueued; explicit publication and share links follow the same account eligibility and revision rules."
+    - "A trusted account publishes valid finalized units through every included route without an image-only exception."
+    - "The third qualifying approval promotes only when the age, verification and clean-history requirements also hold."
+    - "Retries, self-review, avatar/profile changes, edits and several files in one batch cannot inflate qualification credit."
+    - "Mixed text/media has no public fragment during upload, review, rejection or a partial failure."
+    - "Pending replacement edits preserve the earlier public revision and reject stale reviewer decisions."
+    - "Tier changes and direct API calls cannot release existing pending, rejected or hidden units."
+    - "An email change or verification revocation pauses direct publication across all surfaces; re-verification preserves earned progress without releasing already queued work."
+    - "Anonymous users, unrelated game moderators, public caches, search and notifications cannot retrieve pending text or hosted media."
+    - "A serious violation or the ordinary-violation threshold restricts publication across all sites; an unconfirmed report and a quality rejection do not."
+    - "Ordinary correction, rejection, withdrawal, appeal, hiding and deletion keep their distinct recovery and visibility behavior."
+    - "Appeal deadlines derive from the recorded private-notice availability time; notification retries and first-view time cannot change them."
+    - "Overturned decisions correctly restore eligibility and invalidate caches without duplicate credits or notifications."
+    - "Old pending work has no date cutoff; cutover preserves public snapshots and does not invent trust for legacy accounts."

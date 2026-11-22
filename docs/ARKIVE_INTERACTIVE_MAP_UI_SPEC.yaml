@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.interactive-map.desktop-ui"
 title: "Arkive Interactive Map Desktop UI Specification"
 status: "canonical"
-last_reviewed: "2026-11-18"
+last_reviewed: "2026-11-23"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -256,10 +256,11 @@ marker_detail:
     drop_preview: "Game-owned drop sections show at most two rows by default; their disclosure reveals the complete list."
     compact_rows: "Drops, rewards, and equivalent repeated marker data use MarkerDetailItemList: continuous divided rows without individual card borders or card spacing."
   gallery:
+    publication_policy: "docs/ARKIVE_CONTENT_MODERATION_SPEC.yaml owns publication eligibility, whole-submission review and visibility; maps have no separate image-only approval rule."
     ownership: "Each image belongs to a marker and carries an explicit moderation status."
     moderation_states: ["uploading", "processing", "awaiting-review", "published", "rejected", "failed"]
     columns: "Two by default; one at 350px and below."
-    upload: "A marker-gallery upload is distinct from comment attachments and is capped at three selected files. Keep the footer action visually distinct with the primary border. Until the backend adapter is connected, keep the control usable with a current-session preview marked Awaiting review."
+    upload: "A marker-gallery upload is distinct from comment attachments and is capped at three selected files. Keep the footer action visually distinct with the primary border. Show the server-confirmed publication state. A disconnected backend leaves a retryable draft or failure, never a fabricated successful or pending server submission."
   comments:
     capabilities: ["optional images", "likes", "replies", "popular sorting", "latest sorting"]
     attachments: "Each attachment belongs only to its comment and carries a comment id, never marker-gallery ownership."
