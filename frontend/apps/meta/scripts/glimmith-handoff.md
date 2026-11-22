@@ -4,8 +4,15 @@
 
 - Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
 - Preview: http://127.0.0.1:15172/#glimmith/tutorial. Probe the actual Vite page before starting another server. This is a dev-only route; no release is implied by a local commit.
-- Last completed slice: Polyomino, signed commit `8c2ac48efa6efa7df645f20a89cce4c9f6f5ab2f`. Seven windows, 219 puzzles, three notes; 1,006 placed puzzles remain. Local preview only; no push or deployment.
-- Next slice: audit Mingle only (41 source references). Run the inventory helper with the `Mingle` key, extract its original puzzle files, and inspect their cell/edge clue syntax and the localized window name before registering it. Check the authored anchors against the existing Town, lower-level, and Countryside geometry. If another export is needed, checkpoint the inputs before projecting terrain.
+- Last completed slice: Mingle, signed commit `5dcacebea9bc23c92dca3af8b9903723ed6a3a13`. Eight windows, 260 puzzles, three notes; 965 placed puzzles remain. Local preview only; no push or deployment.
+- Next slice: audit ForestTrailhead only (49 source references). It is the closest unmapped window to the current authored puzzle anchors by the distance check. Run the inventory helper with the `ForestTrailhead` key and compare its anchors with the current terrain and nearby forest streams. Record the official localization, clue syntax, and export inputs before editing the generator. Split the input audit from generation if new terrain is needed.
+
+## Mingle checkpoint
+
+- Source: `BP_StainedGlassPlinth_Mingle`, its Simplified Chinese name from the installed localization, and 41 files from the game. All 41 anchors passed the existing height/footprint check. Existing coordinates, puzzle records and all terrain SVGs were compared unchanged. Registering Mingle resolves one previously omitted authored unlock reference; it does not establish the runtime condition.
+- Window thresholds: 12 / 20 / 31. On desktop, clicked the map window, counted 41 links, and viewed the large `1435` solution. On mobile, selecting the region closed the sidebar; clicked `1066` directly and followed the window's `0080` link. Verified both bank glyphs for each representative bank puzzle and the standard coordinate, completion and comment controls. Both map viewports passed nonblank pixel sampling.
+- The generator preserves multi-digit shape IDs by cell index (`1435` and `0331`). The renderer shows the shape pool on the 25 Mingle boards that declare one. Existing regions' shape pool displays were left unchanged and can be reviewed separately. Nine Mingle puzzles declare AreaCompletion and six GameCompletion; exact triggers remain unverified.
+- Verification: five focused scene tests, Meta build, UI guard, and the full frontend suite (191 files / 2,025 tests) passed. No authenticated write was attempted.
 
 ## Polyomino checkpoint
 
