@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.4",
+      "date": "2026-11-23",
+      "commit": "bdc6694be35a68e825297440c08761c8fb8fc3cf",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Twelve low boulders in the audited water area are now optional map markers. Shore markers stay visible.",
+            "zh-CN": "已核对水域中的 12 个低位巨石默认隐藏，可用筛选查看；岸上巨石保持显示。",
+            "zh-TW": "已核對水域中的 12 個低位巨石預設隱藏，可用篩選檢視；岸上巨石維持顯示。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.3",
       "date": "2026-11-23",
       "commit": "84af54368d56660afd2ea9a5abb7d56b80f62eb9",
