@@ -19,7 +19,7 @@ for (const name of [...sources, 'Overworld_Campaign']) {
 }
 const windows = [
   ['Bridge', 'bridge'], ['Gate', 'gate'], ['GeminiDelta', 'gemini-delta'], ['SlashPack', 'rose-windows'], ['ShapeBank', 'shape-bank'],
-  ['Precision', 'precision'],
+  ['Precision', 'precision'], ['Polyomino', 'polyomino'],
 ].map(([key, id]) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -92,6 +92,7 @@ const platformMeshes = /RuinFloor|WoodenPlatform|Brick_Floor|CircularA|Flatrock|
 const landmarkMeshes = /^(Brick_Pillar_SM|Brick_Arch_01_SM|Building_Prefab_02_Open_SM|sm_RuinWall_FullTallA_Mid|sm_RuinTowerA_Mid|sm_RuinPillar_LargeShortA_Base)$/i
 const marketWalkways = new Set(['Awning_Wood_SM', 'Bridge_SM', 'SM_House_Passage'])
 const townWalkways = /^(?:Awning_Wood_SM|Bridge_SM|SM_House_Passage|SM_WoodenPlank_0[1-3]|sm_RuinStair_MediumB)$/i
+const townBrickWalls = /^Brick_Wall_0[1-3]_SM$/
 const passageMeshes = new Set(['SM_Bridge', 'Boarding_Plank_W_Rails_SM', 'Ladder_SM'])
 const dockPlanks = /^SM_WoodenPlank_0[1-3]$/
 const rockMeshes = new Set(['SM_Rock_01', 'SM_Rock_01_cut', 'SM_Rock_02', 'Rock_01_SM', 'Rock_Pile_SM'])
@@ -146,9 +147,10 @@ const surfaces = sources.flatMap((name) => {
     const isLadder = mesh === 'Ladder_SM'
     const isMarketWalkway = name === 'Zone01_Market1' && marketWalkways.has(mesh)
     const isTownWalkway = (name === townMain || name === townLower || name === countryside) && townWalkways.test(mesh)
+    const isTownBrickWall = name === townMain && townBrickWalls.test(mesh)
     const isLandmark = (name !== 'Welcome' && landmarkMeshes.test(mesh)) ||
       (name === 'Zone01_Cathedral' && mesh === 'Cube' && ['Cube_8', 'Cube14'].includes(map.Exports[entry.OuterIndex - 1]?.ObjectName))
-    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !localTransform && mesh !== shipMesh) return []
+    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !isTownBrickWall && !localTransform && mesh !== shipMesh) return []
     const model = meshes[mesh]
     if (!model) throw new Error('Missing mesh: ' + mesh)
     const place = localTransform ?? componentTransform(entry)
@@ -416,6 +418,35 @@ for (const id of ['note', 'puzzle']) {
   const title = id === 'note' ? 'SM_Plinth_V004 + SM_Scroll_001' : 'SM_Plinth_V004'
   writeFileSync(join(output, `glimmith-marker-${id}.svg`), `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><title>${title}</title>${parts.map(renderPart).join('')}${inset}</svg>\n`)
 }
+function readShapeClues(puzzle, board, columns, id) {
+  const used = new Set()
+  for (let y = 1; y < board.length; y += 2) {
+    for (let x = 0; x < columns; x++) {
+      const clue = board[y].slice(3 * x + 1, 3 * x + 3)
+      if (/^S\d$/.test(clue)) used.add(clue)
+    }
+  }
+  if (!used.size) return undefined
+  const shapes = new Map()
+  const lines = puzzle.split(/\r?\nDIMENSIONS /)[0].split(/\r?\n/)
+  for (let i = 0; i < lines.length; i++) {
+    if (!lines[i].startsWith('SHAPE ')) continue
+    const header = /^SHAPE (\d+) (\d+)\s*$/.exec(lines[i])
+    if (!header) throw new Error('Invalid shape header: ' + id)
+    const [, number, height] = header
+    const clue = 'S' + number
+    const cells = lines.slice(i + 1, i + 1 + Number(height)).map((line) => line.trimEnd())
+    if (shapes.has(clue) || cells.length !== Number(height) || cells.some((line) => /[^# ]/.test(line)) ||
+      !cells.some((line) => line.includes('#'))) throw new Error('Invalid shape: ' + id + ' ' + clue)
+    shapes.set(clue, cells)
+    i += Number(height)
+  }
+  return Object.fromEntries([...used].map((clue) => {
+    if (!shapes.has(clue)) throw new Error('Missing board shape: ' + id + ' ' + clue)
+    return [clue, shapes.get(clue)]
+  }))
+}
+
 const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map((actor) => {
   const { id } = actor
   const puzzle = puzzleFile(actor)
@@ -425,7 +456,8 @@ const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).m
   if (frames.length !== 2 || frames.some((frame) => frame.length !== 2 * rows + 1)) throw new Error('Invalid puzzle dimensions: ' + id)
   const difficulty = Number(puzzle.match(/^DIFFICULTY (\d+)\r?$/m)?.[1])
   if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 7) throw new Error('Invalid puzzle difficulty: ' + id)
-  return [id, { columns, rows, difficulty, board: frames[0], solution: frames[1] }]
+  const shapeClues = readShapeClues(puzzle, frames[0], columns, id)
+  return [id, { columns, rows, difficulty, board: frames[0], solution: frames[1], ...(shapeClues && { shapeClues }) }]
 }))
 writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, windows, puzzles }, null, 2) + '\n')
 for (let row = 0; row < height / tileSize; row++) {

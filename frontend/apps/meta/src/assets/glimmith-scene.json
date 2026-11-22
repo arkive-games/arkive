@@ -21,7 +21,7 @@
     "Zone1_Town_Main_Underneath",
     "Zone01_Countryside"
   ],
-  "surfaceCount": 10584,
+  "surfaceCount": 10800,
   "actors": [
     {
       "id": "Tutorial-1",
@@ -2608,7 +2608,8 @@
       "widget": null,
       "directory": "AGeri/Puzzles/Zone1/11-mixed-rules",
       "unlocks": [
-        "0070.puz"
+        "0070.puz",
+        "0379.puz"
       ],
       "unlockCategory": null,
       "pixel": {
@@ -3212,6 +3213,7 @@
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
+        "Brick_Wall_01_SM",
         "SM_Flatrock_01"
       ]
     },
@@ -3268,6 +3270,7 @@
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
+        "Brick_Wall_02_SM",
         "Rock_Pile_SM"
       ]
     },
@@ -3556,6 +3559,7 @@
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
+        "Brick_Wall_02_SM",
         "Rock_Pile_SM",
         "SM_Rock_02"
       ]
@@ -3635,6 +3639,778 @@
         "BeautyCorner_Landscape_4",
         "Brick_Arch_01_SM",
         "SM_Flatrock_01"
+      ]
+    },
+    {
+      "id": "0379.puz",
+      "actor": "PolyPuzzleCube01",
+      "x": -18208.880859375,
+      "y": -3634.31982421875,
+      "z": 343.59033203125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [
+        "0380.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2350.9461279189827,
+        "y": 1286.4006522099073
+      },
+      "supportMeshes": [
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0380.puz",
+      "actor": "PolyPuzzleCube02",
+      "x": -19413.060546875,
+      "y": -3634.31982421875,
+      "z": 343.59228515625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [
+        "0134.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2392.5909246016117,
+        "y": 1217.0920715443492
+      },
+      "supportMeshes": [
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0134.puz",
+      "actor": "PolyPuzzleCube03",
+      "x": -20741.64453125,
+      "y": -3634.31982421875,
+      "z": 343.59423828125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [
+        "0392.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2438.5380622916364,
+        "y": 1140.6231930141064
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "SM_Rock_01_cut",
+        "sm_RuinFloor_BrokenA"
+      ]
+    },
+    {
+      "id": "0392.puz",
+      "actor": "PolyPuzzleCube04",
+      "x": -20687.0234375,
+      "y": -2817.65185546875,
+      "z": 343.59423828125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [
+        "0137.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2389.644377450363,
+        "y": 1115.523732072073
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "SM_Rock_01_cut",
+        "sm_RuinFloor_BrokenA"
+      ]
+    },
+    {
+      "id": "0137.puz",
+      "actor": "PolyPuzzleCube05",
+      "x": -20687.0234375,
+      "y": -1800.840087890625,
+      "z": 343.593994140625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [
+        "0371.puz",
+        "0123.puz",
+        "1054.puz",
+        "0146.puz",
+        "0144.puz",
+        "0133.puz",
+        "0363.puz",
+        "0147.puz",
+        "0150.puz",
+        "0135.puz",
+        "1043.puz",
+        "1053.puz",
+        "0200.puz",
+        "0368.puz",
+        "0148.puz",
+        "0365.puz",
+        "1049.puz",
+        "1057.puz",
+        "1245.puz",
+        "0364.puz",
+        "1040.puz",
+        "0175.puz",
+        "1042.puz",
+        "0149.puz",
+        "1058.puz",
+        "0361.puz",
+        "0128.puz",
+        "0153.puz",
+        "1046.puz",
+        "0151.puz",
+        "0366.puz",
+        "1051.puz",
+        "1048.puz",
+        "1423.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2331.1200715295518,
+        "y": 1080.358781388336
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "sm_RuinFloor_BrokenA",
+        "sm_RuinFloor_TileSmallA_BrokenA"
+      ]
+    },
+    {
+      "id": "0371.puz",
+      "actor": "PolyPuzzleCube6",
+      "x": -22125.517578125,
+      "y": -2880.03955078125,
+      "z": 336.0624694824219,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2442.9834258459837,
+        "y": 1034.8863776110898
+      },
+      "supportMeshes": [
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0123.puz",
+      "actor": "PolyPuzzleCube7",
+      "x": -23262.46875,
+      "y": -1714.1142578125,
+      "z": -1948.557861328125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2415.196437596418,
+        "y": 929.1254225779421
+      },
+      "supportMeshes": [
+        "SM_Bridge"
+      ]
+    },
+    {
+      "id": "1054.puz",
+      "actor": "PolyPuzzleCube8",
+      "x": -21752.685546875,
+      "y": -563.2078857421875,
+      "z": 343.8803405761719,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2296.7404437469713,
+        "y": 976.2211090808614
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0146.puz",
+      "actor": "PolyPuzzleCube9",
+      "x": -23399.630859375,
+      "y": 182.97702026367188,
+      "z": 688.86279296875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2310.7497200304515,
+        "y": 855.6226948666792
+      },
+      "supportMeshes": [
+        "Wood_Planks_Prefab_02_SM"
+      ]
+    },
+    {
+      "id": "0144.puz",
+      "actor": "PolyPuzzleCube10",
+      "x": -23546.044921875,
+      "y": -249.91734313964844,
+      "z": -1762.12158203125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2340.729197466118,
+        "y": 862.166607680882
+      },
+      "supportMeshes": [
+        "Awning_Wood_SM"
+      ]
+    },
+    {
+      "id": "0133.puz",
+      "actor": "PolyPuzzleCube11",
+      "x": -22987.392578125,
+      "y": 1035.8380126953125,
+      "z": 576.8273315429688,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2247.405216639707,
+        "y": 849.8548077888513
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4"
+      ]
+    },
+    {
+      "id": "0363.puz",
+      "actor": "PolyPuzzleCube12",
+      "x": -24410.884765625,
+      "y": -3569.45654296875,
+      "z": 348.3516845703125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2561.7000647062637,
+        "y": 927.1907181158657
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "sm_RuinFloor_BrokenA"
+      ]
+    },
+    {
+      "id": "0147.puz",
+      "actor": "PolyPuzzleCube13",
+      "x": -24839.9296875,
+      "y": -175.30409240722656,
+      "z": -1672.963623046875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 2381.181822596532,
+        "y": 785.114510498053
+      },
+      "supportMeshes": [
+        "Awning_Wood_SM"
+      ]
+    },
+    {
+      "id": "0150.puz",
+      "actor": "PolyPuzzleCube14",
+      "x": -23839.572265625,
+      "y": 314.5534973144531,
+      "z": -1261.7374267578125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2318.3913466395925,
+        "y": 825.7507492994248
+      },
+      "supportMeshes": [
+        "Building_Prefab_02_Open_SM",
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0135.puz",
+      "actor": "PolyPuzzleCubeSecret5",
+      "x": -23943.359375,
+      "y": 839.196044921875,
+      "z": 650.422607421875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 2291.783990946895,
+        "y": 801.6331115666177
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "1043.puz",
+      "actor": "PolyPuzzleCube16",
+      "x": -25080.26171875,
+      "y": -3094.038330078125,
+      "z": -2025.9906005859375,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2557.48599724295,
+        "y": 872.2219605014599
+      },
+      "supportMeshes": [
+        "Awning_Wood_SM"
+      ]
+    },
+    {
+      "id": "1053.puz",
+      "actor": "PolyPuzzleCube17",
+      "x": -23613.619140625,
+      "y": -2142.998291015625,
+      "z": -1948.557861328125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2452.0256007972234,
+        "y": 923.7467013800685
+      },
+      "supportMeshes": [
+        "SM_Bridge"
+      ]
+    },
+    {
+      "id": "0200.puz",
+      "actor": "PolyPuzzleCube18",
+      "x": -24153.509765625,
+      "y": -2599.155029296875,
+      "z": -2871.408935546875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2496.9517957512353,
+        "y": 908.4479062720857
+      },
+      "supportMeshes": [
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0368.puz",
+      "actor": "PolyPuzzleCubeSecret3",
+      "x": -25105.056640625,
+      "y": -3897.3916015625,
+      "z": -1853.7637939453125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2604.581837746289,
+        "y": 898.5776473992444
+      },
+      "supportMeshes": [
+        "Awning_Wood_SM"
+      ]
+    },
+    {
+      "id": "0148.puz",
+      "actor": "PolyPuzzleCube20",
+      "x": -21987.6484375,
+      "y": 797.5798950195312,
+      "z": 466.0365295410156,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2226.5438703110913,
+        "y": 915.6365670281847
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4"
+      ]
+    },
+    {
+      "id": "0365.puz",
+      "actor": "PolyPuzzleCube21",
+      "x": -24544.50390625,
+      "y": -1905.602294921875,
+      "z": 416.7497863769531,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2470.55516701237,
+        "y": 861.9580741248409
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "1049.puz",
+      "actor": "PolyPuzzleCubeSecret2",
+      "x": -22763.048828125,
+      "y": -2850.892578125,
+      "z": -109.41845703125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2463.353910611838,
+        "y": 997.1841922238921
+      },
+      "supportMeshes": [
+        "Brick_Wall_01_SM",
+        "Brick_Wall_02_SM",
+        "Brick_Wall_03_SM"
+      ]
+    },
+    {
+      "id": "1057.puz",
+      "actor": "PolyPuzzleCube22",
+      "x": -24630.462890625,
+      "y": -1869.1669921875,
+      "z": -1340.9815673828125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2471.430838076787,
+        "y": 855.7504989144949
+      },
+      "supportMeshes": [
+        "sm_RuinWoodenPlatform_LargeShortA_Base"
+      ]
+    },
+    {
+      "id": "1245.puz",
+      "actor": "PolyPuzzleCubeBoss",
+      "x": -22990,
+      "y": -1765,
+      "z": -275,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2408.702317814987,
+        "y": 946.5676273781804
+      },
+      "supportMeshes": [
+        "Brick_Wall_02_SM"
+      ]
+    },
+    {
+      "id": "0364.puz",
+      "actor": "PolyPuzzleCubeSecret1",
+      "x": -25378.205078125,
+      "y": 1213.2445068359375,
+      "z": 541.524169921875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 2319.8770487632232,
+        "y": 706.1122416353769
+      },
+      "supportMeshes": [
+        "Brick_Floor_02_SM",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "1040.puz",
+      "actor": "PolyPuzzleCube23",
+      "x": -21602.552734375,
+      "y": -1796.300537109375,
+      "z": 331.0164489746094,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2362.5210343562408,
+        "y": 1027.5069641270866
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0175.puz",
+      "actor": "PolyPuzzleCube24",
+      "x": -24974.560546875,
+      "y": 1253.087158203125,
+      "z": 1315.608154296875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2303.6243812790162,
+        "y": 727.9667793858891
+      },
+      "supportMeshes": [
+        "Wood_Planks_Prefab_02_SM"
+      ]
+    },
+    {
+      "id": "1042.puz",
+      "actor": "PolyPuzzleCube25",
+      "x": -23281.19140625,
+      "y": -630.2922973632812,
+      "z": -2871.818603515625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2353.462743421305,
+        "y": 890.5654083242117
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut",
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "0149.puz",
+      "actor": "PolyPuzzleCube26",
+      "x": -25392.517578125,
+      "y": -63.97079086303711,
+      "z": -1042.2374267578125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2393.8842933343326,
+        "y": 749.4590883507608
+      },
+      "supportMeshes": [
+        "sm_RuinWoodenPlatform_LargeShortA_Base"
+      ]
+    },
+    {
+      "id": "1058.puz",
+      "actor": "PolyPuzzleCube27",
+      "x": -25884.3359375,
+      "y": -1547.8294677734375,
+      "z": -1481.62548828125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2496.2990871280444,
+        "y": 772.4687444342875
+      },
+      "supportMeshes": [
+        "sm_RuinWoodenPlatform_LargeShortA_Base"
+      ]
+    },
+    {
+      "id": "0361.puz",
+      "actor": "PolyPuzzleCube28",
+      "x": -25790.109375,
+      "y": -2052.473388671875,
+      "z": -793.7097778320312,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 2522.0860258913317,
+        "y": 795.344485552292
+      },
+      "supportMeshes": [
+        "sm_RuinWoodenPlatform_LargeShortA_Base"
+      ]
+    },
+    {
+      "id": "0128.puz",
+      "actor": "PolyPuzzleCube29",
+      "x": -24573.6015625,
+      "y": -267.69708251953125,
+      "z": 501.60906982421875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2377.2890866061985,
+        "y": 803.6387489109322
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "Brick_Arch_01_SM",
+        "SM_Flatrock_01",
+        "SM_RockBrick_Medium_02",
+        "SM_RockBrick_Small_02"
+      ]
+    },
+    {
+      "id": "0153.puz",
+      "actor": "PolyPuzzleCubeSecret4",
+      "x": -22918.17578125,
+      "y": -1737.8568115234375,
+      "z": -2875.8193359375,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 2404.6561103383474,
+        "y": 949.7628831473075
+      },
+      "supportMeshes": [
+        "sm_RuinFloor_TileLargeA",
+        "sm_RuinFloor_TileLargeA_BrokenC"
+      ]
+    },
+    {
+      "id": "1046.puz",
+      "actor": "PolyPuzzleCube31",
+      "x": -23962.2109375,
+      "y": -2558.892822265625,
+      "z": -1973.26708984375,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2488.0186462068996,
+        "y": 918.066021371306
+      },
+      "supportMeshes": [
+        "SM_Bridge"
+      ]
+    },
+    {
+      "id": "0151.puz",
+      "actor": "PolyPuzzleCube32",
+      "x": -24072.107421875,
+      "y": -1168.3165283203125,
+      "z": -1936.447265625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 2411.782305862063,
+        "y": 863.6496937539193
+      },
+      "supportMeshes": [
+        "Awning_Wood_SM"
+      ]
+    },
+    {
+      "id": "0366.puz",
+      "actor": "PolyPuzzleCube19",
+      "x": -24709.30859375,
+      "y": -3428.53662109375,
+      "z": -2028.3858642578125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2563.9097348264963,
+        "y": 905.1409246051751
+      },
+      "supportMeshes": [
+        "Awning_Wood_SM",
+        "SM_Bridge",
+        "Wood_Stairs_SM"
+      ]
+    },
+    {
+      "id": "1051.puz",
+      "actor": "PolyPuzzleCubeNew1",
+      "x": -24556.13671875,
+      "y": -1509.243896484375,
+      "z": 416.7496337890625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2448.1443987530297,
+        "y": 847.5810514764618
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "sm_RuinFloor_TileLargeA",
+        "sm_RuinFloor_TileLargeA_BrokenC"
+      ]
+    },
+    {
+      "id": "1048.puz",
+      "actor": "PolyPuzzleCubeNew2",
+      "x": -24482.14453125,
+      "y": -1707.3038330078125,
+      "z": 395.4721374511719,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2456.9851586438654,
+        "y": 858.6894096578131
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_4",
+        "sm_RuinFloor_TileLargeA"
+      ]
+    },
+    {
+      "id": "1423.puz",
+      "actor": "PolyPuzzleCube30",
+      "x": -21638.072265625,
+      "y": 651.91845703125,
+      "z": -1950.447265625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone1/8-poly",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 2222.838076961082,
+        "y": 940.7944978512595
+      },
+      "supportMeshes": [
+        "Building_Prefab_02_Open_SM",
+        "sm_RuinWoodenPlatform_LargeShortA_Base"
       ]
     },
     {
@@ -3972,6 +4748,64 @@
       "pixel": {
         "x": 2617.6015557993173,
         "y": 947.5409963686536
+      }
+    },
+    {
+      "id": "window-polyomino",
+      "actor": "BP_StainedGlassPlinth_Polyomino",
+      "x": -24468.58203125,
+      "y": -999.7909545898438,
+      "z": 412.00152587890625,
+      "name": "Polyomino",
+      "thresholds": [
+        13,
+        20,
+        31
+      ],
+      "prerequisites": [
+        "0379.puz",
+        "0380.puz",
+        "0134.puz",
+        "0392.puz",
+        "0137.puz",
+        "0371.puz",
+        "0123.puz",
+        "1054.puz",
+        "0146.puz",
+        "0144.puz",
+        "0133.puz",
+        "0363.puz",
+        "0147.puz",
+        "0150.puz",
+        "0135.puz",
+        "1043.puz",
+        "1053.puz",
+        "0200.puz",
+        "0368.puz",
+        "0148.puz",
+        "0365.puz",
+        "1049.puz",
+        "1057.puz",
+        "1245.puz",
+        "0364.puz",
+        "1040.puz",
+        "0175.puz",
+        "1042.puz",
+        "0149.puz",
+        "1058.puz",
+        "0361.puz",
+        "0128.puz",
+        "0153.puz",
+        "1046.puz",
+        "0151.puz",
+        "0366.puz",
+        "1051.puz",
+        "1048.puz",
+        "1423.puz"
+      ],
+      "pixel": {
+        "x": 2415.7940295493877,
+        "y": 835.0017219789083
       }
     }
   ],
@@ -10979,6 +11813,2141 @@
         "   #           #",
         "   +##+##+##+##+"
       ]
+    },
+    "0379.puz": {
+      "columns": 5,
+      "rows": 5,
+      "difficulty": 1,
+      "board": [
+        "   +--+         ",
+        "   |S1|         ",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|S2|..|S3|..|S4|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "         |S5|   ",
+        "         +--+   "
+      ],
+      "solution": [
+        "   +##+         ",
+        "   #  #         ",
+        "+##+  +##+##+##+",
+        "#        #  #  #",
+        "+##+  +##+  +  +",
+        "#  #  #     #  #",
+        "+  +##+##+##+  +",
+        "#        #  #  #",
+        "+##+##+##+  +##+",
+        "         #  #   ",
+        "         +##+   "
+      ],
+      "shapeClues": {
+        "S1": [
+          " #",
+          "###",
+          " #"
+        ],
+        "S2": [
+          "#",
+          "###"
+        ],
+        "S3": [
+          " #",
+          "##"
+        ],
+        "S4": [
+          "#",
+          "#",
+          "#"
+        ],
+        "S5": [
+          "#",
+          "#"
+        ]
+      }
+    },
+    "0380.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 1,
+      "board": [
+        "            +--+      ",
+        "            |S1|      ",
+        "      +--+--+--+      ",
+        "      |..|..|..|      ",
+        "   +--+--+--+--+--+   ",
+        "   |..|S1|..|..|..|   ",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|..|..|..|S1|",
+        "   +--+--+--+--+--+--+",
+        "   |..|S1|  |..|..|   ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|..|..|S1|   ",
+        "+--+--+--+--+--+--+   ",
+        "|S1|..|S1|..|         ",
+        "+--+--+--+--+         "
+      ],
+      "solution": [
+        "            +##+      ",
+        "            #  #      ",
+        "      +##+##+  +      ",
+        "      #  #     #      ",
+        "   +##+  +  +##+##+   ",
+        "   #     #  #     #   ",
+        "   +  +##+##+##+  +##+",
+        "   #  #     #  #     #",
+        "   +##+  +##+  +##+##+",
+        "   #     #  #     #   ",
+        "   +##+##+##+##+  +   ",
+        "   #     #     #  #   ",
+        "+##+  +##+  +##+##+   ",
+        "#     #     #         ",
+        "+##+##+##+##+         "
+      ],
+      "shapeClues": {
+        "S1": [
+          " ##",
+          "##"
+        ]
+      }
+    },
+    "0134.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 1,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|S1|..|..|..|..|S2|",
+        "+--+--+--+--+--+--+",
+        "|..|..|S2|S1|..|..|",
+        "+--+--+--+--+--+--+",
+        "|S1|..|..|..|..|S2|",
+        "+--+--+--+--+--+--+",
+        "|..|..|S2|S1|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|S2|..|..|S1|..|",
+        "+--+--+--+--+--+--+",
+        "|S2|..|..|..|..|S1|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#  #     #  #     #",
+        "+  +  +  +  +  +  +",
+        "#  #     #  #     #",
+        "+  +##+##+  +##+##+",
+        "#  #     #  #     #",
+        "+  +  +  +  +  +  +",
+        "#  #     #  #     #",
+        "+##+##+##+##+##+##+",
+        "#     #           #",
+        "+  +  +##+##+##+##+",
+        "#     #           #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "#",
+          "#"
+        ],
+        "S2": [
+          "##",
+          "##"
+        ]
+      }
+    },
+    "0392.puz": {
+      "columns": 5,
+      "rows": 3,
+      "difficulty": 1,
+      "board": [
+        "      +--+--+--+",
+        "      |..|..|S1|",
+        "   +--+--+--+--+",
+        "   |..|S2|..|   ",
+        "+--+--+--+--+   ",
+        "|S3|..|..|      ",
+        "+--+--+--+      "
+      ],
+      "solution": [
+        "      +##+##+##+",
+        "      #  #     #",
+        "   +##+  +  +##+",
+        "   #  #  #  #   ",
+        "+##+##+  +##+   ",
+        "#     #  #      ",
+        "+##+##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "##"
+        ],
+        "S2": [
+          "###"
+        ],
+        "S3": [
+          "##"
+        ]
+      }
+    },
+    "0137.puz": {
+      "columns": 5,
+      "rows": 5,
+      "difficulty": 1,
+      "board": [
+        "+--+--+--+--+--+",
+        "|S1|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|S2|..|..|..|S3|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|S4|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|S5|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#     #  #     #",
+        "+##+  +##+  +  +",
+        "#  #     #     #",
+        "+  +##+##+##+##+",
+        "#  #  #        #",
+        "+  +##+##+  +##+",
+        "#     #  #  #  #",
+        "+##+##+##+##+##+",
+        "#  #           #",
+        "+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          " ##",
+          "##"
+        ],
+        "S2": [
+          "#",
+          "###"
+        ],
+        "S3": [
+          "##",
+          "##"
+        ],
+        "S4": [
+          " #",
+          "###"
+        ],
+        "S5": [
+          "####"
+        ]
+      }
+    },
+    "0371.puz": {
+      "columns": 9,
+      "rows": 9,
+      "difficulty": 1,
+      "board": [
+        "      +--+--+--+--+--+      ",
+        "      |..|..|..|..|..|      ",
+        "   +--+--+--+--+--+--+--+   ",
+        "   |..|S1|..|S1|..|S1|..|   ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|..|..|   ",
+        "+--+--+--+##+--+--+--+--+--+",
+        "|..|S1|..|S1|..|S1#..|S1|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+##+--+--+--+--+--+",
+        "|..|..|S1#S1|..|S1|..|S1|..|",
+        "+--+--+--+--+--+##+--+--+--+",
+        "   |..|..|..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+--+",
+        "   |..|S1|..|S1|..|S1|..|   ",
+        "   +--+--+--+--+--+--+--+   ",
+        "      |..|..|..|..|..|      ",
+        "      +--+--+--+--+--+      "
+      ],
+      "solution": [
+        "      +##+##+##+##+##+      ",
+        "      #  #     #     #      ",
+        "   +##+##+  +  +  +  +##+   ",
+        "   #     #     #     #  #   ",
+        "+##+  +  +##+##+##+##+##+   ",
+        "#  #     #  #     #     #   ",
+        "+##+##+##+##+  +  +  +  +##+",
+        "#     #     #     #     #  #",
+        "+  +  +  +  +##+##+##+##+##+",
+        "#     #     #  #     #     #",
+        "+##+##+##+##+##+  +  +  +  +",
+        "#  #     #     #     #     #",
+        "+##+  +  +  +  +##+##+##+##+",
+        "   #     #     #  #     #  #",
+        "   +##+##+##+##+##+  +  +##+",
+        "   #  #     #     #     #   ",
+        "   +##+  +  +  +  +##+##+   ",
+        "      #     #     #  #      ",
+        "      +##+##+##+##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "##",
+          "##"
+        ]
+      }
+    },
+    "0123.puz": {
+      "columns": 5,
+      "rows": 5,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+",
+        "|..|S2|..|..|S2|",
+        "+--+--+--+--+--+",
+        "|S1|..|..|..|S1|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|S2|",
+        "+--+--+--+--+--+",
+        "|S1|..|..|..|..|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#  #  #        #",
+        "+  +  +##+##+##+",
+        "#  #  #  #     #",
+        "+##+  +  +##+##+",
+        "#  #  #  #  #  #",
+        "+  +##+##+  +  +",
+        "#  #     #  #  #",
+        "+##+##+##+##+  +",
+        "#     #     #  #",
+        "+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S2": [
+          "#",
+          "#",
+          "#"
+        ],
+        "S1": [
+          "#",
+          "#"
+        ]
+      }
+    },
+    "1054.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 1,
+      "board": [
+        "+--+--+--+--+      ",
+        "|S1|..|..|S2|      ",
+        "+--+--+--+--+      ",
+        "   |S3|..|..|      ",
+        "   +--+--+--+--+   ",
+        "   |..|..|S4|..|   ",
+        "   +--+--+--+--+   ",
+        "   |..|..|..|..|   ",
+        "   +--+--+--+--+   ",
+        "      |S5|..|..|   ",
+        "      +--+--+--+--+",
+        "      |..|..|..|..|",
+        "      +--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+      ",
+        "#        #  #      ",
+        "+##+##+##+  +      ",
+        "   #  #     #      ",
+        "   +  +  +##+##+   ",
+        "   #  #  #     #   ",
+        "   +  +##+##+  +   ",
+        "   #        #  #   ",
+        "   +##+##+##+  +   ",
+        "      #  #     #   ",
+        "      +  +##+##+##+",
+        "      #        #  #",
+        "      +##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "###"
+        ],
+        "S2": [
+          " ##",
+          "##"
+        ],
+        "S3": [
+          "  #",
+          "  #",
+          "###"
+        ],
+        "S4": [
+          "# #",
+          "###"
+        ],
+        "S5": [
+          "  #",
+          "###"
+        ]
+      }
+    },
+    "0146.puz": {
+      "columns": 11,
+      "rows": 4,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|S1|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+--+",
+        "|..|S2|..|..|..|  |..|..|..|S3|..|",
+        "+--+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|  |..|..|..|  |..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+--+",
+        "|S4|  |S5|..|..|..|..|..|S6|  |S7|",
+        "+--+  +--+--+--+--+--+--+--+  +--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+##+##+##+##+",
+        "#  #        #           #        #",
+        "+##+  +##+##+##+##+##+  +  +  +##+",
+        "#     #  #  #  #  #  #  #     #  #",
+        "+##+##+  +##+  +##+##+##+##+##+  +",
+        "#        #  #  #  #  #  #        #",
+        "+  +##+##+##+  +##+  +##+##+##+  +",
+        "#  #  #        #           #  #  #",
+        "+##+  +##+##+##+##+##+##+##+  +##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "#",
+          "##"
+        ],
+        "S2": [
+          " #",
+          "##",
+          "#",
+          "#"
+        ],
+        "S3": [
+          "##",
+          "##",
+          "#"
+        ],
+        "S4": [
+          "##",
+          " #",
+          " ##"
+        ],
+        "S5": [
+          "  #",
+          "  #",
+          "###"
+        ],
+        "S6": [
+          " #",
+          "##",
+          " #",
+          " #"
+        ],
+        "S7": [
+          "###",
+          " #",
+          " #"
+        ]
+      }
+    },
+    "0144.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|S2|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|S2|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|S1|S2|S1|S2|..|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#        #  #     #",
+        "+##+##+  +  +##+  +",
+        "#     #  #     #  #",
+        "+  +##+##+##+##+  +",
+        "#  #     #     #  #",
+        "+  +  +##+##+  +##+",
+        "#  #  #     #  #  #",
+        "+##+  +  +##+##+  +",
+        "#  #  #  #     #  #",
+        "+  +##+  +  +##+  +",
+        "#     #  #  #     #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S2": [
+          "#",
+          "###"
+        ],
+        "S1": [
+          "#",
+          "##"
+        ]
+      }
+    },
+    "0133.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|..|S1|..|..|..|S2|",
+        "+--+--+--+--+--+--+",
+        "|S3|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|S4|..|..|S3|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|S4|",
+        "+--+--+--+--+--+--+",
+        "|S5|..|S1|..|S3|..|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#  #        #     #",
+        "+  +##+##+  +  +  +",
+        "#     #  #  #     #",
+        "+##+  +  +##+##+##+",
+        "#  #  #     #     #",
+        "+  +##+  +##+  +##+",
+        "#  #  #  #     #  #",
+        "+  +  +##+##+##+  +",
+        "#  #  #     #     #",
+        "+  +  +##+  +##+  +",
+        "#  #     #     #  #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "  #",
+          "###"
+        ],
+        "S2": [
+          "##",
+          "##"
+        ],
+        "S3": [
+          " ##",
+          "##"
+        ],
+        "S4": [
+          " #",
+          "###"
+        ],
+        "S5": [
+          "####"
+        ]
+      }
+    },
+    "0363.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 3,
+      "board": [
+        "      +--+--+--+--+   ",
+        "      |S1|S1|S1|S1|   ",
+        "   +--+--+--+--+--+--+",
+        "   |S1|S1|S1|S1|S1|S1|",
+        "+--+--+--+--+--+--+--+",
+        "|S1|S1|S1|..|..|S1|   ",
+        "+--+--+--+--+--+--+--+",
+        "   |S1|..|..|..|S1|S1|",
+        "   +--+--+--+--+--+--+",
+        "   |S1|..|..|S1|S1|S1|",
+        "+--+--+--+--+--+--+--+",
+        "|S1|S1|S1|S1|S1|S1|   ",
+        "+--+--+--+--+--+--+   ",
+        "         |S1|         ",
+        "         +--+         "
+      ],
+      "solution": [
+        "      +##+##+##+##+   ",
+        "      #        #  #   ",
+        "   +##+##+  +##+  +##+",
+        "   #  #  #  #        #",
+        "+##+  +  +##+##+##+##+",
+        "#     #     #  #  #   ",
+        "+##+  +  +##+##+  +##+",
+        "   #  #  #  #        #",
+        "   +##+##+##+##+##+##+",
+        "   #  #  #  #        #",
+        "+##+  +##+  +##+  +##+",
+        "#        #     #  #   ",
+        "+##+##+##+  +##+##+   ",
+        "         #  #         ",
+        "         +##+         "
+      ],
+      "shapeClues": {
+        "S1": [
+          " #",
+          "###"
+        ]
+      }
+    },
+    "0147.puz": {
+      "columns": 8,
+      "rows": 8,
+      "difficulty": 3,
+      "board": [
+        "      +--+--+--+--+      ",
+        "      |S1|..|..|..|      ",
+        "   +--+--+--+--+--+--+   ",
+        "   |S2|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+",
+        "|S3|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|     |..|..|..|",
+        "+--+--+--+     +--+--+--+",
+        "|..|..|..|     |..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|S1|",
+        "+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|S2|   ",
+        "   +--+--+--+--+--+--+   ",
+        "      |..|..|..|S2|      ",
+        "      +--+--+--+--+      "
+      ],
+      "solution": [
+        "      +##+##+##+##+      ",
+        "      #        #  #      ",
+        "   +##+##+##+##+  +##+   ",
+        "   #     #     #     #   ",
+        "+##+##+  +##+  +##+  +##+",
+        "#     #     #     #  #  #",
+        "+  +  +##+##+##+##+##+  +",
+        "#     #  #     #     #  #",
+        "+##+##+  +     +  +  +  +",
+        "#     #  #     #     #  #",
+        "+  +  +  +##+##+##+##+##+",
+        "#     #  #     #        #",
+        "+##+##+##+  +  +##+##+##+",
+        "   #     #     #     #   ",
+        "   +##+  +##+##+  +##+   ",
+        "      #     #     #      ",
+        "      +##+##+##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "#"
+        ],
+        "S2": [
+          "#",
+          "##",
+          " #"
+        ],
+        "S3": [
+          "##",
+          "##"
+        ]
+      }
+    },
+    "0150.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 4,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|S2|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|S1|..|..|",
+        "+--+--+--+##+--+--+",
+        "|..|..|S2#..|..|..|",
+        "+##+##+##+--+--+##+",
+        "|..|..|S2|..|..#..|",
+        "+--+--+--+##+##+--+",
+        "|..|..|..|S1|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|S2|..|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#  #        #     #",
+        "+  +##+##+##+##+  +",
+        "#  #  #        #  #",
+        "+  +  +##+##+##+##+",
+        "#  #     #  #     #",
+        "+##+##+##+  +  +##+",
+        "#     #     #  #  #",
+        "+  +##+##+##+##+  +",
+        "#  #        #  #  #",
+        "+##+##+##+##+  +  +",
+        "#        #     #  #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S2": [
+          "#",
+          "##"
+        ],
+        "S1": [
+          "#",
+          "#",
+          "#"
+        ]
+      }
+    },
+    "0135.puz": {
+      "columns": 5,
+      "rows": 5,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|S1|..|S2|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|S3|..|S4|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#  #  #  #     #",
+        "+##+  +##+  +##+",
+        "#        #  #  #",
+        "+##+  +##+  +##+",
+        "#  #  #  #     #",
+        "+  +##+  +##+##+",
+        "#     #        #",
+        "+##+  +##+##+  +",
+        "#  #     #  #  #",
+        "+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          " #",
+          "###",
+          " #"
+        ],
+        "S2": [
+          "# #",
+          "###"
+        ],
+        "S3": [
+          "  #",
+          " ##",
+          "##"
+        ],
+        "S4": [
+          "##",
+          " #",
+          " ##"
+        ]
+      }
+    },
+    "1043.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|..|S1|S2|..|..|S3|",
+        "+--+--+--+--+--+--+",
+        "|..|S2|..|S3|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|S3|..|..|S4|..|",
+        "+--+--+--+--+--+--+",
+        "|..|S4|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|S5|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|S2|..|..|..|..|S5|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#  #  #  #  #  #  #",
+        "+##+##+  +  +  +  +",
+        "#     #  #  #  #  #",
+        "+##+##+##+  +  +  +",
+        "#        #  #  #  #",
+        "+##+##+##+##+  +##+",
+        "#           #  #  #",
+        "+##+##+##+##+##+##+",
+        "#  #              #",
+        "+  +##+##+##+##+##+",
+        "#  #              #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#"
+        ],
+        "S2": [
+          "#",
+          "#"
+        ],
+        "S3": [
+          "#",
+          "#",
+          "#"
+        ],
+        "S4": [
+          "#",
+          "#",
+          "#",
+          "#"
+        ],
+        "S5": [
+          "#",
+          "#",
+          "#",
+          "#",
+          "#"
+        ]
+      }
+    },
+    "1053.puz": {
+      "columns": 8,
+      "rows": 7,
+      "difficulty": 2,
+      "board": [
+        "   +--+--+--+--+--+--+   ",
+        "   |..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..#..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|S2|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|S2|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+   ",
+        "   |..|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+   ",
+        "   |..|..|S2|..|..|..|   ",
+        "   +--+--+--+--+--+--+   "
+      ],
+      "solution": [
+        "   +##+##+##+##+##+##+   ",
+        "   #  #     #  #     #   ",
+        "+##+  +##+##+  +##+##+##+",
+        "#        #  #  #  #     #",
+        "+##+  +##+  +##+  +##+##+",
+        "#  #  #  #  #        #  #",
+        "+  +##+  +##+##+  +##+  +",
+        "#  #        #  #  #  #  #",
+        "+##+##+  +##+  +##+  +##+",
+        "   #  #  #  #  #  #  #   ",
+        "   +  +##+  +##+  +##+   ",
+        "   #  #        #  #  #   ",
+        "   +##+##+  +##+##+  +   ",
+        "   #     #  #     #  #   ",
+        "   +##+##+##+##+##+##+   "
+      ],
+      "shapeClues": {
+        "S2": [
+          " #",
+          "###",
+          " #"
+        ]
+      }
+    },
+    "0200.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 5,
+      "board": [
+        "+--+--+--+--+--+--+--+",
+        "|S1|..|..|..|S2|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|S3|..|S3|..|S3|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|S4|..|..|..|S5|",
+        "+--+--+--+--+--+--+--+",
+        "|..|S3|..|S3|..|S3|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|S6|..|..|..|S2|",
+        "+--+--+--+--+--+--+--+",
+        "|..|S3|..|S3|..|S3|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|S5|..|..|",
+        "+--+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+",
+        "#     #  #  #        #",
+        "+  +##+##+  +  +##+##+",
+        "#  #  #  #  #  #  #  #",
+        "+##+  +  +##+##+  +  +",
+        "#  #  #        #  #  #",
+        "+##+##+  +##+##+##+  +",
+        "#     #  #     #  #  #",
+        "+##+##+##+##+##+  +##+",
+        "#           #  #  #  #",
+        "+  +##+##+##+##+##+  +",
+        "#  #  #     #     #  #",
+        "+##+  +##+##+##+##+  +",
+        "#  #  #        #     #",
+        "+##+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "##",
+          " #"
+        ],
+        "S2": [
+          "###",
+          "#"
+        ],
+        "S3": [
+          "#",
+          "#"
+        ],
+        "S4": [
+          "###",
+          " #",
+          " #"
+        ],
+        "S5": [
+          "###"
+        ],
+        "S6": [
+          "####",
+          "#"
+        ]
+      }
+    },
+    "0368.puz": {
+      "columns": 11,
+      "rows": 10,
+      "difficulty": 5,
+      "board": [
+        "      +--+--+                     ",
+        "      |..|S1|                     ",
+        "      +--+--+--+     +--+--+--+   ",
+        "      |..|..|S1|     |S1|..|S1|   ",
+        "      +--+--+--+--+--+--+--+--+   ",
+        "      |S2|..|..|..|S2|..|..|..|   ",
+        "      +--+--+--+--+--+--+--+--+   ",
+        "         |..|..|S2|  |..|..|S2|   ",
+        "         +--+--+--+  +--+--+--+--+",
+        "         |S2|  |..|  |S1|..|..|S2|",
+        "   +--+--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|S2|..|..|S2|..|..|..|",
+        "   +--+--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|  |S2|     |S1|S2|..|",
+        "   +--+--+--+  +--+--+  +--+--+--+",
+        "   |S1|..|S2|  |..|S1|  |..|..|S2|",
+        "+--+--+--+--+--+--+--+--+--+--+--+",
+        "|S1|..|S1|..|..|..|..|..|S2|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+--+",
+        "   |S2|..|..|  |S1|..|S1|         ",
+        "   +--+--+--+  +--+--+--+         "
+      ],
+      "solution": [
+        "      +##+##+                     ",
+        "      #  #  #                     ",
+        "      +  +  +##+     +##+##+##+   ",
+        "      #  #  #  #     #     #  #   ",
+        "      +  +##+  +##+##+##+##+  +   ",
+        "      #  #  #  #  #        #  #   ",
+        "      +##+  +##+  +##+##+##+##+   ",
+        "         #  #  #  #  #        #   ",
+        "         +  +##+  +  +##+##+##+##+",
+        "         #  #  #  #  #     #  #  #",
+        "   +##+##+##+##+##+##+##+##+  +  +",
+        "   #  #        #        #  #  #  #",
+        "   +##+##+##+##+##+##+##+  +  +  +",
+        "   #  #  #  #  #  #     #  #  #  #",
+        "   +  +##+  +  +  +##+  +##+##+##+",
+        "   #  #  #  #  #  #  #  #        #",
+        "+##+##+  +  +##+  +  +##+##+##+##+",
+        "#     #  #  #  #  #  #  #        #",
+        "+##+##+##+##+##+##+##+  +##+##+##+",
+        "   #        #  #     #  #         ",
+        "   +##+##+##+  +##+##+##+         "
+      ],
+      "shapeClues": {
+        "S1": [
+          "##"
+        ],
+        "S2": [
+          "###"
+        ]
+      }
+    },
+    "0148.puz": {
+      "columns": 5,
+      "rows": 5,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+",
+        "|..#..|S1#..|..|",
+        "+--+--+--+--+--+",
+        "|S2|..#..|..|S3|",
+        "+--+--+--+--+--+",
+        "|..#..|..#..|..|",
+        "+--+--+--+--+--+",
+        "|S3|..#..|..|S1|",
+        "+--+--+--+--+--+",
+        "|..#..|S2#..|..|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#  #     #  #  #",
+        "+  +##+  +  +##+",
+        "#     #  #     #",
+        "+##+  +  +  +##+",
+        "#  #  #  #  #  #",
+        "+  +##+##+##+  +",
+        "#     #     #  #",
+        "+  +##+  +##+  +",
+        "#  #     #     #",
+        "+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "###"
+        ],
+        "S2": [
+          "##",
+          " ##"
+        ],
+        "S3": [
+          " #",
+          "###"
+        ]
+      }
+    },
+    "0365.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 2,
+      "board": [
+        "      +--+--+--+      ",
+        "      |..|S1|..|      ",
+        "   +--+--+--+--+--+   ",
+        "   |..|S1|..|S1|..|   ",
+        "+--+--+--+--+--+--+--+",
+        "|..|S1|..|S1|..|S1|..|",
+        "+--+--+--+--+--+--+--+",
+        "|S1|..|S2|..|S1|..|S1|",
+        "+--+--+--+--+--+--+--+",
+        "|..|S1|..|..|..|S1|..|",
+        "+--+--+--+--+--+--+--+",
+        "   |..|S1|..|S1|..|   ",
+        "   +--+--+--+--+--+   ",
+        "      |..|S1|..|      ",
+        "      +--+--+--+      "
+      ],
+      "solution": [
+        "      +##+##+##+      ",
+        "      #  #     #      ",
+        "   +##+##+  +  +##+   ",
+        "   #     #     #  #   ",
+        "+##+  +  +##+##+##+##+",
+        "#  #     #     #     #",
+        "+##+##+##+  +  +  +  +",
+        "#     #  #     #     #",
+        "+  +  +  +##+##+##+##+",
+        "#     #  #  #     #  #",
+        "+##+##+##+##+  +  +##+",
+        "   #  #     #     #   ",
+        "   +##+  +  +##+##+   ",
+        "      #     #  #      ",
+        "      +##+##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "##",
+          "##"
+        ],
+        "S2": [
+          "#",
+          "#"
+        ]
+      }
+    },
+    "1049.puz": {
+      "columns": 9,
+      "rows": 8,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+--+--+--+   ",
+        "|S1|..|S2|..#S1|..|S2|..|   ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..#..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|..|..#S2|..|..|..#S1|..|   ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|..|S1#..|..|..|S1#..|..|   ",
+        "+--+--+##+##+##+##+--+--+   ",
+        "|..|..|..|..#S1|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|..|S2|..|S2#..|..|..|S1|   ",
+        "+##+##+--+--+--+--+##+##+   ",
+        "|S1|..|..|..#S2|..|S1|..|   ",
+        "+--+--+--+--+--+--+--+--+--+",
+        "   |..|..|S1#..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+##+   ",
+        "#     #     #     #     #   ",
+        "+##+  +##+  +##+  +##+  +   ",
+        "#  #     #  #  #     #  #   ",
+        "+  +##+##+  +  +##+##+  +   ",
+        "#     #  #  #     #  #  #   ",
+        "+##+  +  +##+##+  +  +##+   ",
+        "#  #  #        #  #     #   ",
+        "+  +##+##+##+##+##+##+  +   ",
+        "#  #        #  #     #  #   ",
+        "+  +##+##+  +  +##+  +##+   ",
+        "#     #  #  #     #     #   ",
+        "+##+##+  +##+##+  +##+##+   ",
+        "#     #     #  #  #     #   ",
+        "+##+  +##+  +  +##+##+  +##+",
+        "   #     #  #        #     #",
+        "   +##+##+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "##",
+          " ##"
+        ],
+        "S2": [
+          "###",
+          "  #"
+        ]
+      }
+    },
+    "1057.puz": {
+      "columns": 6,
+      "rows": 8,
+      "difficulty": 1,
+      "board": [
+        "+--+--+--+         ",
+        "|S1|..|..|         ",
+        "+--+--+--+--+--+   ",
+        "|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|S1|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|   ",
+        "+--+--+--+--+--+   ",
+        "|..|..|..|..|..|   ",
+        "+--+--+--+--+--+   ",
+        "   |..|..|..|..|   ",
+        "   +--+--+--+--+   ",
+        "   |..|..|..|      ",
+        "   +--+--+--+      "
+      ],
+      "solution": [
+        "+##+##+##+         ",
+        "#     #  #         ",
+        "+  +  +  +##+##+   ",
+        "#     #     #  #   ",
+        "+##+##+  +  +  +##+",
+        "#     #     #     #",
+        "+  +  +##+##+  +  +",
+        "#     #     #     #",
+        "+##+##+  +  +##+##+",
+        "#     #     #  #   ",
+        "+  +  +##+##+  +   ",
+        "#        #     #   ",
+        "+##+##+##+  +  +   ",
+        "   #     #     #   ",
+        "   +  +  +##+##+   ",
+        "   #        #      ",
+        "   +##+##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "##",
+          "##"
+        ]
+      }
+    },
+    "1245.puz": {
+      "columns": 9,
+      "rows": 9,
+      "difficulty": 6,
+      "board": [
+        "      +--+--+--+--+--+      ",
+        "      |..#..|..|..#..|      ",
+        "   +--+--+--+--+--+--+--+   ",
+        "   |..|..#..|..|..#..|..|   ",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|S1#..|S2|..|..|..|",
+        "+--+--+--+--+--+--+--+--+##+",
+        "|..|..|..#..|..|..#..|..#..|",
+        "+##+--+--+--+--+--+##+##+--+",
+        "|..#..|..#..|  |..#..|..|..|",
+        "+--+##+##+--+--+--+--+--+--+",
+        "|..|..|..#..|..|..#..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|S2|..#S3|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "   |..|..#..|..|..#..|..|   ",
+        "   +--+--+--+--+--+--+--+   ",
+        "      |..#..|..|..#..|      ",
+        "      +--+--+--+--+--+      "
+      ],
+      "solution": [
+        "      +##+##+##+##+##+      ",
+        "      #  #        #  #      ",
+        "   +##+  +##+##+  +  +##+   ",
+        "   #     #     #  #     #   ",
+        "+##+  +##+##+  +##+  +##+##+",
+        "#  #  #     #     #  #     #",
+        "+  +##+  +##+##+##+##+  +##+",
+        "#     #  #        #     #  #",
+        "+##+  +  +##+##+  +##+##+  +",
+        "#  #  #  #  #  #  #        #",
+        "+  +##+##+  +##+##+##+##+##+",
+        "#     #  #     #  #        #",
+        "+  +##+  +##+  +  +##+##+  +",
+        "#  #  #     #  #     #  #  #",
+        "+##+  +##+  +##+  +##+  +##+",
+        "   #     #  #  #  #     #   ",
+        "   +##+  +##+  +##+  +##+   ",
+        "      #  #        #  #      ",
+        "      +##+##+##+##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "##"
+        ],
+        "S2": [
+          "#",
+          "##",
+          " #"
+        ],
+        "S3": [
+          "#",
+          "##",
+          "#"
+        ]
+      }
+    },
+    "0364.puz": {
+      "columns": 10,
+      "rows": 10,
+      "difficulty": 4,
+      "board": [
+        "         +--+--+--+--+         ",
+        "         |S1|S2|S1|..|         ",
+        "   +--+--+--+--+--+--+--+--+   ",
+        "   |..|S1|..|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+--+--+   ",
+        "   |..|..|..|..|..|..|..|S3|   ",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|S4|..|..|..|S1|S2|..|..|..|S1|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|S2|S3|..|S2|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|S3|..|..|S4|..|..|S4|..|..|S4|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|S4|S1|..|..|..|S2|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "   |S2|..|..|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+--+--+   ",
+        "   |..|..|..|..|..|..|S5|..|   ",
+        "   +--+--+--+--+--+--+--+--+   ",
+        "         |S1|..|..|S1|         ",
+        "         +--+--+--+--+         "
+      ],
+      "solution": [
+        "         +##+##+##+##+         ",
+        "         #  #  #     #         ",
+        "   +##+##+  +  +##+  +##+##+   ",
+        "   #        #     #  #     #   ",
+        "   +##+##+##+##+  +  +  +  +   ",
+        "   #  #        #  #  #     #   ",
+        "+##+  +##+##+  +##+##+##+##+##+",
+        "#        #  #  #     #        #",
+        "+##+##+##+  +##+##+  +##+##+  +",
+        "#     #     #     #     #  #  #",
+        "+  +  +  +##+  +  +##+##+  +##+",
+        "#     #  #  #     #  #        #",
+        "+##+##+##+  +##+##+  +##+##+##+",
+        "#     #        #  #     #     #",
+        "+##+  +##+##+##+  +  +##+  +##+",
+        "   #     #        #  #     #   ",
+        "   +##+##+##+##+##+##+##+##+   ",
+        "   #        #  #           #   ",
+        "   +##+##+  +  +##+##+##+##+   ",
+        "         #  #        #         ",
+        "         +##+##+##+##+         "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "###"
+        ],
+        "S2": [
+          " ##",
+          "##"
+        ],
+        "S3": [
+          "##",
+          "##"
+        ],
+        "S4": [
+          " #",
+          "###"
+        ],
+        "S5": [
+          "####"
+        ]
+      }
+    },
+    "1040.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 1,
+      "board": [
+        "                      ",
+        "                      ",
+        "      +--+--+--+--+   ",
+        "      |..|..|..|..|   ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|..|..|      ",
+        "+--+--+--+--+--+--+--+",
+        "|S1|..|..|S1|..|..|S1|",
+        "+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|   ",
+        "   +--+--+--+--+--+   ",
+        "      |..|..|..|      ",
+        "      +--+--+--+      ",
+        "         |S1|         ",
+        "         +--+         "
+      ],
+      "solution": [
+        "                      ",
+        "                      ",
+        "      +##+##+##+##+   ",
+        "      #  #        #   ",
+        "   +##+  +  +##+##+   ",
+        "   #  #  #  #  #      ",
+        "+##+##+  +  +##+##+##+",
+        "#        #  #        #",
+        "+##+##+##+##+  +##+##+",
+        "   #        #  #  #   ",
+        "   +##+##+  +  +##+   ",
+        "      #  #  #  #      ",
+        "      +##+  +##+      ",
+        "         #  #         ",
+        "         +##+         "
+      ],
+      "shapeClues": {
+        "S1": [
+          "  #",
+          "  #",
+          "###"
+        ]
+      }
+    },
+    "0175.puz": {
+      "columns": 6,
+      "rows": 4,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|..|..|S1|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|S2|",
+        "+--+--+--+--+--+--+",
+        "|S3|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|S4|..|..|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#  #           #  #",
+        "+  +##+##+  +  +  +",
+        "#        #     #  #",
+        "+  +  +##+##+##+  +",
+        "#     #  #        #",
+        "+##+##+  +##+##+  +",
+        "#              #  #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "  ##",
+          "####"
+        ],
+        "S2": [
+          "  #",
+          "  #",
+          "####"
+        ],
+        "S3": [
+          "##",
+          "###",
+          "#"
+        ],
+        "S4": [
+          "  #",
+          "#####"
+        ]
+      }
+    },
+    "1042.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 4,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|S1|S1|S1|S1|S1|S1|",
+        "+--+--+--+--+--+--+",
+        "|S1|S1|S1|S1|S2|S1|",
+        "+--+--+--+--+--+--+",
+        "|S1|S1|S1|S1|S1|S1|",
+        "+--+--+--+--+--+--+",
+        "|S1|..|S1|S1|S1|S1|",
+        "+--+--+--+--+--+--+",
+        "|S1|S1|S1|S1|S1|S1|",
+        "+--+--+--+--+--+--+",
+        "|S1|..|S1|S1|S1|S1|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#  #  #        #  #",
+        "+  +  +##+##+##+  +",
+        "#  #  #  #  #  #  #",
+        "+  +  +  +  +##+  +",
+        "#  #  #  #  #  #  #",
+        "+##+##+  +  +  +##+",
+        "#  #  #  #  #  #  #",
+        "+  +##+##+##+  +  +",
+        "#  #        #  #  #",
+        "+  +##+##+##+##+  +",
+        "#  #  #        #  #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "#"
+        ],
+        "S2": [
+          "#"
+        ]
+      }
+    },
+    "0149.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 4,
+      "board": [
+        "+--+--+--+--+--+--+--+",
+        "|S1|..|..|S2|..|..|S3|",
+        "+--+--+##+--+--+--+--+",
+        "|..|..|..|..#..|..|..|",
+        "+--+##+--+--+--+--+--+",
+        "|..|..|..|..|..|..#..|",
+        "+--+--+--+--+--+--+--+",
+        "|S4|..|..|S5|..|..|S6|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..#..|..|..|..|..|",
+        "+--+--+--+##+--+--+--+",
+        "|..|..|..|..|..|..#..|",
+        "+--+##+--+--+--+--+--+",
+        "|S7|..|..|S8|..|..|S9|",
+        "+--+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+",
+        "#     #  #  #        #",
+        "+##+  +##+  +##+##+  +",
+        "#  #  #     #  #  #  #",
+        "+  +##+  +##+  +##+  +",
+        "#     #  #  #     #  #",
+        "+  +  +##+##+##+  +##+",
+        "#     #        #     #",
+        "+##+##+  +##+  +##+##+",
+        "#     #  #  #  #  #  #",
+        "+  +##+  +##+  +##+  +",
+        "#  #  #        #  #  #",
+        "+  +##+##+##+##+  +  +",
+        "#     #  #        #  #",
+        "+##+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "##",
+          " #"
+        ],
+        "S2": [
+          "##",
+          " ##"
+        ],
+        "S3": [
+          "###",
+          "#",
+          "#"
+        ],
+        "S4": [
+          "###",
+          "##"
+        ],
+        "S5": [
+          "###",
+          "# #",
+          "###"
+        ],
+        "S6": [
+          "##",
+          " ##",
+          "  #"
+        ],
+        "S7": [
+          "###",
+          "# #"
+        ],
+        "S8": [
+          "###",
+          "#"
+        ],
+        "S9": [
+          "###"
+        ]
+      }
+    },
+    "1058.puz": {
+      "columns": 9,
+      "rows": 10,
+      "difficulty": 4,
+      "board": [
+        "      +--+--+--+            ",
+        "      |..|..|..|            ",
+        "   +--+--+--+--+--+--+      ",
+        "   |..|..|..|..|..|..|      ",
+        "   +--+--+--+--+--+--+      ",
+        "   |..|  |..|..|..|..|      ",
+        "   +--+--+--+--+--+--+      ",
+        "   |..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..|S2|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|  |..|   ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "   |..|..|  |..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+--+   ",
+        "         |..|..|..|         ",
+        "         +--+--+--+         "
+      ],
+      "solution": [
+        "      +##+##+##+            ",
+        "      #     #  #            ",
+        "   +##+##+  +  +##+##+      ",
+        "   #     #  #     #  #      ",
+        "   +  +##+##+##+##+  +      ",
+        "   #  #  #  #  #     #      ",
+        "   +##+##+  +  +##+##+      ",
+        "   #  #     #     #  #      ",
+        "+##+  +##+##+##+##+  +##+   ",
+        "#     #           #     #   ",
+        "+##+##+  +##+##+  +##+##+   ",
+        "#     #  #     #  #  #  #   ",
+        "+##+  +  +##+  +  +##+  +   ",
+        "   #  #  #  #  #  #     #   ",
+        "+##+##+  +##+##+  +##+##+##+",
+        "#     #           #  #     #",
+        "+##+  +##+##+##+##+  +  +##+",
+        "   #  #     #  #     #  #   ",
+        "   +##+##+  +  +##+##+##+   ",
+        "         #  #     #         ",
+        "         +##+##+##+         "
+      ],
+      "shapeClues": {
+        "S2": [
+          "####",
+          "#  #",
+          "#  #",
+          "####"
+        ]
+      }
+    },
+    "0361.puz": {
+      "columns": 9,
+      "rows": 9,
+      "difficulty": 4,
+      "board": [
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|S1|..|..|S1|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|S2|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|S3|..|..|..|S2|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|S4|        |S2|..|..|",
+        "+--+--+--+        +--+--+--+",
+        "|..|..|..|        |..|..|..|",
+        "+--+--+--+        +--+--+--+",
+        "|..|..|S2|        |S5|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|S6|..|..|..|..|         ",
+        "+--+--+--+--+--+--+         ",
+        "|S6|..|..|..|..|..|         ",
+        "+--+--+--+--+--+--+         ",
+        "|..|..|S7|..|..|S7|         ",
+        "+--+--+--+--+--+--+         "
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+##+##+",
+        "#  #  #        #  #        #",
+        "+##+  +##+  +##+##+##+##+  +",
+        "#        #  #        #  #  #",
+        "+##+##+##+##+  +##+  +##+  +",
+        "#  #        #  #  #  #     #",
+        "+##+  +##+##+##+##+  +##+##+",
+        "#  #  #  #        #  #     #",
+        "+  +##+  +        +##+##+  +",
+        "#        #        #  #  #  #",
+        "+  +##+##+        +  +##+  +",
+        "#  #  #  #        #        #",
+        "+##+##+  +##+##+##+##+##+##+",
+        "#     #  #  #  #  #         ",
+        "+  +##+  +##+  +  +         ",
+        "#  #  #        #  #         ",
+        "+  +##+##+##+##+  +         ",
+        "#     #        #  #         ",
+        "+##+##+##+##+##+##+         "
+      ],
+      "shapeClues": {
+        "S1": [
+          "###",
+          " #"
+        ],
+        "S2": [
+          "###",
+          "# #",
+          "#"
+        ],
+        "S3": [
+          "###",
+          "#"
+        ],
+        "S4": [
+          "  #",
+          "###",
+          "# #"
+        ],
+        "S5": [
+          "###",
+          "# #",
+          "##"
+        ],
+        "S6": [
+          "###",
+          "# #"
+        ],
+        "S7": [
+          "###"
+        ]
+      }
+    },
+    "0128.puz": {
+      "columns": 5,
+      "rows": 3,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+",
+        "|S1|..|S1|..|..|",
+        "+--+--+--+--+--+",
+        "|S1|..|S1|..|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#  #  #     #  #",
+        "+  +##+##+  +##+",
+        "#        #     #",
+        "+##+  +##+  +##+",
+        "#  #  #  #  #  #",
+        "+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          " ##",
+          "##",
+          " #"
+        ]
+      }
+    },
+    "0153.puz": {
+      "columns": 13,
+      "rows": 13,
+      "difficulty": 7,
+      "board": [
+        "               +--+--+--+               ",
+        "               |..|S1|..|               ",
+        "               +--+--+--+               ",
+        "               |..|..|..|               ",
+        "      +--+--+--+--+--+--+--+--+--+      ",
+        "      |..|S1|..|..|..|..|..|..|S2|      ",
+        "      +--+--+--+--+--+--+--+--+--+      ",
+        "      |S3|..|..|..|S3|..|..|..|..|      ",
+        "      +--+--+--+##+--+##+--+--+--+      ",
+        "      |..|..|..#..|..|..#..|..|..|      ",
+        "+--+--+--+--+##+--+--+--+##+--+--+--+--+",
+        "|..|..|..|..#..|S3|..|..|..#..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+--+--+--+",
+        "|S2|..|..|S3|..|..|S2|..|..|S3|..|..|S3|",
+        "+--+--+--+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..#..|..|..|S3|..#..|..|..|..|",
+        "+--+--+--+--+##+--+--+--+##+--+--+--+--+",
+        "      |..|..|..#..|..|..#..|..|..|      ",
+        "      +--+--+--+##+--+##+--+--+--+      ",
+        "      |..|..|..|..|S2|..|..|..|S2|      ",
+        "      +--+--+--+--+--+--+--+--+--+      ",
+        "      |S2|..|..|..|..|..|..|S3|..|      ",
+        "      +--+--+--+--+--+--+--+--+--+      ",
+        "               |..|..|..|               ",
+        "               +--+--+--+               ",
+        "               |..|S2|..|               ",
+        "               +--+--+--+               "
+      ],
+      "solution": [
+        "               +##+##+##+               ",
+        "               #  #     #               ",
+        "               +  +##+  +               ",
+        "               #  #  #  #               ",
+        "      +##+##+##+  +  +##+##+##+##+      ",
+        "      #     #     #  #     #     #      ",
+        "      +##+  +##+##+  +  +##+##+  +      ",
+        "      #  #  #        #  #     #  #      ",
+        "      +  +##+##+##+##+##+  +##+  +      ",
+        "      #  #     #        #  #  #  #      ",
+        "+##+##+  +  +##+##+##+  +##+  +##+##+##+",
+        "#        #  #        #  #  #  #        #",
+        "+##+##+##+##+  +##+##+  +  +  +##+##+  +",
+        "#  #        #  #     #  #  #        #  #",
+        "+  +##+##+  +  +  +##+##+  +##+##+##+  +",
+        "#        #  #  #  #        #  #     #  #",
+        "+##+##+##+  +##+  +##+##+##+  +  +##+##+",
+        "      #  #  #  #  #     #  #  #  #      ",
+        "      +  +##+  +##+  +##+  +  +##+      ",
+        "      #  #     #  #  #  #  #     #      ",
+        "      +  +##+##+  +  +  +  +##+##+      ",
+        "      #     #     #  #  #        #      ",
+        "      +##+##+##+##+##+  +##+##+##+      ",
+        "               #  #     #               ",
+        "               +  +##+##+               ",
+        "               #        #               ",
+        "               +##+##+##+               "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "##"
+        ],
+        "S2": [
+          "#",
+          "###"
+        ],
+        "S3": [
+          "#",
+          "#",
+          "###"
+        ]
+      }
+    },
+    "1046.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 3,
+      "board": [
+        "   +--+--+--+--+--+",
+        "   |..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|S2|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|S1|..|..|S2|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|S1|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|S2|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "   +##+##+##+##+##+",
+        "   #              #",
+        "+##+  +##+##+##+  +",
+        "#  #  #  #     #  #",
+        "+  +  +  +##+##+  +",
+        "#  #  #  #  #  #  #",
+        "+##+  +##+  +  +  +",
+        "#  #  #  #  #  #  #",
+        "+  +  +  +  +##+  +",
+        "#  #  #  #        #",
+        "+##+##+##+##+##+##+",
+        "#     #     #     #",
+        "+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S2": [
+          "#",
+          "#"
+        ],
+        "S1": [
+          "#####",
+          "#",
+          "# ###",
+          "#   #",
+          "#####"
+        ]
+      }
+    },
+    "0151.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 4,
+      "board": [
+        "+--+--+--+--+--+--+--+",
+        "|..|..|S1|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|  |..|S2#S3|..|",
+        "+--+--+  +--+--+##+--+",
+        "|..|S3|  |..|..|..#..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|  |..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..#..|..|..|  |S4|..|",
+        "+--+##+--+--+  +--+--+",
+        "|..|S5#S6|..|  |..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|S7|..|..|",
+        "+--+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+",
+        "#  #  #        #  #  #",
+        "+  +##+##+  +##+  +##+",
+        "#     #  #  #  #     #",
+        "+##+  +  +##+  +##+  +",
+        "#  #  #  #  #     #  #",
+        "+##+##+##+##+##+  +##+",
+        "#        #  #  #     #",
+        "+  +##+##+##+##+##+##+",
+        "#  #  #     #  #     #",
+        "+  +##+  +##+  +##+  +",
+        "#     #  #  #  #  #  #",
+        "+##+##+  +##+##+##+  +",
+        "#  #     #        #  #",
+        "+##+##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          " #",
+          "###"
+        ],
+        "S2": [
+          "  #",
+          " ##",
+          "##"
+        ],
+        "S3": [
+          "##",
+          " ##"
+        ],
+        "S4": [
+          "#",
+          "###"
+        ],
+        "S5": [
+          "  #",
+          "# #",
+          "###"
+        ],
+        "S6": [
+          "  #",
+          "###",
+          "#"
+        ],
+        "S7": [
+          "###"
+        ]
+      }
+    },
+    "0366.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 2,
+      "board": [
+        "      +--+--+         ",
+        "      |..|S1|         ",
+        "      +--+--+  +--+--+",
+        "      |..|..|  |..|S2|",
+        "+--+--+--+--+  +--+--+",
+        "|S1|..|S2|..|  |S1|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|S2|..|S2|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "   |..|..|S1|..|..|S2|",
+        "   +--+--+--+--+--+--+",
+        "   |..|S2|..|S1|..|   ",
+        "   +--+--+--+--+--+   ",
+        "   |S1|  |S1|..|      ",
+        "   +--+  +--+--+      "
+      ],
+      "solution": [
+        "      +##+##+         ",
+        "      #  #  #         ",
+        "      +  +  +  +##+##+",
+        "      #  #  #  #  #  #",
+        "+##+##+  +##+  +  +  +",
+        "#  #  #  #  #  #  #  #",
+        "+  +  +##+##+##+##+  +",
+        "#  #  #  #        #  #",
+        "+##+  +  +##+##+##+##+",
+        "   #  #  #  #        #",
+        "   +##+  +  +##+##+##+",
+        "   #  #  #  #     #   ",
+        "   +  +##+##+##+##+   ",
+        "   #  #  #     #      ",
+        "   +##+  +##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "##"
+        ],
+        "S2": [
+          "###"
+        ]
+      }
+    },
+    "1051.puz": {
+      "columns": 8,
+      "rows": 8,
+      "difficulty": 3,
+      "board": [
+        "   +--+--+--+--+--+--+   ",
+        "   |..|..|S1|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|S2|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|S3|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|S4|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|S2|..|..|..|S5|..|..|S2|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "   |..|S3|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+   "
+      ],
+      "solution": [
+        "   +##+##+##+##+##+##+   ",
+        "   #  #           #  #   ",
+        "+##+##+  +  +  +  +##+##+",
+        "#     #           #     #",
+        "+  +  +  +  +  +  +  +  +",
+        "#     #           #     #",
+        "+##+##+##+##+##+##+  +  +",
+        "#        #        #     #",
+        "+  +  +  +  +  +  +  +  +",
+        "#        #        #     #",
+        "+##+##+##+  +  +  +##+##+",
+        "#     #  #        #     #",
+        "+  +  +##+##+##+##+  +  +",
+        "#     #           #     #",
+        "+##+##+  +  +  +  +##+##+",
+        "   #  #           #  #   ",
+        "   +##+##+##+##+##+##+   "
+      ],
+      "shapeClues": {
+        "S1": [
+          "####",
+          "####",
+          "####"
+        ],
+        "S2": [
+          "##",
+          "##"
+        ],
+        "S3": [
+          "####",
+          "####"
+        ],
+        "S4": [
+          "###",
+          "###"
+        ],
+        "S5": [
+          "###",
+          "###",
+          "###"
+        ]
+      }
+    },
+    "1048.puz": {
+      "columns": 7,
+      "rows": 6,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|S1|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|S2|S3|  |..|S3|S2|",
+        "+--+--+--+  +--+--+--+",
+        "|S3|..|..|  |..|..|..|",
+        "+--+--+--+  +--+--+--+",
+        "|..|..|..|  |S2|..|S2|",
+        "+--+--+--+  +--+--+--+",
+        "|S2|..|S2|  |..|S3|..|",
+        "+--+--+--+  +--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+",
+        "#  #              #  #",
+        "+##+  +  +  +  +  +##+",
+        "#  #              #  #",
+        "+  +##+##+##+##+##+  +",
+        "#  #  #  #  #  #  #  #",
+        "+  +  +  +  +##+  +##+",
+        "#  #  #  #  #  #  #  #",
+        "+##+##+  +  +  +  +  +",
+        "#  #  #  #  #  #  #  #",
+        "+  +##+##+  +##+##+##+",
+        "#  #     #  #        #",
+        "+##+##+##+  +##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#####",
+          "#####"
+        ],
+        "S2": [
+          "#",
+          "#"
+        ],
+        "S3": [
+          "#",
+          "#",
+          "#"
+        ]
+      }
+    },
+    "1423.puz": {
+      "columns": 7,
+      "rows": 7,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+   ",
+        "|..|S1|..|..|..|..|   ",
+        "+--+--+--+--+--+--+   ",
+        "|..|..|..|..|S2|..|   ",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "   |..|S3|..|..|..|..|",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|..|..|S4|..|",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+   ",
+        "#              #  #   ",
+        "+  +##+  +##+  +##+   ",
+        "#  #  #  #  #  #  #   ",
+        "+  +  +  +##+  +  +   ",
+        "#  #  #        #  #   ",
+        "+##+  +##+##+##+  +##+",
+        "#  #        #  #  #  #",
+        "+##+  +##+  +##+  +##+",
+        "   #  #  #  #  #  #  #",
+        "   +  +  +  +  +  +  +",
+        "   #  #  #  #  #  #  #",
+        "   +##+  +##+  +##+  +",
+        "   #  #              #",
+        "   +##+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "# #",
+          "# #",
+          "###",
+          "  #",
+          "  #"
+        ],
+        "S2": [
+          "###",
+          "#",
+          "###",
+          "# #",
+          "###"
+        ],
+        "S3": [
+          "###",
+          "  #",
+          "###",
+          "  #",
+          "###"
+        ],
+        "S4": [
+          "#",
+          "#",
+          "#",
+          "#",
+          "#"
+        ]
+      }
     }
   }
 }

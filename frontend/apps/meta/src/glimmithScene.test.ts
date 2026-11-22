@@ -13,17 +13,35 @@ describe('Glimmith tutorial scene', () => {
       ['window-bridge', 11], ['window-gate', 11], ['window-gemini-delta', 41], ['window-rose-windows', 41],
       ['window-shape-bank', 32],
       ['window-precision', 44],
+      ['window-polyomino', 39],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
     expect(Object.keys(scene.puzzles)).toEqual(ids)
     expect(scene.windows.find(({ id }) => id === 'window-shape-bank')?.thresholds).toEqual([8, 14, 23])
     expect(scene.windows.find(({ id }) => id === 'window-precision')?.thresholds).toEqual([12, 20, 35])
+    expect(scene.windows.find(({ id }) => id === 'window-polyomino')?.thresholds).toEqual([13, 20, 31])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
       expect(solution.join('')).toContain('#')
       expect([1, 2, 3, 4, 5, 6, 7]).toContain(difficulty)
+    }
+  })
+
+  it('keeps every Polyomino cell clue tied to its authored shape', () => {
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    const window = scene.windows.find(({ id }) => id === 'window-polyomino')!
+    expect(scene.puzzles['0379.puz'].shapeClues.S1).toEqual([' #', '###', ' #'])
+    for (const id of window.prerequisites) {
+      const puzzle = puzzles.get(id)!
+      const clues = new Set(puzzle.board.flatMap((line, index) => index % 2 ? line.match(/S\d/g) ?? [] : []))
+      expect(clues.size, id).toBeGreaterThan(0)
+      const shapes = 'shapeClues' in puzzle ? puzzle.shapeClues : {}
+      expect(new Set(Object.keys(shapes)), id).toEqual(clues)
+      for (const cells of Object.values(shapes)) {
+        expect(Array.isArray(cells) && cells.join(''), id).toMatch(/^[# ]*#[# ]*$/)
+      }
     }
   })
 

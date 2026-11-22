@@ -120,8 +120,24 @@ function RelationClue({ x, y, mark }: { x: number; y: number; mark: string }) {
   )
 }
 
-function PuzzleSolution({ puzzle }: { puzzle: (typeof scene.puzzles)['0049.puz'] }) {
-  const { columns, rows, board, solution } = puzzle
+function ShapeClue({ x, y, clue, cells }: { x: number; y: number; clue: string; cells: string[] }) {
+  const width = Math.max(...cells.map((line) => line.length))
+  const unit = 18 / Math.max(width, cells.length)
+  const left = x + (24 - width * unit) / 2
+  const top = y + (24 - cells.length * unit) / 2
+  return (
+    <g data-shape-clue={clue} className="fill-primary stroke-card" strokeWidth=".55">
+      {cells.flatMap((line, row) => [...line].map((part, column) => part === '#' && (
+        <rect key={row * width + column} x={left + column * unit} y={top + row * unit} width={unit} height={unit} />
+      )))}
+    </g>
+  )
+}
+
+type GlimmithPuzzle = (typeof scene.puzzles)['0049.puz'] & { shapeClues?: Record<string, string[]> }
+
+function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
+  const { columns, rows, board, solution, shapeClues } = puzzle
   return (
     <svg role="img" aria-label={copy.solution}
       viewBox={`-7 -7 ${columns * 24 + 14} ${rows * 24 + 14}`}
@@ -146,6 +162,8 @@ function PuzzleSolution({ puzzle }: { puzzle: (typeof scene.puzzles)['0049.puz']
         const y = Math.floor(index / columns)
         const clue = board[2 * y + 1].slice(3 * x + 1, 3 * x + 3)
         const image = cellClueImages.get(clue)
+        const cells = shapeClues?.[clue]
+        if (cells) return <ShapeClue key={index} x={24 * x} y={24 * y} clue={clue} cells={cells} />
         return image ? <image key={index} data-cell-clue={clue} href={image}
           x={24 * x} y={24 * y} width={24} height={24} /> : null
       })}
