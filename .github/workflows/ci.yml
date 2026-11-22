@@ -222,7 +222,6 @@ jobs:
       - name: Check the Komodo Compose model
         working-directory: backend-go
         env:
-          ARKIVE_BACKEND_IMAGE: ghcr.io/arkive-games/backend-go:komodo
           POSTGRES_USERNAME: fixture
           POSTGRES_PASSWORD: fixture
           POSTGRES_DATABASE: fixture
@@ -238,7 +237,7 @@ jobs:
           docker compose -f docker-compose.prod.yml -f docker-compose.komodo.yml config --format json |
             jq -e '
               (.services | keys == ["core", "migrate"]) and
-              (.services.core.image == env.ARKIVE_BACKEND_IMAGE) and
+              (.services.core.image == "ghcr.io/arkive-games/backend-go:komodo") and
               (.services.migrate.image == .services.core.image) and
               (.services.migrate.environment == .services.core.environment) and
               (.services.core.build == null and .services.migrate.build == null) and

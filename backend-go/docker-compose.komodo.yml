@@ -2,7 +2,10 @@
 services:
   core:
     build: !reset null
-    image: ${ARKIVE_BACKEND_IMAGE:?set ARKIVE_BACKEND_IMAGE}
+    # The image is intentionally literal. Komodo parses host-managed Compose
+    # files before it writes its generated env file; a required interpolation
+    # would remain unresolved and hide registry digest updates.
+    image: ghcr.io/arkive-games/backend-go:komodo
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -20,7 +23,7 @@ services:
       file: docker-compose.prod.yml
       service: core
     build: !reset null
-    image: ${ARKIVE_BACKEND_IMAGE:?set ARKIVE_BACKEND_IMAGE}
+    image: ghcr.io/arkive-games/backend-go:komodo
     command: [migrate]
     restart: "no"
     ports: !reset []

@@ -40,12 +40,11 @@ access to that host, Komodo, or production credentials.
    Set the file list in this order: `docker-compose.prod.yml`,
    `docker-compose.komodo.yml`. Apply future Compose changes deliberately from a
    reviewed revision; registry polling updates images, not these files.
-3. Put deployment settings in a restricted host file named `production.env`
-   outside Git; for production, use the existing backend's settings as the source.
-   Configure it as an additional env file with tracking disabled (`track: false`).
-   Set `ARKIVE_BACKEND_IMAGE=registry/path@sha256:...` in the Stack's Komodo
-   Environment field. Komodo's generated `.env` should contain just that image
-   setting. Do not put the production credentials into GitHub.
+3. Put deployment settings in the existing restricted host `.env` outside Git;
+   configure it as an additional env file with tracking disabled (`track: false`).
+   The Compose overlay contains the literal `:komodo` image channel so Komodo can
+   parse its registry digest before generating its env file. Do not put the
+   production credentials into GitHub.
 4. Enable **Auto Pull**. Leave **Run Build** and **Destroy Before Deploy** off.
    Set Compose extra args to `--pull never --wait --wait-timeout 180`. Komodo
    pulls before Compose starts; `--pull never` has Compose use that same local
@@ -77,10 +76,11 @@ then checks that the API is listening. This is a single-instance Compose rollout
 not a zero-downtime rollout. A failed migration or an unhealthy API is a failed
 release and needs operator attention; Compose does not restore the old API.
 
-Disable **Auto Update** first, then set `ARKIVE_BACKEND_IMAGE` to the previous
-known-good digest and deploy it from Komodo. Check the API and the nginx URL
-again. Leave automatic updates off until a corrected release is tested. An
-image rollback does not roll back goose migrations. Use backward-compatible
-schema changes for routine releases, and require a manual rollout and a recovery
-plan for incompatible ones. Do not run destructive down migrations as part of
-automatic rollback.
+Disable **Auto Update** first, then temporarily change the overlay's image to
+the previous known-good `git-<revision>` tag or digest and deploy it from
+Komodo. Check the API and the nginx URL again, then restore `:komodo`. Leave
+automatic updates off until a corrected release is tested. An image rollback
+does not roll back goose migrations. Use backward-compatible schema changes for
+routine releases, and require a manual rollout and a recovery plan for
+incompatible ones. Do not run destructive down migrations as part of automatic
+rollback.
