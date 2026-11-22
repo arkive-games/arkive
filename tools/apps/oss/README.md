@@ -37,3 +37,30 @@ The test checks exact level-zero pixel preservation, override composition,
 overview pixels, stable world bounds and markers, and read-only inputs.
 Use `OSS_DATA_DIR` and `OSS_RES_DIR` to point the frontend dev server at the
 output worktrees for browser verification on port 15181.
+
+## Ruby goal-floor restoration
+
+`restore_redroom_floors.py` bakes the authored Ruby floor mesh footprints into
+every existing pyramid level. It consumes `redroom-floors-26825502.json` from
+the data artifact repository, containing world-space triangles, source entity
+IDs, mesh and scene hashes, and the material color parameter. Its scope is
+`ARCH_Order_RedRoom_Tile_A` using `goal_room_Ruby`, whose `crystal_general`
+shader was omitted by the historical ordinary-floor exporters. In Heroes1,
+the user-identified instance is centered at world `(83, 93)`.
+
+The flat guide color is the material's linear `color_core`, converted to sRGB
+`(173, 0, 19)`. Crystal lighting, fractures, reflections and runtime unlock
+state are not reconstructed. No screenshot colors or manually drawn rectangles
+are used. Only the source triangle footprints replace existing tile pixels;
+other obstacle colors and floors remain unchanged.
+
+Run only in the existing data and resource worktrees:
+
+```powershell
+python tools/apps/oss/restore_redroom_floors.py --data <data-worktree> --resources <resource-worktree> --placements <data-worktree>/redroom-floors-26825502.json
+```
+
+Resources use content-addressed paths, and old tiles remain available. Publish
+resources before the updated override manifest. This adds no runtime layers or
+requests. Run `test_oss_redroom_floors.py` to verify world-to-tile projection,
+texture density, pyramid coverage, and preservation outside the footprint.
