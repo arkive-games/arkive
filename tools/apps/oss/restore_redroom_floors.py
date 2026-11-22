@@ -23,7 +23,7 @@ def restore(data_dir: Path, resources: Path, placements_file: Path):
     width = meta["tileWidth"] * meta["tilesCountX"]
     height = meta["tileHeight"] * meta["tilesCountY"]
     color = tuple(placements["color_srgb"]) + (255,)
-    triangles = [triangle for obj in placements["objects"] for triangle in obj["triangles"]]
+    triangles = [triangle for obj in placements["objects"] if "guide_cell" not in obj for triangle in obj["triangles"]]
     changed = []
     for level in range(meta.get("tileLevels", 0) + 1):
         logical_size = meta["tileWidth"] * 2**level
@@ -45,9 +45,21 @@ def restore(data_dir: Path, resources: Path, placements_file: Path):
                     if max(p[1] for p in points) < 0 or min(p[1] for p in points) >= original.height:
                         continue
                     draw.polygon(points, fill=255)
-                if not mask.getbbox():
-                    continue
                 result = Image.composite(Image.new("RGBA", original.size, color), original, mask)
+                cells = ImageDraw.Draw(result)
+                for obj in placements["objects"]:
+                    if "guide_cell" not in obj:
+                        continue
+                    x0, y0, x1, y1 = obj["guide_cell"]
+                    left = ((x0 - bounds["min"]["x"]) / (bounds["max"]["x"] - bounds["min"]["x"]) * width - x * logical_size) * density
+                    right = ((x1 - bounds["min"]["x"]) / (bounds["max"]["x"] - bounds["min"]["x"]) * width - x * logical_size) * density
+                    top = ((bounds["max"]["y"] - y1) / (bounds["max"]["y"] - bounds["min"]["y"]) * height - y * logical_size) * density
+                    bottom = ((bounds["max"]["y"] - y0) / (bounds["max"]["y"] - bounds["min"]["y"]) * height - y * logical_size) * density
+                    if right <= 0 or bottom <= 0 or left >= original.width or top >= original.height:
+                        continue
+                    cells.rectangle((left, top, right - 1, bottom - 1), fill=color, outline=tuple(round(c * .8) for c in color[:3]) + (255,), width=1)
+                if result.tobytes() == original.tobytes():
+                    continue
                 digest = hashlib.sha256(result.tobytes()).hexdigest()[:16]
                 target = f"tiles/redroom-{digest}/ground/{level}/{x}_{y}.webp"
                 output = resources / target

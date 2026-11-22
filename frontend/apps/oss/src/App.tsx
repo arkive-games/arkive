@@ -12,7 +12,7 @@ const RES_BASE = import.meta.env.VITE_RESOURCE_BASE_URL ?? '/ossres'
 
 interface Collection { id: string; name: string; order: number }
 
-interface Prop { id: string; kind: string; x: number; y: number; z: number; tags: string[] }
+interface Prop { id: string; kind: string; x: number; y: number; z: number; tags: string[]; icon?: string }
 
 const propKinds: { id: string; color: string }[] = [
   { id: 'boulder', color: '#9A7B5B' }, { id: 'crystal', color: '#8E6CF0' }, { id: 'skipstone', color: '#4C8DAE' },
@@ -99,8 +99,8 @@ export function App() {
       id: prop.id, subtype: `prop:${prop.kind}`, x: prop.x, y: prop.y, z: prop.z, images: [], contributors: [], indexInSubtype: index + 1,
       localizedName: prop.tags.length ? `${name}（${prop.tags.join('·')}）` : name,
       localizedDescription: `${propText.category}${prop.tags.length ? ` · ${prop.tags.join(' · ')}` : ''} · ${propText.initial}`,
-      subtypeLabel: name, icon: propIcon(prop.kind),
-      subtypeMeta: { id: `prop:${prop.kind}`, name, pinVariant: 'image', color: kind?.color, icon: propIcon(prop.kind), iconScale: 0.28 },
+      subtypeLabel: name, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind),
+      subtypeMeta: { id: `prop:${prop.kind}`, name, pinVariant: 'image', color: kind?.color, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind), iconScale: prop.icon ? 0.4 : 0.28 },
     }
   })], [data, mapId, collections, props])
   const collectionRows = useMemo(() => {
