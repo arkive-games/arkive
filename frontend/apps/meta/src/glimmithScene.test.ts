@@ -17,6 +17,7 @@ describe('Glimmith tutorial scene', () => {
       ['window-mingle', 41],
       ['window-forest-trailhead', 49],
       ['window-match', 28],
+      ['window-area-number', 43],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
@@ -27,6 +28,7 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.find(({ id }) => id === 'window-mingle')?.thresholds).toEqual([12, 20, 31])
     expect(scene.windows.find(({ id }) => id === 'window-forest-trailhead')?.thresholds).toEqual([8, 18, 34])
     expect(scene.windows.find(({ id }) => id === 'window-match')?.thresholds).toEqual([9, 13, 22])
+    expect(scene.windows.find(({ id }) => id === 'window-area-number')?.thresholds).toEqual([14, 21, 34])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
@@ -103,5 +105,14 @@ describe('Glimmith tutorial scene', () => {
       expect(puzzle.shapeBank.every((clue) => Object.hasOwn(puzzle.shapeClues, clue))).toBe(true)
     }
     expect(boards.some((puzzle) => puzzle.board.some((row) => /P[1-4]/.test(row)))).toBe(true)
+  })
+
+  it('preserves numeric, shape and relation clues on Area Number boards', () => {
+    const area = scene.windows.find(({ id }) => id === 'window-area-number')!
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    expect(area.prerequisites.every((id) => puzzles.get(id)?.board.some((row) => /\d{2}/.test(row)))).toBe(true)
+    expect(scene.puzzles['0335.puz'].board[1]).toBe('|06|..|..|02|..|06|')
+    expect(scene.puzzles['1101.puz'].board).toContain('|10|..=..|10|')
+    expect(scene.puzzles['0649.puz'].shapeBank).toEqual(['S1', 'S2', 'S3', 'S4'])
   })
 })

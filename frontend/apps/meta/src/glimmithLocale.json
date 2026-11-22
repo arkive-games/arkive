@@ -47,6 +47,7 @@
     "window-polyomino": "拼块",
     "window-mingle": "混合",
     "window-forest-trailhead": "林间小径入口",
-    "window-match": "相同"
+    "window-match": "相同",
+    "window-area-number": "面积"
   }
 }

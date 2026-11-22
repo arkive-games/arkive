@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Input: cooked AGeri assets exported to JSON with UAssetAPI (UE 4.27).
-const [root, output, meshFile, terrainFile, marketTerrainDir, townTerrainDir, countrysideTerrainDir, sideIslandTerrainDir] = process.argv.slice(2)
+const [root, output, meshFile, terrainFile, marketTerrainDir, townTerrainDir, countrysideTerrainDir, sideIslandTerrainDir, forestTerrainDir] = process.argv.slice(2)
 const meshes = JSON.parse(readFileSync(meshFile, 'utf8'))
 const readMap = (path) => JSON.parse(readFileSync(join(root, 'Maps', path + '.umap.json'), 'utf8'))
 const prop = (entry, name) => entry.Data?.find?.((item) => item.Name === name)?.Value
@@ -24,6 +24,7 @@ const windows = [
   ['Precision', 'precision'], ['Polyomino', 'polyomino'],
   ['Mingle', 'mingle'], ['ForestTrailhead', 'forest-trailhead'],
   ['Match', 'match'],
+  ['AreaNumber', 'area-number'],
 ].map(([key, id]) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -52,10 +53,10 @@ const actors = [...ids].map((id) => {
   const unlockCategory = prop(entry, 'UnlockCategory')?.replace(/^EUnlockCategory::/, '') ?? null
   return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory, unlocks: unlocks.filter((id) => ids.has(id)), unlockCategory }
 })
-const width = 4096
-const height = 5120
+const width = 5120
+const height = 6144
 const tileSize = 1024
-const projection = { centerX: 4300, centerY: -3000, originX: 1536, originY: 3584, degrees: -59, scale: 2048 / 30500 }
+const projection = { centerX: 4300, centerY: -3000, originX: 1536, originY: 4608, degrees: -59, scale: 2048 / 30500 }
 const angle = projection.degrees * Math.PI / 180
 const project = (x, y) => {
   const dx = (projection.centerX - x) * projection.scale
@@ -123,7 +124,6 @@ const moduleParts = new Map(floorModules.map(([name, dir]) => {
   }))]
 }))
 const identity = (point) => point
-const forestApproach = actors.find(({ id }) => id === '0230.puz')
 const surfaces = sources.flatMap((name) => {
   const map = readMap('OverworldSubmaps/' + name)
   const components = map.Exports.flatMap((entry) => {
@@ -147,23 +147,20 @@ const surfaces = sources.flatMap((name) => {
   return components.flatMap(({ entry, mesh, parentTransform, localTransform }) => {
     const loc = vector(entry, 'RelativeLocation')
     if ((!loc && !localTransform) || !mesh || (!localTransform && prop(entry, 'AttachParent'))) return []
-    if (name === forestMain) {
-      // Only project the entrance clearing around this slice's forest anchor.
-      const [x, y] = localTransform ? parentTransform(localTransform([0, 0, 0])) : [loc.X, loc.Y]
-      if (Math.hypot(x - forestApproach.x, y - forestApproach.y) > 2400) return []
-    }
     const isDockPlank = name === 'Welcome' && dockPlanks.test(mesh)
     const isIslandRock = name === sideIsland && /^(?:SM_SquareRock_0[123]|SM_Rock_06)$/.test(mesh)
-    const isRock = rockMeshes.has(mesh) || (name === 'Welcome' && dockRockMeshes.has(mesh)) || /Flatrock/i.test(mesh) || isIslandRock
+    const isForestRock = name === forestMain && /^(?:SM_SquareRock_0[123]|SM_Rock_05|SM_Rock_06_cut)$/.test(mesh)
+    const isRock = rockMeshes.has(mesh) || (name === 'Welcome' && dockRockMeshes.has(mesh)) || /Flatrock/i.test(mesh) || isIslandRock || isForestRock
     const isLadder = mesh === 'Ladder_SM'
     const isMarketWalkway = name === 'Zone01_Market1' && marketWalkways.has(mesh)
     const isTownWalkway = (name === townMain || name === townLower || name === countryside) && townWalkways.test(mesh)
-    const isTownBrickWall = name === townMain && townBrickWalls.test(mesh)
+    const isBrickWall = (name === townMain || name === forestMain) && townBrickWalls.test(mesh)
     const isForestPlatform = (name === forestMain || name === sideIsland) && mesh === 'Brick_Circle_01_SM'
-    const isIslandBrick = name === sideIsland && mesh === 'Brick_09_SM'
+    const isBrickStep = (name === sideIsland || name === forestMain) && mesh === 'Brick_09_SM'
+    const isForestBridge = name === forestMain && mesh === 'Bridge_SM'
     const isLandmark = (name !== 'Welcome' && landmarkMeshes.test(mesh)) ||
       (name === 'Zone01_Cathedral' && mesh === 'Cube' && ['Cube_8', 'Cube14'].includes(map.Exports[entry.OuterIndex - 1]?.ObjectName))
-    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !isTownBrickWall && !isForestPlatform && !isIslandBrick && !localTransform && mesh !== shipMesh) return []
+    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !isBrickWall && !isForestPlatform && !isBrickStep && !isForestBridge && !localTransform && mesh !== shipMesh) return []
     const model = meshes[mesh]
     if (!model) throw new Error('Missing mesh: ' + mesh)
     const place = localTransform ?? componentTransform(entry)
@@ -310,6 +307,7 @@ addTiledLandscape('Zone01_Market1', marketTerrainDir)
 addTiledLandscape(townMain, townTerrainDir)
 addTiledLandscape(countryside, countrysideTerrainDir)
 addTiledLandscape(sideIsland, sideIslandTerrainDir)
+addTiledLandscape(forestMain, forestTerrainDir)
 if (!surfaces.length) throw new Error('No source geometry found')
 const pointList = (points) => points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')
 const plinthScale = 0.5
@@ -342,11 +340,12 @@ for (const actor of actors) {
   const nearbyHeight = surfaces.filter(({ zMin, zMax, kind }) =>
     kind !== 'sail' && kind !== 'wing-frame' && kind !== 'ladder' &&
     actor.z >= zMin - 70 && actor.z <= zMax + 110)
-  let support = nearbyHeight.filter(({ outline }) => footprintDistance(outline, point) <= 50 * projection.scale)
-  if (!support.length) {
-    const base = placedPuzzleFootprint(actor)
-    if (base?.length >= 3) support = nearbyHeight.filter(({ outline }) => overlaps(outline, base))
-  }
+  const base = placedPuzzleFootprint(actor)
+  const reach = base?.length >= 3 ? Math.max(...base.map(([x, y]) => Math.hypot(x - point[0], y - point[1]))) : 0
+  const support = nearbyHeight.filter(({ outline }) => {
+    const distance = footprintDistance(outline, point)
+    return distance <= 50 * projection.scale || (distance <= reach && overlaps(outline, base))
+  })
   if (!support.length) throw new Error('Marker has no nearby-height mesh footprint: ' + actor.id)
   if (point[0] < 0 || point[0] >= width || point[1] < 0 || point[1] >= height) throw new Error('Marker outside projection: ' + actor.id)
   actor.pixel = { x: point[0], y: point[1] }
@@ -495,7 +494,7 @@ function readShapeClues(headerText, board, columns, id, bank, wide) {
   }))
 }
 
-const shapeBankWindowIds = new Set(['window-mingle', 'window-forest-trailhead', 'window-match'])
+const shapeBankWindowIds = new Set(['window-mingle', 'window-forest-trailhead', 'window-match', 'window-area-number'])
 const shapeBankPuzzleIds = new Set(windows.filter(({ id }) => shapeBankWindowIds.has(id)).flatMap(({ prerequisites }) => prerequisites))
 const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).map((actor) => {
   const { id } = actor

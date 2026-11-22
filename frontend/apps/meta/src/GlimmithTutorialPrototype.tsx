@@ -169,6 +169,12 @@ function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
         const image = cellClueImages.get(clue)
         const cells = shapeClues?.[clue]
         if (cells) return <ShapeClue key={index} x={24 * x} y={24 * y} clue={clue} cells={cells} />
+        if (/^\d{2}$/.test(clue)) {
+          return <text key={index} data-area-clue={clue} x={24 * x + 12} y={24 * y + 12}
+            textAnchor="middle" dominantBaseline="central" fontSize="12" className="fill-foreground font-semibold tabular-nums">
+            {Number(clue)}
+          </text>
+        }
         return image ? <image key={index} data-cell-clue={clue} href={image}
           x={24 * x} y={24 * y} width={24} height={24} /> : null
       })}
