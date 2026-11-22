@@ -4,8 +4,15 @@
 
 - Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
 - Preview: http://127.0.0.1:15172/#glimmith/tutorial. Probe the actual Vite page before starting another server. This is a dev-only route; no release is implied by a local commit.
-- Last completed slice: Range, signed commit `b438787b3d0fe8ae078f2cc0b2490aad8b000d81`. Twelve windows, 426 puzzles, three notes; 799 placed puzzles remain. Local preview only; no push or deployment.
-- Next slice: audit SizeSeparation only (45 source references), the closest remaining window to the mapped anchors by the distance check. Run the inventory helper with the `SizeSeparation` key. Check the original clue syntax, localization, and authored positions before enabling any new terrain. Review cached Zone02 availability first and checkpoint the inputs if the export grows.
+- Last completed slice: SizeSeparation, signed commit `6e4738bc6c71fe912705f8c0da28e824eec64d1d`. Thirteen windows, 471 puzzles, three notes; 754 placed puzzles remain. Local preview only; no push or deployment.
+- Next slice: audit Boxy only (40 source references), the closest remaining window to the mapped anchors by the distance check. Run the inventory helper with the `Boxy` key. Check the authored points against existing terrain first, then inspect the official localization, board headers, and source clues before enabling new terrain.
+
+## SizeSeparation checkpoint
+
+- Source: `BP_StainedGlassPlinth_SizeSeparation`, official Simplified Chinese localization and 45 original files. Thresholds are 14 / 22 / 35. The identity stream `Zone02_Forest_Main_Part2` adds nine landscape components and 21 indexed planes. The local decoder mode is `landscape-planes-indexed`; exports 4014 and 4016 share `Texture2D_0` but their content hashes differ.
+- All anchors passed terrain support; `0824` uses `sm_RuinPillar_LargeRoundExtraShortA_Base`. Added one tile row north while preserving prior relative positions, original coordinates, support witnesses and puzzle records. All 45 source boards declare `ADJACENT_SIZES_DIFFERENT`; three declare shape pools.
+- Desktop: verified 45 window links and thresholds, plus rule, area range and multi-digit glyphs on `1436`. Mobile: the sidebar closed after fitting; a direct click on `0824` showed its lower bound, solution, coordinate, completion and comment controls. Both viewports passed nonblank map pixel sampling. No authenticated write was attempted.
+- Verification: ten scene tests, Meta build, UI guard and the full frontend suite (191 files / 2,030 tests) passed. Eleven puzzles declare AreaCompletion and six GameCompletion; exact runtime triggers remain unverified.
 
 ## Range checkpoint
 
@@ -88,5 +95,5 @@ The optional key prints only that window's puzzle package paths for selective ex
 - Installed pak root: E:/SteamLibrary/steamapps/common/The Artisan of Glimmith/Geri/Content/Paks.
 - Existing Unreal 4.27 exports: %TEMP%/glimmith-arkive-source/Geri/Content/AGeri. This is disposable; the cooked pak is authoritative.
 - Existing local tools: repak-bin/repak.exe in the worktree, plus %TEMP%/glimmith-uasset-reader and %TEMP%/glimmith-mesh-reader. These are not tracked. See glimmith-projection.md for tool roles and required export structure if the cache is missing.
-- The base mesh inventory/geometry is %TEMP%/glimmith-mesh-paths.txt and %TEMP%/glimmith-meshes.json. The cumulative geometry through Range is %TEMP%/glimmith-range-meshes.json. Extra package path lists have the `glimmith-*-mesh-paths.txt` naming pattern for Town, Town Brick, Countryside, Polyomino, Forest Trailhead, Match, Area Number, and Range. The extractor appends the monument automatically, so deduplicate mesh paths if combining lists.
-- Use %TEMP%/hamlet-terrain.raw and the %TEMP%/glimmith-market-terrain, %TEMP%/glimmith-town-terrain, %TEMP%/glimmith-countryside-terrain, %TEMP%/glimmith-match-terrain, %TEMP%/glimmith-forest-main-terrain, and %TEMP%/glimmith-range-terrain directories in that order. Do not store the raw campaign export, game saves, or credentials in the repository.
+- The base mesh inventory/geometry is %TEMP%/glimmith-mesh-paths.txt and %TEMP%/glimmith-meshes.json. The cumulative geometry through SizeSeparation is %TEMP%/glimmith-size-separation-meshes.json. Its extra package paths are in %TEMP%/glimmith-size-separation-mesh-paths.txt and %TEMP%/glimmith-size-separation-support-paths.txt. Earlier paths use the `glimmith-*-mesh-paths.txt` naming pattern. The extractor appends the monument automatically, so deduplicate mesh paths if combining lists.
+- Use %TEMP%/hamlet-terrain.raw and the %TEMP%/glimmith-market-terrain, %TEMP%/glimmith-town-terrain, %TEMP%/glimmith-countryside-terrain, %TEMP%/glimmith-match-terrain, %TEMP%/glimmith-forest-main-terrain, %TEMP%/glimmith-range-terrain, and %TEMP%/glimmith-size-separation-terrain directories in that order. Do not store the raw campaign export, game saves, or credentials in the repository.
