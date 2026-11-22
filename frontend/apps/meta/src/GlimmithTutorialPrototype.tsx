@@ -138,6 +138,16 @@ type GlimmithPuzzle = (typeof scene.puzzles)['0049.puz'] & {
   shapeClues?: Record<string, string[]>
   wideShapeClues?: Partial<Record<number, string>>
   shapeBank?: string[]
+  areaRange?: { min?: number; max?: number }
+}
+
+function PuzzleAreaRange({ areaRange }: { areaRange: GlimmithPuzzle['areaRange'] }) {
+  if (!areaRange) return null
+  const { min, max } = areaRange
+  const label = min != null && max != null ? copy.areaRangeBetween : min != null ? copy.areaRangeMin : copy.areaRangeMax
+  return <p className="text-center text-sm text-muted-foreground tabular-nums">
+    {label.replace('{min}', String(min)).replace('{max}', String(max))}
+  </p>
 }
 
 function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
@@ -294,7 +304,7 @@ export function GlimmithTutorialPrototype() {
           </div>,
         }] : []), {
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
-          content: <PuzzleSolution puzzle={puzzle} />,
+          content: <><PuzzleAreaRange areaRange={'areaRange' in puzzle ? puzzle.areaRange : undefined} /><PuzzleSolution puzzle={puzzle} /></>,
         }] : [{
           id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
           content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&

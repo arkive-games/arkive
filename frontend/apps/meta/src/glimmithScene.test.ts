@@ -18,6 +18,7 @@ describe('Glimmith tutorial scene', () => {
       ['window-forest-trailhead', 49],
       ['window-match', 28],
       ['window-area-number', 43],
+      ['window-range', 46],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
@@ -29,6 +30,7 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.find(({ id }) => id === 'window-forest-trailhead')?.thresholds).toEqual([8, 18, 34])
     expect(scene.windows.find(({ id }) => id === 'window-match')?.thresholds).toEqual([9, 13, 22])
     expect(scene.windows.find(({ id }) => id === 'window-area-number')?.thresholds).toEqual([14, 21, 34])
+    expect(scene.windows.find(({ id }) => id === 'window-range')?.thresholds).toEqual([14, 22, 37])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
@@ -114,5 +116,14 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.puzzles['0335.puz'].board[1]).toBe('|06|..|..|02|..|06|')
     expect(scene.puzzles['1101.puz'].board).toContain('|10|..=..|10|')
     expect(scene.puzzles['0649.puz'].shapeBank).toEqual(['S1', 'S2', 'S3', 'S4'])
+  })
+
+  it('preserves the lower-only, upper-only and paired Range constraints', () => {
+    const range = scene.windows.find(({ id }) => id === 'window-range')!
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    expect(range.prerequisites.every((id) => 'areaRange' in puzzles.get(id)!)).toBe(true)
+    expect(scene.puzzles['0286.puz'].areaRange).toEqual({ min: 4 })
+    expect(scene.puzzles['0768.puz'].areaRange).toEqual({ max: 2 })
+    expect(scene.puzzles['0779.puz'].areaRange).toEqual({ min: 3, max: 5 })
   })
 })

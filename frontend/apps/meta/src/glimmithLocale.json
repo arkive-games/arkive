@@ -27,6 +27,9 @@
   "noBoard": "这是游戏中的说明页，没有独立棋盘或格子答案。",
   "openFirst": "查看这处说明解锁的第一道谜题",
   "solution": "解法",
+  "areaRangeBetween": "每块 {min} 至 {max} 格",
+  "areaRangeMin": "每块至少 {min} 格",
+  "areaRangeMax": "每块至多 {max} 格",
   "shapeBank": "形状池",
   "markCompleted": "标为完成",
   "completed": "已完成",
@@ -48,6 +51,7 @@
     "window-mingle": "混合",
     "window-forest-trailhead": "林间小径入口",
     "window-match": "相同",
-    "window-area-number": "面积"
+    "window-area-number": "面积",
+    "window-range": "范围"
   }
 }
