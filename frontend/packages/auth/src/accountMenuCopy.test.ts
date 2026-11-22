@@ -19,10 +19,10 @@ describe('account menu destinations', () => {
     }
   })
   it.each([
-    ['', '#moderation/images'],
-    ['http://localhost:15172', 'http://localhost:15172#moderation/images'],
-    ['https://arkive.games/#games', 'https://arkive.games/#moderation/images'],
-    ['/toy/arkive/index.html', '/toy/arkive/index.html#moderation/images'],
+    ['', '#moderation'],
+    ['http://localhost:15172', 'http://localhost:15172#moderation'],
+    ['https://arkive.games/#games', 'https://arkive.games/#moderation'],
+    ['/toy/arkive/index.html', '/toy/arkive/index.html#moderation'],
   ])('routes moderation through the configured portal %s', (base, expected) => {
     expect(accountModerationHref(base)).toBe(expected)
   })

@@ -48,7 +48,7 @@ import {
   type PublicProfileSection,
 } from './UserSystemPages'
 import { PlatformUpdatesPage } from './PlatformUpdatesPage'
-import { MarkerImageModerationPage } from './MarkerImageModerationPage'
+import { ContentModerationPage } from './ContentModerationPage'
 import { useSettingsConfig } from './lib/settings'
 import { AUTH_CONFIG } from './lib/auth'
 import { HomeFooter } from './HomeFooter'
@@ -152,7 +152,7 @@ function hashForRoute(route: HomeRoute): string {
     case 'allGames': return '#games'
     case 'tools': return '#tools'
     case 'platformUpdates': return '#updates'
-    case 'moderation': return '#moderation/images'
+    case 'moderation': return '#moderation'
     case 'forum': return route.composer ? '#forum/new' : '#forum'
     case 'notifications': return `#notifications/${route.section}`
     case 'account': return `#account/${route.section}`
@@ -361,7 +361,7 @@ export default function App() {
         actions={
           <HomeMobileActions
             isSignedIn={isSignedIn}
-            moderationHref={moderationAccess.status === 'allowed' ? '#moderation/images' : undefined}
+            moderationHref={moderationAccess.status === 'allowed' ? '#moderation' : undefined}
             hasTools={HAS_TOOLS}
             language={lng}
             theme={theme}
@@ -438,7 +438,7 @@ export default function App() {
       <ArkiveSettingsDialog {...settingsProps} open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       {activeRoute.view === 'moderation' ? (
-        <MarkerImageModerationPage onSignIn={() => setAccountOpen(true)} />
+        <ContentModerationPage onSignIn={() => setAccountOpen(true)} />
       ) : activeRoute.view === 'platformUpdates' ? (
         <PlatformUpdatesPage />
       ) : activeRoute.view === 'allGames' ? (

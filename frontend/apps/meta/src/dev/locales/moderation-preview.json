@@ -1,0 +1,26 @@
+{
+  "zh-CN": {
+    "preview": "开发预览 · 以下均为示例记录，操作不会写入服务器",
+    "light": "浅色", "dark": "深色", "reset": "重置示例", "moderator": "游戏版主", "admin": "站点管理员",
+    "mapTitle": "这个采集点在断桥下面", "mapBody": "从桥头沿左侧小路往下走，在石壁旁可以找到。附上入口和点位截图，方便大家确认。", "mapContext": "永恒之塔 2 · 地图 / 采集点", "mapAuthor": "寻路的小舟",
+    "forumTitle": "新手探索路线的一点补充", "forumBody": "建议先解锁附近的传送点，再沿河岸探索。这样不用在高低落差较大的地方反复折返。", "forumContext": "论坛 · 幻兽帕鲁游戏舱", "forumAuthor": "山间来信",
+    "editTitle": "补充第二条进入路线", "editBody": "原来的入口仍然可用，这次补充了从北侧营地出发的路线。", "oldBody": "从南侧小路可以进入。", "editAuthor": "远行的纸船",
+    "profileTitle": "公开昵称与简介修改", "profileBody": "想把探索途中整理的实用路线分享给大家。", "profileAuthor": "潮汐记录员",
+    "buildTitle": "探索与采集配装分享", "buildBody": "优先保证移动与负重，适合日常跑图。以下为本次公开分享的完整配置。", "buildContext": "RO3 · 配装手册 / 公开分享", "buildAuthor": "风向标", "buildField": "配装配置", "buildValue": "职业：剑士；用途：探索；侧重：移动与负重",
+    "reportReason": "疑似重复推广内容", "reportEvidence": "同一段推广内容重复出现，待核对上下文后处理。",
+    "appealReason": "图片中的路线与原说明对应，希望重新核对。", "appealEvidence": "已补充入口位置的说明。", "originalReason": "需要补充准确的点位说明。",
+    "auditReason": "本次要求补充说明，未记录违规。", "holdReason": "已确认两次重复推广，后续内容恢复先审。", "reviewer": "审核员", "rejectedAction": "拒绝，待修改"
+  },
+  "en-US": {
+    "preview": "Development preview · Sample records only; decisions never reach a server",
+    "light": "Light", "dark": "Dark", "reset": "Reset samples", "moderator": "Game moderator", "admin": "Site administrator",
+    "mapTitle": "This gathering point is under the broken bridge", "mapBody": "Follow the small path on the left of the bridge down to the rock wall. Both the entrance and the gathering point are attached.", "mapContext": "AION2 · Map / gathering point", "mapAuthor": "Route Scout",
+    "forumTitle": "An addition to the beginner exploration route", "forumBody": "Unlock the nearby travel point before following the river. This avoids repeated climbs between the two levels.", "forumContext": "Forum · Palworld cabin", "forumAuthor": "Mountain Letter",
+    "editTitle": "A second entrance route", "editBody": "The original entrance still works. This revision adds a route from the northern camp.", "oldBody": "Enter using the southern path.", "editAuthor": "Paper Boat",
+    "profileTitle": "Public nickname and biography change", "profileBody": "Sharing useful routes collected while exploring.", "profileAuthor": "Tide Archivist",
+    "buildTitle": "Exploration and gathering build", "buildBody": "Prioritize movement and carrying capacity for everyday exploration. The complete public build follows.", "buildContext": "RO3 · Build manual / public share", "buildAuthor": "Windward", "buildField": "Build configuration", "buildValue": "Class: Swordsman; purpose: exploration; priorities: movement and carrying capacity",
+    "reportReason": "Possible repeated promotion", "reportEvidence": "Repeated promotional text; check the complete context before deciding.",
+    "appealReason": "The route corresponds to the original description. Please reassess the context.", "appealEvidence": "Additional entrance context is provided.", "originalReason": "Please provide the exact location context.",
+    "auditReason": "Requested additional context; no violation recorded.", "holdReason": "Two confirmed repeated-promotion decisions; future submissions require review.", "reviewer": "Reviewer", "rejectedAction": "Rejected for correction"
+  }
+}

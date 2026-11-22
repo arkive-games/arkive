@@ -104,3 +104,19 @@ containing URLs or selectors rather than passing JavaScript through a `.cmd`
 shim. Keep generated evidence under ignored `output/playwright/`. A new workspace
 package can resolve existing dependencies with an offline install; avoid an
 unnecessary online resolution of the entire workspace.
+
+## Unified review interface candidate
+
+The local Content moderation workspace follows the canonical
+[publication policy](ARKIVE_CONTENT_MODERATION_SPEC.yaml), replacing individual
+image decisions with complete-submission review UI. Its private typed gateway
+is an interface for a future coordinated integration, not a newly available
+HTTP endpoint or a server-side policy implementation. Existing pending images
+remain inspectable through a read-only legacy queue across all dates.
+
+See [Adoption](ui-system/adoption.md#content-moderation-policy) for the release
+gate. Do not deploy this UI as an operational replacement for the old review
+page before the unified backend adapter and every public channel are ready.
+The development-only real-component preview at
+`http://localhost:15172/ui-review.html?moderation` contains sample records and
+cannot change production publication, trust or moderation decisions.

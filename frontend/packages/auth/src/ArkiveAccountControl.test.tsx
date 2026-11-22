@@ -31,6 +31,6 @@ it.each([true, false])('offers moderation to an administrator or game moderator 
   })}><ArkiveAccountControl language="en-US" homeUrl="http://localhost:15172" /></AuthProvider>)
   await waitFor(() => expect(view.getByTestId('account-menu')).toBeTruthy())
   fireEvent.click(view.getByTestId('account-menu'))
-  await waitFor(() => expect(view.getByRole('menuitem', { name: 'Image moderation' })).toBeTruthy())
-  expect(view.getByRole('menuitem', { name: 'Image moderation' }).querySelector('svg.tabler-icon-photo-check')).toBeTruthy()
+  await waitFor(() => expect(view.getByRole('menuitem', { name: 'Content moderation' })).toBeTruthy())
+  expect(view.getByRole('menuitem', { name: 'Content moderation' }).querySelector('svg.tabler-icon-shield-check')).toBeTruthy()
 })

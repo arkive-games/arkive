@@ -49,12 +49,39 @@ Confirmed on 2026-11-23: [the unified content-moderation
 specification](../ARKIVE_CONTENT_MODERATION_SPEC.yaml) owns the selected
 new-user review and trusted-user publication model for maps, forum content,
 public tool snapshots and public profiles. Its thresholds, complete-submission
-decisions and appeals are product rules. Backend, frontend, private-media access and migration adoption
-remain pending; this documentation change does not enable them in production.
-The existing image-only moderation implementation is not conformance with this
-policy. A candidate review-page redesign is separate local UI work and does not
-implement global publication policy. Record future implementation and rollout
-evidence here before claiming conformance.
+decisions and appeals are product rules. Backend policy enforcement,
+private-media access, migration and production adoption remain pending.
+
+The local portal workspace now presents complete-submission review, credit
+eligibility, correction/violation decisions, separate report and appeal cases,
+resolved-case reasons, administrator trust actions and publication rules through
+the shared encyclopedia frame. The account entrance uses Content moderation and
+a shield-check icon. Old image deep links open read-only historical records.
+
+The production route intentionally has no unified gateway. It shows availability
+feedback instead of claiming an empty unified queue, and never maps the existing
+per-image writes onto a whole-submission approval. This candidate changes the
+old image-review entrance to read-only: release it only with the coordinated
+backend policy rollout, not as a standalone moderation replacement. The typed
+UI boundary is `frontend/apps/meta/src/moderation/model.ts`; a real adapter must
+use backend-owned generated operations after the server contract exists.
+Its list operations need scoped server filtering before paging, revision checks,
+author eligibility, authorized media, complete candidates and decision records.
+
+`http://localhost:15172/ui-review.html?moderation` is a development-only preview
+using the real workspace components and in-memory sample records. Its decisions
+never reach a server and do not prove production authorization, credit changes,
+publication or appeal restoration. The existing image-only API is not policy
+conformance. Record backend and coordinated rollout evidence here before enabling
+the unified gateway or claiming the publication model is live.
+
+Local verification on 2026-11-23: 191 frontend test files / 2032 tests,
+Meta build and lint, canonical-policy threshold/locale checks, and real-component
+browser checks at 1440 x 1000, 1024 x 900 and 390 x 844. Light/dark captures
+cover complete media, rejection evidence, appeal and trust details without
+document overflow. Focused regressions cover failed previews, appeal restoration,
+stale revisions, permission revocation and shrinking legacy pages. These use
+sample identities and data, not authenticated production moderation.
 
 ## Delivery boundary
 

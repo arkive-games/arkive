@@ -139,7 +139,7 @@ export function HomeMobileActions({ isSignedIn, moderationHref, hasTools, langua
             <>
               <a href="#account/edit" onClick={close}>{t('landing.menu.account')}</a>
               <a href="#notifications/settings" onClick={close}>{t('landing.menu.notifications')}</a>
-              {moderationHref ? <a href={moderationHref} onClick={close}>{t('moderation.title')}</a> : null}
+              {moderationHref ? <a href={moderationHref} onClick={close}>{t('contentModeration.title')}</a> : null}
             </>
           )}
           {/* Signed out too: clearing local data lives nowhere else on a phone. */}
