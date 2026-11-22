@@ -62,6 +62,7 @@
     "category": "游戏道具",
     "initial": "初始位置",
     "boulder": "可推巨石",
+    "lowWaterBoulder": "低位巨石（水域）",
     "crystal": "水晶",
     "skipstone": "飞石",
     "lily": "荷叶",

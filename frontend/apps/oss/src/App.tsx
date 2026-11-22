@@ -13,7 +13,7 @@ const RES_BASE = import.meta.env.VITE_RESOURCE_BASE_URL ?? '/ossres'
 
 interface Collection { id: string; name: string; order: number }
 
-interface Prop { id: string; kind: string; x: number; y: number; z: number; tags: string[]; icon?: string }
+interface Prop { id: string; kind: string; x: number; y: number; z: number; tags: string[]; icon?: string; lowWaterCell?: boolean }
 
 const propKinds: { id: string; color: string }[] = [
   { id: 'boulder', color: '#9A7B5B' }, { id: 'crystal', color: '#8E6CF0' }, { id: 'skipstone', color: '#4C8DAE' },
@@ -22,13 +22,14 @@ const propKinds: { id: string; color: string }[] = [
   { id: 'button', color: '#C7A400' }, { id: 'pusher', color: '#6E56CF' }, { id: 'teleporter', color: '#0090FF' },
   { id: 'reset', color: '#12A594' }, { id: 'freezer', color: '#5EB1EF' }, { id: 'spawner', color: '#8D4E3B' },
   { id: 'camera', color: '#687076' }, { id: 'elevator', color: '#3E63DD' }, { id: 'wardrobe', color: '#6E56CF' },
+  { id: 'lowWaterBoulder', color: '#9A7B5B' },
 ]
 const gamePropIcons = new Set(['gem', 'gemslot', 'mirror', 'laser', 'elevator', 'reset', 'spawner'])
 const propIcon = (kind: string) => gamePropIcons.has(kind) ? `/props-game/${kind}.png` : `/props/${kind}.svg`
 const propText: Record<string, string> = text.props
 const propSubtypes = propKinds.map(kind => `prop:${kind.id}`)
 const allSubtypes = ['entrance', 'area', ...propSubtypes]
-const defaultHiddenProps = new Set(['freezer', 'spawner', 'reset', 'teleporter', 'camera'].map(kind => `prop:${kind}`))
+const defaultHiddenProps = new Set(['freezer', 'spawner', 'reset', 'teleporter', 'camera', 'lowWaterBoulder'].map(kind => `prop:${kind}`))
 const defaultSubtypes = allSubtypes.filter(id => !defaultHiddenProps.has(id))
 
 interface PreviewData {
@@ -94,14 +95,16 @@ export function App() {
     icon: marker.subtype === 'entrance' ? '/entrance-game.png' : '/area.svg',
     subtypeMeta: marker.subtypeMeta ? { ...marker.subtypeMeta, pinVariant: 'image' as const, icon: marker.subtype === 'entrance' ? '/entrance-game.png' : '/area.svg', iconScale: marker.subtype === 'entrance' ? 0.3 : 0.4 } : undefined,
   })), ...(mapId === 'ground' ? props : []).map((prop, index): EngineMarker => {
-    const kind = propKinds.find(item => item.id === prop.kind)
-    const name = propText[prop.kind] ?? prop.kind
+    const displayKind = prop.kind === 'boulder' && prop.lowWaterCell ? 'lowWaterBoulder' : prop.kind
+    const subtype = `prop:${displayKind}`
+    const kind = propKinds.find(item => item.id === displayKind)
+    const name = propText[displayKind] ?? prop.kind
     return {
-      id: prop.id, subtype: `prop:${prop.kind}`, x: prop.x, y: prop.y, z: prop.z, images: [], contributors: [], indexInSubtype: index + 1,
+      id: prop.id, subtype, x: prop.x, y: prop.y, z: prop.z, images: [], contributors: [], indexInSubtype: index + 1,
       localizedName: prop.tags.length ? `${name}（${prop.tags.join('·')}）` : name,
       localizedDescription: `${propText.category}${prop.tags.length ? ` · ${prop.tags.join(' · ')}` : ''} · ${propText.initial}`,
       subtypeLabel: name, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind),
-      subtypeMeta: { id: `prop:${prop.kind}`, name, pinVariant: 'image', color: kind?.color, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind), iconScale: prop.icon ? 0.4 : 0.28 },
+      subtypeMeta: { id: subtype, name, pinVariant: 'image', color: kind?.color, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind), iconScale: prop.icon ? 0.4 : 0.28 },
     }
   })], [data, mapId, collections, props])
   const collectionRows = useMemo(() => {
@@ -134,7 +137,7 @@ export function App() {
   return <ShellLayout
     topBar={<OssTopBar active="/" />}
     sidebar={<ShellSidebar key={isMobile ? 'mobile' : 'desktop'} defaultCollapsed={isMobile} width="20rem" label={text.map} collapseLabel={text.collapse} expandLabel={text.expand}
-      classNames={{ collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm' }}
+      classNames={{ collapseButton: 'top-4 max-md:top-16 border border-l-0 border-border bg-card text-foreground shadow-sm' }}
       headerSlot={<ShellGameHeader backgroundUrl={import.meta.env.VITE_OSS_HEADER_URL ?? '/images/game-header.webp'} backgroundPosition="center" logo={null} gameName={text.game} subtitle={text.map} />}
       mapSelectorSlot={data ? <div className="px-3 py-3 max-md:pr-8"><ShellMapSelect
         classNames={{ trigger: 'min-h-11 rounded-xl border-[color:var(--arkive-divider)] bg-card px-3 text-base font-semibold shadow-none hover:border-primary/50 hover:bg-[color:var(--arkive-filter-active)]', content: 'border-[color:var(--arkive-divider)]', item: 'data-[state=checked]:bg-[color:var(--arkive-filter-active)] data-[state=checked]:text-primary' }}
