@@ -55,6 +55,7 @@ describe('standalone image moderation', () => {
     api.reviewMarkerImage.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(image('first'))
     const ui = render(page())
     await waitFor(() => expect(ui.getByTestId('image-review-card')).toBeTruthy())
+    fireEvent.click(within(ui.getByTestId('image-review-card')).getByRole('button'))
     fireEvent.load(within(ui.getByTestId('image-review-detail')).getByRole('img'))
     fireEvent.click(ui.getByRole('button', { name: 'Approve' }))
     await waitFor(() => expect(ui.getByRole('alert').textContent).toContain(copy['en-US'].reviewFailed))
@@ -67,7 +68,9 @@ describe('standalone image moderation', () => {
 
   it('discards the private queue immediately on sign out', async () => {
     const ui = render(page())
-    await waitFor(() => expect(ui.getByRole('heading', { name: 'Map player' })).toBeTruthy())
+    await waitFor(() => expect(ui.getByTestId('image-review-card')).toBeTruthy())
+    fireEvent.click(within(ui.getByTestId('image-review-card')).getByRole('button'))
+    expect(ui.getByRole('dialog')).toBeTruthy()
     session.user = null
     session.access = 'anonymous'
     ui.rerender(page())
@@ -79,6 +82,7 @@ describe('standalone image moderation', () => {
     api.reviewMarkerImage.mockRejectedValue(new ApiError('PermissionError', 'forbidden', 403))
     const ui = render(page())
     await waitFor(() => expect(ui.getByTestId('image-review-card')).toBeTruthy())
+    fireEvent.click(within(ui.getByTestId('image-review-card')).getByRole('button'))
     fireEvent.click(ui.getByRole('button', { name: 'Reject' }))
     await waitFor(() => expect(ui.getByRole('alert').textContent).toBe(copy['en-US'].forbidden))
     expect(ui.queryByTestId('image-review-card')).toBeNull()
@@ -95,7 +99,9 @@ describe('standalone image moderation', () => {
     const ui = render(page())
     await waitFor(() => expect(ui.getAllByTestId('image-review-card')).toHaveLength(20))
     fireEvent.click(ui.getByRole('button', { name: 'Next' }))
-    await waitFor(() => expect(ui.getByRole('heading', { name: 'Last player' })).toBeTruthy())
+    await waitFor(() => expect(ui.getByTestId('image-review-card')).toBeTruthy())
+    fireEvent.click(within(ui.getByTestId('image-review-card')).getByRole('button'))
+    expect(within(ui.getByTestId('image-review-detail')).getByRole('heading', { name: 'Last player' })).toBeTruthy()
     fireEvent.click(within(ui.getByTestId('image-review-detail')).getByRole('button', { name: 'Reject' }))
     await waitFor(() => expect(ui.getAllByTestId('image-review-card')).toHaveLength(20))
     expect(ui.queryAllByText('Last player')).toHaveLength(0)
@@ -108,11 +114,12 @@ describe('standalone image moderation', () => {
     api.reviewMarkerImage.mockImplementation(async () => { records.splice(1, 1); return image('older') })
     const ui = render(page())
     await waitFor(() => expect(ui.getAllByTestId('image-review-card')).toHaveLength(3))
-    fireEvent.click(ui.getByRole('button', { name: 'Review image from Earlier player' }))
+    const entry = ui.getByRole('button', { name: 'Review image from Earlier player' })
+    fireEvent.click(entry)
     const detail = within(ui.getByTestId('image-review-detail'))
     expect(detail.getByRole('heading', { name: 'Earlier player' })).toBeTruthy()
     expect(detail.getByText(copy['en-US'].commentImage)).toBeTruthy()
-    expect(ui.getByRole('button', { name: 'Review image from Earlier player' }).getAttribute('aria-pressed')).toBe('true')
+    expect(entry.getAttribute('aria-expanded')).toBe('true')
     expect(detail.getByRole('button', { name: 'Approve' }).hasAttribute('disabled')).toBe(true)
     fireEvent.load(detail.getByRole('img'))
     fireEvent.click(detail.getByRole('button', { name: 'Approve' }))
@@ -138,7 +145,8 @@ describe('standalone image moderation', () => {
 
   it('blocks approval of a failed preview and lets the reviewer reload it', async () => {
     const ui = render(page())
-    await waitFor(() => expect(ui.getByTestId('image-review-detail')).toBeTruthy())
+    await waitFor(() => expect(ui.getByTestId('image-review-card')).toBeTruthy())
+    fireEvent.click(within(ui.getByTestId('image-review-card')).getByRole('button'))
     const detail = within(ui.getByTestId('image-review-detail'))
     fireEvent.error(detail.getByRole('img'))
     expect(detail.getByRole('alert').textContent).toContain(copy['en-US'].imageFailed)
@@ -149,5 +157,40 @@ describe('standalone image moderation', () => {
     expect(detail.getByRole('button', { name: 'Approve' }).hasAttribute('disabled')).toBe(true)
     fireEvent.load(detail.getByRole('img'))
     expect(detail.getByRole('button', { name: 'Approve' }).hasAttribute('disabled')).toBe(false)
+  })
+
+  it('keeps review details closed until selected and restores focus after dismissal', async () => {
+    const ui = render(page())
+    await waitFor(() => expect(ui.getByTestId('image-review-card')).toBeTruthy())
+    expect(ui.queryByRole('dialog')).toBeNull()
+    expect(ui.queryByTestId('image-review-detail')).toBeNull()
+    const entry = within(ui.getByTestId('image-review-card')).getByRole('button')
+    fireEvent.click(entry)
+    expect(ui.getByRole('dialog')).toBeTruthy()
+    fireEvent.click(ui.getByRole('button', { name: 'Close review' }))
+    await waitFor(() => expect(ui.queryByRole('dialog')).toBeNull())
+    expect(document.activeElement).toBe(entry)
+  })
+
+  it.each([1, 2])('keeps focus stable through a delayed refresh after reviewing one of %s images', async (count) => {
+    const next = image('next', 'Next player')
+    let finishRefresh!: (value: unknown) => void
+    api.listPendingMarkerImages.mockResolvedValueOnce({ count, results: [image('first'), next].slice(0, count) })
+      .mockImplementationOnce(() => new Promise(resolve => { finishRefresh = resolve }))
+    const ui = render(page())
+    await waitFor(() => expect(ui.getAllByTestId('image-review-card')).toHaveLength(count))
+    fireEvent.click(within(ui.getAllByTestId('image-review-card')[0]).getByRole('button'))
+    fireEvent.load(within(ui.getByTestId('image-review-detail')).getByRole('img'))
+    fireEvent.click(ui.getByRole('button', { name: 'Approve' }))
+    await waitFor(() => expect(api.listPendingMarkerImages).toHaveBeenCalledTimes(2))
+    if (count === 2) {
+      expect(ui.getByRole('heading', { name: 'Next player' })).toBeTruthy()
+      fireEvent.click(ui.getByRole('button', { name: 'Close review' }))
+    }
+    await waitFor(() => expect(ui.queryByRole('dialog')).toBeNull())
+    expect(document.activeElement).toBe(ui.getByTestId('image-review-queue'))
+    finishRefresh({ count: count - 1, results: count === 2 ? [next] : [] })
+    await waitFor(() => expect(ui.getByTestId('image-review-queue').getAttribute('aria-busy')).toBe('false'))
+    expect(document.activeElement).toBe(ui.getByTestId('image-review-queue'))
   })
 })

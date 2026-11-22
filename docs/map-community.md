@@ -40,10 +40,26 @@ and earlier browser-only previews have no contribution record to review and are
 not imported automatically. An empty queue alone cannot establish which of these
 conditions applies to a particular account.
 
-The review workspace pairs a thumbnail queue with a full image preview, uploader,
-upload time and marker location. Approval waits for the selected preview to load;
+The review page reuses the encyclopedia directory and wide-data frame. A compact
+image list shows the uploader, upload time and marker location; choosing a row
+opens the shared review dialog. Approval waits for the selected preview to load;
 loading or failed previews cannot be approved. Confirmed decisions advance to the
 next image, while failed decisions retain the selected contribution for retry.
+
+## Publication behavior
+
+| Content | Publication behavior |
+| --- | --- |
+| Map comment text | Public immediately after a successful submission. |
+| Images attached to a map comment | Pending until image approval; the author and authorized staff can preview them. Other readers see the text first. |
+| Forum posts and comments | Public immediately; no approval queue before publication. |
+| Forum post images | Visible with the post after attachment succeeds; not part of the map-image queue. |
+
+Map text and its attachments are saved atomically. An upload failure does not
+publish a text-only fragment of that submission. The separate review states
+control what other readers see after a successful submission. Forum validation,
+upload processing and rate limits are not content approval; reports and staff
+hiding operate after publication.
 
 Deploy the backend before the frontend. The backend applies
 `20261119000001_create_marker_images.sql` through the normal migration stream;

@@ -1,5 +1,6 @@
 {
   "en-US": {
+    "management": "Moderation", "mapImages": "Map images", "collapse": "Collapse moderation directory", "expand": "Expand moderation directory", "openReview": "Review image", "close": "Close review",
     "title": "Image moderation", "back": "Back to my account", "scope": "Player images appear on the map after approval.",
     "queue": "Awaiting review", "queueScope": "All upload dates · Games you moderate", "pending": "Awaiting review", "chooseImage": "Choose an image to review", "selectImage": "Review image from {{author}}",
     "emptyScope": "This queue includes all pending images you can moderate, regardless of upload date.", "emptyHint": "Approved, rejected and built-in map images are not listed here.",
@@ -12,6 +13,7 @@
     "previewAlt": "Player image uploaded by {{author}}", "location": "Map / marker", "previous": "Previous", "next": "Next", "pagination": "Page {{page}} of {{pages}}", "paginationLabel": "Review queue pages"
   },
   "zh-CN": {
+    "management": "审核", "mapImages": "地图图片", "collapse": "收起审核目录", "expand": "展开审核目录", "openReview": "查看审核", "close": "关闭审核",
     "title": "图片审核", "back": "返回个人中心", "scope": "玩家图片通过审核后，才会在地图点位公开。",
     "queue": "待审核", "queueScope": "不限上传日期 · 当前账号可审核的游戏", "pending": "待审核", "chooseImage": "选择待审核图片", "selectImage": "审核 {{author}} 的图片",
     "emptyScope": "这里显示你有权限审核的全部待审核图片，不限上传日期。", "emptyHint": "已通过、已拒绝和地图内置图片不会出现在这里。",
@@ -24,6 +26,7 @@
     "previewAlt": "{{author}} 上传的玩家图片", "location": "地图 / 点位", "previous": "上一页", "next": "下一页", "pagination": "第 {{page}} / {{pages}} 页", "paginationLabel": "审核队列分页"
   },
   "zh-TW": {
+    "management": "審核", "mapImages": "地圖圖片", "collapse": "收起審核目錄", "expand": "展開審核目錄", "openReview": "檢視審核", "close": "關閉審核",
     "title": "圖片審核", "back": "返回個人中心", "scope": "玩家圖片通過審核後，才會在地圖點位公開。",
     "queue": "待審核", "queueScope": "不限上傳日期 · 目前帳號可審核的遊戲", "pending": "待審核", "chooseImage": "選擇待審核圖片", "selectImage": "審核 {{author}} 的圖片",
     "emptyScope": "這裡顯示你有權限審核的全部待審核圖片，不限上傳日期。", "emptyHint": "已通過、已拒絕和地圖內建圖片不會出現在這裡。",
