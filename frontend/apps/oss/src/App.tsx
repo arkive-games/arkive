@@ -4,6 +4,7 @@ import { ArkiveMapTopBar, FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHe
 import { GameMapView, type EngineMarker, type GlMapRef } from '@gamemap/map-engine-gl'
 import type { GameMapMeta, RegionInstance } from '@gamemap/data-contract'
 import text from './locales/zh-CN.json'
+import { indexCellMarkers } from './cellMarkers'
 import { homeUrl, settings, SiteInfoDialog } from './SiteChrome'
 import { useIsMobile } from '@gamemap/ui'
 
@@ -112,7 +113,11 @@ export function App() {
     }
     return [...groups.values()]
   }, [markers, collections])
-  const filteredMarkers = markers.filter(marker => marker.subtype !== 'entrance' || !(collections[marker.id]?.length) || collections[marker.id].some(group => !hiddenCollections.has(group.id)) || marker.id === selected || resultIds.includes(marker.id))
+  const cells = useMemo(() => {
+    const results = new Set(resultIds)
+    const filtered = markers.filter(marker => marker.subtype !== 'entrance' || !(collections[marker.id]?.length) || collections[marker.id].some(group => !hiddenCollections.has(group.id)) || marker.id === selected || results.has(marker.id))
+    return mapId === 'ground' ? indexCellMarkers(filtered, visible, results, selected) : { representatives: filtered, peers: new Map<string, EngineMarker[]>() }
+  }, [markers, mapId, visible, collections, hiddenCollections, resultIds, selected])
   const searchItems = useMemo(() => markers.map(marker => ({ id: marker.id, name: marker.localizedName, description: marker.localizedDescription, x: marker.x, y: marker.y, z: marker.z })), [markers])
   const categories = [{ id: 'locations', label: text.locations, subtypes: [
     { id: 'entrance', label: text.entrance, active: visible.has('entrance'), count: markers.filter(marker => marker.subtype === 'entrance').length },
@@ -170,14 +175,18 @@ export function App() {
       searchFields={['name', 'description']} onResultsChange={setResultIds}
       labels={{ search: text.searchButton, placeholder: text.search, resultsCount: count => `${count} ${text.results}`, unnamed: text.entrance, noDescription: text.noDescription }} />}
     {!data || !tileOverrides ? <div role="status" className="p-4 text-sm">{failed ? text.failure : text.loading}</div> : <GameMapView
-      key={`map:${mapId}`} map={data.maps.find(map => map.id === mapId)} markers={filteredMarkers} regions={data.regions[mapId] ?? []}
+      key={`map:${mapId}`} map={data.maps.find(map => map.id === mapId)} markers={cells.representatives} regions={data.regions[mapId] ?? []}
       visibleSubtypes={visible} forceShowIds={new Set(resultIds)}
       showLabels={showLabels} showBorders={showBorders} lodEnabled={false}
       selectedMarkerId={selected} selectedPosition={null} onToggleMarker={setSelected}
       subzoneAt={() => ''} flyToDuration={0.4} mapRef={mapRef}
       assets={{ tileUrl: (map, x, y, level = 0) => `${RES_BASE}/${tileOverrides[`${map.id}:${level}:${x}:${y}`] ?? `tiles/${map.id}-base-expanded/${level}/${x}_${y}.png`}`, markerIconUrl: icon => icon ?? '' }}
       labels={{ copyPosition: text.copyPosition, noMapSelected: text.noMap, zoomIn: text.zoomIn, zoomOut: text.zoomOut }}
-      renderPopupContent={marker => <MarkerPopupCard name={marker.localizedName} description={marker.localizedDescription || text.unknown} positionValue={`${marker.x}, ${marker.y}`}><p className="mt-2 text-xs text-muted-foreground">{text.preview}</p></MarkerPopupCard>}
+      renderPopupContent={marker => <MarkerPopupCard name={marker.localizedName} icon={marker.icon ? <img src={marker.icon} alt="" className="size-9 object-contain" /> : undefined} description={marker.localizedDescription || text.unknown} positionValue={`${marker.x}, ${marker.y}`}>
+        {cells.peers.has(marker.id) && <div className="mt-2 flex flex-wrap items-center gap-2 text-sm"><span>{text.sameCell}</span>
+          {cells.peers.get(marker.id)?.filter(peer => peer.id !== marker.id).map(peer => <button type="button" key={peer.id} className="text-primary underline" onClick={() => setSelected(peer.id)}>{peer.localizedName}</button>)}
+        </div>}
+        <p className="mt-2 text-xs text-muted-foreground">{text.preview}</p></MarkerPopupCard>}
       exposeTestHandle={import.meta.env.DEV}
     />}
     </div>
