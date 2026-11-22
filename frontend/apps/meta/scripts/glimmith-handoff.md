@@ -4,8 +4,16 @@
 
 - Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
 - Preview: http://127.0.0.1:15172/#glimmith/tutorial. Probe the actual Vite page before starting another server. This is a dev-only route; no release is implied by a local commit.
-- Last completed slice: Mingle, signed commit `5dcacebea9bc23c92dca3af8b9903723ed6a3a13`. Eight windows, 260 puzzles, three notes; 965 placed puzzles remain. Local preview only; no push or deployment.
-- Next slice: audit ForestTrailhead only (49 source references). It is the closest unmapped window to the current authored puzzle anchors by the distance check. Run the inventory helper with the `ForestTrailhead` key and compare its anchors with the current terrain and nearby forest streams. Record the official localization, clue syntax, and export inputs before editing the generator. Split the input audit from generation if new terrain is needed.
+- Last completed slice: ForestTrailhead, signed commit `76e3b89b1d05991d14d4de216610e3aabea99564`. Nine windows, 309 puzzles, three notes; 916 placed puzzles remain. Local preview only; no push or deployment.
+- Next slice: audit Match only (28 source references), the closest remaining window to the mapped anchors by the distance check. Use the inventory helper with the `Match` key. Check the anchors and clue syntax against the installed campaign before enabling any more forest terrain. The six Zone02 submap JSON exports are cached; if Match requires a full landscape export, checkpoint the component planes and mesh inputs before generation.
+
+## ForestTrailhead checkpoint
+
+- Source: `BP_StainedGlassPlinth_ForestTrailhead`, its official Simplified Chinese localization, thresholds 8 / 18 / 34, and 49 original puzzle files. All 49 anchors passed terrain support. Countryside and Town already support 48. The new Forest Main entrance clearing supports `0230` on `Brick_Circle_01_SM` and `sm_RuinSetPiece_CircularA`.
+- Extended the tile grid one column to the right without changing the origin, rotation, scale, old puzzle coordinates or existing solution records. Only the local Forest Main entrance mesh footprints are included, not its landscape or interior. Forest Main has an identity streaming transform.
+- Eight boards show their authored shape pools. `0253` uses the existing multi-digit cell parser; its three wide IDs rendered in the desktop browser. Fourteen puzzles declare AreaCompletion and ten GameCompletion; exact triggers remain unverified.
+- Desktop: opened the map window, verified all 49 links and thresholds, then opened `0253`. Mobile: region fitting closed the sidebar and direct click on `0230` showed its solution and the standard coordinate, completion, and comment controls. Both projections passed nonblank pixel sampling. No authenticated write was attempted.
+- Verification: six scene tests, Meta build, UI guard, and full frontend suite (191 files / 2,026 tests) passed.
 
 ## Mingle checkpoint
 
@@ -59,5 +67,5 @@ The optional key prints only that window's puzzle package paths for selective ex
 - Installed pak root: E:/SteamLibrary/steamapps/common/The Artisan of Glimmith/Geri/Content/Paks.
 - Existing Unreal 4.27 exports: %TEMP%/glimmith-arkive-source/Geri/Content/AGeri. This is disposable; the cooked pak is authoritative.
 - Existing local tools: repak-bin/repak.exe in the worktree, plus %TEMP%/glimmith-uasset-reader and %TEMP%/glimmith-mesh-reader. These are not tracked. See glimmith-projection.md for tool roles and required export structure if the cache is missing.
-- The base mesh inventory/geometry is %TEMP%/glimmith-mesh-paths.txt and %TEMP%/glimmith-meshes.json. The cumulative geometry through Polyomino is %TEMP%/glimmith-polyomino-meshes.json. Extra package paths are in %TEMP%/glimmith-town-mesh-paths.txt, %TEMP%/glimmith-town-brick-paths.txt, %TEMP%/glimmith-countryside-mesh-paths.txt, and %TEMP%/glimmith-polyomino-mesh-paths.txt. The extractor appends the monument automatically, so deduplicate mesh paths if combining lists.
+- The base mesh inventory/geometry is %TEMP%/glimmith-mesh-paths.txt and %TEMP%/glimmith-meshes.json. The cumulative geometry through ForestTrailhead is %TEMP%/glimmith-forest-trailhead-meshes.json. Extra package path lists have the `glimmith-*-mesh-paths.txt` naming pattern for Town, Town Brick, Countryside, Polyomino, and Forest Trailhead. The extractor appends the monument automatically, so deduplicate mesh paths if combining lists.
 - Use %TEMP%/hamlet-terrain.raw and the %TEMP%/glimmith-market-terrain, %TEMP%/glimmith-town-terrain, and %TEMP%/glimmith-countryside-terrain directories in that order. Do not store the raw campaign export, game saves, or credentials in the repository.
