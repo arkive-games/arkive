@@ -4,8 +4,16 @@
 
 - Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
 - Preview: http://127.0.0.1:15172/#glimmith/tutorial. Probe the actual Vite page before starting another server. This is a dev-only route; no release is implied by a local commit.
-- Last completed slice: ShapeBank, signed commit `7390f56969b7ed0fe2a33cbfd724842c013fe0a9`. Five windows, 136 puzzles, three notes; 1,089 placed puzzles remain. Local preview only; no push or deployment.
-- Next slice: audit Precision only (44 source references). Run the inventory helper with the `Precision` key and compare those actor coordinates against the authored Town Main and lower-level submaps before editing the generator. Confirm streaming transforms, the required floor/landscape inputs, and projection bounds. Checkpoint the inventory and export inputs before terrain generation if the slice grows.
+- Last completed slice: Precision, signed commit `e13ff75bbd63ab4b4972c90fe0a7c3f56ee7f098`. Six windows, 180 puzzles, three notes; 1,045 placed puzzles remain. Local preview only; no push or deployment.
+- Next slice: audit Polyomino only (39 source references). Run the inventory helper with the `Polyomino` key, extract its puzzle files, and compare its authored anchors with the existing Town, lower-level, and Countryside terrain before adding any other submaps. Decode the matching Simplified Chinese location name from the installed localization. Split the input audit from generation if new geometry is required.
+
+## Precision checkpoint
+
+- Source: `BP_StainedGlassPlinth_Precision` and 44 puzzle files from the installed game. Window thresholds are 12 / 20 / 35. The three added submaps have identity streaming transforms. All markers passed the same nearby-height footprint check as earlier regions.
+- The map extends upward by 1,024 projection pixels without changing rotation, scale, or raw coordinates. Existing anchors have the same relative positions, and all previously generated boards and solutions were compared unchanged.
+- Start with the existing landscape and authored mesh transforms. Check adjacent streamed submaps if the nearest candidates are implausibly far away: `1127` is supported by wooden planks in Countryside, and `1441b` and `1442` use ground bricks from `BP_Ground_Bricks` instance/template transforms. Lower Town markers `0140` and `0110` use brick floors/rock meshes near Z = -115.
+- Desktop: opened the window from the canvas, checked all 44 links and thresholds, and opened the solution for `0140`. Mobile: area selection collapsed the sidebar and fitted the map; direct click on `0070` showed its source solution, difficulty and standard coordinate/completion/comment controls. No authenticated write was attempted.
+- Verification: three focused scene tests, Meta build, UI guard, and the full frontend suite (191 files / 2,023 tests) passed. Eleven Precision puzzles declare AreaCompletion and six GameCompletion; exact runtime triggers and traversal between projected floors remain unverified.
 
 ## ShapeBank checkpoint
 
@@ -37,4 +45,5 @@ The optional key prints only that window's puzzle package paths for selective ex
 - Installed pak root: E:/SteamLibrary/steamapps/common/The Artisan of Glimmith/Geri/Content/Paks.
 - Existing Unreal 4.27 exports: %TEMP%/glimmith-arkive-source/Geri/Content/AGeri. This is disposable; the cooked pak is authoritative.
 - Existing local tools: repak-bin/repak.exe in the worktree, plus %TEMP%/glimmith-uasset-reader and %TEMP%/glimmith-mesh-reader. These are not tracked. See glimmith-projection.md for tool roles and required export structure if the cache is missing.
-- The current mesh inventory is %TEMP%/glimmith-mesh-paths.txt and decoded geometry is %TEMP%/glimmith-meshes.json. Hamlet terrain planes are %TEMP%/hamlet-terrain.raw; the Market planes are in %TEMP%/glimmith-market-terrain. Do not store the raw campaign export, game saves, or credentials in the repository.
+- The base mesh inventory/geometry is %TEMP%/glimmith-mesh-paths.txt and %TEMP%/glimmith-meshes.json. The cumulative geometry through Precision is %TEMP%/glimmith-precision-meshes.json; its extra package paths are in %TEMP%/glimmith-town-mesh-paths.txt, %TEMP%/glimmith-town-brick-paths.txt, and %TEMP%/glimmith-countryside-mesh-paths.txt. The extractor appends the monument automatically, so deduplicate mesh paths if combining lists.
+- Use %TEMP%/hamlet-terrain.raw and the %TEMP%/glimmith-market-terrain, %TEMP%/glimmith-town-terrain, and %TEMP%/glimmith-countryside-terrain directories in that order. Do not store the raw campaign export, game saves, or credentials in the repository.
