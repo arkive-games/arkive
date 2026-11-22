@@ -76,8 +76,8 @@ const assets = {
 }
 const angle = scene.projection.degrees * Math.PI / 180
 const displayCoords = (x: number, y: number) => {
-  const dx = (x - scene.width / 2) / scene.projection.scale
-  const dy = (y - scene.height / 2) / scene.projection.scale
+  const dx = (x - scene.projection.originX) / scene.projection.scale
+  const dy = (y - scene.projection.originY) / scene.projection.scale
   return {
     x: scene.projection.centerX - (dx * Math.cos(angle) + dy * Math.sin(angle)),
     y: scene.projection.centerY - (-dx * Math.sin(angle) + dy * Math.cos(angle)),

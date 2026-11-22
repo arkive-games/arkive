@@ -12,11 +12,13 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.map(({ id, prerequisites }) => [id, prerequisites.length])).toEqual([
       ['window-bridge', 11], ['window-gate', 11], ['window-gemini-delta', 41], ['window-rose-windows', 41],
       ['window-shape-bank', 32],
+      ['window-precision', 44],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
     expect(Object.keys(scene.puzzles)).toEqual(ids)
     expect(scene.windows.find(({ id }) => id === 'window-shape-bank')?.thresholds).toEqual([8, 14, 23])
+    expect(scene.windows.find(({ id }) => id === 'window-precision')?.thresholds).toEqual([12, 20, 35])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
@@ -31,8 +33,8 @@ describe('Glimmith tutorial scene', () => {
     for (const { id, x, y, pixel } of [...actors, ...windows]) {
       const dx = (projection.centerX - x) * projection.scale
       const dy = (projection.centerY - y) * projection.scale
-      expect(pixel.x, id).toBeCloseTo(width / 2 + dx * Math.cos(angle) - dy * Math.sin(angle))
-      expect(pixel.y, id).toBeCloseTo(height / 2 + dx * Math.sin(angle) + dy * Math.cos(angle))
+      expect(pixel.x, id).toBeCloseTo(projection.originX + dx * Math.cos(angle) - dy * Math.sin(angle))
+      expect(pixel.y, id).toBeCloseTo(projection.originY + dx * Math.sin(angle) + dy * Math.cos(angle))
       expect(pixel.x, id).toBeGreaterThanOrEqual(0)
       expect(pixel.x, id).toBeLessThan(width)
       expect(pixel.y, id).toBeGreaterThanOrEqual(0)

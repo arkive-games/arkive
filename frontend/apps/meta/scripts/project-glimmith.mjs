@@ -2,20 +2,24 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // Input: cooked AGeri assets exported to JSON with UAssetAPI (UE 4.27).
-const [root, output, meshFile, terrainFile, marketTerrainDir] = process.argv.slice(2)
+const [root, output, meshFile, terrainFile, marketTerrainDir, townTerrainDir, countrysideTerrainDir] = process.argv.slice(2)
 const meshes = JSON.parse(readFileSync(meshFile, 'utf8'))
 const readMap = (path) => JSON.parse(readFileSync(join(root, 'Maps', path + '.umap.json'), 'utf8'))
 const prop = (entry, name) => entry.Data?.find?.((item) => item.Name === name)?.Value
 const vector = (entry, name) => prop(entry, name)?.[0]?.Value
 const scene = readMap('PuzzleLevelMainSubmaps/Overworld_Campaign')
 const overview = readMap('OverworldMap')
-const sources = ['Welcome', 'Zone01_Intro_Bridge', 'Zone01_Intro_Gate_Revised', 'Zone01_Hamlet', 'Zone01_Cathedral', 'Zone01_Market1']
+const townMain = 'Zone01_Town_Main'
+const townLower = 'Zone1_Town_Main_Underneath'
+const countryside = 'Zone01_Countryside'
+const sources = ['Welcome', 'Zone01_Intro_Bridge', 'Zone01_Intro_Gate_Revised', 'Zone01_Hamlet', 'Zone01_Cathedral', 'Zone01_Market1', townMain, townLower, countryside]
 for (const name of [...sources, 'Overworld_Campaign']) {
   const stream = overview.Exports.find((entry) => prop(entry, 'WorldAsset')?.AssetPath?.AssetName?.endsWith('/' + name + '.' + name))
   if (!stream || prop(stream, 'LevelTransform')) throw new Error('Expected identity streaming transform: ' + name)
 }
 const windows = [
   ['Bridge', 'bridge'], ['Gate', 'gate'], ['GeminiDelta', 'gemini-delta'], ['SlashPack', 'rose-windows'], ['ShapeBank', 'shape-bank'],
+  ['Precision', 'precision'],
 ].map(([key, id]) => {
   const actor = 'BP_StainedGlassPlinth_' + key
   const entry = scene.Exports.find((entry) => entry.ObjectName === actor)
@@ -45,14 +49,14 @@ const actors = [...ids].map((id) => {
   return { id, actor: entry.ObjectName, x, y, z, widget: widget?.ObjectName ?? null, directory, unlocks: unlocks.filter((id) => ids.has(id)), unlockCategory }
 })
 const width = 3072
-const height = 3072
+const height = 4096
 const tileSize = 1024
-const projection = { centerX: 4300, centerY: -3000, degrees: -59, scale: 2048 / 30500 }
+const projection = { centerX: 4300, centerY: -3000, originX: 1536, originY: 2560, degrees: -59, scale: 2048 / 30500 }
 const angle = projection.degrees * Math.PI / 180
 const project = (x, y) => {
   const dx = (projection.centerX - x) * projection.scale
   const dy = (projection.centerY - y) * projection.scale
-  return [width / 2 + dx * Math.cos(angle) - dy * Math.sin(angle), height / 2 + dx * Math.sin(angle) + dy * Math.cos(angle)]
+  return [projection.originX + dx * Math.cos(angle) - dy * Math.sin(angle), projection.originY + dx * Math.sin(angle) + dy * Math.cos(angle)]
 }
 const cross = ([ax, ay], [bx, by], [cx, cy]) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
 function hull(points) {
@@ -87,6 +91,7 @@ function transform(loc, rot, scale) {
 const platformMeshes = /RuinFloor|WoodenPlatform|Brick_Floor|CircularA|Flatrock|RuinWall.*_Top|RuinTrim|RuinStair_MediumA(?:_CorOutA)?$|Brick_Stairs|Wood_Stairs|Wood_Planks_Prefab|Wood_Plank_0[1-5]_SM/i
 const landmarkMeshes = /^(Brick_Pillar_SM|Brick_Arch_01_SM|Building_Prefab_02_Open_SM|sm_RuinWall_FullTallA_Mid|sm_RuinTowerA_Mid|sm_RuinPillar_LargeShortA_Base)$/i
 const marketWalkways = new Set(['Awning_Wood_SM', 'Bridge_SM', 'SM_House_Passage'])
+const townWalkways = /^(?:Awning_Wood_SM|Bridge_SM|SM_House_Passage|SM_WoodenPlank_0[1-3]|sm_RuinStair_MediumB)$/i
 const passageMeshes = new Set(['SM_Bridge', 'Boarding_Plank_W_Rails_SM', 'Ladder_SM'])
 const dockPlanks = /^SM_WoodenPlank_0[1-3]$/
 const rockMeshes = new Set(['SM_Rock_01', 'SM_Rock_01_cut', 'SM_Rock_02', 'Rock_01_SM', 'Rock_Pile_SM'])
@@ -101,9 +106,13 @@ const shipMaterials = {
 }
 const meshName = (pkg, entry) => pkg.Imports[-prop(entry, 'StaticMesh') - 1]?.ObjectName
 const componentTransform = (entry) => transform(vector(entry, 'RelativeLocation') ?? { X: 0, Y: 0, Z: 0 }, vector(entry, 'RelativeRotation'), vector(entry, 'RelativeScale3D'))
-const moduleParts = new Map(['001', '002'].map((suffix) => {
-  const name = 'Module_BrokenFloor_Gothic_' + suffix
-  const pkg = JSON.parse(readFileSync(join(root, 'Maps', 'Modules', 'Gothic', name + '.uasset.json'), 'utf8'))
+const floorModules = [
+  ['Module_BrokenFloor_Gothic_001', 'Maps/Modules/Gothic'],
+  ['Module_BrokenFloor_Gothic_002', 'Maps/Modules/Gothic'],
+  ['BP_Ground_Bricks', '../StylizedProvencal/Blueprints'],
+]
+const moduleParts = new Map(floorModules.map(([name, dir]) => {
+  const pkg = JSON.parse(readFileSync(join(root, dir, name + '.uasset.json'), 'utf8'))
   return [name + '_C', pkg.Exports.filter((entry) => meshName(pkg, entry)).map((entry) => ({
     entry, mesh: meshName(pkg, entry), template: entry.ObjectName,
   }))]
@@ -136,9 +145,10 @@ const surfaces = sources.flatMap((name) => {
     const isRock = rockMeshes.has(mesh) || (name === 'Welcome' && dockRockMeshes.has(mesh)) || /Flatrock/i.test(mesh)
     const isLadder = mesh === 'Ladder_SM'
     const isMarketWalkway = name === 'Zone01_Market1' && marketWalkways.has(mesh)
+    const isTownWalkway = (name === townMain || name === townLower || name === countryside) && townWalkways.test(mesh)
     const isLandmark = (name !== 'Welcome' && landmarkMeshes.test(mesh)) ||
       (name === 'Zone01_Cathedral' && mesh === 'Cube' && ['Cube_8', 'Cube14'].includes(map.Exports[entry.OuterIndex - 1]?.ObjectName))
-    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && mesh !== shipMesh) return []
+    if (!platformMeshes.test(mesh) && !isRock && !isLandmark && !passageMeshes.has(mesh) && !isDockPlank && !isMarketWalkway && !isTownWalkway && !localTransform && mesh !== shipMesh) return []
     const model = meshes[mesh]
     if (!model) throw new Error('Missing mesh: ' + mesh)
     const place = localTransform ?? componentTransform(entry)
@@ -188,7 +198,7 @@ const surfaces = sources.flatMap((name) => {
     }
     const kind = isLadder ? 'ladder'
       : isRock ? 'rock'
-      : passageMeshes.has(mesh) || isDockPlank || (isMarketWalkway && mesh !== 'SM_House_Passage') || /Wooden|Wood_Stairs|Wood_Plank/i.test(mesh) ? 'wood'
+      : passageMeshes.has(mesh) || isDockPlank || /^(?:Awning_Wood_SM|Bridge_SM)$|Wooden|Wood_Stairs|Wood_Plank/i.test(mesh) ? 'wood'
       : isLandmark ? 'landmark' : 'stone'
     if (isLadder && !model.indices.length) throw new Error('Missing ladder triangles')
     return surface(kind, undefined, isLadder ? triangles(model.indices) : [])
@@ -237,49 +247,53 @@ addLandscape({
   paint: (x, y) => [channel(1, x, y, 2), channel(1, x, y, 1), channel(1, x, y, 0), channel(1, x, y, 3), channel(2, x, y, 2)],
 })
 
-const market = readMap('OverworldSubmaps/Zone01_Market1')
-const marketPlanes = new Map()
 const materialLayers = ['Grass_LayerInfo', 'Sand_LayerInfo', 'Stone_LayerInfo', 'Dirt_LayerInfo', 'Forest_LayerInfo']
 const rgbaToBgra = [2, 1, 0, 3]
-function marketPlane(ref) {
-  const name = market.Exports[ref - 1]?.ObjectName
-  if (!name) throw new Error('Missing Market landscape texture reference')
-  if (!marketPlanes.has(name)) {
-    const data = readFileSync(join(marketTerrainDir, name + '.raw'))
-    if (data.length !== 64 * 64 * 4) throw new Error('Expected 64 by 64 BGRA8 plane: ' + name)
-    marketPlanes.set(name, data)
+function addTiledLandscape(mapName, textureDir) {
+  const map = readMap('OverworldSubmaps/' + mapName)
+  const planes = new Map()
+  function plane(ref) {
+    const name = map.Exports[ref - 1]?.ObjectName
+    if (!name) throw new Error('Missing landscape texture reference: ' + mapName)
+    if (!planes.has(name)) {
+      const data = readFileSync(join(textureDir, name + '.raw'))
+      if (data.length !== 64 * 64 * 4) throw new Error('Expected 64 by 64 BGRA8 plane: ' + name)
+      planes.set(name, data)
+    }
+    return planes.get(name)
   }
-  return marketPlanes.get(name)
+  for (const component of map.Exports.filter((entry) => map.Imports[-entry.ClassIndex - 1]?.ObjectName === 'LandscapeComponent')) {
+    const root = map.Exports[prop(component, 'AttachParent') - 1]
+    const placeRoot = componentTransform(root)
+    const placeLocal = componentTransform(component)
+    if (prop(component, 'ComponentSizeQuads') !== 63 || prop(component, 'NumSubsections') !== 1) {
+      throw new Error('Unsupported landscape component layout: ' + mapName + '/' + component.ObjectName)
+    }
+    const heightmap = plane(prop(component, 'HeightmapTexture'))
+    const weightmaps = prop(component, 'WeightmapTextures').map(({ Value }) => plane(Value))
+    const layers = new Map(prop(component, 'WeightmapLayerAllocations').map(({ Value }) => {
+      const read = (name) => Value.find((field) => field.Name === name)?.Value
+      const layer = map.Imports[-read('LayerInfo') - 1]?.ObjectName
+      return [layer, [weightmaps[read('WeightmapTextureIndex')], rgbaToBgra[read('WeightmapTextureChannel')]]]
+    }))
+    const weight = (layer, x, y) => {
+      const [data, channel] = layers.get(layer) ?? []
+      return data?.[4 * (64 * y + x) + channel] ?? 0
+    }
+    addLandscape({
+      mesh: map.Exports[root.OuterIndex - 1].ObjectName, quads: 63, place: (point) => placeRoot(placeLocal(point)),
+      elevation: (x, y) => {
+        const index = 4 * (64 * y + x)
+        return decodeHeight(heightmap[index + 2], heightmap[index + 1])
+      },
+      hidden: (x, y) => weight('DataLayer', x, y) >= 128,
+      paint: (x, y) => materialLayers.map((layer) => weight(layer, x, y)),
+    })
+  }
 }
-for (const component of market.Exports.filter((entry) => market.Imports[-entry.ClassIndex - 1]?.ObjectName === 'LandscapeComponent')) {
-  const root = market.Exports[prop(component, 'AttachParent') - 1]
-  const placeRoot = componentTransform(root)
-  const placeLocal = componentTransform(component)
-  if (prop(component, 'ComponentSizeQuads') !== 63 || prop(component, 'NumSubsections') !== 1) {
-    throw new Error('Unsupported Market landscape component layout: ' + component.ObjectName)
-  }
-  const heightmap = marketPlane(prop(component, 'HeightmapTexture'))
-  const weightmaps = prop(component, 'WeightmapTextures').map(({ Value }) => marketPlane(Value))
-  const layers = new Map(prop(component, 'WeightmapLayerAllocations').map(({ Value }) => {
-    const read = (name) => Value.find((field) => field.Name === name)?.Value
-    const layer = market.Imports[-read('LayerInfo') - 1]?.ObjectName
-    return [layer, [weightmaps[read('WeightmapTextureIndex')], rgbaToBgra[read('WeightmapTextureChannel')]]]
-  }))
-  if (!layers.has('DataLayer')) throw new Error('Missing Market landscape visibility layer')
-  const weight = (layer, x, y) => {
-    const [plane, channel] = layers.get(layer) ?? []
-    return plane?.[4 * (64 * y + x) + channel] ?? 0
-  }
-  addLandscape({
-    mesh: market.Exports[root.OuterIndex - 1].ObjectName, quads: 63, place: (point) => placeRoot(placeLocal(point)),
-    elevation: (x, y) => {
-      const index = 4 * (64 * y + x)
-      return decodeHeight(heightmap[index + 2], heightmap[index + 1])
-    },
-    hidden: (x, y) => weight('DataLayer', x, y) >= 128,
-    paint: (x, y) => materialLayers.map((layer) => weight(layer, x, y)),
-  })
-}
+addTiledLandscape('Zone01_Market1', marketTerrainDir)
+addTiledLandscape(townMain, townTerrainDir)
+addTiledLandscape(countryside, countrysideTerrainDir)
 if (!surfaces.length) throw new Error('No source geometry found')
 const pointList = (points) => points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')
 // Check contact within the half-width of the plinth base, not just its origin.
