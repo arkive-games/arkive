@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-11-23",
-      "commit": "608360c6508bf3c028b51ba3638aa363ac9692fe",
+      "commit": "85449b4d7b5cd82ceaa9849838b5526cdede73bd",
       "targets": [
         "aion2",
         "gmzz",
@@ -17,9 +17,9 @@
         {
           "kind": "improvement",
           "text": {
-            "en-US": "Image review pairs a large preview with upload details, clearer queue states, and a matching account-menu icon.",
-            "zh-CN": "图片审核采用大图与来源信息并排布局，完善队列状态说明，并为头像菜单补齐审核图标。",
-            "zh-TW": "圖片審核採用大圖與來源資訊並排配置，完善佇列狀態說明，並為頭像選單補齊審核圖示。"
+            "en-US": "Image review uses the encyclopedia directory and compact lists, with a review dialog for full previews and a matching account-menu icon.",
+            "zh-CN": "图片审核采用百科页目录和紧凑列表，通过审核弹窗查看大图，并为头像菜单补齐审核图标。",
+            "zh-TW": "圖片審核採用百科頁目錄和緊湊列表，透過審核彈窗檢視大圖，並為頭像選單補齊審核圖示。"
           }
         }
       ]
