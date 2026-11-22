@@ -16,6 +16,7 @@ describe('Glimmith tutorial scene', () => {
       ['window-polyomino', 39],
       ['window-mingle', 41],
       ['window-forest-trailhead', 49],
+      ['window-match', 28],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
@@ -25,6 +26,7 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.find(({ id }) => id === 'window-polyomino')?.thresholds).toEqual([13, 20, 31])
     expect(scene.windows.find(({ id }) => id === 'window-mingle')?.thresholds).toEqual([12, 20, 31])
     expect(scene.windows.find(({ id }) => id === 'window-forest-trailhead')?.thresholds).toEqual([8, 18, 34])
+    expect(scene.windows.find(({ id }) => id === 'window-match')?.thresholds).toEqual([9, 13, 22])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
@@ -76,6 +78,7 @@ describe('Glimmith tutorial scene', () => {
     for (const { id, supportMeshes } of actors) expect(supportMeshes.length, id).toBeGreaterThan(0)
     expect(actors.find(({ id }) => id === '0054.puz')?.supportMeshes).toContain('Base_Ship_Full_Static_SM')
     expect(actors.find(({ id }) => id === '0230.puz')?.supportMeshes).toContain('Brick_Circle_01_SM')
+    expect(actors.find(({ id }) => id === '0319.puz')?.supportMeshes).toContain('SM_Rock_01_cut')
   })
 
   it('keeps the Forest Trailhead shape pools and wide shape cells', () => {
@@ -87,5 +90,18 @@ describe('Glimmith tutorial scene', () => {
       expect(puzzle.shapeBank.every((clue) => Object.hasOwn(puzzle.shapeClues, clue))).toBe(true)
     }
     expect(scene.puzzles['0253.puz'].wideShapeClues).toEqual({ 58: 'S10', 60: 'S11', 71: 'S12' })
+  })
+
+  it('preserves the Match shape pools and fixed-color clues', () => {
+    const window = scene.windows.find(({ id }) => id === 'window-match')!
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    const boards = window.prerequisites.map((id) => puzzles.get(id)!)
+    const banks = boards.filter((puzzle) => 'shapeBank' in puzzle)
+    expect(banks).toHaveLength(6)
+    expect(scene.puzzles['0353.puz'].shapeBank).toEqual(['S1', 'S2', 'S3'])
+    for (const puzzle of banks) {
+      expect(puzzle.shapeBank.every((clue) => Object.hasOwn(puzzle.shapeClues, clue))).toBe(true)
+    }
+    expect(boards.some((puzzle) => puzzle.board.some((row) => /P[1-4]/.test(row)))).toBe(true)
   })
 })

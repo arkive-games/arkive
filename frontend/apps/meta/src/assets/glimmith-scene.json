@@ -3,12 +3,12 @@
     "centerX": 4300,
     "centerY": -3000,
     "originX": 1536,
-    "originY": 2560,
+    "originY": 3584,
     "degrees": -59,
     "scale": 0.06714754098360656
   },
   "width": 4096,
-  "height": 4096,
+  "height": 5120,
   "tileSize": 1024,
   "sources": [
     "Welcome",
@@ -20,9 +20,10 @@
     "Zone01_Town_Main",
     "Zone1_Town_Main_Underneath",
     "Zone01_Countryside",
-    "Zone02_Forest_Main"
+    "Zone02_Forest_Main",
+    "Zone02_SideIsland"
   ],
-  "surfaceCount": 10878,
+  "surfaceCount": 11574,
   "actors": [
     {
       "id": "Tutorial-1",
@@ -38,7 +39,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 806.9280238502719,
-        "y": 3047.0601590185056
+        "y": 4071.0601590185056
       },
       "supportMeshes": [
         "SM_Flatrock_02",
@@ -59,7 +60,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 957.2340899098631,
-        "y": 2942.235626850179
+        "y": 3966.235626850179
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -79,7 +80,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1023.5071444885823,
-        "y": 2864.6306747394633
+        "y": 3888.6306747394633
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA",
@@ -102,7 +103,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1083.3309109224356,
-        "y": 2802.6697913573353
+        "y": 3826.6697913573353
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA",
@@ -124,7 +125,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1159.9676203302984,
-        "y": 2757.8442979216147
+        "y": 3781.8442979216147
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -144,7 +145,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1233.9018801601298,
-        "y": 2714.682696623727
+        "y": 3738.682696623727
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA",
@@ -164,7 +165,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1287.9062306908274,
-        "y": 2679.800512975521
+        "y": 3703.800512975521
       },
       "supportMeshes": [
         "sm_RuinWall_FullShortA_BrokenA_Top"
@@ -186,7 +187,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1379.878637491155,
-        "y": 2671.9718821398183
+        "y": 3695.9718821398183
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -209,7 +210,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1502.9193957512648,
-        "y": 2672.4717212741534
+        "y": 3696.4717212741534
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA",
@@ -228,7 +229,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1625.325153879967,
-        "y": 2778.7193807363587
+        "y": 3802.7193807363587
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -246,7 +247,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1624.1735184125948,
-        "y": 2581.053962682448
+        "y": 3605.053962682448
       },
       "supportMeshes": [
         "SM_Flatrock_01"
@@ -264,7 +265,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 327.546999147217,
-        "y": 3212.0280064420685
+        "y": 4236.0280064420685
       },
       "supportMeshes": [
         "Base_Ship_Full_Static_SM"
@@ -284,7 +285,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1650.6592494482181,
-        "y": 2532.477485360491
+        "y": 3556.477485360491
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -304,7 +305,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1701.6298986966806,
-        "y": 2488.285724568662
+        "y": 3512.285724568662
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -324,7 +325,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1651.9655076072936,
-        "y": 2464.33276730384
+        "y": 3488.33276730384
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -342,7 +343,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1616.4296451356875,
-        "y": 2377.401105451698
+        "y": 3401.401105451698
       },
       "supportMeshes": [
         "Brick_Pillar_SM"
@@ -368,7 +369,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1701.725697727947,
-        "y": 2418.068886111519
+        "y": 3442.068886111519
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -386,7 +387,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1771.895229600171,
-        "y": 2376.876365044527
+        "y": 3400.876365044527
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -406,7 +407,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1707.0647506653809,
-        "y": 2283.0335040260757
+        "y": 3307.0335040260757
       },
       "supportMeshes": [
         "SM_Flatrock_01",
@@ -425,7 +426,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1719.7272365650329,
-        "y": 2284.8336892420216
+        "y": 3308.8336892420216
       },
       "supportMeshes": [
         "SM_Flatrock_01",
@@ -444,7 +445,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1726.0002245965063,
-        "y": 2355.5912142273746
+        "y": 3379.5912142273746
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -463,7 +464,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1640.5314488182553,
-        "y": 2335.3740054223586
+        "y": 3359.3740054223586
       },
       "supportMeshes": [
         "SM_Flatrock_01",
@@ -482,7 +483,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1620.655130202642,
-        "y": 2310.0193353888612
+        "y": 3334.0193353888612
       },
       "supportMeshes": [
         "Brick_Pillar_SM"
@@ -500,7 +501,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2554.963855883959,
-        "y": 2329.7732404306134
+        "y": 3353.7732404306134
       },
       "supportMeshes": [
         "Rock_Pile_SM",
@@ -519,7 +520,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2199.867296626464,
-        "y": 2009.3108818927406
+        "y": 3033.310881892741
       },
       "supportMeshes": [
         "Wood_Stairs_SM"
@@ -537,7 +538,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2367.068278838645,
-        "y": 2086.654070643871
+        "y": 3110.654070643871
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -555,7 +556,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2520.502588970888,
-        "y": 2228.700316297237
+        "y": 3252.700316297237
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -573,7 +574,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2229.967192314494,
-        "y": 2124.123484570173
+        "y": 3148.123484570173
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -593,7 +594,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2322.925578450717,
-        "y": 1958.6903477157234
+        "y": 2982.690347715724
       },
       "supportMeshes": [
         "Brick_Floor_01_SM"
@@ -611,7 +612,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2417.9236053160093,
-        "y": 2042.044193554645
+        "y": 3066.0441935546446
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -629,7 +630,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2453.1322981674675,
-        "y": 2288.512804299255
+        "y": 3312.512804299255
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -649,7 +650,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2349.690331389723,
-        "y": 2081.2818848719007
+        "y": 3105.2818848719007
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -668,7 +669,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2412.1337999739726,
-        "y": 2111.2907289970126
+        "y": 3135.2907289970126
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -687,7 +688,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2400.33316024133,
-        "y": 2204.935961380129
+        "y": 3228.935961380129
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -705,7 +706,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2398.339035739395,
-        "y": 2308.120285573866
+        "y": 3332.120285573866
       },
       "supportMeshes": [
         "Brick_Floor_01_SM"
@@ -723,7 +724,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2514.5345438779423,
-        "y": 2080.60928815709
+        "y": 3104.60928815709
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -741,7 +742,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2326.4370147944483,
-        "y": 2037.1281204251766
+        "y": 3061.1281204251763
       },
       "supportMeshes": [
         "Building_Prefab_02_Open_SM"
@@ -759,7 +760,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2579.046607189651,
-        "y": 2023.7621937709519
+        "y": 3047.7621937709514
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -778,7 +779,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2270.837068430332,
-        "y": 2007.1873071898067
+        "y": 3031.1873071898067
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -800,7 +801,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1901.62362279213,
-        "y": 2176.145219999633
+        "y": 3200.145219999633
       },
       "supportMeshes": [
         "SM_Bridge",
@@ -821,7 +822,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1897.8695386927902,
-        "y": 2201.824001646013
+        "y": 3225.824001646013
       },
       "supportMeshes": [
         "SM_Bridge",
@@ -843,7 +844,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1973.1680648698775,
-        "y": 2172.2157656744225
+        "y": 3196.2157656744225
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -867,7 +868,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1962.3765162125424,
-        "y": 2242.6491998321917
+        "y": 3266.6491998321917
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -924,7 +925,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2038.2644793121092,
-        "y": 2194.202311773276
+        "y": 3218.202311773276
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -980,7 +981,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2039.7240946720099,
-        "y": 2216.879699077014
+        "y": 3240.879699077014
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -999,7 +1000,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2139.811034083847,
-        "y": 2156.875529434903
+        "y": 3180.875529434903
       },
       "supportMeshes": [
         "Brick_Pillar_SM",
@@ -1018,7 +1019,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2148.4060199884107,
-        "y": 2189.5635538461847
+        "y": 3213.5635538461847
       },
       "supportMeshes": [
         "Brick_Pillar_SM"
@@ -1036,7 +1037,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2272.069754835532,
-        "y": 2183.4931098422244
+        "y": 3207.4931098422244
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1054,7 +1055,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2196.144829234966,
-        "y": 2218.7314460520106
+        "y": 3242.7314460520106
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -1073,7 +1074,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2257.48832566212,
-        "y": 2064.0216364118255
+        "y": 3088.0216364118255
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1091,7 +1092,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2226.020422894986,
-        "y": 1995.7594443818846
+        "y": 3019.759444381885
       },
       "supportMeshes": [
         "Brick_Floor_01_SM"
@@ -1109,7 +1110,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2071.958972917444,
-        "y": 2013.0492904274165
+        "y": 3037.049290427417
       },
       "supportMeshes": [
         "SM_Rock_02"
@@ -1127,7 +1128,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2453.1694088702284,
-        "y": 2148.2271257477505
+        "y": 3172.227125747751
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1145,7 +1146,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2536.75677426547,
-        "y": 2326.8413997393313
+        "y": 3350.8413997393313
       },
       "supportMeshes": [
         "Rock_Pile_SM"
@@ -1163,7 +1164,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2179.6486452171766,
-        "y": 2220.991962076382
+        "y": 3244.991962076382
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -1182,7 +1183,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2285.0509626863122,
-        "y": 2187.6896774910624
+        "y": 3211.6896774910624
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1200,7 +1201,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2372.0008461513316,
-        "y": 2201.958034946974
+        "y": 3225.958034946974
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1218,7 +1219,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2622.2635403474437,
-        "y": 1861.945328343912
+        "y": 2885.945328343912
       },
       "supportMeshes": [
         "Rock_Pile_SM",
@@ -1237,7 +1238,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2231.6650615000876,
-        "y": 2166.2588117394
+        "y": 3190.2588117394
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1255,7 +1256,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2314.8329466763666,
-        "y": 2124.879210175184
+        "y": 3148.879210175184
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1273,7 +1274,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2366.6881471343695,
-        "y": 2300.2405724736072
+        "y": 3324.2405724736072
       },
       "supportMeshes": [
         "Wood_Stairs_SM"
@@ -1291,7 +1292,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2345.111959980918,
-        "y": 2192.162315191202
+        "y": 3216.162315191202
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8"
@@ -1309,7 +1310,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2250.1019290907284,
-        "y": 2099.135832786485
+        "y": 3123.135832786485
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -1328,7 +1329,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2351.7063429619675,
-        "y": 2108.9573300669754
+        "y": 3132.957330066976
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_8",
@@ -1348,7 +1349,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1513.4371337946804,
-        "y": 1719.790917154256
+        "y": 2743.790917154256
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -1366,7 +1367,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1617.242411233723,
-        "y": 1873.8289047061162
+        "y": 2897.828904706116
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -1384,7 +1385,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1560.905661893139,
-        "y": 1934.3314722598232
+        "y": 2958.331472259823
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA",
@@ -1403,7 +1404,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1491.344255310479,
-        "y": 1925.0099920659436
+        "y": 2949.0099920659436
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -1421,7 +1422,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1605.2300098278338,
-        "y": 1793.0587150944714
+        "y": 2817.0587150944716
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA",
@@ -1441,7 +1442,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1730.7740268332027,
-        "y": 1802.7105386260832
+        "y": 2826.7105386260832
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA",
@@ -1461,7 +1462,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1685.0069118028912,
-        "y": 1725.629918433096
+        "y": 2749.629918433096
       },
       "supportMeshes": [
         "SM_Rock_01",
@@ -1480,7 +1481,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1372.8576036395975,
-        "y": 1798.2459718382936
+        "y": 2822.245971838294
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -1500,7 +1501,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1405.7072490470232,
-        "y": 1759.5410137004164
+        "y": 2783.5410137004164
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -1518,7 +1519,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1564.2681664948118,
-        "y": 1806.5340299510383
+        "y": 2830.534029951038
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -1536,7 +1537,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1286.2985401283527,
-        "y": 1784.99555971347
+        "y": 2808.99555971347
       },
       "supportMeshes": [
         "sm_RuinTowerA_Mid",
@@ -1555,7 +1556,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1689.5182213739517,
-        "y": 1915.854911388645
+        "y": 2939.854911388645
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA",
@@ -1574,7 +1575,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1353.541728906169,
-        "y": 1925.5577470448936
+        "y": 2949.557747044894
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenC",
@@ -1593,7 +1594,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1521.720296628599,
-        "y": 1660.7119669388637
+        "y": 2684.7119669388635
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -1612,7 +1613,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1380.1311686065128,
-        "y": 1864.9769801971945
+        "y": 2888.9769801971947
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -1632,7 +1633,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1801.041076473502,
-        "y": 2144.492212505662
+        "y": 3168.492212505662
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenA",
@@ -1653,7 +1654,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1767.9530717215841,
-        "y": 2099.3717953213045
+        "y": 3123.3717953213045
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenA",
@@ -1674,7 +1675,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1764.039212156232,
-        "y": 2059.1261563612748
+        "y": 3083.1261563612748
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenA",
@@ -1695,7 +1696,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1724.4938528405637,
-        "y": 2029.5792662642014
+        "y": 3053.5792662642016
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenA",
@@ -1751,7 +1752,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1695.6548908353145,
-        "y": 1988.7556085855526
+        "y": 3012.7556085855526
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -1771,7 +1772,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1411.8624277028584,
-        "y": 1868.7063285394552
+        "y": 2892.706328539455
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -1790,7 +1791,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1497.1802004841425,
-        "y": 1991.3703329804894
+        "y": 3015.3703329804894
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -1809,7 +1810,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1613.9205241906977,
-        "y": 1992.306535373356
+        "y": 3016.306535373356
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -1828,7 +1829,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1533.6836519014591,
-        "y": 1839.8307500180904
+        "y": 2863.830750018091
       },
       "supportMeshes": [
         "Cube"
@@ -1846,7 +1847,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1465.611256889885,
-        "y": 1811.1888216086704
+        "y": 2835.1888216086704
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -1864,7 +1865,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1728.2946081704872,
-        "y": 1935.7344257985603
+        "y": 2959.7344257985606
       },
       "supportMeshes": [
         "sm_RuinPillar_LargeShortA_Base"
@@ -1882,7 +1883,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1453.4031493335065,
-        "y": 1914.1426878870916
+        "y": 2938.1426878870916
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -1901,7 +1902,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1699.1966042819924,
-        "y": 1834.45363751447
+        "y": 2858.45363751447
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA"
@@ -1919,7 +1920,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1714.6541716152726,
-        "y": 1819.5351002578727
+        "y": 2843.5351002578727
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenC"
@@ -1937,7 +1938,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1356.9431747000108,
-        "y": 1753.1133866861167
+        "y": 2777.1133866861164
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA"
@@ -1955,7 +1956,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1720.1787169640486,
-        "y": 1727.4306639019505
+        "y": 2751.4306639019505
       },
       "supportMeshes": [
         "SM_Flatrock_01",
@@ -1975,7 +1976,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1598.8123144383321,
-        "y": 1775.8015907121564
+        "y": 2799.8015907121567
       },
       "supportMeshes": [
         "sm_RuinFloor_BrokenA",
@@ -1995,7 +1996,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1590.6400053737784,
-        "y": 1760.7312486494607
+        "y": 2784.7312486494607
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -2013,7 +2014,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1503.3313430368007,
-        "y": 1764.700204168995
+        "y": 2788.700204168995
       },
       "supportMeshes": [
         "Cube"
@@ -2031,7 +2032,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1423.8338643812338,
-        "y": 1809.3574784353332
+        "y": 2833.357478435333
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -2049,7 +2050,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1641.3206441081386,
-        "y": 2004.8474887784994
+        "y": 3028.8474887784996
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -2068,7 +2069,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1621.2265941600629,
-        "y": 1773.131772294748
+        "y": 2797.131772294748
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenA"
@@ -2086,7 +2087,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1449.2922859780876,
-        "y": 1961.4399887030124
+        "y": 2985.4399887030127
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -2105,7 +2106,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1478.425913780891,
-        "y": 1870.2091725516689
+        "y": 2894.209172551669
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -2124,7 +2125,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1501.7916975830367,
-        "y": 1676.9940912146803
+        "y": 2700.99409121468
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -2143,7 +2144,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1682.1937725769344,
-        "y": 1783.6634024873617
+        "y": 2807.663402487362
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA_BrokenA"
@@ -2161,7 +2162,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2275.9112209904997,
-        "y": 1845.384364064819
+        "y": 2869.3843640648192
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -2180,7 +2181,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2156.369664855548,
-        "y": 1639.1919015137105
+        "y": 2663.1919015137105
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -2198,7 +2199,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2135.802890728182,
-        "y": 1626.527905175941
+        "y": 2650.527905175941
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -2217,7 +2218,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2188.140446221045,
-        "y": 1821.0144491926558
+        "y": 2845.014449192656
       },
       "supportMeshes": [
         "Wood_Planks_Prefab_02_SM"
@@ -2235,7 +2236,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2278.3314147697743,
-        "y": 1758.7170434145046
+        "y": 2782.7170434145046
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2254,7 +2255,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2335.2869247414083,
-        "y": 1594.7008885085272
+        "y": 2618.7008885085274
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2273,7 +2274,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2355.180857934109,
-        "y": 1607.6201889733793
+        "y": 2631.6201889733793
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9"
@@ -2291,7 +2292,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1907.23611574467,
-        "y": 1567.9066788504317
+        "y": 2591.906678850432
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2310,7 +2311,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1674.827869986402,
-        "y": 1274.2367317931412
+        "y": 2298.236731793141
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2330,7 +2331,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1942.6598542471788,
-        "y": 1684.9899878360977
+        "y": 2708.989987836098
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9"
@@ -2348,7 +2349,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2017.2450751628478,
-        "y": 1854.333977180527
+        "y": 2878.3339771805267
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -2366,7 +2367,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1840.0180198701419,
-        "y": 1291.4053721577925
+        "y": 2315.405372157792
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9"
@@ -2384,7 +2385,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1741.7579255229475,
-        "y": 1226.1861840704275
+        "y": 2250.1861840704278
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -2402,7 +2403,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1812.8344598563115,
-        "y": 1249.0445181205623
+        "y": 2273.0445181205623
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2421,7 +2422,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1686.0804324244182,
-        "y": 1318.426842331639
+        "y": 2342.426842331639
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2442,7 +2443,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2095.276862825624,
-        "y": 1284.6556789999177
+        "y": 2308.655678999918
       },
       "supportMeshes": [
         "SM_House_Passage",
@@ -2463,7 +2464,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1789.2905568677377,
-        "y": 1267.3098202915387
+        "y": 2291.3098202915385
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2483,7 +2484,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1759.2082037245357,
-        "y": 1155.4898262028341
+        "y": 2179.489826202834
       },
       "supportMeshes": [
         "Bridge_SM"
@@ -2501,7 +2502,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2370.0636379922985,
-        "y": 1845.560484696711
+        "y": 2869.560484696711
       },
       "supportMeshes": [
         "SM_House_Passage"
@@ -2519,7 +2520,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1946.4747329948993,
-        "y": 1148.982095655586
+        "y": 2172.982095655586
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2538,7 +2539,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1917.189813561915,
-        "y": 1143.2276140711242
+        "y": 2167.227614071124
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2557,7 +2558,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1830.777392643825,
-        "y": 1448.2549911021133
+        "y": 2472.2549911021133
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9"
@@ -2575,7 +2576,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2009.911954073125,
-        "y": 1228.8635046951872
+        "y": 2252.863504695187
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9"
@@ -2593,7 +2594,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1994.748578217873,
-        "y": 1195.0930122982477
+        "y": 2219.0930122982472
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2615,7 +2616,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2225.3460646068447,
-        "y": 1496.9308234821228
+        "y": 2520.930823482123
       },
       "supportMeshes": [
         "sm_RuinSetPiece_CircularA"
@@ -2633,7 +2634,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2373.612468314082,
-        "y": 1756.3843808589954
+        "y": 2780.3843808589954
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2655,7 +2656,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1991.901536310674,
-        "y": 1393.2983188944238
+        "y": 2417.298318894424
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2674,7 +2675,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1771.770618329374,
-        "y": 1261.5399659174186
+        "y": 2285.5399659174186
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2693,7 +2694,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1812.4108847055063,
-        "y": 1230.0113418278127
+        "y": 2254.011341827813
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_9",
@@ -2712,7 +2713,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2257.338825183434,
-        "y": 1681.7207891261573
+        "y": 2705.7207891261573
       },
       "supportMeshes": [
         "Building_Prefab_02_Open_SM",
@@ -2732,7 +2733,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2004.0925333500318,
-        "y": 1540.399401004263
+        "y": 2564.399401004263
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -2751,7 +2752,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2032.8603142626157,
-        "y": 1563.5450758324496
+        "y": 2587.5450758324496
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -2772,7 +2773,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2361.2925771126743,
-        "y": 1358.6605044432504
+        "y": 2382.66050444325
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -2792,7 +2793,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2402.9091212912117,
-        "y": 1381.3046749419882
+        "y": 2405.304674941988
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -2813,7 +2814,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2444.9000968365326,
-        "y": 1407.038925126014
+        "y": 2431.038925126014
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -2871,7 +2872,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2465.849103117908,
-        "y": 1370.2027182658699
+        "y": 2394.2027182658694
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -2890,7 +2891,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2582.4725345397906,
-        "y": 1271.9416618148991
+        "y": 2295.941661814899
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -2908,7 +2909,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2569.1393014309033,
-        "y": 1197.6959173727769
+        "y": 2221.695917372777
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -2927,7 +2928,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2617.3885349255884,
-        "y": 1004.2483196049049
+        "y": 2028.2483196049047
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -2945,7 +2946,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2529.1426941339637,
-        "y": 1264.2614502607046
+        "y": 2288.2614502607044
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -2964,7 +2965,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2766.5482579363447,
-        "y": 1049.8190690183646
+        "y": 2073.8190690183646
       },
       "supportMeshes": [
         "Building_Prefab_02_Open_SM"
@@ -2982,7 +2983,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2591.8962841005455,
-        "y": 1159.8219380354853
+        "y": 2183.8219380354853
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3002,7 +3003,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2614.791263201275,
-        "y": 1121.7182940692974
+        "y": 2145.7182940692974
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3022,7 +3023,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2698.115648247526,
-        "y": 1118.5653445854864
+        "y": 2142.5653445854864
       },
       "supportMeshes": [
         "SM_Bridge",
@@ -3041,7 +3042,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2746.922096174173,
-        "y": 924.2355842665991
+        "y": 1948.235584266599
       },
       "supportMeshes": [
         "SM_WoodenPlank_01",
@@ -3061,7 +3062,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2522.9938898871874,
-        "y": 1082.231546309391
+        "y": 2106.2315463093905
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -3079,7 +3080,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2560.8060075272956,
-        "y": 1042.096364302534
+        "y": 2066.096364302534
       },
       "supportMeshes": [
         "SM_Bridge"
@@ -3097,7 +3098,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2676.7071721206494,
-        "y": 1212.370836151558
+        "y": 2236.370836151558
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3117,7 +3118,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2723.0965972448817,
-        "y": 1064.5394801558252
+        "y": 2088.5394801558255
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -3135,7 +3136,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2799.8537878341835,
-        "y": 1160.2689302852575
+        "y": 2184.2689302852573
       },
       "supportMeshes": [
         "Wood_Planks_Prefab_02_SM"
@@ -3153,7 +3154,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2654.1686817482714,
-        "y": 1297.600653819607
+        "y": 2321.600653819607
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3172,7 +3173,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2547.4285383995934,
-        "y": 1233.8286948319605
+        "y": 2257.8286948319605
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3192,7 +3193,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2760.418444783763,
-        "y": 1243.194898087822
+        "y": 2267.194898087822
       },
       "supportMeshes": [
         "SM_Flatrock_01"
@@ -3210,7 +3211,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2974.0584147558247,
-        "y": 976.6113609059421
+        "y": 2000.611360905942
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -3230,7 +3231,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2881.9685237704407,
-        "y": 933.2624422628851
+        "y": 1957.262442262885
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -3248,7 +3249,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2677.9701858327508,
-        "y": 989.2885081839773
+        "y": 2013.2885081839772
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3267,7 +3268,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2950.577977981624,
-        "y": 940.4040240671269
+        "y": 1964.404024067127
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -3287,7 +3288,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2606.1781370015224,
-        "y": 916.1224261382162
+        "y": 1940.1224261382163
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -3305,7 +3306,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2483.246453441363,
-        "y": 1208.27756320125
+        "y": 2232.27756320125
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -3323,7 +3324,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2493.4682312233367,
-        "y": 1321.0896527198024
+        "y": 2345.0896527198024
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -3341,7 +3342,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2576.733960742899,
-        "y": 1371.3999775125333
+        "y": 2395.3999775125335
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -3359,7 +3360,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2636.8091889517405,
-        "y": 1086.2162298030032
+        "y": 2110.2162298030034
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3379,7 +3380,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2624.9117265344603,
-        "y": 1079.8363437040018
+        "y": 2103.8363437040016
       },
       "supportMeshes": [
         "SM_Bridge",
@@ -3398,7 +3399,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2829.6687429290396,
-        "y": 1114.341252134474
+        "y": 2138.341252134474
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -3417,7 +3418,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2897.8145538429603,
-        "y": 1125.3866870445445
+        "y": 2149.3866870445445
       },
       "supportMeshes": [
         "SM_RockBrick_Medium_01",
@@ -3437,7 +3438,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2714.0221352053727,
-        "y": 956.2144078192355
+        "y": 1980.2144078192355
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3457,7 +3458,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2709.4275079632603,
-        "y": 937.786364479867
+        "y": 1961.786364479867
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3477,7 +3478,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2732.4501785447414,
-        "y": 951.6197805771233
+        "y": 1975.6197805771233
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3498,7 +3499,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2727.855551302629,
-        "y": 933.1917372377548
+        "y": 1957.1917372377548
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3517,7 +3518,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2704.6555234690663,
-        "y": 882.0593284478974
+        "y": 1906.0593284478973
       },
       "supportMeshes": [
         "sm_RuinWoodenPlatform_LargeShortA_Base"
@@ -3535,7 +3536,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2801.0981753084393,
-        "y": 926.0981308126264
+        "y": 1950.0981308126266
       },
       "supportMeshes": [
         "SM_RockBrick_Medium_01",
@@ -3556,7 +3557,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2937.7870114316656,
-        "y": 941.298431745209
+        "y": 1965.298431745209
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -3577,7 +3578,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2481.609719408633,
-        "y": 1429.6524506720855
+        "y": 2453.6524506720857
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3596,7 +3597,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2580.932909795754,
-        "y": 1123.4419507228754
+        "y": 2147.441950722876
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3616,7 +3617,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2679.536081644079,
-        "y": 1312.624898854806
+        "y": 2336.624898854806
       },
       "supportMeshes": [
         "Wood_Stairs_SM"
@@ -3634,7 +3635,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2630.135305321896,
-        "y": 1156.5651501763937
+        "y": 2180.5651501763937
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3656,7 +3657,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2350.9461279189827,
-        "y": 1286.4006522099073
+        "y": 2310.400652209907
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -3676,7 +3677,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2392.5909246016117,
-        "y": 1217.0920715443492
+        "y": 2241.092071544349
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -3696,7 +3697,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2438.5380622916364,
-        "y": 1140.6231930141064
+        "y": 2164.6231930141066
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3718,7 +3719,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2389.644377450363,
-        "y": 1115.523732072073
+        "y": 2139.523732072073
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3774,7 +3775,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2331.1200715295518,
-        "y": 1080.358781388336
+        "y": 2104.358781388336
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3794,7 +3795,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2442.9834258459837,
-        "y": 1034.8863776110898
+        "y": 2058.8863776110898
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -3812,7 +3813,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2415.196437596418,
-        "y": 929.1254225779421
+        "y": 1953.1254225779421
       },
       "supportMeshes": [
         "SM_Bridge"
@@ -3830,7 +3831,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2296.7404437469713,
-        "y": 976.2211090808614
+        "y": 2000.2211090808614
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3849,7 +3850,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2310.7497200304515,
-        "y": 855.6226948666792
+        "y": 1879.6226948666792
       },
       "supportMeshes": [
         "Wood_Planks_Prefab_02_SM"
@@ -3867,7 +3868,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2340.729197466118,
-        "y": 862.166607680882
+        "y": 1886.166607680882
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -3885,7 +3886,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2247.405216639707,
-        "y": 849.8548077888513
+        "y": 1873.8548077888513
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -3903,7 +3904,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2561.7000647062637,
-        "y": 927.1907181158657
+        "y": 1951.1907181158656
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3922,7 +3923,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2381.181822596532,
-        "y": 785.114510498053
+        "y": 1809.114510498053
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -3940,7 +3941,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2318.3913466395925,
-        "y": 825.7507492994248
+        "y": 1849.7507492994248
       },
       "supportMeshes": [
         "Building_Prefab_02_Open_SM",
@@ -3959,7 +3960,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2291.783990946895,
-        "y": 801.6331115666177
+        "y": 1825.6331115666178
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -3978,7 +3979,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2557.48599724295,
-        "y": 872.2219605014599
+        "y": 1896.2219605014598
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -3996,7 +3997,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2452.0256007972234,
-        "y": 923.7467013800685
+        "y": 1947.7467013800685
       },
       "supportMeshes": [
         "SM_Bridge"
@@ -4014,7 +4015,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2496.9517957512353,
-        "y": 908.4479062720857
+        "y": 1932.4479062720857
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA"
@@ -4032,7 +4033,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2604.581837746289,
-        "y": 898.5776473992444
+        "y": 1922.5776473992444
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -4050,7 +4051,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2226.5438703110913,
-        "y": 915.6365670281847
+        "y": 1939.6365670281848
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4068,7 +4069,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2470.55516701237,
-        "y": 861.9580741248409
+        "y": 1885.958074124841
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4087,7 +4088,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2463.353910611838,
-        "y": 997.1841922238921
+        "y": 2021.184192223892
       },
       "supportMeshes": [
         "Brick_Wall_01_SM",
@@ -4107,7 +4108,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2471.430838076787,
-        "y": 855.7504989144949
+        "y": 1879.750498914495
       },
       "supportMeshes": [
         "sm_RuinWoodenPlatform_LargeShortA_Base"
@@ -4125,7 +4126,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2408.702317814987,
-        "y": 946.5676273781804
+        "y": 1970.5676273781803
       },
       "supportMeshes": [
         "Brick_Wall_02_SM"
@@ -4143,7 +4144,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2319.8770487632232,
-        "y": 706.1122416353769
+        "y": 1730.112241635377
       },
       "supportMeshes": [
         "Brick_Floor_02_SM",
@@ -4162,7 +4163,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2362.5210343562408,
-        "y": 1027.5069641270866
+        "y": 2051.506964127086
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4181,7 +4182,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2303.6243812790162,
-        "y": 727.9667793858891
+        "y": 1751.9667793858891
       },
       "supportMeshes": [
         "Wood_Planks_Prefab_02_SM"
@@ -4199,7 +4200,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2353.462743421305,
-        "y": 890.5654083242117
+        "y": 1914.5654083242118
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -4218,7 +4219,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2393.8842933343326,
-        "y": 749.4590883507608
+        "y": 1773.4590883507608
       },
       "supportMeshes": [
         "sm_RuinWoodenPlatform_LargeShortA_Base"
@@ -4236,7 +4237,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2496.2990871280444,
-        "y": 772.4687444342875
+        "y": 1796.4687444342876
       },
       "supportMeshes": [
         "sm_RuinWoodenPlatform_LargeShortA_Base"
@@ -4254,7 +4255,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2522.0860258913317,
-        "y": 795.344485552292
+        "y": 1819.3444855522919
       },
       "supportMeshes": [
         "sm_RuinWoodenPlatform_LargeShortA_Base"
@@ -4272,7 +4273,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2377.2890866061985,
-        "y": 803.6387489109322
+        "y": 1827.6387489109322
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4294,7 +4295,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2404.6561103383474,
-        "y": 949.7628831473075
+        "y": 1973.7628831473075
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA",
@@ -4313,7 +4314,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2488.0186462068996,
-        "y": 918.066021371306
+        "y": 1942.0660213713059
       },
       "supportMeshes": [
         "SM_Bridge"
@@ -4331,7 +4332,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2411.782305862063,
-        "y": 863.6496937539193
+        "y": 1887.6496937539193
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -4349,7 +4350,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2563.9097348264963,
-        "y": 905.1409246051751
+        "y": 1929.140924605175
       },
       "supportMeshes": [
         "Awning_Wood_SM",
@@ -4369,7 +4370,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2448.1443987530297,
-        "y": 847.5810514764618
+        "y": 1871.5810514764619
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4389,7 +4390,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2456.9851586438654,
-        "y": 858.6894096578131
+        "y": 1882.6894096578133
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4408,7 +4409,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2222.838076961082,
-        "y": 940.7944978512595
+        "y": 1964.7944978512592
       },
       "supportMeshes": [
         "Building_Prefab_02_Open_SM",
@@ -4427,7 +4428,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1969.1125929748966,
-        "y": 854.795650809866
+        "y": 1878.795650809866
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4446,7 +4447,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2055.63873377044,
-        "y": 794.894871959752
+        "y": 1818.894871959752
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4464,7 +4465,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1992.9808516479789,
-        "y": 659.6948579637187
+        "y": 1683.6948579637187
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4482,7 +4483,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1873.172640681399,
-        "y": 637.1713131941792
+        "y": 1661.1713131941792
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4500,7 +4501,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2086.245860965802,
-        "y": 941.0049946548176
+        "y": 1965.0049946548177
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -4518,7 +4519,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1880.0027264666162,
-        "y": 434.4772712728521
+        "y": 1458.477271272852
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -4536,7 +4537,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2026.568101183611,
-        "y": 495.8639840252408
+        "y": 1519.8639840252408
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4554,7 +4555,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2146.4867840306974,
-        "y": 737.3438615274293
+        "y": 1761.3438615274295
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4572,7 +4573,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1936.092066348628,
-        "y": 744.0069311135057
+        "y": 1768.006931113506
       },
       "supportMeshes": [
         "Wood_Planks_Prefab_01_SM"
@@ -4590,7 +4591,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2121.484012954135,
-        "y": 548.4500765319256
+        "y": 1572.4500765319256
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4609,7 +4610,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1719.3052304976698,
-        "y": 503.6962495926969
+        "y": 1527.6962495926969
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4628,7 +4629,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1977.3468478621478,
-        "y": 737.0712913278794
+        "y": 1761.0712913278796
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4646,7 +4647,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1878.4618109544815,
-        "y": 713.8641014643117
+        "y": 1737.864101464312
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4667,7 +4668,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1910.1303982952613,
-        "y": 801.8283786454958
+        "y": 1825.8283786454956
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4687,7 +4688,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1916.1637951443354,
-        "y": 569.0480886070634
+        "y": 1593.0480886070634
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4705,7 +4706,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2070.547985530151,
-        "y": 566.2878322485644
+        "y": 1590.2878322485644
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4725,7 +4726,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2219.0149733367543,
-        "y": 652.2706882334403
+        "y": 1676.2706882334403
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4747,7 +4748,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2271.329493343682,
-        "y": 1043.416438250693
+        "y": 2067.416438250693
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4767,7 +4768,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2211.0555037732643,
-        "y": 1003.1118291390048
+        "y": 2027.1118291390048
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4787,7 +4788,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2176.082715368536,
-        "y": 955.027113997282
+        "y": 1979.0271139972817
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4843,7 +4844,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2138.2073275730013,
-        "y": 905.6429623891131
+        "y": 1929.6429623891129
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4861,7 +4862,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2084.4331409051374,
-        "y": 880.331971683449
+        "y": 1904.3319716834487
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4880,7 +4881,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 1997.9605991179217,
-        "y": 986.3244075944538
+        "y": 2010.3244075944538
       },
       "supportMeshes": [
         "SM_Rock_01_cut"
@@ -4898,7 +4899,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1867.4028471351862,
-        "y": 821.2463363646259
+        "y": 1845.2463363646257
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -4918,7 +4919,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2040.2699241571045,
-        "y": 477.61513324816957
+        "y": 1501.6151332481695
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4936,7 +4937,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2120.4892797937623,
-        "y": 715.6375192363754
+        "y": 1739.6375192363753
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4954,7 +4955,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1838.8134359452445,
-        "y": 528.4347651008225
+        "y": 1552.4347651008225
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4972,7 +4973,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2031.2317460918118,
-        "y": 619.4457129408186
+        "y": 1643.4457129408186
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -4990,7 +4991,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1849.249420895224,
-        "y": 765.0400803856795
+        "y": 1789.0400803856796
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -5009,7 +5010,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2028.4891485678422,
-        "y": 1010.2424058398697
+        "y": 2034.24240583987
       },
       "supportMeshes": [
         "SM_Rock_01_cut",
@@ -5028,7 +5029,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1964.5832172589166,
-        "y": 829.5089128930381
+        "y": 1853.5089128930379
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -5046,7 +5047,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1856.9624219446648,
-        "y": 613.7229444596946
+        "y": 1637.7229444596946
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -5064,7 +5065,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 1974.6791407507721,
-        "y": 603.4489229295402
+        "y": 1627.4489229295402
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -5082,7 +5083,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2076.3213204850804,
-        "y": 958.2536791934084
+        "y": 1982.2536791934083
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -5100,7 +5101,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2032.4081397412915,
-        "y": 725.7623367172476
+        "y": 1749.7623367172478
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -5119,7 +5120,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2114.6525871660156,
-        "y": 641.2253331286192
+        "y": 1665.2253331286192
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -5137,7 +5138,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2267.934483481195,
-        "y": 802.1485786039048
+        "y": 1826.1485786039048
       },
       "supportMeshes": [
         "Brick_Floor_01_SM",
@@ -5157,7 +5158,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2141.847139132053,
-        "y": 633.3378970714512
+        "y": 1657.3378970714512
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4"
@@ -5175,7 +5176,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2244.3848364178752,
-        "y": 656.1342179562362
+        "y": 1680.1342179562362
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -5196,7 +5197,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2034.7404379493269,
-        "y": 962.2791381803468
+        "y": 1986.279138180347
       },
       "supportMeshes": [
         "Awning_Wood_SM"
@@ -5214,7 +5215,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1958.7275705076836,
-        "y": 516.0966998020946
+        "y": 1540.0966998020945
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_4",
@@ -5235,7 +5236,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2826.246104161238,
-        "y": 756.6273903288499
+        "y": 1780.6273903288497
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5253,7 +5254,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2937.521284820615,
-        "y": 533.1493964558027
+        "y": 1557.1493964558028
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5271,7 +5272,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2842.225183108885,
-        "y": 743.095894091883
+        "y": 1767.0958940918829
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5289,7 +5290,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2943.2257860811783,
-        "y": 609.7699794441951
+        "y": 1633.769979444195
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5310,7 +5311,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 3068.815278002806,
-        "y": 645.6349212927321
+        "y": 1669.634921292732
       },
       "supportMeshes": [
         "SM_Flatrock_01"
@@ -5328,7 +5329,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 3052.3336052903865,
-        "y": 551.2563061853547
+        "y": 1575.2563061853548
       },
       "supportMeshes": [
         "SM_RockBrick_Medium_01"
@@ -5346,7 +5347,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2933.457035999189,
-        "y": 667.2513462119718
+        "y": 1691.2513462119718
       },
       "supportMeshes": [
         "Awning_Wood_SM",
@@ -5365,7 +5366,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2798.8205127852007,
-        "y": 656.5619418770674
+        "y": 1680.5619418770673
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5383,7 +5384,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 3117.810531857491,
-        "y": 477.2788531579971
+        "y": 1501.2788531579972
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5402,7 +5403,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2980.544078760809,
-        "y": 680.1590701352743
+        "y": 1704.1590701352743
       },
       "supportMeshes": [
         "SM_Flatrock_01",
@@ -5424,7 +5425,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2814.9758050899122,
-        "y": 518.2510124051036
+        "y": 1542.2510124051037
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5443,7 +5444,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2529.3770135978452,
-        "y": 735.2112145778977
+        "y": 1759.2112145778976
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5463,7 +5464,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2607.4621025452316,
-        "y": 714.9101186269662
+        "y": 1738.9101186269663
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5481,7 +5482,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2504.571288412653,
-        "y": 685.8355890728341
+        "y": 1709.8355890728342
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5499,7 +5500,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2333.6414269221605,
-        "y": 565.9566520726431
+        "y": 1589.956652072643
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5517,7 +5518,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2164.212073885477,
-        "y": 324.56114136710625
+        "y": 1348.5611413671063
       },
       "supportMeshes": [
         "SM_Rock_01"
@@ -5535,7 +5536,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2835.7143152004755,
-        "y": 694.9598726544473
+        "y": 1718.9598726544473
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5553,7 +5554,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2391.1465534911667,
-        "y": 632.9680956532611
+        "y": 1656.9680956532611
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5571,7 +5572,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2575.5835224499633,
-        "y": 567.0367797629774
+        "y": 1591.0367797629774
       },
       "supportMeshes": [
         "SM_House_Passage"
@@ -5589,7 +5590,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2456.405017017066,
-        "y": 552.9013609030137
+        "y": 1576.9013609030137
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5607,7 +5608,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2696.055401255318,
-        "y": 529.2375493382835
+        "y": 1553.2375493382835
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5627,7 +5628,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2318.1842850429434,
-        "y": 442.8962213184381
+        "y": 1466.8962213184382
       },
       "supportMeshes": [
         "Wood_Planks_Prefab_02_SM"
@@ -5645,7 +5646,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2460.5948646201978,
-        "y": 332.32383852990176
+        "y": 1356.3238385299019
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -5664,7 +5665,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2400.463867389937,
-        "y": 369.0035013846201
+        "y": 1393.0035013846202
       },
       "supportMeshes": [
         "Wood_Planks_Prefab_02_SM"
@@ -5682,7 +5683,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2303.6955777653357,
-        "y": 368.27398123937473
+        "y": 1392.2739812393747
       },
       "supportMeshes": [
         "Wood_Stairs_SM"
@@ -5700,7 +5701,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2633.0922029239614,
-        "y": 441.066244680542
+        "y": 1465.066244680542
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5720,7 +5721,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2546.041809680745,
-        "y": 485.3592548058673
+        "y": 1509.3592548058673
       },
       "supportMeshes": [
         "SM_House_Passage",
@@ -5741,7 +5742,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2674.68453546998,
-        "y": 691.7749150343418
+        "y": 1715.7749150343418
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5759,7 +5760,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2499.982075910477,
-        "y": 419.88867761817426
+        "y": 1443.8886776181744
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5777,7 +5778,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2414.3594896458744,
-        "y": 377.8035748194495
+        "y": 1401.8035748194495
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5797,7 +5798,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 3061.9811709888863,
-        "y": 599.5712365205409
+        "y": 1623.5712365205409
       },
       "supportMeshes": [
         "Awning_Wood_SM",
@@ -5816,7 +5817,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2834.0469047193187,
-        "y": 229.84169673576145
+        "y": 1253.8416967357614
       },
       "supportMeshes": [
         "Brick_Circle_01_SM",
@@ -5835,7 +5836,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2646.935999824123,
-        "y": 799.2208431145847
+        "y": 1823.2208431145846
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5856,7 +5857,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2408.026222673486,
-        "y": 457.34704403605474
+        "y": 1481.3470440360547
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5875,7 +5876,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2479.4629049253117,
-        "y": 621.3969150008616
+        "y": 1645.3969150008616
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5893,7 +5894,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2719.979622488727,
-        "y": 741.8438055500443
+        "y": 1765.8438055500444
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -5911,7 +5912,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2991.374379208402,
-        "y": 584.0872888194236
+        "y": 1608.0872888194235
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5932,7 +5933,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2428.7192946059927,
-        "y": 344.68209961002356
+        "y": 1368.6820996100234
       },
       "supportMeshes": [
         "Building_Prefab_02_Open_SM"
@@ -5950,7 +5951,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 3126.457415425404,
-        "y": 494.6805468287208
+        "y": 1518.6805468287207
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -5969,7 +5970,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2622.3820427735327,
-        "y": 288.4269038726328
+        "y": 1312.426903872633
       },
       "supportMeshes": [
         "SM_Flatrock_01"
@@ -5987,7 +5988,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2616.8607733057506,
-        "y": 624.0672652396311
+        "y": 1648.067265239631
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -6006,7 +6007,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2392.9519643705335,
-        "y": 544.2669536889292
+        "y": 1568.2669536889293
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -6024,7 +6025,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2842.7796483135103,
-        "y": 717.8394632087613
+        "y": 1741.8394632087613
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -6042,7 +6043,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2500.350962885571,
-        "y": 605.6844450031795
+        "y": 1629.6844450031795
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -6060,7 +6061,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2498.0838143356955,
-        "y": 631.8654629734447
+        "y": 1655.8654629734447
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03"
@@ -6078,7 +6079,7 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 3021.1431613078234,
-        "y": 479.4351366456144
+        "y": 1503.4351366456144
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
@@ -6097,7 +6098,7 @@
       "unlockCategory": "AreaCompletion",
       "pixel": {
         "x": 2970.942113884554,
-        "y": 720.3891026717151
+        "y": 1744.3891026717151
       },
       "supportMeshes": [
         "Wood_Stairs_SM"
@@ -6115,7 +6116,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 2489.233950156817,
-        "y": 347.32673232115394
+        "y": 1371.326732321154
       },
       "supportMeshes": [
         "SM_Rock_02",
@@ -6134,11 +6135,567 @@
       "unlockCategory": "GameCompletion",
       "pixel": {
         "x": 2989.3030341277363,
-        "y": 514.3822033658192
+        "y": 1538.3822033658191
       },
       "supportMeshes": [
         "BeautyCorner_Landscape_03",
         "SM_Rock_01"
+      ]
+    },
+    {
+      "id": "0372.puz",
+      "actor": "AllSame_PuzzleCube_1Secret",
+      "x": -39459.1171875,
+      "y": -16763.43359375,
+      "z": -1604.3604736328125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3841.522684505705,
+        "y": 1541.3589097126587
+      },
+      "supportMeshes": [
+        "SM_Flatrock_01"
+      ]
+    },
+    {
+      "id": "0384.puz",
+      "actor": "AllSame_PuzzleCube_2",
+      "x": -41791.47265625,
+      "y": -19146.958984375,
+      "z": 1643.9716796875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 4059.371593447918,
+        "y": 1489.5470268900185
+      },
+      "supportMeshes": [
+        "SM_Flatrock_02"
+      ]
+    },
+    {
+      "id": "0254.puz",
+      "actor": "AllSame_PuzzleCube_3",
+      "x": -41360.03515625,
+      "y": -14047.892578125,
+      "z": 936.3113403320312,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 3750.9656419437933,
+        "y": 1338.0353672245192
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0381.puz",
+      "actor": "AllSame_PuzzleCube_4",
+      "x": -42481.984375,
+      "y": -16023.8681640625,
+      "z": 771.1265869140625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3903.4972053814136,
+        "y": 1341.7959302391741
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "Brick_Circle_01_SM"
+      ]
+    },
+    {
+      "id": "0353.puz",
+      "actor": "AllSame_PuzzleCube_5",
+      "x": -38196.45703125,
+      "y": -14055.4990234375,
+      "z": -710.542236328125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 3641.9957122573505,
+        "y": 1520.383467608727
+      },
+      "supportMeshes": [
+        "SM_Flatrock_02"
+      ]
+    },
+    {
+      "id": "1095.puz",
+      "actor": "AllSame_PuzzleCube_6",
+      "x": -42479.4765625,
+      "y": -14675.7841796875,
+      "z": 700.66943359375,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3825.819242625808,
+        "y": 1295.318754867077
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "Brick_Circle_01_SM"
+      ]
+    },
+    {
+      "id": "0355.puz",
+      "actor": "AllSame_PuzzleCube_7",
+      "x": -39924.96875,
+      "y": -12902.587890625,
+      "z": 928.7081909179688,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 3635.4160337923204,
+        "y": 1381.0243293078142
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0382.puz",
+      "actor": "AllSame_PuzzleCube_8",
+      "x": -40112.3671875,
+      "y": -16157.8271484375,
+      "z": 469.7317810058594,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 3829.257687938408,
+        "y": 1482.815995946307
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "Brick_Circle_01_SM",
+        "SM_Rock_02",
+        "SM_SquareRock_02"
+      ]
+    },
+    {
+      "id": "0960.puz",
+      "actor": "AllSame_PuzzleCube_9Secret",
+      "x": -43097.73828125,
+      "y": -17677.806640625,
+      "z": 2739.5439453125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 4019.9873571479193,
+        "y": 1363.5542297459178
+      },
+      "supportMeshes": [
+        "Rock_Pile_SM",
+        "SM_Rock_02"
+      ]
+    },
+    {
+      "id": "0350.puz",
+      "actor": "AllSame_PuzzleCube_10",
+      "x": -41316.640625,
+      "y": -15092.78125,
+      "z": 560.0572509765625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3809.6052246432246,
+        "y": 1376.6689616529266
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "Brick_Circle_01_SM",
+        "SM_Rock_02"
+      ]
+    },
+    {
+      "id": "0351.puz",
+      "actor": "AllSame_PuzzleCube_11",
+      "x": -40001.7421875,
+      "y": -14448.5517578125,
+      "z": 625.3594360351562,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3727.051673170531,
+        "y": 1430.0704090207084
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "Brick_Circle_01_SM",
+        "SM_Rock_01_cut",
+        "SM_Rock_06"
+      ]
+    },
+    {
+      "id": "0357.puz",
+      "actor": "AllSame_PuzzleCube_12",
+      "x": -38704.578125,
+      "y": -15792.0751953125,
+      "z": 125.24298095703125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 3759.5198914132607,
+        "y": 1551.194658141775
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "SM_Flatrock_01",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "1176.puz",
+      "actor": "AllSame_PuzzleCube_13",
+      "x": -42130.89453125,
+      "y": -12702.244140625,
+      "z": 497.7488098144531,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3700.1736364232897,
+        "y": 1247.12997669494
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10"
+      ]
+    },
+    {
+      "id": "1177.puz",
+      "actor": "AllSame_PuzzleCube_14",
+      "x": -43699.40625,
+      "y": -14733.7470703125,
+      "z": 1041.879150390625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3871.344881409291,
+        "y": 1227.1082185079115
+      },
+      "supportMeshes": [
+        "SM_Flatrock_01",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0763.puz",
+      "actor": "AllSame_PuzzleCube_Boss",
+      "x": -40667.1328125,
+      "y": -17548.98046875,
+      "z": 1699.3543701171875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 3928.513608810827,
+        "y": 1498.9965371979524
+      },
+      "supportMeshes": [
+        "SM_SquareRock_03"
+      ]
+    },
+    {
+      "id": "0319.puz",
+      "actor": "AllSame_Tutorial_01",
+      "x": -44671.78125,
+      "y": -11261.8212890625,
+      "z": 121.5828857421875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [
+        "0602.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3705.1405424905397,
+        "y": 1051.0700602641853
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0602.puz",
+      "actor": "AllSame_Tutorial_02",
+      "x": -44015.8671875,
+      "y": -11646.80859375,
+      "z": 291.8282165527344,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [
+        "0352.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3704.6153018487107,
+        "y": 1102.13651768569
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0352.puz",
+      "actor": "AllSame_Tutorial_03",
+      "x": -43705.296875,
+      "y": -12710.6689453125,
+      "z": 596.0282592773438,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [
+        "0372.puz",
+        "0384.puz",
+        "0254.puz",
+        "0381.puz",
+        "0353.puz",
+        "1095.puz",
+        "0355.puz",
+        "0382.puz",
+        "0960.puz",
+        "0350.puz",
+        "0351.puz",
+        "0357.puz",
+        "1176.puz",
+        "1177.puz",
+        "0763.puz",
+        "0383.puz",
+        "0700.puz",
+        "0145.puz",
+        "0356.puz",
+        "1178.puz",
+        "1330.puz",
+        "1331.puz",
+        "1364.puz",
+        "1365.puz",
+        "1366.puz"
+      ],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3755.1069469948475,
+        "y": 1156.8039699597211
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "Rock_Pile_SM",
+        "SM_Flatrock_01",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0383.puz",
+      "actor": "AllSame_PuzzleCube_15",
+      "x": -41241.34375,
+      "y": -17789.359375,
+      "z": 676.7785034179688,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3962.207266809236,
+        "y": 1474.2600176299866
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0700.puz",
+      "actor": "AllSame_PuzzleCube_9",
+      "x": -41154.10546875,
+      "y": -16864.935546875,
+      "z": 782.8045654296875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 3905.9834950174004,
+        "y": 1447.3113144965907
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "0145.puz",
+      "actor": "AllSame_PuzzleCube_16",
+      "x": -39705.65234375,
+      "y": -15341.2568359375,
+      "z": 405.287353515625,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "AreaCompletion",
+      "pixel": {
+        "x": 3768.1929754938355,
+        "y": 1477.9852583532465
+      },
+      "supportMeshes": [
+        "BeautyCorner_Landscape_10"
+      ]
+    },
+    {
+      "id": "0356.puz",
+      "actor": "AllSame_PuzzleCube_17",
+      "x": -38563.65234375,
+      "y": -14589.201171875,
+      "z": 462.48858642578125,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3685.4127480045495,
+        "y": 1517.7062355401872
+      },
+      "supportMeshes": [
+        "SM_Flatrock_02",
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "1178.puz",
+      "actor": "AllSame_PuzzleCube_18",
+      "x": -41179.46484375,
+      "y": -18522.10546875,
+      "z": 648.4257202148438,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 4002.241705005421,
+        "y": 1503.162515837534
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "1330.puz",
+      "actor": "AllSame_PuzzleCube_19",
+      "x": -40230.0078125,
+      "y": -18730.798828125,
+      "z": 631.58154296875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3981.4178157196366,
+        "y": 1565.027462184305
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "1331.puz",
+      "actor": "AllSame_PuzzleCube_20",
+      "x": -39646.43359375,
+      "y": -17554.591796875,
+      "z": 514.7313842773438,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3893.5371857004106,
+        "y": 1557.9386514801213
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut"
+      ]
+    },
+    {
+      "id": "1364.puz",
+      "actor": "AllSame_PuzzleCube_21",
+      "x": -39386.828125,
+      "y": -13955.0126953125,
+      "z": 857.1092529296875,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3677.379299806413,
+        "y": 1448.3944907333218
+      },
+      "supportMeshes": [
+        "SM_Rock_01_cut",
+        "SM_SquareRock_01"
+      ]
+    },
+    {
+      "id": "1365.puz",
+      "actor": "AllSame_PuzzleCube_22",
+      "x": -39699.44921875,
+      "y": -14563.412109375,
+      "z": 1540.995849609375,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": "GameCompletion",
+      "pixel": {
+        "x": 3723.208292212789,
+        "y": 1451.4416652078846
+      },
+      "supportMeshes": [
+        "SM_SquareRock_03"
+      ]
+    },
+    {
+      "id": "1366.puz",
+      "actor": "AllSame_PuzzleCube_23",
+      "x": -42712.81640625,
+      "y": -15531.330078125,
+      "z": 1930.39599609375,
+      "widget": null,
+      "directory": "AGeri/Puzzles/Zone2/3-all-regions-same",
+      "unlocks": [],
+      "unlockCategory": null,
+      "pixel": {
+        "x": 3883.131338970123,
+        "y": 1311.4762949850679
+      },
+      "supportMeshes": [
+        "SM_SquareRock_02"
       ]
     },
     {
@@ -6153,7 +6710,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1483.399707689801,
-        "y": 2488.678893310337
+        "y": 3512.678893310337
       },
       "supportMeshes": [
         "sm_RuinWall_FullShortA_BrokenA_Top"
@@ -6175,7 +6732,7 @@
       "unlockCategory": null,
       "pixel": {
         "x": 1845.3147331739597,
-        "y": 2170.682993690298
+        "y": 3194.682993690298
       },
       "supportMeshes": [
         "sm_RuinFloor_TileLargeA",
@@ -6211,7 +6768,7 @@
       ],
       "pixel": {
         "x": 1421.0023850076655,
-        "y": 2471.2900348273242
+        "y": 3495.2900348273242
       }
     },
     {
@@ -6241,7 +6798,7 @@
       ],
       "pixel": {
         "x": 1750.2445239862827,
-        "y": 2234.6773886720252
+        "y": 3258.6773886720252
       }
     },
     {
@@ -6301,7 +6858,7 @@
       ],
       "pixel": {
         "x": 2227.6609506550453,
-        "y": 1971.7856442531713
+        "y": 2995.785644253171
       }
     },
     {
@@ -6361,7 +6918,7 @@
       ],
       "pixel": {
         "x": 1799.1507731989896,
-        "y": 1785.9412793508307
+        "y": 2809.941279350831
       }
     },
     {
@@ -6412,7 +6969,7 @@
       ],
       "pixel": {
         "x": 2036.6927405950053,
-        "y": 1653.295073820288
+        "y": 2677.295073820288
       }
     },
     {
@@ -6475,7 +7032,7 @@
       ],
       "pixel": {
         "x": 2617.6015557993173,
-        "y": 947.5409963686536
+        "y": 1971.5409963686536
       }
     },
     {
@@ -6533,7 +7090,7 @@
       ],
       "pixel": {
         "x": 2415.7940295493877,
-        "y": 835.0017219789083
+        "y": 1859.0017219789083
       }
     },
     {
@@ -6593,7 +7150,7 @@
       ],
       "pixel": {
         "x": 2182.6991456060673,
-        "y": 630.1411812803101
+        "y": 1654.14118128031
       }
     },
     {
@@ -6661,7 +7218,54 @@
       ],
       "pixel": {
         "x": 2647.0073880679374,
-        "y": 354.35703714132126
+        "y": 1378.3570371413214
+      }
+    },
+    {
+      "id": "window-match",
+      "actor": "BP_StainedGlassPlinth_Match",
+      "x": -43219.17578125,
+      "y": -16906.912109375,
+      "z": 695.029296875,
+      "name": "Match",
+      "thresholds": [
+        9,
+        13,
+        22
+      ],
+      "prerequisites": [
+        "0372.puz",
+        "0384.puz",
+        "0254.puz",
+        "0381.puz",
+        "0353.puz",
+        "1095.puz",
+        "0355.puz",
+        "0382.puz",
+        "0960.puz",
+        "0350.puz",
+        "0351.puz",
+        "0357.puz",
+        "1176.puz",
+        "1177.puz",
+        "0763.puz",
+        "0319.puz",
+        "0602.puz",
+        "0352.puz",
+        "0383.puz",
+        "0700.puz",
+        "0145.puz",
+        "0356.puz",
+        "1178.puz",
+        "1330.puz",
+        "1331.puz",
+        "1364.puz",
+        "1365.puz",
+        "1366.puz"
+      ],
+      "pixel": {
+        "x": 3979.8169687011105,
+        "y": 1329.9044288043697
       }
     }
   ],
@@ -20707,6 +21311,1286 @@
           "####"
         ]
       }
+    },
+    "0372.puz": {
+      "columns": 5,
+      "rows": 4,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+##+--+--+",
+        "|..|..#..#..|..|",
+        "+--+--+--+--+--+",
+        "|..|  |..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|   ",
+        "+--+--+--+--+   "
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#  #  #  #  #  #",
+        "+##+##+##+##+##+",
+        "#  #  #  #  #  #",
+        "+##+##+##+##+##+",
+        "#  #  #  #  #  #",
+        "+##+##+##+##+##+",
+        "#  #  #  #  #   ",
+        "+##+##+##+##+   "
+      ]
+    },
+    "0384.puz": {
+      "columns": 7,
+      "rows": 10,
+      "difficulty": 5,
+      "board": [
+        "      +--+            ",
+        "      |..|            ",
+        "      +--+--+--+      ",
+        "      |..|..|..|      ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|..|..|..|   ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|P1|..|..|..|..|   ",
+        "+--+--+--+--+--+--+   ",
+        "   |..|P1|     |..|   ",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|P1|..|..|..|",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|..|..|      ",
+        "   +--+--+--+--+      ",
+        "   |..|..|            ",
+        "   +--+--+            "
+      ],
+      "solution": [
+        "      +##+            ",
+        "      #  #            ",
+        "      +  +##+##+      ",
+        "      #        #      ",
+        "   +##+  +##+  +##+   ",
+        "   #     #  #     #   ",
+        "   +  +  +  +##+##+   ",
+        "   #     #        #   ",
+        "+##+  +##+  +##+  +##+",
+        "#     #     #  #     #",
+        "+  +  +  +  +  +##+##+",
+        "#     #     #     #   ",
+        "+##+##+  +##+##+  +   ",
+        "   #     #     #  #   ",
+        "   +  +  +##+##+  +##+",
+        "   #     #           #",
+        "   +##+##+  +  +##+##+",
+        "   #           #      ",
+        "   +  +  +##+##+      ",
+        "   #     #            ",
+        "   +##+##+            "
+      ]
+    },
+    "0254.puz": {
+      "columns": 5,
+      "rows": 5,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|..|  |..|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|   ",
+        "+--+--+--+--+--+",
+        "         |..|..|",
+        "         +--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#        #     #",
+        "+  +##+##+##+  +",
+        "#  #        #  #",
+        "+##+  +##+##+  +",
+        "#  #  #  #  #  #",
+        "+  +##+##+  +##+",
+        "#        #  #   ",
+        "+##+##+##+  +##+",
+        "         #     #",
+        "         +##+##+"
+      ]
+    },
+    "0381.puz": {
+      "columns": 7,
+      "rows": 6,
+      "difficulty": 3,
+      "board": [
+        "         +--+--+      ",
+        "         |..|..|      ",
+        "+--+  +--+--+--+      ",
+        "|P1|  |P1|..|         ",
+        "+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+   ",
+        "      |..|..|..|..|   ",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+",
+        "         |..|         ",
+        "         +--+         "
+      ],
+      "solution": [
+        "         +##+##+      ",
+        "         #     #      ",
+        "+##+  +##+  +##+      ",
+        "#  #  #     #         ",
+        "+  +##+##+  +##+##+   ",
+        "#        #        #   ",
+        "+##+##+  +  +##+  +   ",
+        "      #  #  #  #  #   ",
+        "   +##+  +##+  +  +##+",
+        "   #           #     #",
+        "   +##+##+  +##+##+##+",
+        "         #  #         ",
+        "         +##+         "
+      ]
+    },
+    "0353.puz": {
+      "columns": 7,
+      "rows": 10,
+      "difficulty": 5,
+      "board": [
+        "         +--+         ",
+        "         |..|         ",
+        "      +--+--+--+      ",
+        "      |..|..|..|      ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|  |..|..|..|",
+        "+--+--+--+  +--+--+--+",
+        "|..|..|     |..|..|..|",
+        "+--+--+     +--+--+--+",
+        "   |..|        |..|   ",
+        "   +--+        +--+   "
+      ],
+      "solution": [
+        "         +##+         ",
+        "         #  #         ",
+        "      +##+  +##+      ",
+        "      #  #     #      ",
+        "   +##+  +##+  +##+   ",
+        "   #  #     #  #  #   ",
+        "+##+  +##+  +  +  +##+",
+        "#     #  #  #  #     #",
+        "+  +##+  +  +##+##+  +",
+        "#  #     #  #     #  #",
+        "+  +  +##+##+  +##+  +",
+        "#  #  #        #  #  #",
+        "+##+  +##+##+##+  +##+",
+        "#  #  #        #  #  #",
+        "+  +##+  +##+##+  +  +",
+        "#  #     #  #     #  #",
+        "+  +##+##+  +  +##+  +",
+        "#     #     #  #     #",
+        "+##+  +     +##+  +##+",
+        "   #  #        #  #   ",
+        "   +##+        +##+   "
+      ],
+      "shapeClues": {
+        "S1": [
+          " ##",
+          "##",
+          " #"
+        ],
+        "S2": [
+          "#",
+          "#",
+          "#",
+          "##"
+        ],
+        "S3": [
+          " #",
+          "##",
+          "#",
+          "#"
+        ]
+      },
+      "shapeBank": [
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    "1095.puz": {
+      "columns": 4,
+      "rows": 5,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+",
+        "|..|P3|P3|..|",
+        "+--+--+--+--+",
+        "|..|..|..|..|",
+        "+--+--+--+--+",
+        "|P1|P1|..|..|",
+        "+--+--+--+--+",
+        "|..|..|P2|P2|",
+        "+--+--+--+--+",
+        "|..|..|..|..|",
+        "+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+",
+        "#     #     #",
+        "+  +##+  +  +",
+        "#  #        #",
+        "+  +  +##+  +",
+        "#  #  #  #  #",
+        "+  +##+  +  +",
+        "#        #  #",
+        "+  +  +##+  +",
+        "#     #     #",
+        "+##+##+##+##+"
+      ]
+    },
+    "0355.puz": {
+      "columns": 5,
+      "rows": 6,
+      "difficulty": 3,
+      "board": [
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|  |..|  |..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|  |..|..|..|",
+        "+--+  +--+--+--+",
+        "|..|  |..|  |..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+",
+        "#        #     #",
+        "+  +##+  +##+  +",
+        "#  #  #  #  #  #",
+        "+##+##+##+##+  +",
+        "#        #     #",
+        "+  +##+  +##+##+",
+        "#  #  #  #     #",
+        "+##+  +##+##+  +",
+        "#  #  #  #  #  #",
+        "+  +##+  +##+  +",
+        "#        #     #",
+        "+##+##+##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "#",
+          "##"
+        ],
+        "S2": [
+          "# #",
+          "###"
+        ],
+        "S3": [
+          " #",
+          "##",
+          " #",
+          " #"
+        ]
+      },
+      "shapeBank": [
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    "0382.puz": {
+      "columns": 8,
+      "rows": 10,
+      "difficulty": 5,
+      "board": [
+        "         +--+            ",
+        "         |..|            ",
+        "      +--+--+--+         ",
+        "      |..|..|..|         ",
+        "   +--+--+--+--+--+      ",
+        "   |..|..|P1|..|..|      ",
+        "+--+--+--+--+--+--+      ",
+        "|..|..|..|..|..|         ",
+        "+--+--+--+--+--+--+--+   ",
+        "   |..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|  |P1|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+--+",
+        "      |..|  |..|..|..|..|",
+        "      +--+  +--+--+--+--+",
+        "            |..|..|..|   ",
+        "            +--+--+--+   ",
+        "               |..|      ",
+        "               +--+      "
+      ],
+      "solution": [
+        "         +##+            ",
+        "         #  #            ",
+        "      +##+  +##+         ",
+        "      #        #         ",
+        "   +##+  +##+  +##+      ",
+        "   #     #  #     #      ",
+        "+##+  +##+  +  +##+      ",
+        "#     #     #  #         ",
+        "+##+##+  +##+  +##+##+   ",
+        "   #     #           #   ",
+        "+##+  +##+  +##+##+  +##+",
+        "#     #  #  #     #     #",
+        "+##+  +##+##+  +##+  +##+",
+        "   #           #     #   ",
+        "   +##+  +##+  +  +##+##+",
+        "      #  #  #  #  #     #",
+        "      +##+  +  +##+  +##+",
+        "            #        #   ",
+        "            +##+  +##+   ",
+        "               #  #      ",
+        "               +##+      "
+      ]
+    },
+    "0960.puz": {
+      "columns": 10,
+      "rows": 10,
+      "difficulty": 7,
+      "board": [
+        "+--+--+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|  |..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|  |..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|  |..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|P1|P1|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+##+##+##+   ",
+        "#                          #   ",
+        "+  +  +  +  +  +  +  +##+  +##+",
+        "#                    #  #  #  #",
+        "+  +  +  +  +  +##+  +##+  +  +",
+        "#              #  #  #  #  #  #",
+        "+  +  +  +##+  +##+  +  +  +  +",
+        "#        #  #  #  #  #  #  #  #",
+        "+  +##+  +##+  +  +  +  +  +  +",
+        "#  #  #  #  #  #  #  #  #  #  #",
+        "+  +  +  +  +  +  +  +  +  +  +",
+        "#  #  #  #  #  #  #  #  #  #  #",
+        "+##+  +##+  +  +  +  +  +  +  +",
+        "   #        #  #  #  #  #  #  #",
+        "   +  +  +  +##+  +  +  +  +  +",
+        "   #              #  #  #  #  #",
+        "   +  +  +  +  +  +##+  +  +  +",
+        "   #                    #  #  #",
+        "   +  +  +  +  +  +  +  +##+  +",
+        "   #                          #",
+        "   +##+##+##+##+##+##+##+##+##+"
+      ]
+    },
+    "0350.puz": {
+      "columns": 8,
+      "rows": 8,
+      "difficulty": 3,
+      "board": [
+        "      +--+--+--+--+      ",
+        "      |..|..|..|..|      ",
+        "   +--+##+--+--+--+--+   ",
+        "   |..|..#..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|     |..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+   ",
+        "         |..|..|         ",
+        "         +--+--+         "
+      ],
+      "solution": [
+        "      +##+##+##+##+      ",
+        "      #     #     #      ",
+        "   +##+##+  +##+  +##+   ",
+        "   #     #     #     #   ",
+        "+##+  +##+##+##+##+##+##+",
+        "#     #  #     #     #  #",
+        "+##+##+  +##+##+  +##+  +",
+        "#     #     #     #     #",
+        "+##+  +##+  +##+##+  +##+",
+        "#  #     #  #     #  #  #",
+        "+  +##+##+##+  +##+##+  +",
+        "#     #  #     #  #     #",
+        "+##+  +  +##+##+  +  +##+",
+        "   #  #     #     #  #   ",
+        "   +##+##+  +  +##+##+   ",
+        "         #  #  #         ",
+        "         +##+##+         "
+      ]
+    },
+    "0351.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 3,
+      "board": [
+        "      +--+--+--+   ",
+        "      |..|..|..|   ",
+        "      +--+--+--+   ",
+        "      |..|..|..|   ",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|..|   ",
+        "+--+--+--+--+--+   ",
+        "|..|..|..|..|..|   ",
+        "+--+--+--+--+--+   ",
+        "      |..|..|      ",
+        "      +--+--+      "
+      ],
+      "solution": [
+        "      +##+##+##+   ",
+        "      #        #   ",
+        "      +##+  +##+   ",
+        "      #  #  #  #   ",
+        "+##+##+  +##+  +##+",
+        "#  #        #     #",
+        "+  +##+##+##+  +##+",
+        "#     #  #  #  #   ",
+        "+  +##+  +  +##+   ",
+        "#  #     #     #   ",
+        "+##+##+  +  +##+   ",
+        "      #  #  #      ",
+        "      +##+##+      "
+      ]
+    },
+    "0357.puz": {
+      "columns": 9,
+      "rows": 8,
+      "difficulty": 4,
+      "board": [
+        "   +--+--+     +--+         ",
+        "   |..|..|     |..|         ",
+        "+--+--+--+--+--+--+--+      ",
+        "|..|..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+--+      ",
+        "   |..|..|..|  |..|..|      ",
+        "   +--+--+--+--+--+--+--+   ",
+        "         |..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|         ",
+        "+--+--+--+--+--+--+--+      ",
+        "   |..|..|..|..|..|..|      ",
+        "   +--+--+--+--+--+--+      ",
+        "   |..|     |..|            ",
+        "   +--+     +--+            "
+      ],
+      "solution": [
+        "   +##+##+     +##+         ",
+        "   #     #     #  #         ",
+        "+##+##+  +##+##+  +##+      ",
+        "#     #  #  #     #  #      ",
+        "+##+  +##+  +##+##+  +      ",
+        "   #  #     #  #     #      ",
+        "   +##+##+##+##+##+##+##+   ",
+        "         #     #     #  #   ",
+        "   +##+##+  +##+##+  +  +##+",
+        "   #  #  #  #     #  #     #",
+        "+##+  +  +##+  +##+##+##+##+",
+        "#     #     #  #  #         ",
+        "+##+##+##+##+##+  +##+      ",
+        "   #     #     #     #      ",
+        "   +  +##+##+  +##+##+      ",
+        "   #  #     #  #            ",
+        "   +##+     +##+            "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#"
+        ],
+        "S2": [
+          "#",
+          "##"
+        ],
+        "S3": [
+          "#",
+          "##",
+          " #"
+        ]
+      },
+      "shapeBank": [
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    "1176.puz": {
+      "columns": 5,
+      "rows": 5,
+      "difficulty": 1,
+      "board": [
+        "         +--+   ",
+        "         |..|   ",
+        "   +--+--+--+   ",
+        "   |..|..|..|   ",
+        "   +--+--+--+   ",
+        "   |..|..|..|   ",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "   |..|..|..|   ",
+        "   +--+--+--+   "
+      ],
+      "solution": [
+        "         +##+   ",
+        "         #  #   ",
+        "   +##+##+  +   ",
+        "   #  #     #   ",
+        "   +  +##+##+   ",
+        "   #     #  #   ",
+        "+##+##+##+  +##+",
+        "#     #  #     #",
+        "+##+  +  +##+##+",
+        "   #  #     #   ",
+        "   +##+##+##+   "
+      ]
+    },
+    "1177.puz": {
+      "columns": 5,
+      "rows": 4,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+      ",
+        "|..|..|..|      ",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+",
+        "|..|P1|..|P1|..|",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+      ",
+        "#        #      ",
+        "+  +  +  +##+##+",
+        "#        #     #",
+        "+  +  +##+  +  +",
+        "#     #        #",
+        "+  +##+  +  +  +",
+        "#  #           #",
+        "+##+##+##+##+##+"
+      ]
+    },
+    "0763.puz": {
+      "columns": 16,
+      "rows": 16,
+      "difficulty": 6,
+      "board": [
+        "               +--+--+--+--+                     ",
+        "               |..|..|..|..|                     ",
+        "         +--+--+--+--+--+--+--+--+               ",
+        "         |..|..|P1|..|..|..|..|..|               ",
+        "         +--+--+--+--+--+--+--+--+               ",
+        "         |..|..|P1|..|..|..|..|P1|               ",
+        "      +--+--+--+--+--+--+--+--+--+--+--+--+      ",
+        "      |..|..|..|..|..|..|..|..|P1|..|..|..|      ",
+        "      +--+--+--+--+--+--+--+--+--+--+--+--+      ",
+        "      |..|..|..|..|P1|P1|..|..|..|..|..|..|      ",
+        "   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+   ",
+        "   |..|..|..|..|..|..|..|..|P1|..|  |P1|P1|..|   ",
+        "   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+   ",
+        "   |P1|..|..|..|..|..|..|..|P1|..|..|..|  |..|   ",
+        "+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+",
+        "|..|P1|  |..|P1|..|..|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|P1|..|..|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|P1|P1|..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+   ",
+        "   |..|..|..|..|  |..|..|..|..|..|..|P1|P1|..|   ",
+        "   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+   ",
+        "      |P1|P1|..|..|..|..|..|  |..|..|..|..|      ",
+        "      +--+--+--+--+--+--+--+--+--+--+--+--+      ",
+        "      |..|..|..|..|..|..|..|..|..|..|            ",
+        "      +--+--+--+--+--+--+--+--+--+--+            ",
+        "            |..|P1|P1|..|..|P1|..|               ",
+        "            +--+--+--+--+--+--+--+               ",
+        "               |..|..|..|..|P1|..|               ",
+        "               +--+--+--+--+--+--+               ",
+        "               |..|..|..|..|..|..|               ",
+        "               +--+--+--+--+--+--+               "
+      ],
+      "solution": [
+        "               +##+##+##+##+                     ",
+        "               #     #     #                     ",
+        "         +##+##+  +  +  +  +##+##+               ",
+        "         #           #           #               ",
+        "         +  +##+##+##+##+##+##+  +               ",
+        "         #  #     #     #     #  #               ",
+        "      +##+##+  +##+##+  +  +  +##+##+##+##+      ",
+        "      #     #  #     #  #           #     #      ",
+        "      +  +##+  +  +  +  +##+##+##+  +  +  +      ",
+        "      #  #     #     #     #     #  #     #      ",
+        "   +##+  +  +  +  +##+  +  +  +  +##+  +##+##+   ",
+        "   #     #     #  #  #     #     #  #  #     #   ",
+        "   +  +  +##+##+  +  +##+##+##+  +##+  +##+  +   ",
+        "   #     #  #     #           #  #     #  #  #   ",
+        "+##+##+##+  +##+##+##+##+  +  +  +##+##+##+  +##+",
+        "#     #  #           #  #     #     #     #     #",
+        "+  +  +##+##+##+  +  +  +##+##+##+##+##+  +  +  +",
+        "#           #  #     #           #     #  #     #",
+        "+##+##+##+  +  +##+##+##+##+  +  +  +  +  +##+##+",
+        "   #     #  #           #  #     #     #     #   ",
+        "   +  +  +##+##+##+  +  +  +##+##+##+  +  +  +   ",
+        "   #     #     #  #     #           #  #     #   ",
+        "   +##+  +  +  +##+##+##+##+##+  +  +  +##+##+   ",
+        "      #  #           #     #  #     #     #      ",
+        "      +  +##+##+##+  +  +##+##+##+##+##+##+      ",
+        "      #     #     #  #  #     #     #            ",
+        "      +##+##+  +  +##+  +  +  +  +##+            ",
+        "            #     #     #     #  #               ",
+        "            +##+  +  +  +  +##+  +               ",
+        "               #  #     #  #     #               ",
+        "               +  +##+##+  +  +  +               ",
+        "               #     #     #     #               ",
+        "               +##+##+##+##+##+##+               "
+      ]
+    },
+    "0319.puz": {
+      "columns": 7,
+      "rows": 6,
+      "difficulty": 1,
+      "board": [
+        "            +--+--+   ",
+        "            |..|..|   ",
+        "            +--+--+--+",
+        "            |..|..|..|",
+        "      +--+--+--+--+--+",
+        "      |..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|S1|..|..|   ",
+        "+--+--+--+--+--+--+   ",
+        "   |..|..|..|..|..|   ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|..|         ",
+        "   +--+--+--+         "
+      ],
+      "solution": [
+        "            +##+##+   ",
+        "            #     #   ",
+        "            +##+  +##+",
+        "            #  #  #  #",
+        "      +##+##+  +##+  +",
+        "      #  #     #     #",
+        "+##+##+  +##+##+##+##+",
+        "#     #     #     #   ",
+        "+##+  +##+##+##+  +   ",
+        "   #  #  #     #  #   ",
+        "   +##+  +  +##+##+   ",
+        "   #     #  #         ",
+        "   +##+##+##+         "
+      ],
+      "shapeClues": {
+        "S1": [
+          "##",
+          " #"
+        ]
+      }
+    },
+    "0602.puz": {
+      "columns": 8,
+      "rows": 6,
+      "difficulty": 2,
+      "board": [
+        "   +--+--+--+--+         ",
+        "   |..|..|..|..|         ",
+        "+--+--+--+--+--+--+      ",
+        "|..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+      ",
+        "|..|..|     |..|..|      ",
+        "+--+--+     +--+--+      "
+      ],
+      "solution": [
+        "   +##+##+##+##+         ",
+        "   #     #     #         ",
+        "+##+  +##+##+  +##+      ",
+        "#     #     #     #      ",
+        "+  +##+##+  +##+  +##+##+",
+        "#  #     #     #  #     #",
+        "+##+  +##+##+  +##+  +##+",
+        "#     #  #  #  #     #   ",
+        "+  +##+  +  +##+  +##+   ",
+        "#  #     #     #  #      ",
+        "+##+  +##+##+  +##+      ",
+        "#     #     #     #      ",
+        "+##+##+     +##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "###"
+        ],
+        "S2": [
+          "###",
+          " #",
+          " #"
+        ],
+        "S3": [
+          "#",
+          "##",
+          " ##"
+        ]
+      },
+      "shapeBank": [
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    "0352.puz": {
+      "columns": 5,
+      "rows": 6,
+      "difficulty": 2,
+      "board": [
+        "      +--+      ",
+        "      |..|      ",
+        "   +--+--+--+   ",
+        "   |..|..|..|   ",
+        "+--+--+--+--+   ",
+        "|..|..|..|..|   ",
+        "+--+--+--+--+   ",
+        "|..|..|..|..|   ",
+        "+--+--+--+--+   ",
+        "|..|..|  |..|   ",
+        "+--+--+--+--+--+",
+        "|..|..|..|..|..|",
+        "+--+--+--+--+--+"
+      ],
+      "solution": [
+        "      +##+      ",
+        "      #  #      ",
+        "   +##+  +##+   ",
+        "   #  #  #  #   ",
+        "+##+  +  +  +   ",
+        "#  #  #  #  #   ",
+        "+  +  +  +  +   ",
+        "#  #  #  #  #   ",
+        "+  +  +##+  +   ",
+        "#  #  #  #  #   ",
+        "+  +##+##+##+##+",
+        "#  #           #",
+        "+##+##+##+##+##+"
+      ]
+    },
+    "0383.puz": {
+      "columns": 9,
+      "rows": 9,
+      "difficulty": 4,
+      "board": [
+        "         +--+--+            ",
+        "         |..|..|            ",
+        "   +--+--+--+--+--+         ",
+        "   |..|..|..|..|..|         ",
+        "+--+--+--+--+--+--+--+      ",
+        "|..|..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+--+--+   ",
+        "|P1|..|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|         ",
+        "+--+--+--+--+--+--+         ",
+        "   |P1|..|..|..|            ",
+        "   +--+--+--+--+            ",
+        "      |..|..|..|            ",
+        "      +--+--+--+            ",
+        "         |P1|               ",
+        "         +--+               "
+      ],
+      "solution": [
+        "         +##+##+            ",
+        "         #     #            ",
+        "   +##+##+  +  +##+         ",
+        "   #              #         ",
+        "+##+  +  +##+##+##+##+      ",
+        "#        #           #      ",
+        "+  +  +##+  +  +  +##+##+   ",
+        "#     #           #     #   ",
+        "+  +  +  +  +##+##+  +  +##+",
+        "#     #     #              #",
+        "+  +##+  +##+  +  +##+##+##+",
+        "#  #     #        #         ",
+        "+##+  +  +  +  +##+         ",
+        "   #     #     #            ",
+        "   +##+  +  +  +            ",
+        "      #  #     #            ",
+        "      +##+  +##+            ",
+        "         #  #               ",
+        "         +##+               "
+      ]
+    },
+    "0700.puz": {
+      "columns": 8,
+      "rows": 7,
+      "difficulty": 3,
+      "board": [
+        "            +--+--+--+   ",
+        "            |..|..|..|   ",
+        "      +--+--+--+--+--+   ",
+        "      |..|..|..|..|..|   ",
+        "      +--+--+--+--+--+--+",
+        "      |..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|   ",
+        "   +--+--+##+##+--+--+   ",
+        "   |..|..|..#..|..|..|   ",
+        "+--+--+--+--+--+--+--+   ",
+        "|..|..|  |..|..|..|      ",
+        "+--+--+  +--+--+--+      ",
+        "               |..|      ",
+        "               +--+      "
+      ],
+      "solution": [
+        "            +##+##+##+   ",
+        "            #     #  #   ",
+        "      +##+##+  +##+  +   ",
+        "      #        #     #   ",
+        "      +##+  +  +  +  +##+",
+        "      #  #     #        #",
+        "   +##+  +  +##+  +##+##+",
+        "   #     #  #     #  #   ",
+        "   +  +  +##+##+##+  +   ",
+        "   #        #        #   ",
+        "+##+  +##+##+  +  +##+   ",
+        "#     #  #        #      ",
+        "+##+##+  +##+##+  +      ",
+        "               #  #      ",
+        "               +##+      "
+      ]
+    },
+    "0145.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+      ",
+        "|..|..|..|..|      ",
+        "+--+--+--+--+      ",
+        "|..|..|..|..|      ",
+        "+--+--+--+--+--+--+",
+        "      |..|..|..|..|",
+        "      +--+--+--+--+",
+        "      |..|..|..|..|",
+        "      +--+--+--+--+",
+        "      |..|..|      ",
+        "      +--+--+      ",
+        "      |..|..|      ",
+        "      +--+--+      "
+      ],
+      "solution": [
+        "+##+##+##+##+      ",
+        "#        #  #      ",
+        "+  +  +##+  +      ",
+        "#     #     #      ",
+        "+##+##+  +  +##+##+",
+        "      #     #     #",
+        "      +##+##+  +  +",
+        "      #  #        #",
+        "      +  +##+##+##+",
+        "      #     #      ",
+        "      +  +  +      ",
+        "      #     #      ",
+        "      +##+##+      "
+      ]
+    },
+    "0356.puz": {
+      "columns": 7,
+      "rows": 11,
+      "difficulty": 4,
+      "board": [
+        "   +--+--+--+--+      ",
+        "   |..|..|..|..|      ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|  |..|..|   ",
+        "   +--+--+--+--+--+   ",
+        "   |..|..|..|..|..|   ",
+        "   +--+--+--+--+--+   ",
+        "      |..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "   |..|..|..|  |..|..|",
+        "   +--+--+--+--+--+--+",
+        "      |..|..|..|..|..|",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|  |..|..|..|",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|..|..|..|   ",
+        "   +--+--+--+--+--+--+",
+        "   |..|..|  |..|..|..|",
+        "   +--+--+  +--+--+--+"
+      ],
+      "solution": [
+        "   +##+##+##+##+      ",
+        "   #        #  #      ",
+        "   +  +  +##+  +##+   ",
+        "   #     #  #     #   ",
+        "   +##+##+##+  +  +   ",
+        "   #        #     #   ",
+        "   +##+  +  +##+##+   ",
+        "      #     #     #   ",
+        "+##+##+##+##+  +  +##+",
+        "#        #        #  #",
+        "+##+  +  +##+##+##+  +",
+        "   #     #  #  #     #",
+        "   +##+##+  +##+  +  +",
+        "      #  #     #     #",
+        "   +##+  +  +  +##+##+",
+        "   #     #     #     #",
+        "   +  +  +##+##+  +  +",
+        "   #     #  #        #",
+        "   +##+##+##+##+##+##+",
+        "   #        #     #   ",
+        "   +  +  +##+  +  +##+",
+        "   #     #  #        #",
+        "   +##+##+  +##+##+##+"
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "#"
+        ],
+        "S2": [
+          "#",
+          "#",
+          "##"
+        ],
+        "S3": [
+          "#",
+          "##",
+          "##"
+        ]
+      },
+      "shapeBank": [
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    "1178.puz": {
+      "columns": 7,
+      "rows": 6,
+      "difficulty": 2,
+      "board": [
+        "         +--+--+--+   ",
+        "         |..|..|..|   ",
+        "         +--+--+--+   ",
+        "         |..|  |..|   ",
+        "+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+",
+        "|..|  |P1|P1|P1|..|..|",
+        "+--+--+--+--+--+--+--+",
+        "|..|..|..|  |..|  |..|",
+        "+--+--+--+--+--+--+--+",
+        "      |..|..|..|..|..|",
+        "      +--+--+--+--+--+"
+      ],
+      "solution": [
+        "         +##+##+##+   ",
+        "         #        #   ",
+        "         +  +##+  +   ",
+        "         #  #  #  #   ",
+        "+##+##+##+  +##+  +   ",
+        "#        #        #   ",
+        "+  +##+  +  +##+##+##+",
+        "#  #  #  #  #        #",
+        "+  +##+  +##+  +##+  +",
+        "#        #  #  #  #  #",
+        "+##+##+  +##+  +##+  +",
+        "      #  #           #",
+        "      +##+##+##+##+##+"
+      ]
+    },
+    "1330.puz": {
+      "columns": 10,
+      "rows": 10,
+      "difficulty": 4,
+      "board": [
+        "   +--+--+           +--+--+   ",
+        "   |..|..|           |..|..|   ",
+        "+--+--+--+           +--+--+--+",
+        "|..|  |..|           |..|  |..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|P2|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "      |P1|..|..|..|..|..|      ",
+        "      +--+--+--+--+--+--+      ",
+        "      |..|..|P2|P1|P3|..|      ",
+        "      +--+--+--+--+--+--+      ",
+        "      |..|..|P3|P2|P3|..|      ",
+        "      +--+--+--+--+--+--+      ",
+        "      |..|P3|..|..|..|P1|      ",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|P1|P2|..|..|",
+        "+--+--+--+--+--+--+--+--+--+--+",
+        "|..|  |..|           |..|  |..|",
+        "+--+--+--+           +--+--+--+",
+        "   |..|..|           |..|..|   ",
+        "   +--+--+           +--+--+   "
+      ],
+      "solution": [
+        "   +##+##+           +##+##+   ",
+        "   #     #           #     #   ",
+        "+##+##+  +           +  +##+##+",
+        "#  #  #  #           #  #  #  #",
+        "+  +##+  +##+##+##+##+  +##+  +",
+        "#                    #        #",
+        "+##+##+##+  +##+  +##+  +##+##+",
+        "      #  #  #  #  #     #      ",
+        "      +  +##+  +  +##+  +      ",
+        "      #        #     #  #      ",
+        "      +  +##+##+##+##+  +      ",
+        "      #  #     #        #      ",
+        "      +  +##+  +  +##+  +      ",
+        "      #     #  #  #  #  #      ",
+        "+##+##+  +##+  +##+  +##+##+##+",
+        "#        #                    #",
+        "+  +##+  +##+##+##+##+  +##+  +",
+        "#  #  #  #           #  #  #  #",
+        "+##+##+  +           +  +##+##+",
+        "   #     #           #     #   ",
+        "   +##+##+           +##+##+   "
+      ]
+    },
+    "1331.puz": {
+      "columns": 6,
+      "rows": 6,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+--+",
+        "|P4|..|..|..|..|P4|",
+        "+--+--+--+--+--+--+",
+        "|..|..|..|..|P4|..|",
+        "+--+--+--+--+--+--+",
+        "|P3|..|P3|..|..|..|",
+        "+--+--+--+--+--+--+",
+        "|P2|..|P1|P3|P3|..|",
+        "+--+--+--+--+--+--+",
+        "|..|..|P2|..|P2|P1|",
+        "+--+--+--+--+--+--+",
+        "|P4|..|P1|..|P2|P1|",
+        "+--+--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+",
+        "#        #        #",
+        "+##+##+  +##+##+  +",
+        "#     #  #     #  #",
+        "+  +  +  +  +  +  +",
+        "#     #  #     #  #",
+        "+  +##+  +  +##+  +",
+        "#  #     #  #     #",
+        "+  +  +  +  +  +  +",
+        "#  #     #  #     #",
+        "+  +##+##+  +##+##+",
+        "#        #        #",
+        "+##+##+##+##+##+##+"
+      ]
+    },
+    "1364.puz": {
+      "columns": 8,
+      "rows": 7,
+      "difficulty": 2,
+      "board": [
+        "+--+--+--+--+--+--+      ",
+        "|..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+   ",
+        "|..|..|..|..|..|..|..|   ",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|",
+        "   +--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+      "
+      ],
+      "solution": [
+        "+##+##+##+##+##+##+      ",
+        "#        #        #      ",
+        "+  +##+##+##+##+  +##+   ",
+        "#  #           #  #  #   ",
+        "+  +##+##+##+  +  +  +   ",
+        "#  #        #  #  #  #   ",
+        "+  +  +##+##+  +  +  +##+",
+        "#  #  #  #  #  #  #  #  #",
+        "+##+  +  +  +##+##+  +  +",
+        "   #  #  #  #        #  #",
+        "   +  +  +  +##+##+##+  +",
+        "   #  #  #  #           #",
+        "+##+##+  +  +##+##+##+##+",
+        "#        #        #      ",
+        "+##+##+##+##+##+##+      "
+      ],
+      "shapeClues": {
+        "S1": [
+          "#",
+          "#",
+          "#",
+          "###"
+        ],
+        "S2": [
+          "##",
+          "##",
+          "##"
+        ],
+        "S3": [
+          " ##",
+          " #",
+          " #",
+          "##"
+        ],
+        "S4": [
+          "###",
+          " #",
+          " #",
+          " #"
+        ]
+      },
+      "shapeBank": [
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ]
+    },
+    "1365.puz": {
+      "columns": 9,
+      "rows": 7,
+      "difficulty": 4,
+      "board": [
+        "   +--+--+--+--+--+         ",
+        "   |..|..|..|..|..|         ",
+        "   +--+--+--+--+--+--+--+--+",
+        "   |..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|        |..|..|..|",
+        "+--+--+--+  +--+--+--+--+--+",
+        "|..|..|..|  |..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|..|..|",
+        "+--+--+--+--+--+--+--+--+--+",
+        "|..|..|..|..|..|..|..|      ",
+        "+--+--+--+--+--+--+--+      "
+      ],
+      "solution": [
+        "   +##+##+##+##+##+         ",
+        "   #              #         ",
+        "   +  +  +  +  +  +##+##+##+",
+        "   #              #        #",
+        "+##+##+##+  +  +  +  +  +  +",
+        "#        #        #        #",
+        "+  +  +  +##+##+##+  +  +  +",
+        "#        #        #        #",
+        "+  +  +  +  +##+##+##+  +  +",
+        "#        #  #        #     #",
+        "+  +  +##+##+  +  +  +  +  +",
+        "#     #              #     #",
+        "+  +  +  +  +  +  +  +##+##+",
+        "#     #              #      ",
+        "+##+##+##+##+##+##+##+      "
+      ]
+    },
+    "1366.puz": {
+      "columns": 10,
+      "rows": 6,
+      "difficulty": 3,
+      "board": [
+        "+--+  +--+--+                  ",
+        "|..|  |..|..|                  ",
+        "+--+--+--+--+  +--+--+--+--+--+",
+        "|..|..|..|..|  |..|..|..|..|..|",
+        "+--+--+--+--+  +--+--+--+--+--+",
+        "|..|..|..|..|  |..|..|..|..|   ",
+        "+--+--+--+--+  +--+--+--+--+--+",
+        "|..|..|..|..|  |..|..|  |..|..|",
+        "+--+--+--+--+  +--+--+--+--+--+",
+        "|..|..|..|..|     |..|..|..|..|",
+        "+--+--+--+--+  +--+--+--+--+--+",
+        "|..|..|  |..|  |..|..|..|..|..|",
+        "+--+--+  +--+  +--+--+--+--+--+"
+      ],
+      "solution": [
+        "+##+  +##+##+                  ",
+        "#  #  #     #                  ",
+        "+  +##+  +##+  +##+##+##+##+##+",
+        "#        #  #  #              #",
+        "+  +  +##+  +  +##+  +  +  +##+",
+        "#     #     #  #  #        #   ",
+        "+  +  +  +  +  +  +##+##+  +##+",
+        "#     #     #  #     #  #     #",
+        "+  +##+  +  +  +##+  +##+##+  +",
+        "#  #        #     #        #  #",
+        "+##+  +##+  +  +##+  +  +  +##+",
+        "#     #  #  #  #              #",
+        "+##+##+  +##+  +##+##+##+##+##+"
+      ]
     }
   }
 }
