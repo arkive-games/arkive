@@ -3,9 +3,17 @@
 ## Resume here
 
 - Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
-- Preview: http://127.0.0.1:15172/#glimmith/tutorial. Probe the actual Vite page before starting another server. This is a dev-only route; no release is implied by a local commit.
-- Last completed slice: SizeSeparation, signed commit `6e4738bc6c71fe912705f8c0da28e824eec64d1d`. Thirteen windows, 471 puzzles, three notes; 754 placed puzzles remain. Local preview only; no push or deployment.
-- Next slice: integrate Boxy only, after checking the unsupported `0479.puz` anchor and identifying the source artwork or semantics for the `F0`, `F1`, `F2`, `F3`, and `F7` cell clues. The 40 original puzzle files are already extracted. Do not infer the missing support or draw substitute digits.
+- Preview: http://127.0.0.1:15192/#glimmith/tutorial. Port 15172 was occupied by another checkout, so this preview uses a separate Vite process. Probe for the actual map, not just HTTP 200. This is a dev-only route; no release is implied by a local commit.
+- Last completed slice: Boxy and NonBoxy, signed commit `80fdedab0bfa76eb65dcbf484b7d4a07277ddb47`. Fifteen windows, 554 puzzles, three notes; 671 placed puzzles remain. Local preview only; no push or deployment.
+- Next slice: audit Solitude (37 source references), the closest remaining window by the distance check. Start with read-only `--audit` and the existing terrain manifest. Keep the `0479` height investigation separate; do not replace its authored anchor.
+
+## Boxy and NonBoxy checkpoint
+
+- Boxy: 40 original boards, thresholds 13 / 20 / 32, and authored `ONLY_RECTANGLES` rule. All 40 markers and solutions are available. The height probe passes 39; `0479` retains its authored anchor with a matching rock footprint in plan view only. Its height remains open after checking nearby source meshes and the `SM_Rock_02` collision hull.
+- NonBoxy: 43 original boards, thresholds 14 / 21 / 33, and authored `NO_RECTANGLES` rule. All 43 markers pass the height and footprint check. Preserve the original `0860fix2` identifier; count buttons in the related-puzzles list rather than assuming IDs have four digits and one optional letter.
+- Both windows use the game's Palisade textures from the released enum values and `DA_RuleData.PalisadeIcons`. Neither the existing terrain SVGs nor existing anchors or puzzle records changed. The preview retains the same scale, rotation, canvas, and marker tools.
+- Desktop: checked all 40 and 43 links, thresholds, solution rules and source icons on `0810` and `0303`. Mobile: selected both regions, verified sidebar collapse and direct map clicks on `0479` and `0807`, and checked solutions, coordinates, completion and comment controls. Pixel samples confirmed nonblank maps in all four viewports. No authenticated write was attempted.
+- Verification: focused tests, Meta build, UI guard and the full frontend suite (192 files / 2,034 tests) passed. Boxy has nine AreaCompletion and five GameCompletion entries; NonBoxy has ten and six. Exact runtime triggers remain unverified.
 
 ## Boxy preflight checkpoint
 
