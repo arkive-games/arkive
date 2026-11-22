@@ -4,6 +4,13 @@ The frontend is a static Vite app in `frontend/apps/oss`. It uses the
 direct-upload EdgeOne Makers project `arkive-oss` and the production
 host `oss.arkive.games`. The local app port is 15181; PBZ owns 15180.
 
+For the stacked ground cell correction, the local artifact heads are
+`74822be` (resource) and `4e981c0` (data), in publication order.
+The ground variant manifest covers 391 boulders, 24 skipping stones and
+67 mirrors. Mirrorable crystal variants retain their previous icons.
+Another 57 Ruby border cells use calibrated unit meshes in three regions;
+this is not a complete terrain or progression-state reconstruction.
+
 ## Required Artifacts
 
 The frontend cannot render a map without the separate exported datasets:

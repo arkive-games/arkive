@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.3",
+      "date": "2026-11-23",
+      "commit": "84af54368d56660afd2ea9a5abb7d56b80f62eb9",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Ground markers sharing a cell now stay on that cell. Rock and mirror variants and additional Ruby floor borders are shown more faithfully.",
+            "zh-CN": "同格点位回到原格，可切换查看；更新巨石、飞石、镜子图标，并补齐部分红地板边角。",
+            "zh-TW": "同格點位回到原格，可切換檢視；更新巨石、飛石、鏡子圖示，並補齊部分紅地板邊角。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.2",
       "date": "2026-11-23",
       "commit": "1f26e511feda80cc905f699e9250348146acb7da",
