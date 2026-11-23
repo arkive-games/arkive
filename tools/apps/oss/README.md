@@ -79,3 +79,12 @@ markers: eight wardrobes and one boulder. Other props use their existing
 icons. The accompanying artifact `heroes1-icon-provenance.json` records
 source meshes/materials and the approximate shading limitation. Crystal
 runtime colors, transparent gates and animated buttons are not covered.
+
+## Ground marker map thumbnails
+
+After changing ground prop icons, run
+`python tools/apps/oss/pack_marker_thumbnails.py <props-document> <resource-root>`
+in the artifact worktrees. It adds one lossless WebP thumbnail per distinct
+resource path to the existing JSON response. The GL map consumes the small
+images; detail cards and clients without a thumbnail still use the original
+resource URL. Keep HTTP compression enabled for JSON in production.

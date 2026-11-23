@@ -64,6 +64,7 @@ export function App() {
   const [showBorders, setShowBorders] = useState(true)
   const [showLabels, setShowLabels] = useState(false)
   const [props, setProps] = useState<Prop[]>([])
+  const mapIcons = useRef(new Map<string, string>())
   const [tileOverrides, setTileOverrides] = useState<Record<string, string> | null>(null)
   const [visible, setVisible] = useState(() => new Set(defaultSubtypes))
   const [resultIds, setResultIds] = useState<string[]>([])
@@ -71,6 +72,7 @@ export function App() {
 
   useEffect(() => {
     const controller = new AbortController()
+    const thumbnails = new Map<string, string>()
     fetch(`${DATA_BASE}/map-display.json`, { signal: controller.signal })
       .then(response => { if (!response.ok) throw new Error('Map data unavailable'); return response.json() as Promise<PreviewData> })
       .then(setData)
@@ -84,10 +86,29 @@ export function App() {
       .then(setCollections)
       .catch(error => { if (error.name !== 'AbortError') setFailed(true) })
     fetch(`${DATA_BASE}/props-ground-26466613.json`, { signal: controller.signal })
-      .then(response => { if (!response.ok) throw new Error('Props unavailable'); return response.json() as Promise<{ props: Prop[] }> })
-      .then(value => setProps(value.props))
+      .then(response => { if (!response.ok) throw new Error('Props unavailable'); return response.json() as Promise<{ props: Prop[]; mapThumbnails?: Record<string, string> }> })
+      .then(value => {
+        if (controller.signal.aborted) return
+        for (const [path, encoded] of Object.entries(value.mapThumbnails ?? {})) {
+          try {
+            const raw = atob(encoded)
+            if (!raw.startsWith('RIFF') || raw.slice(8, 12) !== 'WEBP') continue
+            const bytes = new Uint8Array(raw.length)
+            for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
+            thumbnails.set(`${RES_BASE}/${path}`, URL.createObjectURL(new Blob([bytes], { type: 'image/webp' })))
+          } catch {
+            // A missing or invalid thumbnail uses the existing resource URL.
+          }
+        }
+        mapIcons.current = thumbnails
+        setProps(value.props)
+      })
       .catch(error => { if (error.name !== 'AbortError') setFailed(true) })
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+      for (const url of thumbnails.values()) URL.revokeObjectURL(url)
+      thumbnails.clear()
+    }
   }, [])
 
   const markers = useMemo(() => [...(data?.markers[mapId] ?? []).map(marker => ({
@@ -196,7 +217,7 @@ export function App() {
       selectedMarkerId={selected} selectedPosition={null} onToggleMarker={setSelected}
       suppressInitialFlyForId={isMobile ? selected : undefined}
       subzoneAt={() => ''} flyToDuration={0.4} mapRef={mapRef}
-      assets={{ tileUrl: (map, x, y, level = 0) => `${RES_BASE}/${tileOverrides[`${map.id}:${level}:${x}:${y}`] ?? `tiles/${map.id}-base-expanded/${level}/${x}_${y}.png`}`, markerIconUrl: icon => icon ?? '' }}
+      assets={{ tileUrl: (map, x, y, level = 0) => `${RES_BASE}/${tileOverrides[`${map.id}:${level}:${x}:${y}`] ?? `tiles/${map.id}-base-expanded/${level}/${x}_${y}.png`}`, markerIconUrl: icon => icon ? mapIcons.current.get(icon) ?? icon : '' }}
       labels={{ copyPosition: text.copyPosition, noMapSelected: text.noMap, zoomIn: text.zoomIn, zoomOut: text.zoomOut }}
       renderPopupContent={marker => isMobile ? null : renderDetails(marker)}
       exposeTestHandle={import.meta.env.DEV}
