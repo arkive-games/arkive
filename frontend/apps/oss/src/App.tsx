@@ -6,7 +6,7 @@ import type { GameMapMeta, RegionInstance } from '@gamemap/data-contract'
 import text from './locales/zh-CN.json'
 import { indexCellMarkers } from './cellMarkers'
 import { homeUrl, settings, SiteInfoDialog } from './SiteChrome'
-import { useIsMobile } from '@gamemap/ui'
+import { Sheet, SheetContent, SheetTitle, useIsMobile } from '@gamemap/ui'
 
 const DATA_BASE = import.meta.env.VITE_DATA_BASE_URL ?? '/data'
 const RES_BASE = import.meta.env.VITE_RESOURCE_BASE_URL ?? '/ossres'
@@ -135,6 +135,17 @@ export function App() {
     else next.add(id)
     return next
   })
+  const mobileMarker = isMobile && selected ? cells.representatives.find(marker => marker.id === selected) : undefined
+  const renderDetails = (marker: EngineMarker) => <MarkerPopupCard
+    className={isMobile ? 'w-full max-w-full bg-transparent shadow-none [&>div:first-child]:hidden' : undefined}
+    name={marker.localizedName} icon={marker.icon ? <img src={marker.icon} alt="" className="size-9 object-contain" /> : undefined}
+    description={marker.localizedDescription || text.unknown} positionValue={`${marker.x}, ${marker.y}`}>
+    {cells.peers.has(marker.id) && <div className="mt-2 flex flex-wrap items-center gap-2 text-sm"><span>{text.sameCell}</span>
+      {cells.peers.get(marker.id)?.filter(peer => peer.id !== marker.id).map(peer => <button type="button" key={peer.id} className="text-primary underline" onClick={() => setSelected(peer.id)}>{peer.localizedName}</button>)}
+    </div>}
+    <p className="mt-2 text-xs text-muted-foreground">{text.preview}</p>
+  </MarkerPopupCard>
+
   return <ShellLayout
     topBar={<OssTopBar active="/" />}
     sidebar={<ShellSidebar key={isMobile ? 'mobile' : 'desktop'} defaultCollapsed={isMobile} width="20rem" label={text.map} collapseLabel={text.collapse} expandLabel={text.expand}
@@ -183,16 +194,19 @@ export function App() {
       visibleSubtypes={visible} forceShowIds={new Set(resultIds)}
       showLabels={showLabels} showBorders={showBorders} lodEnabled={false}
       selectedMarkerId={selected} selectedPosition={null} onToggleMarker={setSelected}
+      suppressInitialFlyForId={isMobile ? selected : undefined}
       subzoneAt={() => ''} flyToDuration={0.4} mapRef={mapRef}
       assets={{ tileUrl: (map, x, y, level = 0) => `${RES_BASE}/${tileOverrides[`${map.id}:${level}:${x}:${y}`] ?? `tiles/${map.id}-base-expanded/${level}/${x}_${y}.png`}`, markerIconUrl: icon => icon ?? '' }}
       labels={{ copyPosition: text.copyPosition, noMapSelected: text.noMap, zoomIn: text.zoomIn, zoomOut: text.zoomOut }}
-      renderPopupContent={marker => <MarkerPopupCard name={marker.localizedName} icon={marker.icon ? <img src={marker.icon} alt="" className="size-9 object-contain" /> : undefined} description={marker.localizedDescription || text.unknown} positionValue={`${marker.x}, ${marker.y}`}>
-        {cells.peers.has(marker.id) && <div className="mt-2 flex flex-wrap items-center gap-2 text-sm"><span>{text.sameCell}</span>
-          {cells.peers.get(marker.id)?.filter(peer => peer.id !== marker.id).map(peer => <button type="button" key={peer.id} className="text-primary underline" onClick={() => setSelected(peer.id)}>{peer.localizedName}</button>)}
-        </div>}
-        <p className="mt-2 text-xs text-muted-foreground">{text.preview}</p></MarkerPopupCard>}
+      renderPopupContent={marker => isMobile ? null : renderDetails(marker)}
       exposeTestHandle={import.meta.env.DEV}
     />}
+    {isMobile && <Sheet open={!!mobileMarker} onOpenChange={open => { if (!open) setSelected(null) }}>
+      <SheetContent side="bottom" aria-describedby={undefined} className="max-h-[80dvh] gap-0 overflow-y-auto px-2 pt-10 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <SheetTitle className="sr-only">{mobileMarker?.localizedName}</SheetTitle>
+        {mobileMarker && renderDetails(mobileMarker)}
+      </SheetContent>
+    </Sheet>}
     </div>
   </ShellLayout>
 }
