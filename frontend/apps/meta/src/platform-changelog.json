@@ -2,6 +2,23 @@
   "entries": [
     {
       "date": "2026-11-24",
+      "commit": "7b7d9a490423d2c6876145c2db0cada28a85709d",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Explore the Glimmith campaign map with 29 stained glass windows and 1,225 original puzzle solutions.",
+            "zh-CN": "开放格里米斯工匠互动地图，可查阅 29 扇彩窗和 1,225 道谜题的原版解法。",
+            "zh-TW": "開放格里米斯工匠互動地圖，可查閱 29 扇彩窗和 1,225 道謎題的原版解法。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-24",
       "commit": "988b60487544a72f16f525840693ce738494df3d",
       "targets": [
         "aion2",
