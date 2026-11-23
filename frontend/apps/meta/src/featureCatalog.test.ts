@@ -10,7 +10,7 @@ import {
   searchCatalog,
   type GameFeature,
 } from './featureCatalog'
-import { SITES, VISIBLE_SITES, type SiteCard } from './sites'
+import { GLIMMITH_MAP_PATH, SITES, VISIBLE_SITES, type SiteCard } from './sites'
 
 interface EdgeOneConfig {
   rewrites?: { source: string }[]
@@ -54,8 +54,14 @@ describe('feature catalog', () => {
   })
 
   it.each(FEATURES.map((feature) => [feature.id, feature] as const))('%s is served by its app', (_, feature) => {
-    expect(EDGEONE[feature.gameId], `apps/${feature.gameId}/edgeone.json is missing`).toBeDefined()
-    expect(isServed(feature.gameId, feature.path), `add ${feature.path} to apps/${feature.gameId}/edgeone.json`).toBe(true)
+    if (feature.path === GLIMMITH_MAP_PATH) {
+      expect(featureHref(feature, SITES.find(site => site.id === feature.gameId))).toBe(GLIMMITH_MAP_PATH)
+      expect(new URL(feature.path, 'https://example.test').pathname).toBe('/')
+      return
+    }
+    const app = feature.gameId
+    expect(EDGEONE[app], `apps/${app}/edgeone.json is missing`).toBeDefined()
+    expect(isServed(app, feature.path), `add ${feature.path} to apps/${app}/edgeone.json`).toBe(true)
   })
 
   it.each(FEATURES.map((feature) => [feature.id, feature] as const))('%s belongs to a listed game', (_, feature) => {
@@ -98,6 +104,11 @@ describe('featureHref', () => {
   it('has no link for a game that is not open', () => {
     expect(featureHref(feature, { ...site, comingSoon: true })).toBeUndefined()
     expect(featureHref(feature, undefined)).toBeUndefined()
+  })
+
+  it('keeps the Glimmith feature on the current portal origin', () => {
+    const feature = FEATURES.find(entry => entry.id === 'glimmith-map')!
+    expect(featureHref(feature, SITES.find(entry => entry.id === 'glimmith'))).toBe(GLIMMITH_MAP_PATH)
   })
 })
 

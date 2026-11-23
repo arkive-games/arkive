@@ -19,12 +19,15 @@ import gmzzIcon from './assets/gmzz-icon.webp'
 import palworldIcon from './assets/palworld-icon.webp'
 import vrisingIcon from './assets/vrising-icon.webp'
 import ro3Icon from './assets/ro3-icon.webp'
+import glimmithCover from './assets/glimmith-steam-header.jpg'
+import glimmithIcon from './assets/glimmith-marker-perfected.png'
 import { PBZ_ARTWORK } from './upcoming'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
 const VRISING_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1604030/library_600x900_2x.jpg'
 
 export const IS_TOY = Boolean(import.meta.env.VITE_TOY)
+export const GLIMMITH_MAP_PATH = '/#glimmith/tutorial'
 
 /**
  * The games the backend knows, taken from the generated client rather than
@@ -91,6 +94,16 @@ function resolveSiteUrl(envUrl: string | undefined, devUrl: string, productionUr
 }
 
 export const SITES: SiteCard[] = [
+  {
+    id: 'glimmith',
+    kind: 'offline',
+    url: GLIMMITH_MAP_PATH,
+    bg: glimmithCover,
+    icon: glimmithIcon,
+    nameKey: 'site.glimmith.name',
+    descKey: 'site.glimmith.desc',
+    featureKey: 'site.glimmith.feature',
+  },
   {
     id: 'oss',
     kind: 'offline',
@@ -248,6 +261,7 @@ export const GAME_LOGOS: Record<string, string> = {
   ro3: ro3Bg,
   pbz: PBZ_ARTWORK.icon,
   oss: '/oss-preview.svg',
+  glimmith: glimmithIcon,
 }
 
 /**

@@ -1,0 +1,5 @@
+{
+  "en-US": { "name": "The Artisan of Glimmith", "desc": "Find stained glass windows, puzzle locations, and original solutions", "feature": "Interactive map" },
+  "zh-CN": { "name": "格里米斯工匠", "desc": "查询彩窗、谜题位置和原版解法", "feature": "互动地图" },
+  "zh-TW": { "name": "格里米斯工匠", "desc": "查詢彩窗、謎題位置和原版解法", "feature": "互動地圖" }
+}

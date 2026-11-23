@@ -332,7 +332,8 @@
                 "sts2",
                 "ro3",
                 "pbz",
-                "oss"
+                "oss",
+                "glimmith"
               ],
               "type": "string"
             },
@@ -3076,7 +3077,8 @@
                 "sts2",
                 "ro3",
                 "pbz",
-                "oss"
+                "oss",
+                "glimmith"
               ],
               "type": "string"
             },
@@ -8610,7 +8612,8 @@
                 "sts2",
                 "ro3",
                 "pbz",
-                "oss"
+                "oss",
+                "glimmith"
               ],
               "type": "string"
             }
@@ -8684,7 +8687,8 @@
                 "sts2",
                 "ro3",
                 "pbz",
-                "oss"
+                "oss",
+                "glimmith"
               ],
               "type": "string"
             }
@@ -8803,7 +8807,8 @@
                 "sts2",
                 "ro3",
                 "pbz",
-                "oss"
+                "oss",
+                "glimmith"
               ],
               "type": "string"
             }

@@ -1,4 +1,4 @@
-import { IS_TOY, siteHref, type GameId, type SiteCard } from './sites'
+import { GLIMMITH_MAP_PATH, IS_TOY, siteHref, type GameId, type SiteCard } from './sites'
 
 /**
  * Every page a visitor can land on inside a game site, as the portal lists it.
@@ -49,6 +49,7 @@ export const HOME_TOOL_IDS = new Set([
 ])
 
 export const FEATURES: readonly GameFeature[] = [
+  { id: 'glimmith-map', gameId: 'glimmith', kind: 'map', path: GLIMMITH_MAP_PATH, name: text('Interactive Map', '\u4e92\u52a8\u5730\u56fe', '\u4e92\u52d5\u5730\u5716') },
   { id: 'oss-map', gameId: 'oss', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },
   // Palworld
   { id: 'palworld-map', gameId: 'palworld', kind: 'map', path: '/', name: text('Interactive Map', '互动地图', '互動地圖') },
@@ -158,7 +159,7 @@ export function featuresOf(gameId: string, features: readonly GameFeature[] = FE
 export function featureHref(feature: GameFeature, site: SiteCard | undefined): string | undefined {
   if (!site) return undefined
   const root = siteHref(site)
-  if (!root || IS_TOY) return root
+  if (!root || IS_TOY || feature.path === root) return root
   return new URL(feature.path, root.endsWith('/') ? root : `${root}/`).toString()
 }
 

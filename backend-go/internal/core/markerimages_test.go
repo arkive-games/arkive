@@ -43,6 +43,15 @@ func markerImageUpload(t *testing.T, h *harness, token, path, text string, files
 }
 
 func TestMarkerImagesPersistAndRequireScopedReview(t *testing.T) {
+	t.Run("palworld", func(t *testing.T) {
+		testMarkerImagesPersistAndRequireScopedReview(t, "palworld", markerImageQuery)
+	})
+	t.Run("glimmith", func(t *testing.T) {
+		testMarkerImagesPersistAndRequireScopedReview(t, "glimmith", "?game=glimmith&map=intro&marker=0479")
+	})
+}
+
+func testMarkerImagesPersistAndRequireScopedReview(t *testing.T, game, query string) {
 	store := blob.NewMemory()
 	h := newHarnessWith(t, nil, store)
 	author := h.registerAndLogin("image-author", "image-author@example.com", "hunter2hunter2")
@@ -50,11 +59,11 @@ func TestMarkerImagesPersistAndRequireScopedReview(t *testing.T) {
 	admin := h.registerAndLogin("image-admin", "image-admin@example.com", "hunter2hunter2")
 	h.promoteToSiteAdmin(admin)
 	mod := h.registerAndLogin("image-mod", "image-mod@example.com", "hunter2hunter2")
-	h.grantRole(admin, "palworld", h.uidOf(mod), "game_moderator")
+	h.grantRole(admin, game, h.uidOf(mod), "game_moderator")
 	otherMod := h.registerAndLogin("other-mod", "other-mod@example.com", "hunter2hunter2")
 	h.grantRole(admin, "pbz", h.uidOf(otherMod), "game_moderator")
 
-	upload := markerImageUpload(t, h, author, "/map-markers/images"+markerImageQuery, "", pngOf(t, 128, 64))
+	upload := markerImageUpload(t, h, author, "/map-markers/images"+query, "", pngOf(t, 128, 64))
 	if upload.status != http.StatusOK {
 		t.Fatalf("upload = %d: %s", upload.status, upload.body)
 	}
@@ -69,7 +78,7 @@ func TestMarkerImagesPersistAndRequireScopedReview(t *testing.T) {
 		t.Fatalf("stored objects = %v, %v", keys, err)
 	}
 	for _, options := range [][]requestOption{nil, {withBearer(reader)}, {withBearer(otherMod)}} {
-		res := h.do(http.MethodGet, "/map-markers/images"+markerImageQuery, nil, options...)
+		res := h.do(http.MethodGet, "/map-markers/images"+query, nil, options...)
 		if res.status != 200 || res.data(t)["count"] != float64(0) {
 			t.Fatalf("unapproved image leaked: %d %s", res.status, res.body)
 		}
@@ -77,7 +86,7 @@ func TestMarkerImagesPersistAndRequireScopedReview(t *testing.T) {
 	// This is a new HTTP read, not the upload response: the pending row survives
 	// a reload and is visible to its author and the correct game's staff only.
 	for _, token := range []string{author, mod} {
-		res := h.do(http.MethodGet, "/map-markers/images"+markerImageQuery, nil, withBearer(token))
+		res := h.do(http.MethodGet, "/map-markers/images"+query, nil, withBearer(token))
 		if res.status != 200 || res.data(t)["count"] != float64(1) {
 			t.Fatalf("owner/staff read = %d %s", res.status, res.body)
 		}
@@ -102,7 +111,7 @@ func TestMarkerImagesPersistAndRequireScopedReview(t *testing.T) {
 	if approved.status != 200 {
 		t.Fatalf("approve = %d: %s", approved.status, approved.body)
 	}
-	public := h.do(http.MethodGet, "/map-markers/images"+markerImageQuery, nil)
+	public := h.do(http.MethodGet, "/map-markers/images"+query, nil)
 	if public.data(t)["count"] != float64(1) {
 		t.Fatalf("approved image missing: %s", public.body)
 	}
@@ -111,7 +120,7 @@ func TestMarkerImagesPersistAndRequireScopedReview(t *testing.T) {
 		t.Fatal("stored URL changed on read")
 	}
 	h.do(http.MethodPut, "/map-markers/images/"+id+"/review", map[string]any{"publish": false}, withBearer(mod))
-	public = h.do(http.MethodGet, "/map-markers/images"+markerImageQuery, nil)
+	public = h.do(http.MethodGet, "/map-markers/images"+query, nil)
 	if public.data(t)["count"] != float64(0) {
 		t.Fatal("withdrawn image remains public")
 	}

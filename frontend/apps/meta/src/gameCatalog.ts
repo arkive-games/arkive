@@ -18,6 +18,7 @@ const GAME_CATEGORY_MAP: Record<string, readonly SpecificGameCategory[]> = {
   ro3: ['mmorpg'],
   pbz: ['singlePlayer'],
   oss: ['singlePlayer'],
+  glimmith: ['singlePlayer'],
 }
 
 export interface CatalogEntry {

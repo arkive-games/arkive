@@ -21,10 +21,10 @@ import "slices"
 //
 // Adding a game means updating core.game_keys() in a migration to match. The test
 // alongside this file is what stops the two from drifting.
-var Keys = []string{"aion2", "gmzz", "palworld", "vrising", "sts2", "ro3", "pbz", "oss"}
+var Keys = []string{"aion2", "gmzz", "palworld", "vrising", "sts2", "ro3", "pbz", "oss", "glimmith"}
 
-// MarkerKeys also includes map previews that are not listed in the forum.
-var MarkerKeys = append(slices.Clone(Keys), "glimmith")
+// MarkerKeys can additionally include private map previews.
+var MarkerKeys = slices.Clone(Keys)
 
 // Valid reports whether key names a game the platform serves.
 //

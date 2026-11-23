@@ -1,5 +1,6 @@
 import i18n from 'i18next'
 import ossLocale from './ossLocale.json'
+import glimmithSiteLocale from './glimmithSiteLocale.json'
 import moderationLocale from './moderationLocale.json'
 import contentModerationLocale from './contentModerationLocale.json'
 import catalogLocale from './catalogLocale.json'
@@ -1162,7 +1163,8 @@ for (const code of LANGUAGES) {
   i18n.addResourceBundle(code, 'translation', { contentModeration: contentModerationLocale[code as keyof typeof contentModerationLocale] ?? contentModerationLocale['en-US'] }, true, true)
   i18n.addResourceBundle(code, 'translation', { catalogStatus: catalogLocale[code as keyof typeof catalogLocale] ?? catalogLocale['en-US'] }, true, true)
   const copy = ossLocale[code as keyof typeof ossLocale] ?? ossLocale['en-US']
-  i18n.addResourceBundle(code, 'translation', { site: { oss: copy } }, true, true)
+  const glimmith = glimmithSiteLocale[code as keyof typeof glimmithSiteLocale] ?? glimmithSiteLocale['en-US']
+  i18n.addResourceBundle(code, 'translation', { site: { oss: copy, glimmith }, forum: { games: { glimmith: glimmith.name } } }, true, true)
 }
 
 bindArkiveDocumentLocale(i18n)

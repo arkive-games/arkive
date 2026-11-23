@@ -82,9 +82,7 @@ const HAS_TOOLS = FEATURES.some((feature) => feature.kind === 'tool'
 const NAV_KEYS = (['discoverGames', 'allGames', 'tools', 'forum'] as const)
   .filter((key) => key !== 'tools' || HAS_TOOLS)
 
-const GlimmithTutorial = import.meta.env.DEV
-  ? lazy(() => import('./GlimmithTutorialPrototype').then(({ GlimmithTutorialPrototype }) => ({ default: GlimmithTutorialPrototype })))
-  : null
+const GlimmithTutorial = lazy(() => import('./GlimmithTutorialPrototype').then(({ GlimmithTutorialPrototype }) => ({ default: GlimmithTutorialPrototype })))
 
 type HomeRoute =
   | { view: 'discoverGames' }
@@ -173,7 +171,7 @@ function routeFromHash(): HomeRoute {
   if (root === 'games') return { view: 'allGames' }
   if (root === 'tools' && HAS_TOOLS) return { view: 'tools' }
   if (root === 'updates') return { view: 'platformUpdates' }
-  if (GlimmithTutorial && root === 'glimmith' && value === 'tutorial') return { view: 'glimmithTutorial' }
+  if (root === 'glimmith' && value === 'tutorial') return { view: 'glimmithTutorial' }
   if (root === 'moderation') return { view: 'moderation' }
   if (root === 'forum') return { view: 'forum', composer: value === 'new' }
   if (root === 'notifications') {
@@ -355,7 +353,7 @@ export default function App() {
     window.scrollTo({ top: 0 })
   }
 
-  if (activeRoute.view === 'glimmithTutorial' && GlimmithTutorial) {
+  if (activeRoute.view === 'glimmithTutorial') {
     return <Suspense fallback={null}><GlimmithTutorial /></Suspense>
   }
 
