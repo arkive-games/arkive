@@ -27,6 +27,7 @@ const propKinds: { id: string; color: string }[] = [
 const gamePropIcons = new Set(['gem', 'gemslot', 'mirror', 'laser', 'elevator', 'reset', 'spawner'])
 const propIcon = (kind: string) => gamePropIcons.has(kind) ? `/props-game/${kind}.png` : `/props/${kind}.svg`
 const propText: Record<string, string> = text.props
+const propIconScale = (prop: Prop) => prop.kind === 'wardrobe' ? 0.72 : prop.icon ? 0.68 : 0.52
 const propSubtypes = propKinds.map(kind => `prop:${kind.id}`)
 const allSubtypes = ['entrance', 'area', ...propSubtypes]
 const defaultHiddenProps = new Set(['freezer', 'spawner', 'reset', 'teleporter', 'camera', 'lowWaterBoulder'].map(kind => `prop:${kind}`))
@@ -104,7 +105,7 @@ export function App() {
       localizedName: prop.tags.length ? `${name}（${prop.tags.join('·')}）` : name,
       localizedDescription: `${propText.category}${prop.tags.length ? ` · ${prop.tags.join(' · ')}` : ''} · ${propText.initial}`,
       subtypeLabel: name, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind),
-      subtypeMeta: { id: subtype, name, pinVariant: 'image', color: kind?.color, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind), iconScale: prop.icon ? 0.4 : 0.28 },
+      subtypeMeta: { id: subtype, name, pinVariant: 'image', color: kind?.color, icon: prop.icon ? `${RES_BASE}/${prop.icon}` : propIcon(prop.kind), iconScale: propIconScale(prop) },
     }
   })], [data, mapId, collections, props])
   const collectionRows = useMemo(() => {
