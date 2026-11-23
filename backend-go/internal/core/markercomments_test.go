@@ -26,6 +26,7 @@ func markerCommentPath(suffix string) string { return "/map-markers/comments" + 
 
 func (h *harness) mustCommentOnMarker(token string, body map[string]any) map[string]any {
 	h.t.Helper()
+	h.trustForContent(token)
 	res := h.do(http.MethodPost, markerCommentPath(""), body, withBearer(token))
 	if res.status != http.StatusOK {
 		h.t.Fatalf("create marker comment = %d: %s", res.status, res.body)

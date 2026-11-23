@@ -3,6 +3,7 @@ import { useAuth, useModerationAccess } from '@gamemap/auth'
 import { Button, PageSkeleton } from '@gamemap/ui'
 import { ContentModerationWorkspace } from './moderation/ContentModerationWorkspace'
 import { LegacyMarkerImageQueue } from './moderation/LegacyMarkerImageQueue'
+import { createModerationGateway } from './moderation/apiGateway'
 
 /** Protected entrance; a policy-compatible server adapter is a rollout gate. */
 export function ContentModerationPage({ onSignIn }: { onSignIn: () => void }) {
@@ -10,7 +11,7 @@ export function ContentModerationPage({ onSignIn }: { onSignIn: () => void }) {
   const access = useModerationAccess()
   const { t } = useTranslation()
   if (access.status === 'allowed' && auth.user) return <ContentModerationWorkspace key={auth.user.id}
-    gateway={null} siteAdministrator={Boolean(auth.user.isSuperuser)}
+    gateway={createModerationGateway(auth.client.requestClient, access.games, Boolean(auth.user.isSuperuser))} siteAdministrator={Boolean(auth.user.isSuperuser)}
     initialSection={window.location.hash === '#moderation/images' ? 'legacy' : 'pending'}
     legacy={<LegacyMarkerImageQueue client={auth.client.requestClient} />} />
   return <main className="arkive-content-page mx-auto w-full max-w-[var(--arkive-content-wide-data)] flex-1 px-[var(--arkive-page-gutter)] pb-12">

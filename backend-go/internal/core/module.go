@@ -27,6 +27,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/httpapi"
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
+	"github.com/arkive-games/arkive/backend-go/internal/core/policy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/privacy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/social"
@@ -183,7 +184,8 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 			d.Logger.Warn("no mail transport configured; reset tokens will be logged, not emailed")
 		}
 	}
-	service := users.NewService(queries, d.Pool, hasher, tokens, mailer, blobs, d.Logger)
+	policyService := policy.NewService(d.Pool)
+	service := users.NewService(queries, d.Pool, hasher, tokens, mailer, blobs, d.Logger).WithPolicy(policyService)
 	notifyService := notify.NewService(queries, service, d.Logger)
 	rolesService := roles.NewService(queries, service, d.Logger)
 	socialService := social.NewService(queries, service, notifyService, d.Logger)
@@ -195,7 +197,8 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	// the same state as an unreachable artifact, which is a deliberate way to run
 	// without the check.
 	markerIndex := comments.NewHTTPMarkerIndex(d.Config.Data.BaseURLs, d.Config.Data.Timeout, d.Logger)
-	commentsService := comments.NewService(queries, service, rolesService, notifyService, markerIndex, d.Logger).WithImages(d.Pool, blobs)
+	forumService.WithPolicy(policyService)
+	commentsService := comments.NewService(queries, service, rolesService, notifyService, markerIndex, d.Logger).WithImages(d.Pool, blobs).WithPolicy(policyService)
 
 	// Identity resolution runs before huma so that every operation can read
 	// the caller from its context. It never rejects: authorization is decided
@@ -226,6 +229,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 		socialService,
 		privacyService,
 		notifyService,
+		policyService,
 		tokens,
 		auth.NewAltcha(
 			d.Config.Auth.AltchaHMACKey,
@@ -248,6 +252,7 @@ func (m *Module) Mount(r chi.Router, d module.Deps) error {
 	handlers.RegisterRoleRoutes(a)
 	handlers.RegisterSocialRoutes(a)
 	handlers.RegisterModerationRoutes(a)
+	handlers.RegisterPolicyRoutes(a)
 	handlers.RegisterPrivacyRoutes(a)
 	handlers.RegisterNotificationRoutes(a)
 	handlers.RegisterPostImageRoutes(a)

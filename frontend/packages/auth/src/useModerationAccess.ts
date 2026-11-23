@@ -10,7 +10,7 @@ export function useModerationAccess() {
   const userId = auth.user?.id ?? null
   const superuser = Boolean(auth.user?.isSuperuser && auth.user.isActive)
   const [revision, setRevision] = useState(0)
-  const [snapshot, setSnapshot] = useState<{ userId: string; revision: number; status: ModerationAccessStatus } | null>(null)
+  const [snapshot, setSnapshot] = useState<{ userId: string; revision: number; status: ModerationAccessStatus; games: string[] } | null>(null)
   const retry = useCallback(() => setRevision((value) => value + 1), [])
   const client = auth.client.requestClient
 
@@ -18,9 +18,9 @@ export function useModerationAccess() {
     if (!auth.enabled || auth.status !== 'authenticated' || !userId || superuser) return
     let active = true
     void result(listOwnRoles({ client, throwOnError: true })).then((data) => {
-      if (active) setSnapshot({ userId, revision, status: data.results?.length ? 'allowed' : 'forbidden' })
+      if (active) setSnapshot({ userId, revision, status: data.results?.length ? 'allowed' : 'forbidden', games: [...new Set((data.results ?? []).map((role) => role.game))] })
     }).catch(() => {
-      if (active) setSnapshot({ userId, revision, status: 'error' })
+      if (active) setSnapshot({ userId, revision, status: 'error', games: [] })
     })
     return () => { active = false }
   }, [auth.enabled, auth.status, client, userId, superuser, revision])
@@ -31,5 +31,5 @@ export function useModerationAccess() {
   else if (!userId || auth.status !== 'authenticated') status = 'anonymous'
   else if (superuser) status = 'allowed'
   else status = snapshot?.userId === userId && snapshot.revision === revision ? snapshot.status : 'checking'
-  return { status, retry }
+  return { status, retry, games: superuser ? [] : snapshot?.userId === userId && snapshot.revision === revision ? snapshot.games : [] }
 }

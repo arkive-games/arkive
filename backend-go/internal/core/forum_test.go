@@ -17,6 +17,7 @@ import (
 // createPost publishes a post and returns the response.
 func (h *harness) createPost(token string, body map[string]any) response {
 	h.t.Helper()
+	h.trustForContent(token)
 	return h.do(http.MethodPost, "/forum/posts", body, withBearer(token))
 }
 
@@ -41,6 +42,7 @@ func simplePost() map[string]any {
 // mustComment adds a comment or reply and returns the decoded payload.
 func (h *harness) mustComment(token string, postNo int64, body string, parentID any) map[string]any {
 	h.t.Helper()
+	h.trustForContent(token)
 	payload := map[string]any{"body": body}
 	if parentID != nil {
 		payload["parentId"] = parentID

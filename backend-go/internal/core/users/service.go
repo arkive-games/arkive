@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/policy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/uploads"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/blob"
@@ -38,7 +40,8 @@ type Service struct {
 	// blobs is nil when object storage is unconfigured, which is allowed in
 	// development. Avatar routes then fail with a clear service error while
 	// everything else works; see config.S3.Configured.
-	blobs blob.Store
+	blobs  blob.Store
+	policy *policy.Service
 
 	// dispatch runs work that must outlive the request. Injectable so a test can
 	// substitute a synchronous runner and still assert on the mail that was sent;
@@ -57,6 +60,8 @@ func NewService(q *coredb.Queries, pool *pgxpool.Pool, hasher *auth.Hasher, toke
 		dispatch: func(f func()) { go f() },
 	}
 }
+
+func (s *Service) WithPolicy(service *policy.Service) *Service { s.policy = service; return s }
 
 // avatarResolver renders stored keys as public URLs, or nil when there is no
 // storage to render them from.
@@ -312,6 +317,24 @@ func (s *Service) SetAvatar(ctx context.Context, id uuid.UUID, image io.Reader) 
 	if err != nil {
 		return UserRead{}, err
 	}
+	if s.policy != nil {
+		status, reason, policyErr := s.policy.PublicationStatus(ctx, id)
+		if policyErr != nil {
+			return UserRead{}, policyErr
+		}
+		if status == "pending" {
+			fields, _ := json.Marshal(map[string]string{"avatarKey": avatar.Key})
+			previousAvatar := ""
+			if current.AvatarKey != nil {
+				previousAvatar = *current.AvatarKey
+			}
+			previous, _ := json.Marshal(map[string]string{"avatarKey": previousAvatar})
+			if _, policyErr = s.policy.ReplacePendingUnit(ctx, id, "profile", "users", "", id, reason, policy.Candidate{Title: "Public avatar update", Fields: fields}, previous); policyErr != nil {
+				return UserRead{}, policyErr
+			}
+			return toUserRead(current, s.avatarResolver()), nil
+		}
+	}
 
 	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: &avatar.Key})
 	if err != nil {
@@ -344,6 +367,24 @@ func (s *Service) SetAvatarPreset(ctx context.Context, id uuid.UUID, presetID st
 	}
 
 	key := uploads.PresetKey(presetID)
+	if s.policy != nil {
+		status, reason, policyErr := s.policy.PublicationStatus(ctx, id)
+		if policyErr != nil {
+			return UserRead{}, policyErr
+		}
+		if status == "pending" {
+			fields, _ := json.Marshal(map[string]string{"avatarKey": key})
+			previousAvatar := ""
+			if current.AvatarKey != nil {
+				previousAvatar = *current.AvatarKey
+			}
+			previous, _ := json.Marshal(map[string]string{"avatarKey": previousAvatar})
+			if _, policyErr = s.policy.ReplacePendingUnit(ctx, id, "profile", "users", "", id, reason, policy.Candidate{Title: "Preset avatar update", Fields: fields}, previous); policyErr != nil {
+				return UserRead{}, policyErr
+			}
+			return toUserRead(current, s.avatarResolver()), nil
+		}
+	}
 	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: &key})
 	if err != nil {
 		return UserRead{}, mapConstraintError(err)
@@ -365,6 +406,31 @@ func (s *Service) SetAvatarPreset(ctx context.Context, id uuid.UUID, presetID st
 // The resulting avatarUrl is not empty: it becomes the preset derived from the
 // account's uid.
 func (s *Service) ClearAvatar(ctx context.Context, id uuid.UUID) (UserRead, error) {
+	if s.policy != nil {
+		current, err := s.q.GetUserByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return UserRead{}, apierr.New(apierr.UserNotFound, "no such user")
+			}
+			return UserRead{}, fmt.Errorf("load user: %w", err)
+		}
+		status, reason, policyErr := s.policy.PublicationStatus(ctx, id)
+		if policyErr != nil {
+			return UserRead{}, policyErr
+		}
+		if status == "pending" {
+			fields, _ := json.Marshal(map[string]string{"avatarKey": ""})
+			previousAvatar := ""
+			if current.AvatarKey != nil {
+				previousAvatar = *current.AvatarKey
+			}
+			previous, _ := json.Marshal(map[string]string{"avatarKey": previousAvatar})
+			if _, policyErr = s.policy.ReplacePendingUnit(ctx, id, "profile", "users", "", id, reason, policy.Candidate{Title: "Reset avatar", Fields: fields}, previous); policyErr != nil {
+				return UserRead{}, policyErr
+			}
+			return toUserRead(current, s.avatarResolver()), nil
+		}
+	}
 	u, err := s.q.SetUserAvatar(ctx, coredb.SetUserAvatarParams{ID: id, AvatarKey: nil})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -401,6 +467,20 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, in UpdateInput, priv
 		name := strings.TrimSpace(*in.Name)
 		if err := validateName(name); err != nil {
 			return UserRead{}, err
+		}
+		if s.policy != nil && name != current.Name {
+			status, reason, policyErr := s.policy.PublicationStatus(ctx, id)
+			if policyErr != nil {
+				return UserRead{}, policyErr
+			}
+			if status == "pending" {
+				fields, _ := json.Marshal(map[string]string{"name": name})
+				previous, _ := json.Marshal(map[string]string{"name": current.Name})
+				if _, policyErr = s.policy.ReplacePendingUnit(ctx, id, "profile", "users", "", id, reason, policy.Candidate{Title: "Public profile update", Fields: fields}, previous); policyErr != nil {
+					return UserRead{}, policyErr
+				}
+				return toUserRead(current, s.avatarResolver()), nil
+			}
 		}
 		params.Name = &name
 	}

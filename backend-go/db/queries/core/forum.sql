@@ -1,6 +1,6 @@
 -- name: CreateForumPost :one
-INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags, video_url)
-VALUES ($1, $2, $3, $4, $5, sqlc.narg('topic'), $6, $7, sqlc.narg('video_url'))
+INSERT INTO core.forum_posts (id, author_id, channel, title, body, topic, game_ids, tags, video_url, publication_status)
+VALUES ($1, $2, $3, $4, $5, sqlc.narg('topic'), $6, $7, sqlc.narg('video_url'), sqlc.arg('publication_status'))
 RETURNING *;
 
 -- name: GetForumPostByNo :one
@@ -29,6 +29,13 @@ UPDATE core.forum_posts SET
 WHERE id = sqlc.arg('id')
 RETURNING *;
 
+-- Used when a new attachment turns an already-published post into a complete
+-- submission that needs review. The text remains in the row so the moderation
+-- unit can show the previous public snapshot.
+-- name: UpdateForumPostPublicationStatus :exec
+UPDATE core.forum_posts SET publication_status = $2, edited_at = now()
+WHERE id = $1;
+
 -- name: DeleteForumPost :execrows
 DELETE FROM core.forum_posts WHERE id = $1;
 
@@ -44,7 +51,7 @@ DELETE FROM core.forum_posts WHERE id = $1;
 -- name: ListForumPosts :many
 SELECT
     p.*,
-    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) AS comment_count,
+    (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL AND c.publication_status = 'published') AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b WHERE b.post_id = p.id) AS bookmark_count,
     EXISTS (
@@ -57,6 +64,7 @@ SELECT
     ) AS bookmarked
 FROM core.forum_posts p
 WHERE p.hidden_at IS NULL
+  AND (p.publication_status = 'published' OR p.author_id = sqlc.narg('viewer_id')::uuid)
   AND (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
   AND (sqlc.narg('tag')::text     IS NULL OR p.tags     @> ARRAY[sqlc.narg('tag')::text])
@@ -95,7 +103,7 @@ ORDER BY
     -- because a ranking formula invites being mistaken for one.
     CASE WHEN sqlc.arg('sort')::text = 'hot' THEN
         ((SELECT count(*) FROM core.forum_post_likes l WHERE l.post_id = p.id)
-         + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL) + 1)
+        + 2 * (SELECT count(*) FROM core.forum_comments c WHERE c.post_id = p.id AND c.hidden_at IS NULL AND c.publication_status = 'published') + 1)
         / power(extract(epoch FROM (now() - p.created_at)) / 3600.0 + 2, 1.5)
     END DESC NULLS LAST,
     p.created_at DESC, p.id
@@ -106,6 +114,7 @@ LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 -- name: CountForumPosts :one
 SELECT count(*) FROM core.forum_posts p
 WHERE p.hidden_at IS NULL
+  AND p.publication_status = 'published'
   AND (sqlc.narg('channel')::text IS NULL OR p.channel = sqlc.narg('channel')::text)
   AND (sqlc.narg('game_id')::text IS NULL OR p.game_ids @> ARRAY[sqlc.narg('game_id')::text])
   AND (sqlc.narg('tag')::text     IS NULL OR p.tags     @> ARRAY[sqlc.narg('tag')::text])
@@ -134,14 +143,14 @@ WHERE id = sqlc.arg('id')
 RETURNING *;
 
 -- name: CountForumPostComments :one
-SELECT count(*) FROM core.forum_comments WHERE post_id = $1 AND hidden_at IS NULL;
+SELECT count(*) FROM core.forum_comments WHERE post_id = $1 AND hidden_at IS NULL AND publication_status = 'published';
 
 -- Everything a single post's DTO needs beyond its own row, in one round trip rather
 -- than one query per counter.
 -- name: ForumPostReactions :one
 SELECT
     (SELECT count(*) FROM core.forum_comments c
-        WHERE c.post_id = sqlc.arg('post_id') AND c.hidden_at IS NULL) AS comment_count,
+        WHERE c.post_id = sqlc.arg('post_id') AND c.hidden_at IS NULL AND c.publication_status = 'published') AS comment_count,
     (SELECT count(*) FROM core.forum_post_likes l
         WHERE l.post_id = sqlc.arg('post_id')) AS like_count,
     (SELECT count(*) FROM core.forum_post_bookmarks b
@@ -169,9 +178,9 @@ WITH allocated AS (
     WHERE id = sqlc.arg('post_id')
     RETURNING next_comment_no - 1 AS comment_no
 )
-INSERT INTO core.forum_comments (id, post_id, parent_id, author_id, body, comment_no)
+INSERT INTO core.forum_comments (id, post_id, parent_id, author_id, body, comment_no, publication_status)
 SELECT sqlc.arg('id'), sqlc.arg('post_id'), NULL, sqlc.arg('author_id'),
-       sqlc.arg('body'), allocated.comment_no
+       sqlc.arg('body'), allocated.comment_no, sqlc.arg('publication_status')
 FROM allocated
 RETURNING *;
 
@@ -181,8 +190,8 @@ RETURNING *;
 -- The composite foreign key refuses this outright if parent_id names a reply
 -- rather than a top-level comment, which is what keeps the thread two levels deep.
 -- name: CreateForumReply :one
-INSERT INTO core.forum_comments (id, post_id, parent_id, author_id, body, comment_no)
-VALUES ($1, $2, $3, $4, $5, NULL)
+INSERT INTO core.forum_comments (id, post_id, parent_id, author_id, body, comment_no, publication_status)
+VALUES ($1, $2, $3, $4, $5, NULL, sqlc.arg('publication_status'))
 RETURNING *;
 
 -- name: GetForumCommentByID :one
@@ -217,5 +226,6 @@ FROM core.forum_comments c
 -- take it down, and the parent's floor number is still what the reply sorts under.
 LEFT JOIN core.forum_comments parent ON parent.id = c.parent_id
 WHERE c.post_id = sqlc.arg('post_id') AND c.hidden_at IS NULL
+  AND c.publication_status = 'published'
 ORDER BY COALESCE(c.comment_no, parent.comment_no), c.depth, c.created_at, c.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');

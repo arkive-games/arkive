@@ -1,6 +1,44 @@
 {
   "components": {
     "schemas": {
+      "AuthorSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "accountAgeHours": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "cleanHistory": {
+            "type": "boolean"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "qualifyingApprovals": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "tier": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "tier",
+          "emailVerified",
+          "accountAgeHours",
+          "qualifyingApprovals",
+          "cleanHistory"
+        ],
+        "type": "object"
+      },
       "AvatarPreset": {
         "additionalProperties": false,
         "properties": {
@@ -38,6 +76,26 @@
         },
         "required": [
           "presets"
+        ],
+        "type": "object"
+      },
+      "Candidate": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "fields": {},
+          "media": {},
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body",
+          "fields",
+          "media"
         ],
         "type": "object"
       },
@@ -936,6 +994,38 @@
         ],
         "type": "object"
       },
+      "EnvelopeListUnit": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListUnit",
+            "description": "The payload"
+          },
+          "errorCode": {
+            "description": "Always \"Success\" on a 2xx response",
+            "examples": [
+              "Success"
+            ],
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Always empty on a 2xx response",
+            "type": "string"
+          },
+          "showType": {
+            "description": "How the client should surface this result",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errorCode",
+          "errorMessage",
+          "showType",
+          "data"
+        ],
+        "type": "object"
+      },
       "EnvelopeListUserRead": {
         "additionalProperties": false,
         "properties": {
@@ -1802,6 +1892,31 @@
         ],
         "type": "object"
       },
+      "ListUnit": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "Total number of matching records, ignoring pagination",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "The current page of records",
+            "items": {
+              "$ref": "#/components/schemas/Unit"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ],
+        "type": "object"
+      },
       "ListUserRead": {
         "additionalProperties": false,
         "properties": {
@@ -2106,6 +2221,52 @@
           "author",
           "createdAt",
           "canReview"
+        ],
+        "type": "object"
+      },
+      "ModerationDecisionInputBody": {
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "enum": [
+              "quality",
+              "ordinary",
+              "serious"
+            ],
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "type": "string"
+          },
+          "evidence": {
+            "maxLength": 10000,
+            "type": "string"
+          },
+          "expectedRevision": {
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "qualificationCredit": {
+            "type": "boolean"
+          },
+          "reason": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "decision",
+          "classification",
+          "qualificationCredit",
+          "reason",
+          "evidence"
         ],
         "type": "object"
       },
@@ -2784,6 +2945,68 @@
           "accessToken",
           "tokenType",
           "expiresAt"
+        ],
+        "type": "object"
+      },
+      "Unit": {
+        "additionalProperties": false,
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/AuthorSummary"
+          },
+          "authorId": {
+            "type": "string"
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/Candidate"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "game": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "previousPublic": {},
+          "reviewReason": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "sourceTable": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "authorId",
+          "contentType",
+          "sourceTable",
+          "sourceId",
+          "revision",
+          "state",
+          "reviewReason",
+          "candidate",
+          "policyVersion",
+          "submittedAt",
+          "author"
         ],
         "type": "object"
       },
@@ -6373,7 +6596,7 @@
     },
     "/map-markers/comments/with-images": {
       "post": {
-        "description": "Text publishes immediately. Images are stored together with the comment and become public only after review. A failed upload publishes neither a partial comment nor partial attachments.",
+        "description": "The text and every image form one complete submission. New or restricted accounts publish only after review; trusted accounts publish directly. A failed upload publishes neither a partial comment nor partial attachments.",
         "operationId": "createMarkerCommentWithImages",
         "parameters": [
           {
@@ -6534,7 +6757,7 @@
             "description": "Service Unavailable"
           }
         },
-        "summary": "Publish a comment with up to three images",
+        "summary": "Submit a comment with up to three images",
         "tags": [
           "comments"
         ]
@@ -7260,6 +7483,7 @@
         ]
       },
       "post": {
+        "description": "New or restricted accounts enter the unified moderation queue; trusted accounts publish directly.",
         "operationId": "uploadMarkerImage",
         "parameters": [
           {
@@ -7402,7 +7626,7 @@
             "description": "Service Unavailable"
           }
         },
-        "summary": "Submit a player image for review",
+        "summary": "Submit a player image",
         "tags": [
           "comments"
         ]
@@ -7675,6 +7899,223 @@
           }
         },
         "summary": "Player images awaiting your review",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
+    "/moderation/units": {
+      "get": {
+        "operationId": "listModerationUnits",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "enum": [
+                "",
+                "map",
+                "forum",
+                "profile",
+                "build"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "game",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "default": "pending",
+              "enum": [
+                "pending",
+                "published",
+                "rejected",
+                "hidden",
+                "withdrawn",
+                "deleted"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "default": 20,
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeListUnit"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List complete content submissions awaiting moderation",
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
+    "/moderation/units/{id}/decision": {
+      "post": {
+        "operationId": "decideModerationUnit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationDecisionInputBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeEmpty"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Approve or reject a complete content submission",
         "tags": [
           "moderation"
         ]

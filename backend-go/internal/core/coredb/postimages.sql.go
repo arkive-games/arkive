@@ -12,21 +12,23 @@ import (
 )
 
 const attachForumPostImage = `-- name: AttachForumPostImage :one
-INSERT INTO core.forum_post_images (post_id, position, object_key, width, height)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO core.forum_post_images (post_id, position, object_key, width, height, publication_status)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (post_id, position) DO UPDATE SET
     object_key = excluded.object_key,
     width      = excluded.width,
-    height     = excluded.height
-RETURNING post_id, position, object_key, width, height, created_at
+    height     = excluded.height,
+    publication_status = excluded.publication_status
+RETURNING post_id, position, object_key, width, height, created_at, publication_status
 `
 
 type AttachForumPostImageParams struct {
-	PostID    uuid.UUID
-	Position  int16
-	ObjectKey string
-	Width     int32
-	Height    int32
+	PostID            uuid.UUID
+	Position          int16
+	ObjectKey         string
+	Width             int32
+	Height            int32
+	PublicationStatus string
 }
 
 // Re-attaching at the same position replaces it, so a client correcting one slot does not
@@ -38,6 +40,7 @@ func (q *Queries) AttachForumPostImage(ctx context.Context, arg AttachForumPostI
 		arg.ObjectKey,
 		arg.Width,
 		arg.Height,
+		arg.PublicationStatus,
 	)
 	var i CoreForumPostImage
 	err := row.Scan(
@@ -47,6 +50,7 @@ func (q *Queries) AttachForumPostImage(ctx context.Context, arg AttachForumPostI
 		&i.Width,
 		&i.Height,
 		&i.CreatedAt,
+		&i.PublicationStatus,
 	)
 	return i, err
 }
@@ -124,7 +128,7 @@ func (q *Queries) ListForumPostImageKeys(ctx context.Context, postID uuid.UUID) 
 }
 
 const listForumPostImages = `-- name: ListForumPostImages :many
-SELECT post_id, position, object_key, width, height, created_at FROM core.forum_post_images WHERE post_id = $1 ORDER BY position
+SELECT post_id, position, object_key, width, height, created_at, publication_status FROM core.forum_post_images WHERE post_id = $1 AND publication_status = 'published' ORDER BY position
 `
 
 func (q *Queries) ListForumPostImages(ctx context.Context, postID uuid.UUID) ([]CoreForumPostImage, error) {
@@ -143,6 +147,41 @@ func (q *Queries) ListForumPostImages(ctx context.Context, postID uuid.UUID) ([]
 			&i.Width,
 			&i.Height,
 			&i.CreatedAt,
+			&i.PublicationStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listForumPostImagesForModeration = `-- name: ListForumPostImagesForModeration :many
+SELECT post_id, position, object_key, width, height, created_at, publication_status FROM core.forum_post_images WHERE post_id = $1 ORDER BY position
+`
+
+// Queue rendering needs the candidate attachments even while they are pending.
+// Public readers use ListForumPostImages above.
+func (q *Queries) ListForumPostImagesForModeration(ctx context.Context, postID uuid.UUID) ([]CoreForumPostImage, error) {
+	rows, err := q.db.Query(ctx, listForumPostImagesForModeration, postID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CoreForumPostImage{}
+	for rows.Next() {
+		var i CoreForumPostImage
+		if err := rows.Scan(
+			&i.PostID,
+			&i.Position,
+			&i.ObjectKey,
+			&i.Width,
+			&i.Height,
+			&i.CreatedAt,
+			&i.PublicationStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -155,8 +194,9 @@ func (q *Queries) ListForumPostImages(ctx context.Context, postID uuid.UUID) ([]
 }
 
 const listForumPostImagesForPosts = `-- name: ListForumPostImagesForPosts :many
-SELECT post_id, position, object_key, width, height, created_at FROM core.forum_post_images
+SELECT post_id, position, object_key, width, height, created_at, publication_status FROM core.forum_post_images
 WHERE post_id = ANY ($1::uuid[])
+  AND publication_status = 'published'
 ORDER BY post_id, position
 `
 
@@ -178,6 +218,7 @@ func (q *Queries) ListForumPostImagesForPosts(ctx context.Context, postIds []uui
 			&i.Width,
 			&i.Height,
 			&i.CreatedAt,
+			&i.PublicationStatus,
 		); err != nil {
 			return nil, err
 		}

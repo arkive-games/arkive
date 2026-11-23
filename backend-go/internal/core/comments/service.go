@@ -2,6 +2,7 @@ package comments
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -19,6 +20,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/games"
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
+	"github.com/arkive-games/arkive/backend-go/internal/core/policy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
@@ -28,20 +30,35 @@ import (
 
 // Service implements the marker-comment use cases.
 type Service struct {
-	q        *coredb.Queries
-	authors  AuthorSource
-	authz    Authorizer
-	notifier Notifier
-	markers  MarkerIndex
-	logger   *slog.Logger
-	pool     *pgxpool.Pool
-	blobs    blob.Store
+	q                         *coredb.Queries
+	authors                   AuthorSource
+	authz                     Authorizer
+	notifier                  Notifier
+	markers                   MarkerIndex
+	logger                    *slog.Logger
+	pool                      *pgxpool.Pool
+	blobs                     blob.Store
+	policy                    *policy.Service
+	publicationStatusOverride string
+	publicationReasonOverride string
 }
 
 // WithImages supplies the transaction pool and the existing object store.
 func (s *Service) WithImages(pool *pgxpool.Pool, store blob.Store) *Service {
 	s.pool, s.blobs = pool, store
 	return s
+}
+
+func (s *Service) WithPolicy(service *policy.Service) *Service { s.policy = service; return s }
+
+func (s *Service) publication(ctx context.Context, userID uuid.UUID) (string, string, error) {
+	if s.publicationStatusOverride != "" {
+		return s.publicationStatusOverride, s.publicationReasonOverride, nil
+	}
+	if s.policy == nil {
+		return "published", "", nil
+	}
+	return s.policy.PublicationStatus(ctx, userID)
 }
 
 // Notifier receives the events a marker comment causes.
@@ -99,16 +116,27 @@ func (s *Service) Create(ctx context.Context, principal auth.Principal, in Creat
 		return MarkerCommentRead{}, err
 	}
 
+	publicationStatus, reviewReason, err := s.publication(ctx, principal.ID)
+	if err != nil {
+		return MarkerCommentRead{}, err
+	}
 	comment, err := s.q.CreateMarkerComment(ctx, coredb.CreateMarkerCommentParams{
-		ID:       uuid.New(),
-		GameKey:  target.GameKey,
-		MapID:    target.MapID,
-		MarkerID: target.MarkerID,
-		AuthorID: principal.ID,
-		Body:     body,
+		ID:                uuid.New(),
+		GameKey:           target.GameKey,
+		MapID:             target.MapID,
+		MarkerID:          target.MarkerID,
+		AuthorID:          principal.ID,
+		Body:              body,
+		PublicationStatus: publicationStatus,
 	})
 	if err != nil {
 		return MarkerCommentRead{}, fmt.Errorf("create marker comment: %w", err)
+	}
+	if s.policy != nil && publicationStatus == "pending" {
+		_, err = s.policy.CreateUnit(ctx, principal.ID, "map", "marker_comments", target.GameKey, &comment.ID, reviewReason, policy.Candidate{Body: body})
+		if err != nil {
+			return MarkerCommentRead{}, err
+		}
 	}
 	return s.single(ctx, comment, &principal.ID)
 }
@@ -143,14 +171,19 @@ func (s *Service) createReply(ctx context.Context, principal auth.Principal, tar
 			"that comment belongs to a different marker")
 	}
 
+	publicationStatus, reviewReason, err := s.publication(ctx, principal.ID)
+	if err != nil {
+		return MarkerCommentRead{}, err
+	}
 	comment, err := s.q.CreateMarkerCommentReply(ctx, coredb.CreateMarkerCommentReplyParams{
-		ID:       uuid.New(),
-		GameKey:  parent.GameKey,
-		MapID:    parent.MapID,
-		MarkerID: parent.MarkerID,
-		AuthorID: principal.ID,
-		ParentID: &parent.ID,
-		Body:     body,
+		ID:                uuid.New(),
+		GameKey:           parent.GameKey,
+		MapID:             parent.MapID,
+		MarkerID:          parent.MarkerID,
+		AuthorID:          principal.ID,
+		ParentID:          &parent.ID,
+		Body:              body,
+		PublicationStatus: publicationStatus,
 	})
 	if err != nil {
 		return MarkerCommentRead{}, fmt.Errorf("create marker comment reply: %w", err)
@@ -162,6 +195,12 @@ func (s *Service) createReply(ctx context.Context, principal auth.Principal, tar
 		Actor:           &principal.ID,
 		MarkerCommentID: &comment.ID,
 	})
+	if s.policy != nil && publicationStatus == "pending" {
+		_, err = s.policy.CreateUnit(ctx, principal.ID, "map", "marker_comments", parent.GameKey, &comment.ID, reviewReason, policy.Candidate{Body: body})
+		if err != nil {
+			return MarkerCommentRead{}, err
+		}
+	}
 	return s.single(ctx, comment, &principal.ID)
 }
 
@@ -246,6 +285,22 @@ func (s *Service) Update(ctx context.Context, principal auth.Principal, id uuid.
 	trimmed, err := validateBody(body)
 	if err != nil {
 		return MarkerCommentRead{}, err
+	}
+	if s.policy != nil {
+		status, reason, policyErr := s.policy.PublicationStatus(ctx, principal.ID)
+		if policyErr != nil {
+			return MarkerCommentRead{}, policyErr
+		}
+		if status == "pending" {
+			var previous json.RawMessage
+			if comment.PublicationStatus == "published" {
+				previous, _ = json.Marshal(map[string]any{"body": comment.Body})
+			}
+			if _, policyErr = s.policy.ReplacePendingUnit(ctx, principal.ID, "map", "marker_comments", comment.GameKey, comment.ID, reason, policy.Candidate{Body: trimmed}, previous); policyErr != nil {
+				return MarkerCommentRead{}, policyErr
+			}
+			return s.single(ctx, comment, &principal.ID)
+		}
 	}
 	updated, err := s.q.UpdateMarkerComment(ctx, coredb.UpdateMarkerCommentParams{ID: comment.ID, Body: trimmed})
 	if err != nil {

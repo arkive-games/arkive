@@ -18,6 +18,7 @@ vi.mock('@gamemap/auth', () => ({
   useModerationAccess: () => ({ status: session.access, retry: vi.fn() }),
 }))
 vi.mock('@gamemap/api-core', async original => ({ ...await original<object>(), ...legacy, result: (value: unknown) => value }))
+vi.mock('./moderation/apiGateway', () => ({ createModerationGateway: () => null }))
 const i18n = createInstance()
 await i18n.use(initReactI18next).init({ lng: 'en-US', resources: { 'en-US': { translation: { contentModeration: copy['en-US'], moderation: legacyCopy['en-US'] } } }, interpolation: { escapeValue: false } })
 const wrap = (children: React.ReactNode) => <I18nextProvider i18n={i18n}>{children}</I18nextProvider>

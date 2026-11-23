@@ -97,6 +97,24 @@ func (s *Service) CanAny(ctx context.Context, p auth.Principal, action Action, g
 	return false, nil
 }
 
+// GamesFor returns the game scopes in which an account may perform an action.
+func (s *Service) GamesFor(ctx context.Context, p auth.Principal, action Action) ([]string, error) {
+	if p.IsSuperuser {
+		return append([]string(nil), games.Keys...), nil
+	}
+	allowed := make([]string, 0, len(games.Keys))
+	for _, key := range games.Keys {
+		ok, err := s.Can(ctx, p, action, key)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			allowed = append(allowed, key)
+		}
+	}
+	return allowed, nil
+}
+
 // held reads the roles an account holds in one game.
 func (s *Service) held(ctx context.Context, userID uuid.UUID, game string) (map[Role]bool, error) {
 	rows, err := s.q.ListRoleGrantsForUserInGame(ctx, coredb.ListRoleGrantsForUserInGameParams{

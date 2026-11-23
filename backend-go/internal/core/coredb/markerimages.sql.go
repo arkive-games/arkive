@@ -57,8 +57,8 @@ func (q *Queries) CountPendingMarkerImages(ctx context.Context, games []string) 
 }
 
 const createMarkerImage = `-- name: CreateMarkerImage :one
-INSERT INTO core.marker_images (id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height, status, reviewed_by, reviewed_at, created_at
+INSERT INTO core.marker_images (id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height, status, reviewed_by, reviewed_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CASE WHEN $11 = 'published' THEN $5 ELSE NULL END, CASE WHEN $11 = 'published' THEN now() ELSE NULL END) RETURNING id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height, status, reviewed_by, reviewed_at, created_at
 `
 
 type CreateMarkerImageParams struct {
@@ -72,6 +72,7 @@ type CreateMarkerImageParams struct {
 	ObjectKey string
 	Width     int32
 	Height    int32
+	Status    string
 }
 
 func (q *Queries) CreateMarkerImage(ctx context.Context, arg CreateMarkerImageParams) (CoreMarkerImage, error) {
@@ -86,6 +87,7 @@ func (q *Queries) CreateMarkerImage(ctx context.Context, arg CreateMarkerImagePa
 		arg.ObjectKey,
 		arg.Width,
 		arg.Height,
+		arg.Status,
 	)
 	var i CoreMarkerImage
 	err := row.Scan(

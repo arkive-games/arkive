@@ -2,6 +2,7 @@ package comments
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
+	"github.com/arkive-games/arkive/backend-go/internal/core/policy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/uploads"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
@@ -53,10 +55,46 @@ func (s *Service) UploadGalleryImage(ctx context.Context, p auth.Principal, targ
 	if err != nil {
 		return MarkerImageRead{}, err
 	}
-	row, err := s.q.CreateMarkerImage(ctx, imageParams(p, target, stored, nil, 0))
-	if err != nil {
-		s.discardImages(ctx, []string{stored.Key})
-		return MarkerImageRead{}, fmt.Errorf("record marker image: %w", err)
+	status, reason := "pending", "new"
+	if s.policy != nil {
+		status, reason, err = s.policy.PublicationStatus(ctx, p.ID)
+		if err != nil {
+			s.discardImages(ctx, []string{stored.Key})
+			return MarkerImageRead{}, err
+		}
+	}
+	var row coredb.CoreMarkerImage
+	if s.policy != nil && s.pool != nil {
+		tx, txErr := s.pool.Begin(ctx)
+		if txErr != nil {
+			s.discardImages(ctx, []string{stored.Key})
+			return MarkerImageRead{}, txErr
+		}
+		defer tx.Rollback(ctx)
+		writer := *s
+		writer.q = s.q.WithTx(tx)
+		row, err = writer.q.CreateMarkerImage(ctx, imageParams(p, target, stored, nil, 0, status))
+		if err != nil {
+			s.discardImages(ctx, []string{stored.Key})
+			return MarkerImageRead{}, fmt.Errorf("record marker image: %w", err)
+		}
+		if status == "pending" {
+			media, _ := json.Marshal([]map[string]any{{"id": row.ID.String(), "url": s.blobs.PublicURL(row.ObjectKey), "kind": "image"}})
+			if _, err = s.policy.CreateUnitTx(ctx, tx, p.ID, "map", "marker_images", target.GameKey, &row.ID, reason, policy.Candidate{Media: media}); err != nil {
+				s.discardImages(ctx, []string{stored.Key})
+				return MarkerImageRead{}, err
+			}
+		}
+		if err = tx.Commit(ctx); err != nil {
+			s.discardImages(ctx, []string{stored.Key})
+			return MarkerImageRead{}, err
+		}
+	} else {
+		row, err = s.q.CreateMarkerImage(ctx, imageParams(p, target, stored, nil, 0, status))
+		if err != nil {
+			s.discardImages(ctx, []string{stored.Key})
+			return MarkerImageRead{}, fmt.Errorf("record marker image: %w", err)
+		}
 	}
 	rows, err := s.imageReads(ctx, []coredb.CoreMarkerImage{row}, false)
 	if err != nil {
@@ -100,6 +138,14 @@ func (s *Service) CreateWithImages(ctx context.Context, p auth.Principal, in Cre
 		keys = append(keys, image.Key)
 		stored = append(stored, image)
 	}
+	status, reviewReason := "pending", "new"
+	if s.policy != nil {
+		status, reviewReason, err = s.policy.PublicationStatus(ctx, p.ID)
+		if err != nil {
+			return out, err
+		}
+	}
+
 	// AuthorSource normally uses the pool independently of s.q. Resolve this
 	// account before reserving a transaction connection, including on pools of
 	// size one, so rendering a response cannot wait on its own transaction.
@@ -116,17 +162,29 @@ func (s *Service) CreateWithImages(ctx context.Context, p auth.Principal, in Cre
 	writer := *s
 	writer.q, writer.notifier = s.q.WithTx(tx), pending
 	writer.authors = prefetchedAuthors(authors)
+	writer.policy = nil
+	writer.publicationStatusOverride, writer.publicationReasonOverride = status, reviewReason
 	out.Comment, err = writer.Create(ctx, p, in)
 	if err != nil {
 		return out, err
 	}
 	rows := make([]coredb.CoreMarkerImage, 0, len(stored))
 	for i, image := range stored {
-		row, e := writer.q.CreateMarkerImage(ctx, imageParams(p, target, image, &out.Comment.ID, int16(i)))
+		row, e := writer.q.CreateMarkerImage(ctx, imageParams(p, target, image, &out.Comment.ID, int16(i), status))
 		if e != nil {
 			return out, fmt.Errorf("attach marker image: %w", e)
 		}
 		rows = append(rows, row)
+	}
+	if s.policy != nil && status == "pending" {
+		mediaItems := make([]map[string]any, 0, len(rows))
+		for _, row := range rows {
+			mediaItems = append(mediaItems, map[string]any{"id": row.ID.String(), "url": s.blobs.PublicURL(row.ObjectKey), "kind": "image"})
+		}
+		media, _ := json.Marshal(mediaItems)
+		if _, err = s.policy.CreateUnitTx(ctx, tx, p.ID, "map", "marker_comments", target.GameKey, &out.Comment.ID, reviewReason, policy.Candidate{Body: out.Comment.Body, Media: media}); err != nil {
+			return out, err
+		}
 	}
 	out.Images, err = writer.imageReads(ctx, rows, false)
 	if err != nil {
@@ -142,8 +200,8 @@ func (s *Service) CreateWithImages(ctx context.Context, p auth.Principal, in Cre
 	return out, nil
 }
 
-func imageParams(p auth.Principal, target Target, image uploads.PostImage, comment *uuid.UUID, position int16) coredb.CreateMarkerImageParams {
-	return coredb.CreateMarkerImageParams{ID: uuid.New(), GameKey: target.GameKey, MapID: target.MapID, MarkerID: target.MarkerID, AuthorID: p.ID, CommentID: comment, Position: position, ObjectKey: image.Key, Width: int32(image.Width), Height: int32(image.Height)}
+func imageParams(p auth.Principal, target Target, image uploads.PostImage, comment *uuid.UUID, position int16, status string) coredb.CreateMarkerImageParams {
+	return coredb.CreateMarkerImageParams{ID: uuid.New(), GameKey: target.GameKey, MapID: target.MapID, MarkerID: target.MarkerID, AuthorID: p.ID, CommentID: comment, Position: position, ObjectKey: image.Key, Width: int32(image.Width), Height: int32(image.Height), Status: status}
 }
 
 func (s *Service) ListImages(ctx context.Context, target Target, p *auth.Principal, page, pageSize int) ([]MarkerImageRead, int64, error) {

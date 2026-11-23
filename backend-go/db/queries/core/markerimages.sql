@@ -1,6 +1,6 @@
 -- name: CreateMarkerImage :one
-INSERT INTO core.marker_images (id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
+INSERT INTO core.marker_images (id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height, status, reviewed_by, reviewed_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, sqlc.arg('status'), CASE WHEN sqlc.arg('status') = 'published' THEN $5 ELSE NULL END, CASE WHEN sqlc.arg('status') = 'published' THEN now() ELSE NULL END) RETURNING *;
 
 -- name: GetMarkerImage :one
 SELECT * FROM core.marker_images WHERE id = $1;

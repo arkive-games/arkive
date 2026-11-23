@@ -11,21 +11,44 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type CoreContentUnit struct {
+	ID             uuid.UUID
+	AuthorID       uuid.UUID
+	ContentType    string
+	SourceTable    string
+	SourceID       *uuid.UUID
+	ScopeGame      *string
+	Revision       int64
+	State          string
+	ReviewReason   string
+	Title          string
+	Body           string
+	Fields         []byte
+	Media          []byte
+	PreviousPublic []byte
+	PolicyVersion  string
+	SubmittedAt    time.Time
+	PublishedAt    pgtype.Timestamptz
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type CoreForumComment struct {
-	ID           uuid.UUID
-	PostID       uuid.UUID
-	ParentID     *uuid.UUID
-	AuthorID     uuid.UUID
-	Body         string
-	CommentNo    *int64
-	Depth        int16
-	ParentDepth  *int16
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	EditedAt     pgtype.Timestamptz
-	HiddenAt     pgtype.Timestamptz
-	HiddenBy     *uuid.UUID
-	HiddenReason *string
+	ID                uuid.UUID
+	PostID            uuid.UUID
+	ParentID          *uuid.UUID
+	AuthorID          uuid.UUID
+	Body              string
+	CommentNo         *int64
+	Depth             int16
+	ParentDepth       *int16
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	EditedAt          pgtype.Timestamptz
+	HiddenAt          pgtype.Timestamptz
+	HiddenBy          *uuid.UUID
+	HiddenReason      *string
+	PublicationStatus string
 }
 
 type CoreForumCommentLike struct {
@@ -35,25 +58,26 @@ type CoreForumCommentLike struct {
 }
 
 type CoreForumPost struct {
-	ID            uuid.UUID
-	PostNo        int64
-	AuthorID      uuid.UUID
-	Channel       string
-	Title         string
-	Body          string
-	Topic         *string
-	GameIDs       []string
-	Tags          []string
-	NextCommentNo int64
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	EditedAt      pgtype.Timestamptz
-	FeaturedAt    pgtype.Timestamptz
-	FeaturedBy    *uuid.UUID
-	HiddenAt      pgtype.Timestamptz
-	HiddenBy      *uuid.UUID
-	HiddenReason  *string
-	VideoUrl      *string
+	ID                uuid.UUID
+	PostNo            int64
+	AuthorID          uuid.UUID
+	Channel           string
+	Title             string
+	Body              string
+	Topic             *string
+	GameIDs           []string
+	Tags              []string
+	NextCommentNo     int64
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	EditedAt          pgtype.Timestamptz
+	FeaturedAt        pgtype.Timestamptz
+	FeaturedBy        *uuid.UUID
+	HiddenAt          pgtype.Timestamptz
+	HiddenBy          *uuid.UUID
+	HiddenReason      *string
+	VideoUrl          *string
+	PublicationStatus string
 }
 
 type CoreForumPostBookmark struct {
@@ -63,12 +87,13 @@ type CoreForumPostBookmark struct {
 }
 
 type CoreForumPostImage struct {
-	PostID    uuid.UUID
-	Position  int16
-	ObjectKey string
-	Width     int32
-	Height    int32
-	CreatedAt time.Time
+	PostID            uuid.UUID
+	Position          int16
+	ObjectKey         string
+	Width             int32
+	Height            int32
+	CreatedAt         time.Time
+	PublicationStatus string
 }
 
 type CoreForumPostLike struct {
@@ -92,22 +117,23 @@ type CoreForumReport struct {
 }
 
 type CoreMarkerComment struct {
-	ID           uuid.UUID
-	GameKey      string
-	MapID        string
-	MarkerID     string
-	AuthorID     uuid.UUID
-	ParentID     *uuid.UUID
-	Body         string
-	Depth        int16
-	ParentDepth  *int16
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	EditedAt     pgtype.Timestamptz
-	HiddenAt     pgtype.Timestamptz
-	HiddenBy     *uuid.UUID
-	HiddenReason *string
-	DeletedAt    pgtype.Timestamptz
+	ID                uuid.UUID
+	GameKey           string
+	MapID             string
+	MarkerID          string
+	AuthorID          uuid.UUID
+	ParentID          *uuid.UUID
+	Body              string
+	Depth             int16
+	ParentDepth       *int16
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	EditedAt          pgtype.Timestamptz
+	HiddenAt          pgtype.Timestamptz
+	HiddenBy          *uuid.UUID
+	HiddenReason      *string
+	DeletedAt         pgtype.Timestamptz
+	PublicationStatus string
 }
 
 type CoreMarkerCommentLike struct {
@@ -131,6 +157,47 @@ type CoreMarkerImage struct {
 	ReviewedBy *uuid.UUID
 	ReviewedAt pgtype.Timestamptz
 	CreatedAt  time.Time
+}
+
+type CoreModerationCredit struct {
+	ID         uuid.UUID
+	UnitID     uuid.UUID
+	ReviewerID uuid.UUID
+	AuthorID   uuid.UUID
+	Reason     string
+	CreatedAt  time.Time
+}
+
+type CoreModerationDecision struct {
+	ID                  uuid.UUID
+	UnitID              uuid.UUID
+	ExpectedRevision    int64
+	ActorID             uuid.UUID
+	Decision            string
+	Classification      string
+	QualificationCredit bool
+	Reason              string
+	Evidence            string
+	CreatedAt           time.Time
+}
+
+type CoreModerationTrust struct {
+	UserID              uuid.UUID
+	Tier                string
+	QualifyingApprovals int32
+	RestrictedUntil     pgtype.Timestamptz
+	AdministratorHold   *string
+	UpdatedAt           time.Time
+}
+
+type CoreModerationViolation struct {
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	UnitID       *uuid.UUID
+	Severity     string
+	Evidence     string
+	CreatedAt    time.Time
+	OverturnedAt pgtype.Timestamptz
 }
 
 type CoreNotification struct {

@@ -17,6 +17,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/comments"
 	"github.com/arkive-games/arkive/backend-go/internal/core/forum"
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
+	"github.com/arkive-games/arkive/backend-go/internal/core/policy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/privacy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/social"
@@ -60,6 +61,7 @@ type Handlers struct {
 	social  *social.Service
 	privacy *privacy.Service
 	notify  *notify.Service
+	policy  *policy.Service
 
 	cfg config.Auth
 }
@@ -73,6 +75,7 @@ func NewHandlers(
 	socialSvc *social.Service,
 	privacySvc *privacy.Service,
 	notifySvc *notify.Service,
+	policySvc *policy.Service,
 	tokens *auth.Tokens,
 	altcha *auth.Altcha,
 	limiter, avatarLimiter, postLimiter, commentLimiter *auth.RateLimiter,
@@ -90,6 +93,7 @@ func NewHandlers(
 		social:         socialSvc,
 		privacy:        privacySvc,
 		notify:         notifySvc,
+		policy:         policySvc,
 		tokens:         tokens,
 		altcha:         altcha,
 		limiter:        limiter,

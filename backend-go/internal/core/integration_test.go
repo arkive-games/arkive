@@ -410,6 +410,28 @@ func (h *harness) registerAndLogin(name, email, password string) string {
 	return h.login(email, password)
 }
 
+// trustForContent keeps the long-standing forum/comment regression fixtures
+// focused on their original behavior. New-user publication is covered by the
+// unified moderation tests with an untouched account; these older helpers model
+// an established contributor so their public-feed assertions remain meaningful.
+func (h *harness) trustForContent(token string) {
+	h.t.Helper()
+	me := h.do(http.MethodGet, "/users/me", nil, withBearer(token))
+	if me.status != http.StatusOK {
+		h.t.Fatalf("load content fixture account = %d: %s", me.status, me.body)
+	}
+	id, _ := me.data(h.t)["id"].(string)
+	if id == "" {
+		h.t.Fatal("content fixture account has no id")
+	}
+	if _, err := h.pool.Exec(context.Background(), `UPDATE core.users SET is_verified=true, created_at=now() - interval '7 days' WHERE id=$1`, id); err != nil {
+		h.t.Fatalf("age content fixture account: %v", err)
+	}
+	if _, err := h.pool.Exec(context.Background(), `INSERT INTO core.moderation_trust (user_id, tier, qualifying_approvals) VALUES ($1, 'trusted', 3) ON CONFLICT (user_id) DO UPDATE SET tier='trusted', qualifying_approvals=3`, id); err != nil {
+		h.t.Fatalf("trust content fixture account: %v", err)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Registration
 // ---------------------------------------------------------------------------

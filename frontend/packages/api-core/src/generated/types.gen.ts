@@ -4,6 +4,16 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type AuthorSummary = {
+    accountAgeHours: number;
+    cleanHistory: boolean;
+    emailVerified: boolean;
+    id: string;
+    name: string;
+    qualifyingApprovals: number;
+    tier: string;
+};
+
 export type AvatarPreset = {
     /**
      * Identifier to send to /users/me/avatar/preset
@@ -20,6 +30,13 @@ export type AvatarPresetList = {
      * Every selectable preset, in display order
      */
     presets: Array<AvatarPreset> | null;
+};
+
+export type Candidate = {
+    body: string;
+    fields: unknown;
+    media: unknown;
+    title: string;
 };
 
 export type Challenge = {
@@ -528,6 +545,25 @@ export type EnvelopeListReportRead = {
     showType: number;
 };
 
+export type EnvelopeListUnit = {
+    /**
+     * The payload
+     */
+    data: ListUnit;
+    /**
+     * Always "Success" on a 2xx response
+     */
+    errorCode: string;
+    /**
+     * Always empty on a 2xx response
+     */
+    errorMessage: string;
+    /**
+     * How the client should surface this result
+     */
+    showType: number;
+};
+
 export type EnvelopeListUserRead = {
     /**
      * The payload
@@ -998,6 +1034,17 @@ export type ListReportRead = {
     results: Array<ReportRead> | null;
 };
 
+export type ListUnit = {
+    /**
+     * Total number of matching records, ignoring pagination
+     */
+    count: number;
+    /**
+     * The current page of records
+     */
+    results: Array<Unit> | null;
+};
+
 export type ListUserRead = {
     /**
      * Total number of matching records, ignoring pagination
@@ -1142,6 +1189,15 @@ export type MarkerImageRead = {
     status: 'pending' | 'published' | 'rejected';
     url: string;
     width: number;
+};
+
+export type ModerationDecisionInputBody = {
+    classification: 'quality' | 'ordinary' | 'serious';
+    decision: 'approve' | 'reject';
+    evidence: string;
+    expectedRevision: number;
+    qualificationCredit: boolean;
+    reason: string;
 };
 
 export type NotificationPreferencesBody = {
@@ -1494,6 +1550,23 @@ export type TokenResponse = {
      * Always "bearer"
      */
     tokenType: string;
+};
+
+export type Unit = {
+    author: AuthorSummary;
+    authorId: string;
+    candidate: Candidate;
+    contentType: string;
+    game?: string;
+    id: string;
+    policyVersion: string;
+    previousPublic?: unknown;
+    reviewReason: string;
+    revision: number;
+    sourceId: string;
+    sourceTable: string;
+    state: string;
+    submittedAt: string;
 };
 
 export type UnreadCount = {
@@ -3967,6 +4040,92 @@ export type ListPendingMarkerImagesResponses = {
 };
 
 export type ListPendingMarkerImagesResponse = ListPendingMarkerImagesResponses[keyof ListPendingMarkerImagesResponses];
+
+export type ListModerationUnitsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        type?: '' | 'map' | 'forum' | 'profile' | 'build';
+        game?: string;
+        state?: 'pending' | 'published' | 'rejected' | 'hidden' | 'withdrawn' | 'deleted';
+        page?: number;
+        pageSize?: number;
+    };
+    url: '/moderation/units';
+};
+
+export type ListModerationUnitsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type ListModerationUnitsError = ListModerationUnitsErrors[keyof ListModerationUnitsErrors];
+
+export type ListModerationUnitsResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeListUnit;
+};
+
+export type ListModerationUnitsResponse = ListModerationUnitsResponses[keyof ListModerationUnitsResponses];
+
+export type DecideModerationUnitData = {
+    body: ModerationDecisionInputBody;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/moderation/units/{id}/decision';
+};
+
+export type DecideModerationUnitErrors = {
+    /**
+     * Unauthorized
+     */
+    401: Error;
+    /**
+     * Forbidden
+     */
+    403: Error;
+    /**
+     * Conflict
+     */
+    409: Error;
+    /**
+     * Unprocessable Entity
+     */
+    422: Error;
+    /**
+     * Internal Server Error
+     */
+    500: Error;
+};
+
+export type DecideModerationUnitError = DecideModerationUnitErrors[keyof DecideModerationUnitErrors];
+
+export type DecideModerationUnitResponses = {
+    /**
+     * OK
+     */
+    200: EnvelopeEmpty;
+};
+
+export type DecideModerationUnitResponse = DecideModerationUnitResponses[keyof DecideModerationUnitResponses];
 
 export type ListNotificationsData = {
     body?: never;

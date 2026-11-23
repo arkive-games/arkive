@@ -5,18 +5,18 @@
 -- name: CreateMarkerComment :one
 -- A top-level comment. No floor number, no ordering counter: the client sorts by
 -- time or by likes, and unlike a forum thread there is no "floor" a reader quotes.
-INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body)
+INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body, publication_status)
 VALUES (sqlc.arg('id'), sqlc.arg('game_key'), sqlc.arg('map_id'), sqlc.arg('marker_id'),
-        sqlc.arg('author_id'), NULL, sqlc.arg('body'))
+        sqlc.arg('author_id'), NULL, sqlc.arg('body'), sqlc.arg('publication_status'))
 RETURNING *;
 
 -- name: CreateMarkerCommentReply :one
 -- The composite foreign key refuses this outright when the parent is itself a
 -- reply, or sits on a different marker, so the service's own checks are a better
 -- message rather than the only defence.
-INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body)
+INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body, publication_status)
 VALUES (sqlc.arg('id'), sqlc.arg('game_key'), sqlc.arg('map_id'), sqlc.arg('marker_id'),
-        sqlc.arg('author_id'), sqlc.arg('parent_id'), sqlc.arg('body'))
+        sqlc.arg('author_id'), sqlc.arg('parent_id'), sqlc.arg('body'), sqlc.arg('publication_status'))
 RETURNING *;
 
 -- name: GetMarkerCommentByID :one
@@ -51,7 +51,8 @@ RETURNING *;
 SELECT
     c.*,
     (SELECT count(*) FROM core.marker_comments r
-        WHERE r.parent_id = c.id AND r.hidden_at IS NULL AND r.deleted_at IS NULL) AS reply_count,
+        WHERE r.parent_id = c.id AND r.hidden_at IS NULL AND r.deleted_at IS NULL
+          AND (r.publication_status = 'published' OR r.author_id = sqlc.narg('viewer_id')::uuid)) AS reply_count,
     (SELECT count(*) FROM core.marker_comment_likes l
         WHERE l.comment_id = c.id) AS like_count,
     EXISTS (
@@ -65,6 +66,7 @@ WHERE c.game_key = sqlc.arg('game_key')
   AND c.parent_id IS NULL
   AND c.hidden_at IS NULL
   AND c.deleted_at IS NULL
+  AND (c.publication_status = 'published' OR c.author_id = sqlc.narg('viewer_id')::uuid)
 ORDER BY
     CASE WHEN sqlc.arg('sort')::text = 'popular'
         THEN (SELECT count(*) FROM core.marker_comment_likes l WHERE l.comment_id = c.id) END DESC NULLS LAST,
@@ -79,7 +81,8 @@ WHERE game_key = sqlc.arg('game_key')
   AND marker_id = sqlc.arg('marker_id')
   AND parent_id IS NULL
   AND hidden_at IS NULL
-  AND deleted_at IS NULL;
+  AND deleted_at IS NULL
+  AND publication_status = 'published';
 
 -- A single comment's replies, oldest first: a conversation reads in the order it
 -- happened, unlike the top-level list where the best answer should float.
@@ -96,12 +99,14 @@ SELECT
     ) AS liked
 FROM core.marker_comments c
 WHERE c.parent_id = sqlc.arg('parent_id') AND c.hidden_at IS NULL AND c.deleted_at IS NULL
+  AND c.publication_status = 'published'
 ORDER BY c.created_at, c.id
 LIMIT sqlc.arg('result_limit') OFFSET sqlc.arg('result_offset');
 
 -- name: CountMarkerCommentReplies :one
 SELECT count(*) FROM core.marker_comments
-WHERE parent_id = sqlc.arg('parent_id') AND hidden_at IS NULL AND deleted_at IS NULL;
+WHERE parent_id = sqlc.arg('parent_id') AND hidden_at IS NULL AND deleted_at IS NULL
+  AND publication_status = 'published';
 
 -- One comment's like state, for the responses that return a single comment rather
 -- than a page of them.

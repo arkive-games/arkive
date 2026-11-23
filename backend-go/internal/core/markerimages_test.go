@@ -170,6 +170,59 @@ func TestMarkerCommentAttachmentsCommitTogetherAndFollowCommentVisibility(t *tes
 	}
 }
 
+func TestUnifiedModerationReviewsCommentAndAttachmentsTogether(t *testing.T) {
+	store := blob.NewMemory()
+	h := newHarnessWith(t, nil, store)
+	author := h.registerAndLogin("unit-author", "unit-author@example.com", "hunter2hunter2")
+	admin := h.registerAndLogin("unit-admin", "unit-admin@example.com", "hunter2hunter2")
+	h.promoteToSiteAdmin(admin)
+
+	path := "/map-markers/comments/with-images" + markerImageQuery
+	created := markerImageUpload(t, h, author, path, "Review the entrance.", pngOf(t, 80, 40), pngOf(t, 40, 80))
+	if created.status != http.StatusOK {
+		t.Fatalf("create pending unit = %d: %s", created.status, created.body)
+	}
+	if public := h.do(http.MethodGet, "/map-markers/comments"+markerImageQuery, nil); public.data(t)["count"] != float64(0) {
+		t.Fatalf("pending comment was public before moderation: %s", public.body)
+	}
+
+	queue := h.do(http.MethodGet, "/moderation/units?state=pending", nil, withBearer(admin))
+	if queue.status != http.StatusOK {
+		t.Fatalf("unified queue = %d: %s", queue.status, queue.body)
+	}
+	units := queue.data(t)["results"].([]any)
+	if len(units) != 1 {
+		t.Fatalf("unified queue = %d units, want one: %s", len(units), queue.body)
+	}
+	unit := units[0].(map[string]any)
+	if unit["sourceTable"] != "marker_comments" {
+		t.Fatalf("unit source = %v, want marker_comments", unit["sourceTable"])
+	}
+	media := unit["candidate"].(map[string]any)["media"].([]any)
+	if len(media) != 2 {
+		t.Fatalf("unit media = %d, want both attachments", len(media))
+	}
+
+	decision := h.do(http.MethodPost, "/moderation/units/"+unit["id"].(string)+"/decision", map[string]any{
+		"expectedRevision": int(unit["revision"].(float64)),
+		"decision":         "approve",
+		"classification":   "quality",
+		"reason":           "Complete submission is clear and useful.",
+	}, withBearer(admin))
+	if decision.status != http.StatusOK {
+		t.Fatalf("approve complete unit = %d: %s", decision.status, decision.body)
+	}
+
+	comments := h.do(http.MethodGet, "/map-markers/comments"+markerImageQuery, nil)
+	if comments.data(t)["count"] != float64(1) {
+		t.Fatalf("approved comment count = %v: %s", comments.data(t)["count"], comments.body)
+	}
+	images := h.do(http.MethodGet, "/map-markers/images"+markerImageQuery, nil)
+	if images.data(t)["count"] != float64(2) {
+		t.Fatalf("approved attachment count = %v: %s", images.data(t)["count"], images.body)
+	}
+}
+
 func TestMarkerImageUploadRequiresAccountStorageAndValidImage(t *testing.T) {
 	h := newHarnessWith(t, nil, blob.NewMemory())
 	author := h.registerAndLogin("validate-image", "validate-image@example.com", "hunter2hunter2")

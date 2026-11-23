@@ -2,6 +2,7 @@ package forum
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
+	"github.com/arkive-games/arkive/backend-go/internal/core/policy"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/apierr"
 )
 
@@ -57,6 +59,19 @@ func (s *Service) AttachImage(ctx context.Context, principal auth.Principal, pos
 	if err != nil {
 		return ImageRead{}, err
 	}
+	status, reason := "published", ""
+	if s.policy != nil {
+		status, reason, err = s.policy.PublicationStatus(ctx, principal.ID)
+		if err != nil {
+			return ImageRead{}, err
+		}
+		if post.PublicationStatus == "pending" {
+			status = "pending"
+			if reason == "" {
+				reason = "queued"
+			}
+		}
+	}
 
 	// Counted before the upload, so an over-limit request does not write an object it
 	// will never reference. Replacing an existing position is not a new image, which the
@@ -88,11 +103,12 @@ func (s *Service) AttachImage(ctx context.Context, principal auth.Principal, pos
 	}
 
 	row, err := s.q.AttachForumPostImage(ctx, coredb.AttachForumPostImageParams{
-		PostID:    post.ID,
-		Position:  int16(position),
-		ObjectKey: key,
-		Width:     int32(width),
-		Height:    int32(height),
+		PostID:            post.ID,
+		Position:          int16(position),
+		ObjectKey:         key,
+		Width:             int32(width),
+		Height:            int32(height),
+		PublicationStatus: status,
 	})
 	if err != nil {
 		// The object is written but unreferenced. Left in place rather than deleted here:
@@ -100,6 +116,24 @@ func (s *Service) AttachImage(ctx context.Context, principal auth.Principal, pos
 		// finds it, and a compensating delete that itself failed would be a second error
 		// to report on top of this one.
 		return ImageRead{}, mapConstraintError(err)
+	}
+	if s.policy != nil && status == "pending" {
+		var policyErr error
+		if reason == "" {
+			reason = "queued"
+		}
+		rows, imageErr := s.q.ListForumPostImagesForModeration(ctx, post.ID)
+		if imageErr != nil {
+			return ImageRead{}, fmt.Errorf("list moderation images: %w", imageErr)
+		}
+		candidate := policy.Candidate{Title: post.Title, Body: post.Body, Media: postImageRowsMedia(s.images, rows)}
+		var previous json.RawMessage
+		if post.PublicationStatus == "published" {
+			previous, _ = json.Marshal(map[string]any{"title": post.Title, "body": post.Body, "media": postImageRowsMedia(s.images, existing)})
+		}
+		if _, policyErr = s.policy.ReplacePendingUnit(ctx, principal.ID, "forum", "forum_posts", firstGame(post.GameIDs), post.ID, reason, candidate, previous); policyErr != nil {
+			return ImageRead{}, policyErr
+		}
 	}
 
 	// Run after the new row is committed, so the displaced key's remaining references are
@@ -241,4 +275,35 @@ func (s *Service) toImageRead(row coredb.CoreForumPostImage) ImageRead {
 		Width:    int(row.Width),
 		Height:   int(row.Height),
 	}
+}
+
+func firstGame(games []string) string {
+	if len(games) == 0 {
+		return ""
+	}
+	return games[0]
+}
+
+func postImagesMedia(images []ImageRead) json.RawMessage {
+	if len(images) == 0 {
+		return json.RawMessage(`[]`)
+	}
+	items := make([]map[string]any, 0, len(images))
+	for _, image := range images {
+		items = append(items, map[string]any{"id": image.Position, "url": image.URL, "kind": "image", "width": image.Width, "height": image.Height})
+	}
+	data, _ := json.Marshal(items)
+	return data
+}
+
+func postImageRowsMedia(store ImageStore, rows []coredb.CoreForumPostImage) json.RawMessage {
+	if len(rows) == 0 {
+		return json.RawMessage(`[]`)
+	}
+	items := make([]map[string]any, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, map[string]any{"id": row.Position, "url": store.PublicURL(row.ObjectKey), "kind": "image", "width": row.Width, "height": row.Height})
+	}
+	data, _ := json.Marshal(items)
+	return data
 }

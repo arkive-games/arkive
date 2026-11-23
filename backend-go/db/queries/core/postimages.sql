@@ -1,18 +1,24 @@
 -- name: AttachForumPostImage :one
 -- Re-attaching at the same position replaces it, so a client correcting one slot does not
 -- have to detach first and does not leave a gap if the second call never arrives.
-INSERT INTO core.forum_post_images (post_id, position, object_key, width, height)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO core.forum_post_images (post_id, position, object_key, width, height, publication_status)
+VALUES ($1, $2, $3, $4, $5, sqlc.arg('publication_status'))
 ON CONFLICT (post_id, position) DO UPDATE SET
     object_key = excluded.object_key,
     width      = excluded.width,
-    height     = excluded.height
+    height     = excluded.height,
+    publication_status = excluded.publication_status
 RETURNING *;
 
 -- name: DetachForumPostImage :execrows
 DELETE FROM core.forum_post_images WHERE post_id = $1 AND position = $2;
 
 -- name: ListForumPostImages :many
+SELECT * FROM core.forum_post_images WHERE post_id = $1 AND publication_status = 'published' ORDER BY position;
+
+-- Queue rendering needs the candidate attachments even while they are pending.
+-- Public readers use ListForumPostImages above.
+-- name: ListForumPostImagesForModeration :many
 SELECT * FROM core.forum_post_images WHERE post_id = $1 ORDER BY position;
 
 -- name: ListForumPostImagesForPosts :many
@@ -20,6 +26,7 @@ SELECT * FROM core.forum_post_images WHERE post_id = $1 ORDER BY position;
 -- is loaded.
 SELECT * FROM core.forum_post_images
 WHERE post_id = ANY (sqlc.arg('post_ids')::uuid[])
+  AND publication_status = 'published'
 ORDER BY post_id, position;
 
 -- name: CountForumPostImages :one

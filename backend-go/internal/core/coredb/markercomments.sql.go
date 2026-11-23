@@ -29,6 +29,7 @@ func (q *Queries) CountHiddenMarkerComments(ctx context.Context, games []string)
 const countMarkerCommentReplies = `-- name: CountMarkerCommentReplies :one
 SELECT count(*) FROM core.marker_comments
 WHERE parent_id = $1 AND hidden_at IS NULL AND deleted_at IS NULL
+  AND publication_status = 'published'
 `
 
 func (q *Queries) CountMarkerCommentReplies(ctx context.Context, parentID *uuid.UUID) (int64, error) {
@@ -46,6 +47,7 @@ WHERE game_key = $1
   AND parent_id IS NULL
   AND hidden_at IS NULL
   AND deleted_at IS NULL
+  AND publication_status = 'published'
 `
 
 type CountMarkerCommentsParams struct {
@@ -63,19 +65,20 @@ func (q *Queries) CountMarkerComments(ctx context.Context, arg CountMarkerCommen
 
 const createMarkerComment = `-- name: CreateMarkerComment :one
 
-INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body)
+INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body, publication_status)
 VALUES ($1, $2, $3, $4,
-        $5, NULL, $6)
-RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at
+        $5, NULL, $6, $7)
+RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at, publication_status
 `
 
 type CreateMarkerCommentParams struct {
-	ID       uuid.UUID
-	GameKey  string
-	MapID    string
-	MarkerID string
-	AuthorID uuid.UUID
-	Body     string
+	ID                uuid.UUID
+	GameKey           string
+	MapID             string
+	MarkerID          string
+	AuthorID          uuid.UUID
+	Body              string
+	PublicationStatus string
 }
 
 // Marker comments. Every write is idempotent where the client can legitimately
@@ -91,6 +94,7 @@ func (q *Queries) CreateMarkerComment(ctx context.Context, arg CreateMarkerComme
 		arg.MarkerID,
 		arg.AuthorID,
 		arg.Body,
+		arg.PublicationStatus,
 	)
 	var i CoreMarkerComment
 	err := row.Scan(
@@ -110,25 +114,27 @@ func (q *Queries) CreateMarkerComment(ctx context.Context, arg CreateMarkerComme
 		&i.HiddenBy,
 		&i.HiddenReason,
 		&i.DeletedAt,
+		&i.PublicationStatus,
 	)
 	return i, err
 }
 
 const createMarkerCommentReply = `-- name: CreateMarkerCommentReply :one
-INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body)
+INSERT INTO core.marker_comments (id, game_key, map_id, marker_id, author_id, parent_id, body, publication_status)
 VALUES ($1, $2, $3, $4,
-        $5, $6, $7)
-RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at
+        $5, $6, $7, $8)
+RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at, publication_status
 `
 
 type CreateMarkerCommentReplyParams struct {
-	ID       uuid.UUID
-	GameKey  string
-	MapID    string
-	MarkerID string
-	AuthorID uuid.UUID
-	ParentID *uuid.UUID
-	Body     string
+	ID                uuid.UUID
+	GameKey           string
+	MapID             string
+	MarkerID          string
+	AuthorID          uuid.UUID
+	ParentID          *uuid.UUID
+	Body              string
+	PublicationStatus string
 }
 
 // The composite foreign key refuses this outright when the parent is itself a
@@ -143,6 +149,7 @@ func (q *Queries) CreateMarkerCommentReply(ctx context.Context, arg CreateMarker
 		arg.AuthorID,
 		arg.ParentID,
 		arg.Body,
+		arg.PublicationStatus,
 	)
 	var i CoreMarkerComment
 	err := row.Scan(
@@ -162,6 +169,7 @@ func (q *Queries) CreateMarkerCommentReply(ctx context.Context, arg CreateMarker
 		&i.HiddenBy,
 		&i.HiddenReason,
 		&i.DeletedAt,
+		&i.PublicationStatus,
 	)
 	return i, err
 }
@@ -229,7 +237,7 @@ func (q *Queries) DeleteMarkerComment(ctx context.Context, id uuid.UUID) (int64,
 }
 
 const getMarkerCommentByID = `-- name: GetMarkerCommentByID :one
-SELECT id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at FROM core.marker_comments WHERE id = $1
+SELECT id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at, publication_status FROM core.marker_comments WHERE id = $1
 `
 
 func (q *Queries) GetMarkerCommentByID(ctx context.Context, id uuid.UUID) (CoreMarkerComment, error) {
@@ -252,6 +260,7 @@ func (q *Queries) GetMarkerCommentByID(ctx context.Context, id uuid.UUID) (CoreM
 		&i.HiddenBy,
 		&i.HiddenReason,
 		&i.DeletedAt,
+		&i.PublicationStatus,
 	)
 	return i, err
 }
@@ -272,7 +281,7 @@ func (q *Queries) LikeMarkerComment(ctx context.Context, arg LikeMarkerCommentPa
 }
 
 const listHiddenMarkerComments = `-- name: ListHiddenMarkerComments :many
-SELECT id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at FROM core.marker_comments
+SELECT id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at, publication_status FROM core.marker_comments
 WHERE hidden_at IS NOT NULL AND deleted_at IS NULL
   AND ($1::text[] IS NULL OR game_key = ANY ($1::text[]))
 ORDER BY hidden_at DESC, id
@@ -313,6 +322,7 @@ func (q *Queries) ListHiddenMarkerComments(ctx context.Context, arg ListHiddenMa
 			&i.HiddenBy,
 			&i.HiddenReason,
 			&i.DeletedAt,
+			&i.PublicationStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -326,7 +336,7 @@ func (q *Queries) ListHiddenMarkerComments(ctx context.Context, arg ListHiddenMa
 
 const listMarkerCommentReplies = `-- name: ListMarkerCommentReplies :many
 SELECT
-    c.id, c.game_key, c.map_id, c.marker_id, c.author_id, c.parent_id, c.body, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at, c.hidden_at, c.hidden_by, c.hidden_reason, c.deleted_at,
+    c.id, c.game_key, c.map_id, c.marker_id, c.author_id, c.parent_id, c.body, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at, c.hidden_at, c.hidden_by, c.hidden_reason, c.deleted_at, c.publication_status,
     (SELECT count(*) FROM core.marker_comments r
         WHERE r.parent_id = c.id AND r.hidden_at IS NULL AND r.deleted_at IS NULL) AS reply_count,
     (SELECT count(*) FROM core.marker_comment_likes l
@@ -337,6 +347,7 @@ SELECT
     ) AS liked
 FROM core.marker_comments c
 WHERE c.parent_id = $2 AND c.hidden_at IS NULL AND c.deleted_at IS NULL
+  AND c.publication_status = 'published'
 ORDER BY c.created_at, c.id
 LIMIT $4 OFFSET $3
 `
@@ -349,25 +360,26 @@ type ListMarkerCommentRepliesParams struct {
 }
 
 type ListMarkerCommentRepliesRow struct {
-	ID           uuid.UUID
-	GameKey      string
-	MapID        string
-	MarkerID     string
-	AuthorID     uuid.UUID
-	ParentID     *uuid.UUID
-	Body         string
-	Depth        int16
-	ParentDepth  *int16
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	EditedAt     pgtype.Timestamptz
-	HiddenAt     pgtype.Timestamptz
-	HiddenBy     *uuid.UUID
-	HiddenReason *string
-	DeletedAt    pgtype.Timestamptz
-	ReplyCount   int64
-	LikeCount    int64
-	Liked        bool
+	ID                uuid.UUID
+	GameKey           string
+	MapID             string
+	MarkerID          string
+	AuthorID          uuid.UUID
+	ParentID          *uuid.UUID
+	Body              string
+	Depth             int16
+	ParentDepth       *int16
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	EditedAt          pgtype.Timestamptz
+	HiddenAt          pgtype.Timestamptz
+	HiddenBy          *uuid.UUID
+	HiddenReason      *string
+	DeletedAt         pgtype.Timestamptz
+	PublicationStatus string
+	ReplyCount        int64
+	LikeCount         int64
+	Liked             bool
 }
 
 // A single comment's replies, oldest first: a conversation reads in the order it
@@ -403,6 +415,7 @@ func (q *Queries) ListMarkerCommentReplies(ctx context.Context, arg ListMarkerCo
 			&i.HiddenBy,
 			&i.HiddenReason,
 			&i.DeletedAt,
+			&i.PublicationStatus,
 			&i.ReplyCount,
 			&i.LikeCount,
 			&i.Liked,
@@ -419,9 +432,10 @@ func (q *Queries) ListMarkerCommentReplies(ctx context.Context, arg ListMarkerCo
 
 const listMarkerComments = `-- name: ListMarkerComments :many
 SELECT
-    c.id, c.game_key, c.map_id, c.marker_id, c.author_id, c.parent_id, c.body, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at, c.hidden_at, c.hidden_by, c.hidden_reason, c.deleted_at,
+    c.id, c.game_key, c.map_id, c.marker_id, c.author_id, c.parent_id, c.body, c.depth, c.parent_depth, c.created_at, c.updated_at, c.edited_at, c.hidden_at, c.hidden_by, c.hidden_reason, c.deleted_at, c.publication_status,
     (SELECT count(*) FROM core.marker_comments r
-        WHERE r.parent_id = c.id AND r.hidden_at IS NULL AND r.deleted_at IS NULL) AS reply_count,
+        WHERE r.parent_id = c.id AND r.hidden_at IS NULL AND r.deleted_at IS NULL
+          AND (r.publication_status = 'published' OR r.author_id = $1::uuid)) AS reply_count,
     (SELECT count(*) FROM core.marker_comment_likes l
         WHERE l.comment_id = c.id) AS like_count,
     EXISTS (
@@ -435,6 +449,7 @@ WHERE c.game_key = $2
   AND c.parent_id IS NULL
   AND c.hidden_at IS NULL
   AND c.deleted_at IS NULL
+  AND (c.publication_status = 'published' OR c.author_id = $1::uuid)
 ORDER BY
     CASE WHEN $5::text = 'popular'
         THEN (SELECT count(*) FROM core.marker_comment_likes l WHERE l.comment_id = c.id) END DESC NULLS LAST,
@@ -454,25 +469,26 @@ type ListMarkerCommentsParams struct {
 }
 
 type ListMarkerCommentsRow struct {
-	ID           uuid.UUID
-	GameKey      string
-	MapID        string
-	MarkerID     string
-	AuthorID     uuid.UUID
-	ParentID     *uuid.UUID
-	Body         string
-	Depth        int16
-	ParentDepth  *int16
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	EditedAt     pgtype.Timestamptz
-	HiddenAt     pgtype.Timestamptz
-	HiddenBy     *uuid.UUID
-	HiddenReason *string
-	DeletedAt    pgtype.Timestamptz
-	ReplyCount   int64
-	LikeCount    int64
-	Liked        bool
+	ID                uuid.UUID
+	GameKey           string
+	MapID             string
+	MarkerID          string
+	AuthorID          uuid.UUID
+	ParentID          *uuid.UUID
+	Body              string
+	Depth             int16
+	ParentDepth       *int16
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	EditedAt          pgtype.Timestamptz
+	HiddenAt          pgtype.Timestamptz
+	HiddenBy          *uuid.UUID
+	HiddenReason      *string
+	DeletedAt         pgtype.Timestamptz
+	PublicationStatus string
+	ReplyCount        int64
+	LikeCount         int64
+	Liked             bool
 }
 
 // One page of a marker's top-level comments, with the counters the drawer needs
@@ -515,6 +531,7 @@ func (q *Queries) ListMarkerComments(ctx context.Context, arg ListMarkerComments
 			&i.HiddenBy,
 			&i.HiddenReason,
 			&i.DeletedAt,
+			&i.PublicationStatus,
 			&i.ReplyCount,
 			&i.LikeCount,
 			&i.Liked,
@@ -564,7 +581,7 @@ UPDATE core.marker_comments SET
     hidden_by     = CASE WHEN $1::boolean THEN $2::uuid ELSE NULL END,
     hidden_reason = CASE WHEN $1::boolean THEN $3::text ELSE NULL END
 WHERE id = $4
-RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at
+RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at, publication_status
 `
 
 type SetMarkerCommentHiddenParams struct {
@@ -600,6 +617,7 @@ func (q *Queries) SetMarkerCommentHidden(ctx context.Context, arg SetMarkerComme
 		&i.HiddenBy,
 		&i.HiddenReason,
 		&i.DeletedAt,
+		&i.PublicationStatus,
 	)
 	return i, err
 }
@@ -621,7 +639,7 @@ func (q *Queries) UnlikeMarkerComment(ctx context.Context, arg UnlikeMarkerComme
 const updateMarkerComment = `-- name: UpdateMarkerComment :one
 UPDATE core.marker_comments SET body = $1, edited_at = now()
 WHERE id = $2
-RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at
+RETURNING id, game_key, map_id, marker_id, author_id, parent_id, body, depth, parent_depth, created_at, updated_at, edited_at, hidden_at, hidden_by, hidden_reason, deleted_at, publication_status
 `
 
 type UpdateMarkerCommentParams struct {
@@ -649,6 +667,7 @@ func (q *Queries) UpdateMarkerComment(ctx context.Context, arg UpdateMarkerComme
 		&i.HiddenBy,
 		&i.HiddenReason,
 		&i.DeletedAt,
+		&i.PublicationStatus,
 	)
 	return i, err
 }

@@ -60,7 +60,7 @@ func (h *Handlers) RegisterMarkerImageRoutes(a huma.API) {
 			}
 			return api.OKList(rows, count), nil
 		})
-	huma.Register(a, huma.Operation{OperationID: "uploadMarkerImage", Method: http.MethodPost, Path: "/map-markers/images", Summary: "Submit a player image for review", Tags: []string{"comments"}, MaxBodyBytes: uploads.MaxPostImageBytes + (1 << 20), Errors: []int{401, 413, 422, 429, 503}},
+	huma.Register(a, huma.Operation{OperationID: "uploadMarkerImage", Method: http.MethodPost, Path: "/map-markers/images", Summary: "Submit a player image", Description: "New or restricted accounts enter the unified moderation queue; trusted accounts publish directly.", Tags: []string{"comments"}, MaxBodyBytes: uploads.MaxPostImageBytes + (1 << 20), Errors: []int{401, 413, 422, 429, 503}},
 		func(ctx context.Context, in *uploadMarkerImageInput) (*api.Response[comments.MarkerImageRead], error) {
 			p, err := h.markerImageWriter(ctx)
 			if err != nil {
@@ -77,7 +77,7 @@ func (h *Handlers) RegisterMarkerImageRoutes(a huma.API) {
 			}
 			return api.OK(row), nil
 		})
-	huma.Register(a, huma.Operation{OperationID: "createMarkerCommentWithImages", Method: http.MethodPost, Path: "/map-markers/comments/with-images", Summary: "Publish a comment with up to three images", Description: "Text publishes immediately. Images are stored together with the comment and become public only after review. A failed upload publishes neither a partial comment nor partial attachments.", Tags: []string{"comments"}, MaxBodyBytes: 3*uploads.MaxPostImageBytes + (1 << 20), Errors: []int{401, 413, 422, 429, 503}},
+	huma.Register(a, huma.Operation{OperationID: "createMarkerCommentWithImages", Method: http.MethodPost, Path: "/map-markers/comments/with-images", Summary: "Submit a comment with up to three images", Description: "The text and every image form one complete submission. New or restricted accounts publish only after review; trusted accounts publish directly. A failed upload publishes neither a partial comment nor partial attachments.", Tags: []string{"comments"}, MaxBodyBytes: 3*uploads.MaxPostImageBytes + (1 << 20), Errors: []int{401, 413, 422, 429, 503}},
 		func(ctx context.Context, in *createMarkerCommentImagesInput) (*api.Response[comments.MarkerCommentWithImagesRead], error) {
 			p, err := h.markerImageWriter(ctx)
 			if err != nil {

@@ -2,6 +2,7 @@ package forum
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -15,6 +16,7 @@ import (
 	"github.com/arkive-games/arkive/backend-go/internal/core/auth"
 	"github.com/arkive-games/arkive/backend-go/internal/core/coredb"
 	"github.com/arkive-games/arkive/backend-go/internal/core/notify"
+	"github.com/arkive-games/arkive/backend-go/internal/core/policy"
 	"github.com/arkive-games/arkive/backend-go/internal/core/roles"
 	"github.com/arkive-games/arkive/backend-go/internal/core/users"
 	"github.com/arkive-games/arkive/backend-go/internal/platform/api"
@@ -29,6 +31,7 @@ type Service struct {
 	notifier Notifier
 	images   ImageStore
 	logger   *slog.Logger
+	policy   *policy.Service
 }
 
 // Notifier receives the events the forum causes.
@@ -72,6 +75,8 @@ type AuthorSource interface {
 func NewService(q *coredb.Queries, authors AuthorSource, authz Authorizer, notifier Notifier, images ImageStore, logger *slog.Logger) *Service {
 	return &Service{q: q, authors: authors, authz: authz, notifier: notifier, images: images, logger: logger}
 }
+
+func (s *Service) WithPolicy(service *policy.Service) *Service { s.policy = service; return s }
 
 // canPostToChannel decides who may post where.
 //
@@ -126,16 +131,24 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 		return PostRead{}, err
 	}
 
+	publicationStatus, reviewReason := "published", ""
+	if s.policy != nil {
+		publicationStatus, reviewReason, err = s.policy.PublicationStatus(ctx, principal.ID)
+		if err != nil {
+			return PostRead{}, err
+		}
+	}
 	post, err := s.q.CreateForumPost(ctx, coredb.CreateForumPostParams{
-		ID:       uuid.New(),
-		AuthorID: principal.ID,
-		Channel:  string(in.Channel),
-		Title:    trimmed(in.Title),
-		Body:     trimmed(in.Body),
-		Topic:    normaliseTopic(in.Topic),
-		GameIDs:  gameIDs,
-		Tags:     tags,
-		VideoUrl: videoURL,
+		ID:                uuid.New(),
+		AuthorID:          principal.ID,
+		Channel:           string(in.Channel),
+		Title:             trimmed(in.Title),
+		Body:              trimmed(in.Body),
+		Topic:             normaliseTopic(in.Topic),
+		GameIDs:           gameIDs,
+		Tags:              tags,
+		VideoUrl:          videoURL,
+		PublicationStatus: publicationStatus,
 	})
 	if err != nil {
 		return PostRead{}, mapConstraintError(err)
@@ -157,6 +170,16 @@ func (s *Service) CreatePost(ctx context.Context, principal auth.Principal, in C
 
 	// A brand-new post has no reactions and cannot have been liked by its author, so
 	// the zero value is correct rather than a placeholder.
+	if s.policy != nil && publicationStatus == "pending" {
+		game := ""
+		if len(post.GameIDs) > 0 {
+			game = post.GameIDs[0]
+		}
+		_, err = s.policy.CreateUnit(ctx, principal.ID, "forum", "forum_posts", game, &post.ID, reviewReason, policy.Candidate{Title: post.Title, Body: post.Body})
+		if err != nil {
+			return PostRead{}, err
+		}
+	}
 	return toPostRead(post, author, Reactions{}), nil
 }
 
@@ -171,6 +194,9 @@ func (s *Service) PostByNo(ctx context.Context, postNo int64, viewer *uuid.UUID)
 			return PostRead{}, apierr.New(apierr.NotFound, "no such post")
 		}
 		return PostRead{}, fmt.Errorf("load post: %w", err)
+	}
+	if post.PublicationStatus != "published" && (viewer == nil || *viewer != post.AuthorID) {
+		return PostRead{}, apierr.New(apierr.NotFound, "no such post")
 	}
 	if err := notFoundIfHidden(post.HiddenAt); err != nil {
 		return PostRead{}, err
@@ -467,6 +493,42 @@ func (s *Service) UpdatePost(ctx context.Context, principal auth.Principal, post
 		params.Tags = tags
 	}
 
+	if s.policy != nil {
+		status, reason, policyErr := s.policy.PublicationStatus(ctx, principal.ID)
+		if policyErr != nil {
+			return PostRead{}, policyErr
+		}
+		if status == "pending" {
+			title, body := post.Title, post.Body
+			if params.Title != nil {
+				title = *params.Title
+			}
+			if params.Body != nil {
+				body = *params.Body
+			}
+			gameIDs, tags := post.GameIDs, post.Tags
+			if params.GameIDs != nil {
+				gameIDs = params.GameIDs
+			}
+			if params.Tags != nil {
+				tags = params.Tags
+			}
+			candidateFields, _ := json.Marshal(map[string]any{"gameIds": gameIDs, "tags": tags, "topic": post.Topic, "videoUrl": post.VideoUrl})
+			var previous json.RawMessage
+			if post.PublicationStatus == "published" {
+				previous, _ = json.Marshal(map[string]any{"title": post.Title, "body": post.Body, "gameIds": post.GameIDs, "tags": post.Tags, "topic": post.Topic, "videoUrl": post.VideoUrl})
+			}
+			images, imageErr := s.imagesFor(ctx, post.ID)
+			if imageErr != nil {
+				return PostRead{}, imageErr
+			}
+			if _, policyErr = s.policy.ReplacePendingUnit(ctx, principal.ID, "forum", "forum_posts", firstGame(post.GameIDs), post.ID, reason, policy.Candidate{Title: title, Body: body, Fields: candidateFields, Media: postImagesMedia(images)}, previous); policyErr != nil {
+				return PostRead{}, policyErr
+			}
+			return s.postWithReactions(ctx, post, &principal.ID)
+		}
+	}
+
 	updated, err := s.q.UpdateForumPost(ctx, params)
 	if err != nil {
 		return PostRead{}, mapConstraintError(err)
@@ -535,18 +597,29 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 	if err := notFoundIfHidden(post.HiddenAt); err != nil {
 		return CommentRead{}, err
 	}
+	if post.PublicationStatus != "published" && post.AuthorID != principal.ID {
+		return CommentRead{}, apierr.New(apierr.NotFound, "no such post")
+	}
 
 	// Captured from the parent load below so the notification does not read the same row
 	// a second time.
 	var parentAuthor *uuid.UUID
 
 	var comment coredb.CoreForumComment
+	publicationStatus, reviewReason := "published", ""
+	if s.policy != nil {
+		publicationStatus, reviewReason, err = s.policy.PublicationStatus(ctx, principal.ID)
+		if err != nil {
+			return CommentRead{}, err
+		}
+	}
 	if parentID == nil {
 		comment, err = s.q.CreateForumComment(ctx, coredb.CreateForumCommentParams{
-			ID:       uuid.New(),
-			PostID:   post.ID,
-			AuthorID: principal.ID,
-			Body:     trimmed(body),
+			ID:                uuid.New(),
+			PostID:            post.ID,
+			AuthorID:          principal.ID,
+			Body:              trimmed(body),
+			PublicationStatus: publicationStatus,
 		})
 	} else {
 		parent, parentErr := s.q.GetForumCommentByID(ctx, *parentID)
@@ -575,11 +648,12 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 		parentAuthor = &parent.AuthorID
 
 		comment, err = s.q.CreateForumReply(ctx, coredb.CreateForumReplyParams{
-			ID:       uuid.New(),
-			PostID:   post.ID,
-			ParentID: parentID,
-			AuthorID: principal.ID,
-			Body:     trimmed(body),
+			ID:                uuid.New(),
+			PostID:            post.ID,
+			ParentID:          parentID,
+			AuthorID:          principal.ID,
+			Body:              trimmed(body),
+			PublicationStatus: publicationStatus,
 		})
 	}
 	if err != nil {
@@ -618,6 +692,16 @@ func (s *Service) CreateComment(ctx context.Context, principal auth.Principal, p
 
 	// A comment that has just been written has no likes, so the zero value is the
 	// truth rather than a stand-in.
+	if s.policy != nil && publicationStatus == "pending" {
+		game := ""
+		if len(post.GameIDs) > 0 {
+			game = post.GameIDs[0]
+		}
+		_, err = s.policy.CreateUnit(ctx, principal.ID, "forum", "forum_comments", game, &comment.ID, reviewReason, policy.Candidate{Body: comment.Body})
+		if err != nil {
+			return CommentRead{}, err
+		}
+	}
 	return toCommentRead(comment, author, 0, false), nil
 }
 
@@ -635,6 +719,9 @@ func (s *Service) ListComments(ctx context.Context, postNo int64, page, pageSize
 			return nil, 0, apierr.New(apierr.NotFound, "no such post")
 		}
 		return nil, 0, fmt.Errorf("load post: %w", err)
+	}
+	if post.PublicationStatus != "published" {
+		return nil, 0, apierr.New(apierr.NotFound, "no such post")
 	}
 	if err := notFoundIfHidden(post.HiddenAt); err != nil {
 		return nil, 0, err
@@ -693,6 +780,30 @@ func (s *Service) UpdateComment(ctx context.Context, principal auth.Principal, i
 	}
 	if _, err := s.ownedComment(ctx, principal, id); err != nil {
 		return CommentRead{}, err
+	}
+	if s.policy != nil {
+		current, loadErr := s.q.GetForumCommentByID(ctx, id)
+		if loadErr != nil {
+			return CommentRead{}, loadErr
+		}
+		status, reason, policyErr := s.policy.PublicationStatus(ctx, principal.ID)
+		if policyErr != nil {
+			return CommentRead{}, policyErr
+		}
+		if status == "pending" {
+			var previous json.RawMessage
+			if current.PublicationStatus == "published" {
+				previous, _ = json.Marshal(map[string]any{"body": current.Body})
+			}
+			if _, policyErr = s.policy.ReplacePendingUnit(ctx, principal.ID, "forum", "forum_comments", "", current.ID, reason, policy.Candidate{Body: trimmed(body)}, previous); policyErr != nil {
+				return CommentRead{}, policyErr
+			}
+			author, authorErr := s.author(ctx, current.AuthorID)
+			if authorErr != nil {
+				return CommentRead{}, authorErr
+			}
+			return toCommentRead(current, author, 0, false), nil
+		}
 	}
 
 	updated, err := s.q.UpdateForumComment(ctx, coredb.UpdateForumCommentParams{
