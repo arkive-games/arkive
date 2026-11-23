@@ -1,6 +1,30 @@
 {
   "entries": [
     {
+      "date": "2026-11-24",
+      "commit": "988b60487544a72f16f525840693ce738494df3d",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Unified moderation now connects the portal review workspace to server-owned publication units for text, attachments, profiles and scoped game review.",
+            "zh-CN": "统一审核工作台现已连接服务器内容单元，统一处理正文、配图、个人资料，并按游戏范围审核。",
+            "zh-TW": "統一審核工作台現已連接伺服器內容單元，統一處理正文、配圖、個人資料，並按遊戲範圍審核。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-23",
       "commit": "34d5284779040f32bbbb29ac9defd44d253f5f53",
       "targets": [
