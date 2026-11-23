@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.5",
+      "date": "2026-11-23",
+      "commit": "023ff962c54783804ade8673b2433f54c655c084",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Puzzle markers and wardrobe icons now remain legible when the map is zoomed in.",
+            "zh-CN": "放大地图时，机关道具和换装柜图标保持清晰可见。",
+            "zh-TW": "放大地圖時，機關道具與換裝櫃圖示保持清晰可見。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.4",
       "date": "2026-11-23",
       "commit": "bdc6694be35a68e825297440c08761c8fb8fc3cf",
