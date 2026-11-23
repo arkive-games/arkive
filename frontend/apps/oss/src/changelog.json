@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.7",
+      "date": "2026-11-24",
+      "commit": "63d5f38e13078d8184fc4b9704425464603443d7",
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Ground map markers load with fewer requests while details retain the original artwork.",
+            "zh-CN": "地面地图用更少的请求加载道具图标，详情保留原图。",
+            "zh-TW": "地面地圖以更少的請求載入道具圖示，詳情保留原圖。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.6",
       "date": "2026-11-24",
       "commit": "1cc9e817a6ac2450c2a5e440f5702d405cf2b32c",
