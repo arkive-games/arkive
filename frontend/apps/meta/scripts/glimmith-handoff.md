@@ -2,10 +2,19 @@
 
 ## Resume here
 
-- Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-tutorial. Reuse it for the next slice. Leave the main checkout, existing untracked files, and production alone.
-- Preview: http://127.0.0.1:15192/#glimmith/tutorial. Port 15172 was occupied by another checkout, so this preview uses a separate Vite process. Probe for the actual map, not just HTTP 200. This is a dev-only route; no release is implied by a local commit.
-- Latest state: the local preview contains all 29 windows, 1,225 placed puzzles, and three notes, with all known authored shape pools and text rules. This checkpoint is in the local working tree only.
-- Verification limits: `0479` retains one projection-only rock witness. Unlock descriptions were checked against authored data and installed code, not a before-and-after playthrough. No saved progress was written or changed.
+- Working tree: E:/Codex/cangzhou-glimmith, branch codex/glimmith-release. The earlier branch retains the pre-release snapshot. Do not stage the untracked artwork references or extraction tools.
+- Production-build preview: http://127.0.0.1:15193/#glimmith/tutorial. From frontend, restart it with `pnpm --filter meta exec vite preview --host 127.0.0.1 --port 15193 --strictPort`. This is local, not a public deployment.
+- The signed release candidate adds the game catalog entry, public map route, change history, and Go game registration. It has not been pushed or deployed. Hold the release for the game checks below.
+
+## Release acceptance
+
+- The production build rendered all 29 window entries, 1,225 puzzle markers, and three notes. Desktop and mobile checks covered catalog navigation, refresh at the deep link, query by puzzle number, solutions, coordinates, and the unlock panel. The local browser cannot call the deployed API with cookies; the real production origin gets credentialed CORS, but the current live API returns 422 for Glimmith until the backend release.
+- Meta lint and build, API drift and analytics checks, changelog verification, and all 2,067 frontend tests passed. The Go test suite passed against isolated PostgreSQL 18 and MinIO, including Glimmith comment isolation and image review. The test avatar prefix needs anonymous GET access; marker storage does not.
+- The Windows Shipping executable ran offline inside a disposable Wine 10 and Xvfb container with no host mounts or network. It loaded a copy of the real 86-solved campaign. Run directly with `-UserDir=C:/gameqa`; Wine then reads `drive_c/gameqa/Saved/SaveGames`. The SHA-256 digests of all 13 original files were unchanged. Do not put real or derived saves in Git.
+- Read-only inspection of all 11 campaign saves found 86 solved in each, `0527` solved, and no records for `0054`, `1152`, `0236`, `0094`, or `0479`. The current save has 10 of 11 Bridge prerequisites solved, but none for Shape Bank or Compass. An absent save record does not prove that an unopened puzzle is invisible.
+- For a visual check, copy the save into another slot and change only the four `mainCamera0317` float values. The Boxy and starting-airship camera probes reached their intended scenery. The Boxy frame has unlit pedestals but does not identify `0479` or measure its contact height. The airship balloon obscures the target, so that frame does not prove whether `0054` appeared. Do not change the authored anchor based on either frame.
+- Resume `0479` with a save where `0766` has unlocked it: identify the puzzle by its board and get a clear view of the specific pedestal and supporting surface, then measure the contact height. For `0054` use a repaired Bridge and a save immediately before opening the final note, with `0527` already solved. For `0236` and `0094` use saves one counted solve below their silver thresholds (13/14 and 22/23). Record before and after in the game rather than checking only the page or editing the unlock flags.
+- Once the game checks pass, follow the signed PR and fast-forward workflow. Verify the backend migration, active backend image, production-origin marker reads, and the EdgeOne map route separately; publishing the frontend does not update the backend.
 
 ## Unified closeout
 
