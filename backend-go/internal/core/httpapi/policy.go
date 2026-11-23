@@ -90,9 +90,6 @@ func (h *Handlers) RegisterPolicyRoutes(a huma.API) {
 			}
 		}
 		if err := h.policy.DecideUnit(ctx, p, in.ID, in.Body.ExpectedRevision, in.Body.Decision, in.Body.Classification, in.Body.Reason, in.Body.Evidence, in.Body.QualificationCredit); err != nil {
-			if _, known := apierr.As(err); !known {
-				return nil, apierr.New(apierr.InternalServer, err.Error())
-			}
 			return nil, err
 		}
 		return api.OKEmpty(), nil

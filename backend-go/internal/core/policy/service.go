@@ -370,17 +370,23 @@ func (s *Service) DecideUnit(ctx context.Context, actor auth.Principal, id uuid.
 		var query string
 		switch sourceTable {
 		case "marker_comments":
-			query = `UPDATE core.marker_comments SET publication_status=$2, body=CASE WHEN $6::boolean THEN $4 ELSE body END WHERE id=$1`
+			query = `UPDATE core.marker_comments SET publication_status=$2, body=CASE WHEN $4::boolean THEN $3 ELSE body END WHERE id=$1`
 		case "forum_posts":
-			query = `UPDATE core.forum_posts SET publication_status=$2, title=CASE WHEN $6::boolean THEN NULLIF($4,'') ELSE title END, body=CASE WHEN $6::boolean THEN NULLIF($5,'') ELSE body END WHERE id=$1`
+			query = `UPDATE core.forum_posts SET publication_status=$2, title=CASE WHEN $5::boolean THEN NULLIF($3,'') ELSE title END, body=CASE WHEN $5::boolean THEN NULLIF($4,'') ELSE body END WHERE id=$1`
 		case "forum_comments":
-			query = `UPDATE core.forum_comments SET publication_status=$2, body=CASE WHEN $6::boolean THEN $4 ELSE body END WHERE id=$1`
+			query = `UPDATE core.forum_comments SET publication_status=$2, body=CASE WHEN $4::boolean THEN $3 ELSE body END WHERE id=$1`
 		case "marker_images":
 			query = `UPDATE core.marker_images SET status=$2, reviewed_by=$3, reviewed_at=now() WHERE id=$1`
 		}
 		if query != "" {
-			args := []any{*sourceID, sourceStatus, revision, body, body, decision == "approve" && revision > 1}
-			if sourceTable == "marker_images" {
+			applyCandidate := decision == "approve" && revision > 1
+			var args []any
+			switch sourceTable {
+			case "marker_comments", "forum_comments":
+				args = []any{*sourceID, sourceStatus, body, applyCandidate}
+			case "forum_posts":
+				args = []any{*sourceID, sourceStatus, title, body, applyCandidate}
+			case "marker_images":
 				args = []any{*sourceID, sourceStatus, actor.ID}
 			}
 			if _, err = tx.Exec(ctx, query, args...); err != nil {
