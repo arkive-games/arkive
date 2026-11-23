@@ -1,3 +1,5 @@
+-- +goose Up
+
 -- Unified publication policy. Existing rows remain public legacy snapshots; new
 -- writes are assigned a publication unit and an account tier by the policy service.
 
