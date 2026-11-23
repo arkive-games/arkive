@@ -209,6 +209,7 @@ func TestUnifiedModerationReviewsCommentAndAttachmentsTogether(t *testing.T) {
 		"classification":      "quality",
 		"qualificationCredit": false,
 		"reason":              "Complete submission is clear and useful.",
+		"evidence":            "",
 	}, withBearer(admin))
 	if decision.status != http.StatusOK {
 		t.Fatalf("approve complete unit = %d: %s", decision.status, decision.body)
