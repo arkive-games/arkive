@@ -242,6 +242,27 @@ func (s *Service) ScopeForUnit(ctx context.Context, id uuid.UUID) (string, error
 	return game, nil
 }
 
+// CanReviewUnit applies the same scope rule to a decision that ListUnits uses
+// for paging. Forum posts may carry several game tags, so a moderator of any
+// tagged game can review the single publication unit.
+func (s *Service) CanReviewUnit(ctx context.Context, id uuid.UUID, games []string) (bool, error) {
+	var allowed bool
+	if err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM core.content_units c
+			WHERE c.id=$1 AND (
+				c.scope_game = ANY($2::text[])
+				OR (c.source_table='forum_posts' AND EXISTS (
+					SELECT 1 FROM core.forum_posts p
+					WHERE p.id=c.source_id AND p.game_ids && $2::text[]
+				))
+			)
+		)`, id, games).Scan(&allowed); err != nil {
+		return false, fmt.Errorf("check moderation scope: %w", err)
+	}
+	return allowed, nil
+}
+
 func (s *Service) ListUnits(ctx context.Context, filter ListFilter, games []string) (ListResult, error) {
 	if filter.Page < 1 {
 		filter.Page = 1
@@ -256,7 +277,10 @@ func (s *Service) ListUnits(ctx context.Context, filter ListFilter, games []stri
 		WHERE ($1 = '' OR content_type = $1)
 		  AND ($2 = '' OR state = $2)
 		  AND ($3 = '' OR scope_game = $3)
-		  AND ($4::text[] IS NULL OR scope_game = ANY($4::text[]))`, args[:4]...).Scan(&count); err != nil {
+		  AND ($4::text[] IS NULL OR scope_game = ANY($4::text[])
+		       OR (source_table='forum_posts' AND EXISTS (
+				SELECT 1 FROM core.forum_posts p WHERE p.id=source_id AND p.game_ids && $4::text[]
+			)))`, args[:4]...).Scan(&count); err != nil {
 		return ListResult{}, fmt.Errorf("count moderation units: %w", err)
 	}
 	rows, err := s.pool.Query(ctx, `
@@ -265,7 +289,10 @@ func (s *Service) ListUnits(ctx context.Context, filter ListFilter, games []stri
 		WHERE ($1 = '' OR content_type = $1)
 		  AND ($2 = '' OR state = $2)
 		  AND ($3 = '' OR scope_game = $3)
-		  AND ($4::text[] IS NULL OR scope_game = ANY($4::text[]))
+		  AND ($4::text[] IS NULL OR scope_game = ANY($4::text[])
+		       OR (source_table='forum_posts' AND EXISTS (
+				SELECT 1 FROM core.forum_posts p WHERE p.id=source_id AND p.game_ids && $4::text[]
+			)))
 		ORDER BY c.submitted_at, c.id LIMIT $5 OFFSET $6`, args...)
 	if err != nil {
 		return ListResult{}, fmt.Errorf("list moderation units: %w", err)

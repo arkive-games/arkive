@@ -81,16 +81,9 @@ func (h *Handlers) RegisterPolicyRoutes(a huma.API) {
 			if len(games) == 0 {
 				return nil, apierr.New(apierr.Forbidden, "you do not moderate any game")
 			}
-			game, scopeErr := h.policy.ScopeForUnit(ctx, in.ID)
+			allowed, scopeErr := h.policy.CanReviewUnit(ctx, in.ID, games)
 			if scopeErr != nil {
 				return nil, scopeErr
-			}
-			allowed := false
-			for _, candidate := range games {
-				if candidate == game {
-					allowed = true
-					break
-				}
 			}
 			if !allowed {
 				return nil, apierr.New(apierr.Forbidden, "you do not moderate this game's content")
