@@ -204,10 +204,11 @@ func TestUnifiedModerationReviewsCommentAndAttachmentsTogether(t *testing.T) {
 	}
 
 	decision := h.do(http.MethodPost, "/moderation/units/"+unit["id"].(string)+"/decision", map[string]any{
-		"expectedRevision": int(unit["revision"].(float64)),
-		"decision":         "approve",
-		"classification":   "quality",
-		"reason":           "Complete submission is clear and useful.",
+		"expectedRevision":    int(unit["revision"].(float64)),
+		"decision":            "approve",
+		"classification":      "quality",
+		"qualificationCredit": false,
+		"reason":              "Complete submission is clear and useful.",
 	}, withBearer(admin))
 	if decision.status != http.StatusOK {
 		t.Fatalf("approve complete unit = %d: %s", decision.status, decision.body)
