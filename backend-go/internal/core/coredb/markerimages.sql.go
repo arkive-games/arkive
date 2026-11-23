@@ -58,7 +58,7 @@ func (q *Queries) CountPendingMarkerImages(ctx context.Context, games []string) 
 
 const createMarkerImage = `-- name: CreateMarkerImage :one
 INSERT INTO core.marker_images (id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height, status, reviewed_by, reviewed_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CASE WHEN $11 = 'published' THEN $5 ELSE NULL END, CASE WHEN $11 = 'published' THEN now() ELSE NULL END) RETURNING id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height, status, reviewed_by, reviewed_at, created_at
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CASE WHEN $11::text = 'published' THEN $5::uuid ELSE NULL::uuid END, CASE WHEN $11::text = 'published' THEN now() ELSE NULL END) RETURNING id, game_key, map_id, marker_id, author_id, comment_id, position, object_key, width, height, status, reviewed_by, reviewed_at, created_at
 `
 
 type CreateMarkerImageParams struct {

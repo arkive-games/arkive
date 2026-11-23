@@ -75,18 +75,12 @@ func (s *Service) UploadGalleryImage(ctx context.Context, p auth.Principal, targ
 		writer.q = s.q.WithTx(tx)
 		row, err = writer.q.CreateMarkerImage(ctx, imageParams(p, target, stored, nil, 0, status))
 		if err != nil {
-			if s.logger != nil {
-				s.logger.ErrorContext(ctx, "record marker image in transaction", "error", err)
-			}
 			s.discardImages(ctx, []string{stored.Key})
 			return MarkerImageRead{}, fmt.Errorf("record marker image: %w", err)
 		}
 		if status == "pending" {
 			media, _ := json.Marshal([]map[string]any{{"id": row.ID.String(), "url": s.blobs.PublicURL(row.ObjectKey), "kind": "image"}})
 			if _, err = s.policy.CreateUnitTx(ctx, tx, p.ID, "map", "marker_images", target.GameKey, &row.ID, reason, policy.Candidate{Media: media}); err != nil {
-				if s.logger != nil {
-					s.logger.ErrorContext(ctx, "create marker image moderation unit", "error", err)
-				}
 				s.discardImages(ctx, []string{stored.Key})
 				return MarkerImageRead{}, err
 			}
@@ -189,9 +183,6 @@ func (s *Service) CreateWithImages(ctx context.Context, p auth.Principal, in Cre
 		}
 		media, _ := json.Marshal(mediaItems)
 		if _, err = s.policy.CreateUnitTx(ctx, tx, p.ID, "map", "marker_comments", target.GameKey, &out.Comment.ID, reviewReason, policy.Candidate{Body: out.Comment.Body, Media: media}); err != nil {
-			if s.logger != nil {
-				s.logger.ErrorContext(ctx, "create marker comment moderation unit", "error", err)
-			}
 			return out, err
 		}
 	}

@@ -203,7 +203,7 @@ func newHarnessWith(t *testing.T, tweak func(*config.Config), store blob.Store, 
 
 	api.InstallErrorModel()
 
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	router := chi.NewRouter()
 	var mountErr error
 	router.Route(apiPrefix, func(root chi.Router) {
