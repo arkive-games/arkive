@@ -4,7 +4,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isDeepStrictEqual } from 'node:util'
 
-const terrainFields = ['meshFile', 'hamlet', 'market', 'town', 'countryside', 'sideIsland', 'forestMain', 'forestFragments', 'forestPartTwo']
+const terrainFields = ['meshFile', 'hamlet', 'market', 'town', 'countryside', 'sideIsland', 'forestMain', 'forestFragments', 'forestPartTwo', 'sideIsland2', 'sideIsland3', 'finale', 'bonus', 'spiral', 'zone03']
 const generator = fileURLToPath(new URL('./project-glimmith.mjs', import.meta.url))
 const prop = (entry, name) => entry?.Data?.find?.((field) => field.Name === name)?.Value
 
@@ -62,15 +62,26 @@ function readBoard(text) {
   const [, columns, rows] = dims.map(Number)
   const cells = new Set()
   const edges = new Set()
+  const vertices = new Set()
   const frameSize = 2 * rows + 1
   const lines = board.split(/\r?\n/)
   if (!columns || !rows || lines.length < frameSize || solution.split(/\r?\n/).length < frameSize) throw new Error('Incomplete puzzle frames')
   let wideShapeCells = false
   for (let y = 0; y < frameSize; y++) {
-    const line = y % 2 ? lines[y].replace(/S\d{2,}/g, () => { wideShapeCells = true; return 'S*' }) : lines[y]
+    const line = y % 2
+      ? lines[y]
+        .replace(/S\d{2,}/g, () => { wideShapeCells = true; return 'S*' })
+        .replace(/U\d*D\d*L\d*R\d*/g, 'C*')
+      : lines[y]
     if (line.slice(3 * columns + 1).trim()) throw new Error('Overwide puzzle board')
     for (let x = y % 2 ? 0 : 1; x <= (y % 2 ? 3 * columns : 3 * columns - 2); x += 3) {
-      if (line[x]?.trim()) edges.add(line[x])
+      const field = line.slice(x, x + 2)
+      const edge = !(y % 2) && /^-[0-9]$/.test(field) ? field[1] : field[0]
+      if (edge?.trim()) edges.add(edge)
+    }
+    if (!(y % 2)) for (let x = 0; x <= columns; x++) {
+      const vertex = line[3 * x]
+      if (/^[1-4]$/.test(vertex ?? '')) vertices.add(vertex)
     }
     if (y % 2) for (let x = 0; x < columns; x++) {
       const clue = line.slice(3 * x + 1, 3 * x + 3).trim()
@@ -79,7 +90,7 @@ function readBoard(text) {
   }
   return {
     headers: new Set([...header.matchAll(/^([A-Z][A-Z_]*)\b/gm)].map((match) => match[1])),
-    cells, edges, wideShapeCells,
+    cells, edges, vertices, wideShapeCells,
   }
 }
 
@@ -139,6 +150,7 @@ export function auditWindow({ root, window, entry, source, preview, terrainManif
   const headers = new Map()
   const cellClues = new Set()
   const edgeMarks = new Set()
+  const vertexMarks = new Set()
   let inspectedPuzzles = 0
   function checkAnchor(actor, id, kind) {
     const anchor = readAnchor(actor, source, id)
@@ -164,6 +176,7 @@ export function auditWindow({ root, window, entry, source, preview, terrainManif
       for (const header of board.headers) headers.set(header, (headers.get(header) ?? 0) + 1)
       for (const clue of board.cells) cellClues.add(clue)
       for (const edge of board.edges) edgeMarks.add(edge)
+      for (const vertex of board.vertices) vertexMarks.add(vertex)
       if (board.wideShapeCells) wideShapePuzzles.push(id)
     } catch (error) {
       if (error.code === 'ENOENT') missingPuzzleFiles.push(packagePath)
@@ -173,7 +186,7 @@ export function auditWindow({ root, window, entry, source, preview, terrainManif
   return {
     window: window.key, alreadyMapped: window.mapped, localizedName, thresholds,
     requestedPuzzles: window.paths.length, inspectedPuzzles, missingPuzzleFiles, invalidPuzzles,
-    clues: { headers: Object.fromEntries([...headers].sort()), cells: [...cellClues].sort(), edges: [...edgeMarks].sort(), wideShapePuzzles },
+    clues: { headers: Object.fromEntries([...headers].sort()), cells: [...cellClues].sort(), edges: [...edgeMarks].sort(), vertices: [...vertexMarks].sort(), wideShapePuzzles },
     projection: { unknownAnchors, outsideCanvas },
     terrain: probeTerrain(root, terrainManifest, anchors, preview),
   }

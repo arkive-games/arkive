@@ -13,6 +13,7 @@ import scene from './assets/glimmith-scene.json'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import noteIcon from './assets/glimmith-marker-note.svg'
 import windowIcon from './assets/glimmith-marker-window.svg'
+import perfectedIcon from './assets/glimmith-marker-perfected.png'
 import circleClue from './assets/glimmith-cell-clue-circle.png'
 import squareClue from './assets/glimmith-cell-clue-square.png'
 import triangleClue from './assets/glimmith-cell-clue-triangle.png'
@@ -22,8 +23,16 @@ import palisadeF0 from './assets/glimmith-cell-palisade-f0.png'
 import palisadeF1 from './assets/glimmith-cell-palisade-f1.png'
 import palisadeF2 from './assets/glimmith-cell-palisade-f2.png'
 import palisadeF3 from './assets/glimmith-cell-palisade-f3.png'
+import palisadeF4 from './assets/glimmith-cell-palisade-f4.png'
 import palisadeF7 from './assets/glimmith-cell-palisade-f7.png'
+import differenceClue from './assets/glimmith-edge-difference.png'
+import inequalityClue from './assets/glimmith-edge-inequality.png'
+import radarOne from './assets/glimmith-vertex-radar-1.png'
+import radarTwo from './assets/glimmith-vertex-radar-2.png'
+import radarThree from './assets/glimmith-vertex-radar-3.png'
+import radarFour from './assets/glimmith-vertex-radar-4.png'
 import headerArt from './assets/glimmith-steam-scenery.jpg'
+import { glimmithInequalityAngle, glimmithVertexMark, horizontalGlimmithEdgeMark } from './glimmithEdgeClues'
 import copy from './glimmithLocale.json'
 import '@gamemap/map-engine-gl/engine-gl.css'
 
@@ -36,10 +45,14 @@ const windowNames = new Map(Object.entries(copy.windows))
 const puzzles = new Map(Object.entries(scene.puzzles))
 const cellClueImages = new Map([
   ['P1', circleClue], ['P2', squareClue], ['P3', triangleClue], ['P4', diamondClue], ['P5', hexagonClue],
-  ['F0', palisadeF0], ['F1', palisadeF1], ['F2', palisadeF2], ['F3', palisadeF3], ['F7', palisadeF7],
+  ['F0', palisadeF0], ['F1', palisadeF1], ['F2', palisadeF2], ['F3', palisadeF3], ['F4', palisadeF4], ['F7', palisadeF7],
 ])
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
+const puzzleWindows = new Map(scene.windows.flatMap((window) => window.prerequisites.map((id) => [id, window] as const)))
 const difficultyArt = import.meta.glob<string>('./assets/glimmith-difficulty-*.png', {
+  eager: true, import: 'default', query: '?url',
+})
+const compassArt = import.meta.glob<string>('./assets/glimmith-compass-*.png', {
   eager: true, import: 'default', query: '?url',
 })
 const puzzleNumber = (id: string) => id.replace(/\.puz$/, '')
@@ -68,7 +81,8 @@ const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, inde
   }
 })
 markers.push(...scene.windows.map((window, index): EngineMarker => ({
-  id: window.id, ...window.pixel, z: window.z, subtype: 'window', icon: windowIcon,
+  id: window.id, ...window.pixel, z: window.z, subtype: 'window',
+  icon: window.windowPrerequisites ? perfectedIcon : windowIcon,
   positionPrecision: 'authored-transform', indexInSubtype: index, images: [], contributors: [],
   localizedName: windowNames.get(window.id) ?? copy.window, subtypeLabel: copy.window, hoverBadge: null,
   subtypeMeta: { id: 'window', name: copy.window, icon: windowIcon, pinVariant: 'image' },
@@ -114,8 +128,26 @@ function framePoints(points: readonly EngineMarker[], width: number, height: num
 }
 
 const desktopView = framePoints(markers, 1050, 780)
+const vertexArt = { '1': radarOne, '2': radarTwo, '3': radarThree, '4': radarFour }
 
-function RelationClue({ x, y, mark }: { x: number; y: number; mark: string }) {
+function RelationClue({ x, y, mark }: { x: number; y: number; mark?: string }) {
+  if (mark === undefined) return null
+  const angle = glimmithInequalityAngle(mark)
+  if (angle !== undefined) {
+    return (
+      <g data-edge-clue={mark} transform={`translate(${x} ${y}) rotate(${angle})`}>
+        <image href={inequalityClue} x={-6.5} y={-6.5} width={13} height={13} />
+      </g>
+    )
+  }
+  if (/^[0-9]$/.test(mark)) {
+    return (
+      <g data-edge-clue={mark} transform={`translate(${x} ${y})`}>
+        <image href={differenceClue} x={-6.5} y={-6.5} width={13} height={13} />
+        <text textAnchor="middle" dominantBaseline="central" fontSize="8" fontWeight="700" fill="#263239">{mark}</text>
+      </g>
+    )
+  }
   if (mark !== '=' && mark !== '!') return null
   return (
     <g data-edge-clue={mark}>
@@ -140,24 +172,62 @@ function ShapeClue({ x, y, clue, cells }: { x: number; y: number; clue: string; 
   )
 }
 
+const compassDirections = [
+  ['U', 12, 4.8], ['R', 19.2, 12], ['D', 12, 19.2], ['L', 4.8, 12],
+] as const
+
+function CompassClue({ x, y, clue }: { x: number; y: number; clue: string }) {
+  const numbers = new Map([...clue.matchAll(/([URDL])(\d*)/g)].map(([, direction, number]) => [direction, number]))
+  // The original texture mask is ordered top, right, bottom, left.
+  const suffix = compassDirections.map(([direction]) => numbers.get(direction) ? 'b' : 'a').join('')
+  return <g data-compass-clue={clue} transform={`translate(${x} ${y})`}>
+    <image href={compassArt[`./assets/glimmith-compass-${suffix}.png`]} width={24} height={24} />
+    {compassDirections.map(([direction, cx, cy]) => {
+      const number = numbers.get(direction)
+      return number && <text key={direction} x={cx} y={cy} textAnchor="middle"
+        dominantBaseline="central" fontSize="6.5" fontWeight="700" fill="#263239">{number}</text>
+    })}
+  </g>
+}
+
 type GlimmithPuzzle = (typeof scene.puzzles)['0049.puz'] & {
   shapeClues?: Record<string, string[]>
   wideShapeClues?: Partial<Record<number, string>>
+  wideCellClues?: Partial<Record<string, string>>
   shapeBank?: string[]
   areaRange?: { min?: number; max?: number }
+  areaEquals?: number
+  adjacentSizesDifferent?: boolean
+  rectangleRule?: 'only' | 'none'
+  ruleFlags?: string[]
 }
 
-function PuzzleAreaRange({ areaRange }: { areaRange: GlimmithPuzzle['areaRange'] }) {
-  if (!areaRange) return null
-  const { min, max } = areaRange
-  const label = min != null && max != null ? copy.areaRangeBetween : min != null ? copy.areaRangeMin : copy.areaRangeMax
-  return <p className="text-center text-sm text-muted-foreground tabular-nums">
-    {label.replace('{min}', String(min)).replace('{max}', String(max))}
-  </p>
+const ruleLabels: Partial<Record<string, string>> = copy.ruleLabels
+
+function PuzzleRules({ puzzle }: { puzzle: GlimmithPuzzle }) {
+  const { areaEquals, areaRange, adjacentSizesDifferent, rectangleRule, ruleFlags } = puzzle
+  const lines: string[] = []
+  if (areaEquals != null) {
+    lines.push(copy.areaEquals.replace('{count}', String(areaEquals)))
+  } else if (areaRange) {
+    const { min, max } = areaRange
+    const label = min != null && max != null ? copy.areaRangeBetween : min != null ? copy.areaRangeMin : copy.areaRangeMax
+    lines.push(label.replace('{min}', String(min)).replace('{max}', String(max)))
+  }
+  const flags = new Set(ruleFlags)
+  if (adjacentSizesDifferent) flags.add('ADJACENT_SIZES_DIFFERENT')
+  if (rectangleRule) flags.add(rectangleRule === 'only' ? 'ONLY_RECTANGLES' : 'NO_RECTANGLES')
+  for (const flag of flags) {
+    const label = ruleLabels[flag]
+    if (typeof label === 'string') lines.push(label)
+  }
+  return lines.length
+    ? <p className="text-center text-sm text-muted-foreground tabular-nums">{lines.join(copy.ruleSeparator)}</p>
+    : null
 }
 
 function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
-  const { columns, rows, board, solution, shapeClues, wideShapeClues, shapeBank } = puzzle
+  const { columns, rows, board, solution, shapeClues, wideShapeClues, wideCellClues, shapeBank } = puzzle
   const bankHeight = shapeBank?.length ? 28 : 0
   return (
     <svg role="img" aria-label={copy.solution}
@@ -184,6 +254,11 @@ function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
         const clue = wideShapeClues?.[index] ?? board[2 * y + 1].slice(3 * x + 1, 3 * x + 3)
         const image = cellClueImages.get(clue)
         const cells = shapeClues?.[clue]
+        if (clue === 'C*') {
+          const ordinal = [...board[2 * y + 1].slice(0, 3 * x).matchAll(/C\*/g)].length
+          const compass = wideCellClues?.[`${y}:${ordinal}`]
+          return compass ? <CompassClue key={index} x={24 * x} y={24 * y} clue={compass} /> : null
+        }
         if (cells) return <ShapeClue key={index} x={24 * x} y={24 * y} clue={clue} cells={cells} />
         if (/^\d{2}$/.test(clue)) {
           return <text key={index} data-area-clue={clue} x={24 * x + 12} y={24 * y + 12}
@@ -195,11 +270,20 @@ function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
           x={24 * x} y={24 * y} width={24} height={24} /> : null
       })}
       {Array.from({ length: rows + 1 }, (_, y) => Array.from({ length: columns }, (_, x) => (
-        <RelationClue key={x} x={24 * x + 12} y={24 * y} mark={board[2 * y][3 * x + 1]} />
+        <RelationClue key={x} x={24 * x + 12} y={24 * y} mark={horizontalGlimmithEdgeMark(board[2 * y], x)} />
       )))}
       {Array.from({ length: rows }, (_, y) => Array.from({ length: columns + 1 }, (_, x) => (
         <RelationClue key={x} x={24 * x} y={24 * y + 12} mark={board[2 * y + 1][3 * x]} />
       )))}
+      {Array.from({ length: rows + 1 }, (_, y) => Array.from({ length: columns + 1 }, (_, x) => {
+        const mark = glimmithVertexMark(board[2 * y], x)
+        return mark && (
+          <image key={x} data-vertex-clue={mark} href={vertexArt[mark]}
+            x={24 * x - 5} y={24 * y - 5} width={10} height={10}>
+            <title>{copy.vertexClue.replace('{count}', mark)}</title>
+          </image>
+        )
+      }))}
       {shapeBank && <g data-shape-bank="" aria-label={copy.shapeBank}>
         {shapeBank.map((clue, index) => {
           const cells = shapeClues?.[clue]
@@ -249,22 +333,32 @@ export function GlimmithTutorialPrototype() {
     setMobileSidebarOpen(false)
     ref.current?.flyTo(view.x, view.y, view.zoom)
   }
-  const openLinkedPuzzle = (id: string) => {
+  const openLinkedMarker = (id: string) => {
     const target = markers.find((marker) => marker.id === id)
     if (!target) return
-    setVisible((prev) => prev.has('puzzle') ? prev : new Set([...prev, 'puzzle']))
+    const subtype = windows.has(id) ? 'window' : 'puzzle'
+    setVisible((prev) => prev.has(subtype) ? prev : new Set([...prev, subtype]))
     select(id)
     ref.current?.flyTo(target.x, target.y)
   }
   const marker = markers.find(({ id }) => id === selected)
   const renderMarkerDetail = (marker: EngineMarker) => {
     const window = windows.get(marker.id)
+    const windowPrerequisites = window?.windowPrerequisites
+    const unlockedArea = window?.unlockedAreaId
+    const requirementsTitle = windowPrerequisites ? copy.perfectedRequirements : copy.requirements
     const actor = window ?? scene.actors.find(({ id }) => id === marker.id)
-    const puzzle = puzzles.get(marker.id)
+    const puzzle = puzzles.get(marker.id) as GlimmithPuzzle | undefined
     const linked = actor && 'unlocks' in actor ? actor.unlocks[0] : undefined
     const unlockCategory = actor && 'unlockCategory' in actor ? actor.unlockCategory : undefined
+    const owningWindow = puzzleWindows.get(marker.id)
+    const owningWindowName = owningWindow && windowNames.get(owningWindow.id)
     const unlockMessage = unlockCategory === 'GameCompletion' ? copy.gameCompletionUnlock
-      : unlockCategory === 'AreaCompletion' ? copy.areaCompletionUnlock : undefined
+      : unlockCategory === 'AreaCompletion'
+        ? owningWindowName && owningWindow
+          ? copy.windowSilverUnlock.replace('{window}', owningWindowName).replace('{count}', String(owningWindow.thresholds[1]))
+          : copy.areaCompletionUnlock
+        : undefined
     const hasBridgeSecretSteps = marker.id === '0054.puz' && unlockCategory === 'GameCompletion'
     const unlocker = hasBridgeSecretSteps ? scene.actors.find(({ directory, unlocks }) => directory && unlocks.some((id) => id === marker.id)) : undefined
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
@@ -282,18 +376,39 @@ export function GlimmithTutorialPrototype() {
         } : undefined}
         labels={markerDetailLabelsFor('zh-CN')} onClose={() => setSelected(null)}
         sections={window ? [{
-          id: 'window-requirements', title: copy.requirements, accessibleTitle: copy.requirements,
-          content: <dl className="grid grid-cols-3 gap-x-2 text-sm">
-            {copy.milestones.map((label, i) => <div key={label} className="flex items-baseline gap-1.5 whitespace-nowrap">
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="font-semibold tabular-nums">{window.thresholds[i]}</dd>
-            </div>)}
-          </dl>,
-        }, {
+          id: 'window-requirements', title: requirementsTitle, accessibleTitle: requirementsTitle,
+          content: <div className="grid gap-2 text-sm">
+            <dl className="grid grid-cols-3 gap-x-2">
+              {copy.milestones.map((label, i) => <div key={label} className="flex items-baseline gap-1.5 whitespace-nowrap">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="font-semibold tabular-nums">{window.thresholds[i]}</dd>
+              </div>)}
+            </dl>
+            {windowPrerequisites && <>
+              <p>{copy.perfectedRule}</p>
+              <p>{copy.perfectedTotal.replace('{count}', String(windowPrerequisites.length))}</p>
+              {unlockedArea && <p>
+                {copy.perfectedUnlock.replace('{count}', String(window.unlockPuzzles?.length ?? 0))}
+                <button type="button" className="text-primary underline" onClick={() => openLinkedMarker(unlockedArea)}>
+                  {windowNames.get(unlockedArea)}
+                </button>
+              </p>}
+            </>}
+          </div>,
+        }, windowPrerequisites ? {
+          id: 'related-windows', title: copy.relatedWindows, accessibleTitle: copy.relatedWindows,
+          content: <ul className="flex flex-wrap gap-2 text-sm">
+            {windowPrerequisites.map((id) => <li key={id}>
+              <button type="button" className="text-primary underline" onClick={() => openLinkedMarker(id)}>
+                {windowNames.get(id)}
+              </button>
+            </li>)}
+          </ul>,
+        } : {
           id: 'window-puzzles', title: copy.related, accessibleTitle: copy.related,
           content: <ul className="flex flex-wrap gap-2 text-sm tabular-nums">
             {window.prerequisites.map((id) => <li key={id}>{puzzles.has(id)
-              ? <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(id)}>{puzzleNumber(id)}</button>
+              ? <button type="button" className="text-primary underline" onClick={() => openLinkedMarker(id)}>{puzzleNumber(id)}</button>
               : <span className="text-muted-foreground">{puzzleNumber(id)}</span>}</li>)}
           </ul>,
         }] : puzzle ? [...(unlockMessage ? [{
@@ -303,7 +418,7 @@ export function GlimmithTutorialPrototype() {
               <p><span className="whitespace-nowrap font-medium">{copy.postGameUnlock}</span>{copy.postGameStep}</p>
             ) : <p>{unlockMessage}</p>}
             {unlocker && <p className="text-muted-foreground">
-              <button type="button" className="text-primary underline" onClick={() => openLinkedPuzzle(unlocker.id)}>
+              <button type="button" className="text-primary underline" onClick={() => openLinkedMarker(unlocker.id)}>
                 {puzzleNumber(unlocker.id)}
               </button>{copy.linkedUnlockInsufficient}
             </p>}
@@ -311,21 +426,13 @@ export function GlimmithTutorialPrototype() {
         }] : []), {
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
           content: <>
-            {'rectangleRule' in puzzle && (
-              <p className="text-center text-sm text-muted-foreground">
-                {puzzle.rectangleRule === 'only' ? copy.onlyRectangles : copy.noRectangles}
-              </p>
-            )}
-            {'adjacentSizesDifferent' in puzzle && puzzle.adjacentSizesDifferent && (
-              <p className="text-center text-sm text-muted-foreground">{copy.adjacentSizesDifferent}</p>
-            )}
-            <PuzzleAreaRange areaRange={'areaRange' in puzzle ? puzzle.areaRange : undefined} />
+            <PuzzleRules puzzle={puzzle} />
             <PuzzleSolution puzzle={puzzle} />
           </>,
         }] : [{
           id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
           content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&
-            <button type="button" className="justify-self-start text-primary underline" onClick={() => openLinkedPuzzle(linked)}>
+            <button type="button" className="justify-self-start text-primary underline" onClick={() => openLinkedMarker(linked)}>
               {copy.openFirst}
             </button>}</div>,
         }]} />

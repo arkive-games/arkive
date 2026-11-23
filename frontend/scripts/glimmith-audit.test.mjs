@@ -39,7 +39,7 @@ describe('Glimmith window audit', () => {
     mkdirSync(localeDir, { recursive: true })
     writeFileSync(join(localeDir, 'Game.locres'), fixtureLocres())
     writeFileSync(join(root, 'Puzzles', '0001.puz'),
-      'VERSION 1\nDIFFICULTY 3\nDIMENSIONS 2 1\nPUZZLE\n+--+--+\n|S10=05|\n+--+--+\nSOLUTION\n+##+##+\n#     #\n+##+##+\n')
+      'VERSION 1\nDIFFICULTY 3\nDIMENSIONS 3 1\nPUZZLE\n+-02--+--+\n|S10=053P2|\n+--+--+--+\nSOLUTION\n+##+##+##+\n#        #\n+##+##+##+\n')
     writeFileSync(join(root, 'Puzzles', '0003.puz'), 'VERSION 1\n')
     const prop = (Name, Value) => ({ Name, Value })
     const puzzle = (id, ref) => ({ ObjectName: id, Data: [prop('PuzzleFile', id), prop('RootComponent', ref)] })
@@ -66,7 +66,7 @@ describe('Glimmith window audit', () => {
       localizedName: { status: 'verified' }, requestedPuzzles: 3, inspectedPuzzles: 1, thresholds: [1, 2, 3],
       missingPuzzleFiles: ['Geri/Content/AGeri/Puzzles/0002.puz'],
       invalidPuzzles: [{ path: 'Geri/Content/AGeri/Puzzles/0003.puz' }],
-      clues: { cells: ['05', 'S*'], edges: ['-', '=', '|'], wideShapePuzzles: ['0001.puz'] },
+      clues: { cells: ['05', 'P2', 'S*'], edges: ['-', '0', '3', '=', '|'], vertices: ['2'], wideShapePuzzles: ['0001.puz'] },
       projection: { unknownAnchors: [{ id: '0003.puz', kind: 'puzzle' }], outsideCanvas: [{ id: '0002.puz', kind: 'puzzle', x: 150, y: 50 }] },
       terrain: { status: 'not-requested' },
     })
@@ -77,7 +77,7 @@ describe('Glimmith window audit', () => {
     const input = fixture()
     const terrainManifest = join(folder, 'terrain.json')
     writeFileSync(terrainManifest, JSON.stringify(Object.fromEntries(
-      ['meshFile', 'hamlet', 'market', 'town', 'countryside', 'sideIsland', 'forestMain', 'forestFragments', 'forestPartTwo']
+      ['meshFile', 'hamlet', 'market', 'town', 'countryside', 'sideIsland', 'forestMain', 'forestFragments', 'forestPartTwo', 'sideIsland2', 'sideIsland3', 'finale', 'bonus', 'spiral', 'zone03']
         .map((key) => [key, key + '.raw']),
     )))
     const failures = [{ id: '0001.puz' }, { id: '0002.puz' }]

@@ -21,6 +21,14 @@ describe('Glimmith tutorial scene', () => {
       ['window-range', 46],
       ['window-size-separation', 45],
       ['window-boxy', 40], ['window-non-boxy', 43],
+      ['window-solitude', 37], ['window-castle-gates', 48],
+      ['window-bricky', 70], ['window-compass', 66],
+      ['window-difference', 53], ['window-hedge-maze', 34],
+      ['window-inequality', 56], ['window-loopy', 58],
+      ['window-mismatch', 48], ['window-palisade', 60],
+      ['window-secluded-garden', 34], ['window-spiral', 48],
+      ['window-watchtower', 59],
+      ['window-perfected-windows', 0],
     ])
     const ids = [...new Set(scene.windows.flatMap(({ prerequisites }) => prerequisites))]
     expect(scene.actors.filter(({ directory }) => directory).map(({ id }) => id)).toEqual(ids)
@@ -36,12 +44,98 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.windows.find(({ id }) => id === 'window-size-separation')?.thresholds).toEqual([14, 22, 35])
     expect(scene.windows.find(({ id }) => id === 'window-boxy')?.thresholds).toEqual([13, 20, 32])
     expect(scene.windows.find(({ id }) => id === 'window-non-boxy')?.thresholds).toEqual([14, 21, 33])
+    expect(scene.windows.find(({ id }) => id === 'window-solitude')?.thresholds).toEqual([13, 19, 30])
+    expect(scene.windows.find(({ id }) => id === 'window-castle-gates')?.thresholds).toEqual([8, 19, 36])
+    expect(scene.windows.find(({ id }) => id === 'window-bricky')?.thresholds).toEqual([15, 29, 52])
+    expect(scene.windows.find(({ id }) => id === 'window-compass')?.thresholds).toEqual([10, 23, 49])
+    expect(scene.windows.find(({ id }) => id === 'window-difference')?.thresholds).toEqual([15, 24, 43])
+    expect(scene.windows.find(({ id }) => id === 'window-hedge-maze')?.thresholds).toEqual([17, 25, 30])
+    expect(scene.windows.find(({ id }) => id === 'window-inequality')?.thresholds).toEqual([15, 26, 41])
+    expect(scene.windows.find(({ id }) => id === 'window-loopy')?.thresholds).toEqual([15, 27, 46])
+    expect(scene.windows.find(({ id }) => id === 'window-mismatch')?.thresholds).toEqual([13, 21, 37])
+    expect(scene.windows.find(({ id }) => id === 'window-palisade')?.thresholds).toEqual([17, 29, 48])
+    expect(scene.windows.find(({ id }) => id === 'window-secluded-garden')?.thresholds).toEqual([8, 16, 25])
+    expect(scene.windows.find(({ id }) => id === 'window-spiral')?.thresholds).toEqual([9, 18, 32])
+    expect(scene.windows.find(({ id }) => id === 'window-watchtower')?.thresholds).toEqual([16, 26, 43])
     for (const { rows, board, solution, difficulty } of Object.values(scene.puzzles)) {
       expect(board).toHaveLength(2 * rows + 1)
       expect(solution).toHaveLength(board.length)
       expect(solution.join('')).toContain('#')
       expect([1, 2, 3, 4, 5, 6, 7]).toContain(difficulty)
     }
+  })
+
+  it('counts perfected windows separately from placed puzzle prerequisites', () => {
+    const finale = scene.windows.find(({ id }) => id === 'window-perfected-windows')!
+    const garden = scene.windows.find(({ id }) => id === 'window-secluded-garden')!
+    expect(finale).toMatchObject({
+      actor: 'BP_StainedGlassPlinth_Glimmith',
+      x: -148310.78125, y: -1124.8958740234375, z: 4523.82421875,
+      thresholds: [10, 15, 20], prerequisites: [], unlockedAreaId: garden.id,
+    })
+    expect(finale.windowPrerequisites).toHaveLength(28)
+    expect(new Set(finale.windowPrerequisites)).toEqual(new Set(scene.windows.filter(w => w !== finale).map(({ id }) => id)))
+    expect(finale.unlockPuzzles).toEqual(garden.prerequisites)
+    expect(Object.keys(scene.puzzles)).toHaveLength(1225)
+  })
+
+  it('keeps Garden and Spiral anchors and mixed clues from the original puzzles', () => {
+    const anchors = new Map(scene.actors.map((actor) => [actor.id, actor]))
+    const ids = scene.windows.filter(({ id }) => id === 'window-secluded-garden' || id === 'window-spiral')
+      .flatMap(({ prerequisites }) => prerequisites)
+    expect(ids).toHaveLength(82)
+    for (const id of ids) expect(anchors.get(id)?.supportMeshes.length, id).toBeGreaterThan(0)
+    for (const id of ['1249.puz', '1149a.puz']) {
+      expect(anchors.get(id)?.supportMeshes, id).toContain('BeautyCorner_Landscape_7')
+    }
+    expect(anchors.get('1151.puz')?.supportMeshes).toContain('SM_RoundRock_02')
+    expect(scene.puzzles['0268.puz']).toMatchObject({ areaEquals: 5, wideShapeClues: { 160: 'S10' } })
+    expect(scene.puzzles['1148.puz']).toMatchObject({ areaEquals: 5, wideCellClues: { '0:0': 'UD1LR', '4:0': 'U0DLR' } })
+    expect(scene.puzzles['1152.puz']).toMatchObject({ shapeBank: ['S1', 'S2', 'S3', 'S4'] })
+  })
+
+  it('includes all Watchtower boards with source support and mixed rules', () => {
+    const window = scene.windows.find(({ id }) => id === 'window-watchtower')!
+    const anchors = new Map(scene.actors.map((actor) => [actor.id, actor]))
+    expect(window).toMatchObject({
+      actor: 'BP_StainedGlassPlinth_Watchtower',
+      x: -94391.3125, y: -1140.1292724609375, z: 5393.7890625,
+    })
+    expect(Object.keys(scene.puzzles)).toHaveLength(1225)
+    for (const id of window.prerequisites) {
+      expect(anchors.get(id)?.supportMeshes.length, id).toBeGreaterThan(0)
+    }
+    expect(scene.puzzles['0994.puz']).toMatchObject({ wideShapeClues: { 67: 'S10' } })
+    expect(scene.puzzles['1227.puz']).toMatchObject({ areaEquals: 4, ruleFlags: ['NO_RECTANGLES'] })
+    expect(scene.puzzles['0192.puz']).toMatchObject({
+      shapeBank: ['S1', 'S2', 'S3', 'S4'], ruleFlags: ['ADJACENT_SHAPES_DIFFERENT'],
+    })
+    expect(anchors.get('0883.puz')?.unlocks).toContain('0540.puz')
+  })
+
+  it('keeps both new windows on source geometry and preserves four-border clues', () => {
+    const actors = new Map(scene.actors.map((actor) => [actor.id, actor]))
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    expect(scene.puzzles['1263.puz']).toMatchObject({ areaEquals: 5, ruleFlags: ['ALL_SHAPES_DIFFERENT'] })
+    expect(scene.puzzles['1020.puz']).toMatchObject({ areaEquals: 3 })
+    let fourBorderClues = 0
+    for (const { id, prerequisites } of scene.windows) {
+      if (id !== 'window-mismatch' && id !== 'window-palisade') continue
+      for (const puzzleId of prerequisites) {
+        expect(actors.get(puzzleId)?.supportMeshes.length, puzzleId).toBeGreaterThan(0)
+        const { board, solution, rows, columns } = puzzles.get(puzzleId)!
+        for (let y = 0; y < rows; y++) for (let x = 0; x < columns; x++) {
+          if (board[2 * y + 1].slice(3 * x + 1, 3 * x + 3) !== 'F4') continue
+          fourBorderClues++
+          expect([
+            solution[2 * y][3 * x + 1], solution[2 * y + 1][3 * x + 3],
+            solution[2 * y + 2][3 * x + 1], solution[2 * y + 1][3 * x],
+          ], puzzleId).toEqual(['#', '#', '#', '#'])
+        }
+      }
+    }
+    expect(fourBorderClues).toBe(5)
+    expect(actors.get('0430.puz')?.supportMeshes).toContain('SM_RockBrick_Small_03')
   })
 
   it('keeps every Polyomino cell clue tied to its authored shape', () => {
@@ -53,7 +147,9 @@ describe('Glimmith tutorial scene', () => {
       const clues = new Set(puzzle.board.flatMap((line, index) => index % 2 ? line.match(/S\d/g) ?? [] : []))
       expect(clues.size, id).toBeGreaterThan(0)
       const shapes = 'shapeClues' in puzzle ? puzzle.shapeClues : {}
-      expect(new Set(Object.keys(shapes)), id).toEqual(clues)
+      expect(new Set(Object.keys(shapes)), id).toEqual(new Set([
+        ...clues, ...('shapeBank' in puzzle ? puzzle.shapeBank : []),
+      ]))
       for (const cells of Object.values(shapes)) {
         expect(Array.isArray(cells) && cells.join(''), id).toMatch(/^[# ]*#[# ]*$/)
       }
@@ -88,6 +184,9 @@ describe('Glimmith tutorial scene', () => {
       if (actor.id === '0479.puz') {
         expect(actor.supportMeshes).toEqual([])
         expect('projectedSupportMeshes' in actor && actor.projectedSupportMeshes).toEqual(['SM_Rock_02'])
+      } else if ('projectedSupportMeshes' in actor) {
+        expect(actor.supportMeshes).toEqual([])
+        expect(actor.projectedSupportMeshes?.length, actor.id).toBeGreaterThan(0)
       } else {
         expect(actor.supportMeshes.length, actor.id).toBeGreaterThan(0)
       }
@@ -130,6 +229,29 @@ describe('Glimmith tutorial scene', () => {
     expect(scene.puzzles['0649.puz'].shapeBank).toEqual(['S1', 'S2', 'S3', 'S4'])
   })
 
+  it('includes authored text rules outside the previously supported windows', () => {
+    expect(scene.puzzles['0070.puz']).toMatchObject({ areaEquals: 4 })
+    expect(scene.puzzles['1250.puz']).toMatchObject({
+      areaEquals: 4, ruleFlags: ['ADJACENT_SHAPES_DIFFERENT'],
+    })
+    expect(scene.puzzles['0372.puz']).toMatchObject({ ruleFlags: ['ALL_SHAPES_SAME'] })
+    expect(scene.puzzles['1265.puz']).toMatchObject({
+      ruleFlags: ['ONE_SYMBOL_PER_REGION', 'ADJACENT_SHAPES_DIFFERENT'],
+    })
+    expect(scene.puzzles['0810.puz']).toMatchObject({ ruleFlags: ['ALL_SHAPES_DIFFERENT'] })
+    expect(scene.puzzles['1436.puz']).toMatchObject({ adjacentSizesDifferent: true })
+    expect(scene.puzzles['1436.puz']).not.toHaveProperty('ruleFlags')
+  })
+
+  it('includes early and late source shape pools with their original definitions', () => {
+    expect(scene.puzzles['0049.puz']).toMatchObject({ shapeBank: ['S1'], shapeClues: { S1: ['##', '##'] } })
+    const pools = Object.values(scene.puzzles).filter((puzzle) => 'shapeBank' in puzzle)
+    expect(pools).toHaveLength(235)
+    for (const puzzle of pools) {
+      expect(puzzle.shapeBank.every(id => Object.hasOwn(puzzle.shapeClues, id))).toBe(true)
+    }
+  })
+
   it('preserves the lower-only, upper-only and paired Range constraints', () => {
     const range = scene.windows.find(({ id }) => id === 'window-range')!
     const puzzles = new Map(Object.entries(scene.puzzles))
@@ -163,5 +285,33 @@ describe('Glimmith tutorial scene', () => {
     }
     expect(scene.puzzles['0479.puz'].board).toContain('|..|F7|..|F3|      ')
     expect(scene.puzzles['0303.puz'].board).toContain('|F3|F2|F2|F2|F2|F2|F3|')
+  })
+
+  it('preserves Solitude and Castle Gates region rules and projected supports', () => {
+    const puzzles = new Map(Object.entries(scene.puzzles))
+    const rulePuzzle = (id: string) => puzzles.get(id) as { areaRange?: { min?: number; max?: number }; ruleFlags?: string[] } | undefined
+    const solitude = scene.windows.find(({ id }) => id === 'window-solitude')!
+    const castle = scene.windows.find(({ id }) => id === 'window-castle-gates')!
+    expect(solitude.prerequisites.every((id) => rulePuzzle(id)?.ruleFlags?.includes('ONE_SYMBOL_PER_REGION'))).toBe(true)
+    expect(rulePuzzle(solitude.prerequisites[0])?.ruleFlags).toContain('ALL_SHAPES_DIFFERENT')
+    expect(rulePuzzle(castle.prerequisites.find((id) => rulePuzzle(id)?.areaRange) ?? '')?.areaRange).toBeDefined()
+    expect(rulePuzzle(castle.prerequisites.find((id) => rulePuzzle(id)?.ruleFlags?.includes('ADJACENT_SIZES_DIFFERENT')) ?? '')?.ruleFlags)
+      .toContain('ADJACENT_SIZES_DIFFERENT')
+    expect(scene.actors.find(({ id }) => id === '0793.puz')?.supportMeshes).toContain('SM_BridgePylon001')
+    expect(scene.actors.find(({ id }) => id === '1114.puz')?.supportMeshes).toContain('sm_RuinHandrailPillarA')
+    expect(scene.actors.find(({ id }) => id === '0883.puz')?.supportMeshes).toContain('SM_Rock_05_cut')
+  })
+
+  it('preserves Bricky and Compass source boards and authored projected references', () => {
+    expect(Object.hasOwn(scene.puzzles['1233.puz'], 'wideCellClues')).toBe(true)
+    expect(Object.hasOwn(scene.puzzles['0469.puz'], 'wideCellClues')).toBe(true)
+    expect(scene.actors.find(({ id }) => id === '0617.puz')?.supportMeshes).toContain('BeautyCorner_Landscape_02')
+    expect(scene.actors.find(({ id }) => id === '1388.puz')?.supportMeshes).toContain('BeautyCorner_Landscape_02')
+    expect(scene.actors.find(({ id }) => id === '0914.puz')?.supportMeshes).toContain('Landscape_0')
+    expect(scene.actors.find(({ id }) => id === '0190.puz')?.supportMeshes).toContain('BeautyCorner_Landscape_12')
+    for (const id of ['0094.puz', '1076.puz', '1104.puz']) {
+      expect(scene.actors.find(actor => actor.id === id)?.supportMeshes).toContain('SM_Plant_Tree_Willow_04_B')
+    }
+    expect(scene.actors.filter(actor => 'projectedSupportMeshes' in actor).map(({ id }) => id)).toEqual(['0479.puz'])
   })
 })
