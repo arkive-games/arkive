@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.6",
+      "date": "2026-11-24",
+      "commit": "1cc9e817a6ac2450c2a5e440f5702d405cf2b32c",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "On phones, marker details fit the screen and closing them preserves your map view.",
+            "zh-CN": "手机上点位详情完整显示，关闭后保留原地图视野。",
+            "zh-TW": "手機上點位詳情完整顯示，關閉後保留原地圖視野。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.5",
       "date": "2026-11-23",
       "commit": "023ff962c54783804ade8673b2433f54c655c084",
