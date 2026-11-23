@@ -432,6 +432,17 @@ func (h *harness) trustForContent(token string) {
 	}
 }
 
+func (h *harness) trustAllForLegacyAvatarTests() {
+	h.t.Helper()
+	ctx := context.Background()
+	if _, err := h.pool.Exec(ctx, `UPDATE core.users SET is_verified=true, created_at=now() - interval '7 days'`); err != nil {
+		h.t.Fatalf("age avatar fixture accounts: %v", err)
+	}
+	if _, err := h.pool.Exec(ctx, `INSERT INTO core.moderation_trust (user_id, tier, qualifying_approvals) SELECT id, 'trusted', 3 FROM core.users ON CONFLICT (user_id) DO UPDATE SET tier='trusted', qualifying_approvals=3`); err != nil {
+		h.t.Fatalf("trust avatar fixture accounts: %v", err)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Registration
 // ---------------------------------------------------------------------------
@@ -690,8 +701,8 @@ func TestUserCannotPromoteThemselvesViaProfileUpdate(t *testing.T) {
 	}
 
 	data := res.data(t)
-	if data["name"] != "alice renamed" {
-		t.Errorf("name = %v, want the update to have applied", data["name"])
+	if data["name"] != "alice" {
+		t.Errorf("name = %v, want the untrusted profile to remain public until review", data["name"])
 	}
 	if data["isSuperuser"] == true {
 		t.Fatal("privilege escalation: isSuperuser was honoured on /users/me")
@@ -724,8 +735,8 @@ func TestAnAccountCannotChangeItsOwnEmail(t *testing.T) {
 	if same.status != http.StatusOK {
 		t.Fatalf("resending the same address = %d, want 200: %s", same.status, same.body)
 	}
-	if got := same.data(t)["name"]; got != "alice renamed" {
-		t.Errorf("name = %v, want the rename to have applied", got)
+	if got := same.data(t)["name"]; got != "alice" {
+		t.Errorf("name = %v, want the untrusted profile to remain public until review", got)
 	}
 }
 

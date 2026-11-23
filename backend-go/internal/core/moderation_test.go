@@ -29,6 +29,8 @@ func setUpModeration(t *testing.T, h *harness) moderationCast {
 
 	author := h.registerAndLogin("author", "author@example.com", "hunter2hunter2")
 	stranger := h.registerAndLogin("stranger", "stranger@example.com", "hunter2hunter2")
+	h.trustForContent(author)
+	h.trustForContent(stranger)
 
 	postNo := h.mustCreatePost(author, map[string]any{
 		"channel": "games", "title": "Reportable", "body": "Body.", "gameIds": []string{"palworld"},

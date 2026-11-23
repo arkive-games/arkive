@@ -414,6 +414,9 @@ func (s *Service) ClearAvatar(ctx context.Context, id uuid.UUID) (UserRead, erro
 			}
 			return UserRead{}, fmt.Errorf("load user: %w", err)
 		}
+		if current.AvatarKey == nil {
+			return toUserRead(current, s.avatarResolver()), nil
+		}
 		status, reason, policyErr := s.policy.PublicationStatus(ctx, id)
 		if policyErr != nil {
 			return UserRead{}, policyErr

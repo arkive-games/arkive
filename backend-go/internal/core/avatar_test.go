@@ -81,6 +81,7 @@ func (h *harness) uploadFileAs(path, filename, partType string, data []byte, opt
 
 func (h *harness) uploadAvatar(path, filename, _ string, data []byte, opts ...requestOption) response {
 	h.t.Helper()
+	h.trustAllForLegacyAvatarTests()
 	return h.uploadFileAs(path, filename, "", data, opts...)
 }
 
