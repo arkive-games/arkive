@@ -48,13 +48,13 @@ function gradient([from, to]: readonly [string, string], index: number): CSSProp
 }
 
 function GameShortcutImage({ site }: { site: SiteCard }) {
-  const [failedLogo, setFailedLogo] = useState<string>()
-  const logo = site.logo !== failedLogo ? site.logo : undefined
+  const [index, setIndex] = useState(0)
+  const sources = [...new Set([site.shortcutAvatar ?? site.icon, site.thumb, site.bg].filter(Boolean))]
+  const src = sources[index]
   return (
     <span className="home-quick-icon is-game" data-game={site.id}>
-      {logo
-        ? <img key={logo} className="home-quick-logo" src={logo} onError={() => setFailedLogo(logo)} alt="" draggable={false} />
-        : <img src={site.thumb ?? site.bg} style={{ objectPosition: site.thumb ? undefined : site.bgPosition }} alt="" draggable={false} />}
+      {src && <img key={src} src={src} onError={() => setIndex(index + 1)}
+        style={{ objectPosition: src === site.bg ? site.bgPosition : undefined }} alt="" draggable={false} />}
     </span>
   )
 }

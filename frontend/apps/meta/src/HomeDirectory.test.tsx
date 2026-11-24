@@ -33,17 +33,31 @@ describe('homepage shortcut tiles', () => {
     }
   })
 
-  it('switches from the logo to this game\'s thumbnail when loading fails', () => {
-    const node = mount()
+  it('uses the chosen avatar, then the game thumbnail and cover on load failures', () => {
+    const node = mount({ ...game, shortcutAvatar: '/game-avatar.png' })
     const image = () => node.querySelector('.home-quick-icon.is-game img')!
-    expect(image().getAttribute('src')).toBe(game.logo)
+    expect(image().getAttribute('src')).toBe('/game-avatar.png')
     fireEvent.error(image())
     expect(image().getAttribute('src')).toBe(game.thumb)
-    expect(image().classList.contains('home-quick-logo')).toBe(false)
+    fireEvent.error(image())
+    expect(image().getAttribute('src')).toBe(game.bg)
+    fireEvent.error(image())
+    expect(image()).toBeNull()
   })
 
-  it('uses the game cover and its crop position when there is no logo or thumbnail', () => {
-    const image = mount({ ...game, logo: undefined, thumb: undefined })
+  it('uses the app icon when no separate library avatar is needed', () => {
+    const site = SITES.find(item => item.id === 'palworld')!
+    expect(mount(site).querySelector('.home-quick-icon.is-game img')?.getAttribute('src')).toBe(site.icon)
+  })
+
+  it('does not retry an avatar that also serves as the thumbnail', () => {
+    const node = mount({ ...game, shortcutAvatar: game.thumb })
+    fireEvent.error(node.querySelector('.home-quick-icon.is-game img')!)
+    expect(node.querySelector('.home-quick-icon.is-game img')?.getAttribute('src')).toBe(game.bg)
+  })
+
+  it('uses the game cover and its crop position when there is no avatar or thumbnail', () => {
+    const image = mount({ ...game, shortcutAvatar: undefined, icon: undefined, thumb: undefined })
       .querySelector<HTMLImageElement>('.home-quick-icon.is-game img')!
     expect(image.getAttribute('src')).toBe(game.bg)
     expect(image.style.objectPosition).toBe(game.bgPosition)

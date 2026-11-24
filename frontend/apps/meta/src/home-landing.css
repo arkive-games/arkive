@@ -493,13 +493,13 @@ button.home-slide {
   stroke-width: 2.2;
 }
 
-.home-quick-icon .home-quick-logo {
-  object-fit: contain;
+.home-quick-icon.is-game {
+  background: var(--muted);
 }
 
-/* The Steam library logo includes transparent margins around the wordmark. */
-.home-quick-icon[data-game="glimmith"] .home-quick-logo {
-  transform: scale(1.55);
+/* The Steam list icon sets this stained-glass emblem on deep teal. */
+.home-quick-icon[data-game="glimmith"] {
+  background: #041d24;
 }
 
 .home-quick > :is(a, button):hover {

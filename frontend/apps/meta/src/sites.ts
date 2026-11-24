@@ -9,8 +9,9 @@ import aion2Logo from './assets/aion2-logo.webp'
 import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
-import glimmithLogo from './assets/glimmith-logo.png'
-import pbzLogo from './assets/pbz-logo.png'
+import glimmithAvatar from './assets/glimmith-library-avatar.png'
+import pbzAvatar from './assets/pbz-library-avatar.png'
+import ro3Avatar from './assets/ro3-poring-avatar.webp'
 import aion2Banner from './assets/aion2-banner.webp'
 import gmzzBanner from './assets/gmzz-banner.webp'
 import palworldBanner from './assets/palworld-banner.webp'
@@ -73,9 +74,9 @@ export interface SiteCard {
   banner?: string
   /** CSS `object-position` for `banner`, chosen so the faces survive the narrower mobile crop. */
   bannerPosition?: string
-  /** Game wordmark or branded app logo, displayed uncropped on the homepage shortcut. */
-  logo?: string
-  /** Square app-style artwork for other surfaces, such as tool badges. */
+  /** Optional homepage-specific avatar when the default app icon is not the best small picture. */
+  shortcutAvatar?: string
+  /** Square app-style artwork for game shortcuts and other surfaces, such as tool badges. */
   icon?: string
   /** Dominant colour of `banner`, used for the carousel glow. */
   color?: string
@@ -103,7 +104,7 @@ export const SITES: SiteCard[] = [
     kind: 'offline',
     url: GLIMMITH_MAP_PATH,
     bg: glimmithCover,
-    logo: glimmithLogo,
+    shortcutAvatar: glimmithAvatar,
     icon: glimmithIcon,
     nameKey: 'site.glimmith.name',
     descKey: 'site.glimmith.desc',
@@ -129,7 +130,6 @@ export const SITES: SiteCard[] = [
     ),
     toySlug: 'arkive-aion2',
     bg: aion2Bg,
-    logo: aion2Logo,
     banner: aion2Banner,
     bannerPosition: '22% 50%',
     icon: aion2Icon,
@@ -149,7 +149,6 @@ export const SITES: SiteCard[] = [
     ),
     toySlug: 'arkive-palworld',
     bg: palworldBg,
-    logo: palworldLogo,
     banner: palworldBanner,
     icon: palworldIcon,
     color: '#4a9ad0',
@@ -167,7 +166,7 @@ export const SITES: SiteCard[] = [
       'https://gmzz.arkive.games',
     ),
     bg: gmzzBg,
-    logo: gmzzIcon,
+    shortcutAvatar: gmzzThumb,
     // The lead character stands right of centre.
     bgPosition: '65% center',
     thumb: gmzzThumb,
@@ -189,7 +188,7 @@ export const SITES: SiteCard[] = [
       'https://ro3.arkive.games',
     ),
     bg: ro3Bg,
-    logo: ro3Icon,
+    shortcutAvatar: ro3Avatar,
     banner: ro3Banner,
     bannerPosition: '28% 18%',
     icon: ro3Icon,
@@ -208,7 +207,6 @@ export const SITES: SiteCard[] = [
       'https://vrising.arkive.games',
     ),
     bg: VRISING_BG,
-    logo: vrisingLogo,
     // A portrait poster whose two faces sit in its top third; a centred
     // landscape crop cuts through their chests instead.
     bgPosition: 'center 15%',
@@ -225,7 +223,6 @@ export const SITES: SiteCard[] = [
     kind: 'offline',
     comingSoon: true,
     bg: STS2_BG,
-    logo: sts2Logo,
     nameKey: 'site.sts2.name',
     descKey: 'site.sts2.desc',
     featureKey: 'site.sts2.feature',
@@ -240,7 +237,7 @@ export const SITES: SiteCard[] = [
       'https://pbz.arkive.games',
     ),
     bg: PBZ_ARTWORK.banner,
-    logo: pbzLogo,
+    shortcutAvatar: pbzAvatar,
     banner: PBZ_ARTWORK.banner,
     icon: PBZ_ARTWORK.icon,
     color: '#c98a3e',
