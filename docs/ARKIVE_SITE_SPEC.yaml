@@ -2,7 +2,7 @@ schema_version: "3.0.0"
 spec_id: "arkive.site"
 title: "Arkive Site Specification"
 status: "canonical"
-last_reviewed: "2026-11-23"
+last_reviewed: "2026-11-25"
 
 purpose:
   summary: >-
@@ -254,6 +254,10 @@ shared_foundations:
       Use the shared framework, typography, spacing, shape, responsive, motion,
       layer, icon, and component rules. Specialist specifications compose these
       foundations but never copy or redefine their values.
+    content_sidebars: >-
+      For desktop account, notification, moderation and game directory pages,
+      follow spacing.desktop_page_rails in the UI foundations. The forum keeps
+      its own layout and is outside this contract.
   color:
     owner: "docs/ARKIVE_SITE_COLOR_SYSTEM.yaml"
     rule: "Use semantic tokens; never copy palette values into another specification."

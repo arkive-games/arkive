@@ -117,13 +117,19 @@
 
 .user-system-layout {
   display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr);
+  grid-template-columns: var(--arkive-page-rail-width) minmax(0, 1fr);
   align-items: start;
   gap: 1.25rem;
 }
 
-.account-layout {
-  margin-top: 1.25rem;
+@media (min-width: 48rem) {
+  .account-layout {
+    grid-template-areas: "sidebar summary" "sidebar content";
+    grid-template-rows: min-content 1fr;
+  }
+  .account-layout > .user-system-sidebar { grid-area: sidebar; }
+  .account-layout > .profile-summary { grid-area: summary; }
+  .account-layout > .user-system-content { grid-area: content; }
 }
 
 .user-panel {
@@ -131,12 +137,6 @@
   border-radius: var(--arkive-radius-standard);
   color: var(--foreground);
   background: color-mix(in srgb, var(--card) 97%, transparent);
-}
-
-.user-system-sidebar {
-  position: sticky;
-  top: 4.75rem;
-  overflow: hidden;
 }
 
 .user-system-sidebar h2 {
@@ -1005,10 +1005,6 @@
 }
 
 @media (max-width: 62rem) {
-  .user-system-layout {
-    grid-template-columns: 13rem minmax(0, 1fr);
-  }
-
   .profile-summary {
     grid-template-columns: auto minmax(0, 1fr);
   }

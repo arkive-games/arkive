@@ -124,7 +124,7 @@ export default function WikiWorkspace({ children }: { children: ReactNode }) {
   const active = activeType ? activeGroup ? `${activeType}:${activeGroup}` : activeType : "overview";
 
   return (
-    <div className="min-h-full p-4 md:p-6 2xl:p-8">
+    <div className="min-h-full p-4 md:p-6 lg:p-0">
       <ArkiveEncyclopediaWorkspace groups={[{ key: "wiki", label: t("wiki:nav.wiki"), entries }]}
         active={active} label={t("wiki:nav.wiki")} collapsed={collapsed} onCollapsedChange={setCollapsed}
         collapseLabel={t("wiki:workspace.collapse")} expandLabel={t("wiki:workspace.expand")}

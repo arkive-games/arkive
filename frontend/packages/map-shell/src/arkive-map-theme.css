@@ -59,8 +59,12 @@
   --arkive-content-reading: 72ch;
   --arkive-content-standard: 80rem;
   --arkive-content-wide-data: 96rem;
-  --arkive-encyclopedia-rail-expanded: 11.5rem;
+  --arkive-page-rail-width: 11.5rem;
+  --arkive-encyclopedia-rail-expanded: var(--arkive-page-rail-width);
   --arkive-encyclopedia-rail-collapsed: 4rem;
+  /* Budget for the tallest desktop header, including its top inset. */
+  --arkive-floating-header-bottom: 4.75rem;
+  --arkive-page-rail-height: max(0rem, calc(100dvh - var(--arkive-floating-header-bottom) - 2 * var(--arkive-content-page-top-space)));
   --arkive-leading-caption: 1.5;
   --arkive-leading-body: 1.65;
   --arkive-leading-title: 1.4;
@@ -210,6 +214,19 @@ textarea {
 .arkive-content-page {
   padding-top: var(--arkive-content-page-top-space);
   padding-inline: var(--arkive-page-gutter);
+}
+
+@media (min-width: 48rem) {
+  .arkive-page-rail {
+    position: sticky;
+    top: var(--arkive-content-page-top-space);
+    align-self: start;
+    align-content: start;
+    min-width: 0;
+    height: var(--arkive-page-rail-height);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
 }
 
 /* wide_desktop is xl, the tier the shared top bar's brand block already switches at. */

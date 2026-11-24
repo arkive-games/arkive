@@ -522,7 +522,7 @@ export function AccountCenterPage({
 
   return (
     <main className="user-system-main account-center-main">
-      <div className="home-shell">
+      <div className="home-shell user-system-layout account-layout">
         <ProfileSummary
           userId={String(user.uid)}
           name={profile.name}
@@ -533,51 +533,49 @@ export function AccountCenterPage({
           followingCount={ownFollowCounts.following}
           ownProfile
         />
-        <div className="user-system-layout account-layout">
-          <UserSidebar title={t('userSystem.account.center')}>
-            {ACCOUNT_NAV.map(({ key, icon: Icon }) => (
-              <a
-                key={key}
-                href={`#account/${key}`}
-                className={section === key ? 'is-active' : undefined}
-                aria-current={section === key ? 'page' : undefined}
-              >
-                <Icon className="size-5" stroke={1.8} aria-hidden="true" />
-                <span>{t(`userSystem.account.${key}`)}</span>
-              </a>
-            ))}
-            <button type="button" className="logout-navigation" onClick={onLogout}>
-              <IconLogout className="size-5" stroke={1.8} aria-hidden="true" />
-              <span>{t('userSystem.account.logout')}</span>
-            </button>
-          </UserSidebar>
+        <UserSidebar title={t('userSystem.account.center')}>
+          {ACCOUNT_NAV.map(({ key, icon: Icon }) => (
+            <a
+              key={key}
+              href={`#account/${key}`}
+              className={section === key ? 'is-active' : undefined}
+              aria-current={section === key ? 'page' : undefined}
+            >
+              <Icon className="size-5" stroke={1.8} aria-hidden="true" />
+              <span>{t(`userSystem.account.${key}`)}</span>
+            </a>
+          ))}
+          <button type="button" className="logout-navigation" onClick={onLogout}>
+            <IconLogout className="size-5" stroke={1.8} aria-hidden="true" />
+            <span>{t('userSystem.account.logout')}</span>
+          </button>
+        </UserSidebar>
 
-          <section className="user-system-content" aria-labelledby="account-page-heading">
-            <h1 id="account-page-heading" className="sr-only">{t(`userSystem.account.${section}`)}</h1>
-            <AccountContent
-              onAuthRequired={onAuthRequired}
-              section={section}
-              profile={profile}
-              userId={String(user.uid)}
-              uid={user.uid}
-              verified={user.isVerified}
-              avatarSrc={avatarSrc}
-              saveStatus={saveStatus}
-              saveError={saveError}
-              onSave={saveProfile}
-              onEdit={() => {
-                setSaveStatus('idle')
-                setSaveError('')
-              }}
-              onProfileChange={(field, value) => {
-                setSaveStatus('idle')
-                setSaveError('')
-                setProfile((current) => ({ ...current, [field]: value }))
-              }}
-              onAvatarChange={saveAvatar}
-            />
-          </section>
-        </div>
+        <section className="user-system-content" aria-labelledby="account-page-heading">
+          <h1 id="account-page-heading" className="sr-only">{t(`userSystem.account.${section}`)}</h1>
+          <AccountContent
+            onAuthRequired={onAuthRequired}
+            section={section}
+            profile={profile}
+            userId={String(user.uid)}
+            uid={user.uid}
+            verified={user.isVerified}
+            avatarSrc={avatarSrc}
+            saveStatus={saveStatus}
+            saveError={saveError}
+            onSave={saveProfile}
+            onEdit={() => {
+              setSaveStatus('idle')
+              setSaveError('')
+            }}
+            onProfileChange={(field, value) => {
+              setSaveStatus('idle')
+              setSaveError('')
+              setProfile((current) => ({ ...current, [field]: value }))
+            }}
+            onAvatarChange={saveAvatar}
+          />
+        </section>
       </div>
     </main>
   )
@@ -1167,7 +1165,7 @@ export function PublicUserProfilePage({
 
   return (
     <main className="user-system-main public-profile-main">
-      <div className="home-shell">
+      <div className="home-shell user-system-layout account-layout">
         <ProfileSummary
           userId={String(profile.specialUid ?? profile.uid)}
           name={profile.name}
@@ -1185,42 +1183,40 @@ export function PublicUserProfilePage({
             </button>
           )}
         />
-        <div className="user-system-layout account-layout">
-          <UserSidebar title={t('userSystem.publicProfile.center')}>
-            {PUBLIC_NAV.map(({ key, icon: Icon }) => (
-              <a
-                key={key}
-                href={publicProfileHref(userId, key)}
-                className={section === key ? 'is-active' : undefined}
-                aria-current={section === key ? 'page' : undefined}
-              >
-                <Icon className="size-5" stroke={1.8} aria-hidden="true" />
-                <span>{t(`userSystem.publicProfile.${key}`)}</span>
-              </a>
-            ))}
-          </UserSidebar>
-          <section className="user-system-content" aria-labelledby="public-profile-heading">
-            <PageHeading
-              id="public-profile-heading"
-              title={t(`userSystem.publicProfile.${section}`)}
-              description={t(`userSystem.publicProfile.descriptions.${section}`)}
-            />
-            {section === 'posts' ? (
-              <ProfilePostList uid={profileUid} client={profileClient} />
-            ) : section === 'comments' ? (
-              // Listing a person comments is the one endpoint this needs and the
-              // backend does not have — the same gap as the forum replies tab. Two
-              // invented comments stood here, attributed to a fixture author.
-              <EmptyAccountContent kind="comments" />
-            ) : section === 'fans' || section === 'following' ? (
-              <PeopleList mode={section} uid={profileUid} client={profileClient} onAuthRequired={onAuthRequired} />
-            ) : (
-              // Someone else's saved posts are not public, and the API has no way to
-              // ask for them — deliberately, since a bookmark is a private note.
-              <EmptyAccountContent kind="favorites" />
-            )}
-          </section>
-        </div>
+        <UserSidebar title={t('userSystem.publicProfile.center')}>
+          {PUBLIC_NAV.map(({ key, icon: Icon }) => (
+            <a
+              key={key}
+              href={publicProfileHref(userId, key)}
+              className={section === key ? 'is-active' : undefined}
+              aria-current={section === key ? 'page' : undefined}
+            >
+              <Icon className="size-5" stroke={1.8} aria-hidden="true" />
+              <span>{t(`userSystem.publicProfile.${key}`)}</span>
+            </a>
+          ))}
+        </UserSidebar>
+        <section className="user-system-content" aria-labelledby="public-profile-heading">
+          <PageHeading
+            id="public-profile-heading"
+            title={t(`userSystem.publicProfile.${section}`)}
+            description={t(`userSystem.publicProfile.descriptions.${section}`)}
+          />
+          {section === 'posts' ? (
+            <ProfilePostList uid={profileUid} client={profileClient} />
+          ) : section === 'comments' ? (
+            // Listing a person comments is the one endpoint this needs and the
+            // backend does not have — the same gap as the forum replies tab. Two
+            // invented comments stood here, attributed to a fixture author.
+            <EmptyAccountContent kind="comments" />
+          ) : section === 'fans' || section === 'following' ? (
+            <PeopleList mode={section} uid={profileUid} client={profileClient} onAuthRequired={onAuthRequired} />
+          ) : (
+            // Someone else's saved posts are not public, and the API has no way to
+            // ask for them — deliberately, since a bookmark is a private note.
+            <EmptyAccountContent kind="favorites" />
+          )}
+        </section>
       </div>
     </main>
   )
@@ -1583,7 +1579,7 @@ function PrivacySettings() {
 
 function UserSidebar({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <aside className="user-panel user-system-sidebar">
+    <aside className="arkive-page-rail user-panel user-system-sidebar">
       <h2>{title}</h2>
       <nav>{children}</nav>
     </aside>

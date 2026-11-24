@@ -7,7 +7,7 @@ export const Route = createFileRoute("/wiki")({
   component: () => (
     <ContentLayout
       className="aion2-wiki-page"
-      contentClassName="max-w-[96rem] p-0 md:p-0"
+      contentClassName="max-w-[var(--arkive-content-wide-data)] max-lg:p-0"
     >
       <WikiWorkspace>
         <Outlet />

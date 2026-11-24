@@ -67,7 +67,7 @@ export function ArkiveEncyclopediaWorkspace({ groups, active, label, collapsed, 
   return <TooltipProvider delayDuration={150}><div data-encyclopedia-workspace data-collapsed={collapsed}
     className="lg:grid lg:grid-cols-[var(--arkive-encyclopedia-rail-size)_minmax(0,1fr)] lg:items-start lg:gap-8"
     style={{ '--arkive-encyclopedia-rail-size': collapsed ? 'var(--arkive-encyclopedia-rail-collapsed)' : 'var(--arkive-encyclopedia-rail-expanded)' } as CSSProperties}>
-    <aside className={cn('sticky top-0 hidden max-h-[calc(100dvh-12rem)] min-w-0 flex-col overflow-y-auto overscroll-contain [scrollbar-width:none] lg:flex', collapsed && appearance === 'quiet' && 'px-2', railClassName)} data-testid="encyclopedia-rail">
+    <aside className={cn('arkive-page-rail hidden flex-col [scrollbar-width:none] lg:flex', collapsed && appearance === 'quiet' && 'px-2', railClassName)} data-testid="encyclopedia-rail">
       <div className={cn('flex gap-2', appearance === 'quiet' ? 'mb-4 items-start' : 'mb-3 min-h-10 items-center', collapsed ? 'justify-center' : 'justify-between px-2')}>
         {!collapsed && <h2 className="flex items-center gap-2 text-2xl font-extrabold leading-tight">
           <span aria-hidden className="h-[1.15em] w-1.5 shrink-0 rounded-full bg-[image:var(--arkive-warm-search)]" />{label}</h2>}

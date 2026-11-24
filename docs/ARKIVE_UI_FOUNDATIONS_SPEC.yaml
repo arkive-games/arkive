@@ -2,7 +2,7 @@ schema_version: "2.0.0"
 spec_id: "arkive.ui-foundations"
 title: "Arkive UI Foundations Specification"
 status: "canonical"
-last_reviewed: "2026-11-22"
+last_reviewed: "2026-11-25"
 
 references:
   parent: "docs/ARKIVE_SITE_SPEC.yaml"
@@ -223,6 +223,13 @@ spacing:
     desktop: "space-6"
     token: "--arkive-content-page-top-space"
     utility: "arkive-content-page"
+  desktop_page_rails:
+    scope: "Desktop navigation sidebars in personal and public profiles, notifications, content moderation, and game directories including build directories."
+    width: "Use --arkive-page-rail-width (11.5rem) when expanded. Directories with manual collapse use --arkive-encyclopedia-rail-collapsed (4rem); changing sections must not collapse or shift the rail."
+    height: "Use --arkive-page-rail-height at the same viewport height regardless of list length. Start short lists at the top and scroll long lists within the rail."
+    alignment: "At the top of the page, apply --arkive-content-page-top-space once below the navigation bar. The rail and the first right-column surface (profile card, toolbar, or content) start at that same edge."
+    exceptions: "Keep the existing forum layout, mobile navigation, fullscreen map overlays, and tool result panels outside this contract."
+    acceptance: "At wide and narrow desktop widths, compare expanded rail dimensions and the gap below each page's own header. Verify that both column tops align and still align after switching sections or collapsing and expanding the directory."
   rhythm:
     compact_control_gap: "space-2"
     related_content_gap: "space-3 or space-4"
