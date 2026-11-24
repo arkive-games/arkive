@@ -1,6 +1,23 @@
 {
   "entries": [
     {
+      "date": "2026-11-25",
+      "commit": "43551b9daf85963a8280970f16bb21466f114cf4",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Use the in-game puzzle square artwork in details and show the game name in the map status corner.",
+            "zh-CN": "详情改用游戏内方块图标，并在地图右下角显示游戏名称。",
+            "zh-TW": "詳情改用遊戲內方塊圖示，並在地圖右下角顯示遊戲名稱。"
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-24",
       "commit": "1aa7a37a08eb7d02725b8728c950683bcef0cff2",
       "targets": [
