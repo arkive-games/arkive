@@ -79,26 +79,25 @@ footer a:focus-visible {
 }
 
 .footer-shore {
-  position: relative;
-  isolation: isolate;
-  margin: 1.25rem -1.5rem 0;
-  padding: 2.25rem 1.5rem 1rem;
+  margin: 1rem -1.5rem 0;
   color: #eaf6ff;
 }
 
-.footer-shore::before {
-  content: "";
-  position: absolute;
-  inset: 2.25rem 0 0;
-  z-index: -1;
-  background: linear-gradient(180deg, #1f6f99, #175a80);
+.footer-shore-art {
+  position: relative;
+  height: 2.5rem;
+  pointer-events: none;
 }
 
 .footer-shore-waves {
-  position: absolute;
-  inset: 0 0 auto;
+  display: block;
   width: 100%;
-  height: 3rem;
+  height: 100%;
+}
+
+.footer-shore-caption {
+  padding: 0.25rem 1.5rem 0.875rem;
+  background: linear-gradient(180deg, #1f6f99, #175a80);
 }
 
 .footer-shore-ship {
@@ -352,22 +351,10 @@ footer a:focus-visible {
   background: radial-gradient(120% 90% at 0% 0%, rgb(255 255 255 / 0.55), transparent 55%);
 }
 
-/* The copy button sits beside the number, the note runs across underneath. */
 .footer-pass-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: 1rem;
   min-width: 0;
-  padding: 1rem 1.25rem;
-}
-
-.footer-pass-info {
-  min-width: 0;
-}
-
-.footer-pass-main .footer-pass-note {
-  grid-column: 1 / -1;
+  align-self: center;
+  padding: 0.875rem 1.125rem;
 }
 
 .footer-pass-kicker {
@@ -381,6 +368,9 @@ footer a:focus-visible {
 }
 
 .footer-pass-number {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   margin-top: 0.25rem;
   font-family: "Arkive Rounded", system-ui, sans-serif;
   font-size: 1.875rem;
@@ -396,35 +386,44 @@ footer a:focus-visible {
   opacity: 0.8;
 }
 
-.footer-pass-copy {
-  display: inline-flex;
+.footer-copy {
+  position: relative;
+  display: inline-grid;
   flex: none;
-  height: 2.75rem;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0 1.25rem;
-  border: 0;
-  border-radius: 9999px;
-  color: #ffe2c4;
-  background: var(--arkive-warm-action-foreground);
-  box-shadow: 0 6px 16px -6px rgb(64 37 28 / 0.6);
-  font-size: 0.9375rem;
-  font-weight: 700;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 50%;
+  color: inherit;
   cursor: pointer;
-  transition: transform var(--arkive-motion-standard) var(--arkive-motion-spring);
 }
 
-.footer-pass-copy:hover {
-  transform: translateY(-1px) scale(1.03);
+.footer-copy:hover, .footer-copy:focus-visible {
+  background: color-mix(in srgb, currentColor 12%, transparent);
 }
 
-.footer-pass-copy:active {
-  transform: scale(0.97);
+.footer-copy:focus-visible {
+  outline: 2px solid currentColor;
 }
 
-.footer-pass-copy[data-copied] {
-  color: #ffffff;
-  background: #2f7a4e;
+.footer-copy svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.footer-copy-error {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 100%;
+  width: max-content;
+  max-width: 10rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--arkive-radius-control);
+  background: var(--foreground);
+  color: var(--background);
+  font: 500 0.75rem/1.4 system-ui, sans-serif;
+  letter-spacing: normal;
 }
 
 /* The stub, torn off along a perforation. */
@@ -534,101 +533,27 @@ footer a:focus-visible {
 .footer-wechat {
   display: flex;
   grid-column: 1 / -1;
-  width: 100%;
-  min-height: 2.25rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  margin-top: 0.625rem;
-  padding: 0 0.625rem;
-  border: 0;
-  border-radius: 9999px;
-  color: #0b7a42;
-  background: rgb(7 193 96 / 0.1);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
-}
-
-.dark .footer-wechat {
-  color: #4fd68b;
-}
-
-.footer-wechat:hover {
-  background: rgb(7 193 96 / 0.18);
-}
-
-.footer-wechat-id {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.footer-wechat-hint {
-  flex: none;
-  opacity: 0.6;
-}
-
-.footer-wechat svg {
-  flex: none;
-}
-
-/* Contact: the repository on the waves */
-.footer-repo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  border-radius: 9999px;
-  color: inherit;
-  background: rgb(255 255 255 / 0.1);
-  text-decoration: none;
-  transition: background-color var(--arkive-motion-standard) var(--arkive-motion-easing);
-}
-
-.footer-repo:hover {
-  background: rgb(255 255 255 / 0.18);
-}
-
-.footer-repo-mark {
-  display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
-  flex: none;
-  place-items: center;
-  border-radius: 9999px;
-  color: #17202a;
-  background: #ffffff;
-}
-
-.footer-repo-text {
-  display: grid;
-  min-width: 0;
-  flex: 1;
-}
-
-.footer-repo-text b {
-  font-size: 0.875rem;
-}
-
-.footer-repo-text small {
-  overflow: hidden;
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  opacity: 0.7;
-}
-
-.footer-repo-go {
-  display: flex;
-  flex: none;
   align-items: center;
   gap: 0.25rem;
-  padding-right: 0.25rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.footer-wechat > svg {
+  flex: none;
+  color: var(--muted-foreground);
+}
+
+.footer-repo {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+  font-size: 0.875rem;
+  text-underline-offset: 0.2em;
+}
+
+.footer-repo:hover, .footer-repo:focus-visible {
+  text-decoration: underline;
 }
 
 /* Phones: a shorter hero and a compact pass, so the crew is in view without scrolling. */
@@ -642,51 +567,60 @@ footer a:focus-visible {
     gap: 0.5rem;
   }
 
-  /* Too narrow for the button beside the number. */
   .footer-pass-main {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: start;
-    row-gap: 0.625rem;
-    padding: 0.875rem 1rem 1rem;
+    padding: 0.75rem;
   }
 
   .footer-pass-number {
-    font-size: 1.625rem;
+    font-size: 1.5rem;
+    letter-spacing: normal;
   }
 
   .footer-pass-note {
     display: none;
   }
 
-  /* Too narrow for both words: the ID stays readable, and "Copied" takes its
-     place only for the moment after a tap. */
-  .footer-wechat:not([data-copied]) .footer-wechat-hint,
-  .footer-wechat[data-copied] .footer-wechat-id {
-    display: none;
-  }
-
-  .footer-pass-copy {
-    height: var(--arkive-touch-target);
-    gap: 0.375rem;
-    padding: 0 0.875rem;
-    box-shadow: none;
-    font-size: 0.8125rem;
-  }
-
-  .footer-pass-copy svg {
-    width: 0.875rem;
-    height: 0.875rem;
-  }
-
   .footer-pass-stub {
-    width: 5.25rem;
+    width: 3.75rem;
   }
 
-  .footer-pass-stub svg {
+  .footer-copy {
+    width: var(--arkive-touch-target);
+    height: var(--arkive-touch-target);
+  }
+}
+
+@media (max-width: 30rem) {
+  .footer-crew {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .footer-mate {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .footer-mate-avatar {
     width: 2.25rem;
     height: 2.25rem;
   }
+
+  .footer-wechat {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    gap: 0.125rem;
+    margin: 0;
+  }
 }
+
+@media (max-width: 22.5rem) {
+  .footer-pass-stub {
+    display: none;
+  }
+}
+
 .coming-soon-toast {
   position: fixed;
   top: 50%;

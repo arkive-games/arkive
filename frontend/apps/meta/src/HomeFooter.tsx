@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import {
   IconAnchor,
-  IconArrowUpRight,
-  IconBrandGithub,
   IconBrandWechat,
   IconCheck,
   IconChevronDown,
@@ -16,12 +14,14 @@ import { settingsStringsFor } from '@gamemap/map-shell'
 import { ARKIVE_FEEDBACK_QQ_GROUP, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@gamemap/ui'
 import { FEATURES } from './featureCatalog'
 import { IS_TOY, VISIBLE_SITES, siteHref } from './sites'
+import { FooterShore } from './FooterShore'
+import { PlatformUpdatesDialog } from './PlatformUpdatesDialog'
 
 // Identity and contact details are the same in every language, so they are
 // spelled out once here rather than repeated in each locale's copy.
-const ARKIVE_DOMAIN = 'www.Arkive.games'
 const GITHUB_URL = 'https://github.com/arkive-games/arkive/tree/master/tools'
 const SUYN_URL = 'https://space.bilibili.com/33004908/upload/video'
+const SHUANGNIANG_URL = 'https://space.bilibili.com/25944544'
 
 interface Creator {
   name: string
@@ -35,22 +35,41 @@ interface Creator {
 }
 
 const CREATORS: readonly Creator[] = [
-  { name: '双酿', handle: 'liuyh615', initial: '双' },
+  { name: '双酿', handle: 'liuyh615', initial: '双', href: SHUANGNIANG_URL },
   { name: '苏烟', handle: 'Suyn77', initial: '苏', uid: 10001, href: SUYN_URL },
 ]
 
 type FooterDialog = 'about' | 'contact' | null
 
-interface HomeFooterProps {
+interface FooterNavigationProps {
   brandName: string
-  /**
-   * Opens the shared settings panel.
-   *
-   * Theme, language and clear-data live there rather than inline here: the panel
-   * is the one surface every game also has, and two homes for the same control
-   * is how they drift apart.
-   */
   onOpenSettings: () => void
+  linkedUpdates: boolean
+  onDismissLinkedUpdates: () => void
+}
+
+export function FooterNavigation({ brandName, onOpenSettings, linkedUpdates, onDismissLinkedUpdates }: FooterNavigationProps) {
+  const { t, i18n } = useTranslation()
+  const [dialog, setDialog] = useState<FooterDialog>(() => {
+    const requested = new URLSearchParams(window.location.search).get('footer')
+    return !linkedUpdates && (requested === 'about' || requested === 'contact') ? requested : null
+  })
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const requested = url.searchParams.get('footer')
+    if (requested !== 'about' && requested !== 'contact') return
+    url.searchParams.delete('footer')
+    window.history.replaceState(window.history.state, '', url)
+  }, [])
+
+  return <>
+    <button type="button" aria-haspopup="dialog" onClick={() => setDialog('about')}>{t('footer.aboutArkive')}</button>
+    <button type="button" aria-haspopup="dialog" onClick={() => setDialog('contact')}>{t('footer.contact')}</button>
+    <PlatformUpdatesDialog linked={linkedUpdates} onDismissLink={onDismissLinkedUpdates} />
+    <button type="button" onClick={onOpenSettings}>{settingsStringsFor(i18n.resolvedLanguage ?? i18n.language).title}</button>
+    <AboutDialog open={dialog === 'about'} brandName={brandName} onOpenChange={open => setDialog(open ? 'about' : null)} />
+    <ContactDialog open={dialog === 'contact'} onOpenChange={open => setDialog(open ? 'contact' : null)} />
+  </>
 }
 
 // The voyage line: a thin route along the foot of the window, filled with gold
@@ -87,9 +106,8 @@ function Sail() {
   )
 }
 
-export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
-  const { t, i18n } = useTranslation()
-  const [dialog, setDialog] = useState<FooterDialog>(null)
+export function HomeFooter({ navigation }: { navigation: ReactNode }) {
+  const { t } = useTranslation()
   const icp = import.meta.env.VITE_ICP_BEIAN ?? t('footer.icp')
   const edgeRef = useRef<SVGSVGElement>(null)
   const layerRef = useRef<HTMLDivElement>(null)
@@ -208,12 +226,7 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
         <div className="home-shell home-footer-row">
           <a className="home-footer-brand arkive-wordmark" href="#top">Arkive</a>
           <nav className="home-footer-links" aria-label={t('footer.about')}>
-            <button type="button" aria-haspopup="dialog" onClick={() => setDialog('about')}>{t('footer.aboutArkive')}</button>
-            <button type="button" aria-haspopup="dialog" onClick={() => setDialog('contact')}>{t('footer.contact')}</button>
-            <a href="#updates">{t('footer.updateHistory')}</a>
-            <button type="button" onClick={onOpenSettings}>
-              {settingsStringsFor(i18n.resolvedLanguage ?? i18n.language).title}
-            </button>
+            {navigation}
           </nav>
           <p className="home-footer-legal">
             <span>{t('footer.copyright')}</span>
@@ -234,8 +247,6 @@ export function HomeFooter({ brandName, onOpenSettings }: HomeFooterProps) {
         <span className="home-port">— {t('landing.arrived')} —</span>
       </div>
 
-      <AboutDialog open={dialog === 'about'} brandName={brandName} onOpenChange={(open) => setDialog(open ? 'about' : null)} />
-      <ContactDialog open={dialog === 'contact'} onOpenChange={(open) => setDialog(open ? 'contact' : null)} />
     </footer>
   )
 }
@@ -271,21 +282,6 @@ function CreatorFace({ creator, src }: { creator: Creator; src: string | undefin
   return src ? <img src={src} alt="" /> : <span>{creator.initial}</span>
 }
 
-function ShoreWaves() {
-  return (
-    <>
-      <svg className="footer-shore-waves" viewBox="0 0 512 48" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 26c32-10 64-10 96 0s64 10 96 0 64-10 96 0 64 10 96 0 64-10 96 0 32 5 32 5V48H0Z" fill="#2f8fb5" opacity=".55" />
-        <path d="M0 32c40-9 72-9 108 0s70 9 104 0 70-9 106 0 72 9 104 0 58-6 90 0V48H0Z" fill="#1f6f99" />
-      </svg>
-      <svg className="footer-shore-ship" viewBox="0 0 32 28" aria-hidden="true">
-        <path d="M15 2v17H6Z" fill="#ffd08a" />
-        <path d="M17 6v13h8Z" fill="#ffb398" />
-        <path d="M3 20h26l-4 6H7Z" fill="#40251c" />
-      </svg>
-    </>
-  )
-}
 
 export function AboutDialog({ open, brandName, onOpenChange }: {
   open: boolean
@@ -305,7 +301,7 @@ export function AboutDialog({ open, brandName, onOpenChange }: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="footer-dialog footer-about max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto pb-0"
-        closeButtonProps={{ className: '[&>span]:bg-white/55 [&>span]:text-[#40251c]' }}
+        closeButtonProps={{ 'aria-label': t('footerDialogs.close'), className: '[&>span]:bg-white/55 [&>span]:text-[#40251c]' }}
       >
         <div className="footer-about-hero">
           <span className="footer-about-sun" aria-hidden="true" />
@@ -321,20 +317,17 @@ export function AboutDialog({ open, brandName, onOpenChange }: {
           <p>
             <Trans
               i18nKey="footerDialogs.about.team"
-              components={{ suyn: <a href={SUYN_URL} target="_blank" rel="noreferrer" /> }}
+              components={{
+                shuang: <a href={SHUANGNIANG_URL} target="_blank" rel="noreferrer" />,
+                suyn: <a href={SUYN_URL} target="_blank" rel="noreferrer" />,
+              }}
             />
           </p>
         </div>
 
         <AboutRoute games={games} tools={tools} />
 
-        <div className="footer-shore">
-          <ShoreWaves />
-          <div className="footer-about-domain">
-            <b>{ARKIVE_DOMAIN}</b>
-            <span>{t('footerDialogs.about.arrived')} ⚓</span>
-          </div>
-        </div>
+        <FooterShore />
       </DialogContent>
     </Dialog>
   )
@@ -375,11 +368,10 @@ export function ContactDialog({ open, onOpenChange }: {
 }) {
   const { t } = useTranslation()
   const avatarOf = useCreatorAvatars(open)
-  const [copiedGroup, copyGroup] = useCopied()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="footer-dialog footer-contact max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto pb-0">
+      <DialogContent className="footer-dialog footer-contact max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto pb-0" closeButtonProps={{ 'aria-label': t('footerDialogs.close') }}>
         <DialogHeader>
           <DialogTitle className="arkive-dialog-title">{t('footerDialogs.contact.title')}</DialogTitle>
           <DialogDescription>{t('footerDialogs.contact.description')}</DialogDescription>
@@ -387,25 +379,14 @@ export function ContactDialog({ open, onOpenChange }: {
 
         <div className="footer-pass">
           <div className="footer-pass-main">
-            <div className="footer-pass-info">
-              <div className="footer-pass-kicker">
-                <IconMessageCircle className="size-3.5" stroke={2.4} aria-hidden="true" />
-                {t('footerDialogs.contact.feedbackGroup')}
-              </div>
-              <div className="footer-pass-number">{ARKIVE_FEEDBACK_QQ_GROUP}</div>
+            <div className="footer-pass-kicker">
+              <IconMessageCircle className="size-3.5" stroke={2.4} aria-hidden="true" />
+              {t('footerDialogs.contact.feedbackGroup')}
             </div>
-            <button
-              type="button"
-              className="footer-pass-copy"
-              data-copied={copiedGroup || undefined}
-              data-testid="footer-copy-qq"
-              onClick={() => copyGroup(ARKIVE_FEEDBACK_QQ_GROUP)}
-            >
-              {copiedGroup
-                ? <IconCheck className="size-4" stroke={2.4} aria-hidden="true" />
-                : <IconCopy className="size-4" stroke={2.2} aria-hidden="true" />}
-              <span aria-live="polite">{t(copiedGroup ? 'footerDialogs.contact.copiedGroup' : 'footerDialogs.contact.copyGroup')}</span>
-            </button>
+            <div className="footer-pass-number">
+              {ARKIVE_FEEDBACK_QQ_GROUP}
+              <CopyButton value={ARKIVE_FEEDBACK_QQ_GROUP} label={t('footerDialogs.contact.copyGroup')} testId="footer-copy-qq" />
+            </div>
             <div className="footer-pass-note">{t('footerDialogs.contact.groupNote')}</div>
           </div>
           <div className="footer-pass-stub" aria-hidden="true">
@@ -430,63 +411,53 @@ export function ContactDialog({ open, onOpenChange }: {
                   </>
                 )}
               </span>
-              <WechatButton creator={creator} />
+              <div className="footer-wechat">
+                <IconBrandWechat className="size-4" stroke={1.8} aria-hidden="true" />
+                <span>{creator.handle}</span>
+                <CopyButton value={creator.handle} label={t('footerDialogs.contact.copyWechat', { name: creator.name, id: creator.handle })} />
+              </div>
             </li>
           ))}
         </ul>
 
-        <div className="footer-shore">
-          <ShoreWaves />
+        <FooterShore>
           <a className="footer-repo" href={GITHUB_URL} target="_blank" rel="noreferrer">
-            <span className="footer-repo-mark"><IconBrandGithub className="size-5" stroke={1.8} aria-hidden="true" /></span>
-            <span className="footer-repo-text">
-              <b>{t('footerDialogs.contact.github')}</b>
-              <small>{GITHUB_URL.replace(/^https:\/\//, '').replace(/\/tree\/.*$/, '')}</small>
-            </span>
-            <span className="footer-repo-go">
-              {t('footerDialogs.contact.open')}
-              <IconArrowUpRight className="size-3.5" stroke={2.4} aria-hidden="true" />
-            </span>
+            {t('footerDialogs.contact.github')} · GitHub
           </a>
-        </div>
+        </FooterShore>
       </DialogContent>
     </Dialog>
   )
 }
 
-function WechatButton({ creator }: { creator: Creator }) {
+function CopyButton({ value, label, testId }: { value: string; label: string; testId?: string }) {
   const { t } = useTranslation()
-  const [copied, copy] = useCopied()
+  const [status, setStatus] = useState<'copied' | 'copyFailed' | null>(null)
+  useEffect(() => {
+    if (!status) return
+    const timeout = window.setTimeout(() => setStatus(null), 2000)
+    return () => window.clearTimeout(timeout)
+  }, [status])
+  const feedback = status ? t(`footerDialogs.contact.${status}`) : ''
 
   return (
     <button
       type="button"
-      className="footer-wechat"
-      data-copied={copied || undefined}
-      aria-label={t('footerDialogs.contact.copyWechat', { name: creator.name, id: creator.handle })}
-      onClick={() => copy(creator.handle)}
+      className="footer-copy"
+      data-testid={testId}
+      aria-label={label}
+      title={feedback || label}
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value)
+          setStatus('copied')
+        } catch {
+          setStatus('copyFailed')
+        }
+      }}
     >
-      <IconBrandWechat className="size-4.5" stroke={1.8} aria-hidden="true" />
-      <span className="footer-wechat-id">{creator.handle}</span>
-      <span className="footer-wechat-hint" aria-live="polite">
-        {t(copied ? 'footerDialogs.contact.copied' : 'footerDialogs.contact.copyAction')}
-      </span>
+      {status === 'copied' ? <IconCheck aria-hidden="true" /> : <IconCopy aria-hidden="true" />}
+      <span className={status === 'copyFailed' ? 'footer-copy-error' : 'sr-only'} role="status">{feedback}</span>
     </button>
   )
-}
-
-/** Copies a value and reports it as copied for two seconds. */
-function useCopied() {
-  const [copied, setCopied] = useState(false)
-
-  useEffect(() => {
-    if (!copied) return
-    const timeout = window.setTimeout(() => setCopied(false), 2000)
-    return () => window.clearTimeout(timeout)
-  }, [copied])
-
-  const copy = (value: string) => {
-    void navigator.clipboard?.writeText(value).then(() => setCopied(true))
-  }
-  return [copied, copy] as const
 }

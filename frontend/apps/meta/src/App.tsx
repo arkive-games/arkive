@@ -47,11 +47,10 @@ import {
   type NotificationSection,
   type PublicProfileSection,
 } from './UserSystemPages'
-import { PlatformUpdatesPage } from './PlatformUpdatesPage'
 import { ContentModerationPage } from './ContentModerationPage'
 import { useSettingsConfig } from './lib/settings'
 import { AUTH_CONFIG } from './lib/auth'
-import { HomeFooter } from './HomeFooter'
+import { FooterNavigation, HomeFooter } from './HomeFooter'
 import { resolveMetaFooterKind } from './footerPolicy'
 import {
   AlertDialog,
@@ -276,6 +275,16 @@ export default function App() {
   const moderationAccess = useModerationAccess()
   const isSignedIn = auth.status === 'authenticated'
   const footerKind = resolveMetaFooterKind(activeRoute.view, isSignedIn)
+  const footerNavigation = <FooterNavigation
+    key={activeRoute.view}
+    brandName={brandName}
+    onOpenSettings={() => setSettingsOpen(true)}
+    linkedUpdates={activeRoute.view === 'platformUpdates'}
+    onDismissLinkedUpdates={() => {
+      window.history.replaceState(window.history.state, '', '#top')
+      setActiveRoute(routeFromHash())
+    }}
+  />
   // Every view that renders the homepage, including a protected route a
   // signed-out visitor falls back from.
   const isHome = footerKind === 'home'
@@ -455,8 +464,6 @@ export default function App() {
 
       {activeRoute.view === 'moderation' ? (
         <ContentModerationPage onSignIn={() => setAccountOpen(true)} />
-      ) : activeRoute.view === 'platformUpdates' ? (
-        <PlatformUpdatesPage />
       ) : activeRoute.view === 'allGames' ? (
         <AllGamesPage
           sites={VISIBLE_SITES}
@@ -500,12 +507,9 @@ export default function App() {
       )}
 
       {footerKind === 'home' ? (
-        <HomeFooter
-          brandName={brandName}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+        <HomeFooter navigation={footerNavigation} />
       ) : (
-        <StandardFooter brandName={brandName} onOpenSettings={() => setSettingsOpen(true)} hasMobileBottomNav={activeRoute.view === 'forum'} />
+        <StandardFooter navigation={footerNavigation} hasMobileBottomNav={activeRoute.view === 'forum'} />
       )}
 
       {noticeId > 0 && (
