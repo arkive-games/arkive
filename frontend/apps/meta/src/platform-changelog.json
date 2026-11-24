@@ -2,6 +2,28 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "44448d23f06e0eccc8753ff30f35d9c3caf67f9a",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Homepage game shortcuts now show the new badge only for updates from the last 7 days.",
+            "zh-CN": "首页游戏快捷入口现在只会为最近 7 天内更新的游戏显示“新”角标。",
+            "zh-TW": "首頁遊戲快速入口現在只會為最近 7 天內更新的遊戲顯示「新」角標。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "4b0730a39da369417cc85b909aea71797ff22fb0",
       "targets": [
         "aion2",
