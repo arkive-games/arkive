@@ -39,6 +39,17 @@ Favorites never restore excluded results or navigate. Request behavior is in
   composition. Do not stretch the image or add padding to make it fit.
   The separate game icon and homepage carousel are not substitutes for this check.
 
+Cover sources:
+
+- **Order of the Sinking Star:** [official game site](https://www.orderofthesinkingstar.com/en/),
+  [introduction artwork](https://cdn.orderofthesinkingstar.com/oss_assets/images/home/introduction/bg2.webp).
+  The catalog uses the original WebP, with the character as its crop anchor.
+- **The Artisan of Glimmith:** [publisher's game index](https://www.983media.com/983-interactive)
+  links to the [official Steam gallery](https://store.steampowered.com/app/4160210/The_Artisan_of_Glimmith/).
+  The [green stained-glass puzzle screenshot](https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4160210/875dbc4b7e827fa3f339ee768df706579c8a1ac2/ss_875dbc4b7e827fa3f339ee768df706579c8a1ac2.1920x1080.jpg)
+  is resized to WebP for the catalog. Source links identify the rights holders;
+  they do not imply a separate reuse license.
+
 ## Tool Library composition and targets
 
 No visible title/intro. Desktop: continuous All / game types (same as All Games) /
