@@ -2,6 +2,31 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "76534847199ddde61ea46cb82a3e300ee529b4ba",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The moderation sidebar stays in place when switching between the queue, publication rules and legacy images. The extra account link has been removed.",
+            "zh-CN": "切换待审核、发布规则和历史图片时，审核侧栏不再左右跳动；已移除返回个人中心的链接。",
+            "zh-TW": "切換待審核、發布規則和歷史圖片時，審核側欄不再左右跳動；已移除返回個人中心的連結。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "43551b9daf85963a8280970f16bb21466f114cf4",
       "targets": [
         "glimmith"
