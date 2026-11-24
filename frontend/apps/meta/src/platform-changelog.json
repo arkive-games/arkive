@@ -2,6 +2,23 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "2e9f19cea95353a2a0cc5c0ed915af9066f32a79",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Show the Glimmith name in map navigation, remove the map-corner label, and use full game artwork in the home shortcut.",
+            "zh-CN": "地图导航栏显示格里米斯工匠名称，移除地图角落文字，并在首页快捷入口使用完整游戏图片。",
+            "zh-TW": "地圖導覽列顯示格里米斯工匠名稱，移除地圖角落文字，並在首頁快捷入口使用完整遊戲圖片。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "192ac4111b875bf5c57973a1ba031cdef70be3b2",
       "targets": [
         "palworld",
