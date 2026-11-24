@@ -13,23 +13,44 @@ popular community posts > homepage footer. No recent-use or capability hero.
 The shelf is not the complete game directory. Carousel/shelf selections are independent; catalog
 favorites/order are not automatically inherited. Tool/post counts are unfixed;
 homepage selections are not the complete Tool Library even when inventories match.
-Game shortcuts use square library avatars, not title treatments. Prefer the
-publisher's Steam games-list icon or app avatar: a recognizable character,
-mascot or emblem that reads at small sizes. Otherwise crop a close-up from the
-same game's art. Fill the tile without distorting the image. Do not center
-a transparent library wordmark on a generic black plate. On load failure,
-try the same game's thumbnail, then its cover. Keep labels and badges separate.
 Game shortcuts and the update history shortcut use their respective latest
 changelog dates and show the new badge through seven local calendar days after an update.
-Glimmith and Phantom Blade Zero use the embedded 256-square PNG frames of
-their Steam client icons (app IDs 4160210 and 4115450). Palworld uses its
-yellow mascot app icon. Keep the recognizable launcher icons for Lord of
-Mysteries and Ragnarok Online 3, including their lettering. The title-only
-treatment to avoid is a separate wordmark on a generic tile, not the original
-artwork of a launcher icon.
 No data stays empty; do not invent entries. Remove expired/deleted/inaccessible
 selections. Retain current empty-section/mobile shelf treatment until explicitly
 reviewed; these contextual choices do not reopen the completed page layout.
+
+## Game shortcut icon selection
+
+Use the square icon players recognize when launching the game or finding it in
+their Steam games list. This rule is for homepage game tiles, not carousel banners
+or tool illustrations.
+
+1. **Keep a confirmed icon.** A new game or a shelf reorder is not a reason to
+   replace another game's artwork. An original icon can contain lettering or a
+   dark background: keep both. Lord of Mysteries keeps its gold lettering on
+   deep red; Ragnarok Online 3 keeps its red 3 on white.
+2. **Find the original before choosing a substitute.** Reuse a matching project
+   asset, or obtain the icon from the game's client, official launcher or Steam
+   games list for the correct title and edition. For Steam, use the client/list
+   icon, not the library logo or store banner. Use desktop screenshots to
+   identify a match, not as source pixels: shortcut arrows and system badges
+   are not part of the artwork.
+3. **Only crop when the original is unavailable.** Propose a square close-up
+   from the same game's official art with one recognizable subject. Do not
+   substitute unrelated card art, AI redraws, or a wide title placed on a
+   generic black tile. A temporary load failure falls back to the game's own
+   thumbnail or cover; it does not change the selected icon.
+4. **Record provenance and review the change.** Name the asset and its source
+   in the change description (project asset, launcher, Steam app ID, or official
+   URL). If the upstream origin is unknown, say so. Before publishing a crop,
+   a choice between conflicting originals, or a replacement for a confirmed
+   icon, show the actual homepage tile at desktop and phone sizes for approval.
+   Check that the image is undistorted and the update badge does not hide its
+   identifying detail. Keep labels and badges separate from the asset.
+
+Source examples: Glimmith and Phantom Blade Zero use the 256-square PNG frames
+from Steam client icons for app IDs 4160210 and 4115450. Palworld reuses the
+project's yellow mascot icon, checked against the local Steam client.
 
 ## Game shortcut selection and order
 
