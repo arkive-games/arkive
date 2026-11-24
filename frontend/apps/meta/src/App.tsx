@@ -291,8 +291,7 @@ export default function App() {
     now: memoryNow,
     maxAge: RECENT_ACTIVITY_RETENTION.milliseconds,
   })
-  // The shelf keeps the curated SITES order: a game never moves because a
-  // visitor opened it, so each one stays where they expect to find it.
+  // Directory eligibility is shared; each homepage section owns its selection.
   const displayedSites = VISIBLE_SITES
   const [communityPosts, setCommunityPosts] = useState<HomeCommunityPost[]>([])
 

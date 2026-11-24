@@ -24,6 +24,7 @@ import {
 import { GAME_LOGOS, IS_TOY, recentUpdateDays, siteHref, type SiteCard } from './sites'
 import { TOOL_ICONS } from './toolIcons'
 import { HomeCarousel } from './HomeCarousel'
+import { homeGameShortcuts } from './homeGameShelf'
 import platformChangelog from './platform-changelog.json'
 
 const KIND_ICONS: Record<FeatureKind, typeof IconTool> = {
@@ -66,7 +67,7 @@ function GameShortcutImage({ site }: { site: SiteCard }) {
  * The complete tool registry and the homepage selection are independent.
  */
 export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, onOpenFeature }: {
-  /** In display order; the caller decides whether a recent game leads. */
+  /** Eligible sites for the independently curated homepage sections. */
   sites: readonly SiteCard[]
   /** Newest changelog date per game id; a recent one earns its shortcut a badge. */
   updatedDates: Readonly<Record<string, string>>
@@ -79,7 +80,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const language = i18n.resolvedLanguage ?? i18n.language
   const [now] = useState(() => new Date())
   const games = sites.filter((site) => siteHref(site))
-  const shortcutGames = games.filter((site) => site.id !== 'oss')
+  const shortcutGames = homeGameShortcuts(games)
   const tools = FEATURES.filter((feature) => feature.kind === 'tool' && HOME_TOOL_IDS.has(feature.id)
     && games.some((site) => site.id === feature.gameId))
   const badge = t('landing.quick.badge')

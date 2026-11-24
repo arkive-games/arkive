@@ -123,7 +123,7 @@ product_model:
     first_screen: "Preserve the existing discovery composition; complete inventories belong to All Games and Tool Library."
     body_order:
       - "Coverflow carousel: one wide banner per game; the centre slide sits flat and its neighbours tilt back; no masks or colour filters"
-      - "Manually configured mixed visual entry shelf; ten desktop tiles initially, expandable manually"
+      - "The shortcut row contains up to 11 curated game tiles followed by utility entries, which do not count toward the limit. Promote a game only by replacing an existing game. Order selected games left to right by observed Arkive popularity; see docs/ui-system/portal.md for the metric and tie policy."
       - "Tool dock: editorial/popularity-selected tools; independent from the complete Tool Library"
       - "Community feed beside the voyage log"
       - "The sea footer"

@@ -10,8 +10,7 @@ popular community posts > homepage footer. No recent-use or capability hero.
 | Selected tools | Editorial/popularity subset of Tool Library; open specific tool; retain lower-right game logo |
 | Popular posts | Title, excerpt, author, time, channel, comments; open specific post |
 
-Shelf target: ten tiles in one desktop row; manual additions allowed. It is not
-the complete game directory. Carousel/shelf selections are independent; catalog
+The shelf is not the complete game directory. Carousel/shelf selections are independent; catalog
 favorites/order are not automatically inherited. Tool/post counts are unfixed;
 homepage selections are not the complete Tool Library even when inventories match.
 Game shortcuts show the game logo without cropping. When no logo is available
@@ -24,6 +23,28 @@ and [Phantom Blade Zero](https://shared.fastly.steamstatic.com/store_item_assets
 No data stays empty; do not invent entries. Remove expired/deleted/inaccessible
 selections. Retain current empty-section/mobile shelf treatment until explicitly
 reviewed; these contextual choices do not reopen the completed page layout.
+
+## Game shortcut selection and order
+
+- The hard ceiling is **11 game tiles**. All Games, Tools, Forum and Update History
+  follow the games in that order when available. They do not count as games.
+- The editorial roster has seven occupied slots. A normal promotion replaces one
+  named game in an existing slot, even below the ceiling. Record the incoming and
+  outgoing IDs in the change. Registering a game or publishing its site does not
+  allocate a slot; removing a tile does not remove the game from All Games.
+- Sort selected, available games from left to right by observed Arkive demand,
+  highest first. Use the sum of pageviews attributable to each game in Baidu
+  Tongji's daily top ten pages over seven consecutive completed Beijing dates.
+  This is a site-traffic sample, not total game traffic or worldwide popularity.
+  Attribute game subdomains to their game and the portal's Glimmith tutorial
+  route to Glimmith; exclude general portal pages. Equal scores use editorial
+  slot order. Games absent from the sample follow in slot order (unknown, not zero).
+- Refresh the checked-in snapshot when reviewing the shelf and before a replacement.
+  From the frontend workspace run
+  `node scripts/refresh-home-game-ranking.mjs <daily-report-directory> <last-complete-YYYY-MM-DD>`.
+  Review the generated order before publishing. Keep the last verified snapshot when
+  a report is missing or invalid. Do not commit raw analytics or change a visitor's
+  order based on their own clicks or favorites.
 
 ## Live portal footer reference
 
