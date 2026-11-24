@@ -2,6 +2,29 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "3f00e7280db6e3c232f9b09e518cc908105ed8d0",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Homepage game shortcuts now use a fixed selection ordered by recent Arkive traffic. Adding a game to the directory no longer moves it onto the homepage.",
+            "zh-CN": "首页游戏方块按近期站内热度从左到右排列。新游戏加入全部游戏后，不会自动占用首页推荐位。",
+            "zh-TW": "首頁遊戲方塊按近期站內熱度由左至右排列。新遊戲加入全部遊戲後，不會自動佔用首頁推薦位。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "efb173fd26c1c6641f8faead917ca6001f62bca0",
       "targets": [
         "glimmith",
