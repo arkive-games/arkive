@@ -2,6 +2,31 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "6c780eedf6ce19640192206a05a01fb6934d7d09",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Long game names wrap within their homepage shortcuts. Carousel captions and portal tools follow the selected language.",
+            "zh-CN": "首页较长的游戏名会在各自入口内换行，轮播文案和工具目录跟随所选语言。",
+            "zh-TW": "首頁較長的遊戲名稱會在各自入口內換行，輪播文案與工具目錄跟隨所選語言。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "192ac4111b875bf5c57973a1ba031cdef70be3b2",
       "targets": [
         "palworld",
