@@ -236,15 +236,12 @@ jobs:
         run: |
           docker compose -f docker-compose.prod.yml -f docker-compose.komodo.yml config --format json |
             jq -e '
-              (.services | keys == ["core", "migrate"]) and
+              (.services | keys == ["core"]) and
               (.services.core.image == "ghcr.io/arkive-games/backend-go:komodo") and
-              (.services.migrate.image == .services.core.image) and
-              (.services.migrate.environment == .services.core.environment) and
-              (.services.core.build == null and .services.migrate.build == null) and
+              (.services.core.build == null) and
+              (.services.core.command == null and .services.core.entrypoint == null) and
               (.services.core.ports | length == 1 and .[0].host_ip == "127.0.0.1") and
-              (.services.migrate.ports | length == 0) and
-              (.services.migrate.command == ["migrate"]) and
-              (.services.core.depends_on.migrate.condition == "service_completed_successfully") and
+              (.services.core.healthcheck.test == ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9000/healthz"]) and
               (.networks.shared.external == true)'
 
       - name: Setup Go

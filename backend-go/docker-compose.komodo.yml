@@ -6,24 +6,9 @@ services:
     # files before it writes its generated env file; a required interpolation
     # would remain unresolved and hide registry digest updates.
     image: ghcr.io/arkive-games/backend-go:komodo
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
     healthcheck:
       test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:9000/healthz]
       interval: 5s
       timeout: 3s
       retries: 12
       start_period: 10s
-
-  # Inherit production settings (including the database and shared network)
-  # without starting a second HTTP listener or modifying the legacy stack.
-  migrate:
-    extends:
-      file: docker-compose.prod.yml
-      service: core
-    build: !reset null
-    image: ghcr.io/arkive-games/backend-go:komodo
-    command: [migrate]
-    restart: "no"
-    ports: !reset []

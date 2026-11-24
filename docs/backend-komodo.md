@@ -47,12 +47,11 @@ access to that host, Komodo, or production credentials.
    production credentials into GitHub.
 4. Enable **Auto Pull**. Leave **Run Build** and **Destroy Before Deploy** off.
    Set Compose extra args to `--pull never --wait --wait-timeout 180`. Komodo
-   pulls before Compose starts; `--pull never` has Compose use that same local
-   image for migration and startup. Add `migrate` to `ignore_services` so its
-   normal exit does not make the Stack look down. Keep Stack alerts enabled.
+   pulls before Compose starts; `--pull never` makes Compose use that local
+   image. Keep Stack alerts enabled.
 5. For staging, use a different Compose project name, loopback port, separate
    database and credentials, and a nonproduction storage bucket. Deploy a pinned
-   digest, verify the migration exits successfully and core is healthy, then
+   digest, verify the core logs show successful migrations and core is healthy, then
    redeploy a previous digest and verify it can serve against the upgraded
    staging database. Test registry polling in staging before switching it on in
    production.
@@ -65,16 +64,27 @@ access to that host, Komodo, or production credentials.
 7. Verify `/healthz` on the backend's loopback port and a database-backed read
    through nginx, such as `GET https://api.arkive.games/api/v1/core/forum/posts`.
    Configure an external availability check and Komodo alert delivery, then
-   change `ARKIVE_BACKEND_IMAGE` to `registry/path:komodo`. Deploy once and
+   restore the literal `:komodo` image reference in the overlay. Deploy once and
    enable **Auto Update** and **Auto Update All Services**. Do not add a Git
    push webhook; the registry digest change is the deployment trigger.
 
+## Upgrade from the separate migration service
+
+Pause Auto Update while replacing the host overlay with the reviewed version.
+Clear `migrate` from the Stack's ignored services and redeploy. After the new
+core is healthy, confirm that `arkive-backend-migrate-1` is an exited container
+from the `arkive-backend` project with Compose service label `migrate`. Remove
+only that container with `docker rm arkive-backend-migrate-1`, if present, and
+restore Auto Update.
+
 ## Failure and rollback
 
-The migration container must succeed before the new API starts; `/healthz`
-then checks that the API is listening. This is a single-instance Compose rollout,
-not a zero-downtime rollout. A failed migration or an unhealthy API is a failed
-release and needs operator attention; Compose does not restore the old API.
+The API runs goose migrations on startup before opening its HTTP listener.
+`/healthz` becomes available only after migrations succeed. This is a
+single-instance Compose rollout: the API can be unavailable while migrations
+run. A failed migration is visible in the core logs and fails the rollout;
+Compose does not restore the previous API automatically. The standalone
+`arkive migrate` command remains available for manual use.
 
 Disable **Auto Update** first, then temporarily change the overlay's image to
 the previous known-good `git-<revision>` tag or digest and deploy it from
