@@ -2,6 +2,29 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "192ac4111b875bf5c57973a1ba031cdef70be3b2",
+      "targets": [
+        "palworld",
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "ro3",
+        "vrising",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Homepage game shortcuts now use square library avatars and character art instead of title logos on dark tiles.",
+            "zh-CN": "首页游戏方块改用 Steam 风格的方形头像，以角色或游戏徽记取代黑底标题字标。",
+            "zh-TW": "首頁遊戲方塊改用 Steam 風格的方形頭像，以角色或遊戲徽記取代黑底標題字標。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "3f00e7280db6e3c232f9b09e518cc908105ed8d0",
       "targets": [
         "aion2",
