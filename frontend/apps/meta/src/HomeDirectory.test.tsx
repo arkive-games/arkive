@@ -50,6 +50,12 @@ describe('homepage shortcut tiles', () => {
     expect(mount(site).querySelector('.home-quick-icon.is-game img')?.getAttribute('src')).toBe(site.icon)
   })
 
+  it.each(['gmzz', 'ro3'])('keeps the original %s launcher icon', (id) => {
+    const site = SITES.find(item => item.id === id)!
+    const src = mount(site).querySelector('.home-quick-icon.is-game img')?.getAttribute('src')
+    expect(src).toContain(`${id}-icon.webp`)
+  })
+
   it('does not retry an avatar that also serves as the thumbnail', () => {
     const node = mount({ ...game, shortcutAvatar: game.thumb })
     fireEvent.error(node.querySelector('.home-quick-icon.is-game img')!)

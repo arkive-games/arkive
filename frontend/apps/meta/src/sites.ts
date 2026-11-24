@@ -11,7 +11,6 @@ import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
 import glimmithAvatar from './assets/glimmith-library-avatar.png'
 import pbzAvatar from './assets/pbz-library-avatar.png'
-import ro3Avatar from './assets/ro3-poring-avatar.webp'
 import aion2Banner from './assets/aion2-banner.webp'
 import gmzzBanner from './assets/gmzz-banner.webp'
 import palworldBanner from './assets/palworld-banner.webp'
@@ -166,7 +165,6 @@ export const SITES: SiteCard[] = [
       'https://gmzz.arkive.games',
     ),
     bg: gmzzBg,
-    shortcutAvatar: gmzzThumb,
     // The lead character stands right of centre.
     bgPosition: '65% center',
     thumb: gmzzThumb,
@@ -188,7 +186,6 @@ export const SITES: SiteCard[] = [
       'https://ro3.arkive.games',
     ),
     bg: ro3Bg,
-    shortcutAvatar: ro3Avatar,
     banner: ro3Banner,
     bannerPosition: '28% 18%',
     icon: ro3Icon,

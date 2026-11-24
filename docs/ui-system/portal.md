@@ -23,7 +23,10 @@ Game shortcuts and the update history shortcut use their respective latest
 changelog dates and show the new badge through seven local calendar days after an update.
 Glimmith and Phantom Blade Zero use the embedded 256-square PNG frames of
 their Steam client icons (app IDs 4160210 and 4115450). Palworld uses its
-yellow mascot app icon. The RO3 shortcut reuses the game's Poring card art.
+yellow mascot app icon. Keep the recognizable launcher icons for Lord of
+Mysteries and Ragnarok Online 3, including their lettering. The title-only
+treatment to avoid is a separate wordmark on a generic tile, not the original
+artwork of a launcher icon.
 No data stays empty; do not invent entries. Remove expired/deleted/inaccessible
 selections. Retain current empty-section/mobile shelf treatment until explicitly
 reviewed; these contextual choices do not reopen the completed page layout.
