@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.26.4",
+      "date": "2026-11-25",
+      "commit": "1244de33a11ce8dcf6a115af41fb7dd6fe63a05c",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Avoid duplicate errors on shared build links",
+            "zh-CN": "修复流派方案分享链接重复显示错误提示的问题",
+            "zh-TW": "修復流派方案分享連結重複顯示錯誤提示的問題"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.26.3",
       "date": "2026-11-22",
       "commit": "1da5cba45bf07b41ae3a176e1d8251ceddb9e244",
