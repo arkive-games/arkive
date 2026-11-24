@@ -79,13 +79,19 @@ footer a:focus-visible {
 }
 
 .footer-shore {
+  --wave-height: 2.5rem;
   margin: 1rem -1.5rem 0;
   color: #eaf6ff;
+  /* Start the sea behind the opaque base of the waves, including at fractional zoom. */
+  background: linear-gradient(to bottom,
+    transparent calc(var(--wave-height) - 0.25rem),
+    #1f6f99 0 var(--wave-height),
+    #175a80);
 }
 
 .footer-shore-art {
   position: relative;
-  height: 2.5rem;
+  height: var(--wave-height);
   pointer-events: none;
 }
 
@@ -97,7 +103,6 @@ footer a:focus-visible {
 
 .footer-shore-caption {
   padding: 0.25rem 1.5rem 0.875rem;
-  background: linear-gradient(180deg, #1f6f99, #175a80);
 }
 
 .footer-shore-ship {
