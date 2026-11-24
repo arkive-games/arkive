@@ -2,6 +2,24 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "8a3baa7585201b6863ed28a35d65e3889c996eeb",
+      "targets": [
+        "glimmith",
+        "oss"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "All Games now shows a stained-glass puzzle for The Artisan of Glimmith and official character artwork for Order of the Sinking Star.",
+            "zh-CN": "全部游戏换上两张官方封面：格里米斯工匠展示彩窗谜题，沉星之序展示角色宣传图。",
+            "zh-TW": "全部遊戲換上兩張官方封面：格里米斯工匠展示彩窗謎題，沉星之序展示角色宣傳圖。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "91b9057f63b1ed8589dd6a36cb09477bf47bf074",
       "targets": [
         "aion2",
