@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { SITES } from '../apps/meta/src/sites'
 
 const css = readFileSync(new URL('../packages/map-shell/src/arkive-map-theme.css', import.meta.url), 'utf8').replace(/\r/g, '')
 const light = css.match(/^:root \{([\s\S]*?)^\}/m)[1]
@@ -15,6 +16,16 @@ const luminance = hex => [1, 3, 5].map(at => parseInt(hex.slice(at, at + 2), 16)
 const ratio = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05)
 
 describe('shared text and focus contrast', () => {
+  for (const [theme, source] of [['light', light], ['dark', dark]]) it(`keeps game cover tints readable in ${theme}`, () => {
+    const value = { ...tokens(light), ...tokens(source) }
+    for (const site of SITES) {
+      const surface = color(site.catalogHover[theme], site.id)
+      for (const [token, minimum] of [['--foreground', 4.5], ['--ring', 3], ['--arkive-nav-accent', 3]]) {
+        expect(ratio(value[token], surface), `${site.id}: ${token} on ${surface}`).toBeGreaterThanOrEqual(minimum)
+      }
+    }
+  })
+
   for (const [theme, source] of [['light', light], ['dark', dark]]) it(`meets the scoped text and focus thresholds in ${theme}`, () => {
     const value = { ...tokens(light), ...tokens(source) }
     for (const [fg, bg] of [

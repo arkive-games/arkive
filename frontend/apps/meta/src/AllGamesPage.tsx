@@ -250,7 +250,13 @@ function CatalogGameCard({
   )
 
   return (
-    <article style={{ '--game-color': game.site.color ?? 'var(--muted)' } as CSSProperties} className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}>
+    <article
+      style={{
+        '--catalog-hover-light': game.site.catalogHover.light,
+        '--catalog-hover-dark': game.site.catalogHover.dark,
+      } as CSSProperties}
+      className={game.site.comingSoon ? 'catalog-game-card is-soon' : 'catalog-game-card'}
+    >
       {href ? (
         <a href={href} className="catalog-game-link" onClick={onOpen}>{body}</a>
       ) : (

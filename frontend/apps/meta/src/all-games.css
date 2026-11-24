@@ -9,21 +9,23 @@
 .catalog-categories small { font-size: .75rem; font-variant-numeric: tabular-nums; }
 .catalog-results { padding-bottom: 2rem; }
 .catalog-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.25rem; }
-.catalog-game-card { position: relative; min-width: 0; padding: .6rem .6rem .75rem; border: 1px solid var(--border); border-radius: var(--arkive-radius-card); background: var(--card); transition: background-color .3s; }
+.catalog-game-card { --catalog-tint: var(--catalog-hover-light); --catalog-readable-ink: color-mix(in srgb, var(--foreground) 30%, var(--muted-foreground)); position: relative; min-width: 0; padding: .6rem .6rem .75rem; border: 1px solid var(--border); border-radius: var(--arkive-radius-card); background: var(--card); transition: background-color .3s; }
+.dark .catalog-game-card { --catalog-tint: var(--catalog-hover-dark); }
+.catalog-game-card:has(:focus-visible) { background: var(--catalog-tint); --catalog-ink: var(--catalog-readable-ink); }
 .catalog-game-link { display: block; color: inherit; text-decoration: none; border-radius: .9rem; }
 .catalog-game-cover { display: block; position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: .9rem; background: var(--muted); }
 .catalog-game-cover > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .catalog-game-glass { position: absolute; inset: -150%; pointer-events: none; background: linear-gradient(150deg, #ffffff2b, #ffffff06 75%); backdrop-filter: brightness(1.06) contrast(.98); -webkit-mask-image: linear-gradient(to top right, transparent 49%, #000 51%); mask-image: linear-gradient(to top right, transparent 49%, #000 51%); transform: translate(28%, -28%); opacity: 0; transition: opacity .2s, transform .75s cubic-bezier(.22,1,.36,1); }
 @media (hover: hover) and (pointer: fine) {
-  .catalog-game-card:hover { background: color-mix(in srgb, var(--game-color) 13%, var(--card)); }
+  .catalog-game-card:hover { background: var(--catalog-tint); --catalog-ink: var(--catalog-readable-ink); }
   .catalog-game-card:hover .catalog-game-glass { transform: translate(0,0); opacity: 1; }
 }
 .catalog-game-copy { display: block; margin: .55rem .25rem 0; }
 .catalog-game-name { display: flex; align-items: center; gap: .5rem; }
 .catalog-game-name img { flex: none; width: 1.5rem; height: 1.5rem; border-radius: .4rem; }
 .catalog-game-name strong { min-width: 0; font-size: 1rem; font-weight: 600; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.catalog-game-copy > small { display: block; margin: .125rem 2rem 0 0; color: var(--muted-foreground); font-size: .75rem; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.catalog-bookmark { position: absolute; right: .35rem; bottom: .15rem; display: grid; place-items: center; width: 2rem; height: 2rem; border: 0; border-radius: 999rem; background: transparent; color: var(--muted-foreground); cursor: pointer; }
+.catalog-game-copy > small { display: block; margin: .125rem 2rem 0 0; color: var(--catalog-ink, var(--muted-foreground)); font-size: .75rem; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catalog-bookmark { position: absolute; right: .35rem; bottom: .15rem; display: grid; place-items: center; width: 2rem; height: 2rem; border: 0; border-radius: 999rem; background: transparent; color: var(--catalog-ink, var(--muted-foreground)); cursor: pointer; }
 .catalog-bookmark:hover { background: var(--muted); }
 .catalog-bookmark.is-active { color: var(--arkive-nav-accent); }
 .catalog-bookmark.is-active svg { fill: currentColor; }
@@ -56,5 +58,5 @@
 }
 
 .catalog-bookmark:disabled { cursor: wait; }
-.catalog-favorite-error { margin-top: .5rem; padding-right: 2rem; color: var(--destructive); font-size: .75rem; }
+.catalog-favorite-error { margin-top: .5rem; padding-right: 2rem; color: var(--destructive); background: var(--card); font-size: .75rem; }
 .catalog-favorite-error button { cursor: pointer; text-decoration: underline; }

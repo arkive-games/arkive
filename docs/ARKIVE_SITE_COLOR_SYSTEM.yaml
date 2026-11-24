@@ -56,7 +56,8 @@ brand_direction:
     warm_action: "Owns the main call to action of a surface: sign-in, submit, publish, search, and the selected tab capsule of warm views"
     amber: "Owns warm accents: field focus borders, active filter tints, search-term highlights, the voyage line, and warnings"
     blue: "Owns links, keyboard focus rings, and selection inside data tools and maps"
-    game_color: "Each game's own colour (sites.ts color and menuTint) may tint that game's own icon, card hover, and menu row"
+    game_color: "Keep artwork colors local to the game: sites.ts color for the carousel, menuTint for its menu row, and catalogHover for the All Games card."
+    catalog_hover: "Choose the light and dark surface from the recognizable colors of the final cover crop. Apply the surface on fine-pointer hover or visible keyboard focus, not to the artwork itself. Check the title and summary at 4.5:1 and meaningful icons at 3:1 on both surfaces."
   # Owner decision (2026-10-27): the logo's gradient fill in light mode, plain
   # white in dark mode and on the homepage sea footer.
   logo:
@@ -96,7 +97,7 @@ semantic_tokens:
     warm_search: { value: "linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c)", css: "--arkive-warm-search" }
     warm_search_foreground: { value: "#40251c", css: "--arkive-warm-search-foreground" }
     warm_accent: { value: "#AB6400", css: "--arkive-nav-accent, --arkive-brand-slogan, --arkive-nav-beacon, --arkive-orange" }
-    game_color_tint: { note: "Each game's sites.ts color property tints its own card hover and menu row", css: "--game-color local variable" }
+    game_color_tint: { note: "All Games uses the game's catalogHover.light; other surfaces keep their own game tint." }
     action: { value: "#CC4E00", css: "--arkive-action" }
     action_foreground: { value: "#FFFFFF", css: "--arkive-action-on" }
     destructive: { value: "#CE2C31", css: "--destructive" }
@@ -129,7 +130,7 @@ semantic_tokens:
     warm_search: { value: "linear-gradient(120deg, #ffc061, #f5a524 50%, #ec7a1c)", css: "--arkive-warm-search (same as light)" }
     warm_search_foreground: { value: "#40251c", css: "--arkive-warm-search-foreground (same as light)" }
     warm_accent: { value: "#FFC53D", css: "--arkive-nav-accent, --arkive-brand-slogan, --arkive-nav-beacon, --arkive-orange" }
-    game_color_tint: { note: "Each game's sites.ts color property tints its own card hover and menu row", css: "--game-color local variable" }
+    game_color_tint: { note: "All Games uses the game's catalogHover.dark; other surfaces keep their own game tint." }
     action: { value: "#F76B15", css: "--arkive-action" }
     action_foreground: { value: "#202020", css: "--arkive-action-on" }
     destructive: { value: "#E5484D", css: "--destructive" }

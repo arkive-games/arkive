@@ -80,6 +80,8 @@ export interface SiteCard {
   icon?: string
   /** Dominant colour of `banner`, used for the carousel glow. */
   color?: string
+  /** Radix surface pair selected from the final catalog crop, independent of the carousel and menu. */
+  catalogHover: { light: string; dark: string }
   /**
    * Which column of the top bar's game menu lists it: a live-service online
    * game, or one played alone or with friends.
@@ -102,6 +104,7 @@ export const SITES: SiteCard[] = [
   {
     id: 'glimmith',
     guideLanguage: 'zh-CN',
+    catalogHover: { light: '#c3e9d7', dark: '#114837' },
     kind: 'offline',
     url: GLIMMITH_MAP_PATH,
     bg: glimmithCover,
@@ -114,6 +117,7 @@ export const SITES: SiteCard[] = [
   {
     id: 'oss',
     guideLanguage: 'zh-CN',
+    catalogHover: { light: '#fbe577', dark: '#4d3000' },
     kind: 'offline',
     url: resolveSiteUrl(import.meta.env.VITE_OSS_URL, 'http://localhost:15181', 'https://oss.arkive.games'),
     bg: '/oss-preview.svg',
@@ -123,6 +127,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'aion2',
+    catalogHover: { light: '#e1dccf', dark: '#38352e' },
     kind: 'online',
     menuTint: '#638bc8',
     url: resolveSiteUrl(
@@ -142,6 +147,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'palworld',
+    catalogHover: { light: '#b5e9f0', dark: '#004558' },
     kind: 'offline',
     menuTint: '#58ab9b',
     url: resolveSiteUrl(
@@ -160,6 +166,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'gmzz',
+    catalogHover: { light: '#f2d1f3', dark: '#512454' },
     kind: 'online',
     menuTint: '#ac8455',
     url: resolveSiteUrl(
@@ -182,6 +189,7 @@ export const SITES: SiteCard[] = [
   {
     id: 'ro3',
     guideLanguage: 'zh-CN',
+    catalogHover: { light: '#bee7f5', dark: '#154467' },
     kind: 'online',
     menuTint: '#6d9d59',
     url: resolveSiteUrl(
@@ -200,6 +208,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'vrising',
+    catalogHover: { light: '#e1d9ff', dark: '#3c2e69' },
     kind: 'offline',
     menuTint: '#b45f6b',
     url: resolveSiteUrl(
@@ -221,6 +230,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'sts2',
+    catalogHover: { light: '#ffcdce', dark: '#611623' },
     kind: 'offline',
     comingSoon: true,
     bg: STS2_BG,
@@ -230,6 +240,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'pbz',
+    catalogHover: { light: '#ffd19a', dark: '#562800' },
     kind: 'offline',
     menuTint: '#c98a3e',
     url: resolveSiteUrl(
