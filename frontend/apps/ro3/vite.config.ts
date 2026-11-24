@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import fs from 'node:fs'
 import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
+import { arkiveFavicons } from '../../vite/arkive-favicons.ts'
 
 function siblingRepo(name: string): string {
   let dir = import.meta.dirname
@@ -53,6 +54,7 @@ function staticDirPlugin(name: string, urlPrefix: string, rootDir: string): Plug
 export default defineConfig({
   server: { host: '0.0.0.0', port: 15178, strictPort: true, allowedHosts: true },
   plugins: [
+    arkiveFavicons(),
     arkiveFontAssets(),
     react(),
     tailwindcss(),

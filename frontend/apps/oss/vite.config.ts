@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import fs from 'node:fs'
 import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
+import { arkiveFavicons } from '../../vite/arkive-favicons.ts'
 
 // Serve the sibling `data-oss` / `resource-oss` artifact repos in dev.
 // Walk ancestor directories until the sibling repo is found, so this keeps
@@ -47,6 +48,7 @@ function staticDirPlugin(name: string, urlPrefix: string, rootDir: string): Plug
 
 export default defineConfig({
   plugins: [
+    arkiveFavicons(),
     arkiveFontAssets(),
     react(),
     tailwindcss(),

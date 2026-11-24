@@ -5,6 +5,7 @@ import { execSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
+import { arkiveFavicons } from '../../vite/arkive-favicons.ts'
 
 /**
  * Each sibling app's newest changelog date, keyed by app directory, for the
@@ -33,7 +34,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
   },
-  plugins: [arkiveFontAssets({ hostsFonts: true }), react(), tailwindcss()],
+  plugins: [arkiveFavicons(), arkiveFontAssets({ hostsFonts: true }), react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   define: {
     __BUILD_TIME__: JSON.stringify(process.env.BUILD_TIME ?? Date.now().toString()),

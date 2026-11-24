@@ -5,6 +5,7 @@ import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
 import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
+import { arkiveFavicons } from '../../vite/arkive-favicons.ts'
 
 // Serve the sibling `data-lostark` artifact repo in dev. Walk ancestor
 // directories until the sibling repo is found, so this keeps working from a git
@@ -50,6 +51,7 @@ function staticDirPlugin(name: string, urlPrefix: string, rootDir: string): Plug
 export default defineConfig({
   server: { host: '0.0.0.0', port: 15177, strictPort: true, allowedHosts: true },
   plugins: [
+    arkiveFavicons(),
     arkiveFontAssets(),
     react(),
     tailwindcss(),

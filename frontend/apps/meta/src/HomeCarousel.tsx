@@ -80,7 +80,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
       banner: recruitBanner,
       phoneBanner: recruitBannerPhone,
       poster: true,
-      icon: `${import.meta.env.BASE_URL}favicon.svg`,
+      icon: `${import.meta.env.BASE_URL}recruitment-mark.svg`,
       color: RECRUIT_COLOR,
       open: () => setContactOpen(true),
     },

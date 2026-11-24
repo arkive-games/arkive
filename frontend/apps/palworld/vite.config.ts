@@ -5,6 +5,7 @@ import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
 import { arkiveFontAssets } from '../../vite/arkive-font-assets.ts'
+import { arkiveFavicons } from '../../vite/arkive-favicons.ts'
 
 // Serve the sibling `data-palworld` / `resource-palworld` artifact repos in dev.
 // In the monorepo they sit next to the `arkive/` repo root (4 up from
@@ -58,6 +59,7 @@ export default defineConfig({
     allowedHosts: true,
   },
   plugins: [
+    arkiveFavicons(),
     arkiveFontAssets(),
     react(),
     tailwindcss(),
