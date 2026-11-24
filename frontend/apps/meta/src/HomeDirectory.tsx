@@ -21,7 +21,7 @@ import {
   type GameFeature,
   type RecentFeature,
 } from './featureCatalog'
-import { GAME_LOGOS, IS_TOY, recentUpdateDays, siteHref, type SiteCard } from './sites'
+import { GAME_LOGOS, IS_TOY, PLATFORM_BADGE_DAYS, recentUpdateDays, siteHref, type SiteCard } from './sites'
 import { TOOL_ICONS } from './toolIcons'
 import { HomeCarousel } from './HomeCarousel'
 import platformChangelog from './platform-changelog.json'
@@ -82,7 +82,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
       label: t('landing.quick.updates'),
       icon: IconSparkles,
       colors: ['#ffcb52', '#ff8a1f'],
-      fresh: recentUpdateDays(platformChangelog.entries[0]?.date, now) !== undefined,
+      fresh: recentUpdateDays(platformChangelog.entries[0]?.date, now, PLATFORM_BADGE_DAYS) !== undefined,
     },
   ]
 

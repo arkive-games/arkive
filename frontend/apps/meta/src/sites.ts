@@ -274,22 +274,22 @@ export const GAME_LOGOS: Record<string, string> = {
 export const VISIBLE_SITES: SiteCard[] = SITES.filter((site) =>
   !site.comingSoon && (!IS_TOY || site.toySlug))
 
-/** A game updated longer ago than this shows no badge: "45 days ago" reads as neglect, not news. */
-export const RECENT_UPDATE_DAYS = 30
+export const GAME_BADGE_DAYS = 7
+export const PLATFORM_BADGE_DAYS = 30
 
 /**
  * Whole calendar days since `date` (a changelog's YYYY-MM-DD) in the visitor's
  * time zone, or `undefined` when there is no date, it is malformed, in the
- * future, or older than `RECENT_UPDATE_DAYS`.
+ * future, or older than the badge window.
  */
-export function recentUpdateDays(date: string | undefined, now: Date): number | undefined {
+export function recentUpdateDays(date: string | undefined, now: Date, maxDays = GAME_BADGE_DAYS): number | undefined {
   const match = date && /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
   if (!match) return undefined
   const then = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   // Rounded, not floored: a daylight-saving change makes one day 23 or 25 hours.
   const days = Math.round((today.getTime() - then.getTime()) / 86_400_000)
-  return days >= 0 && days <= RECENT_UPDATE_DAYS ? days : undefined
+  return days >= 0 && days <= maxDays ? days : undefined
 }
 
 /** `undefined` for an announced game, so callers render an inert card instead of a link. */

@@ -6,7 +6,7 @@ import {
   paginateCatalogEntries,
   type CatalogEntry,
 } from './gameCatalog'
-import { GAME_LOGOS, RECENT_UPDATE_DAYS, SITES, recentUpdateDays } from './sites'
+import { GAME_LOGOS, PLATFORM_BADGE_DAYS, SITES, recentUpdateDays } from './sites'
 
 describe('recentUpdateDays', () => {
   const now = new Date(2026, 8, 26, 23, 30)
@@ -14,15 +14,21 @@ describe('recentUpdateDays', () => {
   it('counts calendar days, not 24-hour spans', () => {
     expect(recentUpdateDays('2026-09-26', now)).toBe(0)
     expect(recentUpdateDays('2026-09-25', now)).toBe(1)
-    expect(recentUpdateDays('2026-09-17', now)).toBe(9)
+    expect(recentUpdateDays('2026-09-20', now)).toBe(6)
   })
 
   it('hides stale, future and malformed dates', () => {
     expect(recentUpdateDays('2026-08-12', now)).toBeUndefined()
-    expect(recentUpdateDays('2026-08-27', now)).toBe(RECENT_UPDATE_DAYS)
+    expect(recentUpdateDays('2026-09-19', now)).toBe(7)
+    expect(recentUpdateDays('2026-09-18', now)).toBeUndefined()
     expect(recentUpdateDays('2026-09-27', now)).toBeUndefined()
     expect(recentUpdateDays('26/09/2026', now)).toBeUndefined()
     expect(recentUpdateDays(undefined, now)).toBeUndefined()
+  })
+
+  it('keeps the platform updates shortcut on its 30-day window', () => {
+    expect(recentUpdateDays('2026-08-27', now, PLATFORM_BADGE_DAYS)).toBe(30)
+    expect(recentUpdateDays('2026-08-26', now, PLATFORM_BADGE_DAYS)).toBeUndefined()
   })
 })
 
