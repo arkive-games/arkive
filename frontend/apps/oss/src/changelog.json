@@ -3,7 +3,7 @@
     {
       "version": "0.2.7",
       "date": "2026-11-24",
-      "commit": "1c20a0af00d7de8f44d1a9d6d08d69e4e655d033",
+      "commit": "0fd230e5cffeb8d22d04171eed21d2f96d958c98",
       "changes": [
         {
           "kind": "improvement",
@@ -18,7 +18,7 @@
     {
       "version": "0.2.6",
       "date": "2026-11-24",
-      "commit": "5301a9cc1a31cbf0079652fa9fcd18e06553c017",
+      "commit": "1770b5f1cd8e6c52060d89a7cc4fa53e3a8018f4",
       "changes": [
         {
           "kind": "fix",
@@ -33,7 +33,7 @@
     {
       "version": "0.2.5",
       "date": "2026-11-23",
-      "commit": "3b9b688f99f9a2009d848689cf038a3c95755d64",
+      "commit": "0c91994bbe1ad8bc3805b9069981c9a6f2f8481d",
       "changes": [
         {
           "kind": "fix",
@@ -48,7 +48,7 @@
     {
       "version": "0.2.4",
       "date": "2026-11-23",
-      "commit": "c3822d33f04e17f649bf337666513d3d8889c59e",
+      "commit": "ddbc68c34fa2e46ceae3be0cd011f7bb4263bdb1",
       "changes": [
         {
           "kind": "fix",
@@ -63,7 +63,7 @@
     {
       "version": "0.2.3",
       "date": "2026-11-23",
-      "commit": "3dc96c827e05c5949509968b7fd78cdab5142123",
+      "commit": "d6d4dec17227b5606bb07dead2cbe4d01af14894",
       "changes": [
         {
           "kind": "fix",
@@ -78,7 +78,7 @@
     {
       "version": "0.2.2",
       "date": "2026-11-23",
-      "commit": "5b5b26dc36abeb87eb6739e204bd5e72234a3359",
+      "commit": "c7fa1bcb738e41168ad2ee41eeb71a536060e391",
       "changes": [
         {
           "kind": "fix",
@@ -93,7 +93,7 @@
     {
       "version": "0.2.1",
       "date": "2026-11-23",
-      "commit": "47c70619ef1002b8f7071e350b2953c53451143d",
+      "commit": "878f7e53b94795f489db19c8fce02f7646023c59",
       "changes": [
         {
           "kind": "fix",
@@ -108,7 +108,7 @@
     {
       "version": "0.2.0",
       "date": "2026-11-17",
-      "commit": "8a8f05208059bd00d2bac36e3374a09c91a49597",
+      "commit": "58a9fa2d60276c52f0a6e0d7bd225938c44f5531",
       "changes": [
         {
           "kind": "feature",
