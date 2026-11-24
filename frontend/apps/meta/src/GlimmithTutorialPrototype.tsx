@@ -10,10 +10,11 @@ import {
 import { browserMemory, defineMemoryRecord, memoryPolicy } from '@gamemap/state-memory'
 import { useIsMobile } from '@gamemap/ui'
 import scene from './assets/glimmith-scene.json'
-import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import noteIcon from './assets/glimmith-marker-note.svg'
+import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import windowIcon from './assets/glimmith-marker-window.svg'
 import perfectedIcon from './assets/glimmith-marker-perfected.png'
+import puzzleSquareIcon from './assets/glimmith-icon-blue.png'
 import circleClue from './assets/glimmith-cell-clue-circle.png'
 import squareClue from './assets/glimmith-cell-clue-square.png'
 import triangleClue from './assets/glimmith-cell-clue-triangle.png'
@@ -366,7 +367,7 @@ export function GlimmithTutorialPrototype() {
       <CommunityMarkerDetail key={marker.id} game="glimmith" mapId={map.id} markerId={puzzleNumber(marker.id)} hideGallery
         language="zh-CN" anchored={!mobile} denseHeader={Boolean(puzzle)}
         name={puzzle ? copy.puzzle + ' ' + marker.localizedName : marker.localizedName}
-        icon={<img className={puzzle ? 'size-6 object-contain' : 'size-8 object-contain'} src={marker.icon} alt="" />}
+        icon={<img className={puzzle ? 'size-6 object-contain' : 'size-8 object-contain'} src={puzzle ? puzzleSquareIcon : marker.icon} alt="" />}
         eyebrow={puzzle ? undefined : marker.subtypeLabel}
         titleAccessory={marker.hoverBadge && <img className="size-5 object-contain" src={marker.hoverBadge.src} alt={marker.hoverBadge.alt} />}
         positionValue={coordinate} positionCopyValue={coordinate}

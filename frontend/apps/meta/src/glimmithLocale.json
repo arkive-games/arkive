@@ -57,7 +57,7 @@
   "postGameUnlock": "通关后解锁：",
   "postGameStep": "修复格里米斯桥彩窗，完成最终挑战并阅读终点提到红色台座的信，再回开场飞船。",
   "linkedUnlockInsufficient": " 与本题有关，但单独解开它不会让本题出现。",
-  "engine": { "copyPosition": "复制坐标", "noMapSelected": "未选择地图", "zoomIn": "放大", "zoomOut": "缩小" },
+  "engine": { "copyPosition": "复制坐标", "noMapSelected": "未选择地图", "zoomIn": "放大", "zoomOut": "缩小", "footerText": "格里米斯工匠" },
   "windows": {
     "window-bridge": "格里米斯桥",
     "window-gate": "格里米斯瞭望台",
