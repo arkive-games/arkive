@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ApiError } from '@gamemap/api-core'
 import { ArkiveEncyclopediaWorkspace } from '@gamemap/map-shell'
 import { Button, CatalogFacetOption, CatalogFacetTrack, cn, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, PageSkeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@gamemap/ui'
-import { IconArrowLeft, IconBook2, IconChevronLeft, IconChevronRight, IconClock, IconFlag, IconHistory, IconListCheck, IconMapPin, IconMessage2, IconPhoto, IconRefresh, IconTools, IconUserCircle, IconUserShield } from '@tabler/icons-react'
+import { IconBook2, IconChevronLeft, IconChevronRight, IconClock, IconFlag, IconHistory, IconListCheck, IconMapPin, IconMessage2, IconPhoto, IconRefresh, IconTools, IconUserCircle, IconUserShield } from '@tabler/icons-react'
 import { CONTENT_POLICY, type ContentState, type ContentType, type ModerationGateway, type QueueEntry, type QueueQuery, type ReviewSection } from './model'
 import { ReviewDetail } from './ReviewDetail'
 import { TierBadge, useModerationCopy } from './shared'
@@ -121,12 +121,11 @@ export function ContentModerationWorkspace({ gateway, siteAdministrator, legacy,
   const pages = Math.max(1, Math.ceil(count / PAGE_SIZE))
   const reload = () => { setSelected(null); setEntries([]); setFailure(null); setRefresh(value => value + 1) }
 
-  return <main className="arkive-content-page mx-auto w-full max-w-[var(--arkive-content-wide-data)] flex-1 px-[var(--arkive-page-gutter)] pb-12" data-testid="content-moderation-page">
+  return <main className="moderation-workspace arkive-content-page mx-auto w-full max-w-[var(--arkive-content-wide-data)] flex-1 px-[var(--arkive-page-gutter)] pb-12" data-testid="content-moderation-page">
     <h1 className="sr-only">{m('title')}</h1>
     <div className="mb-4 lg:hidden"><Select value={section} onValueChange={value => navigate(value as ReviewSection)} disabled={busy}><SelectTrigger className="min-h-11 w-full rounded-full" aria-label={m('section')}><SelectValue /></SelectTrigger><SelectContent>{groups.flatMap(group => group.entries).map(item => <SelectItem key={item.key} value={item.key}>{item.label}</SelectItem>)}</SelectContent></Select></div>
     <ArkiveEncyclopediaWorkspace groups={groups} active={section} label={m('title')} collapsed={collapsed} onCollapsedChange={setCollapsed} collapseLabel={m('collapse')} expandLabel={m('expand')}
-      renderLink={(item, className, children) => <button type="button" className={cn(className, 'w-full text-left')} aria-current={section === item.key ? 'page' : undefined} disabled={busy} onClick={() => navigate(item.key as ReviewSection)}>{children}</button>}
-      railFooter={<a href="#account/edit" className="mt-6 inline-flex min-h-11 items-center gap-2 px-2 text-xs text-muted-foreground hover:text-foreground"><IconArrowLeft className="size-4" aria-hidden="true" stroke={1.8} />{m('back')}</a>}>
+      renderLink={(item, className, children) => <button type="button" className={cn(className, 'w-full text-left')} aria-current={section === item.key ? 'page' : undefined} disabled={busy} onClick={() => navigate(item.key as ReviewSection)}>{children}</button>}>
       {denied ? <p role="alert" className="py-12 text-sm">{m('forbidden')}</p>
         : section === 'rules' ? <PublicationRules />
           : section === 'legacy' ? legacy

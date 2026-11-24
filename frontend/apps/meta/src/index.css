@@ -18,6 +18,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* The document scrolls on this route. Keep its centered workspace in place
+   when switching between a short queue and longer publication rules. */
+html:has(.moderation-workspace) {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   min-width: 320px;
