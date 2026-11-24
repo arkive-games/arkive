@@ -2,6 +2,28 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "af72b6b78b2a6ec4c4fe904e4d1af5a821e871d2",
+      "targets": [
+        "aion2",
+        "gmzz",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Desktop game directories, moderation, account and notification pages now use matching sidebar sizes. Both columns start the same distance below navigation.",
+            "zh-CN": "桌面游戏目录、内容审核、个人中心和通知页统一了侧栏宽度与可用高度，左右两栏从导航栏下方同一高度开始。",
+            "zh-TW": "桌面遊戲目錄、內容審核、個人中心和通知頁統一了側欄寬度與可用高度，左右兩欄從導覽列下方同一高度開始。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "76534847199ddde61ea46cb82a3e300ee529b4ba",
       "targets": [
         "aion2",
