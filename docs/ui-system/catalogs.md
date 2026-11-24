@@ -20,6 +20,25 @@ Favorites never restore excluded results or navigate. Request behavior is in
 - Only not-yet-launched games show Pending Launch and have no unusable game link.
   Available games have no launch-status label; temporary failure is not pending.
 
+### Game cover intake
+
+- For a new or replacement cover, start at the game's official developer or
+  publisher website. Prefer its promotional key art or a press kit linked from
+  that site. Record the official source page, the original asset URL when
+  available, and any reuse or credit requirements in the change description.
+  A search result, fan upload or wallpaper mirror is not a source. If no
+  suitable official image can be used, flag the missing cover for editorial
+  review rather than substituting unofficial art.
+- Choose a recognizable subject or scene that fills the card. Reject
+  letterboxing, a small logo on a blank field, and art where featureless sky,
+  white space or another flat background dominates the final crop. A bright
+  snow scene with a clear subject is not blank merely because it is light.
+- Preview the actual cover at both the desktop **4:3** and phone **1:1** card
+  sizes with `object-fit: cover`. Adjust the focal point first; if either crop
+  loses the face, main subject or signature feature, pick another official
+  composition. Do not stretch the image or add padding to make it fit.
+  The separate game icon and homepage carousel are not substitutes for this check.
+
 ## Tool Library composition and targets
 
 No visible title/intro. Desktop: continuous All / game types (same as All Games) /

@@ -159,6 +159,7 @@ product_model:
   all_games_page:
     role: "Every live game as a paged grid of cover cards, with search, category filters, recent visits and favorites."
     composition_owner: "docs/ARKIVE_UI_FOUNDATIONS_SPEC.yaml shared_component_contracts.portal_catalog_card"
+    cover_intake: "Use official promotional artwork for new or replacement covers. Follow docs/ui-system/catalogs.md#game-cover-intake for sourcing and crop acceptance."
     future_showcase: "A cover-card showcase tinted by each cover's dominant colour belongs here, not on the home page."
   tools_page:
     role: "Every calculator and planner across games, grouped by game."
