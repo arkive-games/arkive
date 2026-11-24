@@ -132,27 +132,6 @@ button.home-slide {
   transition: transform 0.9s var(--soft);
 }
 
-/* The crew and swordsman illustrations share a canvas with Chinese lettering.
-   Frame only the illustrated side when the caption uses another language. */
-.home-slide-art[data-crop] {
-  position: relative;
-  overflow: hidden;
-}
-.home-slide-art[data-crop] > img {
-  position: absolute;
-  max-width: none;
-}
-.home-slide-art[data-crop="crew"] > img {
-  right: 0;
-  width: 210%;
-  object-position: right center;
-}
-.home-slide-art[data-crop="swordsman"] > img {
-  left: 0;
-  width: 300%;
-  object-position: left center;
-}
-
 /* A soft shade under the title, on the middle banner only. */
 .home-slide::after {
   content: "";

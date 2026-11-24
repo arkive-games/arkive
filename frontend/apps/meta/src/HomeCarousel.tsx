@@ -43,7 +43,6 @@ interface Slide {
   bannerPosition?: string
   /** The art carries its own title, so the repeated icon and text are hidden. */
   poster?: boolean
-  artCrop?: 'crew' | 'swordsman'
   icon: string
   color?: string
   href?: string
@@ -70,8 +69,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
   onOpenSite: (site: SiteCard) => void
   /** Opens the notice for Phantom Blade Zero, whose guide is not open yet. */
 }) {
-  const { t, i18n } = useTranslation()
-  const useChinesePosters = i18n.resolvedLanguage === 'zh-CN'
+  const { t } = useTranslation()
   const [contactOpen, setContactOpen] = useState(false)
   const slides: Slide[] = [
     {
@@ -80,9 +78,8 @@ export function HomeCarousel({ sites, onOpenSite }: {
       desc: t('landing.carousel.recruit.desc'),
       go: t('landing.carousel.recruit.go'),
       banner: recruitBanner,
-      phoneBanner: useChinesePosters ? recruitBannerPhone : undefined,
-      poster: useChinesePosters,
-      artCrop: useChinesePosters ? undefined : 'crew',
+      phoneBanner: recruitBannerPhone,
+      poster: true,
       icon: `${import.meta.env.BASE_URL}recruitment-mark.svg`,
       color: RECRUIT_COLOR,
       open: () => setContactOpen(true),
@@ -91,7 +88,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
       const site = sites.find((candidate) => candidate.id === id)
       const href = site && siteHref(site)
       if (!site?.banner || !href) return []
-      const poster = useChinesePosters ? GAME_POSTERS[id] : undefined
+      const poster = GAME_POSTERS[id]
       return [{
         key: site.id,
         name: t(site.nameKey),
@@ -99,8 +96,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
         go: t('landing.carousel.enter'),
         banner: poster?.banner ?? site.banner,
         bannerPosition: poster ? undefined : site.bannerPosition,
-        phoneBanner: id === 'pbz' && useChinesePosters ? PBZ_ARTWORK.phoneBanner : poster?.phoneBanner,
-        artCrop: id === 'pbz' && !useChinesePosters ? 'swordsman' as const : undefined,
+        phoneBanner: id === 'pbz' ? PBZ_ARTWORK.phoneBanner : poster?.phoneBanner,
         poster: Boolean(poster),
         icon: site.icon ?? GAME_LOGOS[site.id],
         color: site.color,
@@ -247,7 +243,7 @@ export function HomeCarousel({ sites, onOpenSite }: {
             const content = (
               <>
                 {shouldRenderArt ? (
-                  <picture className="home-slide-art" data-crop={slide.artCrop}>
+                  <picture className="home-slide-art">
                     {slide.phoneBanner && <source media="(max-width: 760px)" srcSet={slide.phoneBanner} />}
                     <img
                       src={slide.banner}
