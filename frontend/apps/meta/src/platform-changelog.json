@@ -2,6 +2,29 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "efb173fd26c1c6641f8faead917ca6001f62bca0",
+      "targets": [
+        "glimmith",
+        "aion2",
+        "palworld",
+        "gmzz",
+        "ro3",
+        "vrising",
+        "pbz"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Homepage game tiles show the game logo, or a cropped game image when the logo is unavailable. The update history shortcut uses the same seven-day badge as games.",
+            "zh-CN": "首页游戏方块优先显示游戏 Logo，没有 Logo 或加载失败时显示该游戏图片的裁切图。更新日志和游戏方块一样，距更新不超过 7 个日历日才显示「新」。",
+            "zh-TW": "首頁遊戲方塊優先顯示遊戲 Logo，沒有 Logo 或載入失敗時顯示該遊戲圖片的裁切圖。更新日誌和遊戲方塊一樣，距更新不超過 7 個日曆日才顯示「新」。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "44448d23f06e0eccc8753ff30f35d9c3caf67f9a",
       "targets": [
         "aion2",
