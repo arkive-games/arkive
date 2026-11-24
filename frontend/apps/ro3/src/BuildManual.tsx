@@ -180,7 +180,7 @@ export function BuildManual({ gateway = pendingBuildGateway }: { gateway?: Build
       <BuildDetail build={editableBuild(detail)} data={data} faved={detail.favorited} section={sectionLabel} canFavorite={detail.publishedRevision !== null} busy={cloud.busy}
         onBack={backToList} onFav={() => void cloud.mutate(detail, 'favorite')}
         onTemplate={() => startEdit(detail)} onEdit={detail.editable ? () => startEdit(detail, true) : undefined} />
-    </> : <div className="bm-empty"><p>{error || c.notFound}</p><button type="button" className="bm-chip" onClick={backToList}>{m.back}</button></div>}
+    </> : <div className="bm-empty">{error ? null : <p>{c.notFound}</p>}<button type="button" className="bm-chip" onClick={backToList}>{m.back}</button></div>}
   </div>
 
   const tint = root ? rootTint(root) : 'var(--arkive-nav-accent)'
