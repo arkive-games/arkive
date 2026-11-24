@@ -2,6 +2,31 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "4b0730a39da369417cc85b909aea71797ff22fb0",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "sts2",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Browser tabs and bookmarks now use the Arkive A in black on white or white on black to match your browser appearance.",
+            "zh-CN": "浏览器标签页和书签改用藏舟标志里的 A，浅色外观显示白底黑字，深色外观显示黑底白字。",
+            "zh-TW": "瀏覽器分頁和書籤改用藏舟標誌裡的 A，淺色外觀顯示白底黑字，深色外觀顯示黑底白字。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "af72b6b78b2a6ec4c4fe904e4d1af5a821e871d2",
       "targets": [
         "aion2",
