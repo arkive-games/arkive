@@ -87,9 +87,19 @@ describe('feature catalog', () => {
 
 describe('localize', () => {
   const value = { 'en-US': 'Map', 'zh-CN': '地图', 'zh-TW': '地圖' }
-  it('reads Chinese directly and falls back to English otherwise', () => {
+  it('falls back to English for a partial external record', () => {
     expect(localize(value, 'zh-TW')).toBe('地圖')
     expect(localize(value, 'ja-JP')).toBe('Map')
+  })
+  it('provides Japanese and Korean names and descriptions for every portal feature', () => {
+    for (const feature of FEATURES) {
+      for (const field of [feature.name, feature.description].filter(value => value !== undefined)) {
+        for (const language of ['ja-JP', 'ko-KR'] as const) {
+          expect(field[language], feature.id).toBeTruthy()
+          expect(localize(field, language)).toBe(field[language])
+        }
+      }
+    }
   })
 })
 

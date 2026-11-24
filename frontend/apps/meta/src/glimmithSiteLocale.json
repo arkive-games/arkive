@@ -1,4 +1,6 @@
 {
+  "ja-JP": { "name": "The Artisan of Glimmith", "desc": "ステンドグラスやパズルの場所、オリジナルの解答を確認できます", "feature": "インタラクティブマップ" },
+  "ko-KR": { "name": "The Artisan of Glimmith", "desc": "스테인드글라스와 퍼즐의 위치, 원본 해답을 확인하세요", "feature": "인터랙티브 지도" },
   "en-US": { "name": "The Artisan of Glimmith", "desc": "Find stained glass windows, puzzle locations, and original solutions", "feature": "Interactive map" },
   "zh-CN": { "name": "格里米斯工匠", "desc": "查询彩窗、谜题位置和原版解法", "feature": "互动地图" },
   "zh-TW": { "name": "格里米斯工匠", "desc": "查詢彩窗、謎題位置和原版解法", "feature": "互動地圖" }

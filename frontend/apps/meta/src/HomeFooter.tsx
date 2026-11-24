@@ -20,8 +20,6 @@ import { IS_TOY, VISIBLE_SITES, siteHref } from './sites'
 // Identity and contact details are the same in every language, so they are
 // spelled out once here rather than repeated in each locale's copy.
 const ARKIVE_DOMAIN = 'www.Arkive.games'
-/** Chinese for a Chinese page, English for every other language. */
-const SLOGANS = ['万千攻略，藏于一舟', 'Sail Games With Us.'] as const
 const GITHUB_URL = 'https://github.com/arkive-games/arkive/tree/master/tools'
 const SUYN_URL = 'https://space.bilibili.com/33004908/upload/video'
 
@@ -294,14 +292,14 @@ export function AboutDialog({ open, brandName, onOpenChange }: {
   brandName: string
   onOpenChange: (open: boolean) => void
 }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const avatarOf = useCreatorAvatars(open)
   // Counted, not written into the copy, so the route stays true as games and
   // tools are added.
   const games = VISIBLE_SITES.filter((site) => siteHref(site)).length
   const tools = FEATURES.filter((feature) => feature.kind === 'tool'
     && VISIBLE_SITES.some((site) => site.id === feature.gameId && siteHref(site))).length
-  const slogan = (i18n.resolvedLanguage ?? i18n.language).startsWith('zh') ? SLOGANS[0] : SLOGANS[1]
+  const slogan = t('brand.slogan')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

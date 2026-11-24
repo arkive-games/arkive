@@ -1,4 +1,6 @@
 {
+  "ja-JP": { "other": "その他", "favorite": "{{name}}をお気に入りに追加", "failed": "お気に入りを保存できませんでした。", "retry": "再試行" },
+  "ko-KR": { "other": "기타", "favorite": "{{name}} 즐겨찾기", "failed": "즐겨찾기를 저장하지 못했습니다.", "retry": "다시 시도" },
   "en-US": { "other": "Other", "favorite": "Favorite {{name}}", "failed": "Favorite could not be saved.", "retry": "Retry" },
   "zh-CN": { "other": "其他", "favorite": "收藏{{name}}", "failed": "收藏保存失败。", "retry": "重试" },
   "zh-TW": { "other": "其他", "favorite": "收藏{{name}}", "failed": "收藏儲存失敗。", "retry": "重試" }

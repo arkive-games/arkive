@@ -207,6 +207,14 @@ export default function App() {
   const brandName = getArkiveBrandName(lng, t('brand.name'))
 
   useEffect(() => {
+    // Keep the canonical title in the static entry and when returning to Simplified Chinese.
+    if (lng === 'zh-CN') return
+    const initial = document.title
+    document.title = `${t('brand.name')} | ${t('brand.slogan')}`
+    return () => { document.title = initial }
+  }, [lng, t])
+
+  useEffect(() => {
     const updateView = () => {
       const requestedHash = window.location.hash || '#top'
       if (forumComposerDirtyRef.current && requestedHash !== '#forum/new') {
