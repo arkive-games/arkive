@@ -65,8 +65,12 @@ access to that host, Komodo, or production credentials.
    through nginx, such as `GET https://api.arkive.games/api/v1/core/forum/posts`.
    Configure an external availability check and Komodo alert delivery, then
    restore the literal `:komodo` image reference in the overlay. Deploy once and
-   enable **Auto Update** and **Auto Update All Services**. Do not add a Git
-   push webhook; the registry digest change is the deployment trigger.
+   enable **Auto Update** and **Auto Update All Services**. Set Komodo's
+   **Global Auto Update** procedure to run every five minutes. Its default is
+   daily; the Core resource polling interval does not set the procedure's
+   schedule. Verify a successful procedure run and the live image revision
+   after publishing, rather than treating a registry push as a deploy. Do not
+   add a Git push webhook.
 
 ## Upgrade from the separate migration service
 
