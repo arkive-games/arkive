@@ -6,7 +6,7 @@ import {
   paginateCatalogEntries,
   type CatalogEntry,
 } from './gameCatalog'
-import { GAME_LOGOS, PLATFORM_BADGE_DAYS, SITES, recentUpdateDays } from './sites'
+import { GAME_LOGOS, SITES, recentUpdateDays } from './sites'
 
 describe('recentUpdateDays', () => {
   const now = new Date(2026, 8, 26, 23, 30)
@@ -24,11 +24,6 @@ describe('recentUpdateDays', () => {
     expect(recentUpdateDays('2026-09-27', now)).toBeUndefined()
     expect(recentUpdateDays('26/09/2026', now)).toBeUndefined()
     expect(recentUpdateDays(undefined, now)).toBeUndefined()
-  })
-
-  it('keeps the platform updates shortcut on its 30-day window', () => {
-    expect(recentUpdateDays('2026-08-27', now, PLATFORM_BADGE_DAYS)).toBe(30)
-    expect(recentUpdateDays('2026-08-26', now, PLATFORM_BADGE_DAYS)).toBeUndefined()
   })
 })
 

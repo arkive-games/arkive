@@ -14,6 +14,13 @@ Shelf target: ten tiles in one desktop row; manual additions allowed. It is not
 the complete game directory. Carousel/shelf selections are independent; catalog
 favorites/order are not automatically inherited. Tool/post counts are unfixed;
 homepage selections are not the complete Tool Library even when inventories match.
+Game shortcuts show the game logo without cropping. When no logo is available
+or it fails to load, crop the same game's thumbnail or cover to fill the square.
+Game shortcuts and the update history shortcut use their respective latest
+changelog dates and show the new badge through seven local calendar days after an update.
+The portal bundles the publisher's Steam library logos for
+[The Artisan of Glimmith](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/4160210/f8592e69bad594afbfbcadf562de7fc7af7d6255/logo.png)
+and [Phantom Blade Zero](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/4115450/9ab0d8602a9703f7d15545643a612648a964e588/logo_schinese.png).
 No data stays empty; do not invent entries. Remove expired/deleted/inaccessible
 selections. Retain current empty-section/mobile shelf treatment until explicitly
 reviewed; these contextual choices do not reopen the completed page layout.

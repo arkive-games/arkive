@@ -21,7 +21,7 @@ import {
   type GameFeature,
   type RecentFeature,
 } from './featureCatalog'
-import { GAME_LOGOS, IS_TOY, PLATFORM_BADGE_DAYS, recentUpdateDays, siteHref, type SiteCard } from './sites'
+import { GAME_LOGOS, IS_TOY, recentUpdateDays, siteHref, type SiteCard } from './sites'
 import { TOOL_ICONS } from './toolIcons'
 import { HomeCarousel } from './HomeCarousel'
 import platformChangelog from './platform-changelog.json'
@@ -44,6 +44,18 @@ const DEFAULT_TOOL_COLORS = ['#ffa8d9', '#c46bff'] as const
 
 function gradient([from, to]: readonly [string, string], index: number): CSSProperties {
   return { '--c1': from, '--c2': to, '--i': index } as CSSProperties
+}
+
+function GameShortcutImage({ site }: { site: SiteCard }) {
+  const [failedLogo, setFailedLogo] = useState<string>()
+  const logo = site.logo !== failedLogo ? site.logo : undefined
+  return (
+    <span className="home-quick-icon is-game" data-game={site.id}>
+      {logo
+        ? <img key={logo} className="home-quick-logo" src={logo} onError={() => setFailedLogo(logo)} alt="" draggable={false} />
+        : <img src={site.thumb ?? site.bg} style={{ objectPosition: site.thumb ? undefined : site.bgPosition }} alt="" draggable={false} />}
+    </span>
+  )
 }
 
 /**
@@ -82,7 +94,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
       label: t('landing.quick.updates'),
       icon: IconSparkles,
       colors: ['#ffcb52', '#ff8a1f'],
-      fresh: recentUpdateDays(platformChangelog.entries[0]?.date, now, PLATFORM_BADGE_DAYS) !== undefined,
+      fresh: recentUpdateDays(platformChangelog.entries[0]?.date, now) !== undefined,
     },
   ]
 
@@ -96,7 +108,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
           {shortcutGames.map((site, index) => (
             <a key={site.id} href={siteHref(site)} draggable={false} style={{ '--i': index, '--qc': site.color } as CSSProperties} onClick={() => onOpenSite(site)}>
               <span className="home-quick-tile">
-                <span className="home-quick-icon is-game"><img src={site.icon ?? GAME_LOGOS[site.id]} alt="" draggable={false} /></span>
+                <GameShortcutImage site={site} />
                 {recentUpdateDays(updatedDates[site.id], now) !== undefined && <b>{badge}</b>}
               </span>
               <span>{t(site.nameKey)}</span>

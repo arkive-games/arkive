@@ -9,6 +9,8 @@ import aion2Logo from './assets/aion2-logo.webp'
 import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
 import vrisingLogo from './assets/vrising-logo.png'
+import glimmithLogo from './assets/glimmith-logo.png'
+import pbzLogo from './assets/pbz-logo.png'
 import aion2Banner from './assets/aion2-banner.webp'
 import gmzzBanner from './assets/gmzz-banner.webp'
 import palworldBanner from './assets/palworld-banner.webp'
@@ -71,7 +73,9 @@ export interface SiteCard {
   banner?: string
   /** CSS `object-position` for `banner`, chosen so the faces survive the narrower mobile crop. */
   bannerPosition?: string
-  /** Square app-style icon for the homepage quick row and tool badges. Falls back to `GAME_LOGOS`. */
+  /** Game wordmark or branded app logo, displayed uncropped on the homepage shortcut. */
+  logo?: string
+  /** Square app-style artwork for other surfaces, such as tool badges. */
   icon?: string
   /** Dominant colour of `banner`, used for the carousel glow. */
   color?: string
@@ -99,6 +103,7 @@ export const SITES: SiteCard[] = [
     kind: 'offline',
     url: GLIMMITH_MAP_PATH,
     bg: glimmithCover,
+    logo: glimmithLogo,
     icon: glimmithIcon,
     nameKey: 'site.glimmith.name',
     descKey: 'site.glimmith.desc',
@@ -124,6 +129,7 @@ export const SITES: SiteCard[] = [
     ),
     toySlug: 'arkive-aion2',
     bg: aion2Bg,
+    logo: aion2Logo,
     banner: aion2Banner,
     bannerPosition: '22% 50%',
     icon: aion2Icon,
@@ -143,6 +149,7 @@ export const SITES: SiteCard[] = [
     ),
     toySlug: 'arkive-palworld',
     bg: palworldBg,
+    logo: palworldLogo,
     banner: palworldBanner,
     icon: palworldIcon,
     color: '#4a9ad0',
@@ -160,6 +167,7 @@ export const SITES: SiteCard[] = [
       'https://gmzz.arkive.games',
     ),
     bg: gmzzBg,
+    logo: gmzzIcon,
     // The lead character stands right of centre.
     bgPosition: '65% center',
     thumb: gmzzThumb,
@@ -181,6 +189,7 @@ export const SITES: SiteCard[] = [
       'https://ro3.arkive.games',
     ),
     bg: ro3Bg,
+    logo: ro3Icon,
     banner: ro3Banner,
     bannerPosition: '28% 18%',
     icon: ro3Icon,
@@ -199,6 +208,7 @@ export const SITES: SiteCard[] = [
       'https://vrising.arkive.games',
     ),
     bg: VRISING_BG,
+    logo: vrisingLogo,
     // A portrait poster whose two faces sit in its top third; a centred
     // landscape crop cuts through their chests instead.
     bgPosition: 'center 15%',
@@ -215,6 +225,7 @@ export const SITES: SiteCard[] = [
     kind: 'offline',
     comingSoon: true,
     bg: STS2_BG,
+    logo: sts2Logo,
     nameKey: 'site.sts2.name',
     descKey: 'site.sts2.desc',
     featureKey: 'site.sts2.feature',
@@ -229,6 +240,7 @@ export const SITES: SiteCard[] = [
       'https://pbz.arkive.games',
     ),
     bg: PBZ_ARTWORK.banner,
+    logo: pbzLogo,
     banner: PBZ_ARTWORK.banner,
     icon: PBZ_ARTWORK.icon,
     color: '#c98a3e',
@@ -274,22 +286,21 @@ export const GAME_LOGOS: Record<string, string> = {
 export const VISIBLE_SITES: SiteCard[] = SITES.filter((site) =>
   !site.comingSoon && (!IS_TOY || site.toySlug))
 
-export const GAME_BADGE_DAYS = 7
-export const PLATFORM_BADGE_DAYS = 30
+const RECENT_UPDATE_DAYS = 7
 
 /**
  * Whole calendar days since `date` (a changelog's YYYY-MM-DD) in the visitor's
  * time zone, or `undefined` when there is no date, it is malformed, in the
  * future, or older than the badge window.
  */
-export function recentUpdateDays(date: string | undefined, now: Date, maxDays = GAME_BADGE_DAYS): number | undefined {
+export function recentUpdateDays(date: string | undefined, now: Date): number | undefined {
   const match = date && /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
   if (!match) return undefined
   const then = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   // Rounded, not floored: a daylight-saving change makes one day 23 or 25 hours.
   const days = Math.round((today.getTime() - then.getTime()) / 86_400_000)
-  return days >= 0 && days <= maxDays ? days : undefined
+  return days >= 0 && days <= RECENT_UPDATE_DAYS ? days : undefined
 }
 
 /** `undefined` for an announced game, so callers render an inert card instead of a link. */
