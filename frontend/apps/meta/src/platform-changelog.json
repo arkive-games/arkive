@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-11-25",
-      "commit": "8a3baa7585201b6863ed28a35d65e3889c996eeb",
+      "commit": "4c6ff66f957beabefec478ee24f6dfec9d6691d9",
       "targets": [
         "glimmith",
         "oss"
@@ -11,9 +11,9 @@
         {
           "kind": "improvement",
           "text": {
-            "en-US": "All Games now shows a stained-glass puzzle for The Artisan of Glimmith and official character artwork for Order of the Sinking Star.",
-            "zh-CN": "全部游戏换上两张官方封面：格里米斯工匠展示彩窗谜题，沉星之序展示角色宣传图。",
-            "zh-TW": "全部遊戲換上兩張官方封面：格里米斯工匠展示彩窗謎題，沉星之序展示角色宣傳圖。"
+            "en-US": "All Games now shows the floating castle for The Artisan of Glimmith and a title-framed poster for Order of the Sinking Star, both with their Windows launcher icons.",
+            "zh-CN": "全部游戏中，格里米斯工匠换上浮空城原画，沉星之序的海报保留完整标题和人物脸部；两款游戏均使用 Windows 启动图标。",
+            "zh-TW": "全部遊戲中，格里米斯工匠換上浮空城原畫，沉星之序的海報保留完整標題和角色臉部；兩款遊戲均使用 Windows 啟動圖示。"
           }
         }
       ]
