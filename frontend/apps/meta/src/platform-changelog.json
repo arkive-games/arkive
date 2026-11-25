@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "6bb758c329ddd61aed83184462b94a83861e661b",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Marker filters now match the 29 named overview areas, and the map navigation shows the game icon.",
+            "zh-CN": "点位可按区域总览里的 29 个地区分别开关，地图导航也显示游戏图标。",
+            "zh-TW": "點位可依區域總覽裡的 29 個地區分別開關，地圖導覽也顯示遊戲圖示。",
+            "ja-JP": "地域一覧と同じ29の地域別にマーカーを切り替えられます。地図ナビゲーションにゲームアイコンを表示します。",
+            "ko-KR": "지역 목록의 29개 지역별로 지도 표시를 켜고 끌 수 있으며 지도 메뉴에 게임 아이콘이 표시됩니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "cd2c5c2c2fe7e5cc36f1fee99842bce516ada8e7",
       "targets": [
         "glimmith"
