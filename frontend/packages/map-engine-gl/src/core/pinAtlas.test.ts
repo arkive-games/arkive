@@ -226,6 +226,12 @@ describe("resolvePinSpec — variants", () => {
     expect(resolve(true, true)).toBe("/icons/done.webp");
   });
 
+  it("keeps the artwork inside a selected frame at its original scale", () => {
+    const marker = { icon: "window", selectedIcon: "framed", pinScale: 0.88, selectedIconScale: 0.88 * 80 / 62 };
+    const scale = (selected: boolean) => resolvePinSpec(marker, { selected, resolveIconUrl: iconUrlOf }).iconScale;
+    expect(scale(true) * 62 / 80).toBeCloseTo(scale(false));
+  });
+
   it("falls back to the pin dot when the marker has no icon at all", () => {
     const resolved = resolvePinSpec({}, { resolveIconUrl: iconUrlOf });
     expect(resolved.variant).toBe("pin");

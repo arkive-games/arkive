@@ -248,10 +248,12 @@ export type MarkerDetailDrawerProps = {
   onClose: () => void
   /** Desktop only: position above the engine-owned selected-marker anchor. */
   anchored?: boolean
+  /** Allow an otherwise center-locked fly to move sideways around map controls. */
+  allowHorizontalAvoidance?: boolean
   className?: string
 }
 
-function useAnchoredPlacement(enabled: boolean, placementKey: string) {
+function useAnchoredPlacement(enabled: boolean, placementKey: string, allowHorizontalAvoidance: boolean) {
   const detailRef = useRef<HTMLElement | null>(null)
 
   useLayoutEffect(() => {
@@ -300,7 +302,7 @@ function useAnchoredPlacement(enabled: boolean, placementKey: string) {
       detail.style.setProperty("--marker-detail-arrow-x", `${Math.round(result.arrowX)}px`)
       detail.style.transform = `translate3d(${Math.round(result.x)}px, ${Math.round(result.y)}px, 0)`
       const panRequest = {
-        x: targetsMapCenter || locksHorizontalCenter ? 0 : Math.round(result.panX),
+        x: !allowHorizontalAvoidance && (targetsMapCenter || locksHorizontalCenter) ? 0 : Math.round(result.panX),
         y: Math.round(result.panY),
       }
       if (panRequest.x === 0 && panRequest.y === 0) {
@@ -347,7 +349,7 @@ function useAnchoredPlacement(enabled: boolean, placementKey: string) {
       window.removeEventListener("resize", update)
       document.removeEventListener("scroll", update, true)
     }
-  }, [enabled, placementKey])
+  }, [enabled, placementKey, allowHorizontalAvoidance])
 
   return detailRef
 }
@@ -778,11 +780,12 @@ export function MarkerDetailDrawer({
   labels,
   onClose,
   anchored = false,
+  allowHorizontalAvoidance = false,
   className,
 }: MarkerDetailDrawerProps) {
   const sessionKey = gallery?.markerId ?? comments?.markerId ?? positionCopyValue ?? name
   const smallHeader = compact || denseHeader
-  const detailRef = useAnchoredPlacement(anchored, sessionKey)
+  const detailRef = useAnchoredPlacement(anchored, sessionKey, allowHorizontalAvoidance)
   const dragStartRef = useRef<{ y: number; at: number } | null>(null)
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)

@@ -68,6 +68,8 @@ export interface GlMapRef {
 export interface EngineMarker extends MarkerInstance {
   /** Optional alternative artwork resolved only for the selected pin. */
   selectedIcon?: string;
+  /** Explicit image scale for artwork with a decorative outer frame. */
+  selectedIconScale?: number;
   /** An image-only hover badge. Null suppresses hover without affecting labels. */
   hoverBadge?: MarkerHoverBadge | null;
   /**

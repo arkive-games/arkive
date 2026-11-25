@@ -12,6 +12,7 @@ import { useIsMobile } from '@gamemap/ui'
 import scene from './assets/glimmith-scene.json'
 import noteIcon from './assets/glimmith-marker-note.svg'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
+import puzzleDot from './assets/glimmith-puzzle-dot.svg?inline'
 import windowIcon from './assets/glimmith-marker-window.svg'
 import perfectedIcon from './assets/glimmith-marker-perfected.png'
 import selectedWindowIcon from './assets/glimmith-selected-window.svg?no-inline'
@@ -90,6 +91,8 @@ markers.push(...scene.windows.map((window, index): EngineMarker => ({
   id: window.id, ...window.pixel, z: window.z, subtype: 'window',
   icon: window.windowPrerequisites ? perfectedIcon : windowIcon,
   selectedIcon: window.windowPrerequisites ? selectedPerfectedIcon : selectedWindowIcon,
+  // The framed sprite holds the original window in 62 of its 80 units.
+  selectedIconScale: 0.88 * 80 / 62,
   positionPrecision: 'authored-transform', indexInSubtype: index, images: [], contributors: [],
   localizedName: windowNames.get(window.id) ?? copy.window, subtypeLabel: copy.window, hoverBadge: null,
   subtypeMeta: { id: 'window', name: copy.window, icon: windowIcon, pinVariant: 'image' },
@@ -128,6 +131,7 @@ function framePoints(points: readonly EngineMarker[], width: number, height: num
 }
 
 const desktopView = framePoints(markers, 1050, 780)
+const overviewPuzzleScale = 0.21
 const vertexArt = { '1': radarOne, '2': radarTwo, '3': radarThree, '4': radarFour }
 
 function RelationClue({ x, y, mark }: { x: number; y: number; mark?: string }) {
@@ -298,7 +302,7 @@ function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
 export function GlimmithTutorialPrototype() {
   const [selected, setSelected] = useState<string | null>(null)
   const [activeArea, setActiveArea] = useState(map.id)
-  const [pinSize, setPinSize] = useState(0.56)
+  const [pinSize, setPinSize] = useState(overviewPuzzleScale)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [visible, setVisible] = useState<Set<string>>(() => new Set([...subtypes, 'note']))
   const [visibleRegions, setVisibleRegions] = useState(() => new Set(regionIds))
@@ -310,6 +314,7 @@ export function GlimmithTutorialPrototype() {
     })
     .map((marker) => ({
       ...marker, completed: completed.has(marker.id),
+      icon: marker.subtype === 'puzzle' && pinSize === overviewPuzzleScale ? puzzleDot : marker.icon,
       pinScale: marker.subtype === 'puzzle' ? pinSize : 0.88,
     })), [completed, pinSize, visibleRegions])
   const searchItems = useMemo(() => mapMarkers.map((marker) => ({
@@ -377,7 +382,7 @@ export function GlimmithTutorialPrototype() {
     const coordinate = actor ? [actor.x, actor.y, actor.z].map((value) => value.toFixed(1)).join(', ') : undefined
     return (
       <CommunityMarkerDetail key={marker.id} game="glimmith" mapId={map.id} markerId={puzzleNumber(marker.id)} hideGallery
-        language="zh-CN" anchored={!mobile} denseHeader={Boolean(puzzle)}
+        language="zh-CN" anchored={!mobile} allowHorizontalAvoidance denseHeader={Boolean(puzzle)}
         name={puzzle ? copy.puzzle + ' ' + marker.localizedName : marker.localizedName}
         icon={<img className={puzzle ? 'size-6 object-contain' : 'size-8 object-contain'} src={puzzle ? puzzleSquareIcon : marker.icon} alt="" />}
         eyebrow={puzzle ? undefined : marker.subtypeLabel}
@@ -528,7 +533,7 @@ export function GlimmithTutorialPrototype() {
       <main ref={mapViewport} className="relative flex min-h-0 flex-1 flex-col bg-[#243e4c]" aria-label={copy.map}>
         <GameMapView map={map} markers={mapMarkers} regions={[]} visibleSubtypes={visible}
           initialView={mobile ? undefined : desktopView}
-          onViewChange={({ zoom }) => setPinSize(zoom < -1.2 ? 0.49 : zoom < 0.25 ? 0.66 : 0.9)}
+          onViewChange={({ zoom }) => setPinSize(zoom < -1.2 ? overviewPuzzleScale : zoom < 0.25 ? 0.66 : 0.9)}
           showLabels={false} showBorders={false} lodEnabled={false} selectedMarkerId={selected} selectedPosition={null}
           onToggleMarker={setSelected} subzoneAt={() => ''} flyToDuration={0.35} mapRef={ref} assets={assets}
           exposeTestHandle={import.meta.env.DEV} labels={copy.engine} displayCoords={displayCoords}

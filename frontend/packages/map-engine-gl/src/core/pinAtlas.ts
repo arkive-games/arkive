@@ -242,6 +242,7 @@ export function pinSignature(spec: PinSpec): string {
 /** The marker fields pin resolution reads. `EngineMarker` satisfies it. */
 export interface PinMarkerInput {
   selectedIcon?: string;
+  selectedIconScale?: number;
   icon?: string;
   completed?: boolean;
   fragmentType?: "ground" | "air" | "water";
@@ -339,7 +340,7 @@ export function resolvePinSpec(
   return {
     variant: "image",
     iconUrl,
-    iconScale: marker.pinScale ?? imageScale,
+    iconScale: (selected && marker.selectedIcon && !useIconSwap ? marker.selectedIconScale : undefined) ?? marker.pinScale ?? imageScale,
     completed,
     dot: theme.pinDot,
     ring: theme.circularBorder,
