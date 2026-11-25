@@ -653,6 +653,14 @@ button.home-slide {
   transition: background 0.2s, transform 0.4s var(--spring);
 }
 
+.home-tool-install {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .home-tool:hover {
   background: var(--btnh);
   transform: translateY(-0.1875rem);
