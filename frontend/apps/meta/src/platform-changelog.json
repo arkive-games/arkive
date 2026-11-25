@@ -2,6 +2,32 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "638a0e357c8619140ea09ff6a6ffd6e904a7e824",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Daily updates are grouped by type and numbered. Shared changes show All games; shorter game lists can be expanded.",
+            "zh-CN": "每日更新按类型合并并编号。全站变动只标注「全部游戏」，部分游戏的名单可展开查看。",
+            "zh-TW": "每日更新依類型分組並編號。全站變更只標示「全部遊戲」，部分遊戲的名單可展開查看。",
+            "ja-JP": "日ごとの更新を種類別にまとめ、番号を付けました。共通の変更は「すべてのゲーム」と表示し、一部のゲームのみの場合は対象一覧を展開できます。",
+            "ko-KR": "날짜별 업데이트를 유형별로 묶고 번호를 붙였습니다. 공통 변경에는 ‘전체 게임’을 표시하며 일부 게임의 목록은 펼쳐 볼 수 있습니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "aaba8630e7a601bc62edf0c2ef686e4b8d149f08",
       "targets": [
         "palworld",
