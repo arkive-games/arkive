@@ -206,13 +206,13 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
               {canInstall && (
                 <button type="button" className="home-tool home-tool-install"
                   style={gradient(['#ffbf69', '#ff6a64'], 0)}
-                  aria-label={t('landing.install.label')} onClick={() => void install()}>
+                  aria-label={t('landing.addToHome.label')} onClick={() => void install()}>
                   <span className="home-tool-icon" aria-hidden="true">
                     <IconDeviceMobileDown stroke={1.9} />
                   </span>
                   <span className="home-tool-copy">
-                    <strong>{t('landing.install.title')}</strong>
-                    <small>{t('landing.install.description')}</small>
+                    <strong>{t('landing.addToHome.title')}</strong>
+                    <small>{t('landing.addToHome.description')}</small>
                   </span>
                   <IconChevronRight className="home-tool-arrow" stroke={2} aria-hidden="true" />
                 </button>
