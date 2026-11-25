@@ -14,6 +14,14 @@ Reviewed on 2026-11-25. This is a coverage inventory, not a claim that every tra
 | Ragnarok Online 3 | Chinese catalog import and running game homepage | The homepage, encyclopedia and build navigation remain Simplified Chinese. This surface does not provide an English UI catalog. |
 | Order of the Sinking Star, the Glimmith guide and Lost Ark | Host settings, switchers and string ownership | The first two explicitly configure Simplified Chinese; the Lost Ark tool also pins Chinese in controls and formatting. A portal language change cannot translate these destinations. |
 
+## First implementation batch
+
+The table above records the initial inventory. AION2 map search now describes the current map rather than the global wiki index. All four UI languages supply its prompt and category visibility actions. A completed search with no matches shows a localized message; other search hosts retain their existing behavior.
+
+Palworld now requires a zero-route hint in each of its 17 breeding dictionaries and interpolates the active planner button label. The desktop pickers now announce their translated slot names as on mobile. English reports a single chain in the singular.
+
+In a local browser with a Chinese language preference, choosing English on the portal carried through to AION2 without a game override. A search for Monolith on the Eltnen map returned a selectable marker; an unmatched query showed No results. The portal's breeding shortcut opened Palworld in English. Selecting Lamball for both parents returned one Lamball recipe; requiring Jetragon as the offspring produced no standard route. Switching only Palworld to Japanese translated the guidance, while the portal remained English on return. No carousel assets or settings changed in this batch.
+
 ## Verification and boundaries
 
 - Reproduced English text outside four shortcut links at a desktop width of 1440 CSS pixels: The Artisan of Glimmith, Lord of Mysteries, Ragnarok Online 3 and Phantom Blade Zero.

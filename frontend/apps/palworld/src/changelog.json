@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.18",
+      "date": "2026-11-25",
+      "commit": "09f6b21cf2332d4e2d51ff4b6aa0d6edc3c8d3a1",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The breeding calculator explains empty results in every supported language and identifies each parent and child picker for screen readers.",
+            "zh-CN": "配种计算器会用所选语言提示无结果，读屏时可区分亲代和子代选择框。",
+            "zh-TW": "配種計算器會使用所選語言提示沒有結果，螢幕閱讀器可辨別親代與子代選擇框。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.17",
       "date": "2026-11-22",
       "commit": "85645bfa7357f001c24bcfe817b07c3cd01ab0d0",

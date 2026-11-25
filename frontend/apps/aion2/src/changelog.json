@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.17.1",
+      "date": "2026-11-25",
+      "commit": "e520001a70b9c60b165e2032f5e949e53d25a6c4",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Map search describes what it searches and shows a translated message when no markers match. Category visibility controls now use the selected language.",
+            "zh-CN": "地图搜索明确提示可查当前地图的标记名称或描述，无匹配时显示提示；分类显隐控件跟随所选语言。",
+            "zh-TW": "地圖搜尋明確提示可查目前地圖的標記名稱或說明，沒有符合項目時顯示提示；分類顯示與隱藏控制項跟隨所選語言。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.17.0",
       "date": "2026-11-15",
       "commit": "1ec71c228f0f881d743082dec3859bbd285927b9",
