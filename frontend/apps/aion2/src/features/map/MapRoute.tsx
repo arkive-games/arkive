@@ -225,10 +225,8 @@ export default function MapRoute() {
   const searchLabels = useMemo(
     () => ({
       search: t("common:ui.search", "Search"),
-      placeholder: t(
-        "common:globalSearch.placeholder",
-        "Search quests, NPCs, items, or map markers",
-      ),
+      placeholder: t("common:markerSearch.placeholder"),
+      empty: mapId && mapId === markersMapId ? t("common:globalSearch.empty") : undefined,
       resultsCount: (n: number) =>
         t("common:search.resultsCount", {
           count: n,
@@ -237,7 +235,7 @@ export default function MapRoute() {
       unnamed: t("common:markerSearch.unnamed", "Unnamed marker"),
       noDescription: t("common:ui.noDescription", "No description"),
     }),
-    [t],
+    [t, mapId, markersMapId],
   );
 
   // Marker-click selection is a TOGGLE: clicking the already-selected marker

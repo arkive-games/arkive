@@ -35,6 +35,8 @@ export type SearchField = "name" | "description" | "idLabel"
 export type SearchPanelLabels = {
   search: string
   placeholder?: string
+  /** Supply once the source is ready to show a visible empty state. */
+  empty?: string
   resultsCount: (n: number) => string
   unnamed: string
   noDescription: string
@@ -345,8 +347,8 @@ export function SearchPanel({
       {/* Results panel */}
       {hasQuery && (
         <div data-map-avoid="" className="pointer-events-auto flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-popover/95 shadow-sm backdrop-blur">
-          <div className="sr-only" role="status">
-            {labels.resultsCount(results.length)}
+          <div className={!results.length && labels.empty ? "px-3 pt-2 text-sm text-muted-foreground" : "sr-only"} role="status">
+            {(!results.length && labels.empty) || labels.resultsCount(results.length)}
           </div>
           <ul
             data-testid="search-results"

@@ -63,6 +63,8 @@ map:
   zoomOut: "Zoom out"
 
 menu:
+  showCategory: "Show all in this category"
+  hideCategory: "Hide all in this category"
   home: "Home"
   settings: "Settings"
   maps: "Maps"
@@ -148,10 +150,13 @@ markerActions:
   markNotCompleted: "Completed"
 
 markerSearch:
+  placeholder: "Search this map by marker name or description…"
   unnamed: "Unnamed marker"
 
 search:
   resultsCount: "{{count}} results"
+  resultsCount_one: "{{count}} result"
+  resultsCount_other: "{{count}} results"
   coords: "Coords: {{x}}, {{y}}"
 
 introModal:

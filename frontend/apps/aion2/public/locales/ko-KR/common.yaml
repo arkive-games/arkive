@@ -63,6 +63,8 @@ map:
   zoomOut: "축소"
 
 menu:
+  showCategory: "이 분류 모두 표시"
+  hideCategory: "이 분류 모두 숨기기"
   home: "홈"
   settings: "설정"
   maps: "지도"
@@ -148,6 +150,7 @@ markerActions:
   markNotCompleted: "완료됨"
 
 markerSearch:
+  placeholder: "현재 지도의 마커 이름이나 설명 검색…"
   unnamed: "이름 없는 마커"
 
 search:

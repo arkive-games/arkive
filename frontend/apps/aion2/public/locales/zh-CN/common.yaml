@@ -179,6 +179,7 @@ errors:
 
 
 markerSearch:
+  placeholder: "搜索当前地图的标记名称或描述…"
   unnamed: "未命名标记"
 
 search:

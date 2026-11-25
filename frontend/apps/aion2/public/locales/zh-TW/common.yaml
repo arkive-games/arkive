@@ -86,6 +86,8 @@ leaderboard:
   share: "分享"
 
 menu:
+  showCategory: "顯示此分類的全部標記"
+  hideCategory: "隱藏此分類的全部標記"
   home: "首頁"
   settings: "設定"
   maps: "地圖"
@@ -122,6 +124,7 @@ errors:
   notFound: "找不到資源。"
 
 markerSearch:
+  placeholder: "搜尋目前地圖的標記名稱或說明…"
   unnamed: "未命名標記"
 
 search:

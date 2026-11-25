@@ -89,6 +89,18 @@ const palworld = {
 }
 
 describe("SearchPanel", () => {
+  it("shows a localized no-match message only after the host supplies it", () => {
+    const props = { items: [], onFlyTo: vi.fn(), onSelect: vi.fn(), searchFields: ["name"] as SearchField[] }
+    const page = render(<SearchPanel {...props} labels={labels} />)
+    searchFor("missing")
+    expect(screen.getByRole("status").className).toContain("sr-only")
+    page.rerender(<SearchPanel {...props} labels={{ ...labels, empty: "No results" }} />)
+    expect(screen.getByRole("status").textContent).toBe("No results")
+    expect(screen.getByRole("status").className).not.toContain("sr-only")
+    page.rerender(<SearchPanel {...props} labels={{ ...labels, empty: "No results" }} items={[item({ id: "found", name: "Missing piece" })]} />)
+    expect(screen.queryByText("No results")).toBeNull()
+  })
+
   it("keeps the legacy right placement as the floating default", () => {
     const { getByTestId } = renderSearchPanel([])
     const root = getByTestId("search-panel")
