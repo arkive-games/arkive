@@ -43,7 +43,8 @@ Cover sources:
 
 - **Order of the Sinking Star:** the [official game](https://www.orderofthesinkingstar.com/en/)
   uses the [Chinese Steam library capsule](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/499170/3c644b8edbbe401083a520e3cfc8c7821cf720a8/library_capsule_schinese_2x.jpg).
-  Frame the title and the crowned character together.
+  Frame the crowned character from the head down through the armor and cape.
+  The title is already shown under the card; it need not be repeated in the crop.
 - **The Artisan of Glimmith:** [publisher's game index](https://www.983media.com/983-interactive)
   links to the [official Steam gallery](https://store.steampowered.com/app/4160210/The_Artisan_of_Glimmith/).
   Use the [floating castle library artwork](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/4160210/d054bf42f746aab600fba1e2ae03efe59c57f18c/library_hero_2x.jpg).

@@ -238,7 +238,14 @@ function CatalogGameCard({
   const body = (
     <>
       <span className="catalog-game-cover">
-        <img src={cover?.src ?? game.site.banner ?? game.site.bg} alt="" style={{ objectPosition: cover?.position ?? game.site.bannerPosition ?? game.site.bgPosition }} />
+        <img
+          src={cover?.src ?? game.site.banner ?? game.site.bg}
+          alt=""
+          style={{
+            '--cover-position': cover?.position ?? game.site.bannerPosition ?? game.site.bgPosition,
+            '--cover-square-position': cover?.squarePosition,
+          } as CSSProperties}
+        />
         <span className="catalog-game-glass" aria-hidden="true" />
       </span>
       <span className="catalog-game-copy">

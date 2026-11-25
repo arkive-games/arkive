@@ -14,7 +14,7 @@
 .catalog-game-card:has(:focus-visible) { background: var(--catalog-tint); --catalog-ink: var(--catalog-readable-ink); }
 .catalog-game-link { display: block; color: inherit; text-decoration: none; border-radius: .9rem; }
 .catalog-game-cover { display: block; position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: .9rem; background: var(--muted); }
-.catalog-game-cover > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.catalog-game-cover > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--cover-position, center); }
 .catalog-game-glass { position: absolute; inset: -150%; pointer-events: none; background: linear-gradient(150deg, #ffffff2b, #ffffff06 75%); backdrop-filter: brightness(1.06) contrast(.98); -webkit-mask-image: linear-gradient(to top right, transparent 49%, #000 51%); mask-image: linear-gradient(to top right, transparent 49%, #000 51%); transform: translate(28%, -28%); opacity: 0; transition: opacity .2s, transform .75s cubic-bezier(.22,1,.36,1); }
 @media (hover: hover) and (pointer: fine) {
   .catalog-game-card:hover { background: var(--catalog-tint); --catalog-ink: var(--catalog-readable-ink); }
@@ -46,6 +46,7 @@
   .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
   .catalog-game-card { padding: .4rem .4rem .65rem; border-radius: 1rem; }
   .catalog-game-cover { aspect-ratio: 1; border-radius: .7rem; }
+  .catalog-game-cover > img { object-position: var(--cover-square-position, var(--cover-position, center)); }
   .catalog-game-copy { margin-top: .4rem; }
   .catalog-game-name { gap: .35rem; }
   .catalog-game-name img { width: 1.25rem; height: 1.25rem; }

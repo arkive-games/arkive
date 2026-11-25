@@ -78,7 +78,7 @@ export interface SiteCard {
   /** CSS `object-position` for `banner`, chosen so the faces survive the narrower mobile crop. */
   bannerPosition?: string
   /** Art and focal point for the 4:3 and square All Games crops only. */
-  catalogCover?: { src: string; position: string }
+  catalogCover?: { src: string; position: string; squarePosition?: string }
   /** Optional homepage-specific avatar when the default app icon is not the best small picture. */
   shortcutAvatar?: string
   /** Square app-style artwork for game shortcuts and other surfaces, such as tool badges. */
@@ -127,7 +127,7 @@ export const SITES: SiteCard[] = [
     kind: 'offline',
     url: resolveSiteUrl(import.meta.env.VITE_OSS_URL, 'http://localhost:15181', 'https://oss.arkive.games'),
     bg: '/oss-preview.svg',
-    catalogCover: { src: ossCatalog, position: '50% 11%' },
+    catalogCover: { src: ossCatalog, position: '50% 58%', squarePosition: '50% 87%' },
     icon: ossIcon,
     nameKey: 'site.oss.name',
     descKey: 'site.oss.desc',
