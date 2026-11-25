@@ -66,6 +66,8 @@ export interface GlMapRef {
  * i18n or the marker-type taxonomy.
  */
 export interface EngineMarker extends MarkerInstance {
+  /** Optional alternative artwork resolved only for the selected pin. */
+  selectedIcon?: string;
   /** An image-only hover badge. Null suppresses hover without affecting labels. */
   hoverBadge?: MarkerHoverBadge | null;
   /**

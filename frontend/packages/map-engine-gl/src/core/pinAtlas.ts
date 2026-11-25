@@ -241,6 +241,7 @@ export function pinSignature(spec: PinSpec): string {
 
 /** The marker fields pin resolution reads. `EngineMarker` satisfies it. */
 export interface PinMarkerInput {
+  selectedIcon?: string;
   icon?: string;
   completed?: boolean;
   fragmentType?: "ground" | "air" | "water";
@@ -299,7 +300,7 @@ export function resolvePinSpec(
 
   const isCompleted = !!marker.completed;
   const useIconSwap = isCompleted && !!sub?.iconComplete;
-  const rawIcon = (useIconSwap ? sub?.iconComplete : marker.icon || sub?.icon) || "";
+  const rawIcon = (useIconSwap ? sub?.iconComplete : (selected && marker.selectedIcon) || marker.icon || sub?.icon) || "";
   const iconUrl = opts.resolveIconUrl(rawIcon);
   const completed = isCompleted && !useIconSwap;
   // A subtype colour of pure black means "unset" in the taxonomy data.

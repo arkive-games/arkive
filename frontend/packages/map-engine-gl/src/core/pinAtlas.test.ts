@@ -217,6 +217,15 @@ describe("pinSignature", () => {
 // =========================================================== spec resolution ===
 
 describe("resolvePinSpec — variants", () => {
+  it("resolves alternate artwork only while selected and preserves completion swaps", () => {
+    const marker = { icon: "window", selectedIcon: "framed", subtypeMeta: subtype({ iconComplete: "done" }) };
+    const resolve = (selected: boolean, completed = false) =>
+      resolvePinSpec({ ...marker, completed }, { selected, resolveIconUrl: iconUrlOf }).iconUrl;
+    expect(resolve(false)).toBe("/icons/window.webp");
+    expect(resolve(true)).toBe("/icons/framed.webp");
+    expect(resolve(true, true)).toBe("/icons/done.webp");
+  });
+
   it("falls back to the pin dot when the marker has no icon at all", () => {
     const resolved = resolvePinSpec({}, { resolveIconUrl: iconUrlOf });
     expect(resolved.variant).toBe("pin");

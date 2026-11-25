@@ -14,6 +14,8 @@ import noteIcon from './assets/glimmith-marker-note.svg'
 import puzzleIcon from './assets/glimmith-marker-puzzle.svg'
 import windowIcon from './assets/glimmith-marker-window.svg'
 import perfectedIcon from './assets/glimmith-marker-perfected.png'
+import selectedWindowIcon from './assets/glimmith-selected-window.svg?no-inline'
+import selectedPerfectedIcon from './assets/glimmith-selected-perfected.svg?no-inline'
 import puzzleSquareIcon from './assets/glimmith-icon-blue.png'
 import circleClue from './assets/glimmith-cell-clue-circle.png'
 import squareClue from './assets/glimmith-cell-clue-square.png'
@@ -87,6 +89,7 @@ const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, inde
 markers.push(...scene.windows.map((window, index): EngineMarker => ({
   id: window.id, ...window.pixel, z: window.z, subtype: 'window',
   icon: window.windowPrerequisites ? perfectedIcon : windowIcon,
+  selectedIcon: window.windowPrerequisites ? selectedPerfectedIcon : selectedWindowIcon,
   positionPrecision: 'authored-transform', indexInSubtype: index, images: [], contributors: [],
   localizedName: windowNames.get(window.id) ?? copy.window, subtypeLabel: copy.window, hoverBadge: null,
   subtypeMeta: { id: 'window', name: copy.window, icon: windowIcon, pinVariant: 'image' },

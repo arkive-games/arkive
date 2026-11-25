@@ -1,5 +1,12 @@
 # Glimmith tutorial projection
 
+After generating the terrain SVGs, finish the tile bake from the meta app with
+`uv run scripts/bake-glimmith-rims.py src/assets`. It joins structural footprints
+before clipping the outer shorelines back into the tile grid, leaving the original
+art and anchors intact. It is safe to rerun on already finished tiles. After
+updating either window marker, run `node scripts/frame-glimmith-windows.mjs`
+to rebuild its selection artwork. Neither generator is used by the browser.
+
 The local preview uses cooked Unreal 4.27 scene data from the installed game. No reference screenshots are used by the map or its markers.
 
 - Export `OverworldMap`, `Overworld_Campaign`, and the submaps in the generator's `sources` list as UAssetAPI JSON under the original AGeri paths. Export the two `Module_BrokenFloor_Gothic_00*` blueprints and `StylizedProvencal/Blueprints/BP_Ground_Bricks` under their original paths as well.
