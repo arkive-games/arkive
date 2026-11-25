@@ -348,7 +348,7 @@ export default function BreedingPage() {
       : result.browsingSpecial
         ? t('breeding.showingSpecial')
         : result.total === 0
-          ? t('breeding.zeroRouteSummary', { count: result.total })
+          ? t('breeding.zeroRouteSummary', { count: result.total, mode: t('breeding.modeChains') })
           : t('breeding.chainCount', { count: result.total })
 
   const hasFilter = aSel != null || bSel != null || cSel != null

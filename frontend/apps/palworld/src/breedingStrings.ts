@@ -46,13 +46,14 @@ export interface BreedingStrings {
   modeRecipes: string
   modeChains: string
   /** Single-line result and guidance shown when standard breeding returns no route. */
-  zeroRouteSummary?: string
+  zeroRouteSummary: string
   /** Multi-gen planner: generation-budget select label. */
   maxGenerations: string
   /** Prompt while Parent A / Child are not both chosen. */
   chainPrompt: string
   /** Result count line in planner mode. */
   chainCount: string
+  chainCount_one?: string
   /** Group header for direct (1-step) recipes. */
   chainDirect: string
   /** Group header for N-generation chains (N ≥ 2); use {{count}} for N. */
@@ -94,10 +95,11 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Show {{count}} more',
     modeRecipes: 'Standard breeding',
     modeChains: 'Multi-generation',
-    zeroRouteSummary: '{{count}} breeding routes; try the "Multi-generation" tool above to find more routes.',
+    zeroRouteSummary: '{{count}} breeding routes; try the "{{mode}}" tool above to find more routes.',
     maxGenerations: 'Max generations',
     chainPrompt: 'Pick Parent A and a Child to plan a breeding chain.',
     chainCount: '{{count}} chains',
+    chainCount_one: '{{count}} chain',
     chainDirect: 'Direct recipes',
     chainNGen: '{{count}}-generation chains',
     noChains: 'No breeding chain within {{count}} generations — try more generations or another parent.',
@@ -134,6 +136,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: '{{count}} weitere anzeigen',
     modeRecipes: 'Standardzucht',
     modeChains: 'Mehrgenerationen',
+    zeroRouteSummary: '{{count}} Zuchtrouten. Versuche es oben mit „{{mode}}“.',
     maxGenerations: 'Max. Generationen',
     chainPrompt: 'Wähle Elternteil A und einen Nachkommen, um eine Zuchtkette zu planen.',
     chainCount: '{{count}} Ketten',
@@ -174,6 +177,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Mostrar {{count}} más',
     modeRecipes: 'Cría estándar',
     modeChains: 'Multigeneración',
+    zeroRouteSummary: '{{count}} rutas de cría. Prueba el modo «{{mode}}» para buscar otras rutas.',
     maxGenerations: 'Generaciones máx.',
     chainPrompt: 'Elige el progenitor A y una cría para planificar una cadena de crianza.',
     chainCount: '{{count}} cadenas',
@@ -214,6 +218,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Mostrar {{count}} más',
     modeRecipes: 'Cría estándar',
     modeChains: 'Multigeneración',
+    zeroRouteSummary: '{{count}} rutas de crianza. Prueba el modo «{{mode}}» para buscar otras rutas.',
     maxGenerations: 'Generaciones máx.',
     chainPrompt: 'Elige el progenitor A y una cría para planificar una cadena de crianza.',
     chainCount: '{{count}} cadenas',
@@ -254,6 +259,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Afficher {{count}} de plus',
     modeRecipes: 'Élevage standard',
     modeChains: 'Multi-générations',
+    zeroRouteSummary: '{{count}} itinéraire de reproduction. Essayez le mode « {{mode}} » pour en trouver d’autres.',
     maxGenerations: 'Générations max.',
     chainPrompt: "Choisissez le parent A et un enfant pour planifier une chaîne d'élevage.",
     chainCount: '{{count}} chaînes',
@@ -294,6 +300,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Tampilkan {{count}} lagi',
     modeRecipes: 'Pembiakan standar',
     modeChains: 'Multigenerasi',
+    zeroRouteSummary: '{{count}} rute pembiakan. Coba mode {{mode}} untuk mencari rute lain.',
     maxGenerations: 'Generasi maks.',
     chainPrompt: 'Pilih Induk A dan Anak untuk merencanakan rantai ternak.',
     chainCount: '{{count}} rantai',
@@ -334,6 +341,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Mostra altri {{count}}',
     modeRecipes: 'Allevamento standard',
     modeChains: 'Multigenerazione',
+    zeroRouteSummary: '{{count}} percorsi di allevamento. Prova la modalità «{{mode}}» per cercare altri percorsi.',
     maxGenerations: 'Generazioni max',
     chainPrompt: 'Scegli il genitore A e un cucciolo per pianificare una catena di allevamento.',
     chainCount: '{{count}} catene',
@@ -374,6 +382,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'さらに{{count}}件表示',
     modeRecipes: '通常配合',
     modeChains: '多世代',
+    zeroRouteSummary: '配合ルートは {{count}} 件です。「{{mode}}」で別のルートを探せます。',
     maxGenerations: '最大世代数',
     chainPrompt: '親 A と子を選ぶと交配チェーンを計算します。',
     chainCount: 'チェーン {{count}} 件',
@@ -413,6 +422,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: '{{count}}개 더 보기',
     modeRecipes: '일반 교배',
     modeChains: '다세대',
+    zeroRouteSummary: '교배 경로 {{count}}개. 다른 경로를 찾으려면 ‘{{mode}}’ 모드를 사용하세요.',
     maxGenerations: '최대 세대 수',
     chainPrompt: '부모 A와 자식을 선택하면 교배 체인을 계산합니다.',
     chainCount: '체인 {{count}}개',
@@ -452,6 +462,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Pokaż {{count}} więcej',
     modeRecipes: 'Standardowa hodowla',
     modeChains: 'Wielopokoleniowa',
+    zeroRouteSummary: 'Liczba dostępnych ścieżek hodowli: {{count}}. Sprawdź inne ścieżki w trybie „{{mode}}”.',
     maxGenerations: 'Maks. pokoleń',
     chainPrompt: 'Wybierz rodzica A i potomka, aby zaplanować łańcuch hodowli.',
     chainCount: 'Łańcuchy: {{count}}',
@@ -492,6 +503,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Mostrar mais {{count}}',
     modeRecipes: 'Criação padrão',
     modeChains: 'Multigeração',
+    zeroRouteSummary: '{{count}} rotas de reprodução. Tente o modo “{{mode}}” para encontrar outras rotas.',
     maxGenerations: 'Gerações máx.',
     chainPrompt: 'Escolha o progenitor A e um filhote para planejar uma cadeia de reprodução.',
     chainCount: '{{count}} cadeias',
@@ -532,6 +544,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Показать ещё {{count}}',
     modeRecipes: 'Обычное разведение',
     modeChains: 'Несколько поколений',
+    zeroRouteSummary: 'Найдено путей скрещивания: {{count}}. Попробуйте режим «{{mode}}», чтобы найти другие варианты.',
     maxGenerations: 'Макс. поколений',
     chainPrompt: 'Выберите родителя A и потомка, чтобы спланировать цепочку разведения.',
     chainCount: 'Цепочек: {{count}}',
@@ -572,6 +585,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'แสดงอีก {{count}} รายการ',
     modeRecipes: 'การผสมพันธุ์ปกติ',
     modeChains: 'หลายรุ่น',
+    zeroRouteSummary: 'พบเส้นทางการผสมพันธุ์ {{count}} เส้นทาง ลองใช้โหมด {{mode}} เพื่อค้นหาเส้นทางอื่น',
     maxGenerations: 'จำนวนรุ่นสูงสุด',
     chainPrompt: 'เลือกพ่อแม่ A และลูกเพื่อวางแผนสายการผสมพันธุ์',
     chainCount: '{{count}} สาย',
@@ -611,6 +625,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: '{{count}} tane daha göster',
     modeRecipes: 'Standart yetiştirme',
     modeChains: 'Çok nesilli',
+    zeroRouteSummary: '{{count}} üretim rotası bulundu. Diğer rotalar için “{{mode}}” modunu deneyin.',
     maxGenerations: 'Maks. nesil',
     chainPrompt: 'Bir üretme zinciri planlamak için Ebeveyn A ve bir yavru seç.',
     chainCount: '{{count}} zincir',
@@ -650,6 +665,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: 'Hiện thêm {{count}}',
     modeRecipes: 'Phối giống thường',
     modeChains: 'Nhiều thế hệ',
+    zeroRouteSummary: 'Tìm thấy {{count}} lộ trình lai tạo. Hãy thử chế độ “{{mode}}” để tìm lộ trình khác.',
     maxGenerations: 'Số thế hệ tối đa',
     chainPrompt: 'Chọn Bố mẹ A và Con để lập chuỗi nhân giống.',
     chainCount: '{{count}} chuỗi',
@@ -689,7 +705,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: '再显示 {{count}} 条',
     modeRecipes: '常规配种',
     modeChains: '多代计划',
-    zeroRouteSummary: '{{count}} 条配种路线，建议使用顶部的「多代计划」工具获取更多配种路线。',
+    zeroRouteSummary: '{{count}} 条配种路线，建议使用顶部的「{{mode}}」工具获取更多配种路线。',
     maxGenerations: '最多代数',
     chainPrompt: '选择父母 A 和子代，规划多代配种路线。',
     chainCount: '{{count}} 条配种路线',
@@ -729,7 +745,7 @@ export const BREEDING_STRINGS: Record<Language, BreedingStrings> = {
     showMoreRecipes: '再顯示 {{count}} 筆',
     modeRecipes: '常規配種',
     modeChains: '多代計劃',
-    zeroRouteSummary: '{{count}} 條配種路線，建議使用頂部的「多代計劃」工具取得更多配種路線。',
+    zeroRouteSummary: '{{count}} 條配種路線，建議使用頂部的「{{mode}}」工具取得更多配種路線。',
     maxGenerations: '最多代數',
     chainPrompt: '選擇父母 A 和子代，規劃多代配種路線。',
     chainCount: '{{count}} 條配種路線',

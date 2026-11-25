@@ -86,6 +86,7 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
   const [query, setQuery] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
   const selected = value ? pals.find((p) => p.id === value) ?? null : null
+  const pickerLabel = `${label}: ${selected ? names[selected.id] ?? selected.id : labels.anyPal}`
   const selectedPalId = selected ? formatPalId(selected.zukanIndex, selected.zukanIndexSuffix) : undefined
   const selectedPalIdText = palIdText(selectedPalId)
   const tile = variant === 'tile'
@@ -174,7 +175,7 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
               aria-expanded={open}
               // The visible label lives in the strip, but the button's own name
               // must still say which slot it is and what is in it.
-              aria-label={`${label}: ${selected ? names[selected.id] ?? selected.id : labels.anyPal}`}
+              aria-label={pickerLabel}
               data-testid={slot ? `breeding-pick-${slot}` : 'breeding-pick'}
               className={cn(
                 TILE_FRAME,
@@ -264,6 +265,7 @@ export function PalPicker({ label, pals, names, value, onChange, labels, variant
             <Button
               variant="outline"
               role="combobox"
+              aria-label={pickerLabel}
               aria-expanded={open}
               className="h-11 w-full justify-start gap-2 px-2.5 font-normal"
             >
