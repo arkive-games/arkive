@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-11-25",
-      "commit": "b930576f6d6423552f4276e967ad2118dcfe8b7c",
+      "commit": "299cace93acd88cbade1bf9c7f2b019de696cc1f",
       "targets": [
         "aion2",
         "glimmith",
@@ -28,7 +28,7 @@
     },
     {
       "date": "2026-11-25",
-      "commit": "2dded92c1703479ab2d92d347e79fc270a054060",
+      "commit": "78d64d0d13e2a760bbd81a811dc1efa55fe888d0",
       "targets": [
         "aion2",
         "glimmith",
@@ -54,7 +54,7 @@
     },
     {
       "date": "2026-11-25",
-      "commit": "6c780eedf6ce19640192206a05a01fb6934d7d09",
+      "commit": "c8c4683634e023adc168a904bb5352e03ea4c34d",
       "targets": [
         "aion2",
         "glimmith",
@@ -97,7 +97,9 @@
           "text": {
             "en-US": "Homepage game shortcuts now use square library avatars and character art instead of title logos on dark tiles.",
             "zh-CN": "首页游戏方块改用 Steam 风格的方形头像，以角色或游戏徽记取代黑底标题字标。",
-            "zh-TW": "首頁遊戲方塊改用 Steam 風格的方形頭像，以角色或遊戲徽記取代黑底標題字標。"
+            "zh-TW": "首頁遊戲方塊改用 Steam 風格的方形頭像，以角色或遊戲徽記取代黑底標題字標。",
+            "ja-JP": "ホームのショートカットに正方形のゲーム画像やキャラクターイラストを使い、暗いタイル上のタイトルロゴを置き換えました。",
+            "ko-KR": "홈 게임 바로가기에 어두운 바탕의 타이틀 로고 대신 정사각형 게임 아이콘과 캐릭터 이미지를 사용합니다."
           }
         }
       ]
@@ -120,7 +122,9 @@
           "text": {
             "en-US": "Homepage game shortcuts now use a fixed selection ordered by recent Arkive traffic. Adding a game to the directory no longer moves it onto the homepage.",
             "zh-CN": "首页游戏方块按近期站内热度从左到右排列。新游戏加入全部游戏后，不会自动占用首页推荐位。",
-            "zh-TW": "首頁遊戲方塊按近期站內熱度由左至右排列。新遊戲加入全部遊戲後，不會自動佔用首頁推薦位。"
+            "zh-TW": "首頁遊戲方塊按近期站內熱度由左至右排列。新遊戲加入全部遊戲後，不會自動佔用首頁推薦位。",
+            "ja-JP": "ホームに表示するゲームは固定し、最近のサイト内アクセス順に並べます。一覧への新規追加だけではホームには表示されません。",
+            "ko-KR": "홈에 표시할 게임은 고정하고 최근 사이트 방문량에 따라 정렬합니다. 목록에 게임을 추가해도 홈에 자동으로 표시되지 않습니다."
           }
         }
       ]
@@ -143,7 +147,9 @@
           "text": {
             "en-US": "Homepage game tiles show the game logo, or a cropped game image when the logo is unavailable. The update history shortcut uses the same seven-day badge as games.",
             "zh-CN": "首页游戏方块优先显示游戏 Logo，没有 Logo 或加载失败时显示该游戏图片的裁切图。更新日志和游戏方块一样，距更新不超过 7 个日历日才显示「新」。",
-            "zh-TW": "首頁遊戲方塊優先顯示遊戲 Logo，沒有 Logo 或載入失敗時顯示該遊戲圖片的裁切圖。更新日誌和遊戲方塊一樣，距更新不超過 7 個日曆日才顯示「新」。"
+            "zh-TW": "首頁遊戲方塊優先顯示遊戲 Logo，沒有 Logo 或載入失敗時顯示該遊戲圖片的裁切圖。更新日誌和遊戲方塊一樣，距更新不超過 7 個日曆日才顯示「新」。",
+            "ja-JP": "ホームのゲームタイルにロゴを表示し、ロゴがない場合はゲーム画像の一部を使います。更新履歴にもゲームと同じ7日間の新着バッジを表示します。",
+            "ko-KR": "홈 게임 타일에 로고를 표시하고 로고가 없으면 게임 이미지를 잘라 사용합니다. 업데이트 내역에도 게임과 같은 7일 기준의 새 소식 배지를 표시합니다."
           }
         }
       ]
@@ -165,7 +171,9 @@
           "text": {
             "en-US": "Homepage game shortcuts now show the new badge only for updates from the last 7 days.",
             "zh-CN": "首页游戏快捷入口现在只会为最近 7 天内更新的游戏显示“新”角标。",
-            "zh-TW": "首頁遊戲快速入口現在只會為最近 7 天內更新的遊戲顯示「新」角標。"
+            "zh-TW": "首頁遊戲快速入口現在只會為最近 7 天內更新的遊戲顯示「新」角標。",
+            "ja-JP": "ホームのゲームショートカットには、過去7日間に更新があった場合だけ新着バッジが付きます。",
+            "ko-KR": "홈 게임 바로가기에는 최근 7일 안에 업데이트된 경우에만 새 소식 배지가 붙습니다."
           }
         }
       ]
@@ -190,7 +198,9 @@
           "text": {
             "en-US": "Browser tabs and bookmarks now use the Arkive A in black on white or white on black to match your browser appearance.",
             "zh-CN": "浏览器标签页和书签改用藏舟标志里的 A，浅色外观显示白底黑字，深色外观显示黑底白字。",
-            "zh-TW": "瀏覽器分頁和書籤改用藏舟標誌裡的 A，淺色外觀顯示白底黑字，深色外觀顯示黑底白字。"
+            "zh-TW": "瀏覽器分頁和書籤改用藏舟標誌裡的 A，淺色外觀顯示白底黑字，深色外觀顯示黑底白字。",
+            "ja-JP": "ブラウザーのタブとブックマークの Arkive の「A」は、明るいテーマでは白地に黒、暗いテーマでは黒地に白で表示されます。",
+            "ko-KR": "브라우저 탭과 북마크의 Arkive A 아이콘이 밝은 테마에서는 흰 바탕에 검은색, 어두운 테마에서는 검은 바탕에 흰색으로 표시됩니다."
           }
         }
       ]

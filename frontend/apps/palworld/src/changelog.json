@@ -3,7 +3,7 @@
     {
       "version": "1.33.19",
       "date": "2026-11-25",
-      "commit": "451108bdea32d645129fbf7d478a71ee8133a25e",
+      "commit": "f1864a4429fa3d95f6057d03da526dec86ffcd5e",
       "changes": [
         {
           "kind": "fix",
@@ -18,7 +18,7 @@
     {
       "version": "1.33.18",
       "date": "2026-11-25",
-      "commit": "09f6b21cf2332d4e2d51ff4b6aa0d6edc3c8d3a1",
+      "commit": "4dd5aaf8054efe49ea31255d62eb2a0d3ec32e8c",
       "changes": [
         {
           "kind": "fix",
