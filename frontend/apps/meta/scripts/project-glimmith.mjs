@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { writeGlimmithScene } from './write-glimmith-scene.mjs'
 
 // Input: cooked AGeri assets exported to JSON with UAssetAPI (UE 4.27).
 const [root, output, meshFile, terrainFile, marketTerrainDir, townTerrainDir, countrysideTerrainDir, sideIslandTerrainDir, forestTerrainDir, fragmentsTerrainDir, forestPartTwoTerrainDir, sideIsland2TerrainDir, sideIsland3TerrainDir, finaleTerrainDir, bonusTerrainDir, spiralTerrainDir, zone03TerrainDir] = process.argv.slice(2)
@@ -716,7 +717,7 @@ const puzzles = Object.fromEntries(actors.filter(({ directory }) => directory).m
     ...(wideShapeClues && { wideShapeClues }), ...(wideCellClues && { wideCellClues }), ...(shapeBank.length && { shapeBank }), ...(areaRange && { areaRange }),
     ...(areaEquals && { areaEquals }), ...(adjacentSizesDifferent && { adjacentSizesDifferent }), ...(rectangleRule && { rectangleRule }), ...(ruleFlags?.length && { ruleFlags }) }]
 }))
-writeFileSync(join(output, 'glimmith-scene.json'), JSON.stringify({ projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, windows: windowsWithLinks, puzzles }, null, 2) + '\n')
+writeGlimmithScene(output, { projection, width, height, tileSize, sources, surfaceCount: surfaces.length, actors, windows: windowsWithLinks, puzzles })
 for (let row = 0; row < height / tileSize; row++) {
   for (let column = 0; column < width / tileSize; column++) {
     const x = column * tileSize

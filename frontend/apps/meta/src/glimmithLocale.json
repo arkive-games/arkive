@@ -1,4 +1,7 @@
 {
+  "hidden": "已隐藏",
+  "boardRetry": "题板加载失败，点击重试",
+  "boardLoading": "正在加载题板…",
   "home": "返回藏舟首页",
   "account": "账号",
   "language": "简体中文",

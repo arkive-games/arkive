@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import scene from './assets/glimmith-scene.json'
+import scene from './glimmithScene.fixture'
 
 describe('Glimmith tutorial scene', () => {
   it('preserves the game-completion category and the separate puzzle unlock reference', () => {
@@ -141,14 +141,14 @@ describe('Glimmith tutorial scene', () => {
   it('keeps every Polyomino cell clue tied to its authored shape', () => {
     const puzzles = new Map(Object.entries(scene.puzzles))
     const window = scene.windows.find(({ id }) => id === 'window-polyomino')!
-    expect(scene.puzzles['0379.puz'].shapeClues.S1).toEqual([' #', '###', ' #'])
+    expect(scene.puzzles['0379.puz'].shapeClues?.S1).toEqual([' #', '###', ' #'])
     for (const id of window.prerequisites) {
       const puzzle = puzzles.get(id)!
       const clues = new Set(puzzle.board.flatMap((line, index) => index % 2 ? line.match(/S\d/g) ?? [] : []))
       expect(clues.size, id).toBeGreaterThan(0)
-      const shapes = 'shapeClues' in puzzle ? puzzle.shapeClues : {}
+      const shapes = puzzle.shapeClues ?? {}
       expect(new Set(Object.keys(shapes)), id).toEqual(new Set([
-        ...clues, ...('shapeBank' in puzzle ? puzzle.shapeBank : []),
+        ...clues, ...(puzzle.shapeBank ?? []),
       ]))
       for (const cells of Object.values(shapes)) {
         expect(Array.isArray(cells) && cells.join(''), id).toMatch(/^[# ]*#[# ]*$/)
@@ -160,11 +160,11 @@ describe('Glimmith tutorial scene', () => {
     const puzzle = scene.puzzles['1435.puz']
     expect(puzzle.board[9]).toBe('|..|..|S*|..|..|..|..|S6|S*|S2|S4|..|')
     expect(puzzle.wideShapeClues).toMatchObject({ 50: 'S10', 56: 'S11', 103: 'S12', 135: 'S13' })
-    expect(puzzle.shapeClues.S10).toEqual(['  #', ' ##', '##', '#'])
+    expect(puzzle.shapeClues?.S10).toEqual(['  #', ' ##', '##', '#'])
     expect(scene.puzzles['0331.puz'].wideShapeClues).toEqual({ 97: 'S10', 101: 'S11', 107: 'S10' })
     const bank = scene.puzzles['0080.puz']
     expect(bank.shapeBank).toEqual(['S1', 'S2'])
-    expect(Object.keys(bank.shapeClues)).toEqual(bank.shapeBank)
+    expect(Object.keys(bank.shapeClues ?? {})).toEqual(bank.shapeBank)
   })
 
   it('keeps authored anchors on the map with source terrain support', () => {
@@ -202,7 +202,7 @@ describe('Glimmith tutorial scene', () => {
     const banks = window.prerequisites.map((id) => puzzles.get(id)!).filter((puzzle) => 'shapeBank' in puzzle)
     expect(banks).toHaveLength(8)
     for (const puzzle of banks) {
-      expect(puzzle.shapeBank.every((clue) => Object.hasOwn(puzzle.shapeClues, clue))).toBe(true)
+      expect(puzzle.shapeBank?.every((clue) => Object.hasOwn(puzzle.shapeClues ?? {}, clue))).toBe(true)
     }
     expect(scene.puzzles['0253.puz'].wideShapeClues).toEqual({ 58: 'S10', 60: 'S11', 71: 'S12' })
   })
@@ -215,7 +215,7 @@ describe('Glimmith tutorial scene', () => {
     expect(banks).toHaveLength(6)
     expect(scene.puzzles['0353.puz'].shapeBank).toEqual(['S1', 'S2', 'S3'])
     for (const puzzle of banks) {
-      expect(puzzle.shapeBank.every((clue) => Object.hasOwn(puzzle.shapeClues, clue))).toBe(true)
+      expect(puzzle.shapeBank?.every((clue) => Object.hasOwn(puzzle.shapeClues ?? {}, clue))).toBe(true)
     }
     expect(boards.some((puzzle) => puzzle.board.some((row) => /P[1-4]/.test(row)))).toBe(true)
   })
@@ -248,7 +248,7 @@ describe('Glimmith tutorial scene', () => {
     const pools = Object.values(scene.puzzles).filter((puzzle) => 'shapeBank' in puzzle)
     expect(pools).toHaveLength(235)
     for (const puzzle of pools) {
-      expect(puzzle.shapeBank.every(id => Object.hasOwn(puzzle.shapeClues, id))).toBe(true)
+      expect(puzzle.shapeBank?.every(id => Object.hasOwn(puzzle.shapeClues ?? {}, id))).toBe(true)
     }
   })
 
@@ -269,7 +269,7 @@ describe('Glimmith tutorial scene', () => {
       return 'adjacentSizesDifferent' in puzzle && puzzle.adjacentSizesDifferent
     })).toBe(true)
     expect(scene.puzzles['1436.puz'].areaRange).toEqual({ min: 3, max: 5 })
-    expect(new Set(Object.values(scene.puzzles['1436.puz'].wideShapeClues))).toEqual(new Set(['S10', 'S11', 'S12']))
+    expect(new Set(Object.values(scene.puzzles['1436.puz'].wideShapeClues ?? {}))).toEqual(new Set(['S10', 'S11', 'S12']))
     expect(scene.puzzles['1188.puz'].shapeBank).toEqual(['S1', 'S2', 'S3'])
     expect(scene.actors.find(({ id }) => id === '0824.puz')?.supportMeshes).toContain('sm_RuinPillar_LargeRoundExtraShortA_Base')
   })

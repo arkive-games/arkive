@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import scene from './assets/glimmith-scene.json'
+import scene from './glimmithScene.fixture'
 import { glimmithInequalityAngle, glimmithVertexMark, horizontalGlimmithEdgeMark } from './glimmithEdgeClues'
 
 function solutionRegions(board: string[], solution: string[], columns: number, rows: number) {

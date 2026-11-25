@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArkiveAccountControl } from '@gamemap/auth'
 import type { GameMapMeta } from '@gamemap/data-contract'
 import { CommunityMarkerDetail } from '@gamemap/map-community'
@@ -49,7 +49,7 @@ const map: GameMapMeta = {
   tilesCountX: scene.width / scene.tileSize, tilesCountY: scene.height / scene.tileSize,
 }
 const windowNames = new Map(Object.entries(copy.windows))
-const puzzles = new Map(Object.entries(scene.puzzles))
+const puzzles = new Map(Object.entries(scene.difficulties))
 const cellClueImages = new Map([
   ['P1', circleClue], ['P2', squareClue], ['P3', triangleClue], ['P4', diamondClue], ['P5', hexagonClue],
   ['F0', palisadeF0], ['F1', palisadeF1], ['F2', palisadeF2], ['F3', palisadeF3], ['F4', palisadeF4], ['F7', palisadeF7],
@@ -77,7 +77,7 @@ const progressScope = { partition: map.id }
 const markers: EngineMarker[] = scene.actors.map(({ id, pixel, z, widget }, index) => {
   const subtype = widget ? 'note' : 'puzzle'
   const icon = widget ? noteIcon : puzzleIcon
-  const difficulty = puzzles.get(id)?.difficulty
+  const difficulty = puzzles.get(id)
   const badge = difficultyArt[`./assets/glimmith-difficulty-${difficulty}.png`]
   return {
     id, ...pixel, z, subtype, icon, positionPrecision: 'authored-transform', indexInSubtype: index,
@@ -194,7 +194,12 @@ function CompassClue({ x, y, clue }: { x: number; y: number; clue: string }) {
   </g>
 }
 
-type GlimmithPuzzle = (typeof scene.puzzles)['0049.puz'] & {
+export type GlimmithPuzzle = {
+  difficulty: number
+  columns: number
+  rows: number
+  board: string[]
+  solution: string[]
   shapeClues?: Record<string, string[]>
   wideShapeClues?: Partial<Record<number, string>>
   wideCellClues?: Partial<Record<string, string>>
@@ -299,6 +304,42 @@ function PuzzleSolution({ puzzle }: { puzzle: GlimmithPuzzle }) {
   )
 }
 
+const boardUrls = import.meta.glob<string>('./assets/glimmith-boards/*.json', { eager: true, query: '?url&no-inline', import: 'default' })
+const regionBoards = new Map<string, Promise<Record<string, GlimmithPuzzle>>>()
+
+function loadRegionBoards(region: string) {
+  let request = regionBoards.get(region)
+  if (!request) {
+    const url = boardUrls[`./assets/glimmith-boards/${region}.json`]
+    request = fetch(url).then(response => {
+      if (!response.ok) throw new Error('Board request failed')
+      return response.json() as Promise<Record<string, GlimmithPuzzle>>
+    }).catch(error => {
+      regionBoards.delete(region)
+      throw error
+    })
+    regionBoards.set(region, request)
+  }
+  return request
+}
+
+function RegionalPuzzle({ id }: { id: string }) {
+  const [board, setBoard] = useState<GlimmithPuzzle | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    let current = true
+    const region = markerRegions.get(id)
+    if (!region) return
+    loadRegionBoards(region).then(boards => {
+      if (current) setBoard(boards[id])
+    }, () => { if (current) setFailed(true) })
+    return () => { current = false }
+  }, [id, attempt])
+  if (failed) return <button type="button" className="text-primary underline" onClick={() => { setFailed(false); setAttempt(n => n + 1) }}>{copy.boardRetry}</button>
+  return board ? <><PuzzleRules puzzle={board} /><PuzzleSolution puzzle={board} /></> : <p role="status">{copy.boardLoading}</p>
+}
+
 export function GlimmithTutorialPrototype() {
   const [selected, setSelected] = useState<string | null>(null)
   const [activeArea, setActiveArea] = useState(map.id)
@@ -317,11 +358,13 @@ export function GlimmithTutorialPrototype() {
       icon: marker.subtype === 'puzzle' && pinSize === overviewPuzzleScale ? puzzleDot : marker.icon,
       pinScale: marker.subtype === 'puzzle' ? pinSize : 0.88,
     })), [completed, pinSize, visibleRegions])
-  const searchItems = useMemo(() => mapMarkers.map((marker) => ({
-    ...marker,
-    name: marker.localizedName,
-    idLabel: marker.subtype === 'puzzle' ? marker.localizedName : undefined,
-  })), [mapMarkers])
+  const searchItems = useMemo(() => markers.map(marker => {
+    const region = markerRegions.get(marker.id)
+    const hidden = (region && !visibleRegions.has(region)) || !visible.has(marker.subtype)
+    return { ...marker, name: marker.localizedName,
+      description: [region && windowNames.get(region), hidden && copy.hidden].filter(Boolean).join(' · '),
+      idLabel: marker.subtype === 'puzzle' ? marker.localizedName : undefined }
+  }), [visible, visibleRegions])
   const completedCount = [...completed].filter((id) => puzzles.has(id)).length
   const toggleCompleted = (id: string) => {
     const next = new Set(completed)
@@ -345,20 +388,21 @@ export function GlimmithTutorialPrototype() {
     const width = mobile ? document.documentElement.clientWidth : viewport.clientWidth
     const view = framePoints(points, width, viewport.clientHeight)
     setActiveArea(id)
+    if (area) setVisibleRegions(prev => prev.has(id) ? prev : new Set(prev).add(id))
     setSelected(null)
     setMobileSidebarOpen(false)
     ref.current?.flyTo(view.x, view.y, view.zoom)
   }
-  const openLinkedMarker = (id: string) => {
+  const revealMarker = (id: string) => {
     const target = markers.find((marker) => marker.id === id)
     if (!target) return
-    const subtype = windows.has(id) ? 'window' : 'puzzle'
+    const subtype = target.subtype
     setVisible((prev) => prev.has(subtype) ? prev : new Set([...prev, subtype]))
     const region = markerRegions.get(id)
-    if (region) setVisibleRegions((prev) => new Set(prev).add(region))
+    if (region) setVisibleRegions(prev => prev.has(region) ? prev : new Set(prev).add(region))
     select(id)
-    ref.current?.flyTo(target.x, target.y)
   }
+  const openLinkedMarker = revealMarker
   const marker = markers.find(({ id }) => id === selected)
   const renderMarkerDetail = (marker: EngineMarker) => {
     const window = windows.get(marker.id)
@@ -366,7 +410,7 @@ export function GlimmithTutorialPrototype() {
     const unlockedArea = window?.unlockedAreaId
     const requirementsTitle = windowPrerequisites ? copy.perfectedRequirements : copy.requirements
     const actor = window ?? scene.actors.find(({ id }) => id === marker.id)
-    const puzzle = puzzles.get(marker.id) as GlimmithPuzzle | undefined
+    const puzzle = puzzles.has(marker.id)
     const linked = actor && 'unlocks' in actor ? actor.unlocks[0] : undefined
     const unlockCategory = actor && 'unlockCategory' in actor ? actor.unlockCategory : undefined
     const owningWindow = puzzleWindows.get(marker.id)
@@ -443,10 +487,7 @@ export function GlimmithTutorialPrototype() {
           </div>,
         }] : []), {
           id: 'solution', title: copy.solution, accessibleTitle: copy.solution, defaultExpanded: true,
-          content: <>
-            <PuzzleRules puzzle={puzzle} />
-            <PuzzleSolution puzzle={puzzle} />
-          </>,
+          content: <RegionalPuzzle key={marker.id} id={marker.id} />,
         }] : [{
           id: 'note', title: copy.note, accessibleTitle: copy.note, defaultExpanded: true,
           content: <div className="grid gap-2 text-sm"><p>{copy.noBoard}</p>{linked &&
@@ -540,7 +581,7 @@ export function GlimmithTutorialPrototype() {
           renderPopupContent={mobile ? () => null : renderMarkerDetail}
         />
         {mobile && marker && renderMarkerDetail(marker)}
-        <SearchPanel items={searchItems} searchFields={['name', 'idLabel']} onSelect={select} displayCoords={displayCoords}
+        <SearchPanel items={searchItems} searchFields={['name', 'idLabel']} onSelect={revealMarker} displayCoords={displayCoords}
           classNames={{ root: [
             mobileSidebarOpen && 'max-md:hidden',
             selected && 'md:max-lg:invisible',
