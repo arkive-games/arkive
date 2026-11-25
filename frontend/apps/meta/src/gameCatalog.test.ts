@@ -86,6 +86,6 @@ describe('every announced game is wired up', () => {
   })
 
   it('uses full artwork for the Glimmith home shortcut', () => {
-    expect(SITES.find((site) => site.id === 'glimmith')?.quickIcon).toBeTruthy()
+    expect(SITES.find((site) => site.id === 'glimmith')?.logo).toBeTruthy()
   })
 })
