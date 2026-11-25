@@ -26,6 +26,9 @@ import glimmithIcon from './assets/glimmith-launcher.png'
 import ossIcon from './assets/oss-launcher.png'
 import glimmithCatalog from './assets/glimmith-catalog.webp'
 import ossCatalog from './assets/oss-catalog.webp'
+import palworldCatalog from './assets/palworld-catalog.webp'
+import gmzzCatalog from './assets/gmzz-catalog.webp'
+import pbzCatalog from './assets/pbz-catalog.webp'
 import { PBZ_ARTWORK } from './upcoming'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
@@ -166,6 +169,7 @@ export const SITES: SiteCard[] = [
     toySlug: 'arkive-palworld',
     bg: palworldBg,
     banner: palworldBanner,
+    catalogCover: { src: palworldCatalog, position: '53% 50%' },
     icon: palworldIcon,
     color: '#4a9ad0',
     nameKey: 'site.palworld.name',
@@ -187,6 +191,7 @@ export const SITES: SiteCard[] = [
     bgPosition: '65% center',
     thumb: gmzzThumb,
     banner: gmzzBanner,
+    catalogCover: { src: gmzzCatalog, position: '66% 50%', squarePosition: '65% 50%' },
     bannerPosition: '58% 22%',
     icon: gmzzIcon,
     color: '#8a6a3a',
@@ -207,6 +212,7 @@ export const SITES: SiteCard[] = [
     ),
     bg: ro3Bg,
     banner: ro3Banner,
+    catalogCover: { src: ro3Bg, position: '3% 50%', squarePosition: '2% 50%' },
     bannerPosition: '28% 18%',
     icon: ro3Icon,
     color: '#6aa8d8',
@@ -259,6 +265,7 @@ export const SITES: SiteCard[] = [
     bg: PBZ_ARTWORK.banner,
     shortcutAvatar: pbzAvatar,
     banner: PBZ_ARTWORK.banner,
+    catalogCover: { src: pbzCatalog, position: '55% 50%', squarePosition: '57% 50%' },
     icon: PBZ_ARTWORK.icon,
     color: '#c98a3e',
     nameKey: 'site.pbz.name',
