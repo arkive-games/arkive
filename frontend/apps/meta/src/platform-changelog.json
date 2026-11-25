@@ -2,6 +2,32 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "cd2ae64687ba3adfcb3179c693c7e93979fe516d",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Open the update log from the forum without leaving your place. Date fields and the mode selector now have matching outlines.",
+            "zh-CN": "论坛左下角可直接打开更新日志，关闭后仍留在原版块。日期框与筛选条的外框等高对齐。",
+            "zh-TW": "論壇左下角可直接開啟更新日誌，關閉後仍留在原看板。日期欄位與篩選列的外框等高對齊。",
+            "ja-JP": "フォーラムから現在の場所を離れずに更新履歴を開けます。日付入力欄と切り替えボタンの高さと枠線を揃えました。",
+            "ko-KR": "포럼에서 보고 있던 게시판을 벗어나지 않고 업데이트 내역을 열 수 있습니다. 날짜 입력란과 필터의 높이와 테두리를 맞췄습니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "638a0e357c8619140ea09ff6a6ffd6e904a7e824",
       "targets": [
         "aion2",
