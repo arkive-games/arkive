@@ -84,9 +84,8 @@ function UpdateTimeline() {
   const days = useMemo(() => updatesByDate(entries, start, end).map(([date, changes]) => ({
     date, groups: groupDailyChanges(changes, OPEN_GAMES),
   })), [entries, start, end])
-  const controlFrame = 'box-border h-10 rounded-full border border-muted-foreground'
-  const dateControl = `${controlFrame} bg-background text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`
-  const inputClass = `${dateControl} w-36 min-w-0 px-3 text-sm tabular-nums`
+  const dateControl = 'self-stretch rounded-full border border-muted-foreground bg-background text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
+  const inputClass = `${dateControl} w-36 min-w-0 px-3 text-sm tabular-nums max-md:h-10`
   const labelClass = 'inline-flex items-center justify-between gap-2 whitespace-nowrap text-xs text-muted-foreground'
   const dateFields = mode === 'day' ? (
     <label className={labelClass}>
@@ -106,10 +105,10 @@ function UpdateTimeline() {
 
   return <>
     <div className="flex items-center justify-between gap-1 border-b border-border py-3">
-      <div className={`${controlFrame} inline-flex shrink-0 gap-0.5 whitespace-nowrap bg-muted p-1 md:gap-1`} role="group" aria-label={t('platformUpdates.date')}>
+      <div className="inline-flex shrink-0 gap-0.5 whitespace-nowrap rounded-full bg-muted p-1 md:gap-1" role="group" aria-label={t('platformUpdates.date')}>
         {(['all', 'day', 'range'] as const).map(option => (
           <button key={option} type="button" aria-pressed={mode === option} onClick={() => setMode(option)}
-            className="h-full rounded-full px-1.5 text-sm text-muted-foreground aria-pressed:bg-background aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-sm md:px-3">
+            className="min-h-8 rounded-full px-1.5 text-sm text-muted-foreground aria-pressed:bg-background aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-sm md:px-3">
             {t(`platformUpdates.${option}`)}
           </button>
         ))}
@@ -125,7 +124,7 @@ function UpdateTimeline() {
           <PopoverContent align="end" collisionPadding={12} aria-label={t(`platformUpdates.${mode}`)}
             className="z-[calc(var(--arkive-layer-sheet)+1)] grid w-auto gap-2">{dateFields}</PopoverContent>
         </Popover>
-      ) : <div className="inline-flex items-center gap-3">{dateFields}</div>)}
+      ) : <div className="inline-flex self-stretch gap-3">{dateFields}</div>)}
     </div>
     <div key={JSON.stringify([mode, start, end])} className="min-h-0 overflow-y-auto overscroll-contain pt-3" tabIndex={0} role="region" aria-label={t('platformUpdates.title')}>
       {!invalid && days.length > 0 && (mode !== 'day' || day) ? <ol className="space-y-5">
