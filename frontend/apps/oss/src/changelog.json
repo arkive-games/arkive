@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.2.8",
+      "date": "2026-11-25",
+      "commit": "df044cc9dfd06bddf9a349a2f6499b843c3b87ab",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The desktop navigation shows the game icon and name beside Arkive.",
+            "zh-CN": "桌面导航栏在 Arkive 旁显示沉星之序的图标与名称。",
+            "zh-TW": "桌面導覽列在 Arkive 旁顯示沉星之序的圖示與名稱。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.2.7",
       "date": "2026-11-24",
       "commit": "902aae2dc1199afb728065e65d8c87e42d698de2",

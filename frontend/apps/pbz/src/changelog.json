@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.9.2",
+      "date": "2026-11-25",
+      "commit": "df044cc9dfd06bddf9a349a2f6499b843c3b87ab",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The desktop navigation shows the game icon and name beside Arkive.",
+            "zh-CN": "桌面导航栏在 Arkive 旁显示影之刃零的图标与名称。",
+            "zh-TW": "桌面導覽列在 Arkive 旁顯示影之刃零的圖示與名稱。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.1",
       "date": "2026-11-22",
       "commit": "aeb6c2a3f35edb46a45100353e99c4c5767752de",
