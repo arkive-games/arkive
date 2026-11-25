@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "4c87a3d18cf44f7666887acc2bc158a9d5665c9e",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Distant puzzles use amber dots. Selected windows keep their artwork size and desktop details avoid the search bar.",
+            "zh-CN": "远景谜题改用琥珀色小点，选中彩窗不再缩小窗图，桌面详情框避让搜索栏。",
+            "zh-TW": "遠景謎題改用琥珀色小點，選取彩窗不再縮小窗圖，桌面詳情框會避開搜尋列。",
+            "ja-JP": "遠景ではパズルを琥珀色の点で表示します。選択した窓の絵は縮小せず、デスクトップの詳細表示は検索欄を避けます。",
+            "ko-KR": "축소하면 퍼즐을 호박색 점으로 표시합니다. 선택한 창의 그림 크기를 유지하고 데스크톱 상세 창은 검색창을 가리지 않습니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "189cbb2fac146545b8bc9ba82d47dff34ac5b8ab",
       "targets": [
         "glimmith"
