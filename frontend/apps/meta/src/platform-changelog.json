@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "189cbb2fac146545b8bc9ba82d47dff34ac5b8ab",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Floating islands have a subtle rim, and selected stained-glass windows have a diamond frame.",
+            "zh-CN": "浮岛外缘增加明暗线，选中的彩窗显示菱形铅条边框。",
+            "zh-TW": "浮島外緣增加明暗線，選取的彩窗顯示菱形鉛條邊框。",
+            "ja-JP": "浮島の縁に明暗を加え、選択したステンドグラスをひし形の枠で示します。",
+            "ko-KR": "공중섬 가장자리에 명암을 더하고 선택한 스테인드글라스에 마름모 테두리를 표시합니다。"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "d9794ee06267f20b5e5d2839efc44951f5174d9f",
       "targets": [
         "glimmith"
