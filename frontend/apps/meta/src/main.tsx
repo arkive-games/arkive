@@ -11,6 +11,16 @@ import App from './App'
 import { AUTH_CONFIG } from './lib/auth'
 import { UserSystemProvider } from './UserSystemState'
 
+function registerServiceWorker() {
+  if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return
+
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js', { scope: '/' })
+  }, { once: true })
+}
+
+registerServiceWorker()
+
 // `layer: 'global'` -- the portal's theme control writes the shared value that
 // every game inherits, rather than an override for meta itself.
 const themeStorage = createArkiveThemeStorage({ legacyKeys: ['meta.theme'], layer: 'global' })
