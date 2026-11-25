@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { IconCalendar } from '@tabler/icons-react'
 import {
   Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger,
+  Popover, PopoverContent, PopoverTrigger, useIsMobile,
   resolvePlatformChangelog, type PlatformChangelogFile, type PlatformTarget,
 } from '@gamemap/ui'
 import { FooterShore } from './FooterShore'
@@ -65,6 +67,7 @@ export function PlatformUpdatesDialog({ linked, onDismissLink }: { linked: boole
 
 function UpdateTimeline() {
   const { t, i18n } = useTranslation()
+  const mobile = useIsMobile()
   const locale = i18n.resolvedLanguage ?? i18n.language
   const entries = useMemo(() => resolvePlatformChangelog(raw as PlatformChangelogFile, locale), [locale])
   const [mode, setMode] = useState<'all' | 'day' | 'range'>('all')
@@ -77,32 +80,47 @@ function UpdateTimeline() {
   const days = useMemo(() => updatesByDate(entries, start, end).map(([date, changes]) => ({
     date, groups: groupDailyChanges(changes, OPEN_GAMES),
   })), [entries, start, end])
-  const inputClass = 'h-10 min-w-0 w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground'
+  const dateControl = 'h-10 rounded-full border border-muted-foreground bg-background text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
+  const inputClass = `${dateControl} w-36 min-w-0 px-3 text-sm tabular-nums`
+  const labelClass = 'inline-flex items-center justify-between gap-2 whitespace-nowrap text-xs text-muted-foreground'
+  const dateFields = mode === 'day' ? (
+    <label className={labelClass}>
+      {t('platformUpdates.date')}
+      <input type="date" className={inputClass} value={day} onChange={e => setDay(e.target.value)} />
+    </label>
+  ) : <>
+    <label className={labelClass}>
+      {t('platformUpdates.start')}
+      <input type="date" className={inputClass} value={from} max={to || undefined} onChange={e => setFrom(e.target.value)} />
+    </label>
+    <label className={labelClass}>
+      {t('platformUpdates.end')}
+      <input type="date" className={inputClass} value={to} min={from || undefined} aria-invalid={invalid} onChange={e => setTo(e.target.value)} />
+    </label>
+  </>
 
   return <>
-    <div className="flex flex-wrap items-end gap-x-4 gap-y-2 border-b border-border py-3">
-      <div className="inline-flex gap-1 rounded-full bg-muted p-1" role="group" aria-label={t('platformUpdates.date')}>
+    <div className="flex items-center justify-between gap-1 border-b border-border py-3">
+      <div className="inline-flex shrink-0 gap-0.5 whitespace-nowrap rounded-full bg-muted p-1 md:gap-1" role="group" aria-label={t('platformUpdates.date')}>
         {(['all', 'day', 'range'] as const).map(option => (
           <button key={option} type="button" aria-pressed={mode === option} onClick={() => setMode(option)}
-            className="min-h-8 rounded-full px-3 text-sm text-muted-foreground aria-pressed:bg-background aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-sm">
+            className="min-h-8 rounded-full px-1.5 text-sm text-muted-foreground aria-pressed:bg-background aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-sm md:px-3">
             {t(`platformUpdates.${option}`)}
           </button>
         ))}
       </div>
-      {mode === 'day' && <label className="ml-auto grid w-36 max-w-full gap-1 text-xs text-muted-foreground">
-        {t('platformUpdates.date')}
-        <input type="date" className={inputClass} value={day} onChange={e => setDay(e.target.value)} />
-      </label>}
-      {mode === 'range' && <div className="ml-auto grid w-74 max-w-full grid-cols-[repeat(auto-fit,minmax(min(100%,8.25rem),1fr))] gap-2">
-        <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
-          {t('platformUpdates.start')}
-          <input type="date" className={inputClass} value={from} max={to || undefined} onChange={e => setFrom(e.target.value)} />
-        </label>
-        <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
-          {t('platformUpdates.end')}
-          <input type="date" className={inputClass} value={to} min={from || undefined} aria-invalid={invalid} onChange={e => setTo(e.target.value)} />
-        </label>
-      </div>}
+      {mode !== 'all' && (mobile ? (
+        <Popover key={mode}>
+          <PopoverTrigger asChild>
+            <button type="button" className={`${dateControl} inline-grid w-10 shrink-0 place-items-center`}
+              aria-label={t(`platformUpdates.${mode}`)} title={t(`platformUpdates.${mode}`)}>
+              <IconCalendar className="size-5" aria-hidden="true" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" collisionPadding={12} aria-label={t(`platformUpdates.${mode}`)}
+            className="z-[calc(var(--arkive-layer-sheet)+1)] grid w-auto gap-2">{dateFields}</PopoverContent>
+        </Popover>
+      ) : <div className="inline-flex items-center gap-3">{dateFields}</div>)}
     </div>
     <div key={JSON.stringify([mode, start, end])} className="min-h-0 overflow-y-auto overscroll-contain pt-3" tabIndex={0} role="region" aria-label={t('platformUpdates.title')}>
       {!invalid && days.length > 0 && (mode !== 'day' || day) ? <ol className="space-y-5">
