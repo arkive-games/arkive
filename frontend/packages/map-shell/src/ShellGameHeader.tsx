@@ -6,7 +6,7 @@ export interface ShellGameHeaderProps {
   backgroundPosition?: CSSProperties["backgroundPosition"]
   logo: ReactNode
   gameName: ReactNode
-  subtitle: ReactNode
+  subtitle?: ReactNode
   className?: string
   shadeClassName?: string
 }
@@ -44,8 +44,10 @@ export function ShellGameHeader({
         <div className="flex h-12 max-w-full items-end">{logo}</div>
         <p className="mt-2 flex max-w-full items-center truncate text-sm font-semibold text-white/90 drop-shadow-sm">
           <span className="font-bold">{gameName}</span>
-          <span className="mx-2 font-semibold text-white/55" aria-hidden>·</span>
-          <span>{subtitle}</span>
+          {subtitle ? <>
+            <span className="mx-2 font-semibold text-white/55" aria-hidden>·</span>
+            <span>{subtitle}</span>
+          </> : null}
         </p>
       </div>
     </section>

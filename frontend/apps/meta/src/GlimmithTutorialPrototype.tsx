@@ -35,6 +35,7 @@ import radarFour from './assets/glimmith-vertex-radar-4.png'
 import headerArt from './assets/glimmith-steam-scenery.jpg'
 import { glimmithInequalityAngle, glimmithVertexMark, horizontalGlimmithEdgeMark } from './glimmithEdgeClues'
 import copy from './glimmithLocale.json'
+import { markerRegions, regionIds, type RegionId } from './glimmithRegions'
 import '@gamemap/map-engine-gl/engine-gl.css'
 
 const map: GameMapMeta = {
@@ -49,6 +50,11 @@ const cellClueImages = new Map([
   ['F0', palisadeF0], ['F1', palisadeF1], ['F2', palisadeF2], ['F3', palisadeF3], ['F4', palisadeF4], ['F7', palisadeF7],
 ])
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
+const regionNames: Record<RegionId, string> = {
+  Zone1: copy.zone1,
+  Zone2: copy.zone2,
+  Zone3: copy.zone3,
+}
 const puzzleWindows = new Map(scene.windows.flatMap((window) => window.prerequisites.map((id) => [id, window] as const)))
 const difficultyArt = import.meta.glob<string>('./assets/glimmith-difficulty-*.png', {
   eager: true, import: 'default', query: '?url',
@@ -104,16 +110,10 @@ const displayCoords = (x: number, y: number) => {
     y: scene.projection.centerY - (-dx * Math.sin(angle) + dy * Math.cos(angle)),
   }
 }
-const subtypes = ['note', 'puzzle', 'window'] as const
+const subtypes = ['puzzle', 'window'] as const
 const mapOptions = [{ id: map.id, label: copy.overview }, ...scene.windows.map((window) => ({
   id: window.id, label: windowNames.get(window.id) ?? copy.window,
 }))]
-const searchItems = markers.map((marker) => ({
-  ...marker,
-  name: marker.localizedName,
-  idLabel: marker.subtype === 'puzzle' ? marker.localizedName : undefined,
-}))
-
 function framePoints(points: readonly EngineMarker[], width: number, height: number) {
   const xs = points.map(({ x }) => x)
   const ys = points.map(({ y }) => y)
@@ -301,12 +301,23 @@ export function GlimmithTutorialPrototype() {
   const [activeArea, setActiveArea] = useState(map.id)
   const [pinSize, setPinSize] = useState(0.56)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [visible, setVisible] = useState<Set<string>>(() => new Set(subtypes))
+  const [visible, setVisible] = useState<Set<string>>(() => new Set([...subtypes, 'note']))
+  const [visibleRegions, setVisibleRegions] = useState<Set<RegionId>>(() => new Set(regionIds))
   const [completed, setCompleted] = useState(() => new Set(browserMemory.read(completedRecord, progressScope)))
-  const mapMarkers = useMemo(() => markers.map((marker) => ({
-    ...marker, completed: completed.has(marker.id),
-    pinScale: marker.subtype === 'puzzle' ? pinSize : 0.88,
-  })), [completed, pinSize])
+  const mapMarkers = useMemo(() => markers
+    .filter((marker) => {
+      const region = markerRegions.get(marker.id)
+      return region === undefined || visibleRegions.has(region)
+    })
+    .map((marker) => ({
+      ...marker, completed: completed.has(marker.id),
+      pinScale: marker.subtype === 'puzzle' ? pinSize : 0.88,
+    })), [completed, pinSize, visibleRegions])
+  const searchItems = useMemo(() => mapMarkers.map((marker) => ({
+    ...marker,
+    name: marker.localizedName,
+    idLabel: marker.subtype === 'puzzle' ? marker.localizedName : undefined,
+  })), [mapMarkers])
   const completedCount = [...completed].filter((id) => puzzles.has(id)).length
   const toggleCompleted = (id: string) => {
     const next = new Set(completed)
@@ -339,6 +350,8 @@ export function GlimmithTutorialPrototype() {
     if (!target) return
     const subtype = windows.has(id) ? 'window' : 'puzzle'
     setVisible((prev) => prev.has(subtype) ? prev : new Set([...prev, subtype]))
+    const region = markerRegions.get(id)
+    if (region) setVisibleRegions((prev) => new Set(prev).add(region))
     select(id)
     ref.current?.flyTo(target.x, target.y)
   }
@@ -441,7 +454,7 @@ export function GlimmithTutorialPrototype() {
   }
   return (
     <ShellLayout topBar={<ArkiveMapTopBar className="max-md:flex" homeUrl="#top" homeLabel={copy.home}
-      brandName="Arkive" variant="docked" loginLabel={copy.account}
+      brandName="Arkive" variant="docked" game={{ name: copy.game }} loginLabel={copy.account}
       accountSlot={<ArkiveAccountControl language="zh-CN" homeUrl="" />}
       nav={{ items: [], renderItem: () => null }}
       languageSwitcher={{ languages: [{ code: 'zh-CN', label: copy.language }], current: 'zh-CN', onChange: () => {}, menuLabel: copy.languageMenu }}
@@ -456,23 +469,46 @@ export function GlimmithTutorialPrototype() {
           collapseButton: 'top-4 border border-l-0 border-border bg-card text-foreground shadow-sm dark:text-white',
           content: 'pb-2',
         }}
-        headerSlot={<ShellGameHeader backgroundUrl={headerArt} logo={null} gameName={copy.game} subtitle={copy.map} />}
+        headerSlot={<ShellGameHeader backgroundUrl={headerArt} logo={null} gameName={copy.game} />}
         mapSelectorSlot={<div className="px-3 py-3 max-md:pr-8"><ShellMapSelect
           classNames={{
             trigger: 'min-h-11 rounded-xl border-border bg-card px-3 text-base font-semibold shadow-none hover:border-primary/40 hover:bg-card data-[state=open]:bg-card',
             content: 'border-border bg-popover',
           }}
           maps={mapOptions} activeMapId={activeArea} onSelectMap={focusArea} /></div>}>
-        <FilterPanel categories={[{ id: 'intro', label: copy.filters, subtypes: subtypes.map((id) => ({
-          id, label: copy[id], active: visible.has(id),
-          ...(id === 'puzzle' ? { badge: `${completedCount}/${puzzles.size}` }
-            : { count: markers.filter((marker) => marker.subtype === id).length }),
-        })) }]} onToggleSubtype={(id) => setVisible((prev) => {
-          const next = new Set(prev)
-          if (next.has(id)) next.delete(id)
-          else next.add(id)
-          return next
-        })} onSetCategory={(_, enabled) => setVisible(new Set(enabled ? subtypes : []))}
+        <FilterPanel categories={[
+          { id: 'intro', label: copy.filters, subtypes: subtypes.map((id) => ({
+            id, label: copy[id], active: visible.has(id),
+            ...(id === 'puzzle' ? { badge: `${completedCount}/${puzzles.size}` }
+              : { count: markers.filter((marker) => marker.subtype === id).length }),
+          })) },
+          { id: 'regions', label: copy.regions, subtypes: regionIds.map((id) => ({
+            id: `region:${id}`, label: regionNames[id], active: visibleRegions.has(id),
+            count: markers.filter((marker) => markerRegions.get(marker.id) === id).length,
+          })) },
+        ]} onToggleSubtype={(id) => {
+          if (id.startsWith('region:')) {
+            const region = id.slice('region:'.length) as RegionId
+            if (selected && markerRegions.get(selected) === region) setSelected(null)
+            setVisibleRegions((prev) => {
+              const next = new Set(prev)
+              if (next.has(region)) next.delete(region)
+              else next.add(region)
+              return next
+            })
+            return
+          }
+          setVisible((prev) => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+          })
+        }} onSetCategory={(category, enabled) => {
+          if (!enabled) setSelected(null)
+          if (category === 'regions') setVisibleRegions(new Set(enabled ? regionIds : []))
+          else setVisible(new Set(enabled ? [...subtypes, 'note'] : []))
+        }}
         categoryToggleLabels={{ show: copy.show, hide: copy.hide }}
         classNames={{
           root: 'px-3 pb-4',
