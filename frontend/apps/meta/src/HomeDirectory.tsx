@@ -1,11 +1,12 @@
 import { GuideLanguageNote } from './GuideLanguageNote'
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   IconAnchor,
   IconApps,
   IconBook2,
   IconChevronRight,
+  IconDeviceMobileDown,
   IconHistory,
   IconMap2,
   IconMessageCircle,
@@ -43,6 +44,48 @@ const TOOL_COLORS: Record<string, readonly [string, string]> = {
   'gmzz-league-points': ['#7eeac0', '#1fb39a'],
 }
 const DEFAULT_TOOL_COLORS = ['#ffa8d9', '#c46bff'] as const
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
+
+function usePwaInstall() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [installed, setInstalled] = useState(false)
+
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+      || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+    setInstalled(standalone)
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault()
+      setDeferredPrompt(event as BeforeInstallPromptEvent)
+    }
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null)
+      setInstalled(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  const install = async () => {
+    const prompt = deferredPrompt
+    if (!prompt) return
+    setDeferredPrompt(null)
+    await prompt.prompt()
+    await prompt.userChoice
+  }
+
+  return { canInstall: deferredPrompt !== null && !installed, install }
+}
 
 function gradient([from, to]: readonly [string, string], index: number): CSSProperties {
   return { '--c1': from, '--c2': to, '--i': index } as CSSProperties
@@ -82,6 +125,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const [now] = useState(() => new Date())
   const games = sites.filter((site) => siteHref(site))
   const shortcutGames = homeGameShortcuts(games)
+  const { canInstall, install } = usePwaInstall()
   const tools = FEATURES.filter((feature) => feature.kind === 'tool' && HOME_TOOL_IDS.has(feature.id)
     && games.some((site) => site.id === feature.gameId))
   const badge = t('landing.quick.badge')
@@ -159,6 +203,20 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
               <a href="#tools" className="home-more">{t('landing.dock.all')} →</a>
             </header>
             <div className="home-dock-tools">
+              {canInstall && (
+                <button type="button" className="home-tool home-tool-install"
+                  style={gradient(['#ffbf69', '#ff6a64'], 0)}
+                  aria-label={t('landing.install.label')} onClick={() => void install()}>
+                  <span className="home-tool-icon" aria-hidden="true">
+                    <IconDeviceMobileDown stroke={1.9} />
+                  </span>
+                  <span className="home-tool-copy">
+                    <strong>{t('landing.install.title')}</strong>
+                    <small>{t('landing.install.description')}</small>
+                  </span>
+                  <IconChevronRight className="home-tool-arrow" stroke={2} aria-hidden="true" />
+                </button>
+              )}
               {tools.map((tool, index) => {
                 const site = games.find((item) => item.id === tool.gameId)
                 const href = featureHref(tool, site)
@@ -166,7 +224,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
                 const ToolIcon = TOOL_ICONS[tool.id] ?? IconTool
                 return (
                   <a key={tool.id} className="home-tool" href={href}
-                    style={gradient(TOOL_COLORS[tool.id] ?? DEFAULT_TOOL_COLORS, index)}
+                    style={gradient(TOOL_COLORS[tool.id] ?? DEFAULT_TOOL_COLORS, index + (canInstall ? 1 : 0))}
                     onClick={() => onOpenFeature(tool, site)}>
                     <span className="home-tool-icon" aria-hidden="true">
                       <ToolIcon stroke={1.9} />
