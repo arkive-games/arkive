@@ -6,6 +6,7 @@ import { changeLanguagePreference, LANGUAGES, LANGUAGE_LABELS, type Language } f
 import { ARKIVE_HOME_URL } from '../lib/brand'
 import { useSettingsConfig } from '../lib/settings'
 import { REFERENCE_ENTRIES } from './encyclopediaNavigation'
+import gameIcon from '../../../meta/src/assets/pbz-icon.webp'
 
 export type NavKey = '/' | '/changelog' | '/weapons' | '/phantom-edges' | '/accessories' | '/medicines' | '/items' | '/enemies' | '/skills'
 
@@ -25,6 +26,7 @@ export function TopNav({ active }: { active: NavKey }) {
       homeUrl={ARKIVE_HOME_URL}
       homeLabel={t('brandHome')}
       brandName={brandName}
+      game={{ name: t('siteInfo.gameName'), icon: gameIcon }}
       nav={{
         items: ITEMS.map((item) => ({
           key: item.key,

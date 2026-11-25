@@ -172,6 +172,14 @@ jobs:
             pnpm "build:$app"
           done
 
+      # Use the actual registered entry routes, but no private artifact repos.
+      - name: Verify registered game navigation
+        if: steps.build.outcome == 'success'
+        working-directory: frontend
+        run: |
+          pnpm exec playwright install --with-deps --only-shell chromium
+          pnpm check:game-navigation
+
       # The gate. Every step above reports, then this fails the job once, naming
       # everything that broke -- so a red run is a complete list rather than the
       # first thing that happened to run.

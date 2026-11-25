@@ -4,6 +4,7 @@ import { ArkiveMapTopBar, FilterPanel, MarkerPopupCard, SearchPanel, ShellGameHe
 import { GameMapView, type EngineMarker, type GlMapRef } from '@gamemap/map-engine-gl'
 import type { GameMapMeta, RegionInstance } from '@gamemap/data-contract'
 import text from './locales/zh-CN.json'
+import gameIcon from '../../meta/src/assets/oss-launcher.png'
 import { indexCellMarkers } from './cellMarkers'
 import { homeUrl, settings, SiteInfoDialog } from './SiteChrome'
 import { Sheet, SheetContent, SheetTitle, useIsMobile } from '@gamemap/ui'
@@ -46,6 +47,7 @@ export function OssTopBar({ active }: { active: string }) {
   const { theme, setTheme } = useTheme()
   return <ArkiveMapTopBar
     homeUrl={homeUrl} homeLabel={text.home} brandName={text.brand}
+    game={{ name: text.game, icon: gameIcon }}
     nav={{ items: navItems.map(item => ({ ...item, active: item.key === active })), renderItem: (item, className, labelClassName) => <a href={item.key} className={className}><span data-slot="nav-item-label" className={labelClassName}>{item.label}</span></a> }}
     languageSwitcher={{ languages: [{ code: 'zh-CN', label: '简体中文' }], current: 'zh-CN', onChange: () => {}, menuLabel: text.language }}
     themeSwitcher={{ current: theme, onChange: setTheme, labels: { auto: text.auto, light: text.light, dark: text.dark }, menuLabel: text.theme }}

@@ -47,7 +47,7 @@ export interface ArkiveMapTopBarProps {
    */
   variant?: "docked" | "floating"
   /** The game this site covers, shown as a chip beside the wordmark. */
-  game?: { name: string; icon?: string }
+  game?: { name: string; icon: string }
   nav: Omit<ShellTopBarNav, "classNames">
   languageSwitcher: NonNullable<ShellTopBarProps["languageSwitcher"]>
   themeSwitcher: {

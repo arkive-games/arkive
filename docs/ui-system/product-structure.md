@@ -36,6 +36,16 @@ curation. Current game/tool counts belong only in [dated evidence](evidence.md).
 
 Cross-check these single-source owners before opening or shipping a new surface:
 
+**Desktop navigation, including portal-hosted game routes:** Follow the
+[game identity rule](../ARKIVE_SITE_SPEC.yaml) and the
+[Palworld TopNav implementation](../../frontend/apps/palworld/src/components/TopNav.tsx).
+Use the shared `ArkiveMapTopBar` with both the localized game name and the
+game icon. This applies equally to a standalone game app and a game inside
+the portal (such as Glimmith); the portal homepage itself has no game chip.
+Before launch, run `pnpm check:game-navigation` from `frontend/` after building
+the apps and installing Playwright Chromium. PR CI checks each open entry in
+the site registry, skipping only announced games without a public page.
+
 | Surface | Required wiring and verification |
 | --- | --- |
 | New game app (`frontend/apps/<game>`) | 1. Register `GameId` in `backend-go` OpenAPI / `@gamemap/api-core` and add the `SiteCard` + `GAME_LOGOS` entry in `frontend/apps/meta/src/sites.ts` (keep `comingSoon: true` until artifacts and HTTPS are verified).<br>2. Add fixed port dev/build/lint scripts in `frontend/package.json` and include the app in `.github/workflows/ci.yml`.<br>3. Import `@gamemap/map-shell/arkive-map-theme.css` and declare `@custom-variant dark (&:is(.dark *));` in `src/index.css`; adopt shared top bar, mobile header/menu drawer, `ArkiveSiteFooter` (or map `About` panel), theme, account, and `@gamemap/state-memory` records (`pnpm memory:keys`).<br>4. Initialize `initBaiduAnalytics` + `trackPageview` and declare `VITE_TOY` in `env.d.ts` (`pnpm check:analytics`).<br>5. Provide branded `index.html` (`brand_identity.search_metadata.title_brand from ARKIVE_SITE_SPEC.yaml`), `public/robots.txt`, `public/sitemap.xml`, and enumerated `edgeone.json` rewrites (`"/x"` + `"/x*"`).<br>6. Add the `App` option on the GitHub Project board before opening the first PR; add the `.github/workflows/deploy.yml` matrix entry and custom domain only when ready to go live. |
