@@ -48,8 +48,9 @@ Cover sources:
   Frame the color portrait, hand and cards, excluding the duplicate monochrome portrait.
 - **Phantom Blade Zero:** the [official Steam listing](https://store.steampowered.com/app/4115450/)
   supplies the [swordsman library artwork](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/4115450/1cd52ca84a3d974c4206e9cb90231956324c5999/library_hero_2x.jpg).
-- **Ragnarok Online 3:** use the existing taller background rather than the panoramic
-  banner. Anchor the crop on the adventurers at the left, not the open sky.
+- **Ragnarok Online 3:** use the owner-supplied update poster
+  (`76c33de3c2f91b849dd8bf89c74b76ea.png`). Frame the pink-haired harpist on
+  the right; keep her face and veil visible and the promotional headline off the card.
 
 - **Order of the Sinking Star:** the [official game](https://www.orderofthesinkingstar.com/en/)
   uses the [Chinese Steam library capsule](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/499170/3c644b8edbbe401083a520e3cfc8c7821cf720a8/library_capsule_schinese_2x.jpg).

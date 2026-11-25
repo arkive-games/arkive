@@ -244,6 +244,8 @@ function CatalogGameCard({
           style={{
             '--cover-position': cover?.position ?? game.site.bannerPosition ?? game.site.bgPosition,
             '--cover-square-position': cover?.squarePosition,
+            '--cover-zoom': cover?.zoom,
+            '--cover-square-zoom': cover?.squareZoom,
           } as CSSProperties}
         />
         <span className="catalog-game-glass" aria-hidden="true" />

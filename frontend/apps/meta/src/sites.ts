@@ -5,6 +5,7 @@ import palworldBg from './assets/palworld-bg.webp'
 import gmzzBg from './assets/gmzz-bg.webp'
 import gmzzThumb from './assets/gmzz-thumb.webp'
 import ro3Bg from './assets/ro3-bg.webp'
+import ro3Catalog from './assets/ro3-catalog.webp'
 import aion2Logo from './assets/aion2-logo.webp'
 import palworldLogo from './assets/palworld-logo.png'
 import sts2Logo from './assets/sts2-logo.png'
@@ -81,7 +82,7 @@ export interface SiteCard {
   /** CSS `object-position` for `banner`, chosen so the faces survive the narrower mobile crop. */
   bannerPosition?: string
   /** Art and focal point for the 4:3 and square All Games crops only. */
-  catalogCover?: { src: string; position: string; squarePosition?: string }
+  catalogCover?: { src: string; position: string; squarePosition?: string; zoom?: number; squareZoom?: number }
   /** Optional homepage-specific avatar when the default app icon is not the best small picture. */
   shortcutAvatar?: string
   /** Square app-style artwork for game shortcuts and other surfaces, such as tool badges. */
@@ -212,7 +213,7 @@ export const SITES: SiteCard[] = [
     ),
     bg: ro3Bg,
     banner: ro3Banner,
-    catalogCover: { src: ro3Bg, position: '3% 50%', squarePosition: '2% 50%' },
+    catalogCover: { src: ro3Catalog, position: '100% 8%', zoom: 1.5, squareZoom: 1.13 },
     bannerPosition: '28% 18%',
     icon: ro3Icon,
     color: '#6aa8d8',
