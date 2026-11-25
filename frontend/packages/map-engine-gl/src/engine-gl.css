@@ -257,7 +257,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 18px;
-  color: #ffffff;
 }
 
 .gmgl-statusbar-footer {
@@ -270,6 +269,7 @@
 }
 
 .gmgl-statusbar-pill {
+  color: var(--card-foreground, #242424);
   display: flex;
   align-items: baseline;
   gap: 0.625rem;

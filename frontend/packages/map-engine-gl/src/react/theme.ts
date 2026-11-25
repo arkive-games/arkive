@@ -26,5 +26,5 @@ export interface MapTheme extends PinTheme {
 export const DEFAULT_MAP_THEME: MapTheme = {
   ...DEFAULT_PIN_THEME,
   zoomGlyph: "#202020",
-  statusPillBg: "rgba(249,249,249,0.94)",
+  statusPillBg: "var(--card, #f9f9f9)",
 };
