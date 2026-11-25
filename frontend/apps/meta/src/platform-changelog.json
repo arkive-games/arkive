@@ -2,6 +2,58 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "b930576f6d6423552f4276e967ad2118dcfe8b7c",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Read image review controls and platform updates in Japanese and Korean, and see which guides are available only in Simplified Chinese.",
+            "zh-CN": "图片审核和平台更新日志支持日语与韩语，仅支持简中的攻略入口会标明语言。",
+            "zh-TW": "圖片審核與平台更新日誌支援日文及韓文，僅提供簡體中文的攻略入口會標明語言。",
+            "ja-JP": "画像審査と更新履歴を日本語・韓国語で利用できます。簡体字中国語のみの攻略には入口で対応言語を表示します。",
+            "ko-KR": "이미지 검토와 업데이트 내역을 일본어와 한국어로 볼 수 있습니다. 중국어 간체만 지원하는 공략은 입구에 언어를 표시합니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
+      "commit": "2dded92c1703479ab2d92d347e79fc270a054060",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Browse platform updates by day or date range in the footer dialog. Contact numbers now have compact copy icons, and both creators link to Bilibili.",
+            "zh-CN": "页脚更新日志改为按日汇总，可查看单日或日期范围。联系号码旁可一键复制，两位创作者均可直达 B 站主页。",
+            "zh-TW": "頁尾更新日誌改為按日彙整，可查看單日或日期範圍。聯絡號碼旁可一鍵複製，兩位創作者均可直達 B 站首頁。",
+            "ja-JP": "フッターの更新履歴を日付別にまとめ、特定の日や期間で絞り込めるようにしました。連絡先はアイコンでコピーでき、両制作者の Bilibili ページも開けます。",
+            "ko-KR": "하단 업데이트 내역을 날짜별로 묶어 특정 날짜나 기간으로 볼 수 있습니다. 연락처를 아이콘으로 복사하고 두 제작자의 빌리빌리 페이지도 열 수 있습니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "6c780eedf6ce19640192206a05a01fb6934d7d09",
       "targets": [
         "aion2",

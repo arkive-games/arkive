@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.17.2",
+      "date": "2026-11-25",
+      "commit": "f52f186609e6d1b8933f37bc1e5330e8b8af8c06",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Map actions, sign-in, review states and the browser title follow the selected language.",
+            "zh-CN": "地图操作、登录提示、审核状态与浏览器标签标题跟随所选语言。",
+            "zh-TW": "地圖操作、登入提示、審核狀態與瀏覽器分頁標題會跟隨所選語言。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.17.1",
       "date": "2026-11-25",
       "commit": "e520001a70b9c60b165e2032f5e949e53d25a6c4",

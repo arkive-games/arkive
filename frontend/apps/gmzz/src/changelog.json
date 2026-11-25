@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.38.1",
+      "date": "2026-11-25",
+      "commit": "c8a7d189fae5e0ad1abf1a1736e537e50c27d138",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Relic affix choices show the English grade alongside the in-game glyph.",
+            "zh-CN": "英文界面的封印物词条选项会在游戏原字旁显示英文品级。",
+            "zh-TW": "英文介面的封印物詞條選項會在遊戲原字旁顯示英文品級。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.38.0",
       "date": "2026-11-16",
       "commit": "fb51d67a6b074212bce56f22d5b25a38559e4e83",

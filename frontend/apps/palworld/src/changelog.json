@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "1.33.19",
+      "date": "2026-11-25",
+      "commit": "451108bdea32d645129fbf7d478a71ee8133a25e",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Quest navigation, Pal filters and the browser title now support all 17 interface languages.",
+            "zh-CN": "任务导航、帕鲁图鉴筛选和浏览器标签标题现已支持全部 17 种界面语言。",
+            "zh-TW": "任務導覽、帕魯圖鑑篩選與瀏覽器分頁標題現已支援全部 17 種介面語言。"
+          }
+        }
+      ]
+    },
+    {
       "version": "1.33.18",
       "date": "2026-11-25",
       "commit": "09f6b21cf2332d4e2d51ff4b6aa0d6edc3c8d3a1",
