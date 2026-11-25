@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "d9794ee06267f20b5e5d2839efc44951f5174d9f",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "Map coordinates are readable in both light and dark themes.",
+            "zh-CN": "地图左下角的坐标在浅色和深色模式下都清晰可读。",
+            "zh-TW": "地圖左下角的座標在淺色和深色模式下都清晰可讀。",
+            "ja-JP": "ライトテーマとダークテーマのどちらでも、マップ左下の座標が読みやすくなりました。",
+            "ko-KR": "밝은 테마와 어두운 테마 모두에서 지도 왼쪽 아래 좌표를 쉽게 읽을 수 있습니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "6bb758c329ddd61aed83184462b94a83861e661b",
       "targets": [
         "glimmith"
