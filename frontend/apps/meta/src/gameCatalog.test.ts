@@ -84,4 +84,8 @@ describe('every announced game is wired up', () => {
   it.each(SITES.map((site) => site.id))('%s has a forum logo', (id) => {
     expect(GAME_LOGOS[id], `add ${id} to GAME_LOGOS in sites.ts`).toBeTruthy()
   })
+
+  it('uses full artwork for the Glimmith home shortcut', () => {
+    expect(SITES.find((site) => site.id === 'glimmith')?.logo).toBeTruthy()
+  })
 })

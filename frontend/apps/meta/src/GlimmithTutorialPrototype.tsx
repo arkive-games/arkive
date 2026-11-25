@@ -441,7 +441,7 @@ export function GlimmithTutorialPrototype() {
   }
   return (
     <ShellLayout topBar={<ArkiveMapTopBar className="max-md:flex" homeUrl="#top" homeLabel={copy.home}
-      brandName="Arkive" variant="docked" loginLabel={copy.account}
+      brandName="Arkive" variant="docked" game={{ name: copy.game }} loginLabel={copy.account}
       accountSlot={<ArkiveAccountControl language="zh-CN" homeUrl="" />}
       nav={{ items: [], renderItem: () => null }}
       languageSwitcher={{ languages: [{ code: 'zh-CN', label: copy.language }], current: 'zh-CN', onChange: () => {}, menuLabel: copy.languageMenu }}
