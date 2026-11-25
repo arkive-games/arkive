@@ -77,10 +77,10 @@ function UpdateTimeline() {
   const days = useMemo(() => updatesByDate(entries, start, end).map(([date, changes]) => ({
     date, groups: groupDailyChanges(changes, OPEN_GAMES),
   })), [entries, start, end])
-  const inputClass = 'min-w-0 w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground'
+  const inputClass = 'h-10 min-w-0 w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground'
 
   return <>
-    <div className="space-y-3 border-b border-border py-3">
+    <div className="flex flex-wrap items-end gap-x-4 gap-y-2 border-b border-border py-3">
       <div className="inline-flex gap-1 rounded-full bg-muted p-1" role="group" aria-label={t('platformUpdates.date')}>
         {(['all', 'day', 'range'] as const).map(option => (
           <button key={option} type="button" aria-pressed={mode === option} onClick={() => setMode(option)}
@@ -89,11 +89,11 @@ function UpdateTimeline() {
           </button>
         ))}
       </div>
-      {mode === 'day' && <label className="grid gap-1 text-xs text-muted-foreground">
+      {mode === 'day' && <label className="ml-auto grid w-36 max-w-full gap-1 text-xs text-muted-foreground">
         {t('platformUpdates.date')}
         <input type="date" className={inputClass} value={day} onChange={e => setDay(e.target.value)} />
       </label>}
-      {mode === 'range' && <div className="grid grid-cols-2 gap-2">
+      {mode === 'range' && <div className="ml-auto grid w-74 max-w-full grid-cols-[repeat(auto-fit,minmax(min(100%,8.25rem),1fr))] gap-2">
         <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
           {t('platformUpdates.start')}
           <input type="date" className={inputClass} value={from} max={to || undefined} onChange={e => setFrom(e.target.value)} />
