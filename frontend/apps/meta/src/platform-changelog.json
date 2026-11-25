@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-11-25",
-      "commit": "d6cab8e01c459a0313e5b6891fdcebf6f46cb153",
+      "commit": "a348ca717968eb637cfda30bc134c6c89d294bc4",
       "targets": [
         "glimmith",
         "oss"
@@ -13,14 +13,16 @@
           "text": {
             "en-US": "All Games shows the floating castle for The Artisan of Glimmith and a closer view of the crowned character and armor for Order of the Sinking Star, both with their Windows launcher icons.",
             "zh-CN": "全部游戏中，格里米斯工匠展示浮空城原画，沉星之序突出戴王冠的角色与肩甲；两款游戏均使用 Windows 启动图标。",
-            "zh-TW": "全部遊戲中，格里米斯工匠展示浮空城原畫，沉星之序突顯戴王冠的角色與肩甲；兩款遊戲均使用 Windows 啟動圖示。"
+            "zh-TW": "全部遊戲中，格里米斯工匠展示浮空城原畫，沉星之序突顯戴王冠的角色與肩甲；兩款遊戲均使用 Windows 啟動圖示。",
+            "ja-JP": "ゲーム一覧で、The Artisan of Glimmith には空に浮かぶ城を、Order of the Sinking Star には王冠を戴いた人物とその肩当てを大きく表示するようにしました。どちらも Windows 版の起動アイコンを使用しています。",
+            "ko-KR": "전체 게임 목록에서 The Artisan of Glimmith는 공중 성을, Order of the Sinking Star는 왕관을 쓴 인물과 어깨 갑옷을 크게 보여 줍니다. 두 게임 모두 Windows 실행 아이콘을 사용합니다."
           }
         }
       ]
     },
     {
       "date": "2026-11-25",
-      "commit": "54edf57fe9852d1484006cdb51cf1c28fb4333f8",
+      "commit": "055c6ad4b7d83f1da11a454fdc40d2536dc080c6",
       "targets": [
         "aion2",
         "glimmith",
@@ -37,7 +39,9 @@
           "text": {
             "en-US": "All Games cards now use a stronger cover-matched color on hover or keyboard focus, with readable text in light and dark themes.",
             "zh-CN": "全部游戏卡片在鼠标悬停或键盘聚焦时，会显示与封面呼应的底色，浅色和深色模式下的文字都更清晰。",
-            "zh-TW": "全部遊戲卡片在滑鼠懸停或鍵盤聚焦時，會顯示與封面呼應的底色，淺色和深色模式下的文字都更清晰。"
+            "zh-TW": "全部遊戲卡片在滑鼠懸停或鍵盤聚焦時，會顯示與封面呼應的底色，淺色和深色模式下的文字都更清晰。",
+            "ja-JP": "ゲーム一覧のカードにマウスを重ねるか、キーボードでフォーカスすると、表紙に合わせた背景色が表示されます。ライトモードでもダークモードでも文字が読みやすくなりました。",
+            "ko-KR": "전체 게임 목록에서 카드에 마우스를 올리거나 키보드로 초점을 맞추면 표지와 어울리는 배경색이 표시됩니다. 밝은 테마와 어두운 테마 모두에서 글자를 더 쉽게 읽을 수 있습니다."
           }
         }
       ]
