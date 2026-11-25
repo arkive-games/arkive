@@ -33,9 +33,11 @@ import radarTwo from './assets/glimmith-vertex-radar-2.png'
 import radarThree from './assets/glimmith-vertex-radar-3.png'
 import radarFour from './assets/glimmith-vertex-radar-4.png'
 import headerArt from './assets/glimmith-steam-scenery.jpg'
+import gameIcon from './assets/glimmith-launcher.png'
+import { GLIMMITH_MAP_PATH } from './sites'
 import { glimmithInequalityAngle, glimmithVertexMark, horizontalGlimmithEdgeMark } from './glimmithEdgeClues'
 import copy from './glimmithLocale.json'
-import { markerRegions, regionIds, type RegionId } from './glimmithRegions'
+import { markerRegions, regionOptions } from './glimmithRegions'
 import '@gamemap/map-engine-gl/engine-gl.css'
 
 const map: GameMapMeta = {
@@ -50,11 +52,6 @@ const cellClueImages = new Map([
   ['F0', palisadeF0], ['F1', palisadeF1], ['F2', palisadeF2], ['F3', palisadeF3], ['F4', palisadeF4], ['F7', palisadeF7],
 ])
 const windows = new Map(scene.windows.map((window) => [window.id, window]))
-const regionNames: Record<RegionId, string> = {
-  Zone1: copy.zone1,
-  Zone2: copy.zone2,
-  Zone3: copy.zone3,
-}
 const puzzleWindows = new Map(scene.windows.flatMap((window) => window.prerequisites.map((id) => [id, window] as const)))
 const difficultyArt = import.meta.glob<string>('./assets/glimmith-difficulty-*.png', {
   eager: true, import: 'default', query: '?url',
@@ -111,9 +108,8 @@ const displayCoords = (x: number, y: number) => {
   }
 }
 const subtypes = ['puzzle', 'window'] as const
-const mapOptions = [{ id: map.id, label: copy.overview }, ...scene.windows.map((window) => ({
-  id: window.id, label: windowNames.get(window.id) ?? copy.window,
-}))]
+const regionIds = regionOptions.map(({ id }) => id)
+const mapOptions = [{ id: map.id, label: copy.overview }, ...regionOptions]
 function framePoints(points: readonly EngineMarker[], width: number, height: number) {
   const xs = points.map(({ x }) => x)
   const ys = points.map(({ y }) => y)
@@ -302,7 +298,7 @@ export function GlimmithTutorialPrototype() {
   const [pinSize, setPinSize] = useState(0.56)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [visible, setVisible] = useState<Set<string>>(() => new Set([...subtypes, 'note']))
-  const [visibleRegions, setVisibleRegions] = useState<Set<RegionId>>(() => new Set(regionIds))
+  const [visibleRegions, setVisibleRegions] = useState(() => new Set(regionIds))
   const [completed, setCompleted] = useState(() => new Set(browserMemory.read(completedRecord, progressScope)))
   const mapMarkers = useMemo(() => markers
     .filter((marker) => {
@@ -453,10 +449,16 @@ export function GlimmithTutorialPrototype() {
     )
   }
   return (
-    <ShellLayout topBar={<ArkiveMapTopBar className="max-md:flex" homeUrl="#top" homeLabel={copy.home}
-      brandName="Arkive" variant="docked" game={{ name: copy.game }} loginLabel={copy.account}
+    <ShellLayout topBar={<ArkiveMapTopBar className="max-md:flex max-md:gap-1 max-md:px-2 max-md:[&_nav]:hidden max-md:[&_[data-testid=game-chip]]:shrink max-md:[&_[data-testid=game-chip]]:pr-2" homeUrl="#top" homeLabel={copy.home}
+      brandName="Arkive" variant="docked" game={{ name: copy.game, icon: gameIcon }} loginLabel={copy.account}
       accountSlot={<ArkiveAccountControl language="zh-CN" homeUrl="" />}
-      nav={{ items: [], renderItem: () => null }}
+      nav={{ items: [{ key: GLIMMITH_MAP_PATH, label: copy.navMap, active: true }],
+        renderItem: (item, className, labelClassName) => (
+          <a href={item.key} className={className} aria-current="page">
+            <span data-slot="nav-item-label" className={labelClassName}>{item.label}</span>
+          </a>
+        ),
+      }}
       languageSwitcher={{ languages: [{ code: 'zh-CN', label: copy.language }], current: 'zh-CN', onChange: () => {}, menuLabel: copy.languageMenu }}
       themeSwitcher={{ current: theme, onChange: setTheme, menuLabel: copy.theme, labels: copy.themes }}
     />} sidebar={
@@ -482,13 +484,12 @@ export function GlimmithTutorialPrototype() {
             ...(id === 'puzzle' ? { badge: `${completedCount}/${puzzles.size}` }
               : { count: markers.filter((marker) => marker.subtype === id).length }),
           })) },
-          { id: 'regions', label: copy.regions, subtypes: regionIds.map((id) => ({
-            id: `region:${id}`, label: regionNames[id], active: visibleRegions.has(id),
-            count: markers.filter((marker) => markerRegions.get(marker.id) === id).length,
+          { id: 'regions', label: copy.regions, subtypes: regionOptions.map(({ id, label, count }) => ({
+            id: `region:${id}`, label, count, active: visibleRegions.has(id),
           })) },
         ]} onToggleSubtype={(id) => {
           if (id.startsWith('region:')) {
-            const region = id.slice('region:'.length) as RegionId
+            const region = id.slice('region:'.length)
             if (selected && markerRegions.get(selected) === region) setSelected(null)
             setVisibleRegions((prev) => {
               const next = new Set(prev)
