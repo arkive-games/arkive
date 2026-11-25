@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { scrollToResults } from './scrollToResults'
+import { PlatformUpdatesDialog } from './PlatformUpdatesDialog'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@gamemap/auth'
 import {
@@ -777,7 +778,9 @@ export function ForumPage({
 
           <nav className="forum-information-navigation" aria-label={t('forum.redesign.arkiveInfo')}>
             <h2>{t('forum.redesign.arkiveInfo')}</h2>
-            <button type="button" onClick={onComingSoon}><IconHistory className="size-5" stroke={1.8} aria-hidden="true" />{t('forum.redesign.changelog')}</button>
+            <PlatformUpdatesDialog>
+              <IconHistory className="size-5" stroke={1.8} aria-hidden="true" />{t('forum.redesign.changelog')}
+            </PlatformUpdatesDialog>
             <button type="button" onClick={onComingSoon}><IconMessageReport className="size-5" stroke={1.8} aria-hidden="true" />{t('forum.redesign.feedback')}</button>
             <button type="button" onClick={onComingSoon}><IconInfoCircle className="size-5" stroke={1.8} aria-hidden="true" />{t('forum.redesign.guidelines')}</button>
           </nav>

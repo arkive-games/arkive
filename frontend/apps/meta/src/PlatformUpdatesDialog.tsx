@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IconCalendar } from '@tabler/icons-react'
 import {
@@ -39,15 +39,19 @@ function GameScope({ targets }: { targets: PlatformTarget[] | null }) {
   </details>
 }
 
-export function PlatformUpdatesDialog({ linked, onDismissLink }: { linked: boolean; onDismissLink: () => void }) {
+export function PlatformUpdatesDialog({ linked = false, onDismissLink, children }: {
+  linked?: boolean
+  onDismissLink?: () => void
+  children?: ReactNode
+}) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   return (
     <Dialog open={linked || open} onOpenChange={next => {
       setOpen(next)
-      if (!next && linked) onDismissLink()
+      if (!next && linked) onDismissLink?.()
     }}>
-      <DialogTrigger asChild><button type="button">{t('footer.updateHistory')}</button></DialogTrigger>
+      <DialogTrigger asChild><button type="button">{children ?? t('footer.updateHistory')}</button></DialogTrigger>
       <DialogContent
         size="lg"
         className="footer-dialog h-[min(42rem,calc(100dvh-2rem))] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-0 overflow-hidden pb-0"
@@ -80,7 +84,8 @@ function UpdateTimeline() {
   const days = useMemo(() => updatesByDate(entries, start, end).map(([date, changes]) => ({
     date, groups: groupDailyChanges(changes, OPEN_GAMES),
   })), [entries, start, end])
-  const dateControl = 'h-10 rounded-full border border-muted-foreground bg-background text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
+  const controlFrame = 'box-border h-10 rounded-full border border-muted-foreground'
+  const dateControl = `${controlFrame} bg-background text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`
   const inputClass = `${dateControl} w-36 min-w-0 px-3 text-sm tabular-nums`
   const labelClass = 'inline-flex items-center justify-between gap-2 whitespace-nowrap text-xs text-muted-foreground'
   const dateFields = mode === 'day' ? (
@@ -101,10 +106,10 @@ function UpdateTimeline() {
 
   return <>
     <div className="flex items-center justify-between gap-1 border-b border-border py-3">
-      <div className="inline-flex shrink-0 gap-0.5 whitespace-nowrap rounded-full bg-muted p-1 md:gap-1" role="group" aria-label={t('platformUpdates.date')}>
+      <div className={`${controlFrame} inline-flex shrink-0 gap-0.5 whitespace-nowrap bg-muted p-1 md:gap-1`} role="group" aria-label={t('platformUpdates.date')}>
         {(['all', 'day', 'range'] as const).map(option => (
           <button key={option} type="button" aria-pressed={mode === option} onClick={() => setMode(option)}
-            className="min-h-8 rounded-full px-1.5 text-sm text-muted-foreground aria-pressed:bg-background aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-sm md:px-3">
+            className="h-full rounded-full px-1.5 text-sm text-muted-foreground aria-pressed:bg-background aria-pressed:font-semibold aria-pressed:text-foreground aria-pressed:shadow-sm md:px-3">
             {t(`platformUpdates.${option}`)}
           </button>
         ))}
