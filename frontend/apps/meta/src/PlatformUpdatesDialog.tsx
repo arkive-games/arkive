@@ -5,7 +5,8 @@ import {
   resolvePlatformChangelog, type PlatformChangelogFile, type PlatformTarget,
 } from '@gamemap/ui'
 import { FooterShore } from './FooterShore'
-import { updatesByDate } from './updatesByDate'
+import { SITES } from './sites'
+import { groupDailyChanges, updatesByDate } from './updatesByDate'
 import raw from './platform-changelog.json'
 
 const TARGET_KEYS: Record<PlatformTarget, string> = {
@@ -20,6 +21,22 @@ const TARGET_KEYS: Record<PlatformTarget, string> = {
   vrising: 'site.vrising.name',
 }
 
+// The platform history has the same scope on the web and in the Toy.
+const OPEN_GAMES = SITES.filter(site => !site.comingSoon).map(site => site.id)
+
+function GameScope({ targets }: { targets: PlatformTarget[] | null }) {
+  const { t } = useTranslation()
+  if (targets === null) return <span>{t('nav.allGames')}</span>
+  const names = targets.map(target => t(TARGET_KEYS[target])).join(' · ')
+  if (targets.length === 1) return <span>{names}</span>
+  return <details>
+    <summary className="w-fit cursor-pointer rounded-sm hover:text-foreground focus-visible:outline-auto">
+      {t('platformUpdates.gameCount', { count: targets.length })}
+    </summary>
+    <p className="mt-1">{names}</p>
+  </details>
+}
+
 export function PlatformUpdatesDialog({ linked, onDismissLink }: { linked: boolean; onDismissLink: () => void }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -30,6 +47,7 @@ export function PlatformUpdatesDialog({ linked, onDismissLink }: { linked: boole
     }}>
       <DialogTrigger asChild><button type="button">{t('footer.updateHistory')}</button></DialogTrigger>
       <DialogContent
+        size="lg"
         className="footer-dialog h-[min(42rem,calc(100dvh-2rem))] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-0 overflow-hidden pb-0"
         closeButtonProps={{ 'aria-label': t('footerDialogs.close') }}
       >
@@ -56,7 +74,9 @@ function UpdateTimeline() {
   const start = mode === 'day' ? day : mode === 'range' ? from : ''
   const end = mode === 'day' ? day : mode === 'range' ? to : ''
   const invalid = Boolean(start && end && end < start)
-  const days = useMemo(() => updatesByDate(entries, start, end), [entries, start, end])
+  const days = useMemo(() => updatesByDate(entries, start, end).map(([date, changes]) => ({
+    date, groups: groupDailyChanges(changes, OPEN_GAMES),
+  })), [entries, start, end])
   const inputClass = 'min-w-0 w-full rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground'
 
   return <>
@@ -86,20 +106,28 @@ function UpdateTimeline() {
     </div>
     <div key={JSON.stringify([mode, start, end])} className="min-h-0 overflow-y-auto overscroll-contain pt-3" tabIndex={0} role="region" aria-label={t('platformUpdates.title')}>
       {!invalid && days.length > 0 && (mode !== 'day' || day) ? <ol className="space-y-5">
-        {days.map(([date, changes]) => (
+        {days.map(({ date, groups }) => (
           <li key={date}>
             <h3 className="flex items-center gap-2 text-sm font-bold tabular-nums">
               <span aria-hidden="true" className="size-2 rounded-full bg-primary" />
               <time dateTime={date}>{date}</time>
             </h3>
             <ul className="ml-1 mt-2 space-y-3 border-l border-border pl-4">
-              {changes.map(({ key, kind, text, targets }) => (
-                <li key={key} className="space-y-1">
-                  <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground">{t(`platformUpdates.kinds.${kind}`)}</span>
-                    <span aria-label={t('platformUpdates.affected')}>{targets.map(target => t(TARGET_KEYS[target])).join(' · ')}</span>
-                  </div>
-                  <p className="text-sm leading-relaxed">{text}</p>
+              {groups.map(({ kind, scopes }) => (
+                <li key={kind} className="space-y-2">
+                  <h4 className="text-sm font-semibold">{t(`platformUpdates.kinds.${kind}`)}</h4>
+                  {scopes.map(({ key, start, targets, changes }) => (
+                    <div key={key} className="space-y-1">
+                      <div className="text-xs text-muted-foreground"><GameScope targets={targets} /></div>
+                      <ol start={start} className="grid list-decimal gap-x-6 gap-y-1.5 md:grid-cols-2">
+                        {changes.map(change => (
+                          <li key={change.key} className="ml-5 min-w-0 text-sm leading-relaxed break-words marker:font-semibold marker:text-muted-foreground only:col-span-full">
+                            {change.text}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ))}
                 </li>
               ))}
             </ul>

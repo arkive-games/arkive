@@ -622,6 +622,7 @@ const resources = {
       },
       platformUpdates: {
         title: '藏舟平台更新记录', affected: '受影响的游戏',
+        gameCount: '{{count}} 款游戏',
         all: '全部', day: '单日', range: '日期范围', date: '日期', start: '开始日期', end: '结束日期', empty: '这段时间没有更新。', invalidRange: '结束日期不能早于开始日期。',
         kinds: { feature: '新功能', improvement: '优化', fix: '修复', data: '数据' },
       },
@@ -773,6 +774,7 @@ const resources = {
       },
       platformUpdates: {
         title: '藏舟平台更新記錄', affected: '受影響的遊戲',
+        gameCount: '{{count}} 款遊戲',
         all: '全部', day: '單日', range: '日期範圍', date: '日期', start: '開始日期', end: '結束日期', empty: '這段時間沒有更新。', invalidRange: '結束日期不能早於開始日期。',
         kinds: { feature: '新功能', improvement: '最佳化', fix: '修正', data: '資料' },
       },
@@ -891,6 +893,7 @@ const resources = {
       },
       platformUpdates: {
         title: 'Arkive platform updates', affected: 'Affected games',
+        gameCount: '{{count}} games',
         all: 'All', day: 'Single day', range: 'Date range', date: 'Date', start: 'Start date', end: 'End date', empty: 'No updates for these dates.', invalidRange: 'The end date must be on or after the start date.',
         kinds: { feature: 'Feature', improvement: 'Improvement', fix: 'Fix', data: 'Data' },
       },
@@ -1003,6 +1006,7 @@ const resources = {
       },
       platformUpdates: {
         title: 'Arkiveプラットフォーム更新履歴', affected: '対象ゲーム',
+        gameCount: '対象ゲーム {{count}} 本',
         all: 'すべて', day: '日付指定', range: '期間指定', date: '日付', start: '開始日', end: '終了日', empty: 'この期間の更新はありません。', invalidRange: '終了日は開始日以降にしてください。',
         kinds: { feature: '新機能', improvement: '改善', fix: '修正', data: 'データ' },
       },
@@ -1112,6 +1116,7 @@ const resources = {
       },
       platformUpdates: {
         title: 'Arkive 플랫폼 업데이트', affected: '적용 게임',
+        gameCount: '게임 {{count}}개',
         all: '전체', day: '하루', range: '기간', date: '날짜', start: '시작일', end: '종료일', empty: '이 기간에는 업데이트가 없습니다.', invalidRange: '종료일은 시작일보다 빠를 수 없습니다.',
         kinds: { feature: '새 기능', improvement: '개선', fix: '수정', data: '데이터' },
       },
