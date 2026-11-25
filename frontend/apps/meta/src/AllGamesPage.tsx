@@ -242,7 +242,7 @@ function CatalogGameCard({
         <span className="catalog-game-glass" aria-hidden="true" />
       </span>
       <span className="catalog-game-copy">
-        <span className="catalog-game-name"><img src={game.site.icon ?? cover?.src ?? GAME_LOGOS[game.site.id]} alt="" style={!game.site.icon && cover ? { objectFit: 'cover', objectPosition: cover.position } : undefined} /><strong>{name}</strong></span>
+        <span className="catalog-game-name"><img src={game.site.icon ?? GAME_LOGOS[game.site.id]} alt="" /><strong>{name}</strong></span>
         <GuideLanguageNote site={game.site} />
         {game.site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
         <small>{t(`catalog.summary.${game.site.id}`, { defaultValue: t(game.site.descKey) })}</small>

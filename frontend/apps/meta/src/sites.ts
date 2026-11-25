@@ -22,9 +22,10 @@ import palworldIcon from './assets/palworld-icon.webp'
 import vrisingIcon from './assets/vrising-icon.webp'
 import ro3Icon from './assets/ro3-icon.webp'
 import glimmithCover from './assets/glimmith-steam-header.jpg'
-import glimmithIcon from './assets/glimmith-marker-perfected.png'
+import glimmithIcon from './assets/glimmith-launcher.png'
+import ossIcon from './assets/oss-launcher.png'
 import glimmithCatalog from './assets/glimmith-catalog.webp'
-import ossPoster from './assets/oss-poster.webp'
+import ossCatalog from './assets/oss-catalog.webp'
 import { PBZ_ARTWORK } from './upcoming'
 
 const STS2_BG = 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2868840/library_600x900_2x.jpg'
@@ -113,7 +114,7 @@ export const SITES: SiteCard[] = [
     url: GLIMMITH_MAP_PATH,
     bg: glimmithCover,
     shortcutAvatar: glimmithAvatar,
-    catalogCover: { src: glimmithCatalog, position: '50% 50%' },
+    catalogCover: { src: glimmithCatalog, position: '70% 50%' },
     icon: glimmithIcon,
     nameKey: 'site.glimmith.name',
     descKey: 'site.glimmith.desc',
@@ -126,7 +127,8 @@ export const SITES: SiteCard[] = [
     kind: 'offline',
     url: resolveSiteUrl(import.meta.env.VITE_OSS_URL, 'http://localhost:15181', 'https://oss.arkive.games'),
     bg: '/oss-preview.svg',
-    catalogCover: { src: ossPoster, position: '40% 50%' },
+    catalogCover: { src: ossCatalog, position: '50% 11%' },
+    icon: ossIcon,
     nameKey: 'site.oss.name',
     descKey: 'site.oss.desc',
     featureKey: 'site.oss.feature',
@@ -287,7 +289,7 @@ export const GAME_LOGOS: Record<string, string> = {
   sts2: sts2Logo,
   ro3: ro3Bg,
   pbz: PBZ_ARTWORK.icon,
-  oss: '/oss-preview.svg',
+  oss: ossIcon,
   glimmith: glimmithIcon,
 }
 
