@@ -38,10 +38,14 @@ describe("document locale", () => {
       off: vi.fn(),
     }
 
-    const unbind = bindArkiveDocumentLocale(source, document)
+    const unbind = bindArkiveDocumentLocale(source, document, (locale) => `Map: ${locale}`)
+    expect(document.title).toBe("Map: en-US")
     listener?.("ja-JP")
     expect(document.documentElement.lang).toBe("ja-JP")
 
+    expect(document.title).toBe("Map: ja-JP")
+    listener?.("en")
+    expect(document.title).toBe("Map: en-US")
     unbind()
     expect(source.off).toHaveBeenCalledWith("languageChanged", listener)
   })

@@ -1,6 +1,7 @@
 lang: "en-US"
 appName: "AION2 Map"
 siteTitle: "AION2\nInteractive Map"
+documentTitle: "AION2 Interactive Map and Database | Arkive"
 mapSubtitle: "Interactive Map"
 announcement: "200 monolith positions for in Abyss updated, screenshots will be added later."
 
@@ -24,6 +25,23 @@ language:
 
 auth:
   login: "Log in"
+  loginTitle: "Sign in to participate."
+  loginSwitch: "No account yet? Sign up"
+  loginError: "Sign-in failed. Check your email and password."
+  loginPrompt: "Sign in to report an error."
+  loginGo: "Sign in"
+  register: "Sign up"
+  registerTitle: "Create an account"
+  registerSwitch: "Already have an account? Sign in"
+  username: "Username"
+  email: "Email"
+  password: "Password"
+  passwordVerify: "Confirm password"
+  logout: "Sign out"
+  passwordMismatch: "The passwords do not match."
+  registerError: "Sign-up failed. The email or username is already in use."
+  registerMissing: "Enter a valid username, email and password."
+  altcha: "Complete the verification first."
 
 ui:
   confirm: "Confirm"
@@ -37,6 +55,14 @@ ui:
   copy: "Copy"
   copied: "Copied"
   copyFailed: "Copy failed"
+  delete: "Delete"
+  save: "Save"
+  upload: "Upload"
+  submit: "Submit"
+  update: "Update"
+  edit: "Edit"
+  confirmDelete: "Are you sure you want to delete this?"
+  clear: "Clear"
 
 theme:
   label: "Theme"
@@ -127,12 +153,15 @@ leaderboard:
     loginToSubmit: "Login to submit"
     timeFixedNote: "Time is fixed to {{time}} (local time)"
     validationError: "Create/Edit failed, at least 48 hours between two records."
+    countdownMode: "Countdown mode"
   providedBy: "Provided by <emph>{{username}}</emph>"
   artifactAdmins: "Artifact Admins"
   addArtifactAdmin: "Add Artifact Admin"
   submitData: "Click to submit data"
   pin: "Pin"
   share: "Share"
+  options: "Options"
+  deleteConfirm: "Delete this record?"
 
 buttons:
   apply: "Apply"
@@ -144,10 +173,36 @@ errors:
   unknown: "An unknown error occurred."
   network: "Network connection error."
   notFound: "Resource not found."
+  uploadFailed: "Upload failed. Please try again."
 
 markerActions:
   markCompleted: "Mark as completed"
   markNotCompleted: "Completed"
+  comments: "Comments"
+  enterComment: "Write a comment…"
+  userMarker: "Custom marker"
+  editUserMarker: "Edit custom marker"
+  createUserMarker: "Create custom marker"
+  name: "Name"
+  description: "Description"
+  local: "Local markers"
+  feedback: "Reported markers"
+  uploaded: "Uploaded markers"
+  cannotDeleteUploaded: "Uploaded markers cannot be deleted."
+  loginRequired: "Sign in to upload markers."
+  image: "Image"
+  search: "Search for a pet, marker name or description"
+  searchCount: "Results: {{count}}"
+  position: "Coordinates"
+  providedBy: "Marker contributed by <emph>{{contributor}}</emph>"
+  inputPosition: "Go to the entered coordinates"
+  status: "Review status"
+  reply: "Reviewer response"
+  pending: "Pending review"
+  accepted: "Accepted"
+  rejected: "Rejected"
+  revision: "Changes requested"
+  deleted: "Deleted"
 
 markerSearch:
   placeholder: "Search this map by marker name or description…"
@@ -190,6 +245,7 @@ introModal:
 
   hint: |-
     Maintaining a game guide website requires a tremendous amount of time and effort. If you wish to support us, you may do so via the Alipay QR code below — your kindness is what keeps this project moving forward ❤
+  alert: "This site will **always be free to use**."
 
   
 # Site-info panel (right sidebar / top-bar popover / mobile More sheet).
@@ -220,6 +276,10 @@ race:
   light: "Elyos"
   dark: "Asmodian"
   abyss: "Abyss"
+  lightAlt: "West"
+  darkAlt: "East"
+  lightShare: "Western faction"
+  darkShare: "Eastern faction"
 
 globalSearch:
   button: "Search"
@@ -254,3 +314,43 @@ changelog:
     improvement: "Improved"
     fix: "Fixed"
     data: "Data"
+wip:
+  title: "This page is under construction."
+  content: "We’re working on this feature. Please check back later."
+donateModal:
+  body: "Maintaining these guides takes time. To support the team, you can donate using the Alipay QR code below."
+crafting:
+  select: "Choose equipment to replace"
+  selectClick: "Choose equipment"
+  sumType: "Subtotal:"
+  sumTotal: "Total:"
+  weaponOrArmor: "Weapons / Armor"
+  accessory: "Accessories"
+  clearAll: "Clear all"
+  unitPrice: "Unit price"
+server:
+  light: "Elyos"
+  dark: "Asmodians"
+  lightAbbr: "Ely."
+  darkAbbr: "Asm."
+  allServers: "All servers"
+  race: "Faction"
+  server: "Server"
+  character: "Character name"
+  region: "Service region"
+  tw: "Taiwan"
+  kr: "Korea"
+  search: "Find a character"
+  history: "Search history"
+  starred: "Favorite characters"
+  searching: "Searching for characters…"
+  noResults: "No characters found for “{{keyword}}”."
+skills:
+  category:
+    active: "Active"
+    passive: "Passive"
+    dp: "Stigma"
+titles:
+  Attack: "Attack titles"
+  Defense: "Defense titles"
+  Etc: "Other titles"

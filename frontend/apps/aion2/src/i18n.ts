@@ -98,6 +98,6 @@ i18n
     interpolation: { escapeValue: false },
   });
 
-bindArkiveDocumentLocale(i18n);
+bindArkiveDocumentLocale(i18n, undefined, (lng) => i18n.getResource(lng, "common", "documentTitle"));
 
 export default i18n;

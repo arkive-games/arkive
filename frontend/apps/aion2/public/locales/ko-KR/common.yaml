@@ -1,6 +1,7 @@
 lang: "ko-KR"
 appName: "AION2 지도"
 siteTitle: "AION2\n인터랙티브 지도"
+documentTitle: "아이온2 인터랙티브 지도 및 데이터베이스 | Arkive"
 mapSubtitle: "인터랙티브 지도"
 announcement: "어비스의 모노리스 위치 200곳이 업데이트되었습니다. 스크린샷은 추후 추가될 예정입니다."
 
@@ -24,6 +25,23 @@ language:
 
 auth:
   login: "로그인"
+  loginTitle: "참여하려면 로그인하세요."
+  loginSwitch: "계정이 없으신가요? 회원가입"
+  loginError: "로그인하지 못했습니다. 이메일과 비밀번호를 확인하세요."
+  loginPrompt: "오류를 제보하려면 로그인하세요."
+  loginGo: "로그인하기"
+  register: "회원가입"
+  registerTitle: "계정 만들기"
+  registerSwitch: "이미 계정이 있으신가요? 로그인"
+  username: "사용자 이름"
+  email: "이메일"
+  password: "비밀번호"
+  passwordVerify: "비밀번호 확인"
+  logout: "로그아웃"
+  passwordMismatch: "비밀번호가 일치하지 않습니다."
+  registerError: "가입하지 못했습니다. 이미 사용 중인 이메일 또는 사용자 이름입니다."
+  registerMissing: "사용자 이름, 이메일, 비밀번호를 올바르게 입력하세요."
+  altcha: "먼저 자동 가입 방지 인증을 완료하세요."
 
 ui:
   confirm: "확인"
@@ -37,6 +55,14 @@ ui:
   copy: "복사"
   copied: "복사됨"
   copyFailed: "복사 실패"
+  delete: "삭제"
+  save: "저장"
+  upload: "업로드"
+  submit: "제출"
+  update: "업데이트"
+  edit: "편집"
+  confirmDelete: "정말 삭제하시겠습니까?"
+  clear: "지우기"
 
 theme:
   label: "테마"
@@ -127,12 +153,15 @@ leaderboard:
     loginToSubmit: "로그인 후 제출할 수 있습니다"
     timeFixedNote: "시간은 {{time}}(현지 시간)으로 고정됩니다"
     validationError: "생성/수정에 실패했습니다. 두 기록 사이에는 최소 48시간이 필요합니다."
+    countdownMode: "카운트다운 모드"
   providedBy: "<emph>{{username}}</emph> 제공"
   artifactAdmins: "아티팩트 관리자"
   addArtifactAdmin: "아티팩트 관리자 추가"
   submitData: "클릭하여 데이터 제출"
   pin: "고정"
   share: "공유"
+  options: "옵션"
+  deleteConfirm: "이 기록을 삭제하시겠습니까?"
 
 buttons:
   apply: "적용"
@@ -144,10 +173,36 @@ errors:
   unknown: "알 수 없는 오류가 발생했습니다."
   network: "네트워크 연결 오류입니다."
   notFound: "리소스를 찾을 수 없습니다."
+  uploadFailed: "업로드하지 못했습니다. 다시 시도하세요."
 
 markerActions:
   markCompleted: "완료로 표시"
   markNotCompleted: "완료됨"
+  comments: "댓글"
+  enterComment: "댓글을 입력하세요…"
+  userMarker: "사용자 지정 마커"
+  editUserMarker: "사용자 지정 마커 편집"
+  createUserMarker: "사용자 지정 마커 만들기"
+  name: "이름"
+  description: "설명"
+  local: "로컬 마커"
+  feedback: "제보한 마커"
+  uploaded: "업로드한 마커"
+  cannotDeleteUploaded: "업로드한 마커는 삭제할 수 없습니다."
+  loginRequired: "마커를 업로드하려면 로그인하세요."
+  image: "이미지"
+  search: "펫, 마커 이름 또는 설명 검색"
+  searchCount: "검색 결과 {{count}}개"
+  position: "좌표"
+  providedBy: "마커 제공: <emph>{{contributor}}</emph>"
+  inputPosition: "입력한 좌표로 이동"
+  status: "심사 상태"
+  reply: "심사 답변"
+  pending: "심사 중"
+  accepted: "승인됨"
+  rejected: "거절됨"
+  revision: "수정 요청"
+  deleted: "삭제됨"
 
 markerSearch:
   placeholder: "현재 지도의 마커 이름이나 설명 검색…"
@@ -188,6 +243,7 @@ introModal:
 
   hint: |-
     게임 공략 웹사이트를 운영하는 데에는 막대한 시간과 노력이 필요합니다. 저희를 응원하고 싶으시다면 아래의 Alipay QR 코드로 후원하실 수 있습니다 — 여러분의 마음이 이 프로젝트를 계속 나아가게 합니다 ❤
+  alert: "이 사이트는 **항상 무료로 이용할 수 있습니다**."
 
 
 # Site-info panel (right sidebar / top-bar popover / mobile More sheet).
@@ -218,6 +274,10 @@ race:
   light: "천족"
   dark: "마족"
   abyss: "어비스"
+  lightAlt: "서부"
+  darkAlt: "동부"
+  lightShare: "서부 진영"
+  darkShare: "동부 진영"
 
 globalSearch:
   button: "검색"
@@ -252,3 +312,43 @@ changelog:
     improvement: "개선"
     fix: "수정"
     data: "데이터"
+wip:
+  title: "이 페이지는 준비 중입니다."
+  content: "기능을 준비하고 있습니다. 나중에 다시 확인해 주세요."
+donateModal:
+  body: "공략 사이트를 운영하는 데는 많은 시간과 노력이 듭니다. 팀을 응원하고 싶다면 아래 알리페이 QR 코드로 후원할 수 있습니다."
+crafting:
+  select: "교체할 장비 선택"
+  selectClick: "장비 선택"
+  sumType: "소계:"
+  sumTotal: "합계:"
+  weaponOrArmor: "무기 / 방어구"
+  accessory: "장신구"
+  clearAll: "모두 지우기"
+  unitPrice: "개당 가격"
+server:
+  light: "천족"
+  dark: "마족"
+  lightAbbr: "천"
+  darkAbbr: "마"
+  allServers: "모든 서버"
+  race: "종족"
+  server: "서버"
+  character: "캐릭터 이름"
+  region: "서비스 지역"
+  tw: "대만 서버"
+  kr: "한국 서버"
+  search: "캐릭터 검색"
+  history: "검색 기록"
+  starred: "즐겨찾는 캐릭터"
+  searching: "캐릭터 검색 중…"
+  noResults: "“{{keyword}}”에 해당하는 캐릭터가 없습니다."
+skills:
+  category:
+    active: "액티브"
+    passive: "패시브"
+    dp: "스티그마"
+titles:
+  Attack: "공격 계열"
+  Defense: "방어 계열"
+  Etc: "기타 계열"

@@ -50,12 +50,15 @@ export function applyArkiveDocumentLocale(
 export function bindArkiveDocumentLocale(
   source: ArkiveLanguageSource,
   targetDocument: Document | undefined = typeof document === "undefined" ? undefined : document,
+  resolveTitle?: (locale: string) => string | undefined,
 ): () => void {
-  const applyLanguage = (language: string) => {
-    applyArkiveDocumentLocale(language, targetDocument)
+  const applyLanguage = (language?: string) => {
+    const locale = applyArkiveDocumentLocale(language, targetDocument)
+    const title = language && resolveTitle?.(locale)
+    if (title && targetDocument) targetDocument.title = title
   }
 
-  applyArkiveDocumentLocale(source.resolvedLanguage ?? source.language, targetDocument)
+  applyLanguage(source.resolvedLanguage ?? source.language)
   source.on("languageChanged", applyLanguage)
 
   return () => {
