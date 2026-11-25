@@ -57,7 +57,8 @@ function usePwaInstall() {
   const [showHelp, setShowHelp] = useState(false)
 
   useEffect(() => {
-    const standalone = window.matchMedia('(display-mode: standalone)').matches
+    const standalone = (typeof window.matchMedia === 'function'
+      && window.matchMedia('(display-mode: standalone)').matches)
       || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
     setInstalled(standalone)
 
