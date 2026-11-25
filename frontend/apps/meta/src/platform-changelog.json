@@ -2,6 +2,25 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "cd2c5c2c2fe7e5cc36f1fee99842bce516ada8e7",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Toggle map markers by region. The navigation and sidebar now show the game name.",
+            "zh-CN": "新增地区选择，可独立显示或隐藏各区点位；导航栏与侧栏图片显示游戏名。",
+            "zh-TW": "新增地區選擇，可獨立顯示或隱藏各區點位；導覽列與側欄圖片顯示遊戲名稱。",
+            "ja-JP": "地域ごとにマーカーの表示を切り替えられます。ナビゲーションとサイドバーにゲーム名を表示します。",
+            "ko-KR": "지역별로 지도 표시를 켜거나 끌 수 있습니다. 탐색 메뉴와 사이드바에 게임 이름이 표시됩니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "2996639c52e6a4129fcd8b17cc982042b4e754fc",
       "targets": [
         "aion2",
