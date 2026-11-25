@@ -14,8 +14,18 @@ describe('platform-changelog.json', () => {
   })
 
   it('resolves unsupported locales through the English fallback', () => {
-    const entries = resolvePlatformChangelog(changelog, 'ja-JP')
+    const entries = resolvePlatformChangelog(changelog, 'fr-FR')
     expect(entries[0].changes[0].text).toBe(changelog.entries[0].changes[0].text['en-US'])
+  })
+
+  it.each(['ja-JP', 'ko-KR'])('renders every platform change in %s without falling back', (locale) => {
+    const entries = resolvePlatformChangelog(changelog, locale)
+    entries.forEach((entry, i) => entry.changes.forEach((change, j) => {
+      const text = changelog.entries[i].changes[j].text
+      expect(change.text).toBeTruthy()
+      expect(change.text).toBe(text[locale])
+      expect(change.text).not.toBe(text['en-US'])
+    }))
   })
 
   it('rejects unknown target games', () => {

@@ -56,6 +56,7 @@ export interface SiteCard {
    * yet, so the hub cannot accidentally render a href for it.
    */
   url?: string
+  guideLanguage?: 'zh-CN'
   toySlug?: string
   bg: string
   /**
@@ -100,6 +101,7 @@ function resolveSiteUrl(envUrl: string | undefined, devUrl: string, productionUr
 export const SITES: SiteCard[] = [
   {
     id: 'glimmith',
+    guideLanguage: 'zh-CN',
     kind: 'offline',
     url: GLIMMITH_MAP_PATH,
     bg: glimmithCover,
@@ -111,6 +113,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'oss',
+    guideLanguage: 'zh-CN',
     kind: 'offline',
     url: resolveSiteUrl(import.meta.env.VITE_OSS_URL, 'http://localhost:15181', 'https://oss.arkive.games'),
     bg: '/oss-preview.svg',
@@ -178,6 +181,7 @@ export const SITES: SiteCard[] = [
   },
   {
     id: 'ro3',
+    guideLanguage: 'zh-CN',
     kind: 'online',
     menuTint: '#6d9d59',
     url: resolveSiteUrl(

@@ -1,3 +1,4 @@
+import { GuideLanguageNote } from './GuideLanguageNote'
 import {
   useEffect,
   useMemo,
@@ -284,6 +285,7 @@ function LibraryToolCard({
           {highlight(localize(tool.description, language), query)}
         </a>
       )}
+      <GuideLanguageNote site={tool.site} />
       <div className="tools-card-foot">
         {gameName ? (
           <a className="tools-card-game" href={tool.gameHref ?? tool.href}>

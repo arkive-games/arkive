@@ -1,3 +1,4 @@
+import { GuideLanguageNote } from './GuideLanguageNote'
 import { useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -112,7 +113,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
                 <GameShortcutImage site={site} />
                 {recentUpdateDays(updatedDates[site.id], now) !== undefined && <b>{badge}</b>}
               </span>
-              <span>{t(site.nameKey)}</span>
+              <span>{t(site.nameKey)}<GuideLanguageNote site={site} /></span>
             </a>
           ))}
           {entries.map(({ href, label, icon: EntryIcon, colors, fresh }, index) => (
@@ -140,7 +141,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
                     <a href={featureHref(feature, site)} onClick={() => onOpenFeature(feature, site)}>
                       <KindIcon className="size-4 shrink-0" stroke={1.8} aria-hidden="true" />
                       <strong>{localize(feature.name, language)}</strong>
-                      <small>{t(site.nameKey)}</small>
+                      <small>{t(site.nameKey)}<GuideLanguageNote site={site} /></small>
                     </a>
                   </li>
                 )

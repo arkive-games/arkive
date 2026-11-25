@@ -20,6 +20,7 @@
  *             a new version — use for the second and later bullets of one release
  *   --kind    feature | improvement | fix | data     (required)
  *   --en / --zh-cn / --zh-tw   the change text        (all three required)
+ *   --ja / --ko                required for platform entries
  *   --date    YYYY-MM-DD, defaults to today (local)
  *   --commit  full SHA of the release's last commit, defaults to HEAD
  *
@@ -83,7 +84,7 @@ if (!args.platform && !args.append && !BUMPS.includes(args.bump)) {
   fail(`--bump must be one of ${BUMPS.join(', ')} (or pass --append)`)
 }
 if (args.platform && args.bump) fail('--bump is not used by the date-based platform history')
-for (const flag of ['en', 'zh-cn', 'zh-tw']) {
+for (const flag of ['en', 'zh-cn', 'zh-tw', ...(args.platform ? ['ja', 'ko'] : [])]) {
   if (!args[flag]?.trim()) fail(`--${flag} is required and must not be empty`)
 }
 const date = args.date ?? today()
@@ -125,7 +126,7 @@ if (!Array.isArray(data.entries) || data.entries.length === 0) {
 
 const change = {
   kind: args.kind,
-  text: { 'en-US': args.en, 'zh-CN': args['zh-cn'], 'zh-TW': args['zh-tw'] },
+  text: { 'en-US': args.en, 'zh-CN': args['zh-cn'], 'zh-TW': args['zh-tw'], ...(args.platform ? { 'ja-JP': args.ja, 'ko-KR': args.ko } : {}) },
 }
 
 let label

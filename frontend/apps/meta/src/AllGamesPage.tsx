@@ -1,3 +1,4 @@
+import { GuideLanguageNote } from './GuideLanguageNote'
 import { useEffect, useMemo, useRef, type CSSProperties, type FormEvent, type MouseEvent } from 'react'
 import { scrollToResults } from './scrollToResults'
 import { useTranslation } from 'react-i18next'
@@ -241,6 +242,7 @@ function CatalogGameCard({
       </span>
       <span className="catalog-game-copy">
         <span className="catalog-game-name"><img src={game.site.icon ?? GAME_LOGOS[game.site.id]} alt="" /><strong>{name}</strong></span>
+        <GuideLanguageNote site={game.site} />
         {game.site.comingSoon && <span className="soon-badge">{t('comingSoon.badge')}</span>}
         <small>{t(`catalog.summary.${game.site.id}`, { defaultValue: t(game.site.descKey) })}</small>
       </span>

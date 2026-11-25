@@ -20,7 +20,9 @@
           "text": {
             "en-US": "Long game names wrap within their homepage shortcuts. Portal tools follow the selected language.",
             "zh-CN": "首页较长的游戏名会在各自入口内换行，工具目录跟随所选语言。",
-            "zh-TW": "首頁較長的遊戲名稱會在各自入口內換行，工具目錄跟隨所選語言。"
+            "zh-TW": "首頁較長的遊戲名稱會在各自入口內換行，工具目錄跟隨所選語言。",
+            "ja-JP": "長いゲーム名はホームの各ショートカット内で折り返されます。ツール一覧も選択した言語で表示されます。",
+            "ko-KR": "홈 바로가기에서 긴 게임 이름이 줄바꿈되며, 도구 목록에도 선택한 언어가 적용됩니다."
           }
         }
       ]
@@ -158,7 +160,9 @@
           "text": {
             "en-US": "Desktop game directories, moderation, account and notification pages now use matching sidebar sizes. Both columns start the same distance below navigation.",
             "zh-CN": "桌面游戏目录、内容审核、个人中心和通知页统一了侧栏宽度与可用高度，左右两栏从导航栏下方同一高度开始。",
-            "zh-TW": "桌面遊戲目錄、內容審核、個人中心和通知頁統一了側欄寬度與可用高度，左右兩欄從導覽列下方同一高度開始。"
+            "zh-TW": "桌面遊戲目錄、內容審核、個人中心和通知頁統一了側欄寬度與可用高度，左右兩欄從導覽列下方同一高度開始。",
+            "ja-JP": "デスクトップではゲーム一覧、審査、アカウント、通知のサイドバー幅が揃い、左右の列がナビゲーションから同じ高さで始まります。",
+            "ko-KR": "데스크톱 게임 목록, 검토, 계정, 알림 페이지의 사이드바 너비를 통일했습니다. 두 열이 탐색 메뉴 아래 같은 높이에서 시작합니다."
           }
         }
       ]
@@ -183,7 +187,9 @@
           "text": {
             "en-US": "The moderation sidebar stays in place when switching between the queue, publication rules and legacy images. The extra account link has been removed.",
             "zh-CN": "切换待审核、发布规则和历史图片时，审核侧栏不再左右跳动；已移除返回个人中心的链接。",
-            "zh-TW": "切換待審核、發布規則和歷史圖片時，審核側欄不再左右跳動；已移除返回個人中心的連結。"
+            "zh-TW": "切換待審核、發布規則和歷史圖片時，審核側欄不再左右跳動；已移除返回個人中心的連結。",
+            "ja-JP": "審査待ち、公開ルール、旧画像の間を移動しても審査サイドバーの位置は変わりません。重複していたアカウントリンクを削除しました。",
+            "ko-KR": "대기열, 게시 규칙, 기존 이미지 사이를 이동해도 검토 사이드바 위치가 유지됩니다. 중복 계정 링크를 없앴습니다."
           }
         }
       ]
@@ -200,7 +206,9 @@
           "text": {
             "en-US": "Use the in-game puzzle square artwork in details and show the game name in the map status corner.",
             "zh-CN": "详情改用游戏内方块图标，并在地图右下角显示游戏名称。",
-            "zh-TW": "詳情改用遊戲內方塊圖示，並在地圖右下角顯示遊戲名稱。"
+            "zh-TW": "詳情改用遊戲內方塊圖示，並在地圖右下角顯示遊戲名稱。",
+            "ja-JP": "詳細にゲーム内のパズルマスの絵を使い、マップの状態表示にゲーム名を追加しました。",
+            "ko-KR": "상세 화면에 게임 속 퍼즐 칸 이미지를 사용하고 지도 상태 표시 영역에 게임 이름을 추가했습니다."
           }
         }
       ]
@@ -217,7 +225,9 @@
           "text": {
             "en-US": "Explore the Glimmith campaign map with 29 stained glass windows and 1,225 original puzzle solutions.",
             "zh-CN": "开放格里米斯工匠互动地图，可查阅 29 扇彩窗和 1,225 道谜题的原版解法。",
-            "zh-TW": "開放格里米斯工匠互動地圖，可查閱 29 扇彩窗和 1,225 道謎題的原版解法。"
+            "zh-TW": "開放格里米斯工匠互動地圖，可查閱 29 扇彩窗和 1,225 道謎題的原版解法。",
+            "ja-JP": "Glimmith のキャンペーンマップで、29枚のステンドグラスと全1,225問のオリジナルパズルの解答を確認できます。",
+            "ko-KR": "Glimmith 캠페인 지도에서 스테인드글라스 29개와 원본 퍼즐 1,225개의 해답을 볼 수 있습니다."
           }
         }
       ]
@@ -241,7 +251,9 @@
           "text": {
             "en-US": "Unified moderation now connects the portal review workspace to server-owned publication units for text, attachments, profiles and scoped game review.",
             "zh-CN": "统一审核工作台现已连接服务器内容单元，统一处理正文、配图、个人资料，并按游戏范围审核。",
-            "zh-TW": "統一審核工作台現已連接伺服器內容單元，統一處理正文、配圖、個人資料，並按遊戲範圍審核。"
+            "zh-TW": "統一審核工作台現已連接伺服器內容單元，統一處理正文、配圖、個人資料，並按遊戲範圍審核。",
+            "ja-JP": "ポータルの統合審査画面がサーバーに接続され、本文、添付、プロフィールを公開単位で、担当ゲームの権限範囲内で審査できるようになりました。",
+            "ko-KR": "포털 통합 검토 화면이 서버와 연결되어 본문, 첨부 파일, 프로필을 게시 단위로 담당 게임 권한 범위에서 검토할 수 있습니다."
           }
         }
       ]
@@ -265,7 +277,9 @@
           "text": {
             "en-US": "Content moderation brings complete submissions, decision history, reports, appeals and account trust into one workspace, with clear availability feedback until the unified service is enabled.",
             "zh-CN": "内容审核整合整条图文、处理记录、举报、申诉与用户信用；统一服务启用前明确显示待启用状态。",
-            "zh-TW": "內容審核整合整條圖文、處理紀錄、檢舉、申訴與使用者信用；統一服務啟用前明確顯示待啟用狀態。"
+            "zh-TW": "內容審核整合整條圖文、處理紀錄、檢舉、申訴與使用者信用；統一服務啟用前明確顯示待啟用狀態。",
+            "ja-JP": "投稿全体、判断履歴、通報、異議申し立て、アカウントの信頼状態を一つの審査画面にまとめました。統合サービスの有効化前は利用状況が表示されます。",
+            "ko-KR": "제출 내용 전체, 처리 이력, 신고, 이의 제기, 계정 신뢰 상태를 한 검토 화면에 모았습니다. 통합 서비스가 활성화되기 전에는 이용 가능 여부를 표시합니다."
           }
         }
       ]
@@ -289,7 +303,9 @@
           "text": {
             "en-US": "Image review uses the encyclopedia directory and compact lists, with a review dialog for full previews and a matching account-menu icon.",
             "zh-CN": "图片审核采用百科页目录和紧凑列表，通过审核弹窗查看大图，并为头像菜单补齐审核图标。",
-            "zh-TW": "圖片審核採用百科頁目錄和緊湊列表，透過審核彈窗檢視大圖，並為頭像選單補齊審核圖示。"
+            "zh-TW": "圖片審核採用百科頁目錄和緊湊列表，透過審核彈窗檢視大圖，並為頭像選單補齊審核圖示。",
+            "ja-JP": "画像審査を図鑑と同じナビゲーションとコンパクトな一覧に変更しました。ダイアログで原寸を確認でき、アカウントメニューのアイコンも統一しました。",
+            "ko-KR": "이미지 검토에 도감과 같은 탐색 메뉴와 간결한 목록을 적용했습니다. 검토 창에서 원본을 볼 수 있고 계정 메뉴 아이콘도 통일했습니다."
           }
         }
       ]
@@ -313,7 +329,9 @@
           "text": {
             "en-US": "Forum feed tabs stay readable on narrow screens; the following filter moves to another row when needed.",
             "zh-CN": "窄屏下论坛标签保持横排，仅看关注按钮在空间不足时移到下一行。",
-            "zh-TW": "窄螢幕下論壇標籤維持橫排，只看追蹤按鈕在空間不足時移到下一列。"
+            "zh-TW": "窄螢幕下論壇標籤維持橫排，只看追蹤按鈕在空間不足時移到下一列。",
+            "ja-JP": "狭い画面でもフォーラムのフィードタブを読みやすくし、必要に応じてフォロー絞り込みを次の行に表示します。",
+            "ko-KR": "좁은 화면에서도 포럼 피드 탭을 읽기 쉽도록 공간이 부족하면 팔로잉 필터를 다음 줄로 옮깁니다."
           }
         }
       ]
@@ -331,7 +349,9 @@
           "text": {
             "en-US": "Encyclopedia category buttons move onto new rows when space is tight, keeping their labels readable.",
             "zh-CN": "百科分类按钮在空间不足时会整颗换行，分类名称保持易读。",
-            "zh-TW": "百科分類按鈕在空間不足時會整顆換行，分類名稱保持易讀。"
+            "zh-TW": "百科分類按鈕在空間不足時會整顆換行，分類名稱保持易讀。",
+            "ja-JP": "幅が足りないときは図鑑のカテゴリボタンを次の行に送り、ラベルが読めるようにしました。",
+            "ko-KR": "공간이 부족하면 도감 분류 버튼이 다음 줄로 이동해 이름이 잘리지 않습니다."
           }
         }
       ]
@@ -355,7 +375,9 @@
           "text": {
             "en-US": "Home carousel art now loads only the active slide and its neighbours for a faster first paint.",
             "zh-CN": "首页轮播只加载当前页及相邻页图片，首屏打开更快。",
-            "zh-TW": "首頁輪播只載入目前頁及相鄰頁圖片，首屏開啟更快。"
+            "zh-TW": "首頁輪播只載入目前頁及相鄰頁圖片，首屏開啟更快。",
+            "ja-JP": "ホームのカルーセルは表示中とその前後の画像だけを読み込み、初回表示が速くなりました。",
+            "ko-KR": "홈 슬라이드에서 현재 이미지와 앞뒤 이미지만 불러와 첫 화면이 더 빨리 표시됩니다."
           }
         }
       ]
@@ -379,7 +401,9 @@
           "text": {
             "en-US": "Image moderation now has its own page, available to administrators and game moderators through the account menu.",
             "zh-CN": "图片审核改为独立管理页面，管理员和版主可从头像菜单集中处理待审核图片。",
-            "zh-TW": "圖片審核改為獨立管理頁面，管理員和版主可從頭像選單集中處理待審核圖片。"
+            "zh-TW": "圖片審核改為獨立管理頁面，管理員和版主可從頭像選單集中處理待審核圖片。",
+            "ja-JP": "画像審査専用ページを追加しました。管理者とゲームのモデレーターはアカウントメニューから開けます。",
+            "ko-KR": "이미지 검토 전용 페이지를 추가했습니다. 관리자와 게임 운영자는 계정 메뉴에서 열 수 있습니다."
           }
         }
       ]
@@ -399,7 +423,9 @@
           "text": {
             "en-US": "Map comments and player images now survive reloads and sync across devices, with images published after moderator review.",
             "zh-CN": "地图留言和玩家图片现在会保存到服务器，刷新或更换设备后仍可查看；图片审核通过后公开。",
-            "zh-TW": "地圖留言和玩家圖片現在會儲存至伺服器，重新整理或更換裝置後仍可查看；圖片審核通過後公開。"
+            "zh-TW": "地圖留言和玩家圖片現在會儲存至伺服器，重新整理或更換裝置後仍可查看；圖片審核通過後公開。",
+            "ja-JP": "マップのコメントとプレイヤー画像が再読み込み後も残り、端末間で同期されます。画像は審査後に公開されます。",
+            "ko-KR": "지도 댓글과 플레이어 이미지가 새로고침 후에도 유지되고 기기 간에 동기화됩니다. 이미지는 운영자 검토 후 공개됩니다."
           }
         }
       ]
@@ -416,7 +442,9 @@
           "text": {
             "en-US": "Remove Order of the Sinking Star from homepage game shortcuts while keeping it in the game directory.",
             "zh-CN": "移除首页游戏方块中的沉星之序，保留全部游戏中的入口。",
-            "zh-TW": "移除首頁遊戲方塊中的沉星之序，保留全部遊戲中的入口。"
+            "zh-TW": "移除首頁遊戲方塊中的沉星之序，保留全部遊戲中的入口。",
+            "ja-JP": "ホームのショートカットから Order of the Sinking Star を外しました。ゲーム一覧からは引き続き開けます。",
+            "ko-KR": "홈 바로가기에서 Order of the Sinking Star를 제외했습니다. 게임 목록에서는 계속 열 수 있습니다."
           }
         }
       ]
@@ -438,7 +466,9 @@
           "text": {
             "en-US": "Encyclopedia directories scroll without a visible scrollbar.",
             "zh-CN": "百科目录保留滚动操作，不再显示滚动条。",
-            "zh-TW": "百科目錄保留捲動操作，不再顯示捲動條。"
+            "zh-TW": "百科目錄保留捲動操作，不再顯示捲動條。",
+            "ja-JP": "図鑑の目次はスクロールバーを表示せずにスクロールできます。",
+            "ko-KR": "도감 목록에서 스크롤바가 보이지 않아도 스크롤할 수 있습니다."
           }
         }
       ]
@@ -461,7 +491,9 @@
           "text": {
             "en-US": "Tool Library filters by game type, searches associated game names, and provides separate tool, game and favorite actions. Favorites sort first after filtering and retain their previous state when saving fails.",
             "zh-CN": "工具库支持按游戏类型筛选与游戏名称搜索，工具、游戏入口和收藏独立操作；收藏在筛选后优先排列，保存失败时保留原状态并可重试。",
-            "zh-TW": "工具庫支援按遊戲類型篩選與遊戲名稱搜尋，工具、遊戲入口及收藏獨立操作；收藏在篩選後優先排列，儲存失敗時保留原狀態並可重試。"
+            "zh-TW": "工具庫支援按遊戲類型篩選與遊戲名稱搜尋，工具、遊戲入口及收藏獨立操作；收藏在篩選後優先排列，儲存失敗時保留原狀態並可重試。",
+            "ja-JP": "ツール一覧でゲームの種類や名前から絞り込めます。ツールを開く、ゲームに移動、お気に入り登録を分けました。絞り込み後はお気に入りが先頭に並び、保存失敗時は元の状態を保ちます。",
+            "ko-KR": "도구 목록에서 게임 유형으로 거르거나 게임 이름으로 검색할 수 있습니다. 도구 열기, 게임 이동, 즐겨찾기를 분리했습니다. 필터 적용 후에도 즐겨찾기가 먼저 나오며 저장 실패 시 이전 상태가 유지됩니다."
           }
         },
         {
@@ -469,7 +501,9 @@
           "text": {
             "en-US": "Map details place coordinates at the lower left, omit copy notifications and the old image-upload and comment-sort rows. Account menus omit the account number, and account sections begin directly with their fields.",
             "zh-CN": "地图详情坐标移至左下角，移除复制提示、原添加图片入口及留言排序行；账号菜单不再显示UID，账户中心各栏目直接展示实际内容。",
-            "zh-TW": "地圖詳情座標移至左下角，移除複製提示、原新增圖片入口及留言排序列；帳號選單不再顯示UID，帳戶中心各欄目直接展示實際內容。"
+            "zh-TW": "地圖詳情座標移至左下角，移除複製提示、原新增圖片入口及留言排序列；帳號選單不再顯示UID，帳戶中心各欄目直接展示實際內容。",
+            "ja-JP": "マップ詳細の座標を左下に移し、コピー通知、旧画像アップロード行、コメント並べ替え行を削除しました。アカウントメニューの番号を省き、各設定は入力欄から始まります。",
+            "ko-KR": "지도 상세 좌표를 왼쪽 아래로 옮기고 복사 알림, 기존 이미지 업로드 행과 댓글 정렬 행을 없앴습니다. 계정 메뉴에서 계정 번호를 빼고 각 설정은 입력란부터 표시합니다."
           }
         }
       ]
@@ -489,7 +523,9 @@
           "text": {
             "en-US": "Keep homepage banners at the correct size and choose mobile artwork from the first paint, without growing after a refresh.",
             "zh-CN": "首页轮播首屏即适配屏幕大小和手机图片，修复刷新后先小后大的跳动。",
-            "zh-TW": "首頁輪播首屏即適配螢幕大小和手機圖片，修復重新整理後先小後大的跳動。"
+            "zh-TW": "首頁輪播首屏即適配螢幕大小和手機圖片，修復重新整理後先小後大的跳動。",
+            "ja-JP": "ホームのバナーを適切な大きさに保ち、スマートフォンでは初回表示からモバイル用画像を使用します。再読み込み直後に拡大しなくなりました。",
+            "ko-KR": "홈 배너 크기를 일정하게 유지하고 휴대폰에서는 처음부터 모바일 이미지를 표시해 새로고침 뒤 배너가 커지지 않습니다."
           }
         }
       ]
@@ -506,7 +542,9 @@
           "text": {
             "en-US": "Make Order of the Sinking Star available from the homepage and game directory.",
             "zh-CN": "开放沉星之序的首页和游戏目录入口。",
-            "zh-TW": "開放沉星之序的首頁和遊戲目錄入口。"
+            "zh-TW": "開放沉星之序的首頁和遊戲目錄入口。",
+            "ja-JP": "ホームとゲーム一覧から Order of the Sinking Star を開けるようになりました。",
+            "ko-KR": "홈과 게임 목록에서 Order of the Sinking Star를 열 수 있습니다."
           }
         }
       ]
@@ -528,7 +566,9 @@
           "text": {
             "en-US": "Improve selected-label readability, keep failed profile saves retryable, and list Ragnarok 3's Build Handbook in the Tool Library without changing homepage selections.",
             "zh-CN": "改善选中文字的可读性，资料保存失败时保留输入以便重试，并将仙境传说3流派手册补入工具库，首页精选保持不变。",
-            "zh-TW": "改善選取文字的可讀性，資料儲存失敗時保留輸入以便重試，並將仙境傳說3流派手冊補入工具庫，首頁精選維持不變。"
+            "zh-TW": "改善選取文字的可讀性，資料儲存失敗時保留輸入以便重試，並將仙境傳說3流派手冊補入工具庫，首頁精選維持不變。",
+            "ja-JP": "選択中のラベルを読みやすくし、プロフィールの保存失敗後に再試行できるようにしました。ホームの掲載項目を変えず、ツール一覧に Ragnarok 3 のビルド手帳を追加しました。",
+            "ko-KR": "선택한 이름을 읽기 쉽게 하고 프로필 저장 실패 시 다시 시도할 수 있도록 했습니다. 홈 추천은 그대로 두고 도구 목록에 라그나로크 3 빌드 수첩을 추가했습니다."
           }
         }
       ]
@@ -550,7 +590,9 @@
           "text": {
             "en-US": "Disabled encyclopedia search fields also disable their search and clear actions.",
             "zh-CN": "百科搜索框不可用时，搜索和清空按钮也同步停用。",
-            "zh-TW": "百科搜尋框無法使用時，搜尋與清除按鈕也同步停用。"
+            "zh-TW": "百科搜尋框無法使用時，搜尋與清除按鈕也同步停用。",
+            "ja-JP": "図鑑の検索欄が無効な間は、検索とクリアの操作も無効になります。",
+            "ko-KR": "도감 검색란을 사용할 수 없을 때는 검색과 지우기 버튼도 비활성화됩니다."
           }
         }
       ]
@@ -572,7 +614,9 @@
           "text": {
             "en-US": "Restore About, Contact, Updates and current-game Settings in the center of ordinary game footers.",
             "zh-CN": "普通游戏页脚补齐居中的关于藏舟、联系我们、更新日志和当前游戏设置入口。",
-            "zh-TW": "一般遊戲頁尾補齊置中的關於藏舟、聯絡我們、更新日誌和目前遊戲設定入口。"
+            "zh-TW": "一般遊戲頁尾補齊置中的關於藏舟、聯絡我們、更新日誌和目前遊戲設定入口。",
+            "ja-JP": "通常のゲームページのフッター中央に、サイト紹介、お問い合わせ、更新履歴、そのゲームの設定を復元しました。",
+            "ko-KR": "일반 게임 페이지 하단 중앙에 사이트 소개, 문의, 업데이트 내역, 현재 게임 설정을 복원했습니다."
           }
         }
       ]
@@ -591,7 +635,9 @@
           "text": {
             "en-US": "Encyclopedia lists explain empty search results, and reference pages omit redundant interface instructions.",
             "zh-CN": "百科列表补齐搜索无结果提示，资料页移除多余的界面操作说明。",
-            "zh-TW": "百科列表補齊搜尋無結果提示，資料頁移除多餘的介面操作說明。"
+            "zh-TW": "百科列表補齊搜尋無結果提示，資料頁移除多餘的介面操作說明。",
+            "ja-JP": "図鑑の一覧で検索結果がないことを案内し、資料ページから重複する操作説明を省きました。",
+            "ko-KR": "도감 목록에 검색 결과가 없을 때 안내가 표시되며 자료 페이지에서 중복 안내 문구를 없앴습니다."
           }
         }
       ]
@@ -613,7 +659,9 @@
           "text": {
             "en-US": "Catalog searches share the rounded field and arrow action, encyclopedia directory toggles are consistent, and reference pages omit interface explanations and result-total summaries.",
             "zh-CN": "统一百科搜索框与目录收起图标，移除页面操作说明、实现说明和结果总数提示。",
-            "zh-TW": "統一百科搜尋框與目錄收起圖示，移除頁面操作說明、實作說明和結果總數提示。"
+            "zh-TW": "統一百科搜尋框與目錄收起圖示，移除頁面操作說明、實作說明和結果總數提示。",
+            "ja-JP": "各一覧で角丸の検索欄と矢印ボタンを共通化し、図鑑の目次切り替えを統一しました。資料ページの操作説明と結果件数の要約を省きました。",
+            "ko-KR": "목록 검색창과 화살표 버튼, 도감 목차 전환 방식을 통일했습니다. 자료 페이지에서 조작 설명과 결과 수 요약을 없앴습니다."
           }
         }
       ]
@@ -633,7 +681,9 @@
           "text": {
             "en-US": "Remember map camera positions across visits while keeping selected markers separate in each tab.",
             "zh-CN": "地图视角跨访问恢复，选中标记按标签页独立保留。",
-            "zh-TW": "地圖視角跨造訪恢復，選取標記按分頁獨立保留。"
+            "zh-TW": "地圖視角跨造訪恢復，選取標記按分頁獨立保留。",
+            "ja-JP": "次回訪問時もマップの表示位置を復元します。選択したマーカーはタブごとに記憶します。",
+            "ko-KR": "다시 방문하면 지도 시점이 복원됩니다. 선택한 마커는 탭별로 따로 기억합니다."
           }
         }
       ]
@@ -651,7 +701,9 @@
           "text": {
             "en-US": "Resume reference searches, filters and reading position when returning or reloading in Phantom Blade Zero and V Rising's V Blood catalog; remember expanded weapon levels and item-document pages in Phantom Blade Zero.",
             "zh-CN": "影之刃零百科与夜族崛起 V 型血资料返回或刷新时恢复搜索、筛选和浏览位置；影之刃零同时记住武器等级展开与道具文档页码。",
-            "zh-TW": "影之刃零百科與夜族崛起 V 型血資料返回或重新整理時恢復搜尋、篩選和瀏覽位置；影之刃零同時記住武器等級展開與道具文件頁碼。"
+            "zh-TW": "影之刃零百科與夜族崛起 V 型血資料返回或重新整理時恢復搜尋、篩選和瀏覽位置；影之刃零同時記住武器等級展開與道具文件頁碼。",
+            "ja-JP": "Phantom Blade Zero の資料と V Rising の V ブラッド一覧で、戻るときや再読み込み時に検索、絞り込み、閲覧位置を復元します。Phantom Blade Zero では展開した武器レベルとアイテム文書のページも記憶します。",
+            "ko-KR": "팬텀 블레이드 제로 자료와 V Rising의 V 블러드 목록에서 돌아가거나 새로고침해도 검색, 필터, 읽던 위치가 복원됩니다. 팬텀 블레이드 제로는 펼친 무기 레벨과 아이템 문서 페이지도 기억합니다."
           }
         }
       ]
@@ -671,7 +723,9 @@
           "text": {
             "en-US": "Resume map searches, sidebar state and category expansion independently for each map; shared links take priority over remembered targets.",
             "zh-CN": "返回地图时恢复搜索、侧栏状态和分类展开，不同地图分别记忆；分享链接优先定位指定目标。",
-            "zh-TW": "返回地圖時恢復搜尋、側欄狀態和分類展開，不同地圖分別記憶；分享連結優先定位指定目標。"
+            "zh-TW": "返回地圖時恢復搜尋、側欄狀態和分類展開，不同地圖分別記憶；分享連結優先定位指定目標。",
+            "ja-JP": "検索、サイドバー、カテゴリの開閉状態をマップごとに復元します。共有リンクから開いた場合はリンクの対象を優先します。",
+            "ko-KR": "지도별로 검색, 사이드바, 분류 펼침 상태를 복원합니다. 공유 링크로 열면 링크가 가리키는 대상을 우선합니다."
           }
         }
       ]
@@ -694,7 +748,9 @@
           "text": {
             "en-US": "Tool Library filters by game type, searches associated game names, and provides separate tool, game and favorite actions. Favorites sort first after filtering and retain their previous state when saving fails.",
             "zh-CN": "工具库支持按游戏类型筛选与游戏名称搜索，工具、游戏入口和收藏独立操作；收藏在筛选后优先排列，保存失败时保留原状态并可重试。",
-            "zh-TW": "工具庫支援按遊戲類型篩選與遊戲名稱搜尋，工具、遊戲入口及收藏獨立操作；收藏在篩選後優先排列，儲存失敗時保留原狀態並可重試。"
+            "zh-TW": "工具庫支援按遊戲類型篩選與遊戲名稱搜尋，工具、遊戲入口及收藏獨立操作；收藏在篩選後優先排列，儲存失敗時保留原狀態並可重試。",
+            "ja-JP": "ツール一覧でゲームの種類や名前から絞り込めます。ツールを開く、ゲームに移動、お気に入り登録を分けました。絞り込み後はお気に入りが先頭に並び、保存失敗時は元の状態を保ちます。",
+            "ko-KR": "도구 목록에서 게임 유형으로 거르거나 게임 이름으로 검색할 수 있습니다. 도구 열기, 게임 이동, 즐겨찾기를 분리했습니다. 필터 적용 후에도 즐겨찾기가 먼저 나오며 저장 실패 시 이전 상태가 유지됩니다."
           }
         },
         {
@@ -702,7 +758,9 @@
           "text": {
             "en-US": "Map details place coordinates at the lower left, omit copy notifications and the old image-upload and comment-sort rows. Account menus omit the account number, and account sections begin directly with their fields.",
             "zh-CN": "地图详情坐标移至左下角，移除复制提示、原添加图片入口及留言排序行；账号菜单不再显示UID，账户中心各栏目直接展示实际内容。",
-            "zh-TW": "地圖詳情座標移至左下角，移除複製提示、原新增圖片入口及留言排序列；帳號選單不再顯示UID，帳戶中心各欄目直接展示實際內容。"
+            "zh-TW": "地圖詳情座標移至左下角，移除複製提示、原新增圖片入口及留言排序列；帳號選單不再顯示UID，帳戶中心各欄目直接展示實際內容。",
+            "ja-JP": "マップ詳細の座標を左下に移し、コピー通知、旧画像アップロード行、コメント並べ替え行を削除しました。アカウントメニューの番号を省き、各設定は入力欄から始まります。",
+            "ko-KR": "지도 상세 좌표를 왼쪽 아래로 옮기고 복사 알림, 기존 이미지 업로드 행과 댓글 정렬 행을 없앴습니다. 계정 메뉴에서 계정 번호를 빼고 각 설정은 입력란부터 표시합니다."
           }
         }
       ]
@@ -719,7 +777,9 @@
           "text": {
             "en-US": "Add Phantom Blade Zero to the all-games catalog with its interactive map.",
             "zh-CN": "将影之刃零加入全部游戏目录，并提供互动地图入口。",
-            "zh-TW": "將影之刃零加入全部遊戲目錄，並提供互動地圖入口。"
+            "zh-TW": "將影之刃零加入全部遊戲目錄，並提供互動地圖入口。",
+            "ja-JP": "全ゲーム一覧に Phantom Blade Zero とそのインタラクティブマップを追加しました。",
+            "ko-KR": "전체 게임 목록에 팬텀 블레이드 제로와 인터랙티브 지도를 추가했습니다."
           }
         }
       ]
@@ -739,7 +799,9 @@
           "text": {
             "en-US": "Remove the redundant contact label from the recruitment banner while keeping the whole image clickable.",
             "zh-CN": "移除招募大图重复的联系我们按钮，点击整张图片仍可打开联系窗口。",
-            "zh-TW": "移除招募大圖重複的聯絡我們按鈕，點擊整張圖片仍可開啟聯絡視窗。"
+            "zh-TW": "移除招募大圖重複的聯絡我們按鈕，點擊整張圖片仍可開啟聯絡視窗。",
+            "ja-JP": "募集バナーから重複する連絡先ラベルを削除しました。画像全体は引き続きクリックできます。",
+            "ko-KR": "모집 배너에서 중복된 연락처 문구를 없앴습니다. 이미지는 어디든 클릭할 수 있습니다."
           }
         }
       ]
@@ -759,7 +821,9 @@
           "text": {
             "en-US": "Remove redundant entry buttons from homepage game banners; click anywhere on the image to open the game.",
             "zh-CN": "移除首页游戏大图重复的进入按钮，点击图片即可进入游戏页。",
-            "zh-TW": "移除首頁遊戲大圖重複的進入按鈕，點擊圖片即可進入遊戲頁。"
+            "zh-TW": "移除首頁遊戲大圖重複的進入按鈕，點擊圖片即可進入遊戲頁。",
+            "ja-JP": "ホームのゲームバナーから重複するボタンを外し、画像のどこを押してもゲームを開けるようにしました。",
+            "ko-KR": "홈 게임 배너에서 중복 버튼을 없애 이미지 어디든 누르면 게임이 열립니다."
           }
         }
       ]
@@ -782,7 +846,9 @@
           "text": {
             "en-US": "Open homepage game banners and shortcuts with one click, without selecting a banner first or accidentally dragging an icon.",
             "zh-CN": "首页游戏大图和方块单击即可进入，无需先选中大图，并避免图标误拖拽吞掉点击。",
-            "zh-TW": "首頁遊戲大圖與方塊單擊即可進入，無需先選中大圖，並避免圖示誤拖曳吞掉點擊。"
+            "zh-TW": "首頁遊戲大圖與方塊單擊即可進入，無需先選中大圖，並避免圖示誤拖曳吞掉點擊。",
+            "ja-JP": "ホームのゲームバナーとショートカットを一度押すだけで開けます。バナーの事前選択やアイコンの誤ドラッグがなくなりました。",
+            "ko-KR": "홈 배너와 바로가기를 한 번 눌러 게임을 엽니다. 배너를 먼저 선택할 필요가 없고 아이콘도 실수로 끌리지 않습니다."
           }
         }
       ]
@@ -799,7 +865,9 @@
           "text": {
             "en-US": "Your account inbox now shows replies and likes on your map-marker comments, and each one opens the exact marker on the map.",
             "zh-CN": "账户消息中心会显示你的点位留言收到的回复和点赞，点击即可在地图上打开对应点位。",
-            "zh-TW": "帳戶訊息中心會顯示你的點位留言收到的回覆和按讚，點擊即可在地圖上開啟對應點位。"
+            "zh-TW": "帳戶訊息中心會顯示你的點位留言收到的回覆和按讚，點擊即可在地圖上開啟對應點位。",
+            "ja-JP": "マップのマーカーに書いたコメントへの返信や「いいね」が受信箱に届き、通知から該当マーカーを直接開けます。",
+            "ko-KR": "지도 마커 댓글에 달린 답글과 좋아요가 계정 알림함에 표시되며 누르면 해당 마커가 열립니다."
           }
         }
       ]
@@ -816,7 +884,9 @@
           "text": {
             "en-US": "The Phantom Blade Zero guide is open: the homepage links straight to it.",
             "zh-CN": "影之刃零攻略站已开放，首页可直接进入。",
-            "zh-TW": "影之刃零攻略站已開放，首頁可直接進入。"
+            "zh-TW": "影之刃零攻略站已開放，首頁可直接進入。",
+            "ja-JP": "Phantom Blade Zero の攻略サイトを公開しました。ホームから直接アクセスできます。",
+            "ko-KR": "팬텀 블레이드 제로 공략 사이트를 열었습니다. 홈에서 바로 이동할 수 있습니다."
           }
         }
       ]
@@ -834,7 +904,9 @@
           "text": {
             "en-US": "Long pages now have a back-to-top button on desktop as well as on phones",
             "zh-CN": "长页面在电脑端也会出现「返回顶部」按钮",
-            "zh-TW": "長頁面在電腦端也會出現「返回頂部」按鈕"
+            "zh-TW": "長頁面在電腦端也會出現「返回頂部」按鈕",
+            "ja-JP": "長いページの先頭に戻るボタンをスマートフォンに加えてデスクトップにも追加しました。",
+            "ko-KR": "긴 페이지에서 맨 위로 가는 버튼을 휴대폰뿐 아니라 데스크톱에서도 사용할 수 있습니다."
           }
         }
       ]
@@ -855,7 +927,9 @@
           "text": {
             "en-US": "Pages no longer shift sideways when a filter makes them shorter than the window",
             "zh-CN": "筛选后内容变短时，页面不再左右跳动",
-            "zh-TW": "篩選後內容變短時，頁面不再左右跳動"
+            "zh-TW": "篩選後內容變短時，頁面不再左右跳動",
+            "ja-JP": "絞り込みでページがウィンドウより短くなっても、表示が横にずれなくなりました。",
+            "ko-KR": "필터 적용 후 페이지가 창보다 짧아져도 화면이 좌우로 흔들리지 않습니다."
           }
         }
       ]
@@ -876,7 +950,9 @@
           "text": {
             "en-US": "The footer's Update log link now sits level with the other footer links.",
             "zh-CN": "页脚的「更新日志」与其他链接对齐，不再略高一截。",
-            "zh-TW": "頁尾的「更新日誌」與其他連結對齊，不再略高一截。"
+            "zh-TW": "頁尾的「更新日誌」與其他連結對齊，不再略高一截。",
+            "ja-JP": "フッターの更新履歴リンクを他のリンクと同じ高さに揃えました。",
+            "ko-KR": "하단의 업데이트 내역 링크 높이를 다른 링크와 맞췄습니다."
           }
         }
       ]
@@ -897,7 +973,9 @@
           "text": {
             "en-US": "Every site now shows the Arkive brand in its page title and description, and publishes a sitemap so search engines can find its pages.",
             "zh-CN": "所有站点的网页标题和简介都加上了「藏舟 Arkive」品牌，并提供站点地图，方便搜索引擎收录各页面。",
-            "zh-TW": "所有站點的網頁標題和簡介都加上了「藏舟 Arkive」品牌，並提供網站地圖，方便搜尋引擎收錄各頁面。"
+            "zh-TW": "所有站點的網頁標題和簡介都加上了「藏舟 Arkive」品牌，並提供網站地圖，方便搜尋引擎收錄各頁面。",
+            "ja-JP": "各サイトのページタイトルと説明に Arkive 名を表示し、検索エンジン向けにサイトマップを公開しました。",
+            "ko-KR": "모든 사이트의 페이지 제목과 설명에 Arkive 이름을 표시하고 검색 엔진용 사이트맵을 공개했습니다."
           }
         }
       ]
@@ -918,7 +996,9 @@
           "text": {
             "en-US": "Tidier top bar: every menu opens at the same distance, All Games is a plain link, the avatar shows a single menu, and the logo no longer tilts on hover. Slimmer About and Contact dialogs. The footer keeps copyright and ICP on one line and is much shorter on phones.",
             "zh-CN": "顶部导航更整齐：所有弹出菜单与按钮间距一致，全部游戏改为直接跳转，头像悬停只出现一个菜单，Logo 悬停不再倾斜。关于藏舟和联系我们弹窗更紧凑。页脚版权与备案号同排显示，手机端页脚更矮更紧凑。",
-            "zh-TW": "頂部導覽更整齊：所有彈出選單與按鈕間距一致，全部遊戲改為直接跳轉，頭像懸停只出現一個選單，Logo 懸停不再傾斜。關於藏舟和聯絡我們彈窗更緊湊。頁尾版權與備案號同排顯示，手機端頁尾更矮更緊湊。"
+            "zh-TW": "頂部導覽更整齊：所有彈出選單與按鈕間距一致，全部遊戲改為直接跳轉，頭像懸停只出現一個選單，Logo 懸停不再傾斜。關於藏舟和聯絡我們彈窗更緊湊。頁尾版權與備案號同排顯示，手機端頁尾更矮更緊湊。",
+            "ja-JP": "メニューの開く位置を揃え、全ゲームを通常リンクに変更。アバターメニューを一つにし、ロゴに触れても傾かないようにしました。紹介・お問い合わせダイアログを細くし、フッターの著作権と ICP 番号を一行にまとめ、スマートフォンでの高さを抑えました。",
+            "ko-KR": "상단 메뉴가 같은 간격으로 열리며 전체 게임은 일반 링크로 바뀝니다. 아바타 메뉴를 하나로 합치고 로고 기울임 효과를 없앴습니다. 소개와 문의 창을 좁히고 저작권과 ICP 번호를 한 줄에 넣어 모바일 하단이 짧아졌습니다."
           }
         }
       ]
@@ -939,7 +1019,9 @@
           "text": {
             "en-US": "The homepage carousel now features five slides, so V Rising and Ragnarok Online 3 are reached from the shortcut row below it; the Phantom Blade Zero notice now matches the other dialogs.",
             "zh-CN": "首页轮播固定为五张，夜族崛起和仙境传说3请从下方快捷入口进入；影之刃零的「敬请期待」弹窗标题与其他弹窗样式统一。",
-            "zh-TW": "首頁輪播固定為五張，夜族崛起和仙境傳說3請從下方快捷入口進入；影之刃零的「敬請期待」彈窗標題與其他彈窗樣式統一。"
+            "zh-TW": "首頁輪播固定為五張，夜族崛起和仙境傳說3請從下方快捷入口進入；影之刃零的「敬請期待」彈窗標題與其他彈窗樣式統一。",
+            "ja-JP": "ホームのカルーセルを5枚に整理しました。V Rising と Ragnarok Online 3 は下のショートカットから開けます。Phantom Blade Zero のお知らせも他のダイアログと同じ表示になりました。",
+            "ko-KR": "홈 슬라이드를 5장으로 정리했습니다. V Rising과 라그나로크 온라인 3는 아래 바로가기에서 열 수 있습니다. 팬텀 블레이드 제로 공지 창을 다른 대화상자와 통일했습니다."
           }
         }
       ]
@@ -960,7 +1042,9 @@
           "text": {
             "en-US": "The homepage carousel now opens with a call for contributors and a Phantom Blade Zero preview, with new posters for Palworld and Lord of the Mysteries; Phantom Blade Zero also leads the shortcut row.",
             "zh-CN": "首页轮播新增共创伙伴招募和影之刃零预告，幻兽帕鲁、诡秘之主换上新海报；游戏快捷入口最前面加入影之刃零。",
-            "zh-TW": "首頁輪播新增共創夥伴招募和影之刃零預告，幻獸帕魯、詭秘之主換上新海報；遊戲快捷入口最前面加入影之刃零。"
+            "zh-TW": "首頁輪播新增共創夥伴招募和影之刃零預告，幻獸帕魯、詭秘之主換上新海報；遊戲快捷入口最前面加入影之刃零。",
+            "ja-JP": "ホームのカルーセル先頭に協力者募集と Phantom Blade Zero の予告を掲載しました。Palworld と Lord of Mysteries のポスターを更新し、ショートカットの先頭にも Phantom Blade Zero を追加しました。",
+            "ko-KR": "홈 슬라이드 앞부분에 기여자 모집과 팬텀 블레이드 제로 예고를 배치했습니다. 팰월드와 Lord of Mysteries 포스터를 갱신하고 바로가기 첫 칸에도 팬텀 블레이드 제로를 넣었습니다."
           }
         }
       ]
@@ -981,7 +1065,9 @@
           "text": {
             "en-US": "Redesigned the About, Contact, Site settings and clear-data dialogs: a bolder look, one-tap copy for the QQ group and WeChat IDs, and theme and language choices you can see at a glance.",
             "zh-CN": "重做了关于藏舟、联系我们、网站设置和清除数据弹窗：更醒目的新外观，QQ 群号和微信号一键复制，主题和语言选项一眼可见。",
-            "zh-TW": "重做了關於藏舟、聯絡我們、網站設定和清除資料彈窗：更醒目的新外觀，QQ 群號和微信號一鍵複製，主題和語言選項一眼可見。"
+            "zh-TW": "重做了關於藏舟、聯絡我們、網站設定和清除資料彈窗：更醒目的新外觀，QQ 群號和微信號一鍵複製，主題和語言選項一眼可見。",
+            "ja-JP": "紹介、お問い合わせ、サイト設定、データ消去のダイアログを刷新しました。QQ グループ番号と WeChat ID をワンタップでコピーでき、テーマと言語の選択状態も一目で分かります。",
+            "ko-KR": "소개, 문의, 사이트 설정, 데이터 지우기 창을 개편했습니다. QQ 그룹 번호와 위챗 ID를 한 번에 복사하고 테마와 언어 선택 상태를 바로 볼 수 있습니다."
           }
         }
       ]
@@ -1002,7 +1088,9 @@
           "text": {
             "en-US": "A slimmer site footer, a warm search button on All Games, and a redesigned Tools Library.",
             "zh-CN": "页脚更紧凑，全部游戏页搜索按钮改为暖色，工具库全新设计。",
-            "zh-TW": "頁尾更緊湊，全部遊戲頁搜尋按鈕改為暖色，工具庫全新設計。"
+            "zh-TW": "頁尾更緊湊，全部遊戲頁搜尋按鈕改為暖色，工具庫全新設計。",
+            "ja-JP": "サイトのフッターを薄くし、全ゲーム一覧の検索ボタンを暖色に変更。ツール一覧も刷新しました。",
+            "ko-KR": "사이트 하단을 줄이고 전체 게임 목록에 따뜻한 색의 검색 버튼을 적용했습니다. 도구 목록도 개편했습니다."
           }
         },
         {
@@ -1010,7 +1098,9 @@
           "text": {
             "en-US": "The forum and its post composer have a softer, more compact look that matches the rest of the site.",
             "zh-CN": "论坛与发帖页样式更柔和紧凑，与全站风格统一。",
-            "zh-TW": "論壇與發文頁樣式更柔和緊湊，與全站風格統一。"
+            "zh-TW": "論壇與發文頁樣式更柔和緊湊，與全站風格統一。",
+            "ja-JP": "フォーラムと投稿作成画面を、他のページに合わせて柔らかくコンパクトなデザインにしました。",
+            "ko-KR": "포럼과 글쓰기 화면을 사이트 전체와 어울리는 부드럽고 간결한 디자인으로 바꿨습니다."
           }
         }
       ]
@@ -1031,7 +1121,9 @@
           "text": {
             "en-US": "The final Arkive logo replaces the temporary wordmark across the site",
             "zh-CN": "全站换上正式的 Arkive 标志，替换原先的临时字标",
-            "zh-TW": "全站換上正式的 Arkive 標誌，替換原先的臨時字標"
+            "zh-TW": "全站換上正式的 Arkive 標誌，替換原先的臨時字標",
+            "ja-JP": "サイト全体で仮のロゴタイプを正式な Arkive ロゴに置き換えました。",
+            "ko-KR": "사이트 전체에서 임시 글자 로고를 정식 Arkive 로고로 교체했습니다."
           }
         }
       ]
@@ -1052,7 +1144,9 @@
           "text": {
             "en-US": "Redesigned the sign-in and site settings dialogs: rounded titles, softer inputs, and settings as collapsible cards showing each current value.",
             "zh-CN": "重新设计登录与网站设置弹窗：圆润标题、更柔和的输入框，设置项改为可展开卡片并直接显示当前值。",
-            "zh-TW": "重新設計登入與網站設定視窗：圓潤標題、更柔和的輸入框，設定項改為可展開卡片並直接顯示目前值。"
+            "zh-TW": "重新設計登入與網站設定視窗：圓潤標題、更柔和的輸入框，設定項改為可展開卡片並直接顯示目前值。",
+            "ja-JP": "ログインとサイト設定を刷新しました。丸みのある見出しと入力欄を採用し、設定は現在値が見える折りたたみ式になりました。",
+            "ko-KR": "로그인과 사이트 설정 창을 개편했습니다. 제목과 입력란을 부드럽게 다듬고 각 설정은 현재 값이 보이는 접이식 카드로 표시합니다."
           }
         },
         {
@@ -1060,7 +1154,9 @@
           "text": {
             "en-US": "The games menu now groups games into Online and Single & co-op columns, each with its icon.",
             "zh-CN": "游戏菜单按「网游」与「单机／联机」分栏展示，并附带游戏图标。",
-            "zh-TW": "遊戲選單依「網遊」與「單機／連線」分欄顯示，並附上遊戲圖示。"
+            "zh-TW": "遊戲選單依「網遊」與「單機／連線」分欄顯示，並附上遊戲圖示。",
+            "ja-JP": "ゲームメニューをオンラインとシングル・協力プレイの2列に分け、各項目にアイコンを付けました。",
+            "ko-KR": "게임 메뉴를 온라인과 싱글·협동 플레이 두 열로 나누고 각각 아이콘을 붙였습니다."
           }
         },
         {
@@ -1068,7 +1164,9 @@
           "text": {
             "en-US": "On phones, the homepage menu is now a short list of plain rows, and the notification bell is a round icon button.",
             "zh-CN": "手机端首页菜单改为简洁的文字列表，通知铃铛改为圆形图标按钮。",
-            "zh-TW": "手機端首頁選單改為簡潔的文字列表，通知鈴鐺改為圓形圖示按鈕。"
+            "zh-TW": "手機端首頁選單改為簡潔的文字列表，通知鈴鐺改為圓形圖示按鈕。",
+            "ja-JP": "スマートフォンのホームメニューを簡潔なリストにし、通知ベルを丸いアイコンボタンにしました。",
+            "ko-KR": "휴대폰 홈 메뉴를 간결한 목록으로 바꾸고 알림 종을 둥근 아이콘 버튼으로 표시합니다."
           }
         }
       ]
@@ -1090,7 +1188,9 @@
           "text": {
             "en-US": "Scrollbars across every page are now thin and unobtrusive, replacing the browser's wide default.",
             "zh-CN": "全站滚动条统一改为纤细、透明背景的样式，不再使用浏览器默认的宽滚动条。",
-            "zh-TW": "全站捲軸統一改為纖細、透明背景的樣式，不再使用瀏覽器預設的寬捲軸。"
+            "zh-TW": "全站捲軸統一改為纖細、透明背景的樣式，不再使用瀏覽器預設的寬捲軸。",
+            "ja-JP": "各ページの太い標準スクロールバーを、目立たない細い表示に変更しました。",
+            "ko-KR": "모든 페이지에서 기본 스크롤바 대신 눈에 덜 띄는 가는 스크롤바를 사용합니다."
           }
         }
       ]
@@ -1112,7 +1212,9 @@
           "text": {
             "en-US": "Browse redesigned game cards and search aliases, with consistent directory navigation and a quiet footer on content pages.",
             "zh-CN": "全部游戏采用新版卡片与别名搜索，目录导航统一，内容页使用简洁页脚。",
-            "zh-TW": "全部遊戲採用新版卡片與別名搜尋，目錄導覽統一，內容頁使用簡潔頁尾。"
+            "zh-TW": "全部遊戲採用新版卡片與別名搜尋，目錄導覽統一，內容頁使用簡潔頁尾。",
+            "ja-JP": "ゲームカードを刷新し、別名でも検索できるようにしました。一覧のナビゲーションを揃え、コンテンツページのフッターを簡素化しました。",
+            "ko-KR": "게임 카드를 개편하고 별칭 검색을 추가했습니다. 목록 탐색 방식을 통일하고 콘텐츠 페이지 하단을 간소화했습니다."
           }
         }
       ]
@@ -1133,7 +1235,9 @@
           "text": {
             "en-US": "Arkive has moved to arkive.games. Every site, its data and images, and sign-in now live there, and the old tc-imba.com addresses redirect to the new ones. You will need to sign in once more.",
             "zh-CN": "藏舟已迁移至 arkive.games。所有站点、数据、图片和登录现均在新域名下，旧的 tc-imba.com 地址会自动跳转。迁移后需要重新登录一次。",
-            "zh-TW": "藏舟已遷移至 arkive.games。所有站點、資料、圖片和登入現均在新網域下，舊的 tc-imba.com 位址會自動跳轉。遷移後需要重新登入一次。"
+            "zh-TW": "藏舟已遷移至 arkive.games。所有站點、資料、圖片和登入現均在新網域下，舊的 tc-imba.com 位址會自動跳轉。遷移後需要重新登入一次。",
+            "ja-JP": "Arkive は arkive.games に移転しました。各サイト、データ、画像、ログインが新ドメインにまとまり、旧 tc-imba.com から転送されます。再度ログインしてください。",
+            "ko-KR": "Arkive가 arkive.games로 이전했습니다. 사이트, 데이터, 이미지, 로그인이 새 도메인으로 옮겨졌고 기존 tc-imba.com 주소는 자동 연결됩니다. 한 번 다시 로그인해야 합니다."
           }
         }
       ]
@@ -1154,7 +1258,9 @@
           "text": {
             "en-US": "New top navigation: the Arkive wordmark with the current game beside it, rounded tabs with a sliding highlight, and a floating bar on the homepage. On phones the bottom tab bar is replaced by a menu button in the top-right corner that opens every page, language, theme and settings.",
             "zh-CN": "全新顶部导航：Arkive 字标旁显示当前游戏，圆角标签带滑动高亮，首页导航栏改为悬浮样式。手机端去掉底部标签栏，改为右上角菜单按钮，所有页面、语言、主题和设置都在菜单里。",
-            "zh-TW": "全新頂部導覽：Arkive 字標旁顯示目前遊戲，圓角標籤帶滑動高亮，首頁導覽列改為懸浮樣式。手機端移除底部標籤列，改為右上角選單按鈕，所有頁面、語言、主題和設定都在選單裡。"
+            "zh-TW": "全新頂部導覽：Arkive 字標旁顯示目前遊戲，圓角標籤帶滑動高亮，首頁導覽列改為懸浮樣式。手機端移除底部標籤列，改為右上角選單按鈕，所有頁面、語言、主題和設定都在選單裡。",
+            "ja-JP": "上部ナビを刷新し、Arkive ロゴの横にゲーム名、タブには移動する選択表示を追加。ホームではナビが浮かぶ形になりました。スマートフォンは下部タブの代わりに右上のメニューから各ページ、言語、テーマ、設定を開けます。",
+            "ko-KR": "상단에 Arkive 로고와 현재 게임 이름, 움직이는 선택 표시가 있는 탭을 배치했습니다. 홈에서는 탐색 막대가 떠 있고 휴대폰에서는 하단 탭 대신 오른쪽 위 메뉴에서 모든 페이지, 언어, 테마, 설정을 엽니다."
           }
         }
       ]
@@ -1175,7 +1281,9 @@
           "text": {
             "en-US": "Redesigned the Arkive homepage: a game cover carousel, round shortcuts with update badges, a tool dock, the latest forum posts and a new sea-wave footer. Search now lives on the All games and Forum pages.",
             "zh-CN": "藏舟首页改版：游戏封面轮播、带更新角标的圆形快捷入口、工具码头、论坛最新帖子，以及全新的海浪页脚。搜索移至“全部游戏”和“论坛”页面。",
-            "zh-TW": "藏舟首頁改版：遊戲封面輪播、帶更新角標的圓形快捷入口、工具碼頭、論壇最新貼文，以及全新的海浪頁尾。搜尋移至「全部遊戲」和「論壇」頁面。"
+            "zh-TW": "藏舟首頁改版：遊戲封面輪播、帶更新角標的圓形快捷入口、工具碼頭、論壇最新貼文，以及全新的海浪頁尾。搜尋移至「全部遊戲」和「論壇」頁面。",
+            "ja-JP": "ホームにゲームのカルーセル、更新バッジ付きショートカット、ツール、最新の投稿、波のフッターを配置しました。検索は全ゲーム一覧とフォーラムに移動しました。",
+            "ko-KR": "홈에 게임 슬라이드, 업데이트 배지가 붙은 바로가기, 도구 모음, 최신 포럼 글, 물결 모양 하단을 배치했습니다. 검색은 전체 게임 목록과 포럼으로 옮겼습니다."
           }
         }
       ]
@@ -1197,7 +1305,9 @@
           "text": {
             "en-US": "Avatar changes now save to the account instead of only this browser. Account and forum surfaces use the server avatar, and recovered local images require confirmation before upload. Avatar menus consistently offer My profile, Website settings and Sign out across the portal and games.",
             "zh-CN": "更换头像现在会保存到账户，而不再只存于当前浏览器。账户与论坛统一使用服务器头像，找回的旧本地图片需确认后才会上传。主站与游戏站的头像菜单统一提供个人主页、网站设置和退出登录。",
-            "zh-TW": "更換頭像現在會儲存至帳戶，而不再只存於目前瀏覽器。帳戶與論壇統一使用伺服器頭像，找回的舊本機圖片需確認後才會上傳。主站與遊戲站的頭像選單統一提供個人主頁、網站設定和登出。"
+            "zh-TW": "更換頭像現在會儲存至帳戶，而不再只存於目前瀏覽器。帳戶與論壇統一使用伺服器頭像，找回的舊本機圖片需確認後才會上傳。主站與遊戲站的頭像選單統一提供個人主頁、網站設定和登出。",
+            "ja-JP": "アバターをブラウザだけでなくアカウントに保存します。アカウントとフォーラムでサーバーの画像を使い、ローカル画像の復元時はアップロード前に確認します。ポータルと各ゲームでプロフィール、設定、ログアウトのメニューを統一しました。",
+            "ko-KR": "아바타를 브라우저가 아닌 계정에 저장합니다. 계정과 포럼에서 서버 이미지를 사용하며 로컬 이미지 복구 시 업로드 전에 확인합니다. 포털과 게임의 아바타 메뉴를 내 프로필, 사이트 설정, 로그아웃으로 통일했습니다."
           }
         }
       ]
@@ -1215,7 +1325,9 @@
           "text": {
             "en-US": "On phones, catalogue filters fold away behind a Filters toggle, giving the results more of the screen; a dot on the toggle shows when a filter is still active.",
             "zh-CN": "手机端的图鉴筛选栏可通过“筛选”按钮收起，为结果腾出更多空间；按钮上的圆点提示仍有筛选生效。",
-            "zh-TW": "手機端的圖鑑篩選欄可透過「篩選」按鈕收起，為結果騰出更多空間；按鈕上的圓點提示仍有篩選生效。"
+            "zh-TW": "手機端的圖鑑篩選欄可透過「篩選」按鈕收起，為結果騰出更多空間；按鈕上的圓點提示仍有篩選生效。",
+            "ja-JP": "スマートフォンでは一覧のフィルターを折りたたみ、結果を広く表示できます。適用中の条件があるとボタンに点が付きます。",
+            "ko-KR": "휴대폰에서는 목록 필터를 접어 결과를 더 넓게 볼 수 있습니다. 적용 중인 필터가 있으면 버튼에 점이 표시됩니다."
           }
         }
       ]
@@ -1236,7 +1348,9 @@
           "text": {
             "en-US": "The homepage pairs game covers with an automatically rotating tool showcase, with captions below the images and playback controls. A dedicated all-games illustration leads to the full game list, while search, recent pages and update badges remain available.",
             "zh-CN": "首页采用左侧工具轮播与右侧游戏封面的布局，名称与简介置于图片下方，轮播支持自动切换及播放控制；新增全部游戏插画入口，保留搜索、最近使用和更新角标。",
-            "zh-TW": "首頁採用左側工具輪播與右側遊戲封面的配置，名稱與簡介置於圖片下方，輪播支援自動切換及播放控制；新增全部遊戲插畫入口，保留搜尋、最近使用和更新角標。"
+            "zh-TW": "首頁採用左側工具輪播與右側遊戲封面的配置，名稱與簡介置於圖片下方，輪播支援自動切換及播放控制；新增全部遊戲插畫入口，保留搜尋、最近使用和更新角標。",
+            "ja-JP": "ホームにゲームのカバーと自動切り替えのツール紹介を並べ、画像下に説明と再生操作を配置しました。専用イラストから全ゲームを開けます。検索、最近見たページ、更新バッジも引き続き利用できます。",
+            "ko-KR": "홈에 게임 표지와 자동으로 바뀌는 도구 소개를 나란히 두고 이미지 아래에 설명과 재생 버튼을 배치했습니다. 전용 그림에서 전체 게임을 열 수 있으며 검색, 최근 페이지와 업데이트 배지도 유지했습니다."
           }
         }
       ]
@@ -1257,7 +1371,9 @@
           "text": {
             "en-US": "Signing in with a wrong password now says so, instead of the dialog appearing to do nothing.",
             "zh-CN": "密码输错时，登录窗口现在会提示邮箱或密码不正确，不再毫无反应。",
-            "zh-TW": "密碼輸錯時，登入視窗現在會提示電子郵件或密碼不正確，不再毫無反應。"
+            "zh-TW": "密碼輸錯時，登入視窗現在會提示電子郵件或密碼不正確，不再毫無反應。",
+            "ja-JP": "パスワードを間違えたとき、ログイン画面にエラーが表示されるようになりました。",
+            "ko-KR": "비밀번호가 틀리면 로그인 창에서 오류 이유를 알려줍니다."
           }
         }
       ]
@@ -1278,7 +1394,9 @@
           "text": {
             "en-US": "The Arkive homepage now shows every game and every tool on its first screen: each game card links straight to its maps and encyclopedia pages and marks games updated in the last 30 days, the search box finds games and pages by name, such as the Palworld breeding calculator, and the pages you opened lately wait under the search box. Games not yet open no longer appear. The footer's About Arkive and Contact us open on the site with an introduction and the feedback QQ group, and Tool library and Update history open the site's own pages.",
             "zh-CN": "藏舟首页改版：第一屏即可看到全部游戏与全部工具，每张游戏卡片可直接进入对应的地图与资料页面，30 天内有更新的游戏会显示更新时间；搜索框可按名称找到游戏和功能，例如帕鲁配种计算器；最近打开过的页面会显示在搜索框下方。尚未上线的游戏不再显示。底部的「关于藏舟」「联系我们」改为站内弹窗，提供网站介绍与意见反馈 QQ 群；「工具库」「更新日志」改为打开网站自己的页面。",
-            "zh-TW": "藏舟首頁改版：第一屏即可看到全部遊戲與全部工具，每張遊戲卡片可直接進入對應的地圖與資料頁面，30 天內有更新的遊戲會顯示更新時間；搜尋框可按名稱找到遊戲和功能，例如帕魯配種計算器；最近開啟過的頁面會顯示在搜尋框下方。尚未上線的遊戲不再顯示。底部的「關於藏舟」「聯絡我們」改為站內彈窗，提供網站介紹與意見回饋 QQ 群；「工具庫」「更新日誌」改為開啟網站自己的頁面。"
+            "zh-TW": "藏舟首頁改版：第一屏即可看到全部遊戲與全部工具，每張遊戲卡片可直接進入對應的地圖與資料頁面，30 天內有更新的遊戲會顯示更新時間；搜尋框可按名稱找到遊戲和功能，例如帕魯配種計算器；最近開啟過的頁面會顯示在搜尋框下方。尚未上線的遊戲不再顯示。底部的「關於藏舟」「聯絡我們」改為站內彈窗，提供網站介紹與意見回饋 QQ 群；「工具庫」「更新日誌」改為開啟網站自己的頁面。",
+            "ja-JP": "ホームの最初の画面に公開済みの全ゲームとツールを集めました。ゲームカードからマップと図鑑を直接開け、過去30日間に更新されたゲームには印が付きます。ゲーム名や配合計算機などのページ名で検索でき、検索欄の下には最近見たページを表示します。フッターの紹介・お問い合わせでサイト紹介と QQ グループを確認でき、ツール一覧・更新履歴もサイト内で開きます。",
+            "ko-KR": "홈 첫 화면에 공개된 모든 게임과 도구를 모았습니다. 게임 카드에서 지도와 도감을 바로 열 수 있고 최근 30일 내 갱신한 게임을 표시합니다. 게임이나 팰월드 교배 계산기 같은 페이지 이름을 검색할 수 있고 검색창 아래에는 최근 방문 페이지가 나옵니다. 하단 소개와 문의에서 사이트 설명과 QQ 그룹을 확인할 수 있으며 도구 목록과 업데이트 내역도 사이트 안에서 열립니다."
           }
         }
       ]
@@ -1298,7 +1416,9 @@
           "text": {
             "en-US": "Creating an account or resetting a password now asks you to type the password twice, so a typo cannot lock you out, and the sign-up form shows that a human check is protecting it. Your email address is now shown read-only on the account page: ask an administrator to change it.",
             "zh-CN": "注册账号或重置密码时，现在需要输入两次密码，避免打错后无法登录；注册表单也会显示正在进行人机验证。账号页面的邮箱改为只读，如需更换请联系管理员。",
-            "zh-TW": "註冊帳號或重設密碼時，現在需要輸入兩次密碼，避免打錯後無法登入；註冊表單也會顯示正在進行人機驗證。帳號頁面的信箱改為唯讀，如需更換請聯絡管理員。"
+            "zh-TW": "註冊帳號或重設密碼時，現在需要輸入兩次密碼，避免打錯後無法登入；註冊表單也會顯示正在進行人機驗證。帳號頁面的信箱改為唯讀，如需更換請聯絡管理員。",
+            "ja-JP": "登録時とパスワード再設定時に確認入力を追加し、登録フォームには自動登録防止の認証を表示します。アカウントのメールアドレスは閲覧専用です。変更は管理者に依頼してください。",
+            "ko-KR": "가입하거나 비밀번호를 재설정할 때 두 번 입력해 오타를 방지합니다. 가입 양식에 자동 가입 방지 인증을 표시합니다. 계정 이메일은 읽기 전용이며 변경은 관리자에게 요청해야 합니다."
           }
         }
       ]
@@ -1317,7 +1437,9 @@
           "text": {
             "en-US": "Marker details now open in compact panels above map markers, keep search selections centered, and provide tighter empty states and improved image attachments.",
             "zh-CN": "点位详情现以紧凑弹窗显示在地图点位上方，搜索选点保持居中，并优化空状态与图片附件操作。",
-            "zh-TW": "點位詳情現以緊湊彈窗顯示在地圖點位上方，搜尋選點保持置中，並優化空狀態與圖片附件操作。"
+            "zh-TW": "點位詳情現以緊湊彈窗顯示在地圖點位上方，搜尋選點保持置中，並優化空狀態與圖片附件操作。",
+            "ja-JP": "マーカーの上にコンパクトな詳細パネルを表示し、検索で選んだマーカーを中央に保ちます。内容が空のときの表示と画像添付も改善しました。",
+            "ko-KR": "마커 위에 간결한 상세 패널이 열리고 검색으로 선택한 마커가 중앙에 유지됩니다. 비어 있을 때의 표시와 이미지 첨부도 개선했습니다."
           }
         }
       ]
@@ -1337,7 +1459,9 @@
           "text": {
             "en-US": "The forum now runs on real data: posts, comments and replies you write are saved and visible to everyone, and likes, bookmarks and follows are shared rather than kept in your browser. You can edit or delete your own posts, attach a Bilibili or Douyin video, and see your followers and the accounts you follow. The notification inbox shows real activity.",
             "zh-CN": "论坛已接入真实数据：你发布的帖子、评论和回复会被保存并对所有人可见，点赞、收藏和关注也不再只存在你的浏览器里。你可以编辑或删除自己的帖子、附上一个 B 站或抖音视频链接，并查看粉丝与关注列表。通知中心显示的是真实动态。",
-            "zh-TW": "論壇已接入真實資料：你發布的帖子、留言和回覆會被儲存並對所有人可見，讚、收藏和關注也不再只存在你的瀏覽器裡。你可以編輯或刪除自己的帖子、附上一個 B 站或抖音影片連結，並查看粉絲與關注列表。通知中心顯示的是真實動態。"
+            "zh-TW": "論壇已接入真實資料：你發布的帖子、留言和回覆會被儲存並對所有人可見，讚、收藏和關注也不再只存在你的瀏覽器裡。你可以編輯或刪除自己的帖子、附上一個 B 站或抖音影片連結，並查看粉絲與關注列表。通知中心顯示的是真實動態。",
+            "ja-JP": "フォーラムの投稿、コメント、返信が保存・公開され、「いいね」、ブックマーク、フォローも端末内に限らず反映されます。自分の投稿の編集・削除、Bilibili・抖音動画の添付、フォロー一覧の確認が可能です。受信箱には実際の活動が届きます。",
+            "ko-KR": "포럼 글과 댓글, 답글이 저장·공개되며 좋아요, 북마크, 팔로우도 브라우저 밖에서 유지됩니다. 내 글을 수정·삭제하고 빌리빌리나 더우인 영상을 첨부하며 팔로워와 팔로잉을 볼 수 있습니다. 알림함에 실제 활동이 표시됩니다."
           }
         }
       ]
@@ -1356,7 +1480,9 @@
           "text": {
             "en-US": "Maps now use a single renderer everywhere, so they start faster and every game's embedded mini-maps (pal spawns, dungeon entrances, region loot, quest locations) draw with the same engine as the full map. The renderer switcher has been retired.",
             "zh-CN": "地图统一为单一渲染器，加载更快；各游戏的内嵌小地图（帕鲁刷新点、地牢入口、区域掉落、任务地点）与完整地图使用同一渲染引擎。渲染器切换选项已移除。",
-            "zh-TW": "地圖統一為單一渲染器，載入更快；各遊戲的內嵌小地圖（帕魯刷新點、地牢入口、區域掉落、任務地點）與完整地圖使用同一渲染引擎。渲染器切換選項已移除。"
+            "zh-TW": "地圖統一為單一渲染器，載入更快；各遊戲的內嵌小地圖（帕魯刷新點、地牢入口、區域掉落、任務地點）與完整地圖使用同一渲染引擎。渲染器切換選項已移除。",
+            "ja-JP": "マップの描画方式を統一して起動を高速化しました。出現場所、ダンジョン入口、地域の戦利品、クエスト地点のミニマップも全体マップと同じ方式で描画し、切り替え設定を廃止しました。",
+            "ko-KR": "지도 렌더링 방식을 통일해 시작 속도가 빨라졌습니다. 팰 출현지, 던전 입구, 지역 전리품, 퀘스트 위치 미니맵도 전체 지도와 같은 방식으로 그리며 렌더러 전환 설정을 없앴습니다."
           }
         }
       ]
@@ -1375,7 +1501,9 @@
           "text": {
             "en-US": "Marker details now open in one responsive panel on every map: a Details and Comments split, collapsible sections for drops and rewards, and a position you can copy in one click. On phones it opens as a draggable bottom sheet.",
             "zh-CN": "点位详情改为统一的自适应面板：详情与留言分栏、掉落与奖励可折叠、坐标可一键复制；手机端以可拖动的底部面板打开。",
-            "zh-TW": "點位詳情改為統一的自適應面板：詳情與留言分欄、掉落與獎勵可折疊、坐標可一鍵複製；手機端以可拖動的底部面板開啟。"
+            "zh-TW": "點位詳情改為統一的自適應面板：詳情與留言分欄、掉落與獎勵可折疊、坐標可一鍵複製；手機端以可拖動的底部面板開啟。",
+            "ja-JP": "全マップで詳細とコメントを分けた共通のマーカーパネルを使います。ドロップと報酬は折りたたみ可能で、座標はワンクリックでコピーできます。スマートフォンでは下からドラッグして開けます。",
+            "ko-KR": "모든 지도에서 상세 정보와 댓글을 나눈 마커 패널을 사용합니다. 드롭과 보상은 접을 수 있고 좌표는 한 번에 복사됩니다. 휴대폰에서는 아래쪽의 패널을 끌어올릴 수 있습니다."
           }
         }
       ]
@@ -1395,7 +1523,9 @@
           "text": {
             "en-US": "Top-bar menus now use tighter rows and content-aware widths, while long language lists open in two columns so every option fits on screen.",
             "zh-CN": "顶部导航菜单现在采用更紧凑的行距和自适应宽度；语言较多时自动分为两列，让所有选项都能在一屏内清晰显示。",
-            "zh-TW": "頂部導覽選單現在採用更緊湊的行距和自適應寬度；語言較多時自動分為兩欄，讓所有選項都能在一個畫面內清楚顯示。"
+            "zh-TW": "頂部導覽選單現在採用更緊湊的行距和自適應寬度；語言較多時自動分為兩欄，讓所有選項都能在一個畫面內清楚顯示。",
+            "ja-JP": "上部メニューの行間と幅を内容に合わせ、言語が多い場合は2列で全項目を画面に収めます。",
+            "ko-KR": "상단 메뉴 행 간격을 줄이고 내용에 맞춰 너비를 조정했습니다. 긴 언어 목록은 두 열로 표시해 화면 안에 들어옵니다."
           }
         }
       ]
@@ -1415,7 +1545,9 @@
           "text": {
             "en-US": "Forgot your password now sends a reset email, and the link opens the reset form for you.",
             "zh-CN": "忘记密码现在会发送重置邮件，点击邮件中的链接即可直接设置新密码。",
-            "zh-TW": "忘記密碼現在會寄送重設郵件，點選郵件中的連結即可直接設定新密碼。"
+            "zh-TW": "忘記密碼現在會寄送重設郵件，點選郵件中的連結即可直接設定新密碼。",
+            "ja-JP": "パスワード再設定メールを送信し、メールのリンクから再設定フォームを直接開けるようになりました。",
+            "ko-KR": "비밀번호 재설정 이메일을 보내며 링크를 누르면 재설정 양식이 바로 열립니다."
           }
         }
       ]
@@ -1435,7 +1567,9 @@
           "text": {
             "en-US": "The forum has been rebuilt with game cabins, personal activity views, clearer post details, safer publishing, and responsive navigation.",
             "zh-CN": "论坛已完成重构，新增游戏舱、个人动态视图、更清晰的帖子详情、安全的发布流程与响应式导航。",
-            "zh-TW": "論壇已完成重構，新增遊戲艙、個人動態檢視、更清晰的文章詳情、安全的發佈流程與響應式導覽。"
+            "zh-TW": "論壇已完成重構，新增遊戲艙、個人動態檢視、更清晰的文章詳情、安全的發佈流程與響應式導覽。",
+            "ja-JP": "フォーラムを再構成し、ゲーム別の部屋、個人の活動履歴、読みやすい投稿詳細、安全性を高めた投稿フロー、画面幅に応じたナビを追加しました。",
+            "ko-KR": "포럼을 개편해 게임별 게시판, 개인 활동 내역, 읽기 쉬운 글 상세 화면, 더 안전한 게시 절차와 반응형 탐색 메뉴를 추가했습니다."
           }
         }
       ]
@@ -1455,7 +1589,9 @@
           "text": {
             "en-US": "The site filing record now appears in every game's About panel, so it is reachable from the map as well as from content pages.",
             "zh-CN": "网站备案号现已显示在各游戏的「关于」面板中，在地图页与内容页均可查看。",
-            "zh-TW": "網站備案號現已顯示在各遊戲的「關於」面板中，在地圖頁與內容頁均可查看。"
+            "zh-TW": "網站備案號現已顯示在各遊戲的「關於」面板中，在地圖頁與內容頁均可查看。",
+            "ja-JP": "各ゲームの紹介パネルにサイトの届出番号を掲載しました。マップからもコンテンツページからも確認できます。",
+            "ko-KR": "각 게임의 소개 패널에 사이트 등록 정보를 표시해 지도와 콘텐츠 페이지 어디서나 확인할 수 있습니다."
           }
         }
       ]
@@ -1475,7 +1611,9 @@
           "text": {
             "en-US": "Forgot your password now sends a reset email, and the link opens the reset form for you.",
             "zh-CN": "忘记密码现在会发送重置邮件，点击邮件中的链接即可直接设置新密码。",
-            "zh-TW": "忘記密碼現在會寄送重設郵件，點選郵件中的連結即可直接設定新密碼。"
+            "zh-TW": "忘記密碼現在會寄送重設郵件，點選郵件中的連結即可直接設定新密碼。",
+            "ja-JP": "パスワード再設定メールを送信し、メールのリンクから再設定フォームを直接開けるようになりました。",
+            "ko-KR": "비밀번호 재설정 이메일을 보내며 링크를 누르면 재설정 양식이 바로 열립니다."
           }
         }
       ]
@@ -1495,7 +1633,9 @@
           "text": {
             "en-US": "Navigation dropdown menus now size to their labels, so longer translations no longer wrap onto two or three lines.",
             "zh-CN": "导航下拉菜单现在会根据文字长度自动调整宽度，较长的翻译不再折行显示。",
-            "zh-TW": "導覽下拉選單現在會根據文字長度自動調整寬度，較長的翻譯不再折行顯示。"
+            "zh-TW": "導覽下拉選單現在會根據文字長度自動調整寬度，較長的翻譯不再折行顯示。",
+            "ja-JP": "ナビのドロップダウン幅を項目名に合わせ、長い訳文が何行にも折り返されないようにしました。",
+            "ko-KR": "탐색 드롭다운을 문구 길이에 맞춰 긴 번역이 여러 줄로 갈라지지 않습니다."
           }
         }
       ]
@@ -1514,7 +1654,9 @@
           "text": {
             "en-US": "Map marker popups no longer show a scrollbar when there is nothing to scroll, and the pointer under the popup is visible again.",
             "zh-CN": "地图标记弹窗不再出现多余的滚动条，弹窗下方的指示箭头也恢复显示。",
-            "zh-TW": "地圖標記彈窗不再出現多餘的捲軸，彈窗下方的指示箭頭也恢復顯示。"
+            "zh-TW": "地圖標記彈窗不再出現多餘的捲軸，彈窗下方的指示箭頭也恢復顯示。",
+            "ja-JP": "スクロールが不要なマーカーポップアップではバーを隠し、下の吹き出しの矢印を再表示しました。",
+            "ko-KR": "스크롤할 필요가 없는 마커 팝업에서는 스크롤바를 숨기고 하단 가리키는 표시를 복원했습니다."
           }
         }
       ]
@@ -1534,7 +1676,9 @@
           "text": {
             "en-US": "A new Settings panel collects theme, language, and the controls for data this site keeps in your browser. Each game can now follow the shared theme and language or override them for itself.",
             "zh-CN": "新增「设置」面板，集中管理主题、语言，以及本站保存在浏览器中的数据。每个游戏既可跟随全站的主题与语言，也可单独设置。",
-            "zh-TW": "新增「設定」面板，集中管理主題、語言，以及本站儲存在瀏覽器中的資料。每個遊戲既可跟隨全站的主題與語言，也可單獨設定。"
+            "zh-TW": "新增「設定」面板，集中管理主題、語言，以及本站儲存在瀏覽器中的資料。每個遊戲既可跟隨全站的主題與語言，也可單獨設定。",
+            "ja-JP": "設定パネルにテーマ、言語、ブラウザに保存するデータの管理をまとめました。ゲームごとに共通設定を使うか個別に変更できます。",
+            "ko-KR": "설정 패널에 테마, 언어, 브라우저 저장 데이터 관리를 모았습니다. 각 게임에서 공통 테마와 언어를 따르거나 따로 지정할 수 있습니다."
           }
         }
       ]
@@ -1554,7 +1698,9 @@
           "text": {
             "en-US": "Every game About panel now separates game updates from the shared Arkive platform history.",
             "zh-CN": "所有游戏的「关于」界面现已分别提供当前游戏更新记录与藏舟平台更新记录。",
-            "zh-TW": "所有遊戲的「關於」介面現已分別提供目前遊戲更新記錄與藏舟平台更新記錄。"
+            "zh-TW": "所有遊戲的「關於」介面現已分別提供目前遊戲更新記錄與藏舟平台更新記錄。",
+            "ja-JP": "各ゲームの紹介パネルで、そのゲームの更新と Arkive 共通の更新履歴を分けました。",
+            "ko-KR": "각 게임의 소개 패널에서 게임 업데이트와 Arkive 공통 업데이트 내역을 분리했습니다."
           }
         }
       ]
@@ -1573,7 +1719,9 @@
           "text": {
             "en-US": "Map search results now close when you click outside the search panel.",
             "zh-CN": "点击地图搜索区域外部时，搜索结果现在会自动关闭。",
-            "zh-TW": "點擊地圖搜尋區域外部時，搜尋結果現在會自動關閉。"
+            "zh-TW": "點擊地圖搜尋區域外部時，搜尋結果現在會自動關閉。",
+            "ja-JP": "マップの検索パネルの外を押すと検索結果が閉じます。",
+            "ko-KR": "지도 검색 영역 바깥을 누르면 검색 결과가 닫힙니다."
           }
         },
         {
@@ -1581,7 +1729,9 @@
           "text": {
             "en-US": "Marker details now stay clear of the floating search after selecting a result.",
             "zh-CN": "选择搜索结果后，点位详情现在会避开悬浮搜索栏。",
-            "zh-TW": "選擇搜尋結果後，標記詳情現在會避開浮動搜尋列。"
+            "zh-TW": "選擇搜尋結果後，標記詳情現在會避開浮動搜尋列。",
+            "ja-JP": "検索結果を選んでも、マーカー詳細が画面上の検索欄と重ならなくなりました。",
+            "ko-KR": "검색 결과를 선택해도 마커 상세 정보가 떠 있는 검색창에 가려지지 않습니다."
           }
         }
       ]
@@ -1600,7 +1750,9 @@
           "text": {
             "en-US": "Interactive-map search results now use compact rows and a two-column desktop layout.",
             "zh-CN": "互动地图搜索结果现已采用紧凑行距和桌面双列排版。",
-            "zh-TW": "互動地圖搜尋結果現已採用緊湊行距和桌面雙欄排版。"
+            "zh-TW": "互動地圖搜尋結果現已採用緊湊行距和桌面雙欄排版。",
+            "ja-JP": "インタラクティブマップの検索結果をコンパクトな行にし、デスクトップでは2列で表示します。",
+            "ko-KR": "인터랙티브 지도 검색 결과의 행을 간결하게 정리하고 데스크톱에서는 두 열로 표시합니다."
           }
         }
       ]
