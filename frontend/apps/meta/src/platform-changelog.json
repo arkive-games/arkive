@@ -1,6 +1,32 @@
 {
   "entries": [
     {
+      "date": "2026-11-26",
+      "commit": "506164b83054db77fcc0b75ed0d9990db4718628",
+      "targets": [
+        "aion2",
+        "glimmith",
+        "gmzz",
+        "oss",
+        "palworld",
+        "pbz",
+        "ro3",
+        "vrising"
+      ],
+      "changes": [
+        {
+          "kind": "feature",
+          "text": {
+            "en-US": "Add Arkive to your home screen from the tool dock, with a standalone launch and a basic offline app shell.",
+            "zh-CN": "工具码头新增“添加到桌面”，可用独立窗口快速打开藏舟；首页应用壳支持基础离线回退。",
+            "zh-TW": "工具碼頭新增「加入桌面」，可用獨立視窗快速開啟藏舟；首頁應用外殼支援基本離線回退。",
+            "ja-JP": "ツールドックから藏舟をホーム画面に追加できます。独立ウィンドウで起動し、基本的なオフライン用シェルにも対応しました。",
+            "ko-KR": "도구 부두에서 藏舟를 홈 화면에 추가할 수 있습니다. 독립 창으로 열리며 기본 오프라인 앱 셸을 지원합니다."
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-25",
       "commit": "6bb758c329ddd61aed83184462b94a83861e661b",
       "targets": [
