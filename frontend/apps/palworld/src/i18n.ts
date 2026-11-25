@@ -518,6 +518,7 @@ const resources = {
   'en-US': {
     translation: {
       title: 'Palworld Map',
+      documentTitle: 'Palworld Interactive Map and Breeding Calculator | Arkive',
       categories: 'Markers',
       showAll: 'Show all',
       hideAll: 'Hide all',
@@ -547,6 +548,7 @@ const resources = {
   'de-DE': {
     translation: {
       title: 'Palworld-Karte',
+      documentTitle: 'Interaktive Palworld-Karte und Zuchtrechner | Arkive',
       categories: 'Markierungen',
       showAll: 'Alle anzeigen',
       hideAll: 'Alle ausblenden',
@@ -576,6 +578,7 @@ const resources = {
   'es-ES': {
     translation: {
       title: 'Mapa de Palworld',
+      documentTitle: 'Mapa interactivo y calculadora de crianza de Palworld | Arkive',
       categories: 'Marcadores',
       showAll: 'Mostrar todo',
       hideAll: 'Ocultar todo',
@@ -605,6 +608,7 @@ const resources = {
   'es-MX': {
     translation: {
       title: 'Mapa de Palworld',
+      documentTitle: 'Mapa interactivo y calculadora de crianza de Palworld | Arkive',
       categories: 'Marcadores',
       showAll: 'Mostrar todo',
       hideAll: 'Ocultar todo',
@@ -634,6 +638,7 @@ const resources = {
   'fr-FR': {
     translation: {
       title: 'Carte de Palworld',
+      documentTitle: 'Carte interactive et calculateur de reproduction de Palworld | Arkive',
       categories: 'Marqueurs',
       showAll: 'Tout afficher',
       hideAll: 'Tout masquer',
@@ -663,6 +668,7 @@ const resources = {
   'id-ID': {
     translation: {
       title: 'Peta Palworld',
+      documentTitle: 'Peta interaktif dan kalkulator pembiakan Palworld | Arkive',
       categories: 'Penanda',
       showAll: 'Tampilkan semua',
       hideAll: 'Sembunyikan semua',
@@ -692,6 +698,7 @@ const resources = {
   'it-IT': {
     translation: {
       title: 'Mappa di Palworld',
+      documentTitle: 'Mappa interattiva e calcolatore degli accoppiamenti di Palworld | Arkive',
       categories: 'Marcatori',
       showAll: 'Mostra tutto',
       hideAll: 'Nascondi tutto',
@@ -721,6 +728,7 @@ const resources = {
   'ja-JP': {
     translation: {
       title: 'パルワールドマップ',
+      documentTitle: 'パルワールド 攻略マップ・配合計算機 | Arkive',
       categories: 'マーカー',
       showAll: 'すべて表示',
       hideAll: 'すべて非表示',
@@ -750,6 +758,7 @@ const resources = {
   'ko-KR': {
     translation: {
       title: '팰월드 지도',
+      documentTitle: '팰월드 인터랙티브 지도 및 교배 계산기 | Arkive',
       categories: '마커',
       showAll: '모두 표시',
       hideAll: '모두 숨기기',
@@ -779,6 +788,7 @@ const resources = {
   'pl-PL': {
     translation: {
       title: 'Mapa Palworld',
+      documentTitle: 'Interaktywna mapa i kalkulator hodowli Palworld | Arkive',
       categories: 'Znaczniki',
       showAll: 'Pokaż wszystko',
       hideAll: 'Ukryj wszystko',
@@ -808,6 +818,7 @@ const resources = {
   'pt-BR': {
     translation: {
       title: 'Mapa de Palworld',
+      documentTitle: 'Mapa interativo e calculadora de cruzamentos de Palworld | Arkive',
       categories: 'Marcadores',
       showAll: 'Mostrar tudo',
       hideAll: 'Ocultar tudo',
@@ -837,6 +848,7 @@ const resources = {
   'ru-RU': {
     translation: {
       title: 'Карта Palworld',
+      documentTitle: 'Интерактивная карта и калькулятор скрещивания Palworld | Arkive',
       categories: 'Метки',
       showAll: 'Показать все',
       hideAll: 'Скрыть все',
@@ -866,6 +878,7 @@ const resources = {
   'th-TH': {
     translation: {
       title: 'แผนที่ Palworld',
+      documentTitle: 'แผนที่แบบโต้ตอบและเครื่องคำนวณการผสมพันธุ์ Palworld | Arkive',
       categories: 'มาร์กเกอร์',
       showAll: 'แสดงทั้งหมด',
       hideAll: 'ซ่อนทั้งหมด',
@@ -895,6 +908,7 @@ const resources = {
   'tr-TR': {
     translation: {
       title: 'Palworld Haritası',
+      documentTitle: 'Palworld etkileşimli haritası ve çiftleştirme hesaplayıcısı | Arkive',
       categories: 'İşaretçiler',
       showAll: 'Tümünü göster',
       hideAll: 'Tümünü gizle',
@@ -924,6 +938,7 @@ const resources = {
   'vi-VN': {
     translation: {
       title: 'Bản đồ Palworld',
+      documentTitle: 'Bản đồ tương tác và công cụ tính phối giống Palworld | Arkive',
       categories: 'Điểm đánh dấu',
       showAll: 'Hiện tất cả',
       hideAll: 'Ẩn tất cả',
@@ -953,6 +968,7 @@ const resources = {
   'zh-CN': {
     translation: {
       title: '帕鲁世界地图',
+      documentTitle: '幻兽帕鲁互动地图与配种计算器 | 藏舟 Arkive',
       categories: '标记',
       showAll: '全部显示',
       hideAll: '全部隐藏',
@@ -982,6 +998,7 @@ const resources = {
   'zh-TW': {
     translation: {
       title: '帕魯世界地圖',
+      documentTitle: '幻獸帕魯互動地圖與配種計算器 | 藏舟 Arkive',
       categories: '標記',
       showAll: '全部顯示',
       hideAll: '全部隱藏',
@@ -1062,25 +1079,22 @@ for (const lng of LANGUAGES) {
       },
       building: CATALOG_STRINGS[lng].building,
       tech: CATALOG_STRINGS[lng].tech,
-      quest: QUEST_STRINGS[lng] ?? QUEST_STRINGS['en-US'],
-      bp: { ...(BLUEPRINT_STRINGS[lng] ?? BLUEPRINT_STRINGS['en-US']), guaranteed: BP_GUARANTEED_LABELS[lng] },
+      quest: QUEST_STRINGS[lng],
+      bp: { ...BLUEPRINT_STRINGS[lng], guaranteed: BP_GUARANTEED_LABELS[lng] },
       merchant: {
-        ...(MERCHANT_STRINGS[lng] ?? MERCHANT_STRINGS['en-US']),
+        ...MERCHANT_STRINGS[lng],
         stock: MERCHANT_STOCK_LABELS[lng],
         onceOnly: MERCHANT_ONCE_ONLY_LABELS[lng],
       },
-      dungeon: DUNGEON_STRINGS[lng] ?? DUNGEON_STRINGS['en-US'],
-      fishing: FISHING_STRINGS[lng] ?? FISHING_STRINGS['en-US'],
-      recycler: RECYCLER_STRINGS[lng] ?? RECYCLER_STRINGS['en-US'],
-      research: RESEARCH_STRINGS[lng] ?? RESEARCH_STRINGS['en-US'],
-      changelog: CHANGELOG_STRINGS[lng] ?? CHANGELOG_STRINGS['en-US'],
-      sim: SIM_STRINGS[lng] ?? SIM_STRINGS['en-US'],
-      raids: RAIDS_STRINGS[lng] ?? RAIDS_STRINGS['en-US'],
-      basecamp: BASECAMP_STRINGS[lng] ?? BASECAMP_STRINGS['en-US'],
-      // No `?? ['en-US']`: this table is a total `Record<Language, …>`, so the
-      // index can't miss. (Same is true of most siblings above — their fallback
-      // is vestigial; only QUEST_STRINGS is genuinely `Partial`.) Keep it off:
-      // siteInfo.contact is gated on locale-only reads, see siteInfoStrings.ts.
+      dungeon: DUNGEON_STRINGS[lng],
+      fishing: FISHING_STRINGS[lng],
+      recycler: RECYCLER_STRINGS[lng],
+      research: RESEARCH_STRINGS[lng],
+      changelog: CHANGELOG_STRINGS[lng],
+      sim: SIM_STRINGS[lng],
+      raids: RAIDS_STRINGS[lng],
+      basecamp: BASECAMP_STRINGS[lng],
+      // Contact information is locale-specific; never borrow another region’s contact channel.
       siteInfo: SITE_INFO_STRINGS[lng],
       brand: BRAND_LABELS[lng],
       brandHome: BRAND_HOME_LABELS[lng],
@@ -1173,6 +1187,6 @@ for (const lng of LANGUAGES) {
   )
 }
 
-bindArkiveDocumentLocale(i18n)
+bindArkiveDocumentLocale(i18n, undefined, (lng) => i18n.getResource(lng, 'translation', 'documentTitle'))
 
 export default i18n
