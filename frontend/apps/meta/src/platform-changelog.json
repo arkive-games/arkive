@@ -2,7 +2,7 @@
   "entries": [
     {
       "date": "2026-11-25",
-      "commit": "cd2ae64687ba3adfcb3179c693c7e93979fe516d",
+      "commit": "2996639c52e6a4129fcd8b17cc982042b4e754fc",
       "targets": [
         "aion2",
         "glimmith",
@@ -28,7 +28,7 @@
     },
     {
       "date": "2026-11-25",
-      "commit": "638a0e357c8619140ea09ff6a6ffd6e904a7e824",
+      "commit": "0497df9bb4f4e82e466f4c39bf807fad9ca490ae",
       "targets": [
         "aion2",
         "glimmith",
