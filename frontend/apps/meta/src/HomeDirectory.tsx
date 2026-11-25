@@ -1,6 +1,7 @@
 import { GuideLanguageNote } from './GuideLanguageNote'
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@gamemap/ui'
 import {
   IconAnchor,
   IconApps,
@@ -53,6 +54,7 @@ interface BeforeInstallPromptEvent extends Event {
 function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
 
   useEffect(() => {
     const standalone = window.matchMedia('(display-mode: standalone)').matches
@@ -78,13 +80,16 @@ function usePwaInstall() {
 
   const install = async () => {
     const prompt = deferredPrompt
-    if (!prompt) return
+    if (!prompt) {
+      setShowHelp(true)
+      return
+    }
     setDeferredPrompt(null)
     await prompt.prompt()
     await prompt.userChoice
   }
 
-  return { canInstall: deferredPrompt !== null && !installed, install }
+  return { canAddToHome: !installed, install, showHelp, setShowHelp }
 }
 
 function gradient([from, to]: readonly [string, string], index: number): CSSProperties {
@@ -125,7 +130,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   const [now] = useState(() => new Date())
   const games = sites.filter((site) => siteHref(site))
   const shortcutGames = homeGameShortcuts(games)
-  const { canInstall, install } = usePwaInstall()
+  const { canAddToHome, install, showHelp, setShowHelp } = usePwaInstall()
   const tools = FEATURES.filter((feature) => feature.kind === 'tool' && HOME_TOOL_IDS.has(feature.id)
     && games.some((site) => site.id === feature.gameId))
   const badge = t('landing.quick.badge')
@@ -145,7 +150,8 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
   ]
 
   return (
-    <section className="home-directory" aria-labelledby="home-heading">
+    <>
+      <section className="home-directory" aria-labelledby="home-heading">
       <h1 id="home-heading" className="sr-only">{t('home.title')}</h1>
       <HomeCarousel sites={games} onOpenSite={onOpenSite} />
 
@@ -203,7 +209,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
               <a href="#tools" className="home-more">{t('landing.dock.all')} →</a>
             </header>
             <div className="home-dock-tools">
-              {canInstall && (
+              {canAddToHome && (
                 <button type="button" className="home-tool home-tool-install"
                   style={gradient(['#ffbf69', '#ff6a64'], 0)}
                   aria-label={t('landing.addToHome.label')} onClick={() => void install()}>
@@ -224,7 +230,7 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
                 const ToolIcon = TOOL_ICONS[tool.id] ?? IconTool
                 return (
                   <a key={tool.id} className="home-tool" href={href}
-                    style={gradient(TOOL_COLORS[tool.id] ?? DEFAULT_TOOL_COLORS, index + (canInstall ? 1 : 0))}
+                  style={gradient(TOOL_COLORS[tool.id] ?? DEFAULT_TOOL_COLORS, index + (canAddToHome ? 1 : 0))}
                     onClick={() => onOpenFeature(tool, site)}>
                     <span className="home-tool-icon" aria-hidden="true">
                       <ToolIcon stroke={1.9} />
@@ -242,6 +248,15 @@ export function HomeDirectory({ sites, updatedDates, recentlyUsed, onOpenSite, o
           </section>
         )}
       </div>
-    </section>
+      </section>
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent size="sm" closeButtonProps={{ 'aria-label': t('landing.addToHome.close') }}>
+          <DialogHeader>
+            <DialogTitle>{t('landing.addToHome.dialogTitle')}</DialogTitle>
+            <DialogDescription>{t('landing.addToHome.dialogDescription')}</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
