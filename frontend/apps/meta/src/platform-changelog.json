@@ -2,6 +2,28 @@
   "entries": [
     {
       "date": "2026-11-25",
+      "commit": "5729258999e1c53d6245c5ab2412a2aec0606ea7",
+      "targets": [
+        "palworld",
+        "gmzz",
+        "pbz",
+        "ro3"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "All Games now features Cattiva, the Seer and the swordsman on new covers for Palworld, Lord of Mysteries and Phantom Blade Zero. The Ragnarok Online 3 cover shows more of its adventurers.",
+            "zh-CN": "全部游戏换上幻兽帕鲁的捣蛋猫、诡秘之主的占卜家和影之刃零的持刀主角封面；仙境传说 3 的封面露出更多冒险者身形。",
+            "zh-TW": "全部遊戲換上幻獸帕魯的搗蛋貓、詭秘之主的占卜家和影之刃零的持刀主角封面；仙境傳說 3 的封面呈現更多冒險者身形。",
+            "ja-JP": "ゲーム一覧で、Palworld、Lord of Mysteries、Phantom Blade Zero の表紙をそれぞれツッパニャン、占い師、刀を構える主人公の絵に変更しました。Ragnarok Online 3 では冒険者たちの姿がより広く見えるようになりました。",
+            "ko-KR": "전체 게임 목록에서 Palworld, Lord of Mysteries, Phantom Blade Zero의 표지를 각각 까부냥, 점술가, 검을 든 주인공의 모습으로 바꿨습니다. Ragnarok Online 3 표지에서는 모험가들의 모습이 더 많이 보입니다."
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
       "commit": "a348ca717968eb637cfda30bc134c6c89d294bc4",
       "targets": [
         "glimmith",
