@@ -1,6 +1,25 @@
 {
   "entries": [
     {
+      "date": "2026-11-26",
+      "commit": "097b5c6a155922b91f583dad4160c9c92a9b2db9",
+      "targets": [
+        "glimmith"
+      ],
+      "changes": [
+        {
+          "kind": "improvement",
+          "text": {
+            "en-US": "Search hidden markers, restore only the destination region when navigating, and load puzzle boards on demand by region.",
+            "zh-CN": "可搜索隐藏点位；定位时仅恢复目标地区，题板按地区加载并复用。",
+            "zh-TW": "可搜尋隱藏點位；定位時僅恢復目標地區，題板依地區載入並重複使用。",
+            "ja-JP": "非表示の地点も検索でき、移動先の地域だけが再表示されます。盤面は地域ごとに必要なときに読み込みます。",
+            "ko-KR": "숨겨진 지점도 검색할 수 있으며 이동할 때 해당 지역만 다시 표시합니다. 퍼즐판은 필요할 때 지역별로 불러옵니다."
+          }
+        }
+      ]
+    },
+    {
       "date": "2026-11-25",
       "commit": "4c87a3d18cf44f7666887acc2bc158a9d5665c9e",
       "targets": [
