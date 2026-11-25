@@ -29,6 +29,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [master]
   # No branch filter: a branch push with an open PR arrives here as
