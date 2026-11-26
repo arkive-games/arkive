@@ -148,7 +148,7 @@ describe('puppet attribute score', () => {
     expect(clampStage(-3, SCORING)).toBe(0)
     expect(clampStage(Number.NaN, SCORING)).toBe(0)
     expect(clampSlots(99, SCORING)).toBe(8)
-    expect(clampSlots(null, SCORING)).toBe(3)
+    expect(clampSlots(null, SCORING)).toBe(4)
   })
 })
 

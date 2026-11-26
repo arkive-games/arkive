@@ -64,7 +64,7 @@ export type BondsDraft = {
  * `initialDominateSlots` (1) is the first season's, and which season opens which
  * slot lives in `SecretPartnerDominateData`, keyed by a season the page cannot know.
  */
-export const DEFAULT_DEPLOY_SLOTS = 3
+export const DEFAULT_DEPLOY_SLOTS = 4
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
