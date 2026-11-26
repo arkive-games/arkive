@@ -1,6 +1,21 @@
 {
   "entries": [
     {
+      "version": "0.38.2",
+      "date": "2026-11-26",
+      "commit": "2fe256efc301c5999ebbba6249921407e52d454c",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": {
+            "en-US": "The rating calculator now counts four unlocked puppet slots by default.",
+            "zh-CN": "评分计算器默认按已开放的四个秘偶位置计算。",
+            "zh-TW": "評分計算器預設按已開放的四個秘偶位置計算。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.38.1",
       "date": "2026-11-25",
       "commit": "4dc5e0f461ad745c85c981b70cbeb138279f89f4",
